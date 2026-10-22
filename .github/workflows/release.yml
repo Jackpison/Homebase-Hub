@@ -24,8 +24,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          python3 tools/release-notes.py "${GITHUB_REF_NAME}" > /tmp/notes.md
           gh release create "${GITHUB_REF_NAME}" build/site-update-*.zip build/site-update-*.zip.sha256 \
-            --title "${GITHUB_REF_NAME}" --notes-file CHANGELOG.md
+            --title "${GITHUB_REF_NAME}" --notes-file /tmp/notes.md
       - name: Publish latest.json and the website
         env:
           GH_TOKEN: ${{ github.token }}
