@@ -1,0 +1,9 @@
+DirectoryIndex index.html
+Options -Indexes
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    # only this site's own scripts and styles may run; nothing may frame the page from elsewhere
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

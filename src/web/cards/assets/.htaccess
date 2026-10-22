@@ -1,0 +1,13 @@
+# Versioned files (links.js?v=1.29.0) never change under that address: browsers keep them, no check on every page.
+# Anything asked for without a version is still checked each time.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{QUERY_STRING} (^|&)v=[^&]+
+  RewriteRule \.(css|js|png)$ - [E=HUB_VERSIONED:1]
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|png)$">
+    Header set Cache-Control "no-cache" env=!HUB_VERSIONED
+    Header set Cache-Control "public, max-age=31536000, immutable" env=HUB_VERSIONED
+  </FilesMatch>
+</IfModule>

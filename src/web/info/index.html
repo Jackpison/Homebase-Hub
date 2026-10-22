@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<title>Information</title>
+<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.37.0">
+<script src="../core-data/assets/shell.js?v=1.37.0" data-app="info"></script>
+<link rel="icon" id="favIcon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6M8 13h8M8 17h8'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" id="touchIcon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6M8 13h8M8 17h8'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/info.css?v=1.37.0">
+<script src="assets/info-boot.js?v=1.37.0"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1 data-hub="hide"><span id="ptitle">Information</span></h1>
+    <div class="search" role="search" data-hub="hide">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search All Tabs" autocomplete="off" spellcheck="false" aria-label="Search All Tabs" aria-controls="sres" aria-expanded="false" aria-autocomplete="list">
+      <kbd>/</kbd>
+      <button type="button" class="sclear" id="qclear" aria-label="Clear Search" title="Clear Search" hidden>&times;</button>
+      <div class="sres" id="sres" role="listbox" hidden></div>
+    </div>
+    <div class="menus">
+      <button class="mbtn themebtn" id="themeBtn" type="button" data-hub="hide"></button>
+      <button class="mbtn" id="editBtn" type="button" data-hub="toggle">Edit</button>
+    </div>
+  </div>
+  <div class="ebar" id="ebar" hidden>
+    <p title="Drag tabs to reorder them (on a phone, press and hold first). Use the pencil on a tab to rename it, change its color or make it private."><i></i>Editing</p>
+    <div class="eacts">
+      <button type="button" data-e="colors" data-hub="hide">Colors</button>
+      <button type="button" data-hub="item" data-hub-action="sizes" data-hub-label="Text Sizes" data-hub-icon="type" data-hub-order="4">Text Sizes</button>
+      <button type="button" data-e="backup" data-hub="item" data-hub-label="Export" data-hub-icon="file" data-hub-order="7" data-hub-sep>Export</button>
+      <button type="button" data-e="settings" data-hub="item" data-hub-label="Page Settings" data-hub-icon="gear" data-hub-order="8">Settings</button>
+      <button type="button" data-e="logout" id="eLogout" data-hub="logout">Log Out</button>
+      <button type="button" data-e="done" class="pri" data-hub="done">Done</button>
+    </div>
+  </div>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="closed" id="closed" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+    <h2 id="closedT">This Page Is Private</h2>
+    <p id="closedP">Log in to view this page.</p>
+    <button type="button" class="mbtn" id="closedLogin">Log In</button>
+  </div>
+  <div class="panels" id="panels"></div>
+  <span class="sync" id="sync">Loading…</span>
+</div>
+<div id="printArea"></div>
+
+<template id="boxTpl">
+  <section class="box">
+    <div class="nh"><h2 class="title"></h2><button type="button" class="edit" data-r="copy">Copy</button><button type="button" class="edit" data-r="edit">Edit</button><button type="button" class="edit cfg" data-r="cfg" title="Box Settings" aria-label="Box Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h3M13 12h7M4 17h10M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg></button><span class="meta"></span></div>
+    <div class="info rt"></div>
+    <div class="form" hidden>
+      <input class="tin" maxlength="80" aria-label="Box Title">
+      <div class="tools" role="toolbar" aria-label="Formatting"><button type="button" data-f="bold" title="Bold (Ctrl+B)" aria-label="Bold"><b>B</b></button><button type="button" data-f="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i style="font-family:Georgia,serif">I</i></button><button type="button" data-f="strike" title="Strikethrough (Ctrl+Shift+X)" aria-label="Strikethrough"><s>S</s></button><button type="button" data-f="hl" title="Highlight (Ctrl+Shift+H)" aria-label="Highlight"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l-4 4v3h3l4-4"/><path d="M14 4l6 6-8 8-6-6z"/></svg></button><button type="button" data-f="code" title="Inline Code (Ctrl+E)" aria-label="Inline Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg></button><button type="button" data-f="link" title="Link (Ctrl+K)" aria-label="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button><span class="sep"></span><button type="button" data-f="h" title="Heading" aria-label="Heading"><b>H</b></button><button type="button" data-f="ul" title="Bullet List" aria-label="Bullet List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></button><button type="button" data-f="ol" title="Numbered List" aria-label="Numbered List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 5l1.5-1V9M3.5 13.5a1.5 1.5 0 1 1 2.5 1.2L3.5 17h3"/></svg></button><button type="button" data-f="check" title="Checklist" aria-label="Checklist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="6" height="6" rx="1.5"/><path d="M4.5 16l1.5 1.5L9 14.5M13 7h8M13 16h8"/></svg></button><button type="button" data-f="quote" title="Quote" aria-label="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6v12M10 8h10M10 12h10M10 16h7"/></svg></button><button type="button" data-f="codeblock" title="Code Block" aria-label="Code Block"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 10l-2 2 2 2M15 10l2 2-2 2"/></svg></button><button type="button" data-f="hr" title="Divider" aria-label="Divider"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h18"/></svg></button><span class="sep"></span><button type="button" data-f="clear" title="Clear Formatting" aria-label="Clear Formatting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5h12M12 5l-3 14M4 20l16-16"/></svg></button><span class="grow"></span><button type="button" data-f="help" title="Formatting Help" aria-label="Formatting Help">?</button><button type="button" data-f="preview" title="Preview" aria-label="Preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <div class="mdhelp" hidden><b>Text:</b> <code>**bold**</code> <code>*italic*</code> <code>~~strike~~</code> <code>==highlight==</code> <code>`code`</code> <code>[text](https://…)</code><br><b>Lines:</b> <code># Heading</code> <code>- bullet</code> <code>1. numbered</code> <code>- [ ] to-do</code> <code>&gt; quote</code> <code>---</code> divider. Put <code>```</code> on its own line before and after a code block.<br><b>Tips:</b> a line like <code>Data: text</code> gets a colored label. Enter continues a list; Enter on an empty item ends it.</div>
+      <div class="info rt prev" hidden></div>
+      <textarea aria-label="Box Text" placeholder="Write notes, paste links, add reminders…"></textarea>
+      <p class="keys">Shortcuts: Ctrl+B Bold · Ctrl+I Italic · Ctrl+E Code · Ctrl+K Link · Ctrl+S Save</p>
+      <div class="conflict" hidden>
+        This box was changed elsewhere after you opened it. Which version do you want to keep?
+        <div class="act"><button type="button" data-r="mine">Keep My Version</button><button type="button" data-r="theirs">Load the Newer Version</button></div>
+      </div>
+      <p class="msg"></p>
+      <div class="act"><button type="button" data-r="cancel">Cancel</button><button type="button" class="pri" data-r="save">Save</button></div>
+    </div>
+  </section>
+</template>
+
+<dialog id="setdlg">
+  <form id="setform">
+    <h2>Settings</h2>
+    <h3>Page</h3>
+    <div class="f"><label>Site Title<input id="gin" maxlength="60" placeholder="Information"></label></div>
+    <p class="hint">Shown in the browser tab and on exports. The logo comes from the main Settings.</p>
+    <h3>Privacy</h3>
+    <div class="f"><label class="chk"><input type="checkbox" id="spriv"> Private Page</label></div>
+    <p class="hint" id="sprivnote"></p>
+    <p id="setmsg"></p>
+    <div class="act"><button type="button" id="setcancel">Cancel</button><button type="submit" class="pri" id="setsave">Save Settings</button></div>
+  </form>
+</dialog>
+
+<dialog id="bkdlg">
+  <div>
+    <h2>Export</h2>
+    <div class="bgrid"><button type="button" data-b="pdf-all">All Tabs as PDF</button><button type="button" data-b="pdf-cur">Current Tab as PDF</button>
+      <button type="button" data-b="txt-all">All Tabs as Text</button><button type="button" data-b="txt-cur">Current Tab as Text</button></div>
+    <p class="hint">Text keeps everything exactly. The PDF uses a basic font, so some symbols and non-Latin scripts only come through in Text. Locked encrypted boxes are left out: unlock them first.</p>
+    <p class="hint">Backups, imports and earlier versions of the whole site are under the Backup icon in the bar at the top.</p>
+    <div class="act"><button type="button" data-b="close">Close</button></div>
+  </div>
+</dialog>
+
+<dialog id="uldlg">
+  <form id="ulform">
+    <h2>Unlock Encrypted Tabs</h2>
+    <p id="ulintro">Enter your encryption passphrase.</p>
+    <div class="f"><label><span id="ullbl">Passphrase or Recovery Key</span><input id="ulin" type="password" autocomplete="off"></label>
+      <label class="chk"><input type="checkbox" id="ulkeep"> Keep unlocked on this device until I log out</label></div>
+    <p id="ulmsg"></p>
+    <div class="act"><button type="button" id="ulcancel">Cancel</button><button type="submit" class="pri" id="ulsave">Unlock</button></div>
+  </form>
+</dialog>
+
+<dialog id="kdlg">
+  <form id="kform">
+    <h2>Edit Colors</h2>
+    <p>Background colors for each mode. Previews live; Cancel undoes.</p>
+    <div class="kgrid">
+      <span></span><b>Dark Mode</b><b>Light Mode</b>
+      <span>Page Background</span><input type="color" data-m="dark" data-k="bg" aria-label="Dark Mode Page Background"><input type="color" data-m="light" data-k="bg" aria-label="Light Mode Page Background">
+      <span>Text Boxes</span><input type="color" data-m="dark" data-k="box" aria-label="Dark Mode Text Boxes"><input type="color" data-m="light" data-k="box" aria-label="Light Mode Text Boxes">
+      <span>Menus, Dialogs &amp; Search</span><input type="color" data-m="dark" data-k="panel" aria-label="Dark Mode Menus, Dialogs and Search"><input type="color" data-m="light" data-k="panel" aria-label="Light Mode Menus, Dialogs and Search">
+    </div>
+    <p id="kmsg"></p>
+    <div class="act"><button type="button" class="left" id="kdef">Reset to Default</button><button type="button" id="kcancel">Cancel</button><button type="submit" class="pri" id="ksave">Save Colors</button></div>
+  </form>
+</dialog>
+
+<dialog id="etdlg">
+  <form id="etform">
+    <h2 id="ett">Edit Tab</h2>
+    <div class="f">
+      <label>Name<input id="etname" maxlength="40"></label>
+      <div class="crow"><span>Tab Color</span><input type="color" id="etcolor" aria-label="Tab Color"><input type="text" class="hx" id="etcolortx" maxlength="7" placeholder="default" aria-label="Tab Color Hex" spellcheck="false"><button type="button" id="etdef">Use Default</button></div>
+      <div class="crow"><span>Box Headline Color</span><input type="color" id="ethc" aria-label="Box Headline Color"><input type="text" class="hx" id="ethctx" maxlength="7" placeholder="default" aria-label="Box Headline Color Hex" spellcheck="false"><button type="button" id="ethcdef">Default</button></div>
+      <div class="lays" id="etlays" role="radiogroup" aria-label="Layout">
+        <span class="lt">Layout</span>
+        <button type="button" class="lay" data-lay="cards" role="radio" aria-checked="true"><i class="lp lp-cards" aria-hidden="true"></i><b>Notebook Cards</b><small>Cards you can size and arrange. The default.</small></button>
+        <button type="button" class="lay" data-lay="doc" role="radio" aria-checked="false"><i class="lp lp-doc" aria-hidden="true"></i><b>Document</b><small>One page with an outline</small></button>
+      </div>
+      <label class="chk"><input type="checkbox" id="etpriv"> Private Tab</label>
+    </div>
+    <p class="hint" id="etprivnote"></p>
+    <div class="f" style="margin-top:12px"><label class="chk"><input type="checkbox" id="etenc"> Encrypt This Tab (Extra protection)</label></div>
+    <p class="hint" id="etencnote"></p>
+    <div class="crow"><span id="etpos"></span><button type="button" id="etleft">Move Left</button><button type="button" id="etright">Move Right</button></div>
+    <p id="etmsg"></p>
+    <div class="act"><button type="button" class="danger" id="etdel">Delete Tab</button><button type="button" id="etcancel">Cancel</button><button type="submit" class="pri" id="etsave">Save Tab</button></div>
+  </form>
+</dialog>
+
+<dialog id="bxdlg">
+  <form id="bxform">
+    <h2>Box Settings</h2>
+    <p class="hint" id="bxname"></p>
+    <div class="opts" id="bxw" role="radiogroup" aria-label="Width"><span class="lt">Width</span>
+      <button type="button" class="opt" data-v="" role="radio">Auto</button><button type="button" class="opt" data-v="third" role="radio">One Third</button><button type="button" class="opt" data-v="half" role="radio">Half</button><button type="button" class="opt" data-v="twothirds" role="radio">Two Thirds</button><button type="button" class="opt" data-v="full" role="radio">Full</button>
+    </div>
+    <p class="hint" id="bxwhint"></p>
+    <div class="opts" id="bxh" role="radiogroup" aria-label="Height"><span class="lt">Height</span>
+      <button type="button" class="opt" data-v="" role="radio">Auto</button><button type="button" class="opt" data-v="short" role="radio">Short</button><button type="button" class="opt" data-v="tall" role="radio">Tall</button><button type="button" class="opt" data-v="xtall" role="radio">Extra Tall</button>
+    </div>
+    <div class="crow"><span id="bxpos"></span><button type="button" id="bxleft">Move Earlier</button><button type="button" id="bxright">Move Later</button></div>
+    <p id="bxmsg"></p>
+    <div class="act"><button type="button" class="danger" id="bxdel">Delete Box</button><button type="button" id="bxcancel">Cancel</button><button type="submit" class="pri" id="bxsave">Save</button></div>
+  </form>
+</dialog>
+
+<dialog id="idlg">
+  <form method="dialog" id="iform">
+    <h2>Import Backup</h2>
+    <p id="imsg"></p>
+    <div class="act"><button type="button" id="icancel">Cancel</button><button type="submit" class="pri" id="iok">Replace Everything</button></div>
+  </form>
+</dialog>
+
+
+<script src="assets/info.js?v=1.37.0"></script>
+</body>
+</html>

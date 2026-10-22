@@ -1,0 +1,53 @@
+# TOOLS – Apache / cPanel settings
+DirectoryIndex index.html
+Options -Indexes
+
+<IfModule mod_mime.c>
+  AddType application/javascript .js .mjs
+  AddType text/css .css
+  AddType application/json .json
+  AddType application/manifest+json .webmanifest
+  AddType application/wasm .wasm
+</IfModule>
+
+# Compression (Brotli where available, otherwise gzip)
+# The OCR, background-removal and PDF engines (.wasm, .traineddata) shrink to 30-60% of their size.
+# .onnx is already dense, so it gets its own type and is left uncompressed.
+<IfModule mod_mime.c>
+  AddType application/octet-stream .traineddata
+  AddType application/x-onnx .onnx
+</IfModule>
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css application/javascript application/json image/svg+xml application/wasm application/octet-stream
+</IfModule>
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml application/wasm application/octet-stream
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Files are re-checked every time (a quick 304 when unchanged). Addresses that carry ?v=<fingerprint> (the page's own scripts, see
+  # assets/.htaccess) are kept for a year. The service worker keeps assets/ for instant repeat visits and drops it when a file changes.
+  <FilesMatch "\.(js|css|woff2?|png|svg|wasm|onnx|traineddata)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "^(index\.html|config\.json|sw\.js)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+
+  # Security: only this site's own code may run; images/lookups only from Google's favicon service.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.google.com https://*.gstatic.com; connect-src 'self' data: blob: https://www.google.com https://*.gstatic.com; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+</IfModule>
+
+# Send visitors to HTTPS. Remove the "#" from the 5 lines below once SSL works for your domain
+# (your hosting panel: SSL/TLS status, then run AutoSSL or similar). Enabling it without SSL would make the site unreachable.
+#<IfModule mod_rewrite.c>
+#  RewriteEngine On
+#  RewriteCond %{HTTPS} off
+#  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+#</IfModule>

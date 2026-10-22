@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<link id="fav" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E">
+<link id="touch" rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E">
+<title>Cards</title>
+<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.37.0">
+<script src="../core-data/assets/shell.js?v=1.37.0" data-app="cards"></script>
+<script src="assets/cards-boot.js?v=1.37.0"></script>
+<link rel="stylesheet" href="assets/cards.css?v=1.37.0">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1 id="ptitle">Cards</h1>
+    </div>
+    <div class="menus" data-hub="hide">
+      <button class="mbtn alt theme" id="themeBtn" type="button" aria-label="Switch to Light Mode" title="Switch to Light Mode"></button>
+      <div class="menu">
+        <button class="mbtn alt" id="menuBtn2" aria-haspopup="true" aria-expanded="false">Backup <i class="chev"></i></button>
+        <div class="pop" id="pop2" hidden>
+          <span class="ph">Export This Page</span>
+          <button data-a="pdf" data-hub="item" data-hub-label="PDF (print)" data-hub-group="Export" data-hub-icon="file" data-hub-order="40" data-hub-sep>Export PDF</button>
+          <button data-a="xlsx" data-hub="item" data-hub-label="Excel Spreadsheet" data-hub-group="Export" data-hub-icon="file" data-hub-order="41">Export Excel</button>
+          <hr>
+          <span class="ph">Cards Backup File</span>
+          <button data-a="export">Export Backup</button>
+          <button data-a="import">Import Backup</button>
+        </div>
+      </div>
+      <div class="menu">
+        <button class="mbtn" id="menuBtn" aria-haspopup="true" aria-expanded="false">Main <i class="chev"></i></button>
+        <div class="pop" id="pop" hidden>
+          <span class="ph">Add</span>
+          <button data-a="card" data-hub="item" data-hub-label="Add Card" data-hub-icon="card" data-hub-order="1">Add Card</button>
+          <button data-a="holder" data-hub="item" data-hub-label="Add Holder" data-hub-icon="user" data-hub-order="2">Add Holder</button>
+          <hr>
+          <span class="ph">Manage</span>
+          <button data-a="editholder" data-hub="item" data-hub-label="Holders" data-hub-group="Manage" data-hub-icon="user" data-hub-order="10" data-hub-sep>Holders</button>
+          <button data-a="editbank" data-hub="item" data-hub-label="Banks" data-hub-group="Manage" data-hub-icon="card" data-hub-order="11">Banks</button>
+          <hr>
+          <span class="ph">Page</span>
+          <button data-a="title" data-hub="item" data-hub-label="Title and Icon" data-hub-group="Page Look" data-hub-icon="edit" data-hub-order="20" data-hub-sep>Title and Icon</button>
+          <button data-a="reorder" data-hub="item" data-hub-label="Column Order" data-hub-group="Page Look" data-hub-icon="cols" data-hub-order="21">Column Order</button>
+          <button data-hub="item" data-hub-action="sizes" data-hub-label="Text Sizes" data-hub-group="Page Look" data-hub-icon="type" data-hub-order="22">Text Sizes</button>
+          <hr>
+          <button data-a="password" id="mPw">Password &amp; Security</button>
+          <button data-a="lock" id="mLock">Log Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="filters" id="filters">
+    <input id="fq" type="search" placeholder="Find a card, bank, holder or network…" aria-label="Find a Card">
+    <select id="fbank" aria-label="Bank"></select>
+    <select id="fnet" aria-label="Network"></select>
+    <select id="fkind" aria-label="Type"><option value="">Any Type</option><option>Credit</option><option>Debit</option></select>
+    <select id="fholder" aria-label="Holder"></select>
+    <button class="fclear" id="fclear" type="button">Clear</button>
+  </div>
+  <div class="msort"><label>Sort By<select id="sortSel"></select></label></div>
+  <div class="list" id="list"></div>
+  <p class="hint">Hover over a row to show its Edit button.</p>
+  <section class="notes">
+    <div class="nh"><h2>Information</h2><button class="edit" id="infoEdit">Edit</button></div>
+    <div class="info" id="info"></div>
+    <div id="infoForm" hidden>
+      <textarea id="notes" placeholder="Paste links, reminders, offers, login hints…"></textarea>
+      <div class="act"><button type="button" id="infoCancel">Cancel</button><button type="button" class="pri" id="infoSave">Save</button></div>
+    </div>
+  </section>
+  <span class="sync" id="sync">Loading…</span>
+</div>
+<input type="file" id="file" accept="application/json,.json" hidden>
+<div id="printArea"></div>
+
+<dialog id="dlg">
+  <form method="dialog" id="form">
+    <h2 id="dt">Edit Card</h2>
+    <div class="f">
+      <label>Bank<input id="bank" required></label>
+      <label>Card Name<input id="name" required></label>
+      <label>Network<input id="network" list="nets"></label>
+      <label>Variant<input id="variant" placeholder="e.g. Signature"></label>
+      <label>Limit (₹)<input id="limit" inputmode="numeric"></label>
+      <label>Holder<select id="owner"></select></label>
+      <label>Type<select id="kind"><option>Credit</option><option>Debit</option></select></label>
+      <label>Base<select id="type"><option>LTF</option><option>FD</option><option>Paid</option><option>NA</option></select></label>
+      <label>Annual Charges (₹, 0 = Free)<input id="fee" inputmode="numeric"></label>
+      <label>Expiry (MM/YYYY)<input id="expiry" inputmode="numeric" maxlength="7" placeholder="03/2033"></label>
+      <label class="w">Card link (optional, leave blank for the default)<input id="url" inputmode="url" placeholder="https://…"></label>
+      <label class="w">Remark<input id="remark" placeholder="Optional Note"></label>
+    </div>
+    <datalist id="nets"><option>Visa</option><option>RuPay</option><option>Mastercard</option><option>Amex</option><option>Diners Club</option></datalist>
+    <div class="act"><button type="button" id="del" class="danger">Delete</button><button type="button" id="cancel">Cancel</button><button type="submit" class="pri" id="saveBtn">Save Changes</button></div>
+  </form>
+</dialog>
+
+<dialog id="hdlg">
+  <form method="dialog" id="hform">
+    <h2 id="ht">Add Holder</h2>
+    <div class="f">
+      <label class="w" id="hselw">Holder<select id="hsel"></select></label>
+      <label class="w"><span id="hlabel">Name</span><input id="hname" required></label>
+    </div>
+    <p id="hmsg"></p>
+    <div class="act"><button type="button" id="hdel" class="danger">Delete Holder</button><button type="button" id="hcancel">Cancel</button><button type="submit" class="pri" id="hok">Add Holder</button></div>
+  </form>
+</dialog>
+
+<dialog id="idlg">
+  <form method="dialog" id="iform">
+    <h2>Import Backup</h2>
+    <p id="imsg"></p>
+    <div class="act"><button type="button" id="icancel">Cancel</button><button type="submit" class="pri" id="iok">Replace Data</button></div>
+  </form>
+</dialog>
+
+<dialog id="odlg">
+  <h2>Reorder Columns</h2>
+  <p>Use the arrows to move a column. The list, Excel and PDF follow this order.</p>
+  <div id="olist"></div>
+  <div class="act"><button type="button" id="oreset" class="left">Default Order</button><button type="button" id="ocancel">Cancel</button><button type="button" class="pri" id="osave">Save Order</button></div>
+</dialog>
+
+<dialog id="tdlg">
+  <h2>Title</h2>
+  <div class="f">
+    <label class="w">Page Title<input id="ttl" maxlength="60"></label>
+  </div>
+  <div class="act"><button type="button" id="tcancel">Cancel</button><button type="button" class="pri" id="tsave">Save</button></div>
+</dialog>
+
+<dialog id="bdlg">
+  <h2>Edit Bank</h2>
+  <div class="f">
+    <label class="w">Bank<select id="bsel"></select></label>
+    <label class="w">Bank Name<input id="bname"></label>
+    <label class="w">Website Link<input id="burl" inputmode="url" placeholder="https://…"></label>
+  </div>
+  <p id="bmsg">Leave the link blank to use the default one.</p>
+  <div class="act"><button type="button" id="bcancel">Cancel</button><button type="button" class="pri" id="bsave">Save Changes</button></div>
+</dialog>
+
+<script src="assets/cards.js?v=1.37.0"></script>
+</body>
+</html>

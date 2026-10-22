@@ -1,0 +1,2 @@
+/* ask for the page data right away, while shell.js and this page are still loading; the page script below picks the answer up */
+(function () { try { window.__bmGet = fetch('api.php?action=get&t=' + Date.now(), { credentials: 'same-origin' }).then(function (r) { return r.json().then(function (j) { return { r: r, j: j }; }, function () { return { r: r, j: {} }; }); }).catch(function () { return null; }); } catch (e) {} })();

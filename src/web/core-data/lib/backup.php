@@ -1,0 +1,406 @@
+<?php
+if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
+/**
+ * One backup file for the whole site, or just the parts you pick (down to single tabs on Links and Info).
+ *
+ * File: { format: "site-backup", version: 1, created, parts: { links, info, cards, tasks, home, settings } }
+ *   links    = the same object Links' own "Export backup" makes (data + icons)
+ *   info     = { page, tabs, timer }   (encrypted tabs stay encrypted)
+ *   cards    = { cards, people, notes, banks, settings }
+ *   tasks    = { tasks, log, settings }
+ *   home     = { site, icons }          (background photos are not included: they are downloaded again)
+ *   settings = Site settings (never the password)
+ *
+ * Import also accepts the old single-site backups from Links, Info and Cards.
+ */
+
+/* ---------- reading what's there ---------- */
+
+function bk_links_file(): string { return hub_dir('links') . '/bookmarks.php'; }
+function bk_links_data(): array { return hub_read_guarded(bk_links_file()) ?? ['settings' => [], 'tabs' => []]; }
+function bk_info_file(): string { return hub_dir('info') . '/info.json'; }
+function bk_info_data(): array { return hub_jread(bk_info_file()) ?? ['tabs' => []]; }
+function bk_cards_file(): string { return hub_dir('cards') . '/cards.json'; }
+function bk_cards_data(): array { return hub_jread(bk_cards_file()) ?? []; }
+const BK_PARTS = ['links', 'info', 'cards', 'tasks', 'home', 'settings', 'telegram', 'watch'];   // every part of a full backup
+function bk_tasks_file(): string { return hub_dir('tasks') . '/tasks.json'; }
+function bk_tasks_data(): array { return hub_jread(bk_tasks_file()) ?? ['tasks' => [], 'settings' => []]; }
+function bk_home_file(): string { return hub_dir('home') . '/site.json'; }
+function bk_home_data(): ?array { return hub_jread(bk_home_file()); }
+
+/** What the Backup panel shows: each part, its size, and the tabs you can pick. */
+function bk_overview(): array {
+    $l = bk_links_data(); $i = bk_info_data(); $c = bk_cards_data(); $h = bk_home_data(); $tk = bk_tasks_data();
+    $links = 0; foreach ($l['tabs'] ?? [] as $t) foreach ($t['categories'] ?? [] as $cat) foreach ($cat['links'] ?? [] as $x) if (empty($x['divider'])) $links++;
+    return [
+        'links' => ['tabs' => array_map(function ($t) { return ['id' => (string)($t['id'] ?? ''), 'name' => (string)($t['title'] ?? ''), 'private' => !empty($t['private']), 'enc' => !empty($t['enc'])]; }, $l['tabs'] ?? []),
+                    'summary' => count($l['tabs'] ?? []) . ' tabs, ' . $links . ' links', 'size' => @filesize(bk_links_file()) ?: 0],
+        'info'  => ['tabs' => array_map(function ($t) { return ['id' => (string)($t['id'] ?? ''), 'name' => (string)($t['name'] ?? ''), 'private' => !empty($t['private']), 'enc' => !empty($t['enc'])]; }, $i['tabs'] ?? []),
+                    'summary' => count($i['tabs'] ?? []) . ' tabs', 'size' => @filesize(hub_jpath(bk_info_file())) ?: 0],
+        'cards' => ['summary' => count($c['cards'] ?? []) . ' cards, ' . count($c['people'] ?? []) . ' holders', 'size' => @filesize(hub_jpath(bk_cards_file())) ?: 0],
+        'tasks' => ['summary' => count($tk['tasks'] ?? []) . ' tasks', 'size' => @filesize(hub_jpath(bk_tasks_file())) ?: 0],
+        'home'  => ['summary' => $h ? count($h['links'] ?? []) . ' links, settings, background sources' : 'not set up yet', 'size' => @filesize(hub_jpath(bk_home_file())) ?: 0],
+        'settings' => ['summary' => 'site name, logo, look and colors, navigation, pages, Tools branding'],
+        'telegram' => (function () { require_once __DIR__ . '/notify.php'; $n = nt_load();
+            return ['summary' => $n['token'] === '' ? 'not set up' : 'bot, chat, messages, schedule and backup settings (the bot token only in encrypted backups)']; })(),
+        'watch'    => (function () { require_once __DIR__ . '/watch.php'; $w = wt_load(); return ['summary' => count($w['sites']) . ' watched ' . (count($w['sites']) === 1 ? 'site' : 'sites')]; })(),
+    ];
+}
+
+/* ---------- export ---------- */
+
+/**
+ * $pick = ['links' => true | [tabIds], 'info' => true | [tabIds], 'cards' => true, 'home' => true, 'settings' => true]
+ */
+/** $secrets: also the Telegram bot token. Only for files that are encrypted (a plain file could be read by anyone who gets it). */
+function bk_export(array $pick, bool $secrets = false): array {
+    $parts = [];
+    if (!empty($pick['links'])) {
+        $d = bk_links_data();
+        if (is_array($pick['links'])) $d['tabs'] = array_values(array_filter($d['tabs'] ?? [], function ($t) use ($pick) { return in_array((string)($t['id'] ?? ''), $pick['links'], true); }));
+        $icons = [];
+        $base = HUB_CORE . '/media/links/';
+        $add = function ($rel) use (&$icons, $base) {
+            $rel = preg_replace('/\?.*$/', '', (string)$rel);
+            if (!preg_match('#^icons/([A-Za-z0-9._-]+/)?[A-Za-z0-9._-]+\.(png|ico|jpe?g|gif|webp|svg)$#', $rel)) return;
+            $f = $base . $rel;
+            if (is_file($f) && filesize($f) < 600000) $icons[substr($rel, 6)] = base64_encode((string)file_get_contents($f));
+        };
+        foreach ($d['tabs'] ?? [] as $t) foreach ($t['categories'] ?? [] as $c) foreach ($c['links'] ?? [] as $x) if (!empty($x['icon'])) $add($x['icon']);
+        $parts['links'] = ['format' => 'bookmarks-backup', 'version' => 2, 'created' => gmdate('c'), 'data' => $d, 'icons' => (object)$icons];
+    }
+    if (!empty($pick['info'])) {
+        $d = bk_info_data();
+        if (is_array($pick['info'])) $d['tabs'] = array_values(array_filter($d['tabs'] ?? [], function ($t) use ($pick) { return in_array((string)($t['id'] ?? ''), $pick['info'], true); }));
+        $parts['info'] = ['page' => $d['page'] ?? new stdClass(), 'tabs' => $d['tabs'] ?? [], 'timer' => $d['timer'] ?? new stdClass()];
+    }
+    if (!empty($pick['cards'])) $parts['cards'] = bk_cards_data();
+    if (!empty($pick['tasks'])) { $t = bk_tasks_data(); $parts['tasks'] = ['tasks' => $t['tasks'] ?? [], 'log' => $t['log'] ?? [], 'settings' => (object)($t['settings'] ?? [])]; }
+    if (!empty($pick['home']) && ($h = bk_home_data())) {
+        $icons = [];
+        foreach (glob(HUB_CORE . '/media/home/icons/*') ?: [] as $f) {
+            $b = basename($f);
+            if (preg_match('/^[A-Za-z0-9._-]+\.(png|ico|jpe?g|gif|webp)$/', $b) && filesize($f) < 600000) $icons[$b] = base64_encode((string)file_get_contents($f));
+        }
+        $parts['home'] = ['site' => $h, 'icons' => (object)$icons];
+    }
+    if (!empty($pick['telegram'])) {   // Settings > Telegram: everything you chose there
+        require_once __DIR__ . '/notify.php'; $n = nt_load(); $t = [];
+        foreach (NT_USER_KEYS as $k) if ($k !== 'hookKey') $t[$k] = $n[$k];
+        if (!$secrets) { $t['tokenLeftOut'] = $t['token'] !== ''; $t['token'] = ''; }
+        $parts['telegram'] = $t;
+    }
+    if (!empty($pick['watch'])) { require_once __DIR__ . '/watch.php'; $w = wt_load(); $parts['watch'] = ['sites' => $w['sites'], 'tasks' => $w['tasks'], 'updateUrl' => $w['updateUrl']]; }
+    if (!empty($pick['settings'])) {
+        $parts['settings'] = hub_settings();
+        $lf = HUB_PUBLIC . '/' . $parts['settings']['logo'];
+        if ($parts['settings']['logo'] !== '' && is_file($lf)) $parts['settings']['logoData'] = base64_encode((string)file_get_contents($lf)) . ';' . pathinfo($lf, PATHINFO_EXTENSION);
+    }
+
+    $partial = [];
+    foreach (['links', 'info'] as $k) if (!empty($pick[$k]) && is_array($pick[$k])) $partial[$k] = $pick[$k];
+    return ['format' => 'site-backup', 'version' => 1, 'created' => gmdate('c'), 'site' => hub_settings()['siteName'],
+            'partial' => (object)$partial, 'parts' => (object)$parts];
+}
+
+/* ---------- import ---------- */
+
+/** Turns any supported file into backup parts. */
+function bk_normalize($j): array {
+    if (!is_array($j)) return [];
+    if (($j['format'] ?? '') === 'site-backup') return is_array($j['parts'] ?? null) ? $j['parts'] : [];
+    if (($j['format'] ?? '') === 'bookmarks-backup') return ['links' => $j];                                 // old Links backup
+    if (isset($j['tabs'], $j['page']) && is_array($j['tabs']) && isset($j['tabs'][0]['boxes'])) return ['info' => $j];   // old Info backup (v6)
+    if (isset($j['cards']) && is_array($j['cards'])) return ['cards' => $j];                                // old Cards backup
+    if (($j['format'] ?? '') === 'tasks-export' && is_array($j['tasks'] ?? null)) return ['tasks' => $j];  // Tasks' own export
+    return [];
+}
+
+/**
+ * Restores the chosen parts.
+ * $mode per part: 'replace' (everything in that part is replaced) or 'merge' (tabs with the same id are replaced, new tabs added).
+ * Every part keeps an earlier version first, so a restore can be undone.
+ */
+function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
+    $done = [];
+    if (!empty($pick['links']) && isset($parts['links']['data']) && is_array($parts['links']['data'])) {
+        $in = $parts['links']['data'];
+        if (!isset($in['tabs']) || !is_array($in['tabs'])) throw new Exception('The Links part of this file is damaged.');
+        $cur = bk_links_data();
+        bk_keep_links_version($cur);
+        if ($mode === 'merge') {
+            $byId = []; foreach ($cur['tabs'] ?? [] as $i => $t) $byId[(string)($t['id'] ?? '')] = $i;
+            foreach ($in['tabs'] as $t) {
+                $id = (string)($t['id'] ?? '');
+                if ($id !== '' && isset($byId[$id])) $cur['tabs'][$byId[$id]] = $t;
+                elseif (count($cur['tabs'] ?? []) < 6) $cur['tabs'][] = $t;
+                else throw new Exception('Links already has 6 tabs, the most allowed. Delete one first or use Replace.');
+            }
+            $new = $cur;
+            // Encrypted tabs only open with the key they were locked with: this site keeps its own key, and takes the file's only when it has none.
+            if (!hub_norm_vault($cur['settings']['vault'] ?? null) && ($iv = hub_norm_vault($in['settings']['vault'] ?? null))) { if (!is_array($new['settings'] ?? null)) $new['settings'] = []; $new['settings']['vault'] = $iv; }
+        } else {
+            if (count($in['tabs']) > 6) throw new Exception('Links can have at most 6 tabs; this file has ' . count($in['tabs']) . '.');
+            $new = $in;
+        }
+        hub_links_enc_clean($new);
+        if (!isset($new['settings']) || !is_array($new['settings']) || !$new['settings']) $new['settings'] = new stdClass();
+        bk_restore_link_icons($parts['links']['icons'] ?? []);
+        if (!hub_write_guarded(bk_links_file(), $new)) throw new Exception('Could not save Links.');
+        $done[] = 'Links';
+    }
+    if (!empty($pick['info']) && isset($parts['info']['tabs']) && is_array($parts['info']['tabs'])) {
+        $in = $parts['info'];
+        $cur = bk_info_data();
+        bk_keep_info_version();
+        $tabs = [];
+        foreach ($in['tabs'] as $t) {
+            if (!is_array($t)) continue;
+            $t['id'] = isset($t['id']) && preg_match('/^[a-f0-9]{8}$/', (string)$t['id']) ? $t['id'] : bin2hex(random_bytes(4));
+            $tabs[] = $t;
+        }
+        if ($mode === 'merge') {
+            $byId = []; foreach ($cur['tabs'] ?? [] as $i => $t) $byId[(string)($t['id'] ?? '')] = $i;
+            foreach ($tabs as $t) {
+                if (isset($byId[$t['id']])) $cur['tabs'][$byId[$t['id']]] = $t;
+                elseif (count($cur['tabs'] ?? []) < 20) $cur['tabs'][] = $t;
+                else throw new Exception('Info already has 20 tabs, the most allowed.');
+            }
+            $new = $cur;
+            // An encrypted tab needs the key it was locked with; it is only valid with the same vault.
+            if (empty($cur['page']['vault']) && !empty($in['page']['vault'])) $new['page']['vault'] = $in['page']['vault'];
+        } else {
+            $new = ['tabs' => $tabs, 'rev' => (int)($cur['rev'] ?? 0) + 1, 'page' => is_array($in['page'] ?? null) ? $in['page'] : ($cur['page'] ?? []),
+                    'timer' => is_array($in['timer'] ?? null) ? $in['timer'] : ($cur['timer'] ?? [])];
+        }
+        $new['rev'] = (int)($cur['rev'] ?? 0) + 1;
+        if (!hub_jput(bk_info_file(), json_encode($new, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new Exception('Could not save Info.');
+        $done[] = 'Info';
+    }
+    if (!empty($pick['cards']) && (isset($parts['cards']['cards']) && is_array($parts['cards']['cards']))) {
+        $c = $parts['cards'];
+        $keep = array_intersect_key($c, array_flip(['cards', 'people', 'notes', 'banks', 'settings', 'saved']));
+        $keep['saved'] = time();
+        if (is_file(hub_jpath(bk_cards_file()))) @copy(hub_jpath(bk_cards_file()), hub_dir('cards') . '/cards.before-restore.php');
+        if (!hub_jput(bk_cards_file(), json_encode($keep, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new Exception('Could not save Cards.');
+        $done[] = 'Cards';
+    }
+    if (!empty($pick['tasks']) && isset($parts['tasks']['tasks']) && is_array($parts['tasks']['tasks'])) {
+        require_once HUB_WEB . '/tasks/lib.php';
+        $cur = bk_tasks_data();
+        $new = tasks_clean(['tasks' => $parts['tasks']['tasks'], 'log' => $parts['tasks']['log'] ?? null, 'settings' => $parts['tasks']['settings'] ?? ($cur['settings'] ?? [])]);
+        if ($mode === 'merge') {   // tasks with the same id are replaced, new ones added
+            $byId = []; foreach ($cur['tasks'] ?? [] as $i => $t) $byId[(string)($t['id'] ?? '')] = $i;
+            $all = $cur['tasks'] ?? [];
+            foreach ($new['tasks'] as $t) { if (isset($byId[$t['id']])) $all[$byId[$t['id']]] = $t; else $all[] = $t; }
+            $logs = []; foreach (array_merge($cur['log'] ?? [], $new['log']) as $e) $logs[(string)($e['id'] ?? '')] = $e;   // both lists, same entries once
+            $new = tasks_clean(['tasks' => $all, 'log' => array_values($logs), 'settings' => $cur['settings'] ?? []]);
+        }
+        $new['rev'] = (int)($cur['rev'] ?? 0) + 1;
+        tasks_snapshot(true);
+        if (!hub_jput(bk_tasks_file(), json_encode($new, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new Exception('Could not save Tasks.');
+        $done[] = 'Tasks';
+    }
+    if (!empty($pick['home']) && isset($parts['home']['site']) && is_array($parts['home']['site'])) {
+        if (is_file(hub_jpath(bk_home_file()))) @copy(hub_jpath(bk_home_file()), hub_dir('home') . '/site.before-restore.php');
+        foreach ((array)($parts['home']['icons'] ?? []) as $name => $b64) {
+            if (!preg_match('/^[A-Za-z0-9_-][A-Za-z0-9._-]*\.(png|ico|jpe?g|gif|webp)$/', (string)$name)) continue;
+            $bin = base64_decode((string)$b64, true);
+            if ($bin !== false && bk_is_image($bin)) hub_write(HUB_CORE . '/media/home/icons/' . $name, $bin);
+        }
+        if (!hub_jput(bk_home_file(), json_encode($parts['home']['site'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new Exception('Could not save the start page.');
+        $done[] = 'Home';
+    }
+    if (!empty($pick['settings']) && isset($parts['settings']) && is_array($parts['settings'])) {
+        $s = $parts['settings']; $s['backupLast'] = hub_settings()['backupLast']; $s['logo'] = hub_settings()['logo'];
+        if (!empty($s['logoData']) && preg_match('/^([A-Za-z0-9+\/=]+);(png|jpg|webp|gif|ico)$/', (string)$s['logoData'], $m) && ($bin = base64_decode($m[1], true)) !== false && strlen($bin) < 400000 && bk_is_image($bin)) {
+            @mkdir(HUB_CORE . '/media/brand', 0755, true);
+            $logo = 'web/core-data/media/brand/logo-' . dechex(time()) . bin2hex(random_bytes(2)) . '.' . $m[2];
+            if (hub_write(HUB_PUBLIC . '/' . $logo, $bin)) {   // the old logo is only removed once the new one is saved
+                foreach (glob(HUB_CORE . '/media/brand/logo-*') ?: [] as $f) if (basename($f) !== basename($logo)) @unlink($f);
+                $s['logo'] = $logo;
+            }
+        }
+        hub_settings_update(function () use ($s) { return $s; });   // a restore replaces the settings as a whole, under the same lock
+        $done[] = 'Settings';
+    }
+    if (!empty($pick['telegram']) && isset($parts['telegram']) && is_array($parts['telegram'])) {
+        require_once __DIR__ . '/notify.php'; $t = $parts['telegram']; $k = [];
+        foreach (['on', 'tasks', 'timed', 'backup', 'login', 'bkEnc'] as $b) if (array_key_exists($b, $t)) $k[$b] = (bool)$t[$b];
+        if (isset($t['hour'])) $k['hour'] = max(0, min(23, (int)$t['hour']));
+        if (isset($t['bkEvery'])) $k['bkEvery'] = in_array((int)$t['bkEvery'], [0, 1, 3, 7, 14, 30], true) ? (int)$t['bkEvery'] : 0;
+        if (isset($t['chat']) && preg_match('/^-?\d{1,20}$/', (string)$t['chat'])) $k['chat'] = (string)$t['chat'];
+        if (isset($t['chatName'])) $k['chatName'] = mb_substr((string)$t['chatName'], 0, 80);
+        if (isset($t['url']) && ($t['url'] === '' || preg_match('#^https?://[^\s<>"]+/$#', (string)$t['url']))) $k['url'] = (string)$t['url'];
+        if (!empty($t['token']) && nt_token_ok((string)$t['token'])) $k['token'] = (string)$t['token'];   // only in encrypted backups; otherwise the token on this site stays
+        $k['hook'] = false;   // instant replies: turn them on again in Settings > Telegram (that registers this site with Telegram)
+        nt_save_keys($k, array_keys($k));
+        $done[] = 'Telegram';
+    }
+    if (!empty($pick['watch']) && isset($parts['watch']) && is_array($parts['watch'])) {
+        require_once __DIR__ . '/watch.php'; $w = $parts['watch'];
+        wt_update(function (&$d) use ($w) {
+            if (isset($w['sites']) && is_array($w['sites'])) $d['sites'] = array_values(array_filter($w['sites'], 'is_array'));
+            if (isset($w['tasks']) && is_array($w['tasks'])) foreach (['dom', 'ssl', 'host'] as $x) if (isset($w['tasks'][$x])) $d['tasks'][$x] = (bool)$w['tasks'][$x];
+            if (isset($w['updateUrl']) && is_string($w['updateUrl']) && ($w['updateUrl'] === '' || preg_match('#^https://#', $w['updateUrl']))) $d['updateUrl'] = $w['updateUrl'];
+        });
+        $done[] = 'Domain watch';
+    }
+    return $done;
+}
+
+/**
+ * Start over: erases every page's data and its earlier versions, your pictures, icons and logo, the site settings, Telegram, the domain
+ * watch list, the encryption passphrase and backup key, and Telegram login approval. Keeps only what lets you log in again: the password,
+ * two-step login and this session. Everything comes back by importing a backup file.
+ */
+function bk_reset_all(): array {
+    $sd = hub_data_root(); $core = hub_dir('core'); $done = [];
+    foreach (['links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'home' => 'Start Page'] as $app => $name) {
+        if (is_dir("$sd/$app")) { hub_rm_tree("$sd/$app"); $done[] = $name; }
+    }
+    foreach (['home/photos', 'home/uploads', 'home/icons', 'links/icons', 'brand'] as $m)
+        foreach (glob(HUB_CORE . "/media/$m/*") ?: [] as $f) { if (is_dir($f)) hub_rm_tree($f); else @unlink($f); }   // the folder's own .htaccess is hidden from glob and stays
+    $done[] = 'Pictures, icons and logo';
+    require_once __DIR__ . '/notify.php';
+    $n = nt_load();
+    if ($n['hook'] && $n['token'] !== '') { try { nt_hook_set($n, false); } catch (Throwable $e) {} }   // tell Telegram to stop calling this site
+    foreach (['notify.json', 'watch.json', 'passphrase.json', 'backup-key.json'] as $f) { @unlink(hub_jpath("$core/$f")); @unlink("$core/$f"); }
+    @unlink("$core/login-approval.php");   // Telegram is gone, so approving logins there is turned off too (or nobody could log in)
+    @unlink("$core/settings.php"); unset($GLOBALS['__hub_settings']);
+    try { hub_tools_config(hub_settings()); } catch (Throwable $e) {}
+    array_push($done, 'Site settings', 'Telegram', 'Domain watch', 'Encryption passphrase', 'Telegram login approval');
+    return $done;
+}
+
+function bk_is_image(string $b): bool {
+    return strncmp($b, "\x89PNG", 4) === 0 || strncmp($b, "\xFF\xD8\xFF", 3) === 0 || strncmp($b, 'GIF8', 4) === 0
+        || (strncmp($b, 'RIFF', 4) === 0 && substr($b, 8, 4) === 'WEBP') || strncmp($b, "\x00\x00\x01\x00", 4) === 0;
+}
+function bk_restore_link_icons($icons): void {
+    foreach ((array)$icons as $rel => $b64) {
+        $rel = (string)$rel;
+        // no hidden names (".htaccess.png") and no folder tricks
+        if (!preg_match('#^([a-z0-9-]+/)?[A-Za-z0-9_-][A-Za-z0-9._-]*\.(png|ico|jpe?g|gif|webp|svg)$#', $rel) || strpos($rel, '..') !== false) continue;
+        $bin = base64_decode((string)$b64, true);
+        if ($bin === false || strlen($bin) > 600000) continue;
+        $isSvg = substr($rel, -4) === '.svg';
+        if ($isSvg ? !hub_svg_safe($bin) : !bk_is_image($bin)) continue;
+        hub_write(HUB_CORE . '/media/links/icons/' . $rel, $bin);
+    }
+}
+/** Same automatic backups Links makes itself (data/backups, last 40). */
+function bk_keep_links_version(array $cur): void {
+    $dir = hub_dir('links') . '/backups';
+    if (!is_dir($dir)) @mkdir($dir, 0700, true);
+    hub_write_guarded($dir . '/bookmarks-' . date('Ymd-His') . '.php', $cur);
+    $files = glob($dir . '/*.php') ?: []; sort($files);
+    while (count($files) > 40) @unlink(array_shift($files));
+}
+/** Same earlier versions Info keeps itself (versions/, last 40). */
+function bk_keep_info_version(): void {
+    if (!is_file(hub_jpath(bk_info_file()))) return;
+    $dir = hub_dir('info') . '/versions';
+    if (!is_dir($dir)) @mkdir($dir, 0700, true);
+    $name = $dir . '/' . date('Ymd-His') . '.php';
+    if (!is_file($name)) @copy(hub_jpath(bk_info_file()), $name);
+    $files = glob($dir . '/*.php') ?: []; sort($files);
+    while (count($files) > 40) @unlink(array_shift($files));
+}
+
+/* ======================= encrypted backups ======================= */
+/* Backup encryption (Backup > Encryption). Files are locked either with your website password (mode "login", the default:
+   nothing extra to remember) or with a separate backup passphrase (mode "own"). Neither is ever stored: only the key made
+   from it (PBKDF2-SHA256, 310,000 rounds, random salt), in site-data/core/backup-key.php. Encrypted files are compressed,
+   then AES-256-GCM. They are opened in your browser at Import, so the password never travels anywhere.
+   In mode "login" the key is made again whenever the password changes, so new files always open with today's password;
+   older files keep opening with the password you had when they were made. */
+const BK_KDF_ITER = 310000;
+function bk_key_file(): string { return hub_dir('core') . '/backup-key.json'; }
+function bk_key(): ?array { $k = hub_jread(bk_key_file()); return is_array($k) && preg_match('/^[a-f0-9]{64}$/', (string)($k['key'] ?? '')) ? $k : null; }
+/** "login" when backups use the website password, "own" for a separate passphrase (and for keys made before 1.18). */
+function bk_key_mode(?array $k = null): string { $k = $k ?? bk_key(); return $k && ($k['mode'] ?? '') === 'login' ? 'login' : 'own'; }
+/** Which password hash a "login" key was made for, so a password changed some other way is noticed at the next login. */
+function bk_auth_mark(): string { $a = hub_auth(); return $a ? substr(hash('sha256', 'bk|' . $a['hash']), 0, 24) : ''; }
+function bk_key_set(string $pass, string $mode = 'own'): array {
+    $salt = random_bytes(16);
+    $k = ['key' => bin2hex(hash_pbkdf2('sha256', $pass, $salt, BK_KDF_ITER, 32, true)), 'salt' => base64_encode($salt), 'iter' => BK_KDF_ITER, 'set' => time(),
+          'mode' => $mode === 'login' ? 'login' : 'own'];
+    if ($k['mode'] === 'login') $k['auth'] = bk_auth_mark();
+    hub_jput(bk_key_file(), json_encode($k)); @chmod(hub_jpath(bk_key_file()), 0600);
+    return $k;
+}
+/** The right website password was just typed: a "login" key that was made for another password is made again with it. */
+function bk_login_sync(string $pw): void {
+    $k = bk_key();
+    if (!$k || bk_key_mode($k) !== 'login' || hash_equals((string)($k['auth'] ?? ''), bk_auth_mark())) return;
+    bk_key_set($pw, 'login');
+}
+/**
+ * Info's encrypted tabs, when they use the website password: changing the password re-wraps their key in the browser (the
+ * server never sees the key) and sends the new wrap with the password change. $new = {v, salt, iter, wrap, login},
+ * $prev = the wrap it replaces, so a stale page can never replace a newer key. Returns '' when done, or why not.
+ */
+function bk_info_vault_check(array $new, string $prev): string {
+    $b64 = function ($x, $min, $max) { return is_string($x) && strlen($x) >= $min && strlen($x) <= $max && preg_match('#^[A-Za-z0-9+/=]+$#', $x); };
+    if (!isset($new['salt'], $new['wrap'], $new['iter']) || !$b64($new['salt'], 16, 64) || !$b64($new['wrap'], 40, 200) || (int)$new['iter'] < 100000 || (int)$new['iter'] > 10000000) return 'bad';
+    $cur = bk_info_data()['page']['vault'] ?? null;
+    return is_array($cur) && hash_equals((string)($cur['wrap'] ?? ''), $prev) ? '' : 'conflict';
+}
+function bk_info_vault_swap(array $new, string $prev): string {
+    $lk = @fopen(hub_dir('info') . '/info.lock', 'c'); if ($lk) flock($lk, LOCK_EX);   // the same lock Info's own saves use
+    try {
+        if (($why = bk_info_vault_check($new, $prev)) !== '') return $why;
+        $raw = hub_jraw(bk_info_file()); $all = json_decode($raw, true);
+        if (!is_array($all)) return 'unreadable';
+        $all['page']['vault'] = ['v' => 1, 'salt' => $new['salt'], 'iter' => (int)$new['iter'], 'wrap' => $new['wrap'], 'login' => true];
+        $json = json_encode($all, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        return $json !== false && hub_jput(bk_info_file(), $json) ? '' : 'write';
+    } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+}
+/**
+ * Links' encrypted tabs: changing the website password re-wraps their key in the browser, like Info's. $new = {salt, iter, wrap},
+ * $prev = the wrap it replaces (a page that is out of date can never replace a newer key). Returns '' when fine, or why not.
+ */
+function bk_links_vault_check(array $new, string $prev): string {
+    if (!hub_norm_vault($new)) return 'bad';
+    $cur = hub_norm_vault((bk_links_data()['settings'] ?? [])['vault'] ?? null);
+    return $cur && hash_equals($cur['wrap'], $prev) ? '' : 'conflict';
+}
+function bk_links_vault_swap(array $new, string $prev): string {
+    $lk = @fopen(hub_dir('links') . '/links.lock', 'c'); if ($lk) flock($lk, LOCK_EX);   // the same lock Links' own saves use
+    try {
+        if (($why = bk_links_vault_check($new, $prev)) !== '') return $why;
+        $v = hub_norm_vault($new);
+        $all = hub_read_guarded(bk_links_file());
+        if (!is_array($all) || !isset($all['tabs'])) return 'unreadable';
+        if (!is_array($all['settings'] ?? null)) $all['settings'] = [];
+        $all['settings']['vault'] = $v;
+        foreach (['dark', 'light', 'sizes'] as $k) if (array_key_exists($k, $all['settings']) && !$all['settings'][$k]) unset($all['settings'][$k]);   // an empty {} must not come back as []
+        return hub_write_guarded(bk_links_file(), $all) ? '' : 'write';
+    } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+}
+function bk_key_clear(): void { @unlink(hub_jpath(bk_key_file())); }
+/** Opens an encrypted backup file with the stored key (the browser does the same with your passphrase). Returns the JSON text, or null. */
+function bk_decrypt(string $file, ?array $k = null): ?string {
+    $k = $k ?? bk_key(); $j = json_decode($file, true);
+    if (!$k || !is_array($j) || ($j['format'] ?? '') !== 'site-backup-encrypted' || !function_exists('openssl_decrypt')) return null;
+    $raw = base64_decode((string)($j['data'] ?? ''), true); $iv = base64_decode((string)($j['iv'] ?? ''), true);
+    if ($raw === false || $iv === false || strlen($raw) < 17) return null;
+    $plain = @openssl_decrypt(substr($raw, 0, -16), 'aes-256-gcm', hex2bin($k['key']), OPENSSL_RAW_DATA, $iv, substr($raw, -16));
+    $json = $plain === false ? false : @gzdecode($plain);
+    return $json === false ? null : $json;
+}
+/** A whole backup (JSON text) as an encrypted backup file (JSON text). */
+function bk_encrypt(string $json): string {
+    $k = bk_key();
+    if (!$k || !function_exists('openssl_encrypt')) throw new Exception('Encryption is not available.');
+    $iv = random_bytes(12); $tag = '';
+    $ct = openssl_encrypt(gzencode($json, 6), 'aes-256-gcm', hex2bin($k['key']), OPENSSL_RAW_DATA, $iv, $tag, '', 16);
+    if ($ct === false) throw new Exception('Encryption failed.');
+    return json_encode(['format' => 'site-backup-encrypted', 'version' => 1, 'site' => hub_settings()['siteName'], 'created' => gmdate('c'),
+        'cipher' => 'AES-256-GCM', 'kdf' => 'PBKDF2-SHA256', 'iter' => (int)$k['iter'], 'salt' => $k['salt'], 'iv' => base64_encode($iv),
+        'data' => base64_encode($ct . $tag), 'pw' => bk_key_mode($k),
+        'how' => 'Encrypted backup. Open the site, Backup > Import, choose this file and enter ' . (bk_key_mode($k) === 'login' ? 'your website password (the one you had on ' . date('j M Y') . ').' : 'your encryption passphrase.')],
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+}

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<title>Tasks</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M8.5 15.5l2.2 2.2 4.8-4.8'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.37.0">
+<script src="../core-data/assets/shell.js?v=1.37.0" data-app="tasks"></script>
+<link rel="stylesheet" href="assets/tasks.css?v=1.37.0">
+</head>
+<body>
+<main class="wrap" id="app">
+<div class="shell">
+  <aside class="side" id="side">
+    <label class="search ssearch"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"/></svg>
+      <input type="search" id="q" placeholder="Search Tasks" autocomplete="off" aria-label="Search Tasks"><kbd aria-hidden="true">F</kbd>
+      <button type="button" class="ib x" id="qx" aria-label="Clear Search" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></label>
+    <div class="slist" id="stats" aria-label="Smart Lists"></div>
+    <div class="nav" id="views" role="group" aria-label="View">
+      <button type="button" data-view="list" aria-pressed="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span class="lbl">Tasks</span><em class="num" id="nv-list"></em></button>
+      <button type="button" data-view="cal" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2"/></svg><span class="lbl">Calendar</span><em class="num" id="nv-cal"></em></button>
+      <button type="button" data-view="an" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="lbl">Analytics</span><em class="num" id="nv-an"></em></button>
+      <button type="button" data-view="done" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="lbl">Completed</span><em class="num" id="nv-done"></em></button>
+    </div>
+  </aside>
+  <div class="main">
+  <div class="top">
+    <div class="ttlw"><h1 id="ttl" data-k="all">Tasks</h1><small id="tsub"></small></div>
+    <form class="qa tqa" id="qaf" autocomplete="off">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <input type="text" id="qadd" maxlength="200" placeholder="Add a task, e.g. Netflix 649 monthly 5 Nov 9pm" aria-label="Quick Add a Task">
+      <button type="submit" class="btn">Add</button>
+    </form>
+    <div class="seg vsw" id="vsw" role="group" aria-label="Show as">
+      <button type="button" data-v="list" aria-pressed="true" title="List"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span class="lbl">List</span></button>
+      <button type="button" data-v="cal" aria-pressed="false" title="Calendar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v15H4zM4 10h16M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></button>
+    </div>
+    <button type="button" class="btn pri" id="add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Add Task</span></button>
+    <!-- pencil menu (the bar): add, exports, page settings -->
+    <span hidden>
+      <button type="button" id="addh" data-hub="item" data-hub-label="Add Task" data-hub-icon="plus" data-hub-order="1"></button>
+      <button type="button" id="xcsv" data-hub="item" data-hub-label="Spreadsheet (CSV)" data-hub-group="Export" data-hub-icon="file" data-hub-order="20" data-hub-sep></button>
+      <button type="button" id="xics" data-hub="item" data-hub-label="Calendar File (.ics)" data-hub-group="Export" data-hub-icon="file" data-hub-order="21"></button>
+      <button type="button" id="xprint" data-hub="item" data-hub-label="Print or PDF" data-hub-group="Export" data-hub-icon="file" data-hub-order="22"></button>
+      <button type="button" id="psets" data-hub="item" data-hub-label="Page Settings" data-hub-icon="gear" data-hub-order="40"></button>
+    </span>
+  </div>
+
+  <section id="vlist">
+    <div class="wk" id="cal"></div>
+    <div class="tools">
+      <div class="seg" id="where" role="group" aria-label="Online or Offline">
+        <button type="button" data-w="" aria-pressed="true">All</button>
+        <button type="button" data-w="online" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>Online</button>
+        <button type="button" data-w="offline" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg>Offline</button>
+      </div>
+      <select class="sel" id="fsort" aria-label="Sort">
+        <option value="due">Sort: Due Date</option><option value="due-">Sort: Latest First</option>
+        <option value="price-">Sort: Price, High to Low</option><option value="price">Sort: Price, Low to High</option>
+        <option value="name">Sort: Name, A to Z</option><option value="cat">Sort: Category</option>
+        <option value="on">Sort: Online First</option><option value="off">Sort: Offline First</option>
+        <option value="new">Sort: Recently Added</option><option value="upd">Sort: Recently Changed</option></select>
+      <button type="button" class="btn" id="fbtn" aria-expanded="false" aria-controls="filters"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4"/></svg>Filters<span id="fdot"></span></button>
+      <button type="button" class="btn" id="calbtn" aria-pressed="true" title="Show or Hide the Week Strip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v15H4zM4 10h16M8 3v4M16 3v4"/></svg>Week</button>
+    </div>
+    <div class="filters" id="filters" hidden>
+      <label class="f">Status<select id="fst"><option value="">Active and Paused</option><option value="late">Only Overdue</option><option value="soon">Only Due Soon</option><option value="paused">Only Paused</option></select></label>
+      <label class="f">Year<select id="fyear"></select></label>
+      <label class="f">Month<select id="fmonth"></select></label>
+      <label class="f">Category<select id="fcat"></select></label>
+      <label class="f">Repeats<select id="frep">
+        <option value="">Any</option><option value="none">One-Time</option><option value="day">Daily</option><option value="week">Weekly</option>
+        <option value="m1">Monthly</option><option value="m3">Quarterly</option><option value="m6">Every 6 Months</option><option value="year">Yearly</option><option value="other">Other</option></select></label>
+      <label class="f">Currency<select id="fcur"></select></label>
+      <label class="f">Price<select id="fprice"><option value="">Any</option><option value="paid">Has a Price</option><option value="free">No Price</option></select></label>
+      <label class="f">Group By<select id="fgroup"><option value="smart">Date (Overdue, Today, This Week…)</option><option value="month">Month</option><option value="year">Year</option><option value="cat">Category</option><option value="where">Online / Offline</option><option value="state">Status</option><option value="none">No Groups</option></select></label>
+    </div>
+    <div class="tabs" id="range" role="group" aria-label="Show"></div>
+    <div class="chips" id="chips"></div>
+    <p class="count" id="count" aria-live="polite"></p>
+    <div id="list"><p class="count">Loading Tasks…</p></div>
+  </section>
+
+  <section id="vcal" hidden></section>
+
+  <section id="van" hidden></section>
+
+  <section id="vdone" hidden>
+    <div class="tools">
+      <label class="search"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"/></svg>
+        <input type="search" id="dq" placeholder="Search Completed…" autocomplete="off" aria-label="Search Completed"></label>
+      <div class="seg" id="dkind" role="group" aria-label="Show">
+        <button type="button" data-k="" aria-pressed="true">All</button><button type="button" data-k="paid" aria-pressed="false">Done</button><button type="button" data-k="skip" aria-pressed="false">Skipped</button>
+      </div>
+      <select class="sel" id="dyear" aria-label="Year"></select>
+    </div>
+    <p class="count" id="dcount"></p>
+    <div id="dlist"></div>
+  </section>
+  <p class="status" id="status"></p>
+  </div>
+</div>
+</main>
+
+<dialog id="vdlg" aria-labelledby="vname">
+  <div class="vh"><div class="tags" id="vtags"></div><h2 id="vname"></h2><div class="vbig"><b class="num" id="vprice"></b><span id="vwhen"></span></div></div>
+  <div class="db" id="vbody"></div>
+  <div class="df" id="vfoot"></div>
+</dialog>
+
+<dialog id="dlg" aria-labelledby="dlgt">
+  <form method="dialog" id="form" novalidate>
+    <div class="dh"><h2 id="dlgt">Add Task</h2><button type="button" class="ib" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="db">
+      <label class="fl">Name<input id="e-name" maxlength="120" required placeholder="Netflix, Car Insurance, Domain Renewal…"></label>
+      <div class="c2">
+        <label class="fl">Due Date<input type="date" id="e-due" required></label>
+        <label class="fl">Time (Optional)<input type="time" id="e-time"></label>
+      </div>
+      <div class="c2">
+        <label class="fl">Repeats<select id="e-rep">
+          <option value="none">Doesn't Repeat</option><option value="day:1">Every Day</option><option value="week:1">Every Week</option><option value="week:2">Every 2 Weeks</option>
+          <option value="month:1">Every Month</option><option value="month:2">Every 2 Months</option><option value="month:3">Every 3 Months (Quarterly)</option>
+          <option value="month:6">Every 6 Months</option><option value="year:1">Every Year</option><option value="year:2">Every 2 Years</option><option value="year:3">Every 3 Years</option>
+          <option value="custom">Custom…</option></select></label>
+        <div class="fl" id="e-custom" hidden>Every<div class="pair"><input type="number" id="e-n" min="1" max="99" value="1" aria-label="How Many">
+          <select id="e-unit" aria-label="Unit"><option value="day">Days</option><option value="week">Weeks</option><option value="month">Months</option><option value="year">Years</option></select></div></div>
+      </div>
+      <p class="hint" id="e-next"></p>
+      <div class="c3">
+        <label class="fl">Price<input type="number" id="e-price" min="0" step="0.01" inputmode="decimal" placeholder="0"></label>
+        <label class="fl">Currency<select id="e-cur"></select></label>
+        <label class="fl">Category<input id="e-cat" maxlength="40" list="cats" placeholder="Subscription"></label>
+      </div>
+      <div class="c2">
+        <div class="fl">Online or Offline<div class="seg" id="e-mode" role="group" aria-label="Online or Offline">
+          <button type="button" data-m="" aria-pressed="true">Not Set</button><button type="button" data-m="online" aria-pressed="false">Online</button><button type="button" data-m="offline" aria-pressed="false">Offline</button></div></div>
+        <label class="fl">Remind Me<select id="e-remind">
+          <option value="-1">Page Default</option><option value="0">On the Day</option><option value="1">1 Day Before</option><option value="3">3 Days Before</option>
+          <option value="7">1 Week Before</option><option value="14">2 Weeks Before</option><option value="30">1 Month Before</option><option value="60">2 Months Before</option></select></label>
+      </div>
+      <label class="fl">Website<input type="url" id="e-url" maxlength="500" placeholder="https://"></label>
+      <label class="fl">Notes<textarea id="e-notes" maxlength="4000" placeholder="Account number, plan, who to call…"></textarea></label>
+      <p class="err" id="e-err"></p>
+    </div>
+    <div class="df"><button type="button" class="btn left danger" id="e-del" hidden>Delete</button><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn pri" id="e-save">Save Task</button></div>
+  </form>
+</dialog>
+
+<dialog id="sdlg" aria-labelledby="sdlgt">
+  <form method="dialog" id="sform">
+    <div class="dh"><h2 id="sdlgt">Page Settings</h2><button type="button" class="ib" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="db">
+      <label class="fl">Default Currency<select id="s-cur"></select></label>
+      <p class="hint">Used for tasks that don't pick their own currency.</p>
+      <label class="fl">Show a Task as Due Soon<select id="s-soon">
+        <option value="0">Only on the Day</option><option value="1">1 Day Before</option><option value="3">3 Days Before</option><option value="7">1 Week Before</option>
+        <option value="14">2 Weeks Before</option><option value="30">1 Month Before</option></select></label>
+      <p class="hint">A task's own "Remind Me" overrides this. Telegram reminders use the same window.</p>
+      <h3 class="sh3">When the Page Opens</h3>
+      <div class="c2">
+        <label class="fl">Open On<select id="s-start"><option value="">Where I Left Off</option><option value="list">Tasks</option><option value="cal">Calendar</option><option value="an">Analytics</option><option value="done">Completed</option></select></label>
+        <label class="fl">Show<select id="s-range"><option value="">Where I Left Off</option><option value="all">Tasks</option><option value="week">This Week</option><option value="month">This Month</option><option value="year">This Year</option></select></label>
+        <label class="fl">Sort By<select id="s-sort"><option value="">Where I Left Off</option><option value="due">Due Date</option><option value="due-">Latest First</option><option value="price-">Price, High to Low</option><option value="price">Price, Low to High</option><option value="name">Name, A to Z</option><option value="cat">Category</option></select></label>
+        <label class="fl">Week Strip Above the List<select id="s-cal"><option value="">Where I Left Off</option><option value="on">Shown</option><option value="off">Hidden</option></select></label>
+      </div>
+      <h3 class="sh3">Look</h3>
+      <div class="c2">
+        <label class="fl">Week Starts On<select id="s-week"><option value="sun">Sunday</option><option value="mon">Monday</option></select></label>
+        <label class="fl">Dates<select id="s-dates"><option value="in">16 Oct 2026</option><option value="us">Oct 16, 2026</option></select></label>
+      </div>
+      <label class="chk"><input type="checkbox" id="s-stats"> Show amounts in the side panel (totals and the spending card)</label>
+      <p class="hint">These apply on every device. "Where I Left Off" keeps what this browser used last.</p>
+    </div>
+    <div class="df"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn pri">Save Settings</button></div>
+  </form>
+</dialog>
+
+<dialog id="ydlg" aria-labelledby="ydlgt">
+  <div class="dh"><h2 id="ydlgt">Year in Review</h2><button type="button" class="ib" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="db" id="ybody"></div>
+  <div class="df"><button type="button" class="btn" data-close>Close</button><button type="button" class="btn pri" id="ygo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download PDF</button></div>
+</dialog>
+<datalist id="cats"></datalist>
+<script src="assets/tasks.js?v=1.37.0"></script>
+</body>
+</html>

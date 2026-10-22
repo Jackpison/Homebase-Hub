@@ -1,0 +1,18 @@
+# Private data and secrets: never commit
+site-data/
+**/config.php
+!src/web/home/config.php
+*.zip
+*.sha256
+build/
+node_modules/
+package-lock.json
+.env
+*.log
+error_log
+.DS_Store
+# Owner's own media (folders are kept with .gitkeep)
+src/web/core-data/media/**
+!src/web/core-data/media/**/
+!src/web/core-data/media/**/.gitkeep
+!src/web/core-data/media/.htaccess

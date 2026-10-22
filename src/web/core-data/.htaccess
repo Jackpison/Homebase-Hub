@@ -1,0 +1,47 @@
+# core/ is the shared engine. Only these are meant to be opened from a browser:
+#   api.php, cron.php (with its key), telegram.php (Telegram's secret), assets/ (shell.js, shell.css, shell-admin.js, vendor/) and media/ (your pictures, icons and the logo).
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{QUERY_STRING} (^|&)v=[^&]+
+  RewriteRule \.(css|js)$ - [E=HUB_VERSIONED:1]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Scripts, styles and images get these here. PHP files (api.php, cron.php, telegram.php) send their own, so they are left out:
+  # the same header twice, or two different values, can make a browser ignore it.
+  <FilesMatch "^(?!.*\.php$)">
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "same-origin"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+    Header always set X-Robots-Tag "noindex, nofollow"
+  </FilesMatch>
+  # Versioned files (shell.js?v=1.29.0) never change under that address: browsers keep them, no check on every page.
+  # Anything asked for without a version is still checked each time.
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "no-cache" env=!HUB_VERSIONED
+    Header set Cache-Control "public, max-age=31536000, immutable" env=HUB_VERSIONED
+  </FilesMatch>
+  # The site logo gets a new file name every time it changes, so browsers can keep each copy for good
+  <FilesMatch "^logo-[a-z0-9]+\.(png|jpg|webp|gif|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/css application/javascript text/javascript application/json
+</IfModule>
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/css application/javascript text/javascript application/json
+</IfModule>
+
+# Helper files that only other PHP files load: never opened on their own
+<FilesMatch "^config\.php$">
+  Require all denied
+</FilesMatch>
+<FilesMatch "(^\.|\.(bak|old|orig|tmp|log|sql|zip|md|ini|inc|sh|lock|swp|dist|ya?ml|json)$|~$|^error_log(\.[0-9]+)?$|^php_errorlog$|^README\.txt$)">
+  Require all denied
+</FilesMatch>

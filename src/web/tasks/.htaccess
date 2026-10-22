@@ -1,0 +1,22 @@
+DirectoryIndex index.html
+Options -Indexes
+<FilesMatch "^lib\.php$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+<IfModule mod_headers.c>
+  # Not for PHP files: api.php sends its own, and the same header twice (or two values) can make a browser ignore it.
+  <FilesMatch "^(?!.*\.php$)">
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "no-referrer"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

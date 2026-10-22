@@ -1,0 +1,305 @@
+/* Hub shell: the shared bar (top, side or dock), login, Settings, Backup,
+   and the AMOLED + gold look applied over each page's own colours. */
+:root{
+  --ix-accent:#ffc21a; --ix-ink:#000;
+  --ix-bg:#000; --ix-s1:#0e0e0e; --ix-s2:#161616; --ix-s3:#1f1f1f; --ix-line:#262626; --ix-line2:#333;
+  --ix-tx:#f2f2f2; --ix-mu:#a0a0a0; --ix-mu2:#6e6e6e; --ix-ok:#5fd68a; --ix-err:#ff8a8a;
+  --ix-good:#22c55e; --ix-bad:#ef4444;   /* Backup icon: green = fine, red = a backup is due */
+  --ix-soft:color-mix(in srgb,var(--ix-accent) 12%,transparent);
+  --ix-soft2:color-mix(in srgb,var(--ix-accent) 20%,transparent);
+  --ix-dim:color-mix(in srgb,var(--ix-accent) 55%,#000);
+  --ix-font:"Trebuchet MS","Lucida Grande","Lucida Sans Unicode",Tahoma,system-ui,sans-serif;
+  --ix-field:#1c1c1c;   /* search box: a little lighter than the page surfaces */
+  --ix-top:52px; --ix-side:216px; --ix-dock:76px;
+}
+html[data-theme="light"]{
+  --ix-field:#ffffff;
+  --ix-bg:#f6f5f1; --ix-s1:#ffffff; --ix-s2:#f1efe9; --ix-s3:#e8e5dd; --ix-line:#e2dfd6; --ix-line2:#d3cfc4;
+  --ix-tx:#141414; --ix-mu:#5f5b54; --ix-mu2:#8a867f; --ix-ok:#1f7a4d; --ix-err:#b3261e;
+  --ix-good:#16a34a; --ix-bad:#dc2626;
+  --ix-dim:color-mix(in srgb,var(--ix-accent) 70%,#000);
+}
+/* ---------- room for the bar ---------- */
+html[data-ix-bar][data-ix-nav="top"] body{padding-top:var(--ix-top)!important}
+html[data-ix-bar][data-ix-nav="side"] body{padding-left:var(--ix-side)!important}
+html[data-ix-bar][data-ix-nav="dock"] body{padding-bottom:calc(var(--ix-dock) + 18px)!important}
+html[data-ix-app="home"][data-ix-bar] body{padding:0!important}
+/* the start page sits under the bar */
+@media (max-width:760px){html[data-ix-bar][data-ix-nav="side"] body{padding-left:0!important;padding-top:var(--ix-top)!important}html[data-ix-bar][data-ix-nav="dock"] body{padding-bottom:calc(var(--ix-dock) + 8px)!important}}
+/* ---------- the bar ---------- */
+#ix-bar,#ix-bar *{box-sizing:border-box}
+#ix-bar{position:fixed;z-index:2147483000;font:15px/1.2 var(--ix-font);color:var(--ix-tx);-webkit-font-smoothing:antialiased;view-transition-name:ix-bar}
+html.ix-vt #ix-bar{view-transition-name:none}
+#ix-bar a,#ix-bar button{font:inherit;color:inherit;text-decoration:none;background:none;border:0;cursor:pointer}
+#ix-bar svg,#ix-pop svg,#ix-spot svg,#ix-sres svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ix-brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;letter-spacing:.4px;white-space:nowrap}
+.ix-mark{width:26px;height:26px;border-radius:7px;background:var(--ix-accent);color:var(--ix-ink);display:grid;place-items:center;font-size:14px;font-weight:700}
+.ix-logo{width:28px;height:28px;object-fit:contain;border-radius:7px;display:block}
+.ix-links{display:flex;gap:4px}
+#ix-bar .ix-links a{display:flex;align-items:center;gap:8px;height:36px;padding:0 13px;border-radius:9px;font-weight:700;color:var(--ix-bartx,var(--ix-mu))!important;white-space:nowrap;transition:color .15s,background-color .15s}
+#ix-bar .ix-links a:hover,#ix-bar .ix-links a:focus-visible{color:var(--ix-accent)!important;background:var(--ix-soft)}
+/* hover: the accent color from Appearance,like the icons */
+.ix-links a[aria-current="page"]{color:var(--ix-accent)!important;background:var(--ix-soft)}
+.ix-tools{display:flex;align-items:center;gap:4px;margin-left:auto}
+.ix-ib{position:relative;width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--ix-bartx,var(--ix-mu))!important;transition:color .15s,background-color .15s}
+.ix-ib:hover{color:var(--ix-tx)!important;background:var(--ix-s2)}
+.ix-tools .ix-ib:hover{color:var(--ix-accent)!important;background:var(--ix-soft)}
+/* hover: the accent color from Appearance */
+.ix-tools .ix-ib:active{transform:scale(.94)}
+.ix-ib.on{color:var(--ix-accent)!important;background:var(--ix-soft)}
+.ix-only-dock{display:none}
+:is(#ix-bar,#ix-spot) .ix-search{position:relative;display:flex;align-items:center;flex:1 1 260px;max-width:460px;min-width:0;margin:0 auto}
+:is(#ix-bar,#ix-spot) .ix-search>svg{position:absolute;left:13px;width:16px;height:16px;color:var(--ix-mu2);pointer-events:none}
+:is(#ix-bar,#ix-spot) .ix-search input{width:100%;height:38px;border-radius:999px;border:1px solid var(--ix-line2);background:var(--ix-field);color:var(--ix-tx);padding:0 46px 0 38px!important;margin:0;box-shadow:none;font:inherit;font-size:15px;transition:border-color .15s,box-shadow .15s}
+:is(#ix-bar,#ix-spot) .ix-search input::placeholder{color:var(--ix-mu2)}
+:is(#ix-bar,#ix-spot) .ix-search input::-webkit-search-cancel-button{display:none}
+:is(#ix-bar,#ix-spot) .ix-search input:focus{outline:none;border-color:var(--ix-accent);box-shadow:0 0 0 3px var(--ix-soft)}
+:is(#ix-bar,#ix-spot) .ix-search kbd{position:absolute;right:46px;font:12px/1 var(--ix-font);color:var(--ix-mu2);border:1px solid var(--ix-line2);border-radius:5px;padding:3px 6px;pointer-events:none}
+:is(#ix-bar,#ix-spot) .ix-search input:focus+kbd,:is(#ix-bar,#ix-spot) .ix-search input:not(:placeholder-shown)+kbd{display:none}
+#ix-bar .ix-fbtn,#ix-spot .ix-fbtn{position:absolute;right:5px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:0;background:none;color:var(--ix-mu2);cursor:pointer;transition:color .15s,background-color .15s}
+#ix-bar .ix-fbtn:hover,#ix-spot .ix-fbtn:hover{color:var(--ix-tx);background:var(--ix-s3)}
+#ix-bar .ix-fbtn svg,#ix-spot .ix-fbtn svg{width:16px;height:16px}
+#ix-bar :focus-visible,#ix-dlg :focus-visible,#ix-pop :focus-visible{outline:2px solid var(--ix-accent);outline-offset:2px}
+/* top */
+html[data-ix-nav="top"] #ix-bar{top:0;left:0;right:0;height:var(--ix-top);display:flex;align-items:center;gap:16px;padding:0 16px;
+  background:color-mix(in srgb,var(--ix-barbg,var(--ix-bg)) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--ix-line)}
+html[data-ix-nav="top"] .ix-tools{margin-left:0}
+html[data-ix-app="home"][data-ix-nav="top"] #ix-bar{background:color-mix(in srgb,var(--ix-barbg,#000) 55%,transparent);border-color:rgba(255,255,255,.08);color:#f2f2f2}
+/* side */
+html[data-ix-nav="side"] #ix-bar{top:0;bottom:0;left:0;width:var(--ix-side);display:flex;flex-direction:column;gap:6px;padding:16px 12px;
+  background:var(--ix-barbg,var(--ix-bg));border-right:1px solid var(--ix-line)}
+html[data-ix-nav="side"] .ix-brand{padding:4px 6px 12px;order:0}
+html[data-ix-nav="side"] #ix-bar .ix-search{order:1;flex:none;width:100%;max-width:none;margin:0 0 10px}
+html[data-ix-nav="side"] .ix-links{order:2;flex-direction:column}
+html[data-ix-nav="side"] .ix-links a{height:42px;font-size:15.5px}
+html[data-ix-nav="side"] .ix-links a[aria-current="page"]{box-shadow:inset 3px 0 0 var(--ix-accent)}
+html[data-ix-nav="side"] .ix-tools{order:3;margin:auto 0 0;flex-wrap:wrap}
+html[data-ix-app="home"][data-ix-nav="side"] #ix-bar{background:rgba(0,0,0,.6);backdrop-filter:blur(14px);border-color:rgba(255,255,255,.08);color:#f2f2f2}
+/* dock: no search box (the search icon opens it) */
+html[data-ix-nav="dock"] #ix-bar{left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:7px;border-radius:20px;
+  background:color-mix(in srgb,var(--ix-barbg,var(--ix-s1)) 94%,transparent);backdrop-filter:blur(14px);border:1px solid var(--ix-line2);box-shadow:0 10px 40px rgba(0,0,0,.6)}
+html[data-ix-nav="dock"] .ix-brand,html[data-ix-nav="dock"] #ix-bar .ix-search{display:none}
+html[data-ix-nav="dock"] .ix-only-dock{display:grid}
+html[data-ix-nav="dock"] .ix-links a{flex-direction:column;justify-content:center;gap:4px;width:72px;height:58px;padding:0;font-size:11.5px;border-radius:14px}
+html[data-ix-nav="dock"] .ix-links a svg{width:21px;height:21px}
+html[data-ix-nav="dock"] .ix-tools{margin:0 0 0 4px;padding-left:6px;border-left:1px solid var(--ix-line)}
+html[data-ix-app="home"][data-ix-nav="dock"] #ix-bar{background:color-mix(in srgb,var(--ix-barbg,#000) 55%,transparent);color:#f2f2f2}
+.ix-menu{display:none}
+@media (max-width:760px){html[data-ix-nav="top"] #ix-bar,html[data-ix-nav="side"] #ix-bar{top:0;left:0;right:0;bottom:auto;width:auto;height:var(--ix-top);flex-direction:row;align-items:center;padding:0 8px;gap:4px;border-right:0;border-bottom:1px solid var(--ix-line)}html[data-ix-nav="side"] .ix-brand{padding:0;order:0}html[data-ix-nav="top"] .ix-links,html[data-ix-nav="side"] .ix-links{display:none}html[data-ix-nav="top"] #ix-bar .ix-search,html[data-ix-nav="side"] #ix-bar .ix-search{display:none}html[data-ix-nav="top"] .ix-only-dock,html[data-ix-nav="side"] .ix-only-dock{display:grid}html[data-ix-nav="top"] .ix-tools,html[data-ix-nav="side"] .ix-tools{margin:0 0 0 auto;flex-wrap:nowrap;order:3}.ix-menu{display:grid}html[data-ix-nav="dock"] .ix-menu{display:none}html[data-ix-nav="dock"] #ix-bar{left:8px;right:8px;bottom:8px;transform:none;flex-wrap:wrap;justify-content:space-between;row-gap:2px}html[data-ix-nav="dock"] .ix-links{flex:1 1 100%;justify-content:space-around}html[data-ix-nav="dock"] .ix-links a{width:auto;flex:1;min-width:0;height:48px;font-size:10.5px}html[data-ix-nav="dock"] .ix-tools{flex:1 1 100%;margin:0;padding:4px 0 0;border-left:0;border-top:1px solid var(--ix-line);justify-content:space-around}:root{--ix-dock:112px}}
+@media (max-width:480px){.ix-bname{display:none}}
+/* the page list that slides in on phones (top bar and sidebar styles) */
+#ix-drawer{position:fixed;inset:0;z-index:2147483001;display:none}
+#ix-drawer.open{display:block}
+#ix-drawer .ix-scrim,#ix-spot .ix-scrim{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+#ix-drawer nav{position:absolute;top:0;bottom:0;left:0;width:min(280px,82vw);background:var(--ix-s1);border-right:1px solid var(--ix-line2);padding:18px 12px;display:flex;flex-direction:column;gap:4px;font:16px var(--ix-font);color:var(--ix-tx);animation:ix-slide .2s ease-out}
+#ix-drawer nav a{display:flex;align-items:center;gap:12px;height:46px;padding:0 12px;border-radius:10px;color:var(--ix-mu);text-decoration:none}
+#ix-drawer nav a[aria-current="page"],#ix-drawer nav a:hover{color:var(--ix-accent);background:var(--ix-soft)}
+#ix-drawer svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@keyframes ix-slide{from{transform:translateX(-30px);opacity:0}to{transform:none;opacity:1}}
+/* small popup menu (Edit, Settings / Log out) */
+#ix-pop{position:fixed;z-index:2147483004;min-width:210px;max-width:calc(100vw - 16px);padding:6px;border-radius:14px;background:var(--ix-s1);border:1px solid var(--ix-line2);box-shadow:0 18px 50px rgba(0,0,0,.55);font:14.5px var(--ix-font);color:var(--ix-tx);animation:ix-pop .12s ease-out}
+#ix-pop button{display:flex;align-items:center;gap:11px;width:100%;height:40px;padding:0 12px;border:0;border-radius:9px;background:none;color:inherit;font:inherit;cursor:pointer;text-align:left}
+#ix-pop button:hover,#ix-pop button:focus-visible{background:var(--ix-s3)}
+#ix-pop button.danger{color:var(--ix-err)}
+#ix-pop button.accent{color:var(--ix-accent);font-weight:600}
+#ix-pop hr{border:0;border-top:1px solid var(--ix-line);margin:5px 4px}
+#ix-pop .ix-gap{width:18px;flex:none}
+@keyframes ix-pop{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+/* search results (under the bar's box, and in the full-screen search) */
+.ix-panel{position:fixed;z-index:2147483004;max-height:min(70vh,520px);overflow:auto;padding:6px;border-radius:14px;background:var(--ix-s1);border:1px solid var(--ix-line2);box-shadow:0 18px 50px rgba(0,0,0,.55);font:14.5px var(--ix-font);color:var(--ix-tx);animation:ix-pop .12s ease-out}
+.ix-panel.inline{position:static;max-height:min(60vh,460px);box-shadow:none;animation:none;margin-top:8px}
+.ix-panel[hidden]{display:none}
+.ix-rh{padding:8px 10px 4px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ix-mu2)}
+.ix-r{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;color:inherit!important;text-decoration:none}
+.ix-r[aria-selected="true"],.ix-r:hover{background:var(--ix-s3)}
+.ix-r img{width:20px;height:20px;border-radius:5px;object-fit:contain;flex:none}
+.ix-d{width:10px;height:10px;border-radius:50%;background:var(--ix-accent);flex:none;margin:0 5px}
+.ix-rt{display:flex;flex-direction:column;min-width:0}
+.ix-rt b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ix-rt span{font-size:12.5px;color:var(--ix-mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ix-panel mark{background:var(--ix-soft2);color:inherit;border-radius:3px;padding:0 1px}
+#ix-spot{position:fixed;inset:0;z-index:2147483003;display:none;font:15px var(--ix-font);color:var(--ix-tx)}
+#ix-spot.open{display:block}
+.ix-spotbox{position:absolute;left:50%;top:max(12px,8vh);transform:translateX(-50%);width:min(560px,calc(100vw - 20px))}
+#ix-spot .ix-spotbox .ix-search{max-width:none;margin:0}
+#ix-spot .ix-spotbox .ix-search input{height:48px;font-size:16px}
+/* search filters inside the results panel */
+.ix-fs{padding:8px 8px 6px;border-bottom:1px solid var(--ix-line);margin-bottom:4px}
+.ix-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ix-chips button{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--ix-line2);background:none;color:var(--ix-mu);font:inherit;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:color .15s,background-color .15s,border-color .15s}
+.ix-chips button:hover{color:var(--ix-tx);border-color:var(--ix-mu2)}
+.ix-chips button[aria-pressed="true"]{background:var(--ix-accent);border-color:var(--ix-accent);color:var(--ix-ink);font-weight:700}
+.ix-chips .ix-more{margin-left:auto;border-color:transparent}
+.ix-chips .ix-more svg{width:14px;height:14px}
+.ix-fx{display:flex;flex-direction:column;gap:10px;margin-top:10px;padding:10px;border-radius:10px;background:var(--ix-s2)}
+.ix-fl{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--ix-mu)}
+.ix-fl select{max-width:60%;height:32px;border-radius:8px;border:1px solid var(--ix-line2);background:var(--ix-bg);color:var(--ix-tx);font:inherit;font-size:13px;padding:0 8px}
+.ix-fcs{display:flex;flex-wrap:wrap;gap:8px 16px}
+.ix-fc{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ix-tx);cursor:pointer}
+.ix-fc input{accent-color:var(--ix-accent);width:15px;height:15px;margin:0}
+.ix-reset{align-self:flex-start;border:0;background:none;color:var(--ix-accent);font:inherit;font-size:13px;cursor:pointer;padding:0}
+.ix-none{padding:18px 12px;text-align:center;color:var(--ix-mu);font-size:13.5px}
+/* smooth page changes and theme changes: the old page eases out,the new one eases in; the bar itself never moves */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:ix-out .16s cubic-bezier(.4,0,1,1) both}
+::view-transition-new(root){animation:ix-in .3s cubic-bezier(0,0,.2,1) both}
+@keyframes ix-out{to{opacity:0;transform:translateY(-6px) scale(.998)}}
+@keyframes ix-in{from{opacity:0;transform:translateY(10px)}}
+::view-transition-group(ix-bar){animation:none}
+::view-transition-old(ix-bar){display:none}
+::view-transition-new(ix-bar){animation:none}
+html.ix-vt::view-transition-old(root){animation:ix-fade-out .32s ease both}
+html.ix-vt::view-transition-new(root){animation:ix-fade-in .32s ease both}
+@keyframes ix-fade-out{to{opacity:0}}
+@keyframes ix-fade-in{from{opacity:0}}
+html.ix-fade,html.ix-fade *,html.ix-fade *::before,html.ix-fade *::after{transition:background-color .3s ease,color .3s ease,border-color .3s ease,fill .3s ease,stroke .3s ease,box-shadow .3s ease!important}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}#ix-pop,.ix-panel,#ix-drawer nav{animation:none}}
+/* ---------- dialogs ---------- */
+#ix-dlg{position:fixed;inset:0;z-index:2147483002;display:none;place-items:center;background:rgba(0,0,0,.65);padding:16px;font:15px/1.45 var(--ix-font);color:var(--ix-tx);-webkit-font-smoothing:antialiased}
+#ix-dlg.open{display:grid}
+#ix-dlg *{box-sizing:border-box}
+#ix-dlg .ix-box{animation:ix-pop .16s ease-out;width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--ix-s1);border:1px solid var(--ix-line2);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.7);padding:26px}
+#ix-dlg .ix-box.wide{width:min(940px,100%);padding:0;display:flex;flex-direction:column;height:min(680px,calc(100dvh - 32px))}
+#ix-dlg h2{margin:0 0 6px;font-size:21px}
+#ix-dlg h3{margin:20px 0 8px;font-size:14px;color:var(--ix-accent)}
+#ix-dlg h3:first-child{margin-top:0}
+#ix-dlg p{margin:0 0 12px;color:var(--ix-mu);font-size:14px}
+#ix-dlg label{display:block;font-size:13px;color:var(--ix-mu);margin:12px 0 6px}
+#ix-dlg input[type=text],#ix-dlg input[type=password],#ix-dlg input[type=number],#ix-dlg select{width:100%;height:44px;border-radius:10px;border:1px solid var(--ix-line2);background:var(--ix-bg);color:var(--ix-tx);padding:0 12px;font:inherit;font-size:16px}
+#ix-dlg input:focus,#ix-dlg select:focus{outline:none;border-color:var(--ix-accent);box-shadow:0 0 0 3px var(--ix-soft)}
+#ix-dlg .ix-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+#ix-dlg .ix-btn{height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--ix-line2);background:var(--ix-s2);color:var(--ix-tx);font:inherit;font-size:14.5px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+#ix-dlg .ix-btn:hover{border-color:var(--ix-mu2)}
+#ix-dlg .ix-btn.pri{background:var(--ix-accent);border-color:var(--ix-accent);color:var(--ix-ink);font-weight:700}
+#ix-dlg .ix-btn.danger{color:var(--ix-err)}
+#ix-dlg .ix-btn:disabled{opacity:.5;cursor:default}
+#ix-dlg .ix-err{color:var(--ix-err);font-size:13.5px;min-height:18px;margin:8px 0 0}
+#ix-dlg .ix-note{font-size:12.5px;color:var(--ix-mu2);margin-top:10px}
+#ix-dlg .ix-ico{width:50px;height:50px;border-radius:14px;background:var(--ix-soft);color:var(--ix-accent);display:grid;place-items:center;margin-bottom:14px}
+#ix-dlg .ix-ico svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ix-dlg code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px;background:var(--ix-bg);border:1px solid var(--ix-line);border-radius:6px;padding:2px 6px;color:var(--ix-tx);word-break:break-all}
+#ix-dlg .ix-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:700px){#ix-dlg{padding:0;place-items:end stretch}#ix-dlg .ix-box{border-radius:18px 18px 0 0;width:100%}#ix-dlg .ix-box.wide{height:calc(100dvh - 20px)}}
+#ix-dlg input[type=checkbox],#ix-dlg input[type=radio]{accent-color:var(--ix-accent);width:17px;height:17px;margin:0}
+#ix-dlg .ix-ver .ix-btn{height:32px;font-size:13px;margin-left:auto}
+#ix-toast{position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-14px);opacity:0;z-index:2147483003;background:var(--ix-s1);color:var(--ix-tx);border:1px solid var(--ix-line2);border-left:3px solid var(--ix-accent);padding:11px 16px;border-radius:10px;font:14px var(--ix-font);box-shadow:0 10px 30px rgba(0,0,0,.5);transition:.2s;pointer-events:none;max-width:calc(100vw - 32px)}
+#ix-toast.on{opacity:1;transform:translateX(-50%)}
+/* messages appear at the top of the page,just under the bar,so they never cover the editing bars at the bottom */
+html[data-ix-bar][data-ix-nav="top"] #ix-toast,html[data-ix-bar][data-ix-nav="top"] .toast{top:calc(var(--ix-top) + 14px)!important}
+html:has(dialog[open],#ix-dlg.open) #ix-toast,html:has(dialog[open],#ix-dlg.open) .toast{top:auto!important;bottom:24px}
+/* while a dialog is open,the message goes below it */
+#ix-fontc{margin-top:8px}
+/* ---------- PAGE CONTRACT: a page marks its own controls,the bar takes them over ----------
+   data-hub="toggle"  the page's Edit button            data-hub="item"   one entry of the pencil menu (data-hub-label, data-hub-order)
+   data-hub="done"    the page's Done button (stays)    data-hub="logout" the page's own Log out button
+   data-hub="hide"    anything the bar replaces (theme, search, timers, backup, password...)
+   While the bar is on,everything marked (except "done") is hidden but still clickable by script. */
+html[data-ix-bar] [data-hub]:not([data-hub="done"]){display:none!important}
+html[data-ix-app="home"]:not([data-ix-bar]) #editBtn{display:none!important}
+/* no bar: the corner gear replaces the Edit button */
+html[data-ix-bar][data-ix-app="info"] .top{display:none}
+/* its title,search and buttons are all replaced by the bar */
+html[data-ix-app="tools"] .theme-toggle,html[data-ix-app="tools"] .search,html[data-ix-app="tools"] .search-lg{display:none!important}
+/* Tools' own theme switch and search boxes: the bar has them */
+html[data-ix-app="home"][data-ix-bar] .corner{top:auto!important;bottom:max(14px,env(safe-area-inset-bottom))!important}
+html[data-ix-app="home"][data-ix-bar][data-ix-nav="dock"] .corner{bottom:auto!important;top:max(14px,env(safe-area-inset-top))!important}
+/* the pages' own bottom edit bars move up above the dock */
+html[data-ix-nav="dock"][data-ix-app="links"] .editbar,html[data-ix-nav="dock"][data-ix-app="info"] #ebar,html[data-ix-nav="dock"][data-ix-app="home"] .toolbar{margin-bottom:calc(var(--ix-dock) + 14px)!important}
+html[data-ix-nav="dock"][data-ix-app="home"] .toolbar{bottom:calc(var(--ix-dock) + 24px)!important;margin:0!important}
+/* Tools has its own sidebar: in the top-bar and dock styles it stays; it just starts below the bar */
+html[data-ix-app="tools"][data-ix-nav="top"] body{padding-top:0!important}
+html[data-ix-app="tools"][data-ix-nav="top"] #root{padding-top:var(--ix-top)}
+html[data-ix-app="tools"][data-ix-nav="top"] aside,html[data-ix-app="tools"][data-ix-nav="top"] [class*="sidebar"]{top:var(--ix-top)!important}
+/* ---------- the unified look: AMOLED black + gold (Balanced),on when Settings > Appearance says so ---------- */
+html[data-ix-look]{--ix-on:1}
+/* Links */
+html[data-ix-look][data-ix-app="links"]:not([data-theme="light"]){--bg:#000!important;--accent:var(--ix-accent)!important;--ribbon:var(--ix-accent);--on-accent:var(--ix-ink)!important;
+  --raise:#0e0e0e!important;--panel:#0e0e0e!important;--hover:#1a1a1a!important;--line:#232323!important;--line2:#303030!important}
+html[data-ix-look][data-ix-app="links"][data-theme="light"]{--accent:#a5701c!important;--ribbon:#c99400}
+/* ribbon and column colors are not forced: Column colors in Links sets them */
+/* Info: tab colours stay; buttons,headings,highlights turn gold */
+html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]){--bg:#000!important;--box:#0e0e0e!important;--panel:#121212!important;--field:#000!important;--line:#262626!important;--border:#333!important;--hover:#1c1c1c!important;
+  --inv:var(--ix-accent)!important;--inv-fg:var(--ix-ink)!important;--mark:color-mix(in srgb,var(--ix-accent) 38%,transparent)!important;
+  --timer-fg:var(--ix-accent)!important;--timer-bg:var(--ix-soft)!important;--timer-line:var(--ix-dim)!important}
+html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]) .md h1,html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]) .md h2,html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]) .md h3{color:var(--ix-accent)}
+/* Cards: colour-coded columns stay; headings and main buttons turn gold */
+html[data-ix-look][data-ix-app="cards"]:not([data-theme="light"]){--bg:#000!important;--panel:#0e0e0e!important;--field:#000!important;--line:#232323!important;--btn-bg:var(--ix-accent)!important;--btn-fg:var(--ix-ink)!important}
+html[data-ix-look][data-ix-app="cards"]:not([data-theme="light"]) .row.head,html[data-ix-look][data-ix-app="cards"]:not([data-theme="light"]) .row.head *{color:var(--ix-accent)!important}
+/* Home: the sheets and buttons follow the bar's theme */
+html[data-ix-app="home"][data-theme="light"]{--s-bg:#fff;--s-bg2:#f4f4f1;--s-bg3:#ecece7;--s-ink:#15171c;--s-mute:#6b6f78;--s-line:#e6e5e0;--accent:#2b59ff;--accent-ink:#fff}
+html[data-ix-app="home"][data-theme="dark"]{--s-bg:#17181d;--s-bg2:#202228;--s-bg3:#2a2c33;--s-ink:#f2f2f0;--s-mute:#9a9da6;--s-line:#2d2f37}
+html[data-ix-look][data-ix-app="home"][data-theme="dark"]{--s-bg:#0e0e0e!important;--s-bg2:#161616!important;--s-bg3:#1f1f1f!important;--s-line:#262626!important}
+html[data-ix-look][data-ix-app="home"]{--accent:var(--ix-accent)!important;--accent-ink:var(--ix-ink)!important}
+/* Tools: already gold,goes pure black */
+html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!important;--sidebar:#000!important;--card:#0e0e0e!important;--card-2:#161616!important;--gold:var(--ix-accent)!important}
+/* Cards private screen (shown to visitors) */
+#ix-private{max-width:420px;margin:12vh auto;text-align:center;font:16px/1.5 var(--ix-font);color:var(--ix-tx);padding:0 20px}
+#ix-private .ix-ico{width:64px;height:64px;border-radius:18px;background:var(--ix-soft);color:var(--ix-accent);display:grid;place-items:center;margin:0 auto 18px}
+#ix-private svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ix-private h1{font-size:24px;margin:0 0 8px}
+#ix-private p{color:var(--ix-mu);margin:0 0 22px}
+#ix-private button{height:44px;padding:0 26px;border-radius:11px;border:0;background:var(--ix-accent);color:var(--ix-ink);font:700 15px var(--ix-font);cursor:pointer}
+@media (prefers-reduced-motion:reduce){#ix-toast{transition:none}}
+/* ---------- smoothness everywhere ----------
+   Low-specificity defaults,so a page's own transitions still win where it has them. */
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}:where(button,a,input,select,textarea,summary,label,[role="button"],[role="tab"]){transition:background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease,opacity .18s ease,transform .18s ease}:where(img){transition:opacity .25s ease}:where(button:not(:disabled),[role="button"]):active{transform:scale(.985)}dialog[open]{animation:ix-pop .2s cubic-bezier(0,0,.2,1)}dialog[open]::backdrop{animation:ix-fade-in .2s ease}.sheet[open]{animation:ix-pop .22s cubic-bezier(0,0,.2,1)}html[data-ix-app="info"] main.boxes:not([hidden]),html[data-ix-app="tasks"] :is(#vlist,#van,#vdone):not([hidden]),html[data-ix-app="links"] #grid.swap,html[data-ix-app="tools"] #main>*{animation:ix-rise .28s cubic-bezier(0,0,.2,1)}#ix-toast{transition:opacity .25s ease,transform .25s ease}}
+@keyframes ix-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+/* ---------- Backup icon: green,red while a backup is due ---------- */
+.ix-tools .ix-ib.ix-bk,.ix-tools .ix-ib.ix-bk:hover{color:var(--ix-good)!important}
+.ix-tools .ix-ib.ix-bk:hover{background:color-mix(in srgb,var(--ix-good) 14%,transparent)}
+.ix-tools .ix-ib.ix-bk.due,.ix-tools .ix-ib.ix-bk.due:hover{color:var(--ix-bad)!important;position:relative}
+.ix-tools .ix-ib.ix-bk.due:hover{background:color-mix(in srgb,var(--ix-bad) 16%,transparent)}
+.ix-tools .ix-ib.ix-bk.due::after{content:"";position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--ix-bad);box-shadow:0 0 0 2px var(--ix-bg);animation:ix-pulse 2s ease-in-out infinite}
+@keyframes ix-pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.ix-tools .ix-ib.ix-bk.due::after{animation:none}}
+#ix-sfnote{margin-right:auto;align-self:center;font-size:13px;color:var(--ix-mu)}
+#ix-sfnote.ix-dirty{color:var(--ix-accent);font-weight:700}
+#ix-sfnote.ix-dirty::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ix-accent);margin-right:7px;vertical-align:1px}
+#ix-dlg #ix-sfnote~.ix-err:empty{display:none}
+#ix-dlg .ix-btn.pri.pulse{box-shadow:0 0 0 3px var(--ix-soft)}
+/* ---------- login: waiting for Approve in Telegram ---------- */
+#ix-dlg .ix-apw{display:flex;align-items:center;gap:10px;justify-content:center;padding:14px;border:1px solid var(--ix-line);border-radius:12px;margin:12px 0;font-weight:700;color:var(--ix-tx)}
+.ix-spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--ix-line2);border-top-color:var(--ix-accent);animation:ix-spin 0.9s linear infinite}
+@keyframes ix-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ix-spin{animation:none}}
+#ix-dlg .ix-chk{display:flex;align-items:center;gap:9px;margin:10px 0;font-size:14px;color:var(--ix-tx);cursor:pointer}
+#ix-dlg .ix-chk input{width:17px;height:17px;accent-color:var(--ix-accent);margin:0;flex:none}
+#ix-dlg details.ix-apc{margin:10px 0;font-size:14px}
+#ix-dlg details.ix-apc summary{cursor:pointer;color:var(--ix-accent);font-weight:600}
+#ix-dlg details.ix-apc form{margin-top:10px}
+#ix-dlg details.ix-apc button{margin-top:8px}
+.ix-wdot{width:9px;height:9px;border-radius:50%;background:var(--ix-mu2);display:inline-block}
+.ix-wdot.up{background:var(--ix-good)}
+.ix-wdot.down{background:var(--ix-bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--ix-bad) 25%,transparent)}
+#ix-dlg .ix-chk small{color:var(--ix-mu2);font-size:12.5px}
+/* Text sizes (Info, Cards): the same layout as Links' own Text sizes */
+#ix-dlg .ix-tsf{margin-bottom:12px}
+#ix-dlg .ix-tsf label{margin:0 0 6px}
+#ix-dlg .ix-tsr{display:flex;align-items:center;gap:12px}
+#ix-dlg .ix-tsr input[type=range]{flex:1;accent-color:var(--ix-accent);padding:0;border:0;background:none;height:auto}
+#ix-dlg .ix-tsr output{min-width:48px;text-align:right;color:var(--ix-mu);font-variant-numeric:tabular-nums}
+#ix-dlg .ix-tss{margin:4px 0 14px;padding:12px 14px;border:1px solid var(--ix-line2);border-radius:8px;background:var(--ix-bg,#000);display:grid;gap:8px;color:var(--ix-tx)}
+#ix-dlg .ix-tss-info [data-s="tab"]{font-weight:700;text-transform:uppercase;letter-spacing:.02em}
+#ix-dlg .ix-tss-info [data-s="head"]{font-weight:700;color:var(--ix-accent);border-bottom:1px solid var(--ix-line);padding-bottom:6px}
+#ix-dlg .ix-tss-cards [data-s="title"]{font-weight:800;letter-spacing:.01em}
+#ix-dlg .ix-tss-cards [data-s="box"]{font-weight:700;color:var(--ix-accent)}
+/* Tools' first page keeps its own search in the hero (the bar search covers the rest of Tools) */
+html[data-ix-app="tools"] .tt-hero .search{display:block!important}
+@keyframes ix-pane{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#ix-dlg.open{animation:ix-fade-in .18s ease}
+#ix-dlg .ix-box{animation:ix-box-in .24s cubic-bezier(.2,.8,.2,1)}
+@keyframes ix-box-in{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+#ix-dlg.closing{animation:ix-fade-out .15s ease forwards}
+#ix-dlg.closing .ix-box{animation:ix-sink .15s ease forwards}
+@keyframes ix-sink{to{opacity:0;transform:translateY(8px) scale(.985)}}
+/* folded parts open smoothly where the browser can animate height */
+@supports (interpolate-size:allow-keywords){#ix-dlg{interpolate-size:allow-keywords}}
+@media (prefers-reduced-motion:reduce){#ix-dlg.open,#ix-dlg .ix-box,#ix-dlg.closing,#ix-dlg.closing .ix-box{animation:none}}
+/* ===================== Settings as a page (web/settings/) ===================== */
+html[data-ix-app="settings"] .wrap{max-width:1240px;margin:0 auto;padding:18px 18px 40px}
+.ix-ld{color:var(--ix-mu)}
+/* the Settings page paints its own page,like every other page does: dark and light follow the theme,and the Colors you chose */
+html[data-ix-app="settings"]{color-scheme:dark}
+html[data-ix-app="settings"][data-theme="light"]{color-scheme:light}
+html[data-ix-app="settings"] body{margin:0;background:var(--ix-bg);color:var(--ix-tx);font-family:var(--ix-font)}

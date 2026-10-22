@@ -1,0 +1,33 @@
+# Shared rules for everything inside /web. Safe for every subfolder:
+# no DirectoryIndex or rewrite rules here (each page keeps its own).
+Options -Indexes
+
+<IfModule mod_headers.c>
+  # Pages, scripts and styles get these here. PHP files (the APIs, the start page) send their own, so they are left out:
+  # the same header twice, or two different values, can make a browser ignore it.
+  <FilesMatch "^(?!.*\.php$)">
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "same-origin"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+    Header always set X-Robots-Tag "noindex, nofollow"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript text/javascript application/json image/svg+xml
+</IfModule>
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css application/javascript text/javascript application/json image/svg+xml
+</IfModule>
+
+# Helper files that only other PHP files load: never opened on their own
+<FilesMatch "^(lib|config)\.php$">
+  Require all denied
+</FilesMatch>
+# Never serve leftovers, backups or hidden files
+<FilesMatch "(^\.|\.(bak|old|orig|tmp|log|sql|zip|md|ini|inc|sh|lock|swp|dist|ya?ml)$|~$|^error_log(\.[0-9]+)?$|^php_errorlog$|^README\.txt$)">
+  Require all denied
+</FilesMatch>
