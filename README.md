@@ -27,6 +27,10 @@ CHANGELOG.md         full history (also shipped inside every zip)
 
 Build locally: `npm i esbuild && python3 tools/build.py`. The zip is always named with dots (`site-update-1.37.0.zip`) and always contains `web/core-data/docs/CHANGELOG.md`.
 
+## Changelog
+
+The full history of every version is in [CHANGELOG.md](CHANGELOG.md) and on the [project website](https://jackpison.github.io/Homebase-Hub/changelog.html). Each release page lists only what changed in that version.
+
 ## Contact
 
 Feature requests and questions: Telegram [@Jackpison](https://t.me/Jackpison). Bugs: [GitHub Issues](https://github.com/Jackpison/Homebase-Hub/issues).
