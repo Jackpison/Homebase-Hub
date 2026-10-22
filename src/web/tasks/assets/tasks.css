@@ -1,3 +1,11 @@
+/*! Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 :root{color-scheme:dark;--bg:#000;--box:#0e0e0e;--panel:#161616;--line:#262626;--fg:#f2f2f2;--mute:#a0a0a0;--field:#000;
   --acc:var(--ix-accent,#ffc21a);--ink:#000;
   --late:#ff6b6b;--today:#ff9f43;--soon:var(--acc);--good:#5fd68a;--pause:#7a7a7a;--on:#4cc9f0;--off:#b392f0;

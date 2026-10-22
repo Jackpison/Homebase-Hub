@@ -1,5 +1,13 @@
 <?php
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
+/* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 /**
  * Reminders on Telegram (Settings > Telegram). Not opened from a browser: used by api.php and cron.php.
  *
@@ -186,7 +194,7 @@ function nt_card(array $t, string $url): string {
 function nt_digest(array $d, bool $force): ?string {
     [$late, $today, $soon] = nt_due_lists();
     if (!$late && !$today && !$soon && !$force) return null;
-    $site = (string)(hub_settings()['siteName'] ?? 'My Site');
+    $site = (string)(hub_settings()['siteName'] ?? 'Homebase Hub');
     $m = '📋 <b>' . nt_h($site) . ' Tasks</b>' . "\n" . nt_h(date('l, j M Y'));
     $cut = function (array $a) { return array_slice($a, 0, 20); };
     $head = function (string $icon, string $title, array $a) { $s = nt_sums($a); return "\n\n" . $icon . ' <b>' . $title . ' (' . count($a) . ')</b>' . ($s !== '' ? '  ' . nt_h($s) : ''); };
@@ -289,7 +297,7 @@ function nt_device(string $ua): string {
 function nt_security(array $c): void {
     $d = nt_load();
     if (!$d['login'] || $d['token'] === '' || $d['chat'] === '') return;
-    $site = (string)(hub_settings()['siteName'] ?? 'My Site');
+    $site = (string)(hub_settings()['siteName'] ?? 'Homebase Hub');
     $t = [
         'login'      => ['🔐', 'New Login', 'Someone logged in to your site.'],
         'locked'     => ['🚫', 'Logins Paused', 'Too many wrong passwords or codes. Logins from this address are paused for a while.'],

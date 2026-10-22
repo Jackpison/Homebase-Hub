@@ -1,5 +1,13 @@
 <?php
 declare(strict_types=1);
+/* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 require __DIR__ . '/lib.php';
 header('Cache-Control: no-cache, must-revalidate');
 $nonce = rtrim(strtr(base64_encode(random_bytes(16)), '+/', '-_'), '=');   // lets our own two data scripts run; any other inline script is blocked
@@ -54,8 +62,8 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.37.0">
-<script src="../core-data/assets/shell.js?v=1.37.0" data-app="home"></script>
+<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.38.0">
+<script src="../core-data/assets/shell.js?v=1.38.0" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <?php if ($iconPath): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php endif; ?>
 <?php if ($first && ($first['type'] ?? 'image') === 'image'): ?>

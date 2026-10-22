@@ -1,3 +1,11 @@
+/*! Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 :root{color-scheme:dark;box-sizing:border-box;--bg:#000;--box:#1a1a1a;--field:#1a1a1a;--timer-fg:#8ab4ff;--timer-bg:rgba(77,141,255,.12);--timer-line:rgba(110,160,255,.55);--mark:rgba(255,214,10,.38);--fg:#fff;--mute:#a8a8a8;--line:#333;--panel:#1a1a1a;--link:#8ab4ff;--warn:#f2c14e;--err:#ff8a8a;--inv:#fff;--inv-fg:#1a1a1a;--border:#444;--hover:#2e2e2e;--dash:#555;--danger-line:#8f3b3b;--ok:#7dd3a8;--ok-line:#2f5a45;--warn-bg:#2a2615;--warn-line:#6b5a20;--shadow:rgba(0,0,0,.5);--backdrop:rgba(0,0,0,.75);
 padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *,*::before,*::after{box-sizing:inherit}

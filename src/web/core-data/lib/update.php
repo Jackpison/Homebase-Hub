@@ -1,5 +1,13 @@
 <?php
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
+/* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 /**
  * Updates (Settings > Updates).
  *
@@ -150,7 +158,7 @@ function up_status(): array {
     return ['version' => HUB, 'hasManifest' => $man !== null, 'manifestVersion' => $man['version'] ?? null, 'php' => PHP_VERSION,
             'canInflate' => function_exists('inflate_init'), 'unwritable' => up_unwritable(),
             'free' => (int)@disk_free_space(up_root()), 'chunk' => 1048576, 'max' => UP_MAX_ZIP,
-            'staged' => $s['staged'] ?? null, 'notes' => isset($s['staged']) ? (string)($s['notes'] ?? '') : '', 'plan' => isset($s['staged']) ? ($s['plan'] ?? null) : null, 'previous' => $prev, 'last' => $s['last'] ?? null, 'autoUndo' => !isset($s['autoUndo']) || !empty($s['autoUndo'])];
+            'staged' => $s['staged'] ?? null, 'notes' => isset($s['staged']) ? (string)($s['notes'] ?? '') : '', 'plan' => isset($s['staged']) ? ($s['plan'] ?? null) : null, 'previous' => $prev, 'last' => $s['last'] ?? null, 'autoUndo' => !isset($s['autoUndo']) || !empty($s['autoUndo']), 'gh' => (function () { require_once __DIR__ . '/ghupdate.php'; return gh_info(); })()];
 }
 
 /** One piece of the upload. The pieces arrive in order; the last one completes the zip. */

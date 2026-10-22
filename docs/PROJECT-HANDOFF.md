@@ -438,10 +438,15 @@ Create the rulesets before the first release, not before the first normal push. 
 
 
 
-## 18. Update after phase 2 start (repository skeleton, 1.37.0)
+## 18. Status after 1.38.0 (the first GitHub release)
 
-- The repository skeleton now exists as a push-ready folder: `src/` (readable tree restored from `docs/src`, `manifest.json` removed because the build writes it), `tools/build.py`, `tools/make-latest.py`, `.github/workflows/ci.yml` and `release.yml`, issue templates, `README.md`, `CONTRIBUTING.md`, `THIRD-PARTY.md`, `.gitignore`, `CHANGELOG.md`, this handoff in `docs/`.
-- `tools/build.py` was checked against `site-update-1.37.0.zip`: same file list and every file byte-identical (including `manifest.json`), esbuild 0.28.2.
-- Not done: `LICENSE` (GitHub already made it in the repo; do not overwrite), GPL file headers, `website/`, the update-from-GitHub code, the PDF guide, `latest.json` publishing to Pages (the release workflow only attaches the zip and checksum for now).
-- Third-party licence check (section 12, item 2) is still open and blocks the first public release.
-- Pushed from the owner's computer (the sandbox has no GitHub login).
+- **Repository:** https://github.com/Jackpison/Homebase-Hub holds `src/` (readable site), `tools/` (`build.py`, `make-latest.py`, `make-site.py`, `make-guide.py`), `website/`, workflows (`ci.yml`, `release.yml`, `pages.yml`), `README.md`, `CONTRIBUTING.md`, `THIRD-PARTY.md`, `CHANGELOG.md`, and this handoff in `docs/`. `build.py` was checked against the real 1.37.0 zip (every file identical).
+- **1.38.0:** updates from GitHub (`web/core-data/lib/ghupdate.php`; API actions `gh_check`, `gh_install`, `gh_auto`; the card in Settings > Updates; Overview alert and pill; Server Check line; cron hook). Daily check off by default; no request to GitHub while off. Tested against a local stand-in (34 tests: update, wrong checksum, wrong size, flipped byte, truncated, wrong version, malformed `latest.json`, API fallback once a day, foreign redirects refused, CSRF, and the real 1.37.0 to 1.38.0 upload with Go Back). Test hooks `GH_TEST_*` exist only if a test defines them (via `auto_prepend_file`); the site never does.
+- New installs are named Homebase Hub; every own PHP/JS/CSS file has a GPL-3.0-only header (`/*!` in JS and CSS, so minified files keep it).
+- **Release flow:** push a tag `vX.Y.Z` whose number equals `HUB`. `release.yml` builds, checks the tag, creates the release with the zip, its `.sha256` and the changelog, then starts `pages.yml`, which builds the website, the guide and `latest.json` from the newest release and deploys to GitHub Pages. Pages must be set to **Source: GitHub Actions** in the repo settings.
+- **Licences:** checked, see `THIRD-PARTY.md`. Not re-verified file by file: ONNX Runtime Web, pdf-lib, exifr, UTIF, Sortable, pako, fflate, framer-motion (upstream MIT is assumed).
+- **Not signed** (owner's decision); the checksum only catches damaged downloads.
+- **Not tested:** on the owner's live host, against the real github.com download (the first real update will be 1.38.0 to 1.38.1 or later), or by a person using a real browser (screenshots were taken with Chromium, but flows like clicking Download and Check were only tested through the API).
+- **Screenshots** on the website and in the guide come from the real 1.38.0 build with invented demo data (Links and Tasks seeded; Info and Cards are empty states; Home has no photos because the test browser had no internet). The "update available" screenshot used a stand-in release and is labelled as an example.
+- **Ideas not built:** signed releases, accessibility pass, passkey login, dead-link checker, bookmark import, Telegram snooze, card fee reminders, richer demo data for Info and Cards screenshots.
+- A token was once pasted into a chat to push; revoke any such token after use and never store it.

@@ -52,6 +52,7 @@ file whole, a newer version), shows what will change, and only after you type yo
 replaces its own files one by one, removes the files the old version had and the new one does not, and looks at itself
 afterwards. If it cannot answer, the saved version comes back by itself, and "Go Back" does the same on request.
 Never touched: site-data (all your data), web/core-data/media (pictures and logo), web/core-data/config.php, and the Tools settings (made from yours).
+From 1.38.0 Settings > Updates can also fetch the update from GitHub: "Check Now" looks for a newer release, "Download and Check" downloads it, compares its size and SHA-256 with the list the project publishes, and runs the same checks as an uploaded zip. Nothing changes until you type your password. The daily check is off by default; while it is off the site never contacts GitHub unless you press Check Now.
 The very first time (when the site does not have this tab yet), upload and extract the zip with the File Manager, as below;
 after that the site can update itself. Settings > Updates > Files compares the server with the version's file list
 (web/core-data/manifest.json) and shows files that do not belong, which you can delete from there.
@@ -164,6 +165,7 @@ web/core-data/lib/activity.php    login history and the list of logged-in device
 web/core-data/lib/approval.php    approve logins in Telegram (fallbacks: a two-step recovery code; delete site-data/core/login-approval.php)
 web/core-data/lib/watch.php       domain, SSL and uptime watch; keeps renewal tasks in Tasks
 web/core-data/lib/health.php      Health (Settings > Health): disk use, speed, backups and Test a Restore, PHP errors, updates
+web/core-data/lib/ghupdate.php    Updates from GitHub: check (latest.json, API fallback), download, checksum, then update.php's check
 web/core-data/lib/update.php      Updates: reads the zip (plain PHP), checks it, saves the current version, swaps files, rolls back, compares files
 web/core-data/lib/overview.php    Settings > Overview: where things stand, from what is already saved
 web/core-data/assets/shell.js     on every page: the bar, search, theme, login, page contract (numbered sections inside)

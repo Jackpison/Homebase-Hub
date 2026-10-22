@@ -1,4 +1,12 @@
 <?php
+/* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 // Information - storage endpoint (edits need the shared site login).
 // The page has a title, an optional custom icon, custom background colors, a backup reminder, and a list of tabs (1 to 20);
 // each tab has a name, a color, a layout, a private flag and 1 to 12 text boxes. A box has a stable id, a title, text, a revision,

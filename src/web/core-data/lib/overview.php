@@ -1,5 +1,13 @@
 <?php
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
+/* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 /**
  * Settings > Overview: where things stand, read from what is already saved (no slow checks, no calls to other servers).
  * The deeper checks (public error_log, disk use, speed) live in Health and are only mentioned here once they have been run.
@@ -32,9 +40,11 @@ function hub_overview(): array {
     $f = $up['files'] ?? null;
     if ($f && ($f['extra'] > 0 || $f['changed'] > 0)) $alerts[] = ['level' => $f['extra'] > 0 ? 'warn' : 'info', 'go' => 'files', 'text' => ($f['extra'] > 0 ? $f['extra'] . ' file' . ($f['extra'] > 1 ? 's are' : ' is') . ' not part of this version of the site. ' : '') . ($f['changed'] > 0 ? $f['changed'] . ' file' . ($f['changed'] > 1 ? 's were' : ' was') . ' changed by hand.' : '')];
     if (!empty($up['staged'])) $alerts[] = ['level' => 'info', 'go' => 'updates', 'text' => 'An update (' . $up['staged']['version'] . ') is checked and waiting for you to apply it.'];
+    require_once __DIR__ . '/ghupdate.php'; $gh = gh_info();
+    if ($gh['newer'] && empty($up['staged'])) $alerts[] = ['level' => 'info', 'go' => 'updates', 'text' => 'Version ' . $gh['latest']['version'] . ' is available on GitHub.'];
     return ['ok' => true, 'version' => HUB, 'php' => PHP_VERSION, 'https' => hub_https(), 'siteName' => $s['siteName'], 'logo' => $s['logo'] !== '', 'tz' => $s['tz'],
             'protect' => ['on' => $on, 'total' => count($prot) + 1, 'items' => $prot, 'next' => $next], 'telegram' => $tg,
             'backup' => ['last' => $last, 'every' => $every, 'enc' => hub_pp_on(), 'tg' => $tg['bkEvery']],
-            'update' => ['last' => $up['last'] ?? null, 'staged' => $up['staged'] ?? null, 'hasManifest' => $st['hasManifest'], 'unwritable' => $st['unwritable'], 'previous' => $st['previous']],
+            'update' => ['newer' => $gh['newer'] ? $gh['latest']['version'] : null, 'last' => $up['last'] ?? null, 'staged' => $up['staged'] ?? null, 'hasManifest' => $st['hasManifest'], 'unwritable' => $st['unwritable'], 'previous' => $st['previous']],
             'files' => $f, 'alerts' => $alerts];
 }

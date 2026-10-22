@@ -1,4 +1,12 @@
 <?php
+/* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 /**
  * Hub core API (web/core-data/api.php?action=...)
  *
@@ -323,7 +331,7 @@ case 'diag':   // Settings > Server check
         $b = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); $err = curl_error($ch); curl_close($ch);
         return [$code, $err !== '' ? $err : ($b === false ? 'no answer' : strlen((string)$b) . ' bytes')];
     };
-    foreach (['https://www.google.com/s2/favicons?domain=example.com&sz=64' => 'Favicon service (Google)', 'https://icons.duckduckgo.com/ip3/example.com.ico' => 'Favicon service (DuckDuckGo)', 'https://example.com/' => 'A normal website'] as $u => $n) {
+    foreach (['https://www.google.com/s2/favicons?domain=example.com&sz=64' => 'Favicon service (Google)', 'https://icons.duckduckgo.com/ip3/example.com.ico' => 'Favicon service (DuckDuckGo)', 'https://example.com/' => 'A normal website', 'https://api.github.com/' => 'GitHub (for updates)'] as $u => $n) {
         [$code, $note] = $get($u);
         $add('Reach: ' . $n, $code >= 200 && $code < 400, $code ? "Answered HTTP $code ($note)." : "No connection: $note. Your host may block outgoing requests; ask them to allow outbound HTTPS. Link icons then fall back to being loaded by the visitor's browser.");
     }
@@ -494,6 +502,21 @@ case 'update_check':   // checks the uploaded zip completely; changes nothing on
     require_once __DIR__ . '/lib/update.php';
     $b = body(); $r = up_check((string)($b['name'] ?? 'update.zip'));
     hub_json($r['ok'] ? 200 : 400, $r);
+
+case 'gh_check':   // Check Now: looks for a newer version on GitHub (the daily check is a separate switch, off by default)
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/ghupdate.php';
+    $b = body(); hub_json(200, gh_check(empty($b['auto'])));
+
+case 'gh_auto':
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/ghupdate.php';
+    $b = body(); hub_json(200, ['ok' => true] + gh_set_auto(!empty($b['on'])));
+
+case 'gh_install':   // downloads the newest release, checks size and SHA-256, then the same full check as an uploaded zip; changes nothing on the site
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/ghupdate.php';
+    $r = gh_install(); hub_json($r['ok'] ? 200 : 400, $r);
 
 case 'update_cancel':
     need_post(); need_admin();

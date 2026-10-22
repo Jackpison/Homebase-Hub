@@ -1,3 +1,11 @@
+/*! Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 /* Hub shell, admin part: Settings, Security, Telegram, Health (with Server Check) and Backup.
  * Only you need these screens, so they load on first use (shell.js fetches this file when you open Settings or Backup,
  * and prefetches it quietly while you are logged in). Visitors never download it.
@@ -34,7 +42,7 @@
     ['security', 'Security', ICON.shield, 'Who can get in, and how well your private things are protected.', null, 'Protection & Data'],
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and backups, sent to your phone.', null, 'Protection & Data'],
     ['backup', 'Backup & Restore', ICON.box, 'One file holds your pages and every setting you chose. Download it, restore it, or start over.', null, 'Protection & Data'],
-    ['updates', 'Updates', ICON.upload, 'Update the site by uploading a zip, go back to the last version, and clear out files that do not belong.', [['updates', 'Update'], ['files', 'Files']], 'System'],
+    ['updates', 'Updates', ICON.upload, 'Update the site from GitHub or by uploading a zip, go back to the last version, and clear out files that do not belong.', [['updates', 'Update'], ['files', 'Files']], 'System'],
     ['health', 'Health', ICON.pulse, 'Version, disk, speed, errors, your domains, and what your hosting allows.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System'],
     ['changelog', 'Changelog', ICON.log, 'What changed in every version of your site, newest first.', [['changelog', 'Versions'], ['chmap', 'Version Map'], ['chnotes', 'Notes']], 'System']];
   var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, pages: pPages, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
@@ -116,7 +124,7 @@
     ['Telegram Messages', 'telegram/messages', 'digest reminders alerts daily hour due'], ['Instant Replies', 'telegram/instant-replies', 'webhook commands bot'],
     ['Back Up', 'backup/back-up', 'download backup file'], ['Restore a Backup', 'backup/restore', 'import'], ['Export Data', 'backup/export-data', 'csv json spreadsheet links cards tasks'],
     ['Earlier Versions', 'backup/earlier-versions', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
-    ['Update the Site', 'updates', 'upload zip version install'], ['Files That Do Not Belong', 'files', 'extra changed missing leftover'],
+    ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'files', 'extra changed missing leftover'],
     ['Health', 'health', 'disk speed errors log'], ['Domains and Uptime', 'domains', 'expiry ssl hosting renewal'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
     ['Changelog', 'changelog', 'versions history what changed new'], ['Version Map', 'chmap', 'all versions']
   ];
@@ -967,7 +975,7 @@
     var late = bk.every > 0 && (!bk.last || (now - bk.last) / 86400 >= bk.every);
     pill('backup', bk.last ? ago(bk.last).replace(' ago', '') : 'Never', late ? 'warn' : bk.last ? 'good' : '');
     var n = fl ? fl.extra + fl.changed : 0;
-    pill('updates', up.staged ? 'Ready' : n ? n + ' to check' : 'Up to date', up.staged || n ? 'warn' : 'good');
+    pill('updates', up.staged ? 'Ready' : up.newer ? 'New Version' : n ? n + ' to check' : 'Up to date', up.staged || up.newer || n ? 'warn' : 'good');
     var al = (OV.alerts || []).length;
     pill('overview', al ? al + ' to see' : '', al ? 'warn' : '');
     pill('look', S.theme === 'auto' ? 'Auto' : S.theme === 'light' ? 'Light' : 'Dark', '');
@@ -1105,8 +1113,8 @@
               (tg.on ? 'Daily message at ' + hourLbl(tg.hour) + '. ' : 'Daily message is off. ') + (tg.lastSent ? 'Last message ' + esc(ago(tg.lastSent)) + '.' : 'Nothing sent yet.'), 'Open Telegram'),
         card('backup', 'Backup & Restore', bk.last ? ago(bk.last) : 'No Backup Yet', (bk.every > 0 && (!bk.last || (now - bk.last) / 86400 >= bk.every)) || !bk.last ? 'warn' : 'good',
               bk.tg ? 'A backup goes to Telegram ' + ({ 1: 'every day', 3: 'every 3 days', 7: 'every week', 14: 'every 2 weeks', 30: 'every month' }[bk.tg] || 'regularly') + (bk.enc ? ', encrypted.' : ', not encrypted.') : 'Download one file that restores everything.', 'A backup holds your pages, settings, Telegram and domain watch.', 'Back Up Now'),
-        card('updates', 'Updates', up.staged ? 'Update Ready' : n ? n + ' to check' : 'Up to Date', up.staged || n ? 'warn' : 'good',
-              up.staged ? 'Version <b>' + esc(up.staged.version) + '</b> is checked and waiting for you.' : 'You have version <b>' + esc(j.version) + '</b>.',
+        card('updates', 'Updates', up.staged ? 'Update Ready' : up.newer ? 'New Version' : n ? n + ' to check' : 'Up to Date', up.staged || up.newer || n ? 'warn' : 'good',
+              up.staged ? 'Version <b>' + esc(up.staged.version) + '</b> is checked and waiting for you.' : up.newer ? 'Version <b>' + esc(up.newer) + '</b> is available on GitHub. You have <b>' + esc(j.version) + '</b>.' : 'You have version <b>' + esc(j.version) + '</b>.',
               !up.hasManifest ? 'Update once with the File Manager, then the site can update itself.' : fl ? (n ? n + ' file' + (n > 1 ? 's' : '') + ' to look at in Files.' : 'Every file on your server belongs to this version.') : 'Upload a new zip here. No File Manager, nothing to delete by hand.', up.staged ? 'Review the Update' : 'Update the Site'),
         card('health', 'Health', 'PHP ' + j.php.split('.').slice(0, 2).join('.'), '', (j.https ? 'HTTPS is on.' : '<b>HTTPS is off.</b>') + ' Version ' + esc(j.version) + '.', 'Disk use, speed, errors, your domains and what your hosting allows.', 'Open Health')
       ];
@@ -1116,7 +1124,7 @@
       var chip = function (id, label, cls) { return '<button type="button" class="ix-jchip" data-go="' + id + '"><i class="ix-dot ' + (cls || '') + '"></i>' + label + '</button>'; };
       var chips = '<div class="ix-jchips" role="navigation" aria-label="Jump to">' +
         chip('security', 'Security', pr.on >= pr.total ? 'good' : 'warn') + chip('telegram', 'Telegram', tg.ready ? (run ? 'good' : 'warn') : '') +
-        chip('backup', 'Backup', bk.last ? 'good' : 'warn') + chip('look', 'Appearance', '') + chip('updates', 'Updates', up.staged || n ? 'warn' : 'good') +
+        chip('backup', 'Backup', bk.last ? 'good' : 'warn') + chip('look', 'Appearance', '') + chip('updates', 'Updates', up.staged || up.newer || n ? 'warn' : 'good') +
         chip('health', 'Health', j.https ? 'good' : 'warn') + chip('changelog', 'Changelog', '') + '</div>';
       var banner = stDone < stp.length ? '<div class="ix-hero ix-setupb"><div class="ix-ring" style="--p:' + Math.round(stDone / stp.length * 100) + '"><b>' + stDone + '</b><small>of ' + stp.length + '</small></div>' +
         '<div class="ix-hero-t"><div class="ix-hero-h">Protect Your Site Step by Step</div><p>' + stDone + ' of ' + stp.length + ' steps are done. Next: <b>' + esc(stp.filter(function (x) { return !x.done; })[0].title) + '</b>.</p>' +
@@ -1288,6 +1296,37 @@
       drawUpdate(p, st, null);
     }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
   }
+
+  function ghCard(st) {
+    var g = st.gh || {}, l = g.latest, h = '';
+    if (!g.curl) h += '<div class="ix-status"><span>!</span><span>This server\'s PHP has no curl, so it cannot reach GitHub. You can still update by uploading a zip below.</span></div>';
+    if (g.newer && l) {
+      h += '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Version ' + esc(l.version) + ' Is Available.</b> ' + (l.published ? '<small>Published ' + esc(l.published.slice(0, 10)) + '.</small> ' : '') + esc(l.notes || '') + '</span></div>' +
+        (g.phpOk ? '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-ghi">Download and Check Version ' + esc(l.version) + '</button></div>' +
+          '<p class="ix-note">Nothing on your site changes yet. The download is checked against the SHA-256 GitHub lists, then goes through the same checks as an uploaded zip. You review the changes and type your website password to apply it.</p>'
+          : '<div class="ix-status"><span>!</span><span>Version ' + esc(l.version) + ' needs PHP ' + esc(l.minPhp) + ' or newer; this server has ' + esc(st.php) + '.</span></div>');
+    } else if (l) h += '<p>You have the newest version (<b>' + esc(st.version) + '</b>).</p>';
+    else if (!g.err) h += '<p>Press Check Now to look for a newer version.</p>';
+    if (g.err) h += '<p class="ix-err">Couldn\'t check: ' + esc(g.err) + '</p>';
+    h += '<p class="ix-err" id="ix-ghe"></p><div class="ix-row"><button type="button" class="ix-btn" id="ix-ghc"' + (g.curl ? '' : ' disabled') + '>Check Now</button><span class="ix-mu">' + (g.at ? 'Last checked ' + esc(ago(g.at)) : 'Not checked yet') + '</span></div>' +
+      '<label class="ix-chk" style="margin-top:10px"><input type="checkbox" id="ix-gha"' + (g.auto ? ' checked' : '') + '> Check GitHub Once a Day</label>' +
+      '<p class="ix-note">Off by default. While it is off, this site makes no request to GitHub unless you press Check Now. When it is on, the check runs with the schedule from Telegram Setup (the cron job). Nothing ever installs by itself.</p>';
+    return '<section class="ix-card"><div class="ix-cardh"><h3>Update From GitHub</h3><span class="ix-mu">Installed: <b>' + esc(st.version) + '</b></span></div>' + h + '</section>';
+  }
+  function ghWire(p, st) {
+    var e = function (m) { var x = p.querySelector('#ix-ghe'); if (x) x.textContent = m || ''; };
+    var c = p.querySelector('#ix-ghc'), a = p.querySelector('#ix-gha'), i = p.querySelector('#ix-ghi');
+    if (c) c.onclick = function () { c.disabled = true; c.textContent = 'Checking…'; api('gh_check', {}).then(function (j) { if (j && j.repo) st.gh = j; drawUpdate(p, st, null); }, function () { c.disabled = false; c.textContent = 'Check Now'; e('Can\'t reach the server.'); }); };
+    if (a) a.onchange = function () { api('gh_auto', { on: a.checked }).then(function (j) { if (j && j.repo) st.gh = j; }); };
+    if (i) i.onclick = function () {
+      i.disabled = true; i.textContent = 'Downloading and Checking…'; e('');
+      api('gh_install', {}).then(function (j) {
+        if (!j.ok) { i.disabled = false; i.textContent = 'Download and Check Version ' + st.gh.latest.version; e(j.error || 'The download did not work.'); return; }
+        drawUpdate(p, st, j);
+      }, function () { i.disabled = false; i.textContent = 'Download and Check Version ' + st.gh.latest.version; e('Lost the connection while downloading. Nothing was changed.'); });
+    };
+    if (st.gh && st.gh.auto && st.gh.due && st.gh.curl && !st.ghTried) { st.ghTried = true; api('gh_check', { auto: true }).then(function (j) { if (j && j.repo) { st.gh = j; drawUpdate(p, st, null); } }); }
+  }
   function drawUpdate(p, st, chk) {
     var staged = (chk && chk.staged) || st.staged, plan = (chk && chk.plan) || st.plan, last = st.last, prev = st.previous;
     var problems = [];
@@ -1317,11 +1356,13 @@
         '<p class="ix-note">Only use a zip from a source you trust: it replaces the site\'s own code. After the check you see its fingerprint (SHA-256), which you can compare with the one you were given.</p><div class="ix-upm" id="ix-upm"></div>';
     }
     p.innerHTML =
+      (staged ? '' : ghCard(st)) +
       '<section class="ix-card"><div class="ix-cardh"><h3>Update the Site</h3><span class="ix-mu">Installed: <b>' + esc(st.version) + '</b>' + (last ? ' · ' + (last.how === 'back' ? 'went back to ' : 'updated to ') + esc(last.version) + ' ' + esc(ago(last.at)) : '') + '</span></div>' +
         problems.map(function (m) { return '<div class="ix-status"><span>!</span><span>' + m + '</span></div>'; }).join('') + stepsHtml + review + '</section>' +
       '<section class="ix-card"><div class="ix-cardh"><h3>Go Back</h3></div>' + (prev
         ? '<p>Version <b>' + esc(prev.version) + '</b> was saved ' + esc(ago(prev.at)) + ' (' + size(prev.bytes) + '). Going back does not change your data.</p><div class="ix-apl"><label for="ix-bpw">Website Password</label><div class="ix-row"><input type="password" id="ix-bpw" autocomplete="current-password" style="max-width:340px"><button type="button" class="ix-btn" id="ix-ubk">Go Back to ' + esc(prev.version) + '</button></div></div><p class="ix-err" id="ix-be"></p>'
         : '<p>Nothing is saved yet. The first update saves the version you have now, so you can come back to it in one click.</p>') + '</section>';
+    if (!staged) ghWire(p, st);
     var fail = function (m) { var e = p.querySelector('#ix-ue') || p.querySelector('#ix-upm'); if (e) { e.className = 'ix-err'; e.textContent = m; } };
     var dz = p.querySelector('#ix-udz');
     if (dz) {

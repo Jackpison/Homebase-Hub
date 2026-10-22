@@ -1,5 +1,13 @@
 <?php
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
+/* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 /**
  * Hub core: shared by Home, Links, Info, Cards and Tools.
  *
@@ -13,7 +21,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 
 if (defined('HUB')) return;
-define('HUB', '1.37.0');
+define('HUB', '1.38.0');
 
 const HUB_SESSION_DAYS = 30;
 const HUB_MIN_PASSWORD = 8;
@@ -612,7 +620,7 @@ function hub_links_enc_clean(array &$data): bool {
 
 function hub_settings_default(): array {
     return [
-        'siteName' => 'My Site',
+        'siteName' => 'Homebase Hub',   // new installs; an install that kept the old default 'My Site' keeps it
         'logo'     => '',           // site logo: a file in web/core-data/media/brand/ (empty = first letter of the name)
         'nav'      => 'top',        // top | side | dock
         'theme'    => 'dark',       // dark | light | auto  (default for new browsers; each browser can switch)

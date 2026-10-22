@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.38.0 | Updates from GitHub (Check Now, an optional daily check that is off by default, one-click download with a checksum, then your password); the project is public on GitHub under GPL-3.0; new installs are named Homebase Hub |
 | 1.37.0 | Info: any number of boxes in each tab (up to 12), each in its own width and height; Classic layout removed, Notebook Cards is the default |
 | 1.36.0 | Home loads faster (phone-sized background photos, Settings styles split out); Info tabs can be Classic, Notebook Cards or Document; Settings: Guided Setup, jump chips and a status pill on every menu item |
 | 1.35.0 | Info's four Export buttons work again; Info's broken leftover backup timer removed; dead code and styles removed; every page's scripts and styles minified |
@@ -53,6 +54,26 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.38.0
+
+### Homebase Hub is now a public project
+
+- The site is published as **Homebase Hub** on GitHub (https://github.com/Jackpison/Homebase-Hub) under the **GPL-3.0** licence. Every file the project wrote carries a short licence notice; bundled libraries keep their own licences (see `THIRD-PARTY.md` in the repository).
+- New installs are named **Homebase Hub** instead of "My Site". An existing site keeps the name it has.
+
+### Updates: from GitHub, and still by uploading a zip
+
+- **Settings > Updates > Update From GitHub.** **Check Now** looks for a newer version. When there is one, **Download and Check Version X** downloads the release zip, compares its size and SHA-256 with the list GitHub publishes, and then runs exactly the same checks an uploaded zip gets. Nothing on your site changes until you read the changes and type your website password; applying is the same as before (snapshot, swap, self-check, automatic rollback).
+- **Check GitHub Once a Day** is **off by default**. While it is off the site makes no request to GitHub unless you press Check Now. When it is on, the check runs with the Telegram schedule (the cron job), and Overview shows "Version X is available on GitHub".
+- The check reads a small `latest.json` on the project's GitHub Pages address first; GitHub's own API is only a fallback, asked at most once a day. If GitHub cannot be reached the site says "Couldn't check" and keeps working.
+- Only github.com, api.github.com, the project's Pages address and githubusercontent.com are ever contacted, over HTTPS, and every redirect is checked again. The zip must be this project's own release file for that very version; a zip whose version differs from what GitHub lists is refused.
+- The checksum catches damaged or partial downloads. It comes from the same GitHub account as the zip, so it does not prove a release is genuine; that is why nothing installs by itself and you see the changelog and file list first.
+- **Server Check** also tests that your host can reach GitHub.
+- Uploading a zip works exactly as before.
+- The project website and a PDF guide (every page and every setting, with screenshots) are built from the repository and published on GitHub Pages; they are not part of the update zip.
 
 ---
 

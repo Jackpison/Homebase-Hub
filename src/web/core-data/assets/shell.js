@@ -1,5 +1,13 @@
+/*! Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../core-data/assets/shell.js?v=1.37.0" data-app="links"></script>
+ *   <script src="../core-data/assets/shell.js?v=1.38.0" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -346,10 +354,10 @@
       return '<a href="' + p[2] + '" data-page="' + p[0] + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + svg(p[3]) + '<span>' + esc(p[1]) + '</span></a>';
     }).join('');
     var next = themeNow() === 'light' ? 'dark' : 'light';
-    var mark = S.logo ? '<img class="ix-logo" src="' + esc(ROOT + S.logo) + '" alt="">' : '<span class="ix-mark">' + esc((S.siteName || 'My Site').charAt(0).toUpperCase()) + '</span>';
+    var mark = S.logo ? '<img class="ix-logo" src="' + esc(ROOT + S.logo) + '" alt="">' : '<span class="ix-mark">' + esc((S.siteName || 'Homebase Hub').charAt(0).toUpperCase()) + '</span>';
     var html =
       '<button class="ix-ib ix-menu" data-ix="menu" aria-label="Pages">' + svg(ICON.menu) + '</button>' +
-      '<a class="ix-brand" href="' + ROOT + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'My Site') + '</span></a>' +
+      '<a class="ix-brand" href="' + ROOT + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>' +
       '<div class="ix-links">' + links + '</div>' +
       '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="Search" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
         '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
@@ -772,9 +780,9 @@
       };
     });
   }
-  /* "www.example.com" -> "Example", "shop.example.co.uk" -> "Example", an IP address -> "My Site" */
+  /* "www.example.com" -> "Example", "shop.example.co.uk" -> "Example", an IP address -> "Homebase Hub" */
   function guessName(host) {
-    if (!host || /^[\d.:]+$/.test(host) || host.indexOf('.') < 0) return host ? host.charAt(0).toUpperCase() + host.slice(1) : 'My Site';
+    if (!host || /^[\d.:]+$/.test(host) || host.indexOf('.') < 0) return host ? host.charAt(0).toUpperCase() + host.slice(1) : 'Homebase Hub';
     var l = host.split('.'), n = l.length >= 3 && l[l.length - 2].length <= 3 ? l[l.length - 3] : l[l.length - 2];
     return n.charAt(0).toUpperCase() + n.slice(1);
   }

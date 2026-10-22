@@ -1,0 +1,53 @@
+name: Pages
+on:
+  push:
+    branches: [main]
+    paths: ['website/**', 'tools/make-*.py', 'CHANGELOG.md', '.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install reportlab pillow
+      - name: Find the newest release
+        id: rel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || true)
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if [ -n "$TAG" ]; then
+            V=${TAG#v}
+            gh release download "$TAG" -p "site-update-$V.zip.sha256" -D /tmp/rel
+            gh release download "$TAG" -p "site-update-$V.zip" -D /tmp/rel
+            echo "sha=$(cut -d' ' -f1 /tmp/rel/site-update-$V.zip.sha256)" >> "$GITHUB_OUTPUT"
+            echo "size=$(stat -c%s /tmp/rel/site-update-$V.zip)" >> "$GITHUB_OUTPUT"
+            echo "ver=$V" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build the website
+        run: |
+          if [ -n "${{ steps.rel.outputs.tag }}" ]; then
+            python3 tools/make-site.py --latest Jackpison Homebase-Hub "${{ steps.rel.outputs.ver }}" "${{ steps.rel.outputs.sha }}" "${{ steps.rel.outputs.size }}"
+          else
+            python3 tools/make-site.py
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: build/site }
+      - id: deployment
+        uses: actions/deploy-pages@v4

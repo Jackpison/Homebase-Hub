@@ -28,6 +28,9 @@ def sha(p):
 
 def main():
     ver = version()
+    for bad in ('src/site-data', 'src/web/core-data/config.php', 'src/web/core-data/data'):
+        if os.path.exists(os.path.join(ROOT, bad)):
+            sys.exit('Refusing to build: %s exists in the source tree (it is private data and must never be shipped). Delete it.' % bad)
     shutil.rmtree(OUT, ignore_errors=True)
     shutil.copytree(os.path.join(ROOT, 'src'), TREE)
     # readable copy + minify (own files only)

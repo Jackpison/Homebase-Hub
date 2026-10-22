@@ -1,3 +1,11 @@
+/*! Homebase Hub - https://github.com/Jackpison/Homebase-Hub
+ * Copyright (C) 2026 Jackpison
+ * SPDX-License-Identifier: GPL-3.0-only
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 3 of the License. It is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License (the LICENSE file) for more details.
+ */
 const MAXTAB=20;
 let TABS=[],REV=0,PAGE={title:"",icon:""},TIMER={every:7*86400,last:0},active="",locked=false,server=false,tok="",lastAuth=0,pendingFn=null,pending=null,
     authed=false,EDIT=false,CLOSED=false,WAIT=false; // WAIT: logged in, waiting for the server to send private content // logged in? editing mode? whole page private and not logged in?
