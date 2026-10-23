@@ -1,6 +1,6 @@
 # Third-party code
 
-Status as of 1.38.0. Every bundled component is compatible with GPL-3.0. Each keeps its own licence and copyright; where a file carries a header, it is kept.
+Every bundled component is compatible with GPL-3.0. Each keeps its own licence and copyright; where a file carries a header, it is kept.
 
 | Component | Where | Licence | How it was confirmed |
 |---|---|---|---|

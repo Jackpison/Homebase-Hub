@@ -7,7 +7,7 @@
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../core-data/assets/shell.js?v=1.38.0" data-app="links"></script>
+ *   <script src="../core-data/assets/shell.js?v=1.39.0" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -354,7 +354,7 @@
       return '<a href="' + p[2] + '" data-page="' + p[0] + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + svg(p[3]) + '<span>' + esc(p[1]) + '</span></a>';
     }).join('');
     var next = themeNow() === 'light' ? 'dark' : 'light';
-    var mark = S.logo ? '<img class="ix-logo" src="' + esc(ROOT + S.logo) + '" alt="">' : '<span class="ix-mark">' + esc((S.siteName || 'Homebase Hub').charAt(0).toUpperCase()) + '</span>';
+    var mark = '<img class="ix-logo" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt="">';   // your logo, or Homebase Hub's own
     var html =
       '<button class="ix-ib ix-menu" data-ix="menu" aria-label="Pages">' + svg(ICON.menu) + '</button>' +
       '<a class="ix-brand" href="' + ROOT + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>' +
@@ -707,10 +707,10 @@
   }, true);
 
   /* ---------- 7b. the site logo is the tab icon of every page ----------
-     Pages set their own icons while loading; this puts the logo from Settings > General back, whenever one changes it. */
+     Pages set their own icons while loading; this puts the logo from Settings > General (or Homebase Hub's own) back, whenever one changes it. */
   function applyFavicon() {
-    if (!S.logo || !document.head) return;
-    var href = ROOT + S.logo, links = document.head.querySelectorAll('link[rel~="icon"],link[rel="apple-touch-icon"]');
+    if (!document.head) return;
+    var href = S.logo ? ROOT + S.logo : CORE + 'assets/brand/favicon-64.png', links = document.head.querySelectorAll('link[rel~="icon"],link[rel="apple-touch-icon"]');
     if (!links.length) { var l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l); links = [l]; }
     [].forEach.call(links, function (l) {
       if (l.getAttribute('href') === href) return;

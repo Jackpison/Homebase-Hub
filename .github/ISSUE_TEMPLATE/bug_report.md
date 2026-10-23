@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Something does not work
+about: Something does not work as it should
 ---
 **Version** (Settings > Changelog):
 
@@ -8,6 +8,8 @@ about: Something does not work
 
 **What I expected:**
 
-**What happened:**
+**What happened instead:**
 
-Feature requests go to Telegram @Jackpison, not here.
+**Browser and hosting** (if it matters):
+
+Ideas and questions are welcome on Telegram: @Jackpison.

@@ -18,5 +18,5 @@ jobs:
       - name: Check zip name and changelog
         run: |
           ls build/site-update-*.zip
-          unzip -l build/site-update-*.zip | grep -q 'web/core-data/docs/CHANGELOG.md'
+          unzip -l build/site-update-*.zip | grep -q 'web/docs/CHANGELOG.md'
           ! ls build/site-update-*.zip | grep -q '_'

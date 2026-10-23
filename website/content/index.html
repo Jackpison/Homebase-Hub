@@ -1,12 +1,73 @@
-<!--title:Homebase Hub: your own start page, links, notes, cards, tasks and tools-->
-<h1>Your own start page, bookmarks, notes and tasks, on your own server.</h1>
-<p class="lead">Homebase Hub is a self-hosted personal workspace: your start page, links, notes, cards, tasks and browser tools. One login, no database, and your data stays on your own hosting.</p>
-<div class="btns"><a class="btn pri" href="install.html">Install</a><a class="btn" href="guide.html">Read the Guide</a><a class="btn" href="https://github.com/Jackpison/Homebase-Hub">View on GitHub</a></div>
-<figure class="shot"><img src="img/links.webp" alt="The Links page of Homebase Hub with three categories of bookmarks" width="1280" height="800"><figcaption>Links: bookmarks in tabs and categories.</figcaption></figure>
-<div class="grid">
-<div class="card"><h3>One place</h3><p>Home, Links, Info, Cards, Tasks and Tools share one login, one Settings page, one backup and one look.</p></div>
-<div class="card"><h3>Private by design</h3><p>Optional encrypted tabs, two-step login, login history and devices, and data files that cannot be opened from a browser.</p></div>
-<div class="card"><h3>Runs on ordinary hosting</h3><p>PHP 8.1 or newer and a place to put files. No database and no build step on your server.</p></div>
-<div class="card"><h3>Updates you control</h3><p>Update from GitHub with one click and your password, or upload a zip. Every update is checked first and can be undone.</p></div>
+<!--title:Homebase Hub: a self-hosted start page, bookmarks, notes and tasks-->
+<!--wide-->
+<div class="hero"><div class="in">
+<div>
+<img class="logo" src="brand/logo-192.png" alt="" width="76" height="76">
+<h1>Your start page, bookmarks, notes and tasks, on your own server.</h1>
+<p class="lead">Homebase Hub puts the small things you open every day in one private place: one login, one look, and nothing stored anywhere but your own hosting.</p>
+<div class="btns"><a class="btn pri" href="https://github.com/Jackpison/Homebase-Hub/releases/latest">Download {{VER}}</a><a class="btn" href="guide.html">Read the guide</a></div>
+<p class="small">Free and open source under GPL-3.0. Runs on PHP 8.1 or newer, no database.</p>
 </div>
-<p>Questions and feature requests: Telegram <a href="https://t.me/Jackpison">@Jackpison</a>. Bugs: <a href="https://github.com/Jackpison/Homebase-Hub/issues">GitHub Issues</a>.</p>
+<div class="frame"><img src="img/home-2.webp" alt="Homebase Hub's start page with a mountain photo and its credit in the corner" width="1440" height="683"></div>
+</div></div>
+
+<section class="block" id="screenshots">
+<h2>Six pages that share one login</h2>
+<p class="intro">Home, Links, Info, Cards, Tasks and Tools sit behind the same login and bar, with one Settings page for all of them. Every screenshot here is the real app with example data.</p>
+<div class="gallery">
+<input type="radio" name="g" id="g1" checked><input type="radio" name="g" id="g2"><input type="radio" name="g" id="g3"><input type="radio" name="g" id="g4"><input type="radio" name="g" id="g5"><input type="radio" name="g" id="g6"><input type="radio" name="g" id="g7"><input type="radio" name="g" id="g8">
+<div class="tabs"><label for="g1">Links</label><label for="g2">Info</label><label for="g3">Cards</label><label for="g4">Tasks</label><label for="g5">Tools</label><label for="g6">Settings</label><label for="g7">Light mode</label><label for="g8">Phone</label></div>
+<div class="shots">
+<figure class="f1"><div class="frame"><img src="img/links-crop.webp" alt="Links page with six categories of bookmarks" width="1440" height="560" loading="lazy"></div><figcaption>Links: bookmarks in tabs and categories, with their icons saved on your server.</figcaption></figure>
+<figure class="f2"><div class="frame"><img src="img/info-crop.webp" alt="Info page with notes in boxes" width="1440" height="600" loading="lazy"></div><figcaption>Info: notes in boxes you can size and arrange, or written as one document.</figcaption></figure>
+<figure class="f3"><div class="frame"><img src="img/cards.webp" alt="Cards page with a table of example cards" width="1440" height="900" loading="lazy"></div><figcaption>Cards: your cards in one table, with yearly charges added up.</figcaption></figure>
+<figure class="f4"><div class="frame"><img src="img/tasks.webp" alt="Tasks page grouped by when things are due" width="1440" height="900" loading="lazy"></div><figcaption>Tasks: due dates, repeats and prices, grouped by when they are due.</figcaption></figure>
+<figure class="f5"><div class="frame"><img src="img/tools.webp" alt="Tools page with a grid of tools" width="1440" height="900" loading="lazy"></div><figcaption>Tools: image, PDF and text tools that run in your browser.</figcaption></figure>
+<figure class="f6"><div class="frame"><img src="img/s-overview.webp" alt="Settings overview" width="1440" height="900" loading="lazy"></div><figcaption>Settings: where things stand, and what to look at next.</figcaption></figure>
+<figure class="f7"><div class="frame"><img src="img/links-light.webp" alt="Links page in light mode" width="1440" height="900" loading="lazy"></div><figcaption>Dark is the default. Light mode is one click away, for each browser.</figcaption></figure>
+<figure class="f8"><div style="display:flex;gap:18px;flex-wrap:wrap"><img src="img/m-tasks.webp" alt="Tasks on a phone" width="390" height="844" loading="lazy" style="width:260px;border-radius:18px;border:1px solid var(--line)"><img src="img/m-info.webp" alt="Info on a phone" width="390" height="844" loading="lazy" style="width:260px;border-radius:18px;border:1px solid var(--line)"><img src="img/m-settings.webp" alt="Settings on a phone" width="390" height="844" loading="lazy" style="width:260px;border-radius:18px;border:1px solid var(--line)"></div><figcaption>Every page works on a phone.</figcaption></figure>
+</div></div>
+</section>
+
+<section class="block" id="features">
+<h2>What each page does</h2>
+<p class="intro">Each page does one job. A start page, bookmarks, notes, cards, tasks and a toolbox, all with the same look.</p>
+<div class="row"><div class="txt"><h3>Home</h3><p>Your start page, with background photos that change and their credit in the corner.</p><ul><li>Photos get a phone-sized copy, so they load fast.</li><li>Show it with or without the bar.</li></ul></div><img src="img/home-1.webp" alt="Start page with an ocean photo" width="1440" height="683" loading="lazy"></div>
+<div class="row"><div class="txt"><h3>Links</h3><p>Bookmarks in tabs and categories.</p><ul><li>Link icons are saved on your server.</li><li>Colours and text sizes for each tab.</li><li>Tabs can be encrypted with your passphrase.</li></ul></div><img src="img/links-crop.webp" alt="Links page" width="1440" height="560" loading="lazy"></div>
+<div class="row"><div class="txt"><h3>Info</h3><p>Notes in tabs. Each tab holds 1 to 12 boxes.</p><ul><li>Arrange boxes as cards, or write the tab as one document with an outline.</li><li>Encrypted tabs for private notes.</li><li>Export a tab or all of them as PDF or text.</li></ul></div><img src="img/info-doc-crop.webp" alt="Info tab written as a document" width="1440" height="640" loading="lazy"></div>
+<div class="row"><div class="txt"><h3>Cards</h3><p>Your cards in a table you can search and filter by bank, network, type and holder.</p><ul><li>Yearly charges added up.</li><li>Nothing is sent until you are logged in.</li></ul></div><img src="img/cards-crop.webp" alt="Cards page" width="1440" height="640" loading="lazy"></div>
+<div class="row"><div class="txt"><h3>Tasks</h3><p>Things with a due date: bills, renewals, chores.</p><ul><li>Repeats, prices, categories and smart lists.</li><li>A calendar, analytics and a Year in Review PDF.</li><li>Reminders in Telegram.</li></ul></div><img src="img/tasks-analytics.webp" alt="Tasks analytics with spending by month" width="1440" height="900" loading="lazy"></div>
+<div class="row"><div class="txt"><h3>Tools</h3><p>Small tools that run in your browser: crop, resize and convert images, merge and sign PDFs, read text from images, remove backgrounds, make QR codes, and more.</p><ul><li>Star favourites and arrange your own sections.</li></ul></div><img src="img/tools-crop.webp" alt="Tools page" width="1440" height="700" loading="lazy"></div>
+</section>
+
+<section class="block" id="private">
+<h2>Private by design</h2>
+<p class="intro">Your data lives in one folder on your own hosting, closed to browsers. Nothing is sent anywhere unless you set it up.</p>
+<div class="facts">
+<div><h3>One login, done properly</h3><p>Two-step login, recovery codes, trusted browsers, a device list, and logins paused after five wrong tries.</p></div>
+<div><h3>Encrypted where you choose</h3><p>Encrypted tabs in Links and Info, and encrypted backup files. The keys are made in your browser.</p></div>
+<div><h3>Backups you can restore</h3><p>One file holds every page. Earlier versions are kept, and Telegram can send backups to your chat.</p></div>
+<div><h3>Updates you can undo</h3><p>Update from GitHub or with a zip. Each update is checked first, needs your password, and can be undone.</p></div>
+</div>
+</section>
+
+<section class="block" id="start">
+<h2>Get started</h2>
+<p class="intro">You need web hosting with PHP 8.1 or newer and a file manager. HTTPS is recommended.</p>
+<ol class="steps">
+<li><h3>Download</h3><p>Get <code>site-update-{{VER}}.zip</code> from the <a href="https://github.com/Jackpison/Homebase-Hub/releases/latest">latest release</a>.</p></li>
+<li><h3>Upload and extract</h3><p>Put the zip in your domain's folder in the file manager, and extract it there.</p></li>
+<li><h3>Create your site</h3><p>Open your domain, click the key icon, and enter the setup code from <code>site-data/core/SETUP-CODE.php</code> with a new password.</p></li>
+</ol>
+<p class="small" style="margin-top:18px">Full steps, moving a site and recovering a password: <a href="install.html">Install</a>.</p>
+</section>
+
+<section class="block" id="more">
+<h2>Learn more</h2>
+<div class="more">
+<a href="guide.html"><b>The guide</b><span>Every page and every setting, step by step (PDF).</span></a>
+<a href="security.html"><b>Security</b><span>What protects your data, and what does not.</span></a>
+<a href="changelog.html"><b>Changelog</b><span>What changed in every version.</span></a>
+<a href="https://github.com/Jackpison/Homebase-Hub"><b>Source code</b><span>Read it, build it, report an issue.</span></a>
+</div>
+</section>

@@ -1,7 +1,7 @@
 <!--title:Install-->
 <h1>Install</h1><p class="lead">You need a web host with PHP 8.1 or newer and a file manager (or FTP). HTTPS is recommended.</p>
 <h2>First install</h2>
-<ol><li>Download <code>site-update-X.Y.Z.zip</code> from the <a href="https://github.com/Jackpison/Homebase-Hub/releases/latest">latest release</a>.</li>
+<ol class="num"><li>Download <code>site-update-X.Y.Z.zip</code> from the <a href="https://github.com/Jackpison/Homebase-Hub/releases/latest">latest release</a>.</li>
 <li>In your hosting file manager open the folder of your domain (for example <code>public_html</code>), upload the zip and extract it there.</li>
 <li>Open your domain in a browser and click the key icon (top right). A welcome box opens.</li>
 <li>In the file manager open <code>site-data/core/SETUP-CODE.php</code> and copy the code from the line that starts with <code>SETUP CODE:</code>. It is a PHP file only so that a browser gets a 404 for it.</li>
@@ -12,6 +12,6 @@
 <ul><li><b>From GitHub:</b> press Check Now. If a newer version exists, press Download and Check. Review what will change, type your website password, and apply. The daily check is off by default.</li>
 <li><b>By zip:</b> upload the new zip in the same tab.</li></ul>
 <p>Before anything is replaced the site saves the version it has, and afterwards it looks at itself. If it cannot answer, the saved version comes back by itself. Go Back does the same on request.</p>
-<figure class="shot"><img src="img/s-updates-available.webp" alt="Settings, Updates, with a new version offered (an example release)" width="1280" height="800" loading="lazy"><figcaption>Settings, Updates. This screenshot uses an example release.</figcaption></figure>
+<figure><img src="img/s-updates.webp" alt="Settings, Updates, with Update From GitHub" width="1440" height="900" loading="lazy"><figcaption>Settings, Updates: check GitHub, or upload a zip.</figcaption></figure>
 <h2>Moving or copying the site</h2><p>Copy the whole site folder, data included, or export a backup and import it on the new site.</p>
 <h2>Forgot the password</h2><p>Delete <code>site-data/core/auth.php</code> in your file manager, open the site, click the key icon, and use the setup code from <code>site-data/core/SETUP-CODE.php</code>. Encrypted tabs are locked with your passphrase, so a reset does not touch them.</p>

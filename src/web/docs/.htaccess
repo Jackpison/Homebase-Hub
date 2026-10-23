@@ -1,4 +1,4 @@
-# README and CHANGELOG are for you, not for visitors.
+# README, CHANGELOG and the readable source (src/) are for you, not for visitors.
 <IfModule mod_authz_core.c>
   Require all denied
 </IfModule>

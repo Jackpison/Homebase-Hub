@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Feature requests and questions
+  - name: Ideas and questions
     url: https://t.me/Jackpison
-    about: Please message @Jackpison on Telegram.
+    about: Message @Jackpison on Telegram.
+  - name: Security problems
+    url: https://t.me/Jackpison
+    about: Please report these privately on Telegram, not in a public issue.

@@ -49,8 +49,9 @@ $v = fn($f) => $f . '?v=' . (is_file(__DIR__ . '/' . $f) ? filemtime(__DIR__ . '
 // The tab icon is the site logo from the main Settings.
 $siteLogo = hub_settings()['logo'] ?? '';
 $logoOk = $siteLogo !== '' && is_file(HUB_PUBLIC . '/' . $siteLogo);
-$iconPath = $logoOk ? '../../' . $siteLogo : '';   // one logo for the whole site (no separate start page icon)
-$iconFile = $logoOk ? HUB_PUBLIC . '/' . $siteLogo : '';
+$brand = 'web/core-data/assets/brand/favicon-64.png';   // Homebase Hub's own logo, when no site logo is set
+$iconPath = '../../' . ($logoOk ? $siteLogo : $brand);   // one logo for the whole site (no separate start page icon)
+$iconFile = HUB_PUBLIC . '/' . ($logoOk ? $siteLogo : $brand);
 $iconType = ['ico' => 'image/x-icon', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp'][pathinfo($iconPath, PATHINFO_EXTENSION)] ?? 'image/svg+xml';
 $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0) : "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='26' fill='%23111827'/><circle cx='50' cy='50' r='20' fill='%23A8D8FF'/></svg>";
 
@@ -62,8 +63,8 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.38.0">
-<script src="../core-data/assets/shell.js?v=1.38.0" data-app="home"></script>
+<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.39.0">
+<script src="../core-data/assets/shell.js?v=1.39.0" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <?php if ($iconPath): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php endif; ?>
 <?php if ($first && ($first['type'] ?? 'image') === 'image'): ?>

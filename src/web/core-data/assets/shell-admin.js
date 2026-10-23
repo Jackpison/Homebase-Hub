@@ -1150,7 +1150,7 @@
     }, function () {});
   }
 
-  /* ---------- Changelog: web/core-data/docs/CHANGELOG.md, read through the API (the docs folder is closed to browsers) ---------- */
+  /* ---------- Changelog: web/docs/CHANGELOG.md, read through the API (the docs folder is closed to browsers) ---------- */
   var CL = null, CLWANT = '';             // the parsed file (kept while Settings is open), and a version another tab asked to see
   function mdInline(src) {                // everything is escaped first; only code, bold, italic and web links are turned back into markup
     return String(src).split(/(`[^`]+`)/).map(function (part) {

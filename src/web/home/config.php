@@ -11,7 +11,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
 /*
  * Site limits. You normally don't need to touch this file.
  *
- * Password: the start page uses the one site login (see web/core-data/docs/README.txt).
+ * Password: the start page uses the one site login (see web/docs/README.txt).
  */
 
 // Largest background upload, in megabytes. Your host has its own limit too

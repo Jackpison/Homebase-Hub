@@ -3,7 +3,7 @@
 
 Usage: python3 tools/build.py [--out build]
 Needs: Node (npx esbuild). Writes build/site-update-X.Y.Z.zip and .sha256.
-Steps: copy src/ -> build/tree, save readable copies in docs/src, minify own
+Steps: copy src/ -> build/tree, save readable copies in web/docs/src, minify own
 JS/CSS (not Tools, not vendor), write manifest.json, zip with dots in the name.
 """
 import hashlib, json, os, re, shutil, subprocess, sys, zipfile
@@ -44,11 +44,16 @@ def main():
             p = os.path.join(adir, fn)
             if not m or not os.path.isfile(p):
                 continue
-            sd = os.path.join(TREE, 'web/core-data/docs/src', page)
+            sd = os.path.join(TREE, 'web/docs/src', page)
             os.makedirs(sd, exist_ok=True)
             shutil.copyfile(p, os.path.join(sd, f'{m.group(1)}.src.{m.group(2)}'))
             subprocess.run(['npx', 'esbuild', p, '--minify', '--keep-names', '--target=es2017',
                             '--allow-overwrite', f'--outfile={p}', '--log-level=error'], check=True)
+    # Compatibility for one release (1.39.x): sites on 1.38.x and older read the new version's notes from the old path
+    # (web/core-data/docs/CHANGELOG.md) before they update, so a copy and its access block also ship there.
+    old = os.path.join(TREE, 'web/core-data/docs'); os.makedirs(old, exist_ok=True)
+    shutil.copyfile(os.path.join(TREE, 'web/docs/CHANGELOG.md'), os.path.join(old, 'CHANGELOG.md'))
+    shutil.copyfile(os.path.join(TREE, 'web/docs/.htaccess'), os.path.join(old, '.htaccess'))
     # empty folders from .gitkeep
     for dp, dn, fn in os.walk(TREE):
         if '.gitkeep' in fn:

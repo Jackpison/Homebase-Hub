@@ -21,7 +21,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 
 if (defined('HUB')) return;
-define('HUB', '1.38.0');
+define('HUB', '1.39.0');
 
 const HUB_SESSION_DAYS = 30;
 const HUB_MIN_PASSWORD = 8;

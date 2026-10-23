@@ -9,8 +9,8 @@
  */
 /*
  * Your start page. The site is three folders side by side:
- *   core/       the shared login, settings, backup, Telegram and the bar (the engine), and docs/ (README.txt, CHANGELOG.md)
- *   web/        the pages: home (this start page), links, info, cards, tasks, tools
+ *   web/        the pages (home, links, info, cards, tasks, tools, settings), core-data/ (the shared engine: login,
+ *               settings, backup, Telegram, the bar) and docs/ (README.txt, CHANGELOG.md, readable source)
  *   site-data/  your private data (made by the site; updates never touch it)
  */
 define('HOME_BASE', 'web/home/');

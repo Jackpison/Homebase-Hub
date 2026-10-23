@@ -240,7 +240,8 @@ function up_check(string $name): array {
              'updated' => count($upd), 'new' => count($new), 'removed' => count($rem)];
     // what the new version says about itself: its own section of the changelog inside the zip (shown before you apply it)
     $notes = '';
-    $clf = up_sp($stage, 'web/core-data/docs/CHANGELOG.md');
+    $clf = up_sp($stage, 'web/docs/CHANGELOG.md');
+    if (!is_file($clf)) $clf = up_sp($stage, 'web/core-data/docs/CHANGELOG.md');   // zips before 1.39.0
     if (is_file($clf) && preg_match('/^## ' . preg_quote($man['version'], '/') . '\\b[^\\n]*\\n(.*?)(?=^---\\s*$|^## )/ms', (string)file_get_contents($clf, false, null, 0, 1500000), $nm)) $notes = substr(trim($nm[1]), 0, 24000);
     $s = up_state(); $s['staged'] = $info; $s['plan'] = ['updated' => $upd, 'new' => $new, 'removed' => $rem]; $s['notes'] = $notes; up_state_save($s);
     return ['ok' => true, 'staged' => $info, 'notes' => $notes, 'installed' => HUB, 'relation' => $rel > 0 ? 'newer' : ($rel === 0 ? 'same' : 'older'), 'checks' => $checks,

@@ -6,14 +6,15 @@ FOLDERS
 <site folder>/       the folder of one domain (public_html, an add-on domain folder, a subdomain folder...)
   index.php          the start page (the only file kept in the root)
   web/               everything the site is made of
-    core-data/       the engine shared by every page, its docs, and YOUR OWN FILES
+    core-data/       the engine shared by every page, and YOUR OWN FILES
       api.php cron.php telegram.php     the only PHP files a browser calls: site API, schedule, Telegram replies
       lib/           PHP that other files load: boot, backup, notify, approval, watch, health, update, overview (blocked from the web)
       assets/        what every page loads: shell.js, shell.css, shell-admin.js, vendor/ (PDF, Excel and QR libraries)
       manifest.json  every file of this release with its fingerprint (made when the release is built; Updates uses it)
-      docs/          README.txt (this file) and CHANGELOG.md (every change since 1.0.0, newest first; blocked from the web)
       media/         YOUR OWN FILES: brand (the site logo), home/photos, home/uploads, home/icons (start page) and links/icons
                      (saved link icons). Visitors load them from here. Never replaced by an update.
+    docs/            README.txt (this file), CHANGELOG.md (every change since 1.0.0, newest first) and src/ (the readable
+                     source of every minified script and style); all blocked from the web
     home/            start page      (its pictures are in core-data/media/home)
     links/ info/ cards/ tasks/        each has index.html (the page), api.php, and assets/ (its CSS and JavaScript)
     settings/        the Settings page (a small shell: core-data/assets/shell-admin.js draws everything in it)
@@ -57,7 +58,7 @@ The very first time (when the site does not have this tab yet), upload and extra
 after that the site can update itself. Settings > Updates > Files compares the server with the version's file list
 (web/core-data/manifest.json) and shows files that do not belong, which you can delete from there.
 By hand, if you ever need to: upload and extract the new zip over the site folder. Everything in site-data is left alone.
-Every update zip contains web/core-data/docs/CHANGELOG.md with the full history, so you can see what each version changed.
+Every update zip contains web/docs/CHANGELOG.md with the full history, so you can see what each version changed.
 Keep these folders if you replace files by hand: web/core-data/media (home/photos, home/uploads, home/icons, links/icons) and web/core-data/media/brand.
 
 

@@ -1,6 +1,15 @@
 # Contributing
 
-- **Bugs:** open a GitHub Issue with the version (Settings > Changelog), what you did, what you expected, what happened.
-- **Feature requests and questions:** message [@Jackpison](https://t.me/Jackpison) on Telegram.
-- **Code:** edit the readable files in `src/`, never minified output. Every release bumps the version in `src/web/core-data/lib/boot.php` (`HUB`) and every `?v=`, adds a CHANGELOG entry and a Version Map row. Read `docs/PROJECT-HANDOFF.md` (Part A rules) first.
-- Never commit `site-data/`, passwords, tokens or `config.php`.
+Thank you for helping with Homebase Hub.
+
+- **Found a bug?** Open a [GitHub Issue](https://github.com/Jackpison/Homebase-Hub/issues). Include your version (Settings > Changelog), what you did, what you expected and what happened.
+- **Have an idea or a question?** Message [@Jackpison](https://t.me/Jackpison) on Telegram.
+- **Found a security problem?** Message on Telegram instead of opening a public issue.
+
+## Changing the code
+
+- Edit the readable files in `src/`. The build makes the minified files; never edit those.
+- Each release raises the version in `src/web/core-data/lib/boot.php` (`HUB`) and in every `?v=` on the pages, and adds an entry and a Version Map row to `src/web/docs/CHANGELOG.md` (copied to the root `CHANGELOG.md`).
+- Build with `python3 tools/build.py`. The zip is named with dots (`site-update-1.39.0.zip`) and contains the full changelog.
+- Run the update tests before a release: see `tests/README.md`. All of them must pass.
+- Never commit `site-data/`, `config.php`, passwords or tokens. The build refuses to run if private data is in `src/`.

@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.39.0 | Homebase Hub's own logo is the default logo and tab icon; the docs and readable source moved to web/docs |
 | 1.38.0 | Updates from GitHub (Check Now, an optional daily check that is off by default, one-click download with a checksum, then your password); the project is public on GitHub under GPL-3.0; new installs are named Homebase Hub |
 | 1.37.0 | Info: any number of boxes in each tab (up to 12), each in its own width and height; Classic layout removed, Notebook Cards is the default |
 | 1.36.0 | Home loads faster (phone-sized background photos, Settings styles split out); Info tabs can be Classic, Notebook Cards or Document; Settings: Guided Setup, jump chips and a status pill on every menu item |
@@ -54,6 +55,19 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.39.0
+
+### The logo
+
+- Homebase Hub now has its own logo: a gold house. It is the logo in the bar and the tab icon on every page until you choose your own in Settings > General. Your own logo still replaces it everywhere.
+
+### The docs moved
+
+- `README.txt`, `CHANGELOG.md` and the readable source of every minified script and style moved from `web/core-data/docs` to `web/docs`. They are still closed to browsers.
+- For this one version a copy of the changelog also stays at the old place, so a site on an older version can show "What Is in This Update" before it updates. It will be removed in a later version.
 
 ---
 
