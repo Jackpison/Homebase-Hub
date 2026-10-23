@@ -69,8 +69,41 @@ def page(slug, title, body, wide=False, canonical=True):
             '<button class="mode" type="button" aria-label="Switch between dark and light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button>'
             '<a class="gh" href="https://github.com/Jackpison/Homebase-Hub">GitHub</a></nav></header><main>%s</main>'
             '<footer><div class="in"><span class="sp"><img src="brand/logo-192.png" alt="" width="24" height="24">Homebase Hub is free software under the GPL-3.0 licence.</span>'
-            '<a href="https://t.me/Jackpison">Questions and ideas: @Jackpison on Telegram</a><a href="https://github.com/Jackpison/Homebase-Hub/issues">Report a bug</a><a href="about.html">Licence</a></div></footer></body></html>') % (html.escape(title), '<link rel="canonical" href="%s%s">' % (BASE, url(slug)) if canonical else '', nav, main)
+            '<a href="https://t.me/Jackpison">{{i:send}} Questions and ideas: @Jackpison on Telegram</a><a href="https://github.com/Jackpison/Homebase-Hub/issues">{{i:code}} Report a bug</a><a href="about.html">{{i:shield}} Licence</a></div></footer></body></html>') % (html.escape(title), '<link rel="canonical" href="%s%s">' % (BASE, url(slug)) if canonical else '', nav, main)
     return relink(doc, '' if slug in ('index', '404') else '../' * (slug.count('/') + 1))
+
+# Simple line icons (24 x 24), drawn for this site. {{i:name}} in a page becomes the inline SVG, so no icon file is fetched.
+ICONS = {
+    'home': '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
+    'link': '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+    'note': '<path d="M6 3h9l4 4v14H6z"/><path d="M14.5 3v4.5H19"/><path d="M9 12h7M9 16h7"/>',
+    'card': '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M6.5 15h4"/>',
+    'tasks': '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/>',
+    'tools': '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+    'settings': '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>',
+    'lock': '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+    'shield': '<path d="M12 3 5 6v5.5c0 4.3 2.9 7.8 7 9.5 4.1-1.7 7-5.2 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+    'download': '<path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 19.5h14"/>',
+    'refresh': '<path d="M20 7v4.5h-4.5"/><path d="M4 17v-4.5h4.5"/><path d="M6.2 9.5A7 7 0 0 1 19 11.5M17.8 14.5A7 7 0 0 1 5 12.5"/>',
+    'send': '<path d="M21 4 10.5 14.5"/><path d="M21 4l-6.5 16-4-5.5L5 11z"/>',
+    'server': '<rect x="3.5" y="4" width="17" height="6.5" rx="2"/><rect x="3.5" y="13.5" width="17" height="6.5" rx="2"/><path d="M7 7.2h.01M7 16.8h.01"/>',
+    'book': '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3"/>',
+    'code': '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',
+    'clock': '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    'bell': '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+    'palette': '<path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-.9-.6-1.2-.6-2.1 0-.9.7-1.4 1.6-1.4H17a4 4 0 0 0 4-4C21 6.7 17 3 12 3z"/><path d="M7.5 11h.01M10 7.5h.01M14.5 7.5h.01"/>',
+    'check': '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+    'phone': '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+    'image': '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m4 17 5-4.5 3.5 3 3-2.5L20 17"/>',
+    'sun': '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/>',
+    'key': '<circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l2.5 2.5"/>',
+}
+def icons(doc):
+    """{{i:name}} -> the inline SVG of that icon."""
+    def f(m):
+        if m.group(1) not in ICONS: raise SystemExit('Unknown icon: ' + m.group(1))
+        return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[m.group(1)] + '</svg>'
+    return re.sub(r'\{\{i:([a-z-]+)\}\}', f, doc)
 
 SIZES = (640, 960)
 def make_sizes():
@@ -98,7 +131,7 @@ def srcsets(doc):
     return re.sub(r'(<figure class="f\d+">.*?</figure>)', lambda m: m.group(1).replace(' loading="lazy"', ' decoding="async" fetchpriority="low"'), doc, flags=re.S)
 
 def write(slug, doc):
-    doc = srcsets(doc)
+    doc = srcsets(icons(doc))
     d = OUT if slug == 'index' else os.path.join(OUT, slug); os.makedirs(d, exist_ok=True)
     open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(doc)
 
@@ -127,7 +160,7 @@ def main():
         if slug != 'index':
             open(os.path.join(OUT, slug + '.html'), 'w', encoding='utf-8').write('<!doctype html><meta charset="utf-8"><title>Moved</title><meta http-equiv="refresh" content="0; url=%s/"><link rel="canonical" href="%s%s/"><p>This page moved to <a href="%s/">%s%s/</a>.</p>' % (slug, BASE, slug, slug, BASE, slug))
     nf = page('404', 'Page not found: Homebase Hub', '<h1>Page not found</h1><p class="lead">That address does not exist on this site.</p><div class="btns"><a class="btn pri" href="index.html">Go to the home page</a><a class="btn" href="install.html">Install</a><a class="btn" href="guide.html">Guide</a></div>', canonical=False)
-    open(os.path.join(OUT, '404.html'), 'w', encoding='utf-8').write(nf.replace('<head>', '<head><base href="%s">' % BASE, 1))   # served for any missing address, so its links are absolute
+    open(os.path.join(OUT, '404.html'), 'w', encoding='utf-8').write(icons(nf).replace('<head>', '<head><base href="%s">' % BASE, 1))   # served for any missing address, so its links are absolute
     open(os.path.join(OUT, 'sitemap.xml'), 'w', encoding='utf-8').write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join('<url><loc>%s%s</loc></url>\n' % (BASE, url(s)) for s in SLUGS) + '</urlset>\n')
     open(os.path.join(OUT, 'robots.txt'), 'w', encoding='utf-8').write('User-agent: *\nAllow: /\nSitemap: %ssitemap.xml\n' % BASE)
     if '--no-guide' not in sys.argv:
