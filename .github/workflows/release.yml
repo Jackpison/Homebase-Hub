@@ -25,8 +25,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 tools/release-notes.py "${GITHUB_REF_NAME}" > /tmp/notes.md
-          gh release create "${GITHUB_REF_NAME}" build/site-update-*.zip build/site-update-*.zip.sha256 \
-            --title "${GITHUB_REF_NAME}" --notes-file /tmp/notes.md
+          # A release made on github.com's "Draft a new release" page already exists by now: fill it in instead of failing.
+          if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" build/site-update-*.zip build/site-update-*.zip.sha256 --clobber
+            gh release edit "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file /tmp/notes.md
+          else
+            gh release create "${GITHUB_REF_NAME}" build/site-update-*.zip build/site-update-*.zip.sha256 \
+              --title "${GITHUB_REF_NAME}" --notes-file /tmp/notes.md
+          fi
       - name: Publish latest.json and the website
         env:
           GH_TOKEN: ${{ github.token }}
