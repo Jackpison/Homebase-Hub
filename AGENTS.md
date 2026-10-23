@@ -41,7 +41,7 @@ python3 tests/a11y_test.py build/site-update-X.Y.Z.zip build/site
 sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/apache_test.py
 ```
 
-All of them must pass. CI runs the same checks on every push.
+All of them must pass. CI runs the same checks on every pull request and on every push to `main`.
 
 ## Release checklist
 
