@@ -21,7 +21,7 @@ jobs:
       - name: Library safety check
         run: python3 tests/check_libraries.py
       - name: Build
-        run: npm i --no-save esbuild && python3 tools/build.py
+        run: npm i --no-save esbuild@0.28.2 && python3 tools/build.py
       - name: Check zip name and changelog
         run: |
           ls build/site-update-*.zip
@@ -42,7 +42,7 @@ jobs:
         with: { python-version: '3.12' }
       - name: Tools for the tests
         run: |
-          npm i --no-save esbuild axe-core
+          npm i --no-save esbuild@0.28.2 axe-core@4.14.0
           pip install playwright==1.56.0 openpyxl pypdf pillow reportlab
           python -m playwright install --with-deps chromium
       - name: Build the zip and the website

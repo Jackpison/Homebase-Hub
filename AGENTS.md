@@ -30,7 +30,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 ## Checks before a pull request
 
 ```
-npm i --no-save esbuild axe-core
+npm i --no-save esbuild@0.28.2 axe-core@4.14.0
 python3 tests/check_libraries.py
 python3 tools/build.py
 python3 tools/make-site.py --no-guide
