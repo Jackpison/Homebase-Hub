@@ -39,11 +39,26 @@ def md(text):
         else: close(); out.append('<p>%s</p>' % inline(ln))
     close(); flush(); return '\n'.join(out)
 
-def page(slug, title, body, wide=False):
-    nav = ''.join('<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if h == slug + '.html' else '', n) for h, n in NAV)
+BASE = 'https://jackpison.github.io/Homebase-Hub/'
+SLUGS = [s for s, _ in PAGES]
+def url(slug): return '' if slug == 'index' else slug + '/'
+
+def relink(doc, root):
+    """Pages are written with plain names (install.html, img/x.webp); this turns them into folder addresses (install/) and
+    adds the way back up to the site's top ('' on the home page, '../' elsewhere), so no address ever ends in index.html."""
+    def f(m):
+        attr, u = m.group(1), m.group(2)
+        if re.match(r'^(https?:|mailto:|data:|#)', u): return m.group(0)
+        m2 = re.match(r'^([a-z]+)\.html(#.*)?$', u)
+        if m2 and m2.group(1) in SLUGS: return '%s="%s%s%s"' % (attr, root, url(m2.group(1)), m2.group(2) or '')
+        return '%s="%s%s"' % (attr, root, u)
+    return re.sub(r'\b(href|src)="([^"]*)"', f, doc)
+
+def page(slug, title, body, wide=False, canonical=True):
+    nav = ''.join('<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if h == (slug + '.html') else '', n) for h, n in NAV)
     main = body if wide else '<div class="page">' + body + '</div>'
-    return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-            '<title>%s</title><meta name="description" content="Homebase Hub is a self-hosted start page with bookmarks, notes, cards, tasks and browser tools. One login, private, on your own server.">'
+    doc = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+            '<title>%s</title>%s<meta name="description" content="Homebase Hub is a self-hosted start page with bookmarks, notes, cards, tasks and browser tools. One login, private, on your own server.">'
             '<meta name="theme-color" content="#000000"><link rel="icon" type="image/png" href="brand/favicon-32.png"><link rel="apple-touch-icon" href="brand/apple-touch-icon.png">'
             '<meta property="og:title" content="Homebase Hub"><meta property="og:description" content="A self-hosted start page with bookmarks, notes, cards, tasks and tools.">'
             '<meta property="og:image" content="https://jackpison.github.io/Homebase-Hub/brand/social-preview.png">'
@@ -53,7 +68,12 @@ def page(slug, title, body, wide=False):
             '<button class="mode" type="button" aria-label="Switch between dark and light" onclick="var r=document.documentElement,l=r.dataset.theme!==\'light\';if(l)r.dataset.theme=\'light\';else delete r.dataset.theme;try{localStorage.setItem(\'hh-theme\',l?\'light\':\'dark\')}catch(e){}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button>'
             '<a class="gh" href="https://github.com/Jackpison/Homebase-Hub">GitHub</a></nav></header><main>%s</main>'
             '<footer><div class="in"><span class="sp"><img src="brand/logo-192.png" alt="" width="24" height="24">Homebase Hub is free software under the GPL-3.0 licence.</span>'
-            '<a href="https://t.me/Jackpison">Questions and ideas: @Jackpison on Telegram</a><a href="https://github.com/Jackpison/Homebase-Hub/issues">Report a bug</a><a href="about.html">Licence</a></div></footer></body></html>') % (html.escape(title), nav, main)
+            '<a href="https://t.me/Jackpison">Questions and ideas: @Jackpison on Telegram</a><a href="https://github.com/Jackpison/Homebase-Hub/issues">Report a bug</a><a href="about.html">Licence</a></div></footer></body></html>') % (html.escape(title), '<link rel="canonical" href="%s%s">' % (BASE, url(slug)) if canonical else '', nav, main)
+    return relink(doc, '' if slug in ('index', '404') else '../')
+
+def write(slug, doc):
+    d = OUT if slug == 'index' else os.path.join(OUT, slug); os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(doc)
 
 def main():
     shutil.rmtree(OUT, ignore_errors=True); os.makedirs(OUT)
@@ -68,9 +88,17 @@ def main():
         m = re.match(r'<!--title:(.*?)-->\n', t); title = m.group(1) if m else slug; body = t[m.end():] if m else t
         wide = body.startswith('<!--wide-->')
         body = body.replace('Download {{VER}}', 'Download v' + ver).replace('{{VER}}', ver)
-        open(os.path.join(OUT, slug + '.html'), 'w', encoding='utf-8').write(page(slug, 'Homebase Hub: ' + title if slug != 'index' else title, body, wide))
+        write(slug, page(slug, 'Homebase Hub: ' + title if slug != 'index' else title, body, wide))
     cl = open(os.path.join(ROOT, 'CHANGELOG.md'), encoding='utf-8').read().replace('# Changelog', '', 1)
-    open(os.path.join(OUT, 'changelog.html'), 'w', encoding='utf-8').write(page('changelog', 'Homebase Hub: Changelog', '<h1>Changelog</h1><p class="lead">Every version, newest first.</p><div class="cl">' + md(cl) + '</div>'))
+    write('changelog', page('changelog', 'Homebase Hub: Changelog', '<h1>Changelog</h1><p class="lead">Every version, newest first.</p><div class="cl">' + md(cl) + '</div>'))
+    # the old addresses (install.html ...) were published before: they forward to the new ones
+    for slug in SLUGS:
+        if slug != 'index':
+            open(os.path.join(OUT, slug + '.html'), 'w', encoding='utf-8').write('<!doctype html><meta charset="utf-8"><title>Moved</title><meta http-equiv="refresh" content="0; url=%s/"><link rel="canonical" href="%s%s/"><p>This page moved to <a href="%s/">%s%s/</a>.</p>' % (slug, BASE, slug, slug, BASE, slug))
+    nf = page('404', 'Page not found: Homebase Hub', '<h1>Page not found</h1><p class="lead">That address does not exist on this site.</p><div class="btns"><a class="btn pri" href="index.html">Go to the home page</a><a class="btn" href="install.html">Install</a><a class="btn" href="guide.html">Guide</a></div>', canonical=False)
+    open(os.path.join(OUT, '404.html'), 'w', encoding='utf-8').write(nf.replace('<head>', '<head><base href="%s">' % BASE, 1))   # served for any missing address, so its links are absolute
+    open(os.path.join(OUT, 'sitemap.xml'), 'w', encoding='utf-8').write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join('<url><loc>%s%s</loc></url>\n' % (BASE, url(s)) for s in SLUGS) + '</urlset>\n')
+    open(os.path.join(OUT, 'robots.txt'), 'w', encoding='utf-8').write('User-agent: *\nAllow: /\nSitemap: %ssitemap.xml\n' % BASE)
     if '--no-guide' not in sys.argv:
         subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'make-guide.py'), os.path.join(OUT, 'Homebase-Hub-Guide.pdf')], check=True)
         subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'make-guide.py'), os.path.join(OUT, 'Homebase-Hub-Guide-Print.pdf'), '--print'], check=True)

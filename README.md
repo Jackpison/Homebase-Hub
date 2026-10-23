@@ -8,7 +8,7 @@
 <a href="https://github.com/Jackpison/Homebase-Hub/releases/latest"><b>Download</b></a> ·
 <a href="https://jackpison.github.io/Homebase-Hub/">Website</a> ·
 <a href="https://jackpison.github.io/Homebase-Hub/Homebase-Hub-Guide.pdf">User guide (PDF)</a> ·
-<a href="https://jackpison.github.io/Homebase-Hub/changelog.html">Changelog</a>
+<a href="https://jackpison.github.io/Homebase-Hub/changelog/">Changelog</a>
 </p>
 
 <p align="center"><img src="website/img/home-2.webp" alt="Homebase Hub start page with a mountain photo" width="900"></p>
@@ -71,7 +71,7 @@ Open **Settings > Updates**. Press **Check Now** to look for a new version on Gi
 - Needs PHP 8.3 or newer. Settings tells you when your PHP stops getting security fixes, and an update that needs a newer PHP than your server has is refused.
 - Updates come only from this project's GitHub releases, are checked before anything changes, and need your password. Releases are not signed: the checksum catches damaged downloads, not a compromised account.
 
-More: [Security](https://jackpison.github.io/Homebase-Hub/security.html).
+More: [Security](https://jackpison.github.io/Homebase-Hub/security/).
 
 ## Building and testing
 
@@ -88,7 +88,7 @@ Releases are made by pushing a tag `vX.Y.Z` that matches the version in `src/web
 
 ## Changelog
 
-The full history of every version is in [CHANGELOG.md](CHANGELOG.md) and on the [website](https://jackpison.github.io/Homebase-Hub/changelog.html). Each release page lists only what changed in that version.
+The full history of every version is in [CHANGELOG.md](CHANGELOG.md) and on the [website](https://jackpison.github.io/Homebase-Hub/changelog/). Each release page lists only what changed in that version.
 
 ## Contact
 

@@ -21,7 +21,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 
 if (defined('HUB')) return;
-define('HUB', '1.41.0');
+define('HUB', '1.42.0');
 const HUB_MIN_PHP = '8.3';   // the oldest PHP this version supports and is tested on; an update zip carries it as "minPhp" in its file list
 
 /** When each PHP branch stops getting security fixes (https://www.php.net/supported-versions, checked 2026-10-23). Branches not listed are newer than this table. Add a row each November. */
@@ -256,6 +256,36 @@ function hub_rate_fail(): int {
 function hub_rate_clear(): void {
     $k = hub_rate_key();
     hub_rate_update(function ($all) use ($k) { unset($all[$k]); return [$all, null]; });
+}
+
+/* ======================= Tools > Favicon: icons fetched for the browser ======================= */
+
+/** A visitor may fetch at most $max icons in $window seconds (Tools > Favicon download). The address is kept only as a hash and forgotten when the window ends. */
+function hub_icon_allow(int $max = 60, int $window = 600): bool {
+    $fh = @fopen(hub_dir('core') . '/favlimit.php', 'c+'); if (!$fh) return true;
+    flock($fh, LOCK_EX);
+    $s = stream_get_contents($fh); if (strncmp($s, '<?php', 5) === 0) $s = (string)substr($s, strpos($s, "\n") + 1);
+    $all = json_decode($s, true); if (!is_array($all)) $all = [];
+    $now = time(); $k = hub_rate_key();
+    foreach ($all as $key => $v) if (($v['t'] ?? 0) < $now - $window) unset($all[$key]);
+    $r = $all[$k] ?? ['t' => $now, 'n' => 0]; if ($now - $r['t'] > $window) $r = ['t' => $now, 'n' => 0];
+    $ok = $r['n'] < $max; if ($ok) $r['n']++;
+    $all[$k] = $r;
+    ftruncate($fh, 0); rewind($fh); fwrite($fh, HUB_GUARD . json_encode($all)); fflush($fh); flock($fh, LOCK_UN); fclose($fh);
+    return $ok;
+}
+/** A website name as the Favicon tool sends it: letters, digits and hyphens in dot-separated parts, at least one dot, not an IP address. Returns it lower-cased, or null. */
+function hub_icon_domain($d): ?string {
+    $d = strtolower(trim((string)$d));
+    if ($d === '' || strlen($d) > 253 || filter_var($d, FILTER_VALIDATE_IP)) return null;
+    return preg_match('/^([a-z0-9]([a-z0-9-]*[a-z0-9])?)(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/', $d) ? $d : null;
+}
+function hub_png_ok(string $b): bool { return strlen($b) > 60 && strlen($b) < 400000 && strncmp($b, "\x89PNG\r\n\x1a\n", 8) === 0; }
+/** The PNG of a website's icon from Google's public favicon service (only the website name is sent), or null. $sz is 16 to 256. */
+function hub_icon_fetch(string $domain, int $sz): ?string {
+    if (defined('HUB_TEST_FAVICON')) return (string)@file_get_contents(HUB_TEST_FAVICON);   // tests only: the site never defines this
+    $r = hub_get_https('https://www.google.com/s2/favicons?domain=' . rawurlencode($domain) . '&sz=' . $sz, ['Accept: image/png,image/*;q=0.8'], 400000, 10);
+    return $r && $r[0] === 200 && hub_png_ok($r[1]) ? $r[1] : null;
 }
 
 /* ======================= the one password ======================= */

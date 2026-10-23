@@ -13,7 +13,7 @@ if len(sys.argv) < 4:
              '  OLDER     any older release zip (for the upload upgrade and Go Back tests)\n'
              'A "next" version (CURRENT with its patch number raised) is made by this script.')
 CUR, REL38, OLD = sys.argv[1:4]
-import re, tempfile
+import re, tempfile, urllib.parse
 
 def zip_version(p): return re.search(r"define\('HUB', '([^']+)'\)", zipfile.ZipFile(p).read('web/core-data/lib/boot.php').decode()).group(1)
 
@@ -213,6 +213,31 @@ try:
     prog = ("require '%s/web/core-data/lib/boot.php'; $now = strtotime('2026-10-23 12:00 UTC'); foreach (['7.4','8.1','8.2','8.3','8.4','8.5','9.0'] as $b) { $n = hub_php_notice($b, $now); echo $b, '=', $n ? $n['level'] : 'none', ' '; }" % s.dir)
     out = subprocess.run(['php', '-r', prog], capture_output=True, text=True).stdout.strip()
     check('E6 the PHP support notice: 7.4 and 8.1 warn, 8.2 gives notice, newer ones stay quiet (at 23 Oct 2026)', out == '7.4=warn 8.1=warn 8.2=info 8.3=none 8.4=none 8.5=none 9.0=none', out)
+    # ===== F. Tools > Favicon: the icon address (the icon service is replaced by a fixture; nothing leaves this computer) =====
+    fixture = open(os.path.join(HERE, 'favicon-fixture.png'), 'rb').read()
+    s = Site(CUR, 9500)
+    def anon(qs, method='GET'):
+        rq = urllib.request.Request(s.base + '/web/core-data/api.php?action=favicon' + qs, method=method, data=b'{}' if method == 'POST' else None, headers={'User-Agent': UA})
+        try:
+            r = urllib.request.urlopen(rq, timeout=30); return r.status, dict(r.headers), r.read()
+        except urllib.error.HTTPError as e: return e.code, dict(e.headers), e.read()
+    st_, hd, bd = anon('&domain=Example.com&sz=64')
+    check('F1 a visitor without a login gets the icon as a PNG', st_ == 200 and hd.get('Content-Type') == 'image/png' and bd == fixture, (st_, hd.get('Content-Type')))
+    check('F2 512 is an offered size', anon('&domain=example.com&sz=512')[0] == 200)
+    bad = ['localhost', '127.0.0.1', '10.0.0.5', 'a b.com', 'exa_mple.com', '-bad.com', 'bad-.com', 'x.com/../etc', 'http://x.com', 'x.com:80', ('a' * 300) + '.com', '', '..', 'x..com']
+    wrong = [d for d in bad if anon('&domain=' + urllib.parse.quote(d) + '&sz=64')[0] != 400]
+    check('F3 anything that is not a plain website name is refused', not wrong, wrong)
+    check('F4 sizes that are not offered are refused', all(anon('&domain=example.com' + z)[0] == 400 for z in ('&sz=7', '&sz=0', '&sz=1024', '&sz=abc', '')))
+    check('F5 only GET is accepted', anon('&domain=example.com&sz=64', 'POST')[0] == 405)
+    n_ok = 2 + 0; code = 200
+    while code == 200 and n_ok < 100: code = anon('&domain=example.com&sz=32')[0]; n_ok += 1 if code == 200 else 0
+    st_, hd, _b = anon('&domain=example.com&sz=32')
+    check('F6 a visitor is limited to 60 icons per 10 minutes, then gets a clear wait message', code == 429 and st_ == 429 and 58 <= n_ok <= 60 and hd.get('Retry-After') == '600', (code, n_ok, hd.get('Retry-After')))
+    zf = zipfile.ZipFile(CUR); defs = [n for n in zf.namelist() if n.endswith('.php') and re.search(rb"define\('HUB_TEST_", zf.read(n))]
+    check('F7 the release never turns the test shortcut on by itself', not defs, defs)
+    prog = ("require '%s/web/core-data/lib/boot.php'; echo (hub_png_ok(file_get_contents('%s')) ? 'y' : 'n'), (hub_png_ok('GIF89a' . str_repeat('x', 200)) ? 'y' : 'n'), (hub_png_ok('<html>' . str_repeat('x', 200)) ? 'y' : 'n'), (hub_png_ok(\"\\x89PNG\\r\\n\\x1a\\n\" . str_repeat('x', 30)) ? 'y' : 'n');" % (s.dir, os.path.join(HERE, 'favicon-fixture.png')))
+    out = subprocess.run(['php', '-r', prog], capture_output=True, text=True).stdout.strip()
+    check('F8 only a real PNG of a sensible size is passed on (not a GIF, a web page or a stub)', out == 'ynnn', out)
 finally:
     for p in procs: p.terminate()
 print('\n%d/%d passed' % (sum(res), len(res)))

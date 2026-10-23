@@ -28,6 +28,8 @@ def sha(p):
 
 def main():
     ver = version()
+    chk = subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'tools-rev.py'), '--check'], capture_output=True, text=True)
+    if chk.returncode: sys.exit('Refusing to build: ' + (chk.stderr or chk.stdout).strip())
     for bad in ('src/site-data', 'src/web/core-data/config.php', 'src/web/core-data/data'):
         if os.path.exists(os.path.join(ROOT, bad)):
             sys.exit('Refusing to build: %s exists in the source tree (it is private data and must never be shipped). Delete it.' % bad)

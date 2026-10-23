@@ -24,6 +24,7 @@
  *  POST recovery_new {password}            new recovery codes
  *  POST settings   {settings}
  *  GET  changelog                          the text of web/docs/CHANGELOG.md, for the Changelog section in Settings
+ *  GET  favicon?domain=..&sz=..            Tools > Favicon: a website's icon as a PNG (open to visitors, 60 a visitor per 10 minutes)
  *  GET  backup_overview                    parts, tabs and earlier versions for the Backup panel
  *  GET  backup?parts=...&links=..&info=..  downloads the backup file  (t = security token)
  *  POST restore    {backup, pick, mode}
@@ -313,6 +314,19 @@ case 'logo':   // POST {data: "data:image/png;base64,..."} sets the site logo; P
     foreach (glob($dir . '/logo-*') ?: [] as $f) if ($path === '' || basename($f) !== basename($path)) @unlink($f);   // old logos, only now
     hub_settings_update(function ($s) use ($path) { $s['logo'] = $path; return $s; });
     hub_json(200, ['ok' => true, 'state' => hub_public_state()]);
+
+case 'favicon':   // Tools > Favicon: the icon of a website, fetched here because Google's service does not let a browser save its pictures
+    if ($method !== 'GET') hub_json(405, ['ok' => false, 'error' => 'Use GET.']);
+    $dom = hub_icon_domain($_GET['domain'] ?? ''); $sz = (int)($_GET['sz'] ?? 0);
+    if ($dom === null) hub_json(400, ['ok' => false, 'error' => 'Enter a website name like example.com.']);
+    if (!in_array($sz, [16, 32, 48, 64, 128, 256, 512], true)) hub_json(400, ['ok' => false, 'error' => 'That size is not offered.']);
+    if (!hub_icon_allow()) { header('Retry-After: 600'); hub_json(429, ['ok' => false, 'error' => 'Too many icons in a short time. Try again in a few minutes.']); }
+    if (!defined('HUB_TEST_FAVICON') && !function_exists('curl_init')) hub_json(503, ['ok' => false, 'error' => 'This server cannot reach the icon service (PHP has no curl).']);
+    @set_time_limit(20);
+    $png = hub_icon_fetch($dom, min($sz, 256));   // the service gives at most 256; the browser enlarges it for 512
+    if ($png === null) hub_json(502, ['ok' => false, 'error' => 'The icon service did not answer. Try again later.']);
+    header('Content-Type: image/png'); header('Content-Length: ' . strlen($png)); header('Cache-Control: public, max-age=86400'); header('X-Content-Type-Options: nosniff');
+    echo $png; exit;
 
 case 'diag':   // Settings > Server check
     need_admin(false);

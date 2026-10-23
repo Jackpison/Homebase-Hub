@@ -16,3 +16,4 @@ src/web/core-data/media/**
 !src/web/core-data/media/**/
 !src/web/core-data/media/**/.gitkeep
 !src/web/core-data/media/.htaccess
+__pycache__/

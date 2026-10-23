@@ -184,6 +184,7 @@ story += chapter('9', 'Tools', 'Small tools that run in your browser.',
  shot('tools-crop', 'Tools, grouped into sections.'),
  table(['Kind', 'Tools'], [['Images', 'Crop, circle crop, resize, compress, convert, rotate, adjust, watermark, redact, collage, meme, ID photo, colours, Base64, SVG to PNG, favicon, metadata'],
    ['PDF', 'Merge, compress, organise, annotate, sign, protect, extract text, PDF to images, images to PDF'], ['Other', 'Text from images (OCR), background removal, QR codes, hashes, JSON formatter, text tool, zip files']]),
+ P('%s (Get from a Website) shows a website\'s icon in 16, 32, 64, 128, 256 and 512 pixels. Press %s under a size and the file is saved right away. Google\'s icon service gives at most 256 pixels, so the 512 picture is enlarged from that.' % (C('Favicon'), C('PNG'))),
  P('Tools has its own sections: Tools, Recent, Favourites, one per category, Organise and Settings. In %s you star favourites, drag tools to reorder them or move them to another section, and hide the ones you do not use.' % C('Organise')),
  Tip('Heavy engines, such as OCR and background removal, only load when a tool needs them.'))
 

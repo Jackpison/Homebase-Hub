@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.42.0 | Tools > Favicon: a 512 × 512 size, and downloads save right there instead of opening a new tab; the website uses clean addresses |
 | 1.41.0 | New padlock pictures: gold for private tabs, green for encrypted tabs, in Info and Links |
 | 1.40.0 | Needs PHP 8.3 or newer; the site tells you when your PHP stops getting security fixes; the bundled libraries were reviewed |
 | 1.39.0 | Homebase Hub's own logo is the default logo and tab icon; the docs and readable source moved to web/docs |
@@ -57,6 +58,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.42.0
+
+### Tools: Favicon
+
+- **Get from a Website** now offers **512 × 512** next to 16, 32, 64, 128 and 256. Google's icon service gives at most 256 × 256, so the 512 picture is enlarged from that, and the page says so.
+- **Downloads save right there.** Before, a download opened the icon in a new tab and asked you to right-click and save it, because Google's service does not let a web page save its pictures. Now your own site fetches the icon and the browser saves it as a file, like `example.com-favicon-512.png`.
+- Only the website name is sent to Google, as before, now through your site. The icon address is open to visitors but limited to 60 icons per visitor per 10 minutes, accepts only real website names and the sizes listed, and only ever returns a PNG.
+- If your hosting cannot reach other websites, the tool says so instead of opening a new tab. Settings > Health > Server Check shows whether it can.
+
+### Tools files are now checked on every build
+
+- A short fingerprint of the Tools files decides when your browser throws away its saved copy of them. A new script, `tools/tools-rev.py`, makes it, and the build refuses to run when it is out of date, so a changed Tools file can never be served from an old saved copy.
 
 ---
 
