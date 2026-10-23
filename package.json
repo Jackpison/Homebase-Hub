@@ -1,0 +1,10 @@
+{
+  "name": "homebase-hub-tools",
+  "private": true,
+  "description": "Build and test tools only. Nothing here is part of the site or ships in the update zip.",
+  "license": "GPL-3.0-only",
+  "devDependencies": {
+    "axe-core": "4.14.0",
+    "esbuild": "0.28.2"
+  }
+}

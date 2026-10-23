@@ -84,7 +84,7 @@ More on the [Security page](https://jackpison.github.io/Homebase-Hub/security/).
 The readable source is in `src/`. To build the update zip you need Python 3 and Node:
 
 ```
-npm i --no-save esbuild@0.28.2
+npm ci
 python3 tools/build.py
 ```
 

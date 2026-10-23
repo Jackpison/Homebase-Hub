@@ -137,7 +137,7 @@ function hub_jput(string $f, string $json): bool {
 
 /* ======================= requests ======================= */
 
-function hub_json($code, $arr): void {
+function hub_json($code, $arr): never {
     if (!headers_sent()) { http_response_code($code); header('Content-Type: application/json; charset=utf-8'); }
     echo json_encode($arr, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     exit;

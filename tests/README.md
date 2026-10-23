@@ -2,12 +2,29 @@
 
 These run on your own computer. Nothing here is part of the update zip.
 
+## Unit tests (PHP, no browser)
+
+`php tests/unit/run.php` runs every `tests/unit/*_test.php` on its own fresh copy of `src/`. Telegram is replaced by `telegram_stub.php`, a local stand-in, through `NT_TEST_API`, which only the tests define. It takes a few seconds and needs only PHP 8.3 with openssl and curl.
+
+- `snooze_test.php`: the Snooze buttons, `/snooze`, the daily digest and the Due Now card.
+- `logic_test.php`: `/add` parsing, money, repeat dates, completing tasks, the Favicon helpers, the PHP support notice, safe names in an update zip, backup encryption, and a check that no PHP file defines a test shortcut.
+
+Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen', $ok)`.
+
+## Static analysis
+
+`phpstan.neon` (level 1) is run by CI with a pinned PHPStan. See AGENTS.md for the command. `tests/phpstan-bootstrap.php` only tells it the folder constants that `boot.php` defines at run time.
+
+## Python packages
+
+`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`.
+
 ## Update tests
 
 `update_test.py` installs real zips into temporary folders, runs each site with PHP's built-in server, and checks updating from GitHub and by upload against a local stand-in for GitHub. It covers the full update, a wrong checksum, a wrong size, damaged and cut-off downloads, a wrong version, a broken `latest.json`, the API fallback (asked at most once a day), redirects to other hosts, the security token, the daily check switch, upgrading from the previous release, the notes preview, and Go Back.
 
 ```
-npm i --no-save esbuild@0.28.2
+npm ci
 python3 tools/build.py                        # CURRENT
 python3 tests/update_test.py build/site-update-1.40.0.zip site-update-1.39.0.zip site-update-1.37.0.zip
 ```

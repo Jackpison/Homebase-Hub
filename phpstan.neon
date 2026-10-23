@@ -1,0 +1,12 @@
+# Static analysis of the site's PHP (see AGENTS.md). Run:  php phpstan.phar analyse
+parameters:
+    level: 1
+    paths:
+        - src
+    bootstrapFiles:
+        - tests/phpstan-bootstrap.php
+    ignoreErrors:
+        # every page's api.php has its own small out() helper; PHPStan reads all pages as one program and mixes them up
+        - '#^Function out invoked with \d+ parameters?, \d+ required\.$#'
+        # a PHP feature PHPStan does not model: this variable exists after a file_get_contents() over http
+        - '#^Variable \$http_response_header on left side of \?\? always exists#'
