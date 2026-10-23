@@ -23,7 +23,8 @@ links={'tabs':[{'id':'main','title':'Bookmarks','categories':[
  {'title':'Maps and Travel','links':[{'title':'OpenStreetMap','url':'https://www.openstreetmap.org'},{'title':'Wikivoyage','url':'https://www.wikivoyage.org'},{'title':'Time and Date','url':'https://www.timeanddate.com'}]},
  {'title':'Home Network','links':[{'title':'Router','url':'http://192.168.1.1'},{'title':'Media Server','url':'https://example.com'},{'title':'Printer','url':'http://192.168.1.20'}]},
  {'title':'Music','links':[{'title':'Bandcamp','url':'https://bandcamp.com'},{'title':'Radio Garden','url':'https://radio.garden'}]},
- {'title':'Learning','links':[{'title':'Khan Academy','url':'https://www.khanacademy.org'},{'title':'Coursera','url':'https://www.coursera.org'}]}]}]}
+ {'title':'Learning','links':[{'title':'Khan Academy','url':'https://www.khanacademy.org'},{'title':'Coursera','url':'https://www.coursera.org'}]}]},
+ {'id':'priv','title':'Private','private':True,'categories':[{'title':'Accounts','links':[{'title':'Bank','url':'https://example.com/bank'},{'title':'Health Portal','url':'https://example.com/health'}]}]}]}
 print('links',post('/web/links/api.php?action=save',{'data':links}).get('ok'))
 today=datetime.date.today(); d=lambda n:(today+datetime.timedelta(days=n)).isoformat()
 tasks=[{'name':'Renew domain name','due':d(12),'repeat':{'n':1,'unit':'year'},'price':1199,'cur':'INR','cat':'Website','pay':'Card'},

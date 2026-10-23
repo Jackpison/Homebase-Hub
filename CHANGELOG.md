@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.41.0 | New padlock pictures: gold for private tabs, green for encrypted tabs, in Info and Links |
 | 1.40.0 | Needs PHP 8.3 or newer; the site tells you when your PHP stops getting security fixes; the bundled libraries were reviewed |
 | 1.39.0 | Homebase Hub's own logo is the default logo and tab icon; the docs and readable source moved to web/docs |
 | 1.38.0 | Updates from GitHub (Check Now, an optional daily check that is off by default, one-click download with a checksum, then your password); the project is public on GitHub under GPL-3.0; new installs are named Homebase Hub |
@@ -56,6 +57,16 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.41.0
+
+### Padlocks you can tell apart
+
+- A **gold padlock** now marks a **private** tab (only shown when you are logged in), and a **green padlock with a tick** marks an **encrypted** tab. Before, both looked alike in Links, and both were thin outlines.
+- The same pictures are used on the "Encrypted Tab" unlock card and on the bar that says "Encrypted tab, unlocked on this device until you log out or lock it", in Info and in Links.
+- The tab's tooltip says which kind it is.
 
 ---
 

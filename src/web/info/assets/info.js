@@ -310,9 +310,9 @@ function syncDom(){
   for(const t of TABS){
     if($("panel-"+t.id)){syncBoxes(t);continue}
     const m=document.createElement("main");m.className="boxes";m.id="panel-"+t.id;m.dataset.tab=t.id;m.setAttribute("role","tabpanel");m.hidden=true;
-    m.insertAdjacentHTML("beforeend",`<div class="gate">${LOCKC}<h3>Encrypted Tab</h3><p>This tab is encrypted. Unlock it with your ${VAULT_LOGIN()?"website password":"encryption passphrase"} to view and edit it.</p>`+
+    m.insertAdjacentHTML("beforeend",`<div class="gate">${IMG_SAFE}<h3>Encrypted Tab</h3><p>This tab is encrypted. Unlock it with your ${VAULT_LOGIN()?"website password":"encryption passphrase"} to view and edit it.</p>`+
       `<button type="button" class="mbtn" data-unlock="1">Unlock</button></div>`+
-      `<div class="encbar">${LOCKC}<span>Encrypted tab, unlocked on this device until you ${keepOn()?"":"reload, "}log out or lock it.</span><button type="button" data-lockenc="1">Lock Now</button></div><nav class="outline" aria-label="Outline"></nav><div class="bxs"><button type="button" class="addbox" data-addbox="1">+ Add Box</button></div>`);
+      `<div class="encbar">${IMG_SAFE}<span>Encrypted tab, unlocked on this device until you ${keepOn()?"":"reload, "}log out or lock it.</span><button type="button" data-lockenc="1">Lock Now</button></div><nav class="outline" aria-label="Outline"></nav><div class="bxs"><button type="button" class="addbox" data-addbox="1">+ Add Box</button></div>`);
     $("panels").appendChild(m);syncBoxes(t);setHead(t);
   }
   renderTabs();renderGates();
@@ -722,8 +722,8 @@ async function copyBox(b,btn){
 
 /* tabs */
 const PEN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
-const LOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-const LOCKC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10.2"/><rect x="7.6" y="11" width="8.8" height="6.4" rx="1.4"/><path d="M9.6 11V9.2a2.4 2.4 0 0 1 4.8 0V11"/></svg>';
+/* Padlock pictures: a gold padlock marks a private tab, a green safe padlock marks an encrypted one (web/core-data/assets/brand). */
+const IMG_LOCK='<img src="../core-data/assets/brand/lock.png" alt="" width="16" height="16">',IMG_SAFE='<img src="../core-data/assets/brand/safe.png" alt="" width="16" height="16">';
 function renderTabs(){
   const empty=!TABS.length;
   $("closed").hidden=WAIT||!(CLOSED||(empty&&!authed));
@@ -736,8 +736,8 @@ function renderTabs(){
   $("tabs").innerHTML=TABS.map((t,i)=>{const c=tabColor(t,i),on=t.id===active,id=esc(t.id),nm=esc(t.name);
     return`<div class="tabi${on?" on":""}" role="none" data-t="${id}" style="--tc:${c};--tf:${textOn(c)}">`+
       `<button class="tab" role="tab" data-t="${id}" aria-selected="${on}">${nm}`+
-      (t.enc?`<span class="lk enc" title="Encrypted tab: encrypted with your passphrase">${LOCKC}</span>`
-       :t.private?`<span class="lk" title="Private tab: only visible when you're logged in">${LOCK}</span>`:"")+`</button>`+
+      (t.enc?`<span class="lk enc" title="Encrypted tab: encrypted with your passphrase">${IMG_SAFE}</span>`
+       :t.private?`<span class="lk" title="Private tab: only visible when you're logged in">${IMG_LOCK}</span>`:"")+`</button>`+
       `<button class="pen" type="button" title="Edit Tab" aria-label="Edit tab ${nm}">${PEN}</button></div>`}).join("")+
     (TABS.length<MAXTAB?'<button class="tab add" data-add="1" title="Add Tab" aria-label="Add Tab">+</button>':"");
   for(const t of TABS){const m=$("panel-"+t.id);if(m){m.hidden=t.id!==active;m.style.setProperty("--tc",tabColor(t,TABS.indexOf(t)))}}

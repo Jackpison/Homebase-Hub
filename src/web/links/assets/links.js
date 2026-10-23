@@ -101,7 +101,8 @@ const ICONS = {
   right: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"/></svg>',
   edit: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg>',
   del: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
-  lock: '<svg class="lock" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2h.5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zm1.5 0h4V5a2 2 0 0 0-4 0z"/></svg>',
+  lock: '<img class="lock" src="../core-data/assets/brand/lock.png" alt="" width="16" height="16">',   // a private tab
+  safe: '<img class="lock" src="../core-data/assets/brand/safe.png" alt="" width="16" height="16">',   // an encrypted tab
   lgrip: '<svg viewBox="0 0 9 14" fill="currentColor"><circle cx="2" cy="2" r="1.3"/><circle cx="7" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="7" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="7" cy="12" r="1.3"/></svg>',
   grip: '<svg viewBox="0 0 12 16" fill="currentColor"><circle cx="3.5" cy="3" r="1.4"/><circle cx="8.5" cy="3" r="1.4"/><circle cx="3.5" cy="8" r="1.4"/><circle cx="8.5" cy="8" r="1.4"/><circle cx="3.5" cy="13" r="1.4"/><circle cx="8.5" cy="13" r="1.4"/></svg>',
   sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',
@@ -222,7 +223,6 @@ const HF=(u,o)=>window.HUB?HUB.fetch(u,o):fetch(u,o);   // the site's fetch: lon
    so the server, its earlier versions and backup files cannot read the tab. The open key lives in this page's memory, and (so a reload
    doesn't ask again) in this browser's IndexedDB under a device key that can't be read out; logging out or Lock deletes it. */
 const ENC = 'enc1:', CAN_ENC = !!(window.isSecureContext && window.crypto && crypto.subtle);
-const LOCKC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10.2"/><rect x="7.6" y="11" width="8.8" height="6.4" rx="1.4"/><path d="M9.6 11V9.2a2.4 2.4 0 0 1 4.8 0V11"/></svg>';
 const KEEPK = 'links-keep';   // "keep unlocked on this device": on unless turned off in the unlock box
 const keepOn = () => { try { return localStorage.getItem(KEEPK) !== '0'; } catch { return true; } };
 const setKeep = on => { try { on ? localStorage.removeItem(KEEPK) : localStorage.setItem(KEEPK, '0'); } catch {} };
@@ -605,7 +605,7 @@ function renderTabs() {
     const active = t === cur && !S.q;
     wrap.append(h('a', { class: 'tab' + (active ? ' active' : ''), href: '#' + encodeURIComponent(t.id), 'data-tab': t.id, role: 'tab', style: isHex(t.ribbon) ? `--tab-ribbon:${t.ribbon}` : null, 'aria-selected': active ? 'true' : 'false',
       onclick: () => { if (S.q) { $('#q').value = ''; S.q = ''; } } }, ribbon(), h('span', {}, t.title),
-      t.private ? h('span', { 'aria-label': t.encrypted ? 'encrypted' : 'private', title: t.encrypted ? 'Encrypted tab' : 'Private tab', html: ICONS.lock }) : null));
+      t.private ? h('span', { 'aria-label': t.encrypted ? 'encrypted' : 'private', title: t.encrypted ? 'Encrypted tab: encrypted with your passphrase' : 'Private tab: only shown when you are logged in', html: t.encrypted ? ICONS.safe : ICONS.lock }) : null));
     if (t === cur && S.editing) wrap.append(h('div', { class: 'tab-ctrl' },
       tabs.length > 1 ? ib('left', 'Move tab left', () => move(tabs, ti, -1) && persist('Moved')) : null,
       tabs.length > 1 ? ib('right', 'Move tab right', () => move(tabs, ti, 1) && persist('Moved')) : null,
@@ -761,12 +761,12 @@ function render() {
   if (!q && S.opening && cur.encrypted && (cur.locked || cur.bad)) { grid.append(h('div', { class: 'skel', role: 'status', 'aria-label': 'Loading' }, h('i'), h('i'), h('i'))); return; }   // the kept key is being opened
   if (!q && cur.encrypted && (cur.locked || cur.bad)) {   // an encrypted tab nobody has opened yet in this browser
     const what = vault() && vault().login ? 'website password' : 'encryption passphrase';
-    grid.append(h('div', { class: 'gate' }, h('span', { class: 'lk', html: LOCKC }), h('h3', {}, 'Encrypted Tab'),
+    grid.append(h('div', { class: 'gate' }, h('span', { class: 'lk', html: ICONS.safe }), h('h3', {}, 'Encrypted Tab'),
       h('p', {}, cur.bad ? `This tab couldn't be opened with the key this browser kept. Unlock it with your ${what}.` : `This tab is encrypted. Unlock it with your ${what} to view and edit it.`),
       h('button', { class: 'pill', type: 'button', onclick: () => ensureKey() }, 'Unlock')));
     return;
   }
-  if (!q && cur.encrypted && !cur.locked) grid.append(h('div', { class: 'encbar' }, h('span', { class: 'lk', html: LOCKC }),
+  if (!q && cur.encrypted && !cur.locked) grid.append(h('div', { class: 'encbar' }, h('span', { class: 'lk', html: ICONS.safe }),
     h('span', {}, `Encrypted tab, unlocked on this device until you ${keepOn() ? '' : 'reload, '}log out or lock it.`), h('button', { type: 'button', onclick: lockNow }, 'Lock Now')));
 
   const board = h('div', { class: 'board', style: `--cols:${n}` });

@@ -13,7 +13,7 @@ $info = ['rev' => 3, 'tabs' => [
     box('Shopping List', "- Coffee beans\n- Oat milk\n- Lemons\n- Batteries (AA)\n- Light bulb for the hallway", 'half'),
     box('Ideas', "Paint the study a warm white\nShelves above the desk\nA reading lamp for the corner chair", 'half'),
   ]],
-  ['id' => rid8(), 'name' => 'Trip Notes', 'layout' => 'doc', 'color' => '', 'boxes' => [
+  ['id' => rid8(), 'name' => 'Trip Notes', 'layout' => 'doc', 'color' => '', 'private' => true, 'boxes' => [
     box('Weekend in the Mountains', "Leave Friday after work, about four hours by car.\nStay: the small guest house by the lake (booked).\n\nPack\n- Warm jacket and hiking boots\n- Headlamp\n- Camera and the spare battery\n\nPlan\nSaturday: the ridge trail, early start.\nSunday: slow breakfast, the market, drive back after lunch.", 'full'),
     box('Places to Eat', "The bakery on the square opens at 7.\nThe trattoria by the bridge needs a booking on Saturdays.", 'full'),
   ]],

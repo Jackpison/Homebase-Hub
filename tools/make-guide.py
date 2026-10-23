@@ -146,6 +146,7 @@ story += chapter('5', 'Links', 'Bookmarks in tabs, each with categories of links
  P('The pencil menu also has %s (saves each link\'s icon on your server), %s, %s and %s.' % (C('Fetch Icons'), C('Column Colors'), C('Text Sizes'), C('Export'))),
  *sub('Encrypted tabs'),
  P('A tab can be encrypted with your passphrase (set it in Settings, Security, Encryption). The same passphrase locks Info\'s encrypted tabs and your backup files. Search finds a locked tab by its name, but never shows what is inside.'),
+ P('A <font name="M-Bold">gold padlock</font> on a tab means it is private: it is only shown when you are logged in. A <font name="M-Bold">green padlock with a tick</font> means it is encrypted.'),
  Note('A lost passphrase together with a lost recovery key means the encrypted tabs cannot be opened by anyone, including you.'),
  phones(['m-links'], 'Links on a phone.'))
 
