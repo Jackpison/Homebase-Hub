@@ -1,16 +1,45 @@
 #!/usr/bin/env python3
 """Update tests for Homebase Hub, against a local stand-in for GitHub (no network needed).
-Needs PHP 8.1+ with curl, zip and mbstring. See tests/README.md."""
+Needs PHP 8.3+ with curl, zip and mbstring. See tests/README.md."""
 import json, os, shutil, subprocess, sys, threading, time, urllib.request, urllib.error, http.cookiejar, zipfile, hashlib, http.server, socketserver, glob
 
 UA = 'ghtest/1.0'
 PW = 'correct horse battery staple'
 HERE = os.path.dirname(os.path.abspath(__file__))
-if len(sys.argv) < 5:
-    sys.exit('Usage: python3 tests/update_test.py CURRENT.zip NEXT.zip PREVIOUS.zip OLDER.zip\n'
-             '  CURRENT  the zip just built (tools/build.py)\n  NEXT     the same source with HUB raised by one patch version and a "Test build." changelog entry\n'
-             '  PREVIOUS the latest published release zip\n  OLDER    any older release zip (for the upload upgrade and Go Back test)')
-CUR, NEW, REL38, OLD = sys.argv[1:5]
+if len(sys.argv) < 4:
+    sys.exit('Usage: python3 tests/update_test.py CURRENT.zip PREVIOUS.zip OLDER.zip\n'
+             '  CURRENT   the zip just built (tools/build.py)\n'
+             '  PREVIOUS  the latest published release zip (before CURRENT)\n'
+             '  OLDER     any older release zip (for the upload upgrade and Go Back tests)\n'
+             'A "next" version (CURRENT with its patch number raised) is made by this script.')
+CUR, REL38, OLD = sys.argv[1:4]
+import re, tempfile
+
+def zip_version(p): return re.search(r"define\('HUB', '([^']+)'\)", zipfile.ZipFile(p).read('web/core-data/lib/boot.php').decode()).group(1)
+
+def mutate_zip(src, dst, version=None, minphp=None):
+    """A copy of a release zip with another version and/or minPhp, its file list kept consistent."""
+    zin = zipfile.ZipFile(src); items = {i.filename: zin.read(i.filename) for i in zin.infolist()}
+    man = json.loads(items['web/core-data/manifest.json'])
+    def put(n, data): items[n] = data; man['files'][n] = hashlib.sha256(data).hexdigest()
+    if version:
+        put('web/core-data/lib/boot.php', re.sub(r"define\('HUB', '[^']+'\)", "define('HUB', '%s')" % version, items['web/core-data/lib/boot.php'].decode()).encode())
+        man['version'] = version
+        for ch in ('web/docs/CHANGELOG.md', 'web/core-data/docs/CHANGELOG.md'):
+            if ch in items:
+                x = items[ch].decode(); i = x.index('\n## '); put(ch, (x[:i] + '\n## %s\n\n### Test build\n\nTest build.\n\n---\n' % version + x[i:]).encode())
+    if minphp: man['minPhp'] = minphp
+    items['web/core-data/manifest.json'] = json.dumps(man).encode()
+    with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as z:
+        for n, d in items.items(): z.writestr(n, d)
+    return dst
+
+CURV, PREVV, OLDV = zip_version(CUR), zip_version(REL38), zip_version(OLD)
+_p = CURV.split('.'); NEXTV = '%s.%s.%d' % (_p[0], _p[1], int(_p[2]) + 1); NEXT2V = '%s.%s.%d' % (_p[0], _p[1], int(_p[2]) + 2)
+TMP = tempfile.mkdtemp()
+NEW = mutate_zip(CUR, TMP + '/next.zip', version=NEXTV)
+_cl = zipfile.ZipFile(CUR).read('web/docs/CHANGELOG.md').decode()
+NOTEMARK = re.search(r'^## ' + re.escape(CURV) + r'\b[^\n]*\n+### ([^\n]+)', _cl, re.M).group(1)   # first heading of the newest notes
 def sha(p): return hashlib.sha256(open(p, 'rb').read()).hexdigest()
 
 # ---------- stand-in for GitHub ----------
@@ -28,7 +57,7 @@ class H(http.server.BaseHTTPRequestHandler):
 class TS(socketserver.ThreadingMixIn, http.server.HTTPServer): daemon_threads = True
 srv = TS(('127.0.0.1', 8124), H); threading.Thread(target=srv.serve_forever, daemon=True).start()
 def jl(o): return (200, json.dumps(o).encode(), {'Content-Type': 'application/json'})
-def route_good(ver='1.39.1', zp=NEW, **over):
+def route_good(ver=f'{NEXTV}', zp=NEW, **over):
     z = open(zp, 'rb').read()
     ROUTES.clear()
     ROUTES['/v%s/site-update-%s.zip' % (ver, ver)] = (200, z, {'Content-Type': 'application/zip'})
@@ -86,17 +115,17 @@ try:
     r = subprocess.run(['php', '-d', 'auto_prepend_file=' + os.path.join(HERE, 'prepend.php'), '-r', "require '%s/web/core-data/lib/ghupdate.php'; gh_tick(); echo 'tick';" % s.dir], capture_output=True, text=True)
     check('A2 with the daily check off: status, overview, cron tick and an automatic check make NO request to GitHub', LOG == [] and r.stdout == 'tick', (LOG, r.stdout, r.stderr[:200]))
     r = s.post('gh_check', {}); g = r
-    check('A3 Check Now finds 1.39.1 via latest.json (1 request)', g.get('newer') and g['latest']['version'] == '1.39.1' and g['latest']['via'] == 'pages' and LOG == ['/latest.json'], (g, LOG))
-    ov = s.get('overview'); check('A4 Overview shows the available version', any('1.39.1' in a['text'] for a in ov.get('alerts', [])), ov.get('alerts'))
+    check(f'A3 Check Now finds {NEXTV} via latest.json (1 request)', g.get('newer') and g['latest']['version'] == f'{NEXTV}' and g['latest']['via'] == 'pages' and LOG == ['/latest.json'], (g, LOG))
+    ov = s.get('overview'); check('A4 Overview shows the available version', any(f'{NEXTV}' in a['text'] for a in ov.get('alerts', [])), ov.get('alerts'))
     r = s.post('gh_install', {})
-    check('A5 one click downloads, verifies and runs the full check', r.get('ok') and r.get('source') == 'github' and r['staged']['version'] == '1.39.1' and all(c['ok'] for c in r['checks']), r)
+    check('A5 one click downloads, verifies and runs the full check', r.get('ok') and r.get('source') == 'github' and r['staged']['version'] == f'{NEXTV}' and all(c['ok'] for c in r['checks']), r)
     check('A6 the staged zip fingerprint equals the one GitHub lists', r.get('staged', {}).get('sha256') == sha(NEW), r.get('staged'))
-    check('A7 nothing on the site changed yet', s.version() == '1.39.0')
-    bad = s.post('update_apply', {'password': 'wrong password here'}); check('A8 apply without the right password is refused', not bad.get('ok') and s.version() == '1.39.0', bad)
+    check('A7 nothing on the site changed yet', s.version() == f'{CURV}')
+    bad = s.post('update_apply', {'password': 'wrong password here'}); check('A8 apply without the right password is refused', not bad.get('ok') and s.version() == f'{CURV}', bad)
     r = s.post('update_apply', {'password': PW}); time.sleep(0.5)
-    check('A9 apply with the password works and the site answers', r.get('ok') and s.version() == '1.39.1', r)
+    check('A9 apply with the password works and the site answers', r.get('ok') and s.version() == f'{NEXTV}', r)
     check('A10 file check after the update: 0 changed, 0 missing, 0 extra', s.clean()[:3] == (0, 0, 0), s.clean())
-    st = s.get('update_status'); check('A11 after update no newer version is offered', st['gh']['newer'] is False and st['version'] == '1.39.1', st['gh'])
+    st = s.get('update_status'); check('A11 after update no newer version is offered', st['gh']['newer'] is False and st['version'] == f'{NEXTV}', st['gh'])
     r = s.post('gh_install', {}); check('A12 install when already current is refused', not r.get('ok'), r)
 
     # ===== B. refusals =====
@@ -104,36 +133,36 @@ try:
     def fresh_checked(**over):
         route_good(**over); s = Site(CUR, 9000 + len(res)); s.post('gh_check', {}); return s
     s = fresh_checked(sha256='0' * 64); r = s.post('gh_install', {})
-    check('B1 wrong SHA-256 in latest.json: refused, nothing kept, nothing changed', not r.get('ok') and 'SHA-256' in r.get('error', '') and s.incoming() == [] and s.version() == '1.39.0', (r, s.incoming()))
+    check('B1 wrong SHA-256 in latest.json: refused, nothing kept, nothing changed', not r.get('ok') and 'SHA-256' in r.get('error', '') and s.incoming() == [] and s.version() == f'{CURV}', (r, s.incoming()))
     s = fresh_checked(size=12345); r = s.post('gh_install', {})
     check('B2 wrong size in latest.json: refused', not r.get('ok') and 'size' in r.get('error', '') and s.incoming() == [], r)
     z = open(NEW, 'rb').read(); bz = bytearray(z); bz[len(bz) // 2] ^= 0xFF; open('/tmp/bad.zip', 'wb').write(bz)
-    route_good(); ROUTES['/v1.39.1/site-update-1.39.1.zip'] = (200, bytes(bz), {}); s = Site(CUR, 9101); s.post('gh_check', {}); r = s.post('gh_install', {})
-    check('B3 one changed byte in the download: refused (same size, wrong checksum)', not r.get('ok') and 'SHA-256' in r.get('error', '') and s.incoming() == [] and s.version() == '1.39.0', r)
-    route_good(); ROUTES['/v1.39.1/site-update-1.39.1.zip'] = (200, z[:len(z) // 2], {}); s = Site(CUR, 9102); s.post('gh_check', {}); r = s.post('gh_install', {})
+    route_good(); ROUTES[f'/v{NEXTV}/site-update-{NEXTV}.zip'] = (200, bytes(bz), {}); s = Site(CUR, 9101); s.post('gh_check', {}); r = s.post('gh_install', {})
+    check('B3 one changed byte in the download: refused (same size, wrong checksum)', not r.get('ok') and 'SHA-256' in r.get('error', '') and s.incoming() == [] and s.version() == f'{CURV}', r)
+    route_good(); ROUTES[f'/v{NEXTV}/site-update-{NEXTV}.zip'] = (200, z[:len(z) // 2], {}); s = Site(CUR, 9102); s.post('gh_check', {}); r = s.post('gh_install', {})
     check('B4 a cut-off download: refused', not r.get('ok') and s.incoming() == [], r)
-    s = fresh_checked(zip='http://127.0.0.1:8124/evil/site-update-1.39.1.zip'); g = s.get('update_status')['gh']
+    s = fresh_checked(zip=f'http://127.0.0.1:8124/evil/site-update-{NEXTV}.zip'); g = s.get('update_status')['gh']
     check('B5 latest.json pointing at another zip address is not trusted', g['latest'] is None and g['err'] != '', g)
     s = fresh_checked(sha256='ZZ'); g = s.get('update_status')['gh']; check('B6 a malformed checksum in latest.json is not trusted', g['latest'] is None and g['err'] != '', g)
-    route_good(ver='1.39.2'); s = Site(CUR, 9103)   # latest.json says 1.39.2 but the file behind it is 1.39.1
+    route_good(ver=f'{NEXT2V}'); s = Site(CUR, 9103)   # latest.json says 1.39.2 but the file behind it is 1.39.1
     s.post('gh_check', {}); r = s.post('gh_install', {})
-    check('B7 zip whose real version differs from what latest.json says: refused and discarded', not r.get('ok') and '1.39.1' in r.get('error', '') and s.incoming() == [] and s.version() == '1.39.0', (r, s.incoming()))
-    route_good(); ROUTES['/latest.json'] = (200, b'{"version": "1.39.1"', {}); s = Site(CUR, 9104); r = s.post('gh_check', {})
+    check('B7 zip whose real version differs from what latest.json says: refused and discarded', not r.get('ok') and f'{NEXTV}' in r.get('error', '') and s.incoming() == [] and s.version() == f'{CURV}', (r, s.incoming()))
+    route_good(); ROUTES['/latest.json'] = (200, ('{"version": "%s"' % NEXTV).encode(), {}); s = Site(CUR, 9104); r = s.post('gh_check', {})
     check('B8 broken latest.json: "Couldn\'t check", site keeps working', r.get('ok') and r['err'] != '' and r['latest'] is None, r)
     # API fallback
     route_good(); del ROUTES['/latest.json']
-    ROUTES['/api.json'] = jl({'tag_name': 'v1.39.1', 'published_at': '2026-10-22T09:00:00Z', 'assets': [{'name': 'site-update-1.39.1.zip', 'size': len(z), 'browser_download_url': 'http://127.0.0.1:8124/v1.39.1/site-update-1.39.1.zip'}, {'name': 'site-update-1.39.1.zip.sha256', 'browser_download_url': 'http://127.0.0.1:8124/sha'}]})
-    ROUTES['/sha'] = (200, ('%s  site-update-1.39.1.zip\n' % sha(NEW)).encode(), {})
+    ROUTES['/api.json'] = jl({'tag_name': f'v{NEXTV}', 'published_at': '2026-10-22T09:00:00Z', 'assets': [{'name': f'site-update-{NEXTV}.zip', 'size': len(z), 'browser_download_url': f'http://127.0.0.1:8124/v{NEXTV}/site-update-{NEXTV}.zip'}, {'name': f'site-update-{NEXTV}.zip.sha256', 'browser_download_url': 'http://127.0.0.1:8124/sha'}]})
+    ROUTES['/sha'] = (200, (f'%s  site-update-{NEXTV}.zip\n' % sha(NEW)).encode(), {})
     s = Site(CUR, 9105); LOG.clear(); r = s.post('gh_check', {})
-    check('B9 Pages down: falls back to the GitHub API once and finds 1.39.1', r.get('newer') and r['latest']['via'] == 'api' and LOG.count('/api.json') == 1, (r, LOG))
+    check(f'B9 Pages down: falls back to the GitHub API once and finds {NEXTV}', r.get('newer') and r['latest']['via'] == 'api' and LOG.count('/api.json') == 1, (r, LOG))
     LOG.clear(); r = s.post('gh_check', {})
     check('B10 asked again the same day: the API is NOT asked again', LOG.count('/api.json') == 0 and r['err'] != '', (r, LOG))
-    r = s.post('gh_install', {}); check('B11 install works from an API-found release too', r.get('ok') and r['staged']['version'] == '1.39.1', r)
+    r = s.post('gh_install', {}); check('B11 install works from an API-found release too', r.get('ok') and r['staged']['version'] == f'{NEXTV}', r)
     # redirect to a host that is not allowed
-    route_good(); ROUTES['/v1.39.1/site-update-1.39.1.zip'] = (302, b'', {'Location': 'http://127.0.0.1:8125/x.zip'}); s = Site(CUR, 9106); s.post('gh_check', {}); r = s.post('gh_install', {})
+    route_good(); ROUTES[f'/v{NEXTV}/site-update-{NEXTV}.zip'] = (302, b'', {'Location': 'http://127.0.0.1:8125/x.zip'}); s = Site(CUR, 9106); s.post('gh_check', {}); r = s.post('gh_install', {})
     check('B12 a redirect to a host that is not GitHub is refused', not r.get('ok') and 'GitHub' in r.get('error', ''), r)
     # redirect within allowed host works
-    route_good(); ROUTES['/v1.39.1/site-update-1.39.1.zip'] = (302, b'', {'Location': 'http://127.0.0.1:8124/real.zip'}); ROUTES['/real.zip'] = (200, z, {}); s = Site(CUR, 9107); s.post('gh_check', {}); r = s.post('gh_install', {})
+    route_good(); ROUTES[f'/v{NEXTV}/site-update-{NEXTV}.zip'] = (302, b'', {'Location': 'http://127.0.0.1:8124/real.zip'}); ROUTES['/real.zip'] = (200, z, {}); s = Site(CUR, 9107); s.post('gh_check', {}); r = s.post('gh_install', {})
     check('B13 a redirect to an allowed host is followed (as GitHub does)', r.get('ok'), r)
     # auth and csrf
     anon = Site(CUR, 9108); csrf = anon.csrf; anon.csrf = 'nope'
@@ -143,32 +172,47 @@ try:
     anon.post('gh_auto', {'on': False}); LOG.clear(); anon.post('gh_check', {'auto': True}); check('B17 switched off again: no request', LOG == [], LOG)
 
     # ===== C. the real upgrade path 1.37.0 -> 1.39.0 by uploading the zip =====
-    s = Site(OLD, 9200); r = s.chunks(CUR, 'site-update-1.39.0.zip')
-    check('C1 uploaded 1.39.0 passes every check on a 1.37.0 site', r.get('ok') and all(c['ok'] for c in r['checks']), r)
+    s = Site(OLD, 9200); r = s.chunks(CUR, f'site-update-{CURV}.zip')
+    check(f'C1 uploaded {CURV} passes every check on a {OLDV} site', r.get('ok') and all(c['ok'] for c in r['checks']), r)
     r = s.post('update_apply', {'password': PW}); time.sleep(0.5)
-    check('C2 1.37.0 -> 1.39.0 applied by the old updater', r.get('ok') and s.version() == '1.39.0', r)
+    check(f'C2 {OLDV} -> {CURV} applied by the old updater', r.get('ok') and s.version() == f'{CURV}', r)
     check('C3 file check afterwards: 0 changed, 0 missing, 0 extra', s.clean()[:3] == (0, 0, 0), s.clean())
     st = s.get('update_status'); check('C4 new GitHub card data is there, daily check off', st['gh']['auto'] is False and st['gh']['curl'], st.get('gh'))
     r = s.post('update_apply', {'password': PW, 'back': True}); time.sleep(0.5)
-    check('C5 Go Back to 1.37.0 works', r.get('ok') and s.version() == '1.37.0', r)
+    check(f'C5 Go Back to {OLDV} works', r.get('ok') and s.version() == f'{OLDV}', r)
 
     # ===== D. the docs move: 1.38.0 (real release) -> 1.39.0 =====
-    s = Site(REL38, 9300); r = s.chunks(CUR, 'site-update-1.39.0.zip')
-    check('D1 a 1.38.0 site shows the 1.39.0 notes before updating (old path copy)', r.get('ok') and 'The logo' in (r.get('notes') or ''), (r.get('ok'), (r.get('notes') or '')[:120]))
+    s = Site(REL38, 9300); r = s.chunks(CUR, f'site-update-{CURV}.zip')
+    check(f'D1 a {PREVV} site shows the {CURV} notes before updating ', r.get('ok') and NOTEMARK in (r.get('notes') or ''), (r.get('ok'), (r.get('notes') or '')[:120]))
     r = s.post('update_apply', {'password': PW}); time.sleep(0.5)
-    check('D2 1.38.0 -> 1.39.0 applied', r.get('ok') and s.version() == '1.39.0', r)
+    check(f'D2 {PREVV} -> {CURV} applied', r.get('ok') and s.version() == f'{CURV}', r)
     check('D3 file check afterwards: 0 changed, 0 missing, 0 extra', s.clean()[:3] == (0, 0, 0), s.clean())
     check('D4 docs are now in web/docs; the old readable source is gone', os.path.isfile(s.dir + '/web/docs/CHANGELOG.md') and os.path.isfile(s.dir + '/web/docs/.htaccess') and not os.path.isdir(s.dir + '/web/core-data/docs/src'), os.listdir(s.dir + '/web/core-data/docs'))
-    cl = s.get('changelog'); check('D5 Settings > Changelog reads the new place', '1.39.0' in (cl.get('text') or cl.get('md') or json.dumps(cl))[:4000], str(cl)[:200])
+    cl = s.get('changelog'); check('D5 Settings > Changelog reads the new place', f'{CURV}' in (cl.get('text') or cl.get('md') or json.dumps(cl))[:4000], str(cl)[:200])
     st = s.get('update_status'); check('D6 GitHub card still there after the move', 'gh' in st and st['gh']['auto'] is False, st.get('gh'))
     r = s.post('update_apply', {'password': PW, 'back': True}); time.sleep(0.5)
-    check('D7 Go Back to 1.38.0 works', r.get('ok') and s.version() == '1.38.0', r)
-    check('D8 after going back, 1.38.0 is whole again', s.clean()[:3] == (0, 0, 0), s.clean())
+    check(f'D7 Go Back to {PREVV} works', r.get('ok') and s.version() == f'{PREVV}', r)
+    check(f'D8 after going back, {PREVV} is whole again', s.clean()[:3] == (0, 0, 0), s.clean())
     # a 1.39.0 site reads notes of the next zip from the new place
-    s = Site(CUR, 9301); r = s.chunks(NEW, 'site-update-1.39.1.zip')
-    check('D9 a 1.39.0 site reads the next version\'s notes from web/docs', r.get('ok') and 'Test build' in (r.get('notes') or ''), (r.get('notes') or '')[:120])
-    s = Site(CUR, 9302); r = s.chunks(REL38, 'site-update-1.38.0.zip')
+    s = Site(CUR, 9301); r = s.chunks(NEW, f'site-update-{NEXTV}.zip')
+    check(f'D9 a {CURV} site reads the next version\'s notes from web/docs', r.get('ok') and 'Test build' in (r.get('notes') or ''), (r.get('notes') or '')[:120])
+    s = Site(CUR, 9302); r = s.chunks(REL38, f'site-update-{PREVV}.zip')
     check('D10 an older zip is still refused as not newer', not r.get('ok') or not all(c['ok'] for c in r.get('checks', [])), r.get('error') or [c for c in r.get('checks', []) if not c['ok']][:1])
+
+    # ===== E. the PHP minimum =====
+    man = json.loads(zipfile.ZipFile(CUR).read('web/core-data/manifest.json'))
+    boot_min = re.search(r"const HUB_MIN_PHP = '([^']+)'", zipfile.ZipFile(CUR).read('web/core-data/lib/boot.php').decode()).group(1)
+    check('E1 the zip\'s file list carries the PHP minimum from the code', man.get('minPhp') == boot_min and re.match(r'^\d+\.\d+$', boot_min), man.get('minPhp'))
+    s = Site(CUR, 9400); r = s.chunks(mutate_zip(CUR, TMP + '/php99.zip', version=NEXTV, minphp='99.0'), f'site-update-{NEXTV}.zip')
+    check('E2 an uploaded zip that needs a newer PHP is refused with a clear message', not r.get('ok') and 'PHP 99.0' in json.dumps(r) and s.version() == CURV, json.dumps(r)[:300])
+    check('E3 nothing was kept or changed after that refusal', s.version() == CURV and s.get('update_status').get('staged') in (None, False), s.get('update_status').get('staged'))
+    route_good(minPhp='99.0'); s = Site(CUR, 9401); g = s.post('gh_check', {}); r = s.post('gh_install', {})
+    check('E4 an update from GitHub that needs a newer PHP is refused', g.get('newer') and g.get('phpOk') is False and not r.get('ok') and 'PHP 99.0' in r.get('error', ''), (g.get('phpOk'), r))
+    s = Site(CUR, 9402); r = s.chunks(mutate_zip(CUR, TMP + '/php83.zip', version=NEXTV, minphp=boot_min), f'site-update-{NEXTV}.zip')
+    check('E5 a zip that needs only the minimum PHP is accepted', r.get('ok') and all(c['ok'] for c in r['checks']), json.dumps(r)[:300])
+    prog = ("require '%s/web/core-data/lib/boot.php'; $now = strtotime('2026-10-23 12:00 UTC'); foreach (['7.4','8.1','8.2','8.3','8.4','8.5','9.0'] as $b) { $n = hub_php_notice($b, $now); echo $b, '=', $n ? $n['level'] : 'none', ' '; }" % s.dir)
+    out = subprocess.run(['php', '-r', prog], capture_output=True, text=True).stdout.strip()
+    check('E6 the PHP support notice: 7.4 and 8.1 warn, 8.2 gives notice, newer ones stay quiet (at 23 Oct 2026)', out == '7.4=warn 8.1=warn 8.2=info 8.3=none 8.4=none 8.5=none 9.0=none', out)
 finally:
     for p in procs: p.terminate()
 print('\n%d/%d passed' % (sum(res), len(res)))

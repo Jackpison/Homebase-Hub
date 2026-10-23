@@ -10,7 +10,7 @@ notes = ''
 m = re.search(r'^\| ' + re.escape(ver) + r' \| (.+?) \|\s*$', open(os.path.join(root, 'CHANGELOG.md'), encoding='utf-8').read(), re.M)
 if m: notes = m.group(1)[:600]
 d = {'version': ver, 'zip': f'https://github.com/{owner}/{repo}/releases/download/v{ver}/site-update-{ver}.zip', 'sha256': sha, 'size': int(size),
-     'minPhp': '8.1', 'notes': notes, 'published': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
+     'minPhp': re.search(r"const HUB_MIN_PHP = '([^']+)'", open(os.path.join(root, 'src/web/core-data/lib/boot.php'), encoding='utf-8').read()).group(1), 'notes': notes, 'published': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
 s = json.dumps(d, indent=2)
 if out: open(out, 'w', encoding='utf-8').write(s + '\n')
 else: print(s)

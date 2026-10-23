@@ -319,8 +319,8 @@ case 'diag':   // Settings > Server check
     @set_time_limit(40);
     $c = [];
     $add = function ($name, $ok, $note) use (&$c) { $c[] = ['name' => $name, 'ok' => (bool)$ok, 'note' => $note]; };
-    $php8 = version_compare(PHP_VERSION, '8.0', '>=');
-    $add('PHP', $php8, 'Version ' . PHP_VERSION . ($php8 ? '.' : ' is too old for the start page; choose 8.1 or newer in your hosting PHP settings.'));
+    $phpOk = version_compare(PHP_VERSION, HUB_MIN_PHP, '>='); $pn = hub_php_notice();
+    $add('PHP', $phpOk && !($pn && $pn['level'] === 'warn'), 'Version ' . PHP_VERSION . ($phpOk ? '.' : ' is older than the ' . HUB_MIN_PHP . ' this site needs; choose ' . HUB_MIN_PHP . ' or newer in your hosting PHP settings.') . ($pn ? ' ' . $pn['text'] : ''));
     $hasCurl = function_exists('curl_init');
     $add('cURL (reaching other sites)', $hasCurl, $hasCurl ? 'Available.' : 'Missing. Link icons and titles cannot be fetched. Enable the curl extension in your hosting PHP settings.');
     $get = function ($url) use ($hasCurl) {

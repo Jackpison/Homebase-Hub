@@ -225,6 +225,11 @@ function up_check(string $name): array {
     foreach ($files as $n => $_) if (substr($n, -4) === '.php') { try { token_get_all((string)file_get_contents(up_sp($stage, $n)), TOKEN_PARSE); } catch (Throwable $e) { $syntax[] = $n; } }
     $add(!$syntax, 'Every PHP file is readable.', $syntax ? 'Broken: ' . implode(', ', array_slice($syntax, 0, 4)) : 'No cut-off or damaged scripts.');
     $add(isset($files['web/core-data/lib/update.php']), 'It can update itself again.', 'The updater is part of it, so the next update works too.');
+    $mp = (string)($man['minPhp'] ?? '');
+    if (preg_match('/^\d+\.\d+(\.\d+)?$/', $mp)) {
+        $okp = version_compare(PHP_VERSION, $mp, '>=');
+        $add($okp, $okp ? 'This server\'s PHP is new enough.' : 'This server\'s PHP is too old for it.', $okp ? 'It needs PHP ' . $mp . ' or newer; this server runs ' . PHP_VERSION . '.' : 'It needs PHP ' . $mp . ' or newer; this server runs ' . PHP_VERSION . '. Choose a newer PHP in your hosting panel (in cPanel: MultiPHP Manager), then try again.');
+    }
     $rel = version_compare($man['version'], HUB);
     $add($rel >= 0, $rel > 0 ? 'It is newer than yours.' : 'It is the same version as yours.', $rel > 0 ? HUB . ' to ' . $man['version'] . '.' : ($rel === 0 ? 'Applying it repairs the files of ' . HUB . '.' : 'This is ' . $man['version'] . ' and you have ' . HUB . '. To go back, use Go Back.'));
     $un = up_unwritable();

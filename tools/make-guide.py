@@ -115,7 +115,7 @@ story += chapter('1', 'Welcome', 'Homebase Hub puts the small things you open ev
  P('Search covers Links, Info, Tasks and Tools; Cards has its own search box. The sliders button in the search box chooses where to look: everything, one page, one tab, which fields, and whole words only.'),
  table(['To do this', 'Press or type'], [['Open search from anywhere', '<font name="M-Bold">/</font> or <font name="M-Bold">Ctrl+K</font>'], ['Search only Links', '<font name="M-Bold">links:</font> followed by your words'], ['Search only Info', '<font name="M-Bold">info:</font> followed by your words']]))
 
-story += chapter('2', 'Install', 'You need web hosting with PHP 8.1 or newer and a file manager or FTP. HTTPS is recommended.',
+story += chapter('2', 'Install', 'You need web hosting with PHP 8.3 or newer and a file manager or FTP. HTTPS is recommended.',
  steps(['Download <font name="M-Bold">site-update-X.Y.Z.zip</font> from the latest release on GitHub (github.com/Jackpison/Homebase-Hub/releases).',
         'In your hosting file manager, open your domain\'s folder (for example <font name="M-Bold">public_html</font>). Upload the zip and extract it there.',
         'Open your domain in a browser and click the key icon at the top right. The welcome box opens.',
@@ -238,6 +238,10 @@ story += chapter('A', 'Help and recovery', 'What to do when something goes wrong
  P('Log in with a recovery code instead of the 6-digit code. With no codes left, follow Forgot the password.'),
  *sub('Link icons do not load'),
  P('Run Settings, Health, Server Check. It shows whether your hosting can reach other websites and write to the icon folders. If it cannot reach other websites, Links shows icons from an icon service instead.'),
+ *sub('Keeping your site safe'),
+ P('The site itself needs no regular work. The one thing to watch is PHP, the language your hosting runs it with. Each PHP version gets security fixes for about four years, and then stops. Homebase Hub needs PHP 8.3 or newer.'),
+ table(['What', 'What to do'], [['PHP version', 'Check it in Settings, Health, Server Check. Settings, Overview warns you when your PHP is about to stop getting fixes. Change it in your hosting panel (in cPanel: MultiPHP Manager) to 8.4 or newer.'], ['New versions', 'Install them from Settings, Updates when you see them. Each release says what changed.'], ['Backups', 'Make one now and then in Settings, Backup and Restore, and keep it somewhere other than your server.']]),
+ Note('An update that needs a newer PHP than your server has is refused with a clear message, and nothing changes. Change the PHP version, then try again.'),
  *sub('Moving the site'),
  P('Copy the whole site folder, data included. Or export a backup, install a new site, and import the backup there. Backups made before a passphrase change need the old passphrase.'),
  *sub('Contact'),

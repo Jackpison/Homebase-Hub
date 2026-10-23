@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.40.0 | Needs PHP 8.3 or newer; the site tells you when your PHP stops getting security fixes; the bundled libraries were reviewed |
 | 1.39.0 | Homebase Hub's own logo is the default logo and tab icon; the docs and readable source moved to web/docs |
 | 1.38.0 | Updates from GitHub (Check Now, an optional daily check that is off by default, one-click download with a checksum, then your password); the project is public on GitHub under GPL-3.0; new installs are named Homebase Hub |
 | 1.37.0 | Info: any number of boxes in each tab (up to 12), each in its own width and height; Classic layout removed, Notebook Cards is the default |
@@ -55,6 +56,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.40.0
+
+### PHP 8.3 or newer
+
+- Homebase Hub now needs **PHP 8.3 or newer**. PHP 8.1 stopped getting security fixes on 31 December 2025, and 8.2 stops on 31 December 2026.
+- An update that needs a newer PHP than your server has is **refused with a clear message, and nothing changes**. This covers updates from GitHub and uploaded zips. If your host runs an older PHP, choose 8.3 or newer in your hosting panel (in cPanel: MultiPHP Manager) and try again.
+- **Settings > Overview** now tells you when the PHP your site runs on has stopped getting security fixes, or will within about six months, and what to ask your host for.
+- Settings > Health > Server Check shows the same notice next to the PHP version.
+- The site does not stop working on an older PHP; it only warns, and refuses updates it cannot support.
+
+### Checked the bundled libraries
+
+- The PDF reader in Tools (pdf.js 3.11.174) and the Excel writer in Cards (SheetJS 0.18.5) have known problems that need a crafted file to be opened or read. Tools already opens PDFs the safe way, and the site never reads Excel files, so neither can be reached. Both facts are now checked automatically before every release. The details are in `THIRD-PARTY.md`.
+- Nothing else bundled has a known advisory.
 
 ---
 

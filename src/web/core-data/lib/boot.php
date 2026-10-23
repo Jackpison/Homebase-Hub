@@ -21,7 +21,22 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 
 if (defined('HUB')) return;
-define('HUB', '1.39.0');
+define('HUB', '1.40.0');
+const HUB_MIN_PHP = '8.3';   // the oldest PHP this version supports and is tested on; an update zip carries it as "minPhp" in its file list
+
+/** When each PHP branch stops getting security fixes (https://www.php.net/supported-versions, checked 2026-10-23). Branches not listed are newer than this table. Add a row each November. */
+function hub_php_eol(): array { return ['8.1' => '2025-12-31', '8.2' => '2026-12-31', '8.3' => '2027-12-31', '8.4' => '2028-12-31', '8.5' => '2029-12-31']; }
+
+/** A notice when this server's PHP no longer gets security fixes, or soon will not. Null when all is well. $branch and $now are for tests. */
+function hub_php_notice(?string $branch = null, ?int $now = null): ?array {
+    $b = $branch ?? (PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION); $now = $now ?? time(); $t = hub_php_eol();
+    $ask = ' Ask your host to switch this site to PHP 8.4 or newer (in cPanel: MultiPHP Manager).';
+    if (!isset($t[$b])) return version_compare($b, '8.1', '<') ? ['level' => 'warn', 'text' => 'PHP ' . $b . ' no longer gets security fixes.' . $ask] : null;
+    $end = strtotime($t[$b] . ' 23:59:59 UTC'); $nice = gmdate('j F Y', $end);
+    if ($now > $end) return ['level' => 'warn', 'text' => 'PHP ' . $b . ' stopped getting security fixes on ' . $nice . '.' . $ask];
+    if ($end - $now < 183 * 86400) return ['level' => 'info', 'text' => 'PHP ' . $b . ' stops getting security fixes on ' . $nice . '.' . $ask];
+    return null;
+}
 
 const HUB_SESSION_DAYS = 30;
 const HUB_MIN_PASSWORD = 8;

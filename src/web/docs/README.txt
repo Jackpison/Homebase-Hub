@@ -34,6 +34,20 @@ To keep the data somewhere else on purpose, create web/core-data/config.php cont
 and remember to copy that folder when you move the site.
 
 
+WHAT IT NEEDS
+-------------
+Web hosting with PHP 8.3 or newer (with the curl and zip extensions for updates from GitHub) and a file manager or FTP.
+The PHP version is chosen in your hosting panel (in cPanel: MultiPHP Manager). Settings > Overview tells you when the PHP your site
+runs on stops getting security fixes, and Settings > Health > Server Check shows its version. An update that needs a newer PHP than
+your server has is refused with a clear message, and nothing changes.
+
+KEEPING IT SAFE
+---------------
+- The site itself needs no regular work. Its pages, data and login do not expire.
+- PHP is the one thing to watch: each version gets security fixes for about four years. Keep your hosting on a supported PHP.
+- Install new versions of Homebase Hub when they come out (Settings > Updates). Each release says what changed.
+- Back up now and then (Settings > Backup and Restore), and keep the file somewhere other than your server.
+
 SET UP ON ANY DOMAIN
 --------------------
 1. In your hosting file manager open the domain's folder, upload site-update.zip and extract it.

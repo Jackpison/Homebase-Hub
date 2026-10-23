@@ -23,3 +23,17 @@ If you find an entry that is wrong, please open an issue.
 ## LGPL-3.0 note (libheif)
 
 libheif is unmodified and is loaded as a separate file (`web/tools/assets/libheif-bundle-*.js`). You can replace it with your own build of libheif-js. The LGPL-3.0 text is at https://www.gnu.org/licenses/lgpl-3.0.html.
+
+## Security review of the bundled libraries (23 October 2026)
+
+Checked with `npm audit` against the exact versions in the site, and by reading how the site calls each library. Run `python3 tests/check_libraries.py --audit` to repeat it.
+
+| Library | Version | Finding | Why it cannot be reached here |
+|---|---|---|---|
+| pdf.js (Tools) | 3.11.174 | GHSA-wgrm-67xf-hhpq: a crafted PDF can run script when fonts are compiled with eval. Fixed upstream in newer major versions. | Tools opens every PDF with `isEvalSupported:false`, the fix the pdf.js team documents for older versions. `tests/check_libraries.py` fails if any call stops setting it. Updating pdf.js itself needs a rebuild of Tools, which is planned for a later version. |
+| SheetJS (Cards) | 0.18.5 | GHSA-4r6h-8v6p-xvw6 (prototype pollution) and GHSA-5pgg-2g8v-p4x9 (ReDoS). Both need a crafted Excel file to be read. SheetJS no longer publishes new versions to npm. | The site only writes Excel files (the Cards export) and never reads one. The check fails if any code calls `XLSX.read` or `XLSX.readFile`. |
+| ONNX Runtime Web (Tools) | 1.17.3 | No advisory. Older than the current release. | It only runs the bundled background-removal model. |
+| libheif-js (Tools) | 1.23.5 | No advisory. This is the newest release. | Runs inside WebAssembly in the visitor's browser. |
+| JSZip, jsPDF, React, pdf-lib | 3.10.2, 4.2.1, 18.3.1, 1.17.1 | No advisory. | |
+
+`npm audit` also lists `tar`, a helper that pdfjs-dist uses only when it is installed for Node. It is not part of the browser files that ship with the site.

@@ -86,7 +86,7 @@ function gh_clean(array $j): ?array {
     $v = (string)($j['version'] ?? ''); $sha = strtolower((string)($j['sha256'] ?? '')); $size = (int)($j['size'] ?? 0);
     if (!preg_match('/^\d+\.\d+\.\d+$/', $v) || !preg_match('/^[a-f0-9]{64}$/', $sha) || $size < 0 || $size > UP_MAX_ZIP) return null;
     if ((string)($j['zip'] ?? '') !== gh_zip_url($v)) return null;   // the zip must be this project's own release asset for this very version
-    $mp = (string)($j['minPhp'] ?? '8.1'); if (!preg_match('/^\d+\.\d+(\.\d+)?$/', $mp)) $mp = '8.1';
+    $mp = (string)($j['minPhp'] ?? HUB_MIN_PHP); if (!preg_match('/^\d+\.\d+(\.\d+)?$/', $mp)) $mp = HUB_MIN_PHP;
     return ['version' => $v, 'zip' => gh_zip_url($v), 'sha256' => $sha, 'size' => $size, 'minPhp' => $mp,
             'notes' => mb_substr(strip_tags((string)($j['notes'] ?? '')), 0, 600), 'published' => preg_match('/^\d{4}-\d\d-\d\dT[\d:]+Z$/', (string)($j['published'] ?? '')) ? (string)$j['published'] : ''];
 }
@@ -132,7 +132,7 @@ function gh_info(): array {
     $g = gh_state(); $l = is_array($g['latest'] ?? null) ? $g['latest'] : null;
     return ['repo' => GH_REPO, 'auto' => !empty($g['auto']), 'at' => (int)($g['at'] ?? 0), 'err' => (string)($g['err'] ?? ''), 'latest' => $l,
             'newer' => $l !== null && version_compare($l['version'], HUB, '>'), 'curl' => function_exists('curl_init'),
-            'phpOk' => $l === null || version_compare(PHP_VERSION, (string)($l['minPhp'] ?? '8.1'), '>='),
+            'phpOk' => $l === null || version_compare(PHP_VERSION, (string)($l['minPhp'] ?? HUB_MIN_PHP), '>='),
             'due' => !empty($g['auto']) && time() - (int)($g['at'] ?? 0) > GH_DAY];
 }
 function gh_set_auto(bool $on): array { gh_save(function ($x) use ($on) { $x['auto'] = $on; return $x; }); return gh_info(); }

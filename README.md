@@ -17,7 +17,7 @@
 
 Homebase Hub puts the small things you open every day in one place on your own hosting: a start page, your bookmarks, notes, cards, tasks with due dates, and a set of browser tools. The pages share one login, one bar, one look and one Settings page. There is no database; your data lives in one folder that browsers cannot open.
 
-It runs on ordinary PHP hosting (PHP 8.1 or newer). Dark is the default, and light mode is one click away.
+It runs on ordinary PHP hosting (PHP 8.3 or newer). Dark is the default, and light mode is one click away.
 
 ## Pages
 
@@ -68,6 +68,7 @@ Open **Settings > Updates**. Press **Check Now** to look for a new version on Gi
 - One password (bcrypt), optional two-step login with recovery codes, trusted browsers and a device list. Logins pause after five wrong tries.
 - Encrypted tabs in Links and Info, and encrypted backups. Keys are made in your browser from your passphrase.
 - Data files answer 404 to a browser even where `.htaccess` is ignored.
+- Needs PHP 8.3 or newer. Settings tells you when your PHP stops getting security fixes, and an update that needs a newer PHP than your server has is refused.
 - Updates come only from this project's GitHub releases, are checked before anything changes, and need your password. Releases are not signed: the checksum catches damaged downloads, not a compromised account.
 
 More: [Security](https://jackpison.github.io/Homebase-Hub/security.html).

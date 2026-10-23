@@ -49,7 +49,7 @@ def main():
             shutil.copyfile(p, os.path.join(sd, f'{m.group(1)}.src.{m.group(2)}'))
             subprocess.run(['npx', 'esbuild', p, '--minify', '--keep-names', '--target=es2017',
                             '--allow-overwrite', f'--outfile={p}', '--log-level=error'], check=True)
-    # Compatibility for one release (1.39.x): sites on 1.38.x and older read the new version's notes from the old path
+    # Compatibility for a while (1.39.x and 1.40.x; remove once nobody is still on 1.38.x or older): sites on 1.38.x and older read the new version's notes from the old path
     # (web/core-data/docs/CHANGELOG.md) before they update, so a copy and its access block also ship there.
     old = os.path.join(TREE, 'web/core-data/docs'); os.makedirs(old, exist_ok=True)
     shutil.copyfile(os.path.join(TREE, 'web/docs/CHANGELOG.md'), os.path.join(old, 'CHANGELOG.md'))
@@ -69,8 +69,9 @@ def main():
             if rel.startswith('web/core-data/media/') and not rel.endswith('.htaccess'):
                 continue
             files[rel] = sha(os.path.join(dp, fn))
+    minphp = re.search(r"const HUB_MIN_PHP = '([^']+)'", open(os.path.join(ROOT, 'src/web/core-data/lib/boot.php'), encoding='utf-8').read()).group(1)
     body = '{\n"files": {\n' + ',\n'.join(f'{json.dumps(k)}: {json.dumps(files[k])}' for k in sorted(files)) \
-        + '\n},\n"version": ' + json.dumps(ver) + '\n}'
+        + '\n},\n"minPhp": ' + json.dumps(minphp) + ',\n"version": ' + json.dumps(ver) + '\n}'
     open(os.path.join(TREE, 'web/core-data/manifest.json'), 'w', encoding='utf-8', newline='\n').write(body)
     # zip
     name = f'site-update-{ver}.zip'

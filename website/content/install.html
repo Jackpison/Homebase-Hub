@@ -1,5 +1,5 @@
 <!--title:Install-->
-<h1>Install</h1><p class="lead">You need a web host with PHP 8.1 or newer and a file manager (or FTP). HTTPS is recommended.</p>
+<h1>Install</h1><p class="lead">You need a web host with PHP 8.3 or newer and a file manager (or FTP). HTTPS is recommended.</p>
 <h2>First install</h2>
 <ol class="num"><li>Download <code>site-update-X.Y.Z.zip</code> from the <a href="https://github.com/Jackpison/Homebase-Hub/releases/latest">latest release</a>.</li>
 <li>In your hosting file manager open the folder of your domain (for example <code>public_html</code>), upload the zip and extract it there.</li>
@@ -13,5 +13,6 @@
 <li><b>By zip:</b> upload the new zip in the same tab.</li></ul>
 <p>Before anything is replaced the site saves the version it has, and afterwards it looks at itself. If it cannot answer, the saved version comes back by itself. Go Back does the same on request.</p>
 <figure><img src="img/s-updates.webp" alt="Settings, Updates, with Update From GitHub" width="1440" height="900" loading="lazy"><figcaption>Settings, Updates: check GitHub, or upload a zip.</figcaption></figure>
+<h2>Keeping it safe</h2><p>The site needs no regular work. The one thing to watch is the PHP version on your hosting: each version gets security fixes for about four years. Homebase Hub needs PHP 8.3 or newer, and Settings tells you when yours is about to stop getting fixes. An update that needs a newer PHP than your server has is refused, and nothing changes.</p>
 <h2>Moving or copying the site</h2><p>Copy the whole site folder, data included, or export a backup and import it on the new site.</p>
 <h2>Forgot the password</h2><p>Delete <code>site-data/core/auth.php</code> in your file manager, open the site, click the key icon, and use the setup code from <code>site-data/core/SETUP-CODE.php</code>. Encrypted tabs are locked with your passphrase, so a reset does not touch them.</p>

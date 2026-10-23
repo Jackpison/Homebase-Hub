@@ -40,6 +40,7 @@ function hub_overview(): array {
     $f = $up['files'] ?? null;
     if ($f && ($f['extra'] > 0 || $f['changed'] > 0)) $alerts[] = ['level' => $f['extra'] > 0 ? 'warn' : 'info', 'go' => 'files', 'text' => ($f['extra'] > 0 ? $f['extra'] . ' file' . ($f['extra'] > 1 ? 's are' : ' is') . ' not part of this version of the site. ' : '') . ($f['changed'] > 0 ? $f['changed'] . ' file' . ($f['changed'] > 1 ? 's were' : ' was') . ' changed by hand.' : '')];
     if (!empty($up['staged'])) $alerts[] = ['level' => 'info', 'go' => 'updates', 'text' => 'An update (' . $up['staged']['version'] . ') is checked and waiting for you to apply it.'];
+    $pn = hub_php_notice(); if ($pn) $alerts[] = ['level' => $pn['level'], 'go' => 'check', 'text' => $pn['text']];
     require_once __DIR__ . '/ghupdate.php'; $gh = gh_info();
     if ($gh['newer'] && empty($up['staged'])) $alerts[] = ['level' => 'info', 'go' => 'updates', 'text' => 'Version ' . $gh['latest']['version'] . ' is available on GitHub.'];
     return ['ok' => true, 'version' => HUB, 'php' => PHP_VERSION, 'https' => hub_https(), 'siteName' => $s['siteName'], 'logo' => $s['logo'] !== '', 'tz' => $s['tz'],
