@@ -324,7 +324,7 @@
 #ix-page .ix-steps li.done span{background:var(--ix-accent);border-color:var(--ix-accent);color:var(--ix-ink)}
 #ix-page .ix-zipcard{display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between;align-items:center;background:var(--ix-bg);border:1px solid var(--ix-line);border-radius:14px;padding:14px 16px;margin:6px 0 14px}
 #ix-page .ix-fp{margin-top:4px;font-size:12.5px;color:var(--ix-mu);overflow-wrap:anywhere}
-#ix-page .ix-checks>div{display:flex;gap:10px;padding:3px 0}
+#ix-page .ix-checks>div:not(.ix-chkrow){display:flex;gap:10px;padding:3px 0}
 #ix-page .ix-checks small{color:var(--ix-mu)}
 #ix-page .ix-bad{color:var(--ix-err)}
 #ix-page .ix-chgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:10px 0 14px}

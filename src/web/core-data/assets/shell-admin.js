@@ -970,8 +970,8 @@
           (h.ok ? hCard('PHP', esc(h.php), esc(h.server), '') + hCard('Memory per Request', String(h.limits.memory) === '-1' ? 'No Limit' : esc(h.limits.memory), 'Time limit ' + (h.limits.time ? h.limits.time + ' s' : 'none'), '') +
             hCard('Largest Upload', esc(h.limits.upload), esc(h.limits.post) + ' per request', '') : '') +
         '</div>' +
-        '<h3>Connections and Folders</h3>' + j.checks.map(function (c) {
-          return '<div class="ix-status"><span class="' + (c.ok ? 'ix-ok' : '') + '">' + (c.ok ? '✓' : '!') + '</span><span><b>' + esc(c.name) + '.</b> ' + esc(c.note) + '</span></div>'; }).join('') +
+        '<h3>Connections and Folders</h3><div class="ix-checks">' + j.checks.map(function (c) {
+          return checkRow(c.ok ? '' : 'warn', c.ok ? '✓' : '!', esc(c.name), esc(c.note)); }).join('') + '</div>' +
         (h.ok ? '<h3>PHP Extensions</h3><div class="ix-exts">' + Object.keys(h.ext).map(function (e) { return '<span class="' + (h.ext[e] ? 'on' : 'off') + '">' + (h.ext[e] ? '✓ ' : '✗ ') + esc(e) + '</span>'; }).join('') + '</div>' +
           '<p class="ix-note">Time zone ' + esc(String(h.tz || '').replace(/_/g, ' ')) + '.</p>' : '') +
         '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn" id="ix-rc2">Run Again</button></div>';

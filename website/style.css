@@ -26,7 +26,7 @@ pre{background:var(--surface);border:1px solid var(--line);padding:16px 18px;bor
 .top nav a.gh:hover{color:var(--ink);background:var(--amber)}
 
 /* buttons */
-.btns{display:flex;flex-wrap:wrap;gap:12px;margin:30px 0 20px}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin:26px 0 18px}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;border:1px solid var(--line);color:var(--text);background:var(--surface)}
 .btn:hover{border-color:var(--gold)}
 .btn.pri{background:var(--gold);border-color:var(--gold);color:var(--ink)}
@@ -35,12 +35,11 @@ pre{background:var(--surface);border:1px solid var(--line);padding:16px 18px;bor
 
 /* hero: the one bold element is the logo's long shadow */
 .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
-.hero::before{content:"";position:absolute;left:-10%;top:-40%;width:70%;height:200%;background:linear-gradient(135deg,var(--shadow),transparent 62%);transform:rotate(-45deg);transform-origin:center;pointer-events:none}
-.hero .in{position:relative;max-width:1180px;margin:0 auto;padding:76px 24px 64px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:56px;align-items:center}
-.hero .logo{width:64px;height:64px;margin-bottom:22px}
-.hero h1{font-size:clamp(2.3rem,4.6vw,3.6rem);line-height:1.06;letter-spacing:-.035em;margin:0 0 20px;font-weight:800}
-.hero p.lead{font-size:1.2rem;color:var(--mute);margin:0;max-width:36ch}
-.frame{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--surface);box-shadow:24px 24px 0 var(--shadow),0 30px 80px rgba(0,0,0,.45)}
+.hero::before{content:"";position:absolute;left:-10%;top:-40%;width:70%;height:200%;background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 8%,transparent),transparent 58%);transform:rotate(-45deg);transform-origin:center;pointer-events:none}
+.hero .in{position:relative;max-width:1180px;margin:0 auto;padding:64px 24px 72px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:52px;align-items:center}
+.hero h1{font-size:clamp(2rem,3.9vw,3.1rem);line-height:1.1;letter-spacing:-.03em;margin:0 0 18px;font-weight:800}
+.hero p.lead{font-size:1.12rem;color:var(--mute);margin:0;max-width:40ch}
+.frame{border-radius:14px;overflow:hidden;border:1px solid color-mix(in srgb,var(--gold) 22%,var(--line));background:var(--surface);box-shadow:0 30px 70px -24px rgba(0,0,0,.6),0 0 90px -40px var(--shadow)}
 .frame img{display:block;width:100%}
 @media (max-width:900px){.hero .in{grid-template-columns:1fr;padding-top:48px;gap:36px}.hero p.lead{max-width:none}}
 
@@ -164,3 +163,20 @@ ul.tick .ic{color:var(--link);width:16px;height:16px;margin-top:.15em}
 section.block>h2{margin-bottom:12px}
 @media (max-width:620px){section.block{padding-top:64px}.hero .in{padding-bottom:70px}}
 footer .in a{display:inline-flex;align-items:center;gap:7px}footer .in a .ic{width:16px;height:16px}
+
+/* fewer icons: dots for lists and chips, one icon per feature */
+.chips li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);flex:none}
+ul.dots{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:8px;font-size:14.5px;color:var(--mute);line-height:1.45}
+ul.dots li{display:flex;gap:10px;align-items:baseline}
+ul.dots li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--gold);flex:none;transform:translateY(-.12em)}
+.fgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:1000px){.fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.fgrid{grid-template-columns:1fr}}
+.fcard .tag{color:var(--text);font-weight:600;margin:0 0 12px;font-size:15.5px}
+.fsub{margin:48px 0 16px;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:800}
+.agrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.acard{display:flex;gap:16px;align-items:flex-start;padding:22px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+.acard h4{margin:0 0 4px;font-size:1.1rem}.acard p{margin:0;color:var(--mute);font-size:15px;line-height:1.5}
+.acard a{display:inline-block;margin-top:10px;font-weight:700;font-size:15px;text-decoration:none}.acard a:hover{text-decoration:underline}
+@media (max-width:1000px){.agrid{grid-template-columns:1fr}}
+.more a>span:first-child:not(.ico) b{display:block}

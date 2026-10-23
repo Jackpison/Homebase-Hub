@@ -1,6 +1,6 @@
 # Working on Homebase Hub
 
-This file is for anyone changing the code, people and AI tools alike. Read it before you start. `CONTRIBUTING.md` has the short version.
+This file is for anyone changing the code, people and AI tools alike. Read it before you start. `.github/CONTRIBUTING.md` has the short version.
 
 ## What is where
 

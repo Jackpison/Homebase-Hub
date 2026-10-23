@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.44.1 | Cleaner padlock pictures for private and encrypted tabs; Server Check rows laid out properly, and no false warning for the favicon service; a more compact Tools start box |
 | 1.44.0 | Telegram: Snooze buttons under Due Now messages and a `/snooze` command; a slightly smaller update zip; more tests behind the scenes |
 | 1.43.1 | Tools loads its code once (the React error in the console is gone); pages pre-load when you hover over their link in the bar |
 | 1.43.0 | Newer, safer PDF reader in Tools (pdf.js 6.4.299); Excel export without an outside library; easier to read in light and dark mode |
@@ -61,6 +62,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.44.1
+
+### Easier to read
+
+- **New padlocks.** Private tabs now show a gold padlock and encrypted tabs a green padlock with a tick, drawn as sharp vector pictures that look the same on every screen, in Info and Links. The old picture files are gone.
+- **Health checks line up.** In Settings, the Site Checks and Server Check rows now have proper spacing, with the tick or warning circle inside the card instead of touching its edge.
+- **Tools start box.** The "What do you want to do?" box at the top of Tools is smaller, so the tools show sooner.
+
+### Fix
+
+- **Server Check no longer warns about the favicon service.** Google's favicon service answers "404" for the test site it has no icon for. That means the service was reached, so it now counts as a pass.
 
 ---
 

@@ -111,7 +111,7 @@ body:not(.editing) .box [data-r="edit"],body:not(.editing) .box [data-r="cfg"],b
 .tabi{position:relative;flex:none;display:flex;border-radius:999px}
 .tabi .tab{transition:transform .16s ease,box-shadow .16s ease}
 .tab .lk{display:inline-grid;place-items:center;vertical-align:-2px;margin-left:7px}
-.tab .lk img{display:block;width:16px;height:16px}
+.tab .lk svg{display:block;width:16px;height:16px}
 .tabi .pen{position:absolute;right:6px;top:50%;width:26px;height:26px;margin-top:-13px;border:0;border-radius:50%;padding:0;background:transparent;
   color:var(--mute);display:none;place-items:center;cursor:pointer}
 .tabi.on .pen{color:var(--tf)}
@@ -145,10 +145,10 @@ body.editing .wrap{padding-bottom:110px}
 .gate,.encbar{grid-column:1/-1}
 .gate{display:none;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:56px 20px;background:var(--box);border:1px solid var(--line);border-radius:14px;min-height:calc(100vh - 300px);justify-content:center}
 .boxes.lockd .gate{display:flex}.boxes.lockd .box,.boxes.lockd .addbox{display:none}
-.gate img{width:64px;height:64px;display:block}.gate h3{margin:6px 0 0;font-size:20px}.gate p{margin:0 0 10px;color:var(--mute);max-width:420px}
+.gate svg{width:64px;height:64px;display:block}.gate h3{margin:6px 0 0;font-size:20px}.gate p{margin:0 0 10px;color:var(--mute);max-width:420px}
 .encbar{display:none;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin:-6px 0 0}
 .boxes.unl .encbar{display:flex}
-.encbar img{width:20px;height:20px;flex:none;display:block}
+.encbar svg{width:20px;height:20px;flex:none;display:block}
 .encbar button{margin-left:auto;flex:none;font:inherit;font-size:12px;font-weight:700;border-radius:8px;padding:4px 10px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--fg)}
 
 .boxes .bad{color:var(--err)}

@@ -198,13 +198,13 @@ body.is-locked .search{display:none}
 .locked{display:flex;flex-direction:column;align-items:flex-start;gap:14px;padding:40px 8px;color:var(--muted)}
 /* encrypted tab: centered lock screen while it is locked, a slim bar with Lock Now once it is open (the same as Info's) */
 .gate{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:56px 20px;background:var(--raise);border:1px solid var(--line);border-radius:14px;min-height:calc(100vh - 300px)}
-.gate>.lk{display:flex}.gate .lk img{width:64px;height:64px;display:block}
+.gate>.lk{display:flex}.gate .lk svg{width:64px;height:64px;display:block}
 .gate h3{margin:6px 0 0;font-size:20px;font-weight:600;color:var(--text)}
 .gate p{margin:0 0 10px;color:var(--muted);max-width:420px}
 .gate .pill{background:var(--text);color:var(--bg);border:1px solid var(--text);border-radius:999px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer}
 .gate .pill:hover{filter:brightness(1.1)}
 .encbar{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin:0 0 14px}
-.encbar .lk{display:flex;flex:none}.encbar .lk img{width:20px;height:20px;display:block}
+.encbar .lk{display:flex;flex:none}.encbar .lk svg{width:20px;height:20px;display:block}
 .encbar button{margin-left:auto;flex:none;font:inherit;font-size:12px;font-weight:700;border-radius:8px;padding:4px 10px;cursor:pointer;border:1px solid var(--line2);background:transparent;color:var(--text)}
 .encbar button:hover{background:var(--hover)}
 #keyDlg h3{font-size:20px;margin-bottom:10px}

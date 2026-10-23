@@ -347,7 +347,9 @@ case 'diag':   // Settings > Server check
     };
     foreach (['https://www.google.com/s2/favicons?domain=example.com&sz=64' => 'Favicon service (Google)', 'https://icons.duckduckgo.com/ip3/example.com.ico' => 'Favicon service (DuckDuckGo)', 'https://example.com/' => 'A normal website', 'https://api.github.com/' => 'GitHub (for updates)'] as $u => $n) {
         [$code, $note] = $get($u);
-        $add('Reach: ' . $n, $code >= 200 && $code < 400, $code ? "Answered HTTP $code ($note)." : "No connection: $note. Your host may block outgoing requests; ask them to allow outbound HTTPS. Link icons then fall back to being loaded by the visitor's browser.");
+        // a favicon service answers 404 (with a plain icon) for a site it has no icon for, such as example.com: it was reached
+        $fav = strpos($n, 'Favicon service') === 0;
+        $add('Reach: ' . $n, $fav ? ($code >= 200 && $code < 500) : ($code >= 200 && $code < 400), $code ? "Answered HTTP $code ($note)." : "No connection: $note. Your host may block outgoing requests; ask them to allow outbound HTTPS. Link icons then fall back to being loaded by the visitor's browser.");
     }
     $add('allow_url_fopen', true, ini_get('allow_url_fopen') ? 'On.' : 'Off (fine when cURL works).');
     foreach (['Data folder' => hub_data_root(), 'Links icons' => HUB_CORE . '/media/links/icons', 'Start page icons' => HUB_CORE . '/media/home/icons', 'Start page photos' => HUB_CORE . '/media/home/photos',
