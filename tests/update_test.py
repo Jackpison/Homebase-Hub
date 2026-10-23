@@ -25,7 +25,7 @@ def mutate_zip(src, dst, version=None, minphp=None):
     if version:
         put('web/core-data/lib/boot.php', re.sub(r"define\('HUB', '[^']+'\)", "define('HUB', '%s')" % version, items['web/core-data/lib/boot.php'].decode()).encode())
         man['version'] = version
-        for ch in ('web/docs/CHANGELOG.md', 'web/core-data/docs/CHANGELOG.md'):
+        for ch in ('web/docs/CHANGELOG.md',):
             if ch in items:
                 x = items[ch].decode(); i = x.index('\n## '); put(ch, (x[:i] + '\n## %s\n\n### Test build\n\nTest build.\n\n---\n' % version + x[i:]).encode())
     if minphp: man['minPhp'] = minphp
@@ -187,7 +187,9 @@ try:
     r = s.post('update_apply', {'password': PW}); time.sleep(0.5)
     check(f'D2 {PREVV} -> {CURV} applied', r.get('ok') and s.version() == f'{CURV}', r)
     check('D3 file check afterwards: 0 changed, 0 missing, 0 extra', s.clean()[:3] == (0, 0, 0), s.clean())
-    check('D4 docs are now in web/docs; the old readable source is gone', os.path.isfile(s.dir + '/web/docs/CHANGELOG.md') and os.path.isfile(s.dir + '/web/docs/.htaccess') and not os.path.isdir(s.dir + '/web/core-data/docs/src'), os.listdir(s.dir + '/web/core-data/docs'))
+    had_old = 'web/core-data/docs/CHANGELOG.md' in zipfile.ZipFile(REL38).namelist()
+    check('D3b the old second copy of the changelog (web/core-data/docs) is gone after the update', not os.path.exists(s.dir + '/web/core-data/docs/CHANGELOG.md'), 'previous zip had it: %s' % had_old)
+    check('D4 docs are now in web/docs; the old readable source is gone', os.path.isfile(s.dir + '/web/docs/CHANGELOG.md') and os.path.isfile(s.dir + '/web/docs/.htaccess') and not os.path.isdir(s.dir + '/web/core-data/docs/src'), os.listdir(s.dir + '/web/core-data') )
     cl = s.get('changelog'); check('D5 Settings > Changelog reads the new place', f'{CURV}' in (cl.get('text') or cl.get('md') or json.dumps(cl))[:4000], str(cl)[:200])
     st = s.get('update_status'); check('D6 GitHub card still there after the move', 'gh' in st and st['gh']['auto'] is False, st.get('gh'))
     r = s.post('update_apply', {'password': PW, 'back': True}); time.sleep(0.5)

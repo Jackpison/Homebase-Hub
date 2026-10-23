@@ -10,6 +10,20 @@
  * Only you need these screens, so they load on first use (shell.js fetches this file when you open Settings or Backup,
  * and prefetches it quietly while you are logged in). Visitors never download it.
  * It shares shell.js's state and helpers through window.__ixShell (K below); nothing here runs until called. */
+/* Map of this file (search for the names; line numbers would go stale). One closure, in this order:
+ *   frame      SECTIONS, PANES, mount(), go(), pane(), tabify(), cardify(), the draft and "Save Settings" (saveSettings)
+ *   search     SEARCH: add a line here for every new setting
+ *   General    pGeneral, textSizes        Appearance  pLook, pColors, PRESETS / PRESET_GROUPS (data), pThemes
+ *   Navigation pNav, tabEditor            Pages       pPages
+ *   Telegram   pRemind                    Health      pCheck (Server Check), pDomains
+ *   Overview   pOverview, whatsNew, decorateNav, pSetup (Guided Setup, WZ, setupSteps)
+ *   Changelog  mdInline, mdBlocks, clParse, pChangelog, pChMap, pChNotes
+ *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles
+ *   building blocks (used by every pane)  ecCard, ecField, ecChip, tabHead, tile, checkRow, spinRow
+ *   Security   pSecurity, VK (devices), PP (password and encryption flows)
+ *   Backup     NAMES, pBackup           Health  pHealth
+ * Panes share state through the closure, so they are not separate files: splitting them needs a module loader and a real browser test of every
+ * Settings section first (tests/pages_test.py opens all of them). */
 (function (K) {
   'use strict';
   if (!K || K.impl) return;
