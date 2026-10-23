@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: '24' }
       - name: Build
-        run: npm i --no-save esbuild && python3 tools/build.py
+        run: npm i --no-save esbuild@0.28.2 && python3 tools/build.py
       - name: Check the tag matches the version in the code
         run: |
           V=$(ls build/site-update-*.zip | sed -E 's/.*site-update-(.*)\.zip/\1/')

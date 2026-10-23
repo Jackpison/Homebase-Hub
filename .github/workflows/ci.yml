@@ -1,5 +1,14 @@
 name: CI
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+# A branch with an open pull request used to run twice per push (once as a push, once as the pull request), and an older run kept going after a newer push.
+# Now it runs once, and a newer push cancels the older run on the same branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -21,7 +30,7 @@ jobs:
       - name: Library safety check
         run: python3 tests/check_libraries.py
       - name: Build
-        run: npm i --no-save esbuild && python3 tools/build.py
+        run: npm i --no-save esbuild@0.28.2 && python3 tools/build.py
       - name: Check zip name and changelog
         run: |
           ls build/site-update-*.zip
@@ -42,7 +51,7 @@ jobs:
         with: { python-version: '3.12' }
       - name: Tools for the tests
         run: |
-          npm i --no-save esbuild axe-core
+          npm i --no-save esbuild@0.28.2 axe-core@4.14.0
           pip install playwright==1.56.0 openpyxl pypdf pillow reportlab
           python -m playwright install --with-deps chromium
       - name: Build the zip and the website
@@ -70,6 +79,26 @@ jobs:
         run: python3 tests/pages_test.py build/site-update-*.zip
       - name: Accessibility
         run: python3 tests/a11y_test.py build/site-update-*.zip build/site
+
+  apache:
+    # Installing Apache takes about five minutes on a fresh runner, so it runs beside the other tests instead of after them.
+    runs-on: ubuntu-latest
+    name: apache (the .htaccess files)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24' }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12' }
+      - name: Tools for the test
+        run: |
+          npm i --no-save esbuild@0.28.2
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+      - name: Build the zip
+        run: python3 tools/build.py
       - name: On real Apache (the .htaccess files)
         run: |
           sudo sh tests/apache_setup.sh build/site-update-*.zip

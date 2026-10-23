@@ -7,7 +7,7 @@ These run on your own computer. Nothing here is part of the update zip.
 `update_test.py` installs real zips into temporary folders, runs each site with PHP's built-in server, and checks updating from GitHub and by upload against a local stand-in for GitHub. It covers the full update, a wrong checksum, a wrong size, damaged and cut-off downloads, a wrong version, a broken `latest.json`, the API fallback (asked at most once a day), redirects to other hosts, the security token, the daily check switch, upgrading from the previous release, the notes preview, and Go Back.
 
 ```
-npm i --no-save esbuild
+npm i --no-save esbuild@0.28.2
 python3 tools/build.py                        # CURRENT
 python3 tests/update_test.py build/site-update-1.40.0.zip site-update-1.39.0.zip site-update-1.37.0.zip
 ```

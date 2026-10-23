@@ -40,9 +40,14 @@ jobs:
             echo "ver=$V" >> "$GITHUB_OUTPUT"
           fi
       - name: Build the website
+        env:
+          TAG: ${{ steps.rel.outputs.tag }}
+          VER: ${{ steps.rel.outputs.ver }}
+          SHA: ${{ steps.rel.outputs.sha }}
+          SIZE: ${{ steps.rel.outputs.size }}
         run: |
-          if [ -n "${{ steps.rel.outputs.tag }}" ]; then
-            python3 tools/make-site.py --latest Jackpison Homebase-Hub "${{ steps.rel.outputs.ver }}" "${{ steps.rel.outputs.sha }}" "${{ steps.rel.outputs.size }}"
+          if [ -n "$TAG" ]; then
+            python3 tools/make-site.py --latest Jackpison Homebase-Hub "$VER" "$SHA" "$SIZE"
           else
             python3 tools/make-site.py
           fi

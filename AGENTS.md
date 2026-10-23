@@ -30,7 +30,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 ## Checks before a pull request
 
 ```
-npm i --no-save esbuild axe-core
+npm i --no-save esbuild@0.28.2 axe-core@4.14.0
 python3 tests/check_libraries.py
 python3 tools/build.py
 python3 tools/make-site.py --no-guide
@@ -41,7 +41,7 @@ python3 tests/a11y_test.py build/site-update-X.Y.Z.zip build/site
 sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/apache_test.py
 ```
 
-All of them must pass. CI runs the same checks on every push.
+All of them must pass. CI runs the same checks on every pull request and on every push to `main`.
 
 ## Release checklist
 
