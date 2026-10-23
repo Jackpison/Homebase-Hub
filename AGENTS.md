@@ -52,7 +52,7 @@ All of them must pass. CI runs the same checks on every pull request and on ever
 3. If the minimum PHP changes, change `HUB_MIN_PHP` in `boot.php`; the build carries it into the zip.
 4. Run every check above on the final build.
 5. Commit, push `main`, and wait for CI to pass.
-6. Tag `vX.Y.Z` (the same number as `HUB`) and push the tag. The release workflow builds the zip, publishes the release with only that version's changelog section, and updates the website, the PDF guides and `latest.json`.
+6. Tag `vX.Y.Z` (the same number as `HUB`) and push the tag. The release workflow builds the zip, publishes the release with only that version's changelog section, and updates the website, the PDF guides and `latest.json`. No command line? On github.com open Releases, **Draft a new release**, type the tag `vX.Y.Z` under *Choose a tag* (create it on publish, target `main`) and publish. The workflow then adds the zip and notes to that release.
 7. Check the release page and the website.
 
 The zip is always named `site-update-X.Y.Z.zip` (dots, not underscores) and always contains the full `CHANGELOG.md`.
