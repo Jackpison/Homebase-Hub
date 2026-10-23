@@ -14,7 +14,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  * Settings live in site-data/core/notify.php (guarded: answers 404 in a browser). The bot token never goes back to the browser.
  * What is sent, in the site's time zone (Settings > General):
  *   - a daily digest at the hour you choose: overdue, due today, and coming up (each task's "Remind me" window)
- *   - "due now" when a task with a time reaches that time (once per date)
+ *   - "due now" when a task with a time reaches that time (once per date); Snooze buttons under it, and /snooze in the bot, hold a task's reminders back
  *   - the backup reminder, once a day while a backup is due
  *   - login alerts: every login, logins paused after wrong passwords, password and two-step changes, restores
  *   - a full backup file of the site every N days (counts as your backup, so the reminder resets)
@@ -28,7 +28,7 @@ function nt_load(): array {
     $d += ['on' => false, 'token' => '', 'chat' => '', 'chatName' => '', 'hour' => 9, 'tasks' => true, 'timed' => true, 'backup' => true,
            'login' => true, 'bkEvery' => 0, 'bkLast' => 0, 'bkError' => '', 'bkEnc' => true,
            'hook' => false, 'hookKey' => '', 'offset' => 0, 'lastPoll' => 0,
-           'key' => '', 'url' => '', 'sent' => [], 'lastRun' => 0, 'lastError' => '', 'lastSent' => 0];
+           'key' => '', 'url' => '', 'sent' => [], 'snooze' => [], 'lastRun' => 0, 'lastError' => '', 'lastSent' => 0];
     if (!preg_match('/^[a-f0-9]{32}$/', (string)$d['key'])) { $d['key'] = bin2hex(random_bytes(16)); nt_save($d); }
     return $d;
 }
@@ -60,7 +60,7 @@ function nt_token_hint(string $t): string { return $t === '' ? '' : substr($t, 0
 /** One Telegram Bot API call. */
 function nt_tg(string $token, string $method, array $params = []): array {
     if (!nt_token_ok($token)) return ['ok' => false, 'description' => 'The bot token is missing or not valid.'];
-    $url = 'https://api.telegram.org/bot' . $token . '/' . $method;
+    $url = (defined('NT_TEST_API') ? NT_TEST_API : 'https://api.telegram.org') . '/bot' . $token . '/' . $method;   // NT_TEST_API: only tests define it
     $body = json_encode($params, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     $raw = false; $err = '';
     if (function_exists('curl_init')) {
@@ -192,7 +192,7 @@ function nt_card(array $t, string $url): string {
     return $m;
 }
 function nt_digest(array $d, bool $force): ?string {
-    [$late, $today, $soon] = nt_due_lists();
+    [$late, $today, $soon] = array_map(function ($l) use ($d) { return nt_unsnoozed($d, $l); }, array_slice(nt_due_lists(), 0, 3));
     if (!$late && !$today && !$soon && !$force) return null;
     $site = (string)(hub_settings()['siteName'] ?? 'Homebase Hub');
     $m = '📋 <b>' . nt_h($site) . ' Tasks</b>' . "\n" . nt_h(date('l, j M Y'));
@@ -239,7 +239,7 @@ function nt_run(bool $force = false): array {
         $m = nt_digest($d, $force);
         if ($m === null) $d['sent']['digest'] = $today;
         else {
-            [$late, $todayL] = nt_due_lists(); $kb = [];
+            [$late, $todayL] = array_map(function ($l) use ($d) { return nt_unsnoozed($d, $l); }, array_slice(nt_due_lists(), 0, 2)); $kb = [];
             foreach (array_slice(array_merge($late, $todayL), 0, 8) as $t) $kb[] = [['text' => '✓ ' . mb_substr($t['name'], 0, 28), 'callback_data' => 'td:' . $t['id'] . ':' . $t['due']]];
             $r = nt_send($d, $m, $kb ? ['inline_keyboard' => $kb] : null);
             if (!empty($r['ok'])) { $sent++; $d['sent']['digest'] = $today; } else $errs[] = (string)($r['description'] ?? 'Telegram refused the message.');
@@ -249,9 +249,15 @@ function nt_run(bool $force = false): array {
     if ($d['timed'] && !$force) {
         foreach (nt_due_lists()[3] as $t) {
             $k = 't|' . $t['id'] . '|' . $t['due'] . '|' . $t['time'];
-            if (isset($d['sent'][$k])) continue;
+            $sn = $d['snooze'][$t['id']] ?? null;
+            if (nt_snoozed($d, $t['id'])) continue;   // snoozed: wait for the time it chose
+            $again = is_array($sn) && ($sn['due'] ?? '') === $t['due'] && isset($d['sent'][$k]);   // a snooze that has run out: ask again once
+            if (isset($d['sent'][$k]) && !$again) continue;
             $r = nt_send($d, nt_card($t, (string)$d['url']), nt_task_buttons($t));
-            if (!empty($r['ok'])) { $sent++; $d['sent'][$k] = time(); } else $errs[] = (string)($r['description'] ?? 'Telegram refused the message.');
+            if (!empty($r['ok'])) {
+                $sent++; $d['sent'][$k] = time();
+                if ($again) { $tid = $t['id']; nt_update(function (&$x) use ($tid) { unset($x['snooze'][$tid]); }); unset($d['snooze'][$tid]); }
+            } else $errs[] = (string)($r['description'] ?? 'Telegram refused the message.');
         }
     }
     // 3. backup reminder, once a day while a backup is due
@@ -279,6 +285,7 @@ function nt_run(bool $force = false): array {
         $cur['sent'] = array_merge(is_array($cur['sent']) ? $cur['sent'] : [], $d['sent']);
         // forget sent markers older than 45 days
         foreach ($cur['sent'] as $k => $v) if (is_int($v) && $v < time() - 45 * 86400) unset($cur['sent'][$k]);
+        foreach (is_array($cur['snooze']) ? $cur['snooze'] : [] as $k => $v) if ((int)($v['until'] ?? 0) < time() - 2 * 86400) unset($cur['snooze'][$k]);   // ran out long ago
     });
     flock($lk, LOCK_UN); fclose($lk);
     if ($errs) return ['ok' => false, 'note' => 'Telegram: ' . $errs[0]];
@@ -380,7 +387,51 @@ function nt_view(array $d): array {
 function nt_task_buttons(array $t): array {
     $row = [['text' => '✓ Done', 'callback_data' => 'td:' . $t['id'] . ':' . $t['due']]];
     if (($t['repeat']['unit'] ?? 'none') !== 'none') $row[] = ['text' => '⏭ Skip', 'callback_data' => 'ts:' . $t['id'] . ':' . $t['due']];
-    return ['inline_keyboard' => [$row]];
+    $z = 'tz:' . $t['id'] . ':' . $t['due'] . ':';
+    return ['inline_keyboard' => [$row, [['text' => '💤 1 Hour', 'callback_data' => $z . '1h'], ['text' => '💤 3 Hours', 'callback_data' => $z . '3h'], ['text' => '💤 Tomorrow', 'callback_data' => $z . 'tm']]]];
+}
+/** Is this task's reminder on hold right now (Snooze button or /snooze)? */
+function nt_snoozed(array $d, string $id): bool {
+    $s = $d['snooze'][$id] ?? null;
+    return is_array($s) && (int)($s['until'] ?? 0) > time();
+}
+/** The tasks of $list that are not snoozed. */
+function nt_unsnoozed(array $d, array $list): array {
+    return array_values(array_filter($list, function ($t) use ($d) { return !nt_snoozed($d, $t['id']); }));
+}
+/** When a snooze ends: '1h', '3h', 'tm' (tomorrow, at the hour of the daily digest) or a number of seconds. Between 5 minutes and 7 days from now. */
+function nt_snooze_until(array $d, $how): int {
+    if ($how === 'tm') return strtotime('tomorrow ' . sprintf('%02d:00', (int)$d['hour']));
+    $sec = $how === '1h' ? 3600 : ($how === '3h' ? 10800 : (int)$how);
+    return time() + max(300, min(7 * 86400, $sec));
+}
+/** Holds back the reminders of one task until $until. Returns a plain-text answer. */
+function nt_bot_snooze(string $id, string $due, int $until): string {
+    require_once HUB_WEB . '/tasks/lib.php';
+    $name = '';
+    foreach (tasks_read()['tasks'] as $t) if ($t['id'] === $id && $t['status'] === 'active') $name = $t['name'];
+    if ($name === '') return 'That task no longer exists.';
+    nt_update(function (&$x) use ($id, $due, $until) { $x['snooze'][$id] = ['until' => $until, 'due' => $due]; });
+    return '💤 Snoozed: ' . $name . ' until ' . date('D, j M, g:i A', $until) . '.';
+}
+/** "/snooze Netflix 2h" (30m, 2h, 1d or tomorrow; one hour if left out) */
+function nt_bot_snooze_by_name(array $d, string $arg): string {
+    require_once HUB_WEB . '/tasks/lib.php';
+    $arg = trim($arg); $how = '1h';
+    if ($arg === '') return 'Which task? For example: /snooze Netflix 2h';
+    if (preg_match('/^(.*?)\s+(?:(\d{1,3})\s*(m|mins?|minutes?|h|hrs?|hours?|d|days?)|(tomorrow))$/iu', $arg, $m)) {
+        $arg = trim($m[1]);
+        if (!empty($m[4])) $how = 'tm';
+        else { $u = strtolower($m[3])[0]; $how = (string)((int)$m[2] * ($u === 'm' ? 60 : ($u === 'h' ? 3600 : 86400))); }
+    }
+    if ($arg === '') return 'Which task? For example: /snooze Netflix 2h';
+    $hits = array_values(array_filter(tasks_read()['tasks'], function ($t) use ($arg) { return $t['status'] === 'active' && mb_stripos($t['name'], $arg) !== false; }));
+    if (!$hits) return 'No active task matches "' . $arg . '".';
+    if (count($hits) > 1) {
+        usort($hits, function ($a, $b) { return strcmp($a['due'], $b['due']); });
+        return 'Several tasks match. Be more exact: ' . implode(', ', array_map(function ($t) { return $t['name']; }, array_slice($hits, 0, 6)));
+    }
+    return nt_bot_snooze($hits[0]['id'], $hits[0]['due'], nt_snooze_until($d, $how));
 }
 /** Asks Telegram for new messages (polling mode), at most every $every seconds. Returns how many were handled. */
 function nt_poll(int $every = 3): int {
@@ -409,6 +460,7 @@ function nt_handle_update(array $u): void {
         $data = (string)($q['data'] ?? ''); $text = '';
         if (preg_match('/^ap:(ok|no):([a-f0-9]{16})$/', $data, $m)) { require_once __DIR__ . '/approval.php'; $text = ap_answer($m[2], $m[1] === 'ok'); }
         elseif (preg_match('/^t([ds]):([a-z0-9]{6,16}):(\d{4}-\d{2}-\d{2})$/', $data, $m)) $text = nt_bot_done($m[2], $m[3], $m[1] === 's' ? 'skip' : 'paid');
+        elseif (preg_match('/^tz:([a-z0-9]{6,16}):(\d{4}-\d{2}-\d{2}):(1h|3h|tm)$/', $data, $m)) $text = nt_bot_snooze($m[1], $m[2], nt_snooze_until($d, $m[3]));
         nt_tg($d['token'], 'answerCallbackQuery', ['callback_query_id' => (string)$q['id'], 'text' => mb_substr(strip_tags($text), 0, 190)]);
         if ($text !== '' && isset($q['message']['message_id'])) {
             $old = (string)($q['message']['text'] ?? '');
@@ -431,6 +483,7 @@ function nt_handle_update(array $u): void {
         case '/next': case '/tasks': nt_bot_list($d, 'next'); return;
         case '/add': nt_reply($d, nt_bot_add($arg)); return;
         case '/done': nt_reply($d, nt_bot_done_by_name($arg)); return;
+        case '/snooze': nt_reply($d, nt_h(nt_bot_snooze_by_name($d, $arg))); return;
         case '/backup': $r = nt_backup_send($d); nt_save_keys($d, ['bkLast', 'bkError']); if (empty($r['ok'])) nt_reply($d, '⚠️ Backup not sent: ' . nt_h($r['description'] ?? 'unknown problem')); return;
         case '/status': nt_reply($d, nt_bot_status()); return;
     }
@@ -439,9 +492,9 @@ function nt_handle_update(array $u): void {
 function nt_bot_help(): string {
     return '🤖 <b>What I Can Do</b>' . "\n\n" .
         "/today  overdue and due today, with Done buttons\n/week  the next 7 days\n/next  the next 10 tasks\n" .
-        "/add Netflix 649 monthly 5 Nov  a new task (price, repeat, date and time are optional)\n/done Netflix  mark a task done\n" .
+        "/add Netflix 649 monthly 5 Nov  a new task (price, repeat, date and time are optional)\n/done Netflix  mark a task done\n/snooze Netflix 2h  pause its reminders (30m, 2h, 1d or tomorrow)\n" .
         "/backup  send a backup file now\n/status  a quick check of the site\n\n" .
-        "Buttons under reminders mark tasks done or skip a date.";
+        "Buttons under reminders mark tasks done, skip a date or snooze them.";
 }
 /** today | week | next: active tasks with Done buttons (8 at most) */
 function nt_bot_list(array $d, string $what): void {

@@ -270,7 +270,7 @@ case 'twostep_enable':
     $a = hub_auth(); $code = preg_replace('/\D/', '', (string)(body()['code'] ?? ''));
     $sec = (string)($a['totp']['pending'] ?? '');
     if ($sec === '') hub_json(409, ['ok' => false, 'error' => 'Start again: open Two-step login.']);
-    $ok = false; $now = intdiv(time(), 30);
+    $ok = false; $step = 0; $now = intdiv(time(), 30);
     foreach ([-1, 0, 1] as $d) if (hash_equals(hub_totp_at($sec, $now + $d), $code)) { $ok = true; $step = $now + $d; }
     if (!$ok) hub_json(400, ['ok' => false, 'error' => "That code doesn't match. Check your phone's clock and try the newest code."]);
     $a['totp'] = ['on' => true, 'secret' => $sec, 'last' => $step];

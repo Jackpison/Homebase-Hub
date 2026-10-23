@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.44.0 | Telegram: Snooze buttons under Due Now messages and a `/snooze` command; a slightly smaller update zip; more tests behind the scenes |
 | 1.43.1 | Tools loads its code once (the React error in the console is gone); pages pre-load when you hover over their link in the bar |
 | 1.43.0 | Newer, safer PDF reader in Tools (pdf.js 6.4.299); Excel export without an outside library; easier to read in light and dark mode |
 | 1.42.0 | Tools > Favicon: a 512 × 512 size, and downloads save right there instead of opening a new tab; the website uses clean addresses |
@@ -60,6 +61,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.44.0
+
+### Telegram: Snooze
+
+- A Due Now message in Telegram now has **1 Hour**, **3 Hours** and **Tomorrow** buttons next to Done and Skip. Tap one and the reminder waits.
+- Send `/snooze Netflix 2h` to do the same from the chat. You can write `30m`, `2h`, `1d` or `tomorrow`; with no time it is one hour. Settings > Telegram lists the new command.
+- A snoozed task stays out of the daily digest. When a snooze of an hour or three ends, the Due Now message of a task that has a time comes once more. A task snoozed until tomorrow comes back in the morning digest.
+- Snoozing never changes the task or its due date. It only holds back the messages.
+
+### Smaller and tidier
+
+- The update zip no longer carries a second copy of the changelog for sites older than 1.39.0. **Nothing to do:** the first update to this version removes the leftover copy by itself.
+- Setting up two-step login no longer relies on a variable PHP could not prove was set. It behaved correctly before; the code is now easier to check.
+- Behind the scenes: PHP unit tests for the new Snooze, task parsing, repeat dates, update file names and backup encryption; a static code check (PHPStan); build tools are pinned with a lock file.
 
 ---
 

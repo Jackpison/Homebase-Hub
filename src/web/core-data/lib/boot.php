@@ -21,7 +21,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 
 if (defined('HUB')) return;
-define('HUB', '1.43.1');
+define('HUB', '1.44.0');
 const HUB_MIN_PHP = '8.3';   // the oldest PHP this version supports and is tested on; an update zip carries it as "minPhp" in its file list
 
 /** When each PHP branch stops getting security fixes (https://www.php.net/supported-versions, checked 2026-10-23). Branches not listed are newer than this table. Add a row each November. */
@@ -137,7 +137,7 @@ function hub_jput(string $f, string $json): bool {
 
 /* ======================= requests ======================= */
 
-function hub_json($code, $arr): void {
+function hub_json($code, $arr): never {
     if (!headers_sent()) { http_response_code($code); header('Content-Type: application/json; charset=utf-8'); }
     echo json_encode($arr, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     exit;

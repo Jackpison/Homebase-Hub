@@ -10,6 +10,20 @@
  * Only you need these screens, so they load on first use (shell.js fetches this file when you open Settings or Backup,
  * and prefetches it quietly while you are logged in). Visitors never download it.
  * It shares shell.js's state and helpers through window.__ixShell (K below); nothing here runs until called. */
+/* Map of this file (search for the names; line numbers would go stale). One closure, in this order:
+ *   frame      SECTIONS, PANES, mount(), go(), pane(), tabify(), cardify(), the draft and "Save Settings" (saveSettings)
+ *   search     SEARCH: add a line here for every new setting
+ *   General    pGeneral, textSizes        Appearance  pLook, pColors, PRESETS / PRESET_GROUPS (data), pThemes
+ *   Navigation pNav, tabEditor            Pages       pPages
+ *   Telegram   pRemind                    Health      pCheck (Server Check), pDomains
+ *   Overview   pOverview, whatsNew, decorateNav, pSetup (Guided Setup, WZ, setupSteps)
+ *   Changelog  mdInline, mdBlocks, clParse, pChangelog, pChMap, pChNotes
+ *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles
+ *   building blocks (used by every pane)  ecCard, ecField, ecChip, tabHead, tile, checkRow, spinRow
+ *   Security   pSecurity, VK (devices), PP (password and encryption flows)
+ *   Backup     NAMES, pBackup           Health  pHealth
+ * Panes share state through the closure, so they are not separate files: splitting them needs a module loader and a real browser test of every
+ * Settings section first (tests/pages_test.py opens all of them). */
 (function (K) {
   'use strict';
   if (!K || K.impl) return;
@@ -878,15 +892,15 @@
             '<span class="ix-note" style="margin:0">' + esc(String(n.tz).replace(/_/g, ' ')) + ' time</span><button type="button" class="ix-btn" id="nt-now"' + (ready ? '' : ' disabled') + '>Send Now</button></div>' +
             '<p class="ix-note">Last checked: ' + (n.lastRun ? when(n.lastRun) : 'never') + '. Last message: ' + (n.lastSent ? when(n.lastSent) : 'none yet') + '.' + (n.lastError ? ' <span class="ix-err">Last problem: ' + esc(n.lastError) + '</span>' : '') + '</p>')) +
 
-        acc('two', 'Instant Replies', (n.hook ? 'On: the bot answers your commands within a second.' : 'Off: the bot answers within a few minutes.') + ' It understands 7 commands.',
-          tabHead(ICON.pulse, 'Instant Replies', 'Tap Done under reminders, or send commands. Only your own chat is answered.') +
+        acc('two', 'Instant Replies', (n.hook ? 'On: the bot answers your commands within a second.' : 'Off: the bot answers within a few minutes.') + ' It understands 8 commands.',
+          tabHead(ICON.pulse, 'Instant Replies', 'Tap Done or Snooze under reminders, or send commands. Only your own chat is answered.') +
           ecCard(n.hook ? 'good' : '', ICON.pulse, 'Instant Replies', n.hook ? 'Telegram sends each message straight to your site, so the bot answers at once.' : 'The site checks for messages every few minutes and whenever a page is open.',
             '<label class="ix-tg"><span>Instant Replies<small>' + (n.hook ? 'On.' + (n.hookInfo && n.hookInfo.error ? ' <span class="ix-err">Telegram reports: ' + esc(n.hookInfo.error) + '</span>' : '') : 'Off.') + '</small></span><input type="checkbox" id="nt-hook"' + (n.hook ? ' checked' : '') + (n.hasToken ? '' : ' disabled') + '></label>') +
           '<div class="ix-duo"><div class="ix-mini"><b>When It Is On</b><p>Answers at once, and Approve in Telegram logs you in within a second. Needs https; if replies stop behind Cloudflare, add a WAF rule that skips <code>/web/core-data/telegram.php</code>.</p></div>' +
             '<div class="ix-mini"><b>When It Is Off</b><p>Everything still works, a few minutes slower.</p></div></div>' +
           ecCard('', ICON.cmd, 'Commands', 'Send any of these to your bot.',
             '<div class="ix-cmds"><code>/today</code><span>Overdue and today, with Done buttons</span><code>/week</code><span>The next 7 days</span><code>/next</code><span>The next 10 tasks</span>' +
-            '<code>/add Netflix 649 monthly 5 Nov</code><span>A new task</span><code>/done Netflix</code><span>Mark one done</span>' +
+            '<code>/add Netflix 649 monthly 5 Nov</code><span>A new task</span><code>/done Netflix</code><span>Mark one done</span><code>/snooze Netflix 2h</code><span>Pause its reminders</span>' +
             '<code>/backup</code><span>A backup file now</span><code>/status</code><span>A quick health check</span></div>'));
       p.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { var d = p.querySelector('details[data-tg="' + x.dataset.go + '"]'); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
       var eg = p.querySelector('#nt-encgo'); if (eg) eg.onclick = function (e) { e.preventDefault(); go('security'); };

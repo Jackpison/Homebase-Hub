@@ -1,4 +1,4 @@
-# GitHub proposes a pull request when an Action used by the workflows has a new version.
+# GitHub proposes a pull request when an Action or a build tool (esbuild, axe-core) has a new version.
 # Read it, check that CI passes, and merge. Nothing here changes the site itself.
 version: 2
 updates:
@@ -10,4 +10,13 @@ updates:
       prefix: "ci"
     groups:
       actions:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "build"
+    groups:
+      build-tools:
         patterns: ["*"]

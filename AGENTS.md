@@ -30,7 +30,9 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 ## Checks before a pull request
 
 ```
-npm i --no-save esbuild@0.28.2 axe-core@4.14.0
+npm ci
+php tests/unit/run.php
+curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.1.33/phpstan.phar && php -d memory_limit=1G phpstan.phar analyse --no-progress
 python3 tests/check_libraries.py
 python3 tools/build.py
 python3 tools/make-site.py --no-guide

@@ -6,7 +6,6 @@ site-data/
 *.sha256
 build/
 node_modules/
-package-lock.json
 .env
 *.log
 error_log
