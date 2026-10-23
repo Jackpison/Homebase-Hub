@@ -7,7 +7,7 @@
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../core-data/assets/shell.js?v=1.43.0" data-app="links"></script>
+ *   <script src="../core-data/assets/shell.js?v=1.43.1" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -1001,18 +1001,8 @@
         var pl = document.createElement('link'); pl.rel = 'prefetch'; pl.as = f[0]; pl.setAttribute('data-ix-admin', ''); pl.href = ASSETS + f[1] + ver; document.head.appendChild(pl);
       });
     }
-    try {
-      if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('speculationrules')) return;
-      var c = navigator.connection;   // not on data saver or slow connections, and not while the tab is in the background
-      if ((c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ''))) || document.hidden) return;
-      var others = pages().filter(function (p) { return p[0] !== APP; });
-      var s = document.createElement('script'); s.type = 'speculationrules';
-      s.textContent = JSON.stringify({
-        prerender: [{ urls: others.filter(function (p) { return p[0] !== 'home'; }).map(function (p) { return p[2]; }), eagerness: 'eager' }],
-        prefetch: [{ urls: others.filter(function (p) { return p[0] === 'home'; }).map(function (p) { return p[2]; }), eagerness: 'eager' }]
-      });
-      document.head.appendChild(s);
-    } catch (e) {}
+    // Pre-loading the other pages is done by the browser from web/core-data/assets/speculation-rules.json, which every page names in a
+    // Speculation-Rules response header (an inline rule set would be refused by the pages' security policy).
   }
   whenBody(function () { drawBar(); });                 // the bar is there on the very first paint
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

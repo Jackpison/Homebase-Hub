@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.43.1 | Tools loads its code once (the React error in the console is gone); pages pre-load when you hover over their link in the bar |
 | 1.43.0 | Newer, safer PDF reader in Tools (pdf.js 6.4.299); Excel export without an outside library; easier to read in light and dark mode |
 | 1.42.0 | Tools > Favicon: a 512 × 512 size, and downloads save right there instead of opening a new tab; the website uses clean addresses |
 | 1.41.0 | New padlock pictures: gold for private tabs, green for encrypted tabs, in Info and Links |
@@ -59,6 +60,24 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.43.1
+
+### Tools loads its code once
+
+- The Tools page loaded its main file under two addresses, so the browser ran two copies of React. Every tool hit an error on its first try and then recovered, leaving "Minified React error #321" in the browser console. An import map on the page now tells the browser both addresses are the same file. Tools works as before, without the error.
+
+### Pages open faster from the bar
+
+- Hover over a page in the bar, or start to tap it, and the browser prepares that page in the background, so it opens almost at once. Your site already asked for this, but every page's security policy blocked it, so it never worked. The pages now name a small rules file instead (`web/core-data/assets/speculation-rules.json`), which the security policy allows.
+- Browsers that do not support it ignore it, and a browser can skip it, for example to save data or battery.
+
+### Checked on a real Apache server
+
+- The site's `.htaccess` files (security policies, private folders) were tested on Apache for the first time: every page answers with its policy, and `site-data`, `web/docs`, `config.php` and the file list are refused. This test now runs on every change.
+- A page's own security policy no longer includes `frame-ancestors`, which browsers ignore there (the server's policy still sends it).
 
 ---
 

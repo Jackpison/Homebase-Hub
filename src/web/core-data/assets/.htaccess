@@ -1,0 +1,6 @@
+# The page pre-loading rules (see speculation-rules.json). The folder above refuses .json files, so this one is let through on purpose,
+# and browsers only read it with this type.
+<Files "speculation-rules.json">
+  Require all granted
+  ForceType application/speculationrules+json
+</Files>

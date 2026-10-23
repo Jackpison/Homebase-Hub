@@ -70,3 +70,7 @@ jobs:
         run: python3 tests/pages_test.py build/site-update-*.zip
       - name: Accessibility
         run: python3 tests/a11y_test.py build/site-update-*.zip build/site
+      - name: On real Apache (the .htaccess files)
+        run: |
+          sudo sh tests/apache_setup.sh build/site-update-*.zip
+          python3 tests/apache_test.py

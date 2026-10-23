@@ -21,6 +21,8 @@ Options -Indexes
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
   </FilesMatch>
   <FilesMatch "\.html$">
+    # Pre-load a page when you hover over its link in the bar (the rules are in core-data/assets/speculation-rules.json).
+    Header set Speculation-Rules "\"../core-data/assets/speculation-rules.json\""
     Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
     Header set Cache-Control "no-cache"
   </FilesMatch>

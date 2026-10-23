@@ -34,6 +34,17 @@ Need Playwright with Chromium (`pip install playwright openpyxl pypdf`, then `py
 
 The fixture files (`fixture-*.pdf`, `fixture-image.png`, `favicon-fixture.png`) are small test inputs made for these tests.
 
+## On real Apache
+
+The `.htaccess` files (security policies, private folders, caching, the page pre-loading header) only work on Apache, and PHP's test server ignores them.
+
+```
+sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip   # installs Apache with PHP and serves the zip on port 8300
+python3 tests/apache_test.py
+```
+
+It checks that every page answers with its policy and pre-loading header, private files and folders are refused, the rules file has its type, and in a browser nothing is refused and Tools loads its main file once.
+
 ## Screenshots
 
 `screenshots.py` installs a zip, adds invented demo data (`seed_demo.php`), and saves dark, light and phone screenshots with Playwright and Chromium. The website and the guide use these.

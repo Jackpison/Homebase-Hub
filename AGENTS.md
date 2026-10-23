@@ -22,7 +22,8 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 - Updates must stay safe: a zip is checked before anything changes, nothing installs without the website password, a snapshot is taken first, and Go Back must work. Do not weaken `src/web/core-data/lib/update.php` or `ghupdate.php` without tests that prove the same safety.
 - The site makes no request to another server unless the person turned that feature on or pressed a button for it. Keep it that way.
 - Test-only shortcuts (`GH_TEST_*`, `HUB_TEST_FAVICON`) are defined only by `tests/prepend.php`. The site must never define them.
-- After changing any file in `src/web/tools/assets/`, run `python3 tools/tools-rev.py --write`. The build refuses a stale fingerprint.
+- After changing any file in `src/web/tools/assets/`, run `python3 tools/tools-rev.py --write`. The build refuses a stale fingerprint. It also keeps the Tools import map and its security-policy hash in step.
+- `.htaccess` files only work on Apache: a comment must be on its own line (Apache refuses `Directive value  # comment`). Test them with `tests/apache_test.py`.
 - Write plainly in everything a user reads: short sentences, the same names the screen shows, Title Case on buttons and headings in the app.
 - Do not claim something works unless you ran it and saw it work. Say what you did not test.
 
@@ -37,6 +38,7 @@ python3 tests/update_test.py build/site-update-X.Y.Z.zip <previous release zip> 
 python3 tests/tools_test.py build/site-update-X.Y.Z.zip
 python3 tests/pages_test.py build/site-update-X.Y.Z.zip
 python3 tests/a11y_test.py build/site-update-X.Y.Z.zip build/site
+sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/apache_test.py
 ```
 
 All of them must pass. CI runs the same checks on every push.
