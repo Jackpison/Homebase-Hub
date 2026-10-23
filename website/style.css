@@ -105,3 +105,4 @@ footer{margin-top:96px;border-top:1px solid var(--line)}
 footer .in{max-width:1180px;margin:0 auto;padding:30px 24px 40px;display:flex;flex-wrap:wrap;gap:10px 28px;color:var(--mute);font-size:14.5px;align-items:center}
 footer img{width:24px;height:24px;vertical-align:-6px;margin-right:8px}
 footer .sp{margin-right:auto}
+.phones{display:flex;gap:18px;flex-wrap:wrap}.phones img{width:260px;border-radius:18px;border:1px solid var(--line)}.mt{margin-top:18px}
