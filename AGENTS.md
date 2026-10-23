@@ -25,6 +25,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 - After changing any file in `src/web/tools/assets/`, run `python3 tools/tools-rev.py --write`. The build refuses a stale fingerprint. It also keeps the Tools import map and its security-policy hash in step.
 - `.htaccess` files only work on Apache: a comment must be on its own line (Apache refuses `Directive value  # comment`). Test them with `tests/apache_test.py`.
 - Write plainly in everything a user reads: short sentences, the same names the screen shows, Title Case on buttons and headings in the app.
+- **Every new feature and every bug fix in the PHP code gets at least one unit test** in `tests/unit/` (a new `*_test.php` is picked up by itself; for a fix, write a test that fails without it). A change to a page or a tool gets a check in the matching browser test (`tests/*_test.py`). A green run proves only what the tests cover, so do not describe it as proof that everything works.
 - Do not claim something works unless you ran it and saw it work. Say what you did not test.
 
 ## Checks before a pull request
@@ -32,7 +33,9 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 ```
 npm ci
 php tests/unit/run.php
-curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.1.33/phpstan.phar && php -d memory_limit=1G phpstan.phar analyse --no-progress
+curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.1.33/phpstan.phar
+echo "48caad125554d6b416159db71dd7fd890295ba1a24b3650b49e32752e24fd6a0  phpstan.phar" | sha256sum -c -
+php -d memory_limit=1G phpstan.phar analyse --no-progress
 python3 tests/check_libraries.py
 python3 tools/build.py
 python3 tools/make-site.py --no-guide
