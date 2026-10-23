@@ -8,6 +8,9 @@ Thank you for helping with Homebase Hub.
 
 ## Changing the code
 
+Read `AGENTS.md` first: it has the full rules, the checks and the release checklist.
+
+
 - Edit the readable files in `src/`. The build makes the minified files; never edit those.
 - Each release raises the version in `src/web/core-data/lib/boot.php` (`HUB`) and in every `?v=` on the pages, and adds an entry and a Version Map row to `src/web/docs/CHANGELOG.md` (copied to the root `CHANGELOG.md`).
 - After changing any file in `src/web/tools/assets`, run `python3 tools/tools-rev.py --write` (the build refuses to run otherwise).

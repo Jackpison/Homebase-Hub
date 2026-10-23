@@ -55,7 +55,7 @@ const isWeb = u => /^https?:/i.test(u || '');
 const isHex = v => /^#[0-9a-f]{6}$/i.test(v || '');
 // Full name on hover, only for names cut off with "..."
 const tip = document.body.appendChild(document.createElement('div'));
-tip.className = 'tip'; tip.setAttribute('role', 'tooltip');
+tip.className = 'tip'; tip.setAttribute('aria-hidden', 'true');   // repeats the link's own name, which screen readers already read
 let tipFor = null, tipTimer = 0;
 function hideTip() {
   clearTimeout(tipTimer); tip.classList.remove('show');

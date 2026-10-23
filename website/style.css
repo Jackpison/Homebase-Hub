@@ -1,12 +1,12 @@
 /* Homebase Hub website. Dark by default (like the app), with a light mode for people whose system asks for it. */
 @font-face{font-family:Manrope;src:url(fonts/manrope.woff2) format("woff2");font-weight:200 800;font-display:swap}
-:root{color-scheme:dark;--bg:#000;--surface:#121110;--raise:#1b1916;--line:#2a2621;--text:#f3eee5;--mute:#a69d90;--gold:#ffc21a;--amber:#f59e0b;--ink:#1a1204;--shadow:rgba(245,158,11,.22)}
-:root[data-theme="light"]{color-scheme:light;--bg:#fbf8f2;--surface:#fff;--raise:#f4efe5;--line:#e7dfd1;--text:#1d1913;--mute:#6b6255;--gold:#e8a500;--amber:#d97f06;--ink:#1a1204;--shadow:rgba(217,127,6,.16)}
+:root{color-scheme:dark;--bg:#000;--surface:#121110;--raise:#1b1916;--line:#2a2621;--text:#f3eee5;--mute:#a69d90;--gold:#ffc21a;--amber:#f59e0b;--ink:#1a1204;--shadow:rgba(245,158,11,.22);--link:#ffc21a}
+:root[data-theme="light"]{color-scheme:light;--bg:#fbf8f2;--surface:#fff;--raise:#f4efe5;--line:#e7dfd1;--text:#1d1913;--mute:#6b6255;--gold:#e8a500;--amber:#d97f06;--ink:#1a1204;--shadow:rgba(217,127,6,.16);--link:#7a4f00}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:84px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before{animation:none!important;transition:none!important}}
 body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 Manrope,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-a{color:var(--gold);text-underline-offset:3px}
+a{color:var(--link);text-underline-offset:3px}
 a:focus-visible,button:focus-visible,label:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
 img{max-width:100%;height:auto}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:var(--raise);padding:2px 6px;border-radius:6px}
@@ -99,7 +99,7 @@ section.block>p.intro{color:var(--mute);font-size:1.12rem;max-width:62ch;margin:
 table{border-collapse:collapse;width:100%;font-size:15.5px;display:block;overflow-x:auto}
 th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}th{color:var(--mute);font-weight:700}
 ol.num{padding-left:22px}ol.num li{margin:6px 0}
-.cl h2{border-top:1px solid var(--line);padding-top:1.1em;margin-top:1.6em}.cl h3{color:var(--gold);font-size:1rem}
+.cl h2{border-top:1px solid var(--line);padding-top:1.1em;margin-top:1.6em}.cl h3{color:var(--link);font-size:1rem}
 
 footer{margin-top:96px;border-top:1px solid var(--line)}
 footer .in{max-width:1180px;margin:0 auto;padding:30px 24px 40px;display:flex;flex-wrap:wrap;gap:10px 28px;color:var(--mute);font-size:14.5px;align-items:center}

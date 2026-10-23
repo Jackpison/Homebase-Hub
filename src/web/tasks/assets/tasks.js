@@ -493,7 +493,7 @@ function drawStrip(){
     '</div>'+
     '<div class="wkg">'+[0,1,2,3,4,5,6].map(i=>{
       const d=addDays(from,i),it=on[d]||[],m=compactMap(dueMap(it));
-      return '<button type="button" class="wkd'+(d===t0?" today":"")+(d<t0?" past":"")+'" data-day="'+d+'" aria-pressed="'+(V.day===d)+'" aria-label="'+esc(fmtD(d,{weekday:"long",day:"numeric",month:"long"}))+(it.length?", "+it.length+(it.length===1?" task":" tasks"):"")+'">'+
+      return '<button type="button" class="wkd'+(d===t0?" today":"")+(d<t0?" past":"")+'" data-day="'+d+'" aria-pressed="'+(V.day===d)+'" title="'+esc(fmtD(d,{weekday:"long",day:"numeric",month:"long"}))+(it.length?", "+it.length+(it.length===1?" task":" tasks"):"")+'">'+
         '<span class="w">'+(d===t0?"Today":parse(d).toLocaleDateString("en-US",{weekday:"short"}))+'</span><span class="n"><span class="num">'+(+d.slice(8))+'</span>'+(m?'<small class="num">'+esc(m)+'</small>':'')+'</span>'+
         it.slice(0,2).map(x=>'<span class="nl s-'+x.st+'" style="--cc:'+ccOf(x)+(x.st==="up"?";--pc:"+ccOf(x):"")+'" title="'+esc(itTip(x))+'">'+esc(itName(x))+'</span>').join("")+
         (it.length>2?'<span class="mr">+'+(it.length-2)+' More</span>':'')+
@@ -561,7 +561,7 @@ function drawCalView(){
     from=cells[0];to=cells[cells.length-1];on=dayItems(from,to);title=MONTHS[m]+" "+y;scope=MONTHS[m]+" at a Glance";
     body='<div class="mg r'+(cells.length/7)+'">'+WDN().map(w=>'<div class="wdh">'+w+'</div>').join("")+cells.map(d=>{
       const it=on[d]||[],wd=parse(d).getDay(),mt=compactMap(dueMap(it));
-      return '<div class="cd'+(d.slice(0,7)!==base?" out":"")+(d===t0?" today":"")+(d===sel?" sel":"")+(wd===0||wd===6?" we":"")+'" data-day="'+d+'" role="button" tabindex="0" aria-label="'+esc(fmtD(d,{weekday:"long",day:"numeric",month:"long"}))+(it.length?", "+it.length+(it.length===1?" task":" tasks"):"")+'">'+
+      return '<div class="cd'+(d.slice(0,7)!==base?" out":"")+(d===t0?" today":"")+(d===sel?" sel":"")+(wd===0||wd===6?" we":"")+'" data-day="'+d+'" role="button" tabindex="0" title="'+esc(fmtD(d,{weekday:"long",day:"numeric",month:"long"}))+(it.length?", "+it.length+(it.length===1?" task":" tasks"):"")+'">'+
         '<div class="cdh"><span class="n num">'+(+d.slice(8))+'</span>'+(mt?'<small class="num">'+esc(mt)+'</small>':'')+'</div>'+
         it.slice(0,3).map(pillHtml).join("")+(it.length>3?'<span class="more">+'+(it.length-3)+' More</span>':'')+
         (it.length?'<span class="dots">'+it.slice(0,4).map(x=>'<i class="s-'+x.st+'"'+(x.st==="up"?' style="--pc:'+ccOf(x)+'"':'')+'></i>').join("")+'</span>':'')+'</div>';

@@ -325,34 +325,56 @@ function saveBlob(blob,name){
   const l=document.createElement("a");l.href=URL.createObjectURL(blob);l.download=name;
   document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(l.href),1000);
 }
-/* The Excel library (880 KB) is only loaded when you export, from this site (no outside server ever sees the page). */
-let xlsxLoad=null;
-function loadXlsx(){
-  if(window.XLSX)return Promise.resolve(true);
-  return xlsxLoad||(xlsxLoad=new Promise(ok=>{const s=document.createElement("script");s.src="../core-data/assets/vendor/xlsx.full.min.js?v=0.18.5";
-    s.onload=()=>ok(!!window.XLSX);s.onerror=()=>{xlsxLoad=null;ok(false)};document.head.appendChild(s)}));
-}
-async function exportXlsx(){
-  await loadXlsx();   // falls back to a CSV file if it can't load
+/* Excel export, written here (no library): a real .xlsx file is a zip of a few small XML files.
+   The zip is stored without compression (tiny files), and every text is written as an inline string. */
+const XL=(()=>{
+  const enc=new TextEncoder(),CRC=new Uint32Array(256);
+  for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRC[n]=c>>>0}
+  const crc=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+  const zip=files=>{   // files: [[name, text]] -> Uint8Array (zip, stored)
+    const parts=[],cd=[];let off=0;
+    for(const[name,text]of files){
+      const n=enc.encode(name),d=enc.encode(text),c=crc(d),h=new DataView(new ArrayBuffer(30));
+      h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,0,true);h.setUint16(12,0x21,true);
+      h.setUint32(14,c,true);h.setUint32(18,d.length,true);h.setUint32(22,d.length,true);h.setUint16(26,n.length,true);h.setUint16(28,0,true);
+      parts.push(new Uint8Array(h.buffer),n,d);
+      const e=new DataView(new ArrayBuffer(46));
+      e.setUint32(0,0x02014b50,true);e.setUint16(4,20,true);e.setUint16(6,20,true);e.setUint16(8,0x0800,true);e.setUint16(10,0,true);e.setUint16(12,0,true);e.setUint16(14,0x21,true);
+      e.setUint32(16,c,true);e.setUint32(20,d.length,true);e.setUint32(24,d.length,true);e.setUint16(28,n.length,true);e.setUint32(42,off,true);
+      cd.push(new Uint8Array(e.buffer),n);off+=30+n.length+d.length;
+    }
+    const cdLen=cd.reduce((s,x)=>s+x.length,0),end=new DataView(new ArrayBuffer(22));
+    end.setUint32(0,0x06054b50,true);end.setUint16(8,files.length,true);end.setUint16(10,files.length,true);end.setUint32(12,cdLen,true);end.setUint32(16,off,true);
+    return new Blob([...parts,...cd,new Uint8Array(end.buffer)],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  };
+  const esc=v=>String(v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const col=i=>{let s="";for(i++;i;i=Math.floor((i-1)/26))s=String.fromCharCode(65+(i-1)%26)+s;return s};
+  /* sheet: {name, rows:[[...]], widths:[chars], money:Set of column indexes, header:true} ; styles: 1 = money, 2 = bold header */
+  const sheetXml=s=>{
+    const cols=s.widths?.length?`<cols>${s.widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${(w||10)+1}" customWidth="1"/>`).join("")}</cols>`:"";
+    const rows=s.rows.map((r,ri)=>`<row r="${ri+1}">${r.map((v,ci)=>{
+      if(v===""||v==null)return"";const ref=col(ci)+(ri+1);
+      if(typeof v==="number"&&isFinite(v))return`<c r="${ref}"${s.money?.has(ci)&&ri>0?' s="1"':""}><v>${v}</v></c>`;
+      return`<c r="${ref}" t="inlineStr"${s.header&&ri===0?' s="2"':""}><is><t xml:space="preserve">${esc(v)}</t></is></c>`}).join("")}</row>`).join("");
+    return`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${cols}<sheetData>${rows}</sheetData></worksheet>`;
+  };
+  const book=sheets=>zip([
+    ["[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}</Types>`],
+    ["_rels/.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ["xl/workbook.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s,i)=>`<sheet name="${esc(s.name).slice(0,31)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join("")}</sheets></workbook>`],
+    ["xl/_rels/workbook.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join("")}<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+    ["xl/styles.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="&quot;₹&quot;#,##0"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`],
+    ...sheets.map((s,i)=>[`xl/worksheets/sheet${i+1}.xml`,sheetXml(s)])]);
+  return{book};
+})();
+function exportXlsx(){
   const l=curList(),order=colOrder(),total=l.reduce((s,c)=>s+(c.limit||0),0),yearly=l.reduce((s,c)=>s+(c.fee||0),0);
   const tot=order.map((k,i)=>k==="limit"?(total||""):k==="fee"?(yearly||""):(i===0?"Totals":""));
-  const aoa=[order.map(k=>defOf(k).l),...l.map(c=>order.map(k=>EXV[k](c))),[],tot];
-  const name=`cards-${slug()}-${stamp()}.xlsx`;
-  if(!window.XLSX){
-    const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-    saveBlob(new Blob(["\uFEFF"+aoa.map(r=>r.map(q).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"}),name.replace(".xlsx",".csv"));
-    return;
-  }
-  const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"]=order.map(k=>({wch:XW[k]}));
-  for(let r=1;r<aoa.length;r++)order.forEach((k,c)=>{if(k==="limit"||k==="fee"){const x=ws[XLSX.utils.encode_cell({r,c})];if(x&&x.t==="n")x.z='"₹"#,##0'}});
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"Cards");
-  if(NOTES.trim()){
-    const wi=XLSX.utils.aoa_to_sheet([["Information"],...NOTES.split(/\r?\n/).map(x=>[x])]);
-    wi["!cols"]=[{wch:110}];XLSX.utils.book_append_sheet(wb,wi,"Information");
-  }
-  XLSX.writeFile(wb,name);
+  const rows=[order.map(k=>defOf(k).l),...l.map(c=>order.map(k=>EXV[k](c))),[],tot];
+  const money=new Set(order.map((k,i)=>k==="limit"||k==="fee"?i:-1).filter(i=>i>=0));
+  const sheets=[{name:"Cards",rows,widths:order.map(k=>XW[k]),money,header:true}];
+  if(NOTES.trim())sheets.push({name:"Information",rows:[["Information"],...NOTES.split(/\r?\n/).map(x=>[x])],widths:[110],header:true});
+  saveBlob(XL.book(sheets),`cards-${slug()}-${stamp()}.xlsx`);
 }
 function exportPdf(){
   const l=curList(),order=colOrder(),total=l.reduce((s,c)=>s+(c.limit||0),0),yearly=l.reduce((s,c)=>s+(c.fee||0),0);

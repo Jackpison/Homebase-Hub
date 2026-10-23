@@ -89,7 +89,7 @@
     var gl = null;
     host.innerHTML = '<aside class="ix-snav" aria-label="Settings Sections"><div class="ix-snh">Settings</div><div class="ix-ssearch"><input type="search" id="ix-ss" placeholder="Search Settings" aria-label="Search settings" autocomplete="off" spellcheck="false"><div class="ix-sres" id="ix-sres" hidden></div></div>' + SECTIONS.map(function (x) {
         var head = x[5] !== gl ? (gl = x[5], x[5] ? '<div class="ix-sgl">' + x[5] + '</div>' : '') : '';
-        return head + '<button type="button" role="tab" data-sec="' + x[0] + '">' + svg(x[2]) + '<span>' + x[1] + '</span><em class="ix-sp" data-pill="' + x[0] + '"></em></button>'; }).join('') +
+        return head + '<button type="button" data-sec="' + x[0] + '">' + svg(x[2]) + '<span>' + x[1] + '</span><em class="ix-sp" data-pill="' + x[0] + '"></em></button>'; }).join('') +
         '<button type="button" class="ix-out" data-ix="logout">' + svg(ICON.out) + '<span>Log Out</span></button></aside>' +
       '<section class="ix-pane" id="ix-pane"></section>' +
       '<div class="ix-sf" id="ix-sf" hidden><span id="ix-sfnote"></span><span class="ix-err" id="ix-sferr"></span><button type="button" class="ix-btn" id="ix-discard">Discard</button><button type="button" class="ix-btn pri" id="ix-save">Save Settings</button></div>';
@@ -163,7 +163,7 @@
   function pane(id) {
     var sec = SUB_OF[id] || 'overview', s = sectionOf(sec);
     var subs = s[4] || [[sec, s[1]]], sub = subs.some(function (t) { return t[0] === id; }) ? id : subs[0][0];
-    P().querySelectorAll('[data-sec]').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.sec === sec ? 'true' : 'false'); });
+    P().querySelectorAll('[data-sec]').forEach(function (b) { if (b.dataset.sec === sec) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     curSec = sec; curSub = sub; P().setAttribute('data-view', 'detail');
     try { sessionStorage.setItem('ix-sec', sub); if (location.hash !== '#' + sub) history.replaceState(null, '', '#' + sub); } catch (e) {}
     var box = $('#ix-pane'); box.scrollTop = 0; window.scrollTo(0, 0);

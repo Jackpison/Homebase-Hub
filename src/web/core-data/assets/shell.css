@@ -10,8 +10,9 @@
    and the AMOLED + gold look applied over each page's own colours. */
 :root{
   --ix-accent:#ffc21a; --ix-ink:#000;
+  --ix-accent-tx:var(--ix-accent);   /* the accent used as text; darker in light mode so it reads at 4.5:1 */
   --ix-bg:#000; --ix-s1:#0e0e0e; --ix-s2:#161616; --ix-s3:#1f1f1f; --ix-line:#262626; --ix-line2:#333;
-  --ix-tx:#f2f2f2; --ix-mu:#a0a0a0; --ix-mu2:#6e6e6e; --ix-ok:#5fd68a; --ix-err:#ff8a8a;
+  --ix-tx:#f2f2f2; --ix-mu:#a0a0a0; --ix-mu2:#8c8c8c;   /* the dimmer grey still reads at 4.5:1 on every surface */ --ix-ok:#5fd68a; --ix-err:#ff8a8a;
   --ix-good:#22c55e; --ix-bad:#ef4444;   /* Backup icon: green = fine, red = a backup is due */
   --ix-soft:color-mix(in srgb,var(--ix-accent) 12%,transparent);
   --ix-soft2:color-mix(in srgb,var(--ix-accent) 20%,transparent);
@@ -21,10 +22,11 @@
   --ix-top:52px; --ix-side:216px; --ix-dock:76px;
 }
 html[data-theme="light"]{
+  --ix-accent-tx:color-mix(in srgb,var(--ix-accent) 45%,#000);
   --ix-field:#ffffff;
   --ix-bg:#f6f5f1; --ix-s1:#ffffff; --ix-s2:#f1efe9; --ix-s3:#e8e5dd; --ix-line:#e2dfd6; --ix-line2:#d3cfc4;
-  --ix-tx:#141414; --ix-mu:#5f5b54; --ix-mu2:#8a867f; --ix-ok:#1f7a4d; --ix-err:#b3261e;
-  --ix-good:#16a34a; --ix-bad:#dc2626;
+  --ix-tx:#141414; --ix-mu:#5f5b54; --ix-mu2:#6f6b64; --ix-ok:#1f7a4d; --ix-err:#b3261e;
+  --ix-good:#15803d; --ix-bad:#b91c1c;
   --ix-dim:color-mix(in srgb,var(--ix-accent) 70%,#000);
 }
 /* ---------- room for the bar ---------- */
@@ -45,16 +47,16 @@ html.ix-vt #ix-bar{view-transition-name:none}
 .ix-logo{width:28px;height:28px;object-fit:contain;border-radius:7px;display:block}
 .ix-links{display:flex;gap:4px}
 #ix-bar .ix-links a{display:flex;align-items:center;gap:8px;height:36px;padding:0 13px;border-radius:9px;font-weight:700;color:var(--ix-bartx,var(--ix-mu))!important;white-space:nowrap;transition:color .15s,background-color .15s}
-#ix-bar .ix-links a:hover,#ix-bar .ix-links a:focus-visible{color:var(--ix-accent)!important;background:var(--ix-soft)}
+#ix-bar .ix-links a:hover,#ix-bar .ix-links a:focus-visible{color:var(--ix-accent-tx)!important;background:var(--ix-soft)}
 /* hover: the accent color from Appearance,like the icons */
-.ix-links a[aria-current="page"]{color:var(--ix-accent)!important;background:var(--ix-soft)}
+.ix-links a[aria-current="page"]{color:var(--ix-accent-tx)!important;background:var(--ix-soft)}
 .ix-tools{display:flex;align-items:center;gap:4px;margin-left:auto}
 .ix-ib{position:relative;width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--ix-bartx,var(--ix-mu))!important;transition:color .15s,background-color .15s}
 .ix-ib:hover{color:var(--ix-tx)!important;background:var(--ix-s2)}
-.ix-tools .ix-ib:hover{color:var(--ix-accent)!important;background:var(--ix-soft)}
+.ix-tools .ix-ib:hover{color:var(--ix-accent-tx)!important;background:var(--ix-soft)}
 /* hover: the accent color from Appearance */
 .ix-tools .ix-ib:active{transform:scale(.94)}
-.ix-ib.on{color:var(--ix-accent)!important;background:var(--ix-soft)}
+.ix-ib.on{color:var(--ix-accent-tx)!important;background:var(--ix-soft)}
 .ix-only-dock{display:none}
 :is(#ix-bar,#ix-spot) .ix-search{position:relative;display:flex;align-items:center;flex:1 1 260px;max-width:460px;min-width:0;margin:0 auto}
 :is(#ix-bar,#ix-spot) .ix-search>svg{position:absolute;left:13px;width:16px;height:16px;color:var(--ix-mu2);pointer-events:none}
@@ -101,7 +103,7 @@ html[data-ix-app="home"][data-ix-nav="dock"] #ix-bar{background:color-mix(in srg
 #ix-drawer .ix-scrim,#ix-spot .ix-scrim{position:absolute;inset:0;background:rgba(0,0,0,.6)}
 #ix-drawer nav{position:absolute;top:0;bottom:0;left:0;width:min(280px,82vw);background:var(--ix-s1);border-right:1px solid var(--ix-line2);padding:18px 12px;display:flex;flex-direction:column;gap:4px;font:16px var(--ix-font);color:var(--ix-tx);animation:ix-slide .2s ease-out}
 #ix-drawer nav a{display:flex;align-items:center;gap:12px;height:46px;padding:0 12px;border-radius:10px;color:var(--ix-mu);text-decoration:none}
-#ix-drawer nav a[aria-current="page"],#ix-drawer nav a:hover{color:var(--ix-accent);background:var(--ix-soft)}
+#ix-drawer nav a[aria-current="page"],#ix-drawer nav a:hover{color:var(--ix-accent-tx);background:var(--ix-soft)}
 #ix-drawer svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @keyframes ix-slide{from{transform:translateX(-30px);opacity:0}to{transform:none;opacity:1}}
 /* small popup menu (Edit, Settings / Log out) */
@@ -109,7 +111,7 @@ html[data-ix-app="home"][data-ix-nav="dock"] #ix-bar{background:color-mix(in srg
 #ix-pop button{display:flex;align-items:center;gap:11px;width:100%;height:40px;padding:0 12px;border:0;border-radius:9px;background:none;color:inherit;font:inherit;cursor:pointer;text-align:left}
 #ix-pop button:hover,#ix-pop button:focus-visible{background:var(--ix-s3)}
 #ix-pop button.danger{color:var(--ix-err)}
-#ix-pop button.accent{color:var(--ix-accent);font-weight:600}
+#ix-pop button.accent{color:var(--ix-accent-tx);font-weight:600}
 #ix-pop hr{border:0;border-top:1px solid var(--ix-line);margin:5px 4px}
 #ix-pop .ix-gap{width:18px;flex:none}
 @keyframes ix-pop{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
@@ -145,7 +147,7 @@ html[data-ix-app="home"][data-ix-nav="dock"] #ix-bar{background:color-mix(in srg
 .ix-fcs{display:flex;flex-wrap:wrap;gap:8px 16px}
 .ix-fc{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ix-tx);cursor:pointer}
 .ix-fc input{accent-color:var(--ix-accent);width:15px;height:15px;margin:0}
-.ix-reset{align-self:flex-start;border:0;background:none;color:var(--ix-accent);font:inherit;font-size:13px;cursor:pointer;padding:0}
+.ix-reset{align-self:flex-start;border:0;background:none;color:var(--ix-accent-tx);font:inherit;font-size:13px;cursor:pointer;padding:0}
 .ix-none{padding:18px 12px;text-align:center;color:var(--ix-mu);font-size:13.5px}
 /* smooth page changes and theme changes: the old page eases out,the new one eases in; the bar itself never moves */
 @view-transition{navigation:auto}
@@ -169,7 +171,7 @@ html.ix-fade,html.ix-fade *,html.ix-fade *::before,html.ix-fade *::after{transit
 #ix-dlg .ix-box{animation:ix-pop .16s ease-out;width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--ix-s1);border:1px solid var(--ix-line2);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.7);padding:26px}
 #ix-dlg .ix-box.wide{width:min(940px,100%);padding:0;display:flex;flex-direction:column;height:min(680px,calc(100dvh - 32px))}
 #ix-dlg h2{margin:0 0 6px;font-size:21px}
-#ix-dlg h3{margin:20px 0 8px;font-size:14px;color:var(--ix-accent)}
+#ix-dlg h3{margin:20px 0 8px;font-size:14px;color:var(--ix-accent-tx)}
 #ix-dlg h3:first-child{margin-top:0}
 #ix-dlg p{margin:0 0 12px;color:var(--ix-mu);font-size:14px}
 #ix-dlg label{display:block;font-size:13px;color:var(--ix-mu);margin:12px 0 6px}
@@ -183,7 +185,7 @@ html.ix-fade,html.ix-fade *,html.ix-fade *::before,html.ix-fade *::after{transit
 #ix-dlg .ix-btn:disabled{opacity:.5;cursor:default}
 #ix-dlg .ix-err{color:var(--ix-err);font-size:13.5px;min-height:18px;margin:8px 0 0}
 #ix-dlg .ix-note{font-size:12.5px;color:var(--ix-mu2);margin-top:10px}
-#ix-dlg .ix-ico{width:50px;height:50px;border-radius:14px;background:var(--ix-soft);color:var(--ix-accent);display:grid;place-items:center;margin-bottom:14px}
+#ix-dlg .ix-ico{width:50px;height:50px;border-radius:14px;background:var(--ix-soft);color:var(--ix-accent-tx);display:grid;place-items:center;margin-bottom:14px}
 #ix-dlg .ix-ico svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #ix-dlg code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px;background:var(--ix-bg);border:1px solid var(--ix-line);border-radius:6px;padding:2px 6px;color:var(--ix-tx);word-break:break-all}
 #ix-dlg .ix-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -229,10 +231,10 @@ html[data-ix-look][data-ix-app="links"][data-theme="light"]{--accent:#a5701c!imp
 html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]){--bg:#000!important;--box:#0e0e0e!important;--panel:#121212!important;--field:#000!important;--line:#262626!important;--border:#333!important;--hover:#1c1c1c!important;
   --inv:var(--ix-accent)!important;--inv-fg:var(--ix-ink)!important;--mark:color-mix(in srgb,var(--ix-accent) 38%,transparent)!important;
   --timer-fg:var(--ix-accent)!important;--timer-bg:var(--ix-soft)!important;--timer-line:var(--ix-dim)!important}
-html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]) .md h1,html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]) .md h2,html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]) .md h3{color:var(--ix-accent)}
+html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]) .md h1,html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]) .md h2,html[data-ix-look][data-ix-app="info"]:not([data-theme="light"]) .md h3{color:var(--ix-accent-tx)}
 /* Cards: colour-coded columns stay; headings and main buttons turn gold */
 html[data-ix-look][data-ix-app="cards"]:not([data-theme="light"]){--bg:#000!important;--panel:#0e0e0e!important;--field:#000!important;--line:#232323!important;--btn-bg:var(--ix-accent)!important;--btn-fg:var(--ix-ink)!important}
-html[data-ix-look][data-ix-app="cards"]:not([data-theme="light"]) .row.head,html[data-ix-look][data-ix-app="cards"]:not([data-theme="light"]) .row.head *{color:var(--ix-accent)!important}
+html[data-ix-look][data-ix-app="cards"]:not([data-theme="light"]) .row.head,html[data-ix-look][data-ix-app="cards"]:not([data-theme="light"]) .row.head *{color:var(--ix-accent-tx)!important}
 /* Home: the sheets and buttons follow the bar's theme */
 html[data-ix-app="home"][data-theme="light"]{--s-bg:#fff;--s-bg2:#f4f4f1;--s-bg3:#ecece7;--s-ink:#15171c;--s-mute:#6b6f78;--s-line:#e6e5e0;--accent:#2b59ff;--accent-ink:#fff}
 html[data-ix-app="home"][data-theme="dark"]{--s-bg:#17181d;--s-bg2:#202228;--s-bg3:#2a2c33;--s-ink:#f2f2f0;--s-mute:#9a9da6;--s-line:#2d2f37}
@@ -242,7 +244,7 @@ html[data-ix-look][data-ix-app="home"]{--accent:var(--ix-accent)!important;--acc
 html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!important;--sidebar:#000!important;--card:#0e0e0e!important;--card-2:#161616!important;--gold:var(--ix-accent)!important}
 /* Cards private screen (shown to visitors) */
 #ix-private{max-width:420px;margin:12vh auto;text-align:center;font:16px/1.5 var(--ix-font);color:var(--ix-tx);padding:0 20px}
-#ix-private .ix-ico{width:64px;height:64px;border-radius:18px;background:var(--ix-soft);color:var(--ix-accent);display:grid;place-items:center;margin:0 auto 18px}
+#ix-private .ix-ico{width:64px;height:64px;border-radius:18px;background:var(--ix-soft);color:var(--ix-accent-tx);display:grid;place-items:center;margin:0 auto 18px}
 #ix-private svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #ix-private h1{font-size:24px;margin:0 0 8px}
 #ix-private p{color:var(--ix-mu);margin:0 0 22px}
@@ -262,7 +264,7 @@ html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!impo
 @keyframes ix-pulse{50%{opacity:.35}}
 @media (prefers-reduced-motion:reduce){.ix-tools .ix-ib.ix-bk.due::after{animation:none}}
 #ix-sfnote{margin-right:auto;align-self:center;font-size:13px;color:var(--ix-mu)}
-#ix-sfnote.ix-dirty{color:var(--ix-accent);font-weight:700}
+#ix-sfnote.ix-dirty{color:var(--ix-accent-tx);font-weight:700}
 #ix-sfnote.ix-dirty::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ix-accent);margin-right:7px;vertical-align:1px}
 #ix-dlg #ix-sfnote~.ix-err:empty{display:none}
 #ix-dlg .ix-btn.pri.pulse{box-shadow:0 0 0 3px var(--ix-soft)}
@@ -274,7 +276,7 @@ html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!impo
 #ix-dlg .ix-chk{display:flex;align-items:center;gap:9px;margin:10px 0;font-size:14px;color:var(--ix-tx);cursor:pointer}
 #ix-dlg .ix-chk input{width:17px;height:17px;accent-color:var(--ix-accent);margin:0;flex:none}
 #ix-dlg details.ix-apc{margin:10px 0;font-size:14px}
-#ix-dlg details.ix-apc summary{cursor:pointer;color:var(--ix-accent);font-weight:600}
+#ix-dlg details.ix-apc summary{cursor:pointer;color:var(--ix-accent-tx);font-weight:600}
 #ix-dlg details.ix-apc form{margin-top:10px}
 #ix-dlg details.ix-apc button{margin-top:8px}
 .ix-wdot{width:9px;height:9px;border-radius:50%;background:var(--ix-mu2);display:inline-block}
@@ -289,9 +291,9 @@ html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!impo
 #ix-dlg .ix-tsr output{min-width:48px;text-align:right;color:var(--ix-mu);font-variant-numeric:tabular-nums}
 #ix-dlg .ix-tss{margin:4px 0 14px;padding:12px 14px;border:1px solid var(--ix-line2);border-radius:8px;background:var(--ix-bg,#000);display:grid;gap:8px;color:var(--ix-tx)}
 #ix-dlg .ix-tss-info [data-s="tab"]{font-weight:700;text-transform:uppercase;letter-spacing:.02em}
-#ix-dlg .ix-tss-info [data-s="head"]{font-weight:700;color:var(--ix-accent);border-bottom:1px solid var(--ix-line);padding-bottom:6px}
+#ix-dlg .ix-tss-info [data-s="head"]{font-weight:700;color:var(--ix-accent-tx);border-bottom:1px solid var(--ix-line);padding-bottom:6px}
 #ix-dlg .ix-tss-cards [data-s="title"]{font-weight:800;letter-spacing:.01em}
-#ix-dlg .ix-tss-cards [data-s="box"]{font-weight:700;color:var(--ix-accent)}
+#ix-dlg .ix-tss-cards [data-s="box"]{font-weight:700;color:var(--ix-accent-tx)}
 /* Tools' first page keeps its own search in the hero (the bar search covers the rest of Tools) */
 html[data-ix-app="tools"] .tt-hero .search{display:block!important}
 @keyframes ix-pane{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}

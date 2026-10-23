@@ -11,10 +11,10 @@ jobs:
         php: ['8.3', '8.4', '8.5']
     name: build (PHP ${{ matrix.php }})
     steps:
-      - uses: actions/checkout@v7
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with: { php-version: '${{ matrix.php }}' }
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: '24' }
       - name: PHP lint
         run: find src -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
@@ -27,3 +27,46 @@ jobs:
           ls build/site-update-*.zip
           unzip -l build/site-update-*.zip | grep -q 'web/docs/CHANGELOG.md'
           ! ls build/site-update-*.zip | grep -q '_'
+
+  tests:
+    # The update tests, the Tools and page tests in a real browser, and the accessibility check, on every push.
+    runs-on: ubuntu-latest
+    name: tests (updates, browser, accessibility)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24' }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12' }
+      - name: Tools for the tests
+        run: |
+          npm i --no-save esbuild axe-core
+          pip install playwright==1.56.0 openpyxl pypdf pillow reportlab
+          python -m playwright install --with-deps chromium
+      - name: Build the zip and the website
+        run: python3 tools/build.py && python3 tools/make-site.py --no-guide
+      - name: Get the previous and an older release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PREV=$(python3 - <<'PY'
+          import json, re, subprocess
+          cur = re.search(r"define\('HUB', '([^']+)'\)", open('src/web/core-data/lib/boot.php').read()).group(1)
+          v = lambda s: tuple(int(x) for x in s.split('.'))
+          tags = [t['tagName'] for t in json.loads(subprocess.check_output(['gh', 'release', 'list', '--limit', '100', '--json', 'tagName']))]
+          print(max((t for t in tags if re.match(r'^v\d+\.\d+\.\d+$', t) and v(t[1:]) < v(cur)), key=lambda t: v(t[1:])))
+          PY
+          )
+          echo "previous release: $PREV"
+          gh release download "$PREV" -p 'site-update-*.zip' -D rel-prev
+          gh release download v1.37.0 -p 'site-update-*.zip' -D rel-old
+      - name: Update tests
+        run: python3 tests/update_test.py build/site-update-*.zip rel-prev/site-update-*.zip rel-old/site-update-*.zip
+      - name: Tools in a browser
+        run: python3 tests/tools_test.py build/site-update-*.zip
+      - name: Pages in a browser
+        run: python3 tests/pages_test.py build/site-update-*.zip
+      - name: Accessibility
+        run: python3 tests/a11y_test.py build/site-update-*.zip build/site

@@ -24,6 +24,16 @@ PHP's built-in server ignores `.htaccess`, so the browser blocks on `site-data`,
 
 `python3 tests/check_libraries.py` checks that the two known problems in bundled libraries (pdf.js in Tools and SheetJS in Cards) cannot be reached: every place that opens a PDF sets `isEvalSupported:false`, and no code reads Excel files. With `--audit` it also asks npm for advisories on the exact versions and fails on any new one. CI runs the offline part on every push.
 
+## Browser tests
+
+Need Playwright with Chromium (`pip install playwright openpyxl pypdf`, then `python3 -m playwright install chromium`).
+
+- `python3 tests/tools_test.py build/site-update-X.Y.Z.zip`: every tool opens without an error, and real PDFs and images go through the main tools (convert, compress, merge, text, resize, QR, and the PDF tools with page previews).
+- `python3 tests/pages_test.py build/site-update-X.Y.Z.zip`: every page and every Settings section loads with no error and no broken request, and the Cards Excel export opens.
+- `python3 tests/a11y_test.py build/site-update-X.Y.Z.zip build/site`: axe-core (WCAG 2.1 A and AA) on every app page in dark and light mode and on the website. Needs `npm i --no-save axe-core` and the website built with `python3 tools/make-site.py --no-guide`.
+
+The fixture files (`fixture-*.pdf`, `fixture-image.png`, `favicon-fixture.png`) are small test inputs made for these tests.
+
 ## Screenshots
 
 `screenshots.py` installs a zip, adds invented demo data (`seed_demo.php`), and saves dark, light and phone screenshots with Playwright and Chromium. The website and the guide use these.

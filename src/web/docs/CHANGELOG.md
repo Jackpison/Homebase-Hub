@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.43.0 | Newer, safer PDF reader in Tools (pdf.js 6.4.299); Excel export without an outside library; easier to read in light and dark mode |
 | 1.42.0 | Tools > Favicon: a 512 × 512 size, and downloads save right there instead of opening a new tab; the website uses clean addresses |
 | 1.41.0 | New padlock pictures: gold for private tabs, green for encrypted tabs, in Info and Links |
 | 1.40.0 | Needs PHP 8.3 or newer; the site tells you when your PHP stops getting security fixes; the bundled libraries were reviewed |
@@ -58,6 +59,32 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.43.0
+
+### Tools: a newer, safer PDF reader
+
+- The PDF tools now use **pdf.js 6.4.299**, the newest version, instead of 3.11.174. Older versions have known problems where a specially made PDF could run script; this version has no known problem. PDFs are opened with scripting turned off.
+- Every PDF tool was checked with real files: PDF to Images, Compress, Merge, PDF to Text, and the page previews in Organize, Split, Sign, Annotate, Watermark and Protect.
+- pdf.js 6 needs separate decoders for JPEG 2000 and JBIG2 pictures and for colour profiles; they are included and load only when a PDF needs them.
+
+### Cards: Excel export without an outside library
+
+- **Export Excel** now writes the spreadsheet itself instead of loading an 880 KB library (SheetJS) whose last free version has known problems. The file has the same columns, widths, ₹ amounts and totals, a bold header, and the Information sheet when you have notes. It is the standard .xlsx format; it was checked in LibreOffice.
+
+### Easier to read
+
+- Every page was checked with an accessibility tester (WCAG 2.1 AA), in dark and light mode, and every problem it found is fixed:
+- In **light mode**, gold and the Tools section colours used as text are now a darker shade of the same colour, so they are easy to read on a light background. Buttons and highlights keep the bright colour.
+- Small grey text (notes, the group names in the Settings menu) is a little brighter in dark mode and a little darker in light mode.
+- The Settings menu is announced as a list of sections, the Tasks calendar days read what they show, and a hover box in Links no longer confuses screen readers.
+
+### Behind the scenes
+
+- Every change is now tested automatically: the update tests, every page and every tool in a real browser, the accessibility check and the library check. The tools these checks use are pinned to exact versions.
+- `AGENTS.md` explains the rules and the release steps for anyone changing the code.
 
 ---
 

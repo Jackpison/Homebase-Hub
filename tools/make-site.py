@@ -69,9 +69,35 @@ def page(slug, title, body, wide=False, canonical=True):
             '<a class="gh" href="https://github.com/Jackpison/Homebase-Hub">GitHub</a></nav></header><main>%s</main>'
             '<footer><div class="in"><span class="sp"><img src="brand/logo-192.png" alt="" width="24" height="24">Homebase Hub is free software under the GPL-3.0 licence.</span>'
             '<a href="https://t.me/Jackpison">Questions and ideas: @Jackpison on Telegram</a><a href="https://github.com/Jackpison/Homebase-Hub/issues">Report a bug</a><a href="about.html">Licence</a></div></footer></body></html>') % (html.escape(title), '<link rel="canonical" href="%s%s">' % (BASE, url(slug)) if canonical else '', nav, main)
-    return relink(doc, '' if slug in ('index', '404') else '../')
+    return relink(doc, '' if slug in ('index', '404') else '../' * (slug.count('/') + 1))
+
+SIZES = (640, 960)
+def make_sizes():
+    """640 and 960 pixel copies of every wide screenshot, so phones and small windows download less."""
+    from PIL import Image
+    d = os.path.join(OUT, 'img'); made = 0
+    for f in os.listdir(d):
+        if not f.endswith('.webp') or re.search(r'-\d+w\.webp$', f): continue
+        im = Image.open(os.path.join(d, f))
+        if im.size[0] < 1000: continue
+        for w in SIZES:
+            im.convert('RGB').resize((w, round(im.size[1] * w / im.size[0])), Image.LANCZOS).save(os.path.join(d, f[:-5] + '-%dw.webp' % w), 'WEBP', quality=80, method=6); made += 1
+    return made
+
+def srcsets(doc):
+    """<img src=".../img/x.webp" width="1440"> gets a srcset with the smaller copies; gallery pictures load quietly after the page."""
+    def f(m):
+        tag, src = m.group(0), m.group(2)
+        w = re.search(r'width="(\d+)"', tag)
+        if not w or int(w.group(1)) < 1000 or 'srcset=' in tag: return tag
+        base = src[:-5]
+        ss = ', '.join('%s-%dw.webp %dw' % (base, x, x) for x in SIZES) + ', %s %sw' % (src, w.group(1))
+        return tag.replace(m.group(1), m.group(1) + ' srcset="%s" sizes="(max-width: 1220px) 100vw, 1180px"' % ss, 1)
+    doc = re.sub(r'(<img src="([^"]*img/[^"]+\.webp)")[^>]*>', f, doc)
+    return re.sub(r'(<figure class="f\d+">.*?</figure>)', lambda m: m.group(1).replace(' loading="lazy"', ' decoding="async" fetchpriority="low"'), doc, flags=re.S)
 
 def write(slug, doc):
+    doc = srcsets(doc)
     d = OUT if slug == 'index' else os.path.join(OUT, slug); os.makedirs(d, exist_ok=True)
     open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(doc)
 
@@ -90,7 +116,11 @@ def main():
         body = body.replace('Download {{VER}}', 'Download v' + ver).replace('{{VER}}', ver)
         write(slug, page(slug, 'Homebase Hub: ' + title if slug != 'index' else title, body, wide))
     cl = open(os.path.join(ROOT, 'CHANGELOG.md'), encoding='utf-8').read().replace('# Changelog', '', 1)
-    write('changelog', page('changelog', 'Homebase Hub: Changelog', '<h1>Changelog</h1><p class="lead">Every version, newest first.</p><div class="cl">' + md(cl) + '</div>'))
+    parts = re.split(r'(?m)^(?=## \d+\.\d+\.\d+)', cl)   # [intro and version map, newest version, ...]
+    head, vers = parts[0], parts[1:]
+    recent = head + ''.join(vers[:10])
+    write('changelog', page('changelog', 'Homebase Hub: Changelog', '<h1>Changelog</h1><p class="lead">The newest ten versions. <a href="changelog/all/">Every version since 1.0.0</a> is on its own page.</p><div class="cl">' + md(recent) + '</div><p><a class="btn" href="changelog/all/">Older versions</a></p>'))
+    write('changelog/all', page('changelog/all', 'Homebase Hub: Every version', '<h1>Every version</h1><p class="lead">Newest first. The <a href="changelog.html">changelog</a> page shows just the newest ten.</p><div class="cl">' + md(cl) + '</div>'))
     # the old addresses (install.html ...) were published before: they forward to the new ones
     for slug in SLUGS:
         if slug != 'index':
@@ -105,6 +135,7 @@ def main():
     if '--latest' in sys.argv:
         a = sys.argv[sys.argv.index('--latest') + 1:][:5]
         subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'make-latest.py')] + a + [os.path.join(OUT, 'latest.json')], check=True)
+    print('smaller screenshot copies:', make_sizes())
     open(os.path.join(OUT, '.nojekyll'), 'w').close()
     print('site built:', len(os.listdir(OUT)), 'files')
 main()
