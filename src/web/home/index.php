@@ -67,7 +67,13 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 <link rel="stylesheet" href="../core-data/assets/shell.css?v=1.45.0">
 <script src="../core-data/assets/shell.js?v=1.45.0" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
-<?php if ($iconPath): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php endif; ?>
+<?php if ($iconPath): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../core-data/assets/brand/apple-touch-icon.png"><?php endif; ?>
+<!-- install on a phone or computer: Settings > General > Install on Your Phone -->
+<link rel="manifest" href="../core-data/api.php?action=manifest">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <?php if ($first && ($first['type'] ?? 'image') === 'image'): ?>
 <?php if (!empty($first['p'])): ?>
 <link rel="preload" as="image" href="<?= $h(media_url(photo_portrait_name($first['url']))) ?>" media="(max-aspect-ratio: 3/4)" fetchpriority="low">

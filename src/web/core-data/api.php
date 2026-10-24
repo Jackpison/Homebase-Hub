@@ -27,6 +27,7 @@
  *  GET  favicon?domain=..&sz=..            Tools > Favicon: a website's icon as a PNG (open to visitors, 60 a visitor per 10 minutes)
  *  GET  backup_overview                    parts, tabs and earlier versions for the Backup panel
  *  GET  backup?parts=...&links=..&info=..  downloads the backup file  (t = security token)
+ *  GET  manifest     the web app manifest (public)
  *  POST restore    {backup, pick, mode}
  *  POST version_restore {app, id}
  *
@@ -93,6 +94,13 @@ function versions_list(): array {
 }
 
 switch ($action) {
+
+case 'manifest':   // GET: the web app manifest for "Add to Home Screen" (public: name, icons, colours, page names; nothing private)
+    if ($method !== 'GET') hub_json(405, ['ok' => false, 'error' => 'Use GET.']);
+    header('Content-Type: application/manifest+json; charset=utf-8');
+    header('Cache-Control: no-cache');
+    echo json_encode(hub_manifest(hub_settings(), hub_site_path((string)($_SERVER['SCRIPT_NAME'] ?? '/web/core-data/api.php')), HUB_PUBLIC), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    exit;
 
 case 'state':
     // after the page has its answer: send any Telegram reminders that are due (at most every 10 minutes)

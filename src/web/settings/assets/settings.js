@@ -22,4 +22,8 @@
     }, function () { host.innerHTML = '<p class="ix-err">Could not reach the site. Check your connection and reload.</p>'; });
   }
   start();
+  // Install on Your Phone (Settings > General): keep the browser's install offer so the Install button can use it later.
+  // Only this page does this, so the other pages keep the browser's own install hint.
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__hubInstall = e; document.dispatchEvent(new Event('hub-install')); });
+  window.addEventListener('appinstalled', function () { window.__hubInstall = null; document.dispatchEvent(new Event('hub-install')); });
 })();

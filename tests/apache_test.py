@@ -3,7 +3,7 @@
   sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip
   python3 tests/apache_test.py [http://127.0.0.1:8300]
 Checks: every page answers with its security policy and the page pre-loading header; private files and folders are refused;
-the pre-loading rules file is served with its type; in a browser nothing is refused, React reports no error and Tools loads
+the pre-loading rules file is served with its type; the app manifest and its icons are public; in a browser nothing is refused, React reports no error and Tools loads
 its main file once."""
 import sys, urllib.request, urllib.error
 from playwright.sync_api import sync_playwright
@@ -29,6 +29,13 @@ check('A2 private files and folders are refused', not open_, open_)
 st, h, body = get('/web/core-data/assets/speculation-rules.json')
 check('A3 the pre-loading rules are served as application/speculationrules+json', st == 200 and (h.get('Content-Type') or '').startswith('application/speculationrules+json') and b'prerender' in body, (st, h.get('Content-Type')))
 check('A4 other JSON files in core-data stay refused', get('/web/core-data/assets/nothing.json')[0] in (403, 404) and get('/web/core-data/manifest.json')[0] == 403)
+import json
+st, h, body = get('/web/core-data/api.php?action=manifest')
+try: man = json.loads(body)
+except Exception: man = {}
+icons = [i['src'] for i in man.get('icons', [])] + ['/web/core-data/assets/brand/apple-touch-icon.png']
+shut = [(s, get(s)[0]) for s in icons if get(s)[0] != 200]
+check('A7 the app manifest is public, served as application/manifest+json, and its icons and the iPhone icon load', st == 200 and (h.get('Content-Type') or '').startswith('application/manifest+json') and man.get('start_url') == '/web/home/' and not shut, (st, h.get('Content-Type'), shut))
 with sync_playwright() as p:
     b = p.chromium.launch(args=['--no-sandbox']); ctx = b.new_context(viewport={'width': 1280, 'height': 800})
     ctx.route('**/*', lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith(('data:', 'blob:')) else r.abort())

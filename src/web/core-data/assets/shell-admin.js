@@ -126,7 +126,7 @@
   }
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
-    ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'],
+    ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
     ['Navigation Style', 'nav', 'top bar sidebar dock menu'], ['Show the Bar on the Start Page', 'nav', 'home corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'pages names order'],
     ['Open a Page in Edit Mode', 'pages', 'shortcuts pencil'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], ['Same Look on Every Page', 'look', 'unified'],
@@ -208,7 +208,7 @@
   /* The plain panes (General, Navigation, Pages, Look) are written as "heading, one line, controls". Each heading with what follows it
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
   var CARDIFY = { general: 1, nav: 1, pages: 1, look: 1 };
-  var CARD_ICON = { 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
+  var CARD_ICON = { 'install on your phone': ICON.down, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages, 'open a page in edit mode': ICON.edit };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
@@ -221,7 +221,7 @@
       var desc = g.body.length && g.body[0].tagName === 'P' && !g.body[0].id && !g.body[0].classList.contains('ix-err') ? g.body.shift() : null;
       sec.innerHTML = '<div class="ix-ec-h"><span class="ix-ec-i">' + svg(CARD_ICON[title.toLowerCase()] || ICON.gear) + '</span><div><div class="ix-ec-t"></div><div class="ix-ec-d"></div></div></div><div class="ix-ec-b"></div>';
       sec.querySelector('.ix-ec-t').textContent = title;
-      if (desc) sec.querySelector('.ix-ec-d').innerHTML = desc.innerHTML; else sec.querySelector('.ix-ec-d').remove();
+      if (desc) { sec.querySelector('.ix-ec-d').innerHTML = desc.innerHTML; desc.remove(); } else sec.querySelector('.ix-ec-d').remove();   // moved into the card head, not shown twice
       var b = sec.querySelector('.ix-ec-b'); g.body.forEach(function (n) { b.appendChild(n); });
       pc.insertBefore(sec, g.h); g.h.remove();
     });
@@ -304,7 +304,22 @@
       '<button type="button" class="ix-btn" id="ix-lu">' + svg(ICON.image) + 'Change Logo</button><button type="button" class="ix-btn" id="ix-lx"' + (S.logo ? '' : ' hidden') + '>Remove</button>' +
       '<input type="file" id="ix-lf2" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>' +
       '<h3>Time Zone</h3><p>Today, due times, backups and Telegram all follow it.</p>' +
-      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>';
+      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>' +
+      '<h3 id="ix-install">Install on Your Phone</h3><p>Put your site on the home screen of a phone or computer. It then opens like an app, with its own icon and no browser bars. ' +
+      'Your data still comes from your server every time: nothing is kept offline.</p>' +
+      '<div class="ix-steps"><h4>iPhone or iPad</h4><p>In Safari, tap Share, then Add to Home Screen.</p>' +
+      '<h4>Android</h4><p>In Chrome, open the menu (the three dots), then Install App or Add to Home Screen.</p>' +
+      '<h4>Computer</h4><p>In Chrome or Edge, click the install icon at the right end of the address bar, or open the menu and choose Install.</p></div>' +
+      '<button type="button" class="ix-btn pri" id="ix-inst" hidden>' + svg(ICON.down) + 'Install</button>';
+    // the Install button shows only when this browser offers it (settings.js keeps the offer: beforeinstallprompt)
+    var ib = p.querySelector('#ix-inst');
+    var offer = function () { ib.hidden = !window.__hubInstall; };
+    offer(); document.addEventListener('hub-install', offer);
+    ib.onclick = function () {
+      var ev = window.__hubInstall; if (!ev) return;
+      window.__hubInstall = null; ib.hidden = true; ev.prompt();
+      Promise.resolve(ev.userChoice).then(function (r) { if (r && r.outcome === 'accepted') toast('Installed.'); }, function () {});
+    };
     p.querySelector('#ix-tz').onchange = function (e) { draft.tz = e.target.value; };
     p.querySelector('#ix-name').oninput = function (e) { draft.siteName = e.target.value; };
     p.querySelector('#ix-lu').onclick = function () { p.querySelector('#ix-lf2').click(); };

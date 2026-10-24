@@ -224,6 +224,59 @@ function hub_links_keep_due(?int $newest, bool $force, int $every, ?int $now = n
     return $force || $newest === null || ($now ?? time()) - $newest >= $every;
 }
 
+/* ======================= install on a phone or computer (web app manifest) ======================= */
+
+/** The site's own path from the address of a script inside it: "/hub" for /hub/web/core-data/api.php, "" at the top. */
+function hub_site_path(string $script): string {
+    $s = str_replace('\\', '/', $script);
+    $p = preg_replace('#/web/[^/]+/[^/]*$#', '', $s);
+    if ($p === null || $p === $s) $p = rtrim(dirname($s), '/');   // a script at the top (index.php)
+    return rtrim($p, '/');
+}
+
+/** The owner's logo, when it can be an app icon: a square PNG of at least 512 px. Its address inside the site, or ''. */
+function hub_app_logo(string $logo, string $public): string {
+    if (!preg_match('#^web/core-data/media/brand/logo-[0-9a-f]+\.png$#', $logo)) return '';
+    $f = $public . '/' . $logo;
+    $i = is_file($f) ? @getimagesize($f) : false;
+    return ($i && $i[2] === IMAGETYPE_PNG && $i[0] === $i[1] && $i[0] >= 512) ? $logo : '';
+}
+
+/**
+ * The web app manifest (what a phone uses for "Add to Home Screen"). Public: only the site name, icons, colours and the
+ * pages' names. Every address starts at the site's own path, so an install in a sub-folder works. No offline mode.
+ */
+function hub_manifest(array $s, string $root, string $public): array {
+    $name = mb_substr(trim(strip_tags((string)($s['siteName'] ?? ''))), 0, 30) ?: 'Homebase Hub';
+    $short = mb_strlen($name) <= 12 ? $name : rtrim(mb_substr(preg_split('/\s+/', $name)[0], 0, 12));
+    $u = function (string $path) use ($root) { return $root . '/' . $path; };
+    $brand = 'web/core-data/assets/brand/';
+    $own = hub_app_logo((string)($s['logo'] ?? ''), $public);
+    $icons = [
+        ['src' => $u($brand . 'logo-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+        ['src' => $u($own !== '' ? $own : $brand . 'logo-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+        ['src' => $u($brand . 'logo-512-maskable.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
+    ];
+    if ($own !== '') { $sz = getimagesize($public . '/' . $own); $icons[1]['sizes'] = $sz[0] . 'x' . $sz[1]; }
+    $names = ['links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'tools' => 'Tools'];
+    $order = array_keys($names); $hidden = [];
+    foreach ((array)($s['pages'] ?? []) as $pg) {   // the bar's own names, order and hidden pages (Settings > General > Navigation)
+        $id = (string)($pg['id'] ?? '');
+        if (!isset($names[$id])) continue;
+        if (trim((string)($pg['name'] ?? '')) !== '') $names[$id] = mb_substr(trim(strip_tags((string)$pg['name'])), 0, 30);
+        if (!empty($pg['hide'])) $hidden[$id] = true;
+    }
+    $listed = array_values(array_filter(array_map(function ($p) { return (string)($p['id'] ?? ''); }, (array)($s['pages'] ?? [])), function ($id) use ($names) { return isset($names[$id]); }));
+    $order = array_values(array_unique(array_merge($listed, $order)));
+    $short_cuts = [];
+    foreach ($order as $id) if (empty($hidden[$id])) $short_cuts[] = ['name' => $names[$id], 'url' => $u('web/' . $id . '/'), 'icons' => [['src' => $u($brand . 'logo-192.png'), 'sizes' => '192x192', 'type' => 'image/png']]];
+    return [
+        'id' => $u(''), 'name' => $name, 'short_name' => $short, 'description' => $name . ': start page, bookmarks, notes and tasks on your own server.',
+        'start_url' => $u('web/home/'), 'scope' => $u(''), 'display' => 'standalone',
+        'background_color' => '#1a1a1a', 'theme_color' => '#1a1a1a', 'icons' => $icons, 'shortcuts' => $short_cuts,
+    ];
+}
+
 /* ======================= login lockout ======================= */
 
 function hub_rate_file(): string { return hub_dir('core') . '/ratelimit.php'; }

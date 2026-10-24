@@ -46,6 +46,7 @@ python3 tests/update_test.py build/site-update-X.Y.Z.zip <previous release zip> 
 python3 tests/update_attack_test.py build/site-update-X.Y.Z.zip
 python3 tests/core_test.py build/site-update-X.Y.Z.zip
 python3 tests/import_test.py build/site-update-X.Y.Z.zip
+python3 tests/app_test.py build/site-update-X.Y.Z.zip
 python3 tests/tools_test.py build/site-update-X.Y.Z.zip
 python3 tests/pages_test.py build/site-update-X.Y.Z.zip
 python3 tests/a11y_test.py build/site-update-X.Y.Z.zip build/site

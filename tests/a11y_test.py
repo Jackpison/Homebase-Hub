@@ -42,7 +42,7 @@ try:
     subprocess.run(['php', os.path.join(HERE, 'seed_demo.php'), D], capture_output=True)
     ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/core-data/lib/boot.php').read()).group(1)
     pages = [('Home', '/'), ('Links', '/web/links/'), ('Info', '/web/info/'), ('Cards', '/web/cards/'), ('Tasks', '/web/tasks/'), ('Tools', '/web/tools/'),
-             ('Tools: a tool', '/web/tools/#/tool/image-resize'), ('Settings', '/web/settings/#overview'), ('Settings: Security', '/web/settings/#security'), ('Settings: Updates', '/web/settings/#updates')]
+             ('Tools: a tool', '/web/tools/#/tool/image-resize'), ('Settings', '/web/settings/#overview'), ('Settings: General (Install on Your Phone)', '/web/settings/#general'), ('Settings: Security', '/web/settings/#security'), ('Settings: Updates', '/web/settings/#updates')]
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         for theme in ('dark', 'light'):

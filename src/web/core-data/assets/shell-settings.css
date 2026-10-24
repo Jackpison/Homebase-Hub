@@ -574,3 +574,7 @@
 #ix-page .ix-step .ix-ec-b{padding:2px 18px 18px 64px}
 @media (max-width:600px){#ix-page .ix-step .ix-ec-b{padding-left:18px}#ix-page .ix-steph{padding:14px}}
 #ix-page .ix-steph .ix-ec-t{color:var(--ix-tx)}#ix-page .ix-steph .ix-ec-d{color:var(--ix-mu)}
+/* Settings > General > Install on Your Phone: the three sets of steps */
+#ix-page .ix-steps{margin:0 0 12px}
+#ix-page .ix-steps h4{margin:10px 0 2px;font-size:13.5px;color:var(--ix-tx)}
+#ix-page .ix-steps h4+p{margin:0 0 4px}

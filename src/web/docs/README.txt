@@ -105,6 +105,11 @@ Settings > General > Navigation > Tabs). Middle: search. Right, icons only (Back
   (background, boxes, menus, borders) and Text. Presets (166 looks, a search box, a Surprise Me button, and your own saved looks that can be exported and imported) fill a whole mode in one click; Colors also holds a separate accent for each page; the arrow next to a color puts it
   back to the default. Page Backgrounds gives one page its own background. Tab colors in Links and Info are set on each tab.
 - Text sizes: Links, Info and Cards each have "Text sizes" under their pencil menu (tabs, box titles, box text...).
+- Install on Your Phone (Settings > General > Basics): add the site to the home screen of a phone or computer and it opens
+  like an app (its own icon, no browser bars). iPhone: Safari, Share, Add to Home Screen. Android: Chrome menu, Install App.
+  Computer: the install icon in Chrome's or Edge's address bar. The site describes itself to the phone through
+  web/core-data/api.php?action=manifest (public: the site name, icons, colours and the pages' names). There is no offline
+  mode: pages and data always come from your server.
 - Start page without the bar (Settings > General > Navigation): a gear button in its corner opens editing, the other
   sections and Settings once you are logged in.
 

@@ -36,6 +36,7 @@ Around the pages:
 
 - **Settings:** Guided Setup for protection, 166 looks and your own colours, backup and restore, updates and health checks.
 - **Telegram:** a daily digest, Due Now messages with Done, Skip and Snooze buttons, commands such as `/add`, `/done` and `/snooze`, and backup files sent to your chat.
+- **On your phone:** add the site to the home screen of a phone or computer and it opens like an app, with its own icon and no browser bars (Settings > General > Install on Your Phone). Nothing is kept offline: your data always comes from your server.
 - **Security:** one password, optional two-step login, encrypted tabs and backups, and checked updates you can undo. [More below](#security-in-short).
 
 ## Why Homebase Hub

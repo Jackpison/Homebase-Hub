@@ -131,7 +131,16 @@ story += chapter('3', 'First steps', 'Guided Setup walks you through protecting 
  steps(['Open %s (the gear in the bar).' % C('Settings'), 'Choose %s, then the %s tab.' % (C('Overview'), C('Guided Setup')),
         'Work through the steps: a strong password, two-step login, an encryption passphrase, a first backup, and Telegram.', 'Come back to Overview any time: it shows what still needs a look.']),
  shot('s-overview', 'Settings, Overview: a card for each area, the things to look at next, and a status on every menu item.'),
- Tip('You can do the steps in any order, and skip the ones you do not need. Each one also lives in its own section of Settings.'))
+ Tip('You can do the steps in any order, and skip the ones you do not need. Each one also lives in its own section of Settings.'),
+ *sub('Install on your phone'),
+ P('Put your site on the home screen of a phone or computer. It then opens like an app, with its own icon and no browser bars. Your data still comes from your server every time: nothing is kept offline. The steps are also in %s.' % C('Settings, General, Install on Your Phone')),
+ P('<font name="M-Bold">iPhone or iPad</font>'),
+ steps(['Open your site in Safari.', 'Tap %s (the square with an arrow).' % C('Share'), 'Choose %s, then %s.' % (C('Add to Home Screen'), C('Add'))]),
+ P('<font name="M-Bold">Android</font>'),
+ steps(['Open your site in Chrome.', 'Open the menu (the three dots).', 'Choose %s (or %s).' % (C('Install App'), C('Add to Home Screen'))]),
+ P('<font name="M-Bold">Computer</font>'),
+ steps(['Open your site in Chrome or Edge.', 'Click the install icon at the right end of the address bar, or open the menu and choose %s.' % C('Install'), 'The site opens in its own window and can be pinned like any app.']),
+ Tip('On a computer, Settings can also show an %s button when the browser offers it.' % C('Install')))
 
 story += chapter('4', 'Home', 'Your start page: the first thing you see when you open your site.',
  shot('home-1', 'Home, with a photo and its credit in the top corner, next to the buttons for the next photo and for settings.'),
