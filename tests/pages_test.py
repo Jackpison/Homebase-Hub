@@ -71,13 +71,26 @@ try:
             [(c['name'], c['domain'], c['path'], c.get('sameSite'), c.get('secure'), c.get('expires')) for c in ctx.cookies()],
             pg.evaluate("fetch('../core-data/api.php?action=state', {credentials: 'same-origin'}).then(r => r.json()).then(j => ({admin: j.admin}), e => String(e))"))
         check('P6 the browser is logged in (the login cookie was accepted)', admin, diag)
-        with pg.expect_download(timeout=20000) as dl: pg.evaluate("document.querySelector('[data-a=xlsx]').click()")
-        data = open(dl.value.path(), 'rb').read()
+        # P7: the same, in a context without the test's request routing (the routing hands each page to the browser with its
+        # security policy added). If P7 passes where P6 fails, the difference is in the routing, not in the site.
+        c7 = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); p7 = c7.new_page()
+        why7 = browser_login(p7, B, PW); p7.goto(B + '/web/cards/'); p7.wait_for_timeout(1500)
+        check('P7 logged in on a second page without the test routing', p7.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())"), why7)
+        c7.close()
+        data = b''
+        try:
+            with pg.expect_download(timeout=20000) as dl: pg.evaluate("document.querySelector('[data-a=xlsx]').click()")
+            data = open(dl.value.path(), 'rb').read()
+        except Exception as e:
+            check('P3 Cards exports a file (no download came)', False, str(e)[:120])
         try:
             import openpyxl
+            if not data: raise ValueError('no file')
             wb = openpyxl.load_workbook(io.BytesIO(data)); ws = wb['Cards']; hdr = [c.value for c in ws[1]]
             ok = 'Limit' in hdr and isinstance(ws.cell(2, hdr.index('Limit') + 1).value, (int, float)) and '₹' in ws.cell(2, hdr.index('Limit') + 1).number_format
             detail = (wb.sheetnames, hdr[:5])
+        except ValueError:
+            ok = False; detail = 'no file'
         except ImportError:
             z = zipfile.ZipFile(io.BytesIO(data)); ok = 'xl/worksheets/sheet1.xml' in z.namelist(); detail = z.namelist()
         check('P3 Cards exports a real Excel file with numbers and the money format', data[:2] == b'PK' and ok, detail)
