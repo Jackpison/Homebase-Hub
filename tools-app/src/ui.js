@@ -14,6 +14,7 @@ export function h(tag, props, ...kids) {
     else if (k === 'text') el.textContent = v;
     else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
     else if (k === 'dataset') Object.assign(el.dataset, v);
+    else if (k === 'value') el.value = v;   // a property: the attribute does nothing for <textarea>
     else if (k in el && typeof v !== 'string') el[k] = v;
     else el.setAttribute(k, v === true ? '' : v);
   }

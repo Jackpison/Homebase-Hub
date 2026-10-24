@@ -97,6 +97,79 @@ try:
         z = zipfile.ZipFile(io.BytesIO(data)); ico = z.read('favicon.ico')
         check('N16 Favicon Maker makes a pack: favicon.ico with 3 sizes, PNGs up to 512, a manifest', {'favicon.ico', 'icon-512.png', 'apple-touch-icon.png', 'site.webmanifest'} <= set(z.namelist()) and ico[:4] == b'\x00\x00\x01\x00' and ico[4] == 3, z.namelist())
 
+        # ---------- Images ----------
+        import tempfile
+        from PIL import Image as PI, ImageStat
+        TMP = tempfile.mkdtemp(prefix='hub-img-')
+        def img(data): return PI.open(io.BytesIO(data))
+        noisy = os.path.join(TMP, 'big-photo.jpg')
+        PI.effect_noise((1600, 1200), 70).convert('RGB').resize((2000, 1500)).save(noisy, quality=95)
+        tif = os.path.join(TMP, 'scan.tif'); PI.open(os.path.join(HERE, 'fixture-image.png')).save(tif)
+        FIX = os.path.join(HERE, 'fixture-image.png'); HEIC = os.path.join(HERE, 'fixture-photo.heic')
+        def open_tool(i):   # through the home, so the tool starts fresh even when it was the last one open
+            pg.goto(U + '#/'); wait_js(pg, "location.hash === '#/'"); pg.goto(U + '#/tool/' + i); wait_js(pg, "!!document.querySelector('#root .dropwrap input[type=file]')")
+        def go(name, files, timeout=60000):
+            pg.set_input_files('#root .dropwrap input[type=file] >> nth=0', files); pg.wait_for_timeout(400)
+            with pg.expect_download(timeout=timeout) as d: pg.get_by_role('button', name=name, exact=True).click()
+            return open(d.value.path(), 'rb').read(), d.value.suggested_filename
+
+        open_tool('image-converter')
+        data, name = go('Convert', FIX); check('I1 Image Converter: PNG to JPG', data[:3] == b'\xff\xd8\xff' and name == 'fixture-image.jpg' and img(data).size == (800, 600), name)
+        open_tool('image-converter'); pg.get_by_role('button', name='AVIF', exact=True).click()
+        data, name = go('Convert', FIX, 120000); check('I2 ...to AVIF (the AVIF encoder loads and works)', data[4:12] == b'ftypavif' and name.endswith('.avif'), data[:16])
+        open_tool('image-converter'); data, name = go('Convert', HEIC, 120000)
+        check('I3 ...HEIC to JPG (the HEIC reader loads and works)', data[:3] == b'\xff\xd8\xff' and name == 'fixture-photo.jpg' and img(data).size == (320, 240), (name, data[:4]))
+        open_tool('image-converter'); pg.get_by_role('button', name='PNG', exact=True).click(); data, name = go('Convert', tif)
+        check('I4 ...TIFF to PNG', data[:8] == b'\x89PNG\r\n\x1a\n' and img(data).size == (800, 600), name)
+        open_tool('image-converter'); pg.set_input_files('#root .dropwrap input[type=file]', [FIX, tif]); pg.wait_for_timeout(300)
+        pg.get_by_role('button', name='Convert', exact=True).click(); wait_js(pg, "[...document.querySelectorAll('#root button')].some(b => b.textContent.includes('Download All (ZIP)'))", 60000)
+        with pg.expect_download() as d: pg.get_by_role('button', name='Download All (ZIP)').click()
+        zz = zipfile.ZipFile(d.value.path()); check('I5 ...two images at once come as a ZIP of two JPGs', len(zz.namelist()) == 2 and all(n.endswith('.jpg') for n in zz.namelist()), zz.namelist())
+
+        open_tool('image-compress'); pg.fill('#root input[aria-label="Target size"]', '120')
+        data, name = go('Compress', noisy, 120000); before = os.path.getsize(noisy)
+        check('I6 Image Compressor: a %d KB photo comes under the 120 KB target' % (before // 1024), len(data) <= 120 * 1024 and data[:3] == b'\xff\xd8\xff', len(data))
+        check('I7 ...and the page shows the saving', 'smaller' in pg.inner_text('#root'))
+
+        open_tool('image-resize'); pg.fill('#root input[aria-label="Width"]', '300')
+        data, name = go('Resize', FIX); check('I8 Image Resizer: width 300 keeps the shape (300 x 225)', img(data).size == (300, 225) and '300x225' in name, (img(data).size, name))
+        open_tool('image-resize'); pg.get_by_role('button', name='Social sizes', exact=True).click()
+        data, name = go('Resize', FIX); check('I9 ...the Instagram square preset fills 1080 x 1080', img(data).size == (1080, 1080), img(data).size)
+
+        open_tool('img-rotate'); pg.set_input_files('#root .dropwrap input[type=file]', FIX); pg.wait_for_timeout(500)
+        pg.get_by_role('button', name='Right', exact=True).click()
+        with pg.expect_download() as d: pg.get_by_role('button', name='Save', exact=True).click()
+        check('I10 Rotate and Flip: a quarter turn swaps width and height', img(open(d.value.path(), 'rb').read()).size == (600, 800))
+
+        open_tool('img-adjust'); pg.set_input_files('#root .dropwrap input[type=file]', FIX); pg.wait_for_timeout(500)
+        pg.evaluate("(() => { const r = [...document.querySelectorAll('#root input[type=range]')][0]; r.value = 60; r.dispatchEvent(new Event('input')); })()")
+        with pg.expect_download() as d: pg.get_by_role('button', name='Save', exact=True).click()
+        lum = lambda im: sum(ImageStat.Stat(im.convert('L')).mean)
+        check('I11 Image Editor: more brightness makes a brighter photo', lum(img(open(d.value.path(), 'rb').read())) > lum(PI.open(FIX)) + 20)
+
+        open_tool('img-watermark'); data, name = go('Add to All and Save', FIX)
+        check('I12 Watermark Images: same size, and the photo changed', img(data).size == (800, 600) and list(img(data).convert('RGB').getdata())[::997] != list(PI.open(FIX).convert('RGB').getdata())[::997], name)
+
+        open_tool('img-colors'); pg.set_input_files('#root .dropwrap input[type=file]', HEIC); wait_js(pg, "document.querySelectorAll('#root .sw').length >= 4", 60000)
+        hexes = pg.evaluate("[...document.querySelectorAll('#root .flist .out')].map(x => x.textContent)")
+        check('I13 Color Picker: the palette finds the main colours of the photo', sum(1 for x in hexes if x.startswith('#')) >= 4, hexes[:6])
+
+        open_tool('img-beautify'); data, name = go('Save PNG', FIX)
+        check('I14 Screenshot Beautifier: padding and a window frame around the screenshot (928 x 762)', img(data).size == (928, 762), img(data).size)
+
+        open_tool('svg-png'); pg.fill('#root textarea', '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><rect width="100" height="50" fill="#f00"/></svg>')
+        pg.fill('#root input[type=number]', '400')
+        with pg.expect_download() as d: pg.get_by_role('button', name='Convert', exact=True).click()
+        sv = img(open(d.value.path(), 'rb').read()); check('I15 SVG to PNG: code at 400 pixels wide keeps the shape and colour', sv.size == (400, 200) and sv.convert('RGB').getpixel((200, 100)) == (255, 0, 0), sv.size)
+
+        open_tool('img-base64'); pg.set_input_files('#root .dropwrap input[type=file]', FIX); pg.wait_for_timeout(500)
+        uri = pg.input_value('#root textarea >> nth=0')
+        check('I16 Image to Base64 makes a data URI', uri.startswith('data:image/png;base64,iVBOR'))
+        pg.get_by_role('button', name='Base64 to Image', exact=True).click(); pg.fill('#root textarea', uri); pg.get_by_role('button', name='Make the File', exact=True).click()
+        with pg.expect_download() as d: pg.get_by_role('button', name='Download image.png', exact=True).click()
+        check('I17 ...and turns it back into the same file', open(d.value.path(), 'rb').read() == open(FIX, 'rb').read())
+        shutil.rmtree(TMP, ignore_errors=True)
+
         # the app itself
         pg.goto(U + '#/'); wait_js(pg, "document.querySelectorAll('#root .tc').length > 0")
         pg.click('#root .tc:has(a[href="#/tool/json-formatter"]) .star'); pg.goto(U + '#/favourites'); wait_js(pg, "location.hash === '#/favourites'"); pg.wait_for_timeout(150)
@@ -104,7 +177,7 @@ try:
         check('N17 a star adds a favourite, and Favourites lists it', '#/tool/json-formatter' in favs and '#/tool/image-resize' in favs, favs)
         pg.goto(U + '#/recent'); pg.wait_for_timeout(150)
         rec = pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))")
-        check('N18 Recent lists the tools just used, newest first', rec[:2] == ['#/tool/favicon', '#/tool/zip-creator'], rec[:4])
+        check('N18 Recent lists the tools just used, newest first (the last one opened is first)', rec[0] == '#/tool/img-base64' and rec.index('#/tool/favicon') > rec.index('#/tool/img-rotate'), rec[:4])
         pg.goto(U + '#/organise'); pg.wait_for_timeout(150)
         pg.click('button[aria-label="Show QR Code Generator"]'); pg.goto(U + '#/s/utilities'); pg.wait_for_timeout(150)
         ul = pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))")
@@ -124,7 +197,7 @@ try:
         for scheme in ('dark', 'light'):
             pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme)
             found = []
-            for u in ('#/', '#/tool/qr-generator', '#/tool/json-formatter', '#/tool/generators', '#/organise', '#/settings'):
+            for u in ('#/', '#/tool/qr-generator', '#/tool/json-formatter', '#/tool/generators', '#/tool/image-converter', '#/tool/image-resize', '#/tool/img-adjust', '#/tool/img-watermark', '#/organise', '#/settings'):
                 pg.goto(U + u); pg.wait_for_timeout(300); pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme); pg.mouse.move(2, 2); pg.wait_for_timeout(100)
                 pg.evaluate(AXE); v = pg.evaluate(RUN)
                 if v: found.append(u + ': ' + '; '.join(v[:3]))

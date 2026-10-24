@@ -5,8 +5,11 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "dependencies": {
+    "@jsquash/avif": "2.1.1",
     "@noble/hashes": "2.4.0",
     "fflate": "0.7.5",
-    "qrcode-generator": "2.0.4"
+    "libheif-js": "1.23.5",
+    "qrcode-generator": "2.0.4",
+    "utif2": "4.1.0"
   }
 }

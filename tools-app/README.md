@@ -14,6 +14,7 @@ python3 tools/build-tools.py --install    # builds into src/web/tools (replaces 
   each id to its module. `src/state.js`: what is remembered in the browser (`tools.v3`; the first visit carries over favourites and
   recent tools from the old app). `src/ui.js`: shared pieces (fields, drop zones, downloads, notices). `src/icons.js`, `src/styles.css`.
 - `src/tools/<id>.js`: one file per tool, `export default function (root, ctx)`, loaded only when the tool is opened.
+- `src/lib/image.js`: opening every image format (HEIC through libheif, TIFF through UTIF, the rest through the browser), saving as JPG, PNG, WebP or AVIF (the AVIF encoder's `avif_enc.wasm` is copied into `assets/` by `build.mjs`), shrinking to a target size, and the results list with Download All (ZIP).
 - Libraries come from npm, pinned to versions at least two weeks old (`package.json`, `package-lock.json`); Dependabot proposes updates.
 - Text from users and files is only set with `textContent` or as a value. The page's security policy (`src/web/tools/.htaccess`) allows
   only this site's own scripts and WebAssembly.
@@ -25,6 +26,6 @@ The old, prebuilt Tools stays in `src/web/tools` until every tool is rebuilt her
 | Section | Built |
 |---|---|
 | Utilities (7) | QR Code Generator, Favicon Downloader and Maker, JSON Formatter, Text Tools, Password and UUID, Hash Generator, ZIP Creator |
-| Images (10) | not yet |
+| Images (10) | Rotate and Flip, Image Editor, Watermark Images, Color Picker and Palette, Screenshot Beautifier, SVG to PNG, Image to Base64, Image Converter (HEIC, TIFF, AVIF in and out), Image Compressor (target size), Image Resizer (social sizes, size cap) |
 | Photos (8) | not yet |
 | PDF (11) | not yet |

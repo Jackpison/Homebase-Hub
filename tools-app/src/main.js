@@ -16,6 +16,16 @@ const LOAD = {
   'generators': () => import('./tools/generators.js'),
   'hash-generator': () => import('./tools/hash-generator.js'),
   'zip-creator': () => import('./tools/zip-creator.js'),
+  'img-rotate': () => import('./tools/img-rotate.js'),
+  'img-adjust': () => import('./tools/img-adjust.js'),
+  'img-watermark': () => import('./tools/img-watermark.js'),
+  'img-colors': () => import('./tools/img-colors.js'),
+  'img-beautify': () => import('./tools/img-beautify.js'),
+  'svg-png': () => import('./tools/svg-png.js'),
+  'img-base64': () => import('./tools/img-base64.js'),
+  'image-converter': () => import('./tools/image-converter.js'),
+  'image-compress': () => import('./tools/image-compress.js'),
+  'image-resize': () => import('./tools/image-resize.js'),
 };
 
 const TOOLS = DATA.tools, CATS = DATA.categories;
