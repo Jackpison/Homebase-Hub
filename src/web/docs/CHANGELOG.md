@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.46.0 | Install on Your Phone: the site on a phone's or computer's home screen, opening like an app with its own icon and page shortcuts; Settings descriptions no longer shown twice |
 | 1.45.0 | Import Bookmarks in Links: bookmarks from any browser, with a preview, into a new or existing tab, easy to undo; readable main buttons in Links' light mode |
 | 1.44.2 | PDF to Text works in Safari; Earlier Versions never overwrites the version being restored; no stale "ready to apply" update after a refused upload; many more tests, now also in Firefox and WebKit |
 | 1.44.1 | Cleaner padlock pictures for private and encrypted tabs; Server Check rows laid out properly, and no false warning for the favicon service; a more compact Tools start box |
@@ -64,6 +65,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.46.0
+
+### New: Install on Your Phone
+
+- **Your site as an app.** Add it to the home screen of a phone or computer and it opens like an app: its own icon, its own name, no browser bars. iPhone: Safari, Share, Add to Home Screen. Android: Chrome's menu, Install App. Computer: the install icon in Chrome's or Edge's address bar. The steps are in **Settings › General › Install on Your Phone**, which also shows an **Install** button when your browser offers one.
+- **Shortcuts.** Press and hold the icon for Links, Info, Cards, Tasks and Tools, with the names and order of your bar (hidden pages are left out).
+- **Nothing kept offline.** Your pages and data always come from your server, as before. Works in a sub-folder too.
+
+### Fix
+
+- **Settings shows each description once.** In Settings, the line under each heading was also repeated below its box. It now appears only inside the box.
 
 ---
 
