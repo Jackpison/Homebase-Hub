@@ -335,7 +335,6 @@ FAQ = [
     ('Does Telegram have to be set up?', 'No, it is optional. When you set it up, the bot only answers your own chat.'),
     ('Can I move the site to another host?', 'Yes. Copy the whole site folder, data included, or export a backup and import it on the new site.'),
     ('Which browsers is it tested in?', 'The pages, Tools and this website are tested in Chromium (Chrome, Edge), Firefox and WebKit (Safari) engines, and checked for accessibility.'),
-    ('Are the releases signed?', 'No. The checksum catches damaged downloads, but it comes from the same GitHub account as the zip, so it cannot prove a release is genuine. Keep two-factor login on the GitHub account and read the changelog before you install.'),
     ('How do I report a problem or ask something?', 'To report a problem, open an issue on GitHub. For anything else, message @Jackpison on Telegram.'),
     ('Is it really free?', 'Yes. Homebase Hub is free software under the GPL-3.0 licence: you may use it, study it, change it and share it.'),
 ]

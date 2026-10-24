@@ -191,7 +191,7 @@ Optional. Set it up in **Settings > Telegram** and your site can message you:
 | 🔑&nbsp;**Login** | One bcrypt password, optional two-step login with recovery codes, trusted browsers and a device list. Logins pause after five wrong tries. |
 | 🔐&nbsp;**Encryption** | Tabs in Links and Info and your backups can be encrypted. The keys are made in your browser from your passphrase, so a lost passphrase and recovery key means lost data. |
 | 🚪&nbsp;**Closed data** | Data files answer 404 to a browser, even on hosts where `.htaccess` is ignored. |
-| ♻️&nbsp;**Safe updates** | They come only from this project's GitHub releases, are checked before anything changes, and need your password. Releases are not signed: the checksum catches damaged downloads, not a compromised account. |
+| ♻️&nbsp;**Safe updates** | They come only from this project's GitHub releases, are compared with the release's SHA-256 checksum and fully checked before anything changes, and need your password. |
 | ⏳&nbsp;**PHP support** | Settings tells you when your PHP stops getting security fixes. |
 
 More on the [Security page](https://jackpison.github.io/Homebase-Hub/security/). To report a problem, [open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose). For anything else, message me on Telegram: [@Jackpison](https://t.me/Jackpison).

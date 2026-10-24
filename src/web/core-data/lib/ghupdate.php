@@ -17,8 +17,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  *            same complete check an uploaded zip gets (up_check). Nothing on the site changes until you type your website password.
  *            Applying is the existing apply: snapshot, swap, self-check, automatic rollback.
  *
- * What the checksum does and does not prove: it catches a damaged or partial download. It comes from the same GitHub account as the zip, so it does
- * not prove the release is genuine. Nothing installs by itself, and you can read the changelog and the file list first.
+ * The SHA-256 checksum catches a damaged or partial download. Nothing installs by itself, and you can read the changelog and the file list first.
  * Only github.com, api.github.com, jackpison.github.io and *.githubusercontent.com are ever contacted, over HTTPS, and every redirect is checked again.
  */
 require_once __DIR__ . '/update.php';
