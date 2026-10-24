@@ -69,6 +69,10 @@ PHP's built-in server ignores `.htaccess`, so the browser blocks on `site-data`,
 
 Two cases are by design, not refusals: the **same version** is accepted as a repair of the installed files (the screen says so), and a **bit flip in a field no file depends on** (a date or an attribute) can still give a valid zip; the test then checks that every file matched its fingerprint. Many cases use a smaller but valid update (the release without the Tools files) so that 250 uploads take seconds, not minutes.
 
+## Import Bookmarks
+
+`python3 tests/import_test.py build/site-update-X.Y.Z.zip [--browser ...]` (port 8850) runs Links > Import Bookmarks in a real browser with the exports in `tests/bookmarks/` (Chrome, Firefox with its folder descriptions, Safari without an outer list, 12 levels deep, duplicates, a hostile file, an empty file, a web page that is not bookmarks) plus a PNG, 5,001 links, a file over 5 MB and 3,000 links made by the test. It checks the preview numbers, the result message, exactly what Links saved, a private new tab, an existing tab (its links kept, nothing added twice), that encrypted tabs are never offered, the six-tab limit, that nothing from the hostile file ran or became markup, undo through Earlier Versions, that the importer loads only when first used, and axe on the open dialog.
+
 ## Library check
 
 `python3 tests/check_libraries.py` checks that the two known problems in bundled libraries (pdf.js in Tools and SheetJS in Cards) cannot be reached: every place that opens a PDF sets `isEvalSupported:false`, and no code reads Excel files. With `--audit` it also asks npm for advisories on the exact versions and fails on any new one. CI runs the offline part on every push.
