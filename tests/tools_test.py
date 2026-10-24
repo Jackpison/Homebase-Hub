@@ -72,7 +72,10 @@ try:
         except ImportError:
             pages = 5 if data[:5] == b'%PDF-' else 0; print('  (pypdf is not installed, so the page count was not checked)')
         check('T4 Merge PDF joins 3 + 2 pages into one 5-page PDF', data[:5] == b'%PDF-' and pages == 5, (pages, errs))
-        tool('pdf-text', [F('fixture-3pages.pdf')]); act(pg, 'Text Layer Only', download=False); act(pg, 'Get the Text', download=False); pg.wait_for_timeout(4000)
+        tool('pdf-text', [F('fixture-3pages.pdf')]); act(pg, 'Text Layer Only', download=False); act(pg, 'Get the Text', download=False)
+        for _ in range(40):   # up to 20 s: the text appears when the reader is done (slower in some engines)
+            if 'quick brown fox' in ' '.join(pg.locator('main textarea').nth(i).input_value() for i in range(pg.locator('main textarea').count())) + pg.locator('main').inner_text(): break
+            pg.wait_for_timeout(500)
         txt = ' '.join(pg.locator('main textarea').nth(i).input_value() for i in range(pg.locator('main textarea').count())) + pg.locator('main').inner_text()
         check('T5 PDF to Text reads the text layer', 'quick brown fox' in txt and not errs, (txt[-200:], errs))
 

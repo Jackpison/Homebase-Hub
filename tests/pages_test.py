@@ -29,7 +29,7 @@ try:
     check('P1 a new site can be set up', call('setup', {'code': code, 'password': PW}).get('ok'))
     subprocess.run(['php', os.path.join(HERE, 'seed_demo.php'), D], capture_output=True)
     ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/core-data/lib/boot.php').read()).group(1)
-    cookies = [{'name': c.name, 'value': c.value, 'domain': '127.0.0.1', 'path': '/'} for c in cj]
+    cookies = [{'name': c.name, 'value': c.value, 'url': B + '/'} for c in cj]
     panes = re.findall(r"\['([a-z]+)', '[A-Z][^']*', ICON", open(D + '/web/docs/src/core-data/shell-admin.src.js', encoding='utf-8').read())
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
@@ -64,7 +64,9 @@ try:
         check('P4 with the real security policies, nothing is refused and React reports no error', len(CSP) >= 5 and not refused, (len(CSP), refused[:3]))
         check('P5 Tools loads its main file once (one copy of React)', len(tools_main) == 1, sorted(tools_main))
         pg.goto(B + '/web/cards/'); pg.wait_for_timeout(1500)
-        with pg.expect_download(timeout=10000) as dl: pg.evaluate("document.querySelector('[data-a=xlsx]').click()")
+        admin = pg.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())")
+        check('P6 the browser is logged in (the login cookie was accepted)', admin)
+        with pg.expect_download(timeout=20000) as dl: pg.evaluate("document.querySelector('[data-a=xlsx]').click()")
         data = open(dl.value.path(), 'rb').read()
         try:
             import openpyxl

@@ -47,7 +47,7 @@ try:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         for theme in ('dark', 'light'):
             ctx = b.new_context(bypass_csp=True, user_agent=UA, viewport={'width': 1280, 'height': 860})
-            ctx.add_cookies([{'name': c.name, 'value': c.value, 'domain': '127.0.0.1', 'path': '/'} for c in cj])
+            ctx.add_cookies([{'name': c.name, 'value': c.value, 'url': B + '/'} for c in cj])
             ctx.add_init_script("try{localStorage.setItem('ix-seen-ver','%s');localStorage.setItem('hub-theme','%s')}catch(e){}" % (ver, theme))
             ctx.route('**/*', lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith(('data:', 'blob:')) else r.abort())
             pg = ctx.new_page()
