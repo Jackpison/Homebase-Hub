@@ -5,7 +5,7 @@ site-data/
 *.zip
 *.sha256
 build/
-node_modules/
+node_modules
 .env
 *.log
 error_log

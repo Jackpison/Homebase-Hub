@@ -26,7 +26,7 @@ Six pages share one login, one bar and one Settings page.
 | Page | What it does | Highlights |
 |---|---|---|
 | **Home** | A start page that feels like yours | Background photos that change, phone-sized copies that load fast, with or without the bar |
-| **Links** | Bookmarks in tabs and categories | Icons saved on your server, colours and sizes for each tab, encrypted tabs |
+| **Links** | Bookmarks in tabs and categories | Import from any browser, icons saved on your server, colours and sizes for each tab, encrypted tabs |
 | **Info** | Notes in boxes, or as a document | 1 to 12 boxes in each tab, cards or one document with an outline, export as PDF or text |
 | **Cards** | Your cards in one searchable table | Filter by bank, network, type and holder, yearly charges added up, export to Excel |
 | **Tasks** | Bills, renewals and chores | Due dates, repeats and prices, calendar and analytics, Year in Review PDF |

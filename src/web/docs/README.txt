@@ -83,6 +83,10 @@ Settings > General > Navigation > Tabs). Middle: search. Right, icons only (Back
   Theme (one icon on every page) / Edit (pencil) / Backup / Settings (gear: Settings and Log out; a key when logged out).
 - The pencil holds each page's edit options: "Edit this page" (becomes "Done editing"), then the page's own options such as
   Fetch icons, Column colors, Text sizes, Export, Add card, Background, and Page settings at the bottom.
+  Links > Import Bookmarks reads the .html file any browser exports (Chrome, Edge, Firefox, Brave, Opera, Safari) in your
+  browser, shows a preview, and adds the links to a new tab (private if you like) or one of your tabs. Folders become
+  categories, links you already have are not added twice, and only web links are kept. Undo: Settings > Backup & Restore >
+  Earlier Versions (a copy of Links is kept just before the import).
   Tools has its own sections: Tools, Recent, Favourites, one per category, Organise and Settings. Tools > Settings > Layout
   shows them as a side menu on the left (the default; it can shrink to icons) or as tabs on top. Phones always get tabs.
   Tools > Organise: star favourites, drag tools to reorder them or move them to another section, reorder sections, hide tools.
