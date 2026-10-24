@@ -33,7 +33,11 @@ try:
     panes = re.findall(r"\['([a-z]+)', '[A-Z][^']*', ICON", open(D + '/web/docs/src/core-data/shell-admin.src.js', encoding='utf-8').read())
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
-        ctx = b.new_context(user_agent=UA, accept_downloads=True, viewport={'width': 1280, 'height': 860}); ctx.add_cookies(cookies)
+        ctx = b.new_context(user_agent=UA, accept_downloads=True, viewport={'width': 1280, 'height': 860})
+        # log in through the browser context, so the server's own Set-Cookie lands in this engine's cookie store
+        # (planting the cookie with add_cookies is not accepted by WebKit for an IP address)
+        lr = ctx.request.post(B + '/web/core-data/api.php?action=login', data=json.dumps({'password': PW}), headers={'Content-Type': 'application/json'})
+        check('P0 the browser logs in', lr.ok and lr.json().get('ok'), lr.text()[:200])
         ctx.add_init_script("try{localStorage.setItem('ix-seen-ver','%s')}catch(e){}" % ver)
         ctx.add_init_script(CSP_REPORTER)
         # PHP's test server ignores .htaccess, so each page gets the security policy Apache would send, read from its own .htaccess

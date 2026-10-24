@@ -48,6 +48,8 @@ try:
         ctx.route('**/*', lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith(('data:', 'blob:')) else r.abort())
         pg = ctx.new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        cons = []   # console errors and warnings, shown when a check fails (helps find engine differences in CI)
+        pg.on('console', lambda m: cons.append(m.type + ': ' + m.text[:200]) if m.type in ('error', 'warning') else None)
 
         # 1. every tool opens
         broken = []
@@ -77,7 +79,7 @@ try:
             if 'quick brown fox' in ' '.join(pg.locator('main textarea').nth(i).input_value() for i in range(pg.locator('main textarea').count())) + pg.locator('main').inner_text(): break
             pg.wait_for_timeout(500)
         txt = ' '.join(pg.locator('main textarea').nth(i).input_value() for i in range(pg.locator('main textarea').count())) + pg.locator('main').inner_text()
-        check('T5 PDF to Text reads the text layer', 'quick brown fox' in txt and not errs, (txt[-200:], errs))
+        check('T5 PDF to Text reads the text layer', 'quick brown fox' in txt and not errs, (txt[-200:], errs, cons[-6:]))
 
         # PDF tools that show page previews (pdf.js) after a PDF is chosen
         bad = []
