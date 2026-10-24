@@ -45,7 +45,9 @@ try:
             u = r.request.url
             if not (u.startswith(B) or u.startswith(('data:', 'blob:'))): return r.abort()
             path = u[len(B):].split('#')[0].split('?')[0]
-            if r.request.resource_type == 'document' and path in CSP:
+            # WebKit fails the requests of a page that Playwright fetched and handed over (seen in CI: P6 failed, P7 passed),
+            # so there each page keeps only its own <meta> policy; Chromium, Firefox and the Apache job check the headers.
+            if BROWSER != 'webkit' and r.request.resource_type == 'document' and path in CSP:
                 resp = r.fetch(); h = dict(resp.headers); h['content-security-policy'] = CSP[path]; return r.fulfill(response=resp, headers=h)
             r.continue_()
         ctx.route('**/*', handle)

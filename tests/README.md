@@ -77,7 +77,9 @@ Two cases are by design, not refusals: the **same version** is accepted as a rep
 
 Need Playwright with Chromium (`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`). `pages_test.py`, `tools_test.py` and `a11y_test.py` take `--browser chromium|firefox|webkit` (default Chromium; install the engine first with `python3 -m playwright install firefox webkit`). CI runs the page and Tools tests on Firefox and WebKit, and the accessibility check on Firefox, in the jobs `browser (firefox)` and `browser (webkit)`.
 
-Checks skipped in an engine: none so far. A check that cannot work in an engine is skipped by name, with the reason written here.
+Checks skipped in an engine: none. A check that cannot work in an engine is skipped by name, with the reason written here.
+
+One difference in how the test runs: `pages_test.py` adds each page's `.htaccess` security policy (the header Apache sends) by fetching the page itself and handing it to the browser. WebKit then fails every request that page makes (the browser stays logged out), so in WebKit the pages keep only their own `<meta>` policy, and P4 checks against that. The full header policies are checked in Chromium, Firefox and the Apache job. P7 logs in without any of this, in every engine.
 
 Refused content is found in every engine through the standard `securitypolicyviolation` event (`CSP_REPORTER` in `helpers.py`); each engine words its own console message differently.
 
