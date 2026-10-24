@@ -17,7 +17,15 @@ Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen'
 
 ## Python packages
 
-`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`.
+`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`. Every package is pinned to the version the tests pass with; Dependabot proposes the bumps each week (for these, the npm build tools and the GitHub Actions).
+
+The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web, jsPDF, pdf-lib, React in Tools) are copied files, not npm packages, so Dependabot does not see them. `check_libraries.py` and the weekly security check (`.github/workflows/weekly-check.yml`, which runs `check_libraries.py --audit` and `npm audit` every Monday and opens an issue labelled `security` on a failure) cover them.
+
+## Release script and lint
+
+- `python3 tools/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
+- `python3 tests/release_test.py`: tests `release.py` itself on a temporary copy of the repo (a bump, then each thing broken in turn must fail the check). Needs git.
+- `npx eslint src`: `no-undef`, `no-redeclare`, `no-dupe-keys`, `no-unreachable` and `no-const-assign` on the readable scripts in `src/web` (not Tools, not `vendor/`). `eslint.config.js` lists each page's real globals and says why.
 
 ## Update tests
 

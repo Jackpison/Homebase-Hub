@@ -1602,7 +1602,7 @@
     function encOn() { return !!(st.bk && st.bk.pp); }
     function encLabel() { return encOn() ? 'Passphrase Set' : (st.vault || st.lvault || (st.bk && st.bk.set)) ? 'Older Setting' : 'Off'; }
     function drawEnc() {
-      var b = body('enc'), bk = st.bk, on = encOn(), older = !on && !!(st.vault || st.lvault || bk.set);
+      var b = body('enc'), bk = st.bk, on = encOn();
       if (!bk.ok) { b.innerHTML = spinRow(); return; }
       var line = function (k, v) { return '<span><b>' + k + '</b>' + v + '</span>'; };
       var cnt = function (n, has, hint) { return has ? n + ' ' + (n === 1 ? 'tab' : 'tabs') + ' encrypted' : hint; };

@@ -32,7 +32,10 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 
 ```
 npm ci
+npx eslint src
 php tests/unit/run.php
+python3 tools/release.py --check
+python3 tests/release_test.py
 curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.1.33/phpstan.phar
 echo "48caad125554d6b416159db71dd7fd890295ba1a24b3650b49e32752e24fd6a0  phpstan.phar" | sha256sum -c -
 php -d memory_limit=1G phpstan.phar analyse --no-progress
@@ -50,8 +53,8 @@ All of them must pass. CI runs the same checks on every pull request and on ever
 
 ## Release checklist
 
-1. Raise the version: `HUB` in `src/web/core-data/lib/boot.php` and every `?v=` in the pages (search for the old number).
-2. Add a section to `src/web/docs/CHANGELOG.md` (`## X.Y.Z`, then `###` headings and short bullet points) and a row in its Version Map. Copy the file to the root `CHANGELOG.md`.
+1. On a clean working tree run `python3 tools/release.py X.Y.Z`. It raises `HUB` in `src/web/core-data/lib/boot.php` and every `?v=` of the old version in the pages, adds a `## X.Y.Z` section and a Version Map row to `src/web/docs/CHANGELOG.md`, each with a `TODO` marker, and copies the file to the root `CHANGELOG.md`.
+2. Replace the `TODO` markers (`###` headings and short bullet points in plain words; one line in the Version Map) and copy the file to the root `CHANGELOG.md` again. `python3 tools/release.py --check` must pass; CI and the release workflow run it too.
 3. If the minimum PHP changes, change `HUB_MIN_PHP` in `boot.php`; the build carries it into the zip.
 4. Run every check above on the final build.
 5. Commit, push `main`, and wait for CI to pass.

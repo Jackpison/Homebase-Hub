@@ -37,8 +37,12 @@ jobs:
           php -d memory_limit=1G phpstan.phar analyse --no-progress
       - name: Library safety check
         run: python3 tests/check_libraries.py
+      - name: Version agrees everywhere (tools/release.py --check) and its own test
+        run: python3 tools/release.py --check && python3 tests/release_test.py
       - name: Build
         run: npm ci && python3 tools/build.py
+      - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
+        run: npx eslint src
       - name: Check zip name and changelog
         run: |
           ls build/site-update-*.zip

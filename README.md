@@ -123,7 +123,7 @@ Every version is in [CHANGELOG.md](CHANGELOG.md) and on the [website](https://ja
 
 - Questions and feature requests: Telegram [@Jackpison](https://t.me/Jackpison)
 - Bugs: [GitHub Issues](https://github.com/Jackpison/Homebase-Hub/issues)
-- Security problems: please message on Telegram rather than opening a public issue
+- Security problems: please message on Telegram rather than opening a public issue (see [SECURITY.md](.github/SECURITY.md))
 
 ## Licence and credits
 

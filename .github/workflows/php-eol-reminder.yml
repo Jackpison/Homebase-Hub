@@ -1,0 +1,37 @@
+name: Yearly PHP reminder
+# PHP releases a new version every November. Mid-November this opens one issue with the checklist below.
+# It does not read php.net: a person compares the dates by hand.
+on:
+  schedule:
+    - cron: '0 8 15 11 *'
+  workflow_dispatch:
+permissions:
+  issues: write
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    name: open the reminder issue
+    steps:
+      - name: Open the issue (once per year)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          YEAR=$(date -u +%Y)
+          TITLE="Check the PHP support dates"
+          if gh issue list --state all --search "\"$TITLE\" in:title created:>=$YEAR-01-01" --json title --jq ".[] | select(.title == \"$TITLE\") | .title" | grep -q .; then
+            echo "Already opened this year."; exit 0
+          fi
+          cat > body.md <<'EOF'
+          PHP has (or soon has) a new version. Go through this list once a year.
+
+          - [ ] Compare `hub_php_eol()` in `src/web/core-data/lib/boot.php` with https://www.php.net/supported-versions and add the row for the new version.
+          - [ ] Decide whether `HUB_MIN_PHP` (same file) rises. The build carries it into the zip as `minPhp`.
+          - [ ] Update the PHP matrix in `.github/workflows/ci.yml` (`build`) and the PHP used by the other jobs.
+          - [ ] Update every "PHP 8.x" sentence: `README.md`, `src/web/docs/README.txt`, `website/content/index.html`, `website/content/install.html`, and the guide (`tools/make-guide.py`).
+          - [ ] Check test E6 in `tests/update_test.py` (it uses a fixed date) and the `hub_php_notice` checks in `tests/unit/logic_test.php`.
+          - [ ] Changelog entry (in the next release).
+          EOF
+          sed -i 's/^          //' body.md
+          gh label create maintenance --color 0E8A16 --description "Routine upkeep" 2>/dev/null || true
+          gh issue create --title "$TITLE" --label maintenance --body-file body.md

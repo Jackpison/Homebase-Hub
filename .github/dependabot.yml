@@ -1,4 +1,4 @@
-# GitHub proposes a pull request when an Action or a build tool (esbuild, axe-core) has a new version.
+# GitHub proposes a pull request when an Action, a build tool (esbuild, axe-core, eslint) or a Python test package has a new version.
 # Read it, check that CI passes, and merge. Nothing here changes the site itself.
 version: 2
 updates:
@@ -19,4 +19,13 @@ updates:
       prefix: "build"
     groups:
       build-tools:
+        patterns: ["*"]
+  - package-ecosystem: pip
+    directory: /tests
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "test"
+    groups:
+      test-tools:
         patterns: ["*"]
