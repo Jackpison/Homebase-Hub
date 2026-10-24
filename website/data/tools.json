@@ -1,0 +1,554 @@
+{
+ "categories": [
+  {
+   "id": "images",
+   "name": "Images"
+  },
+  {
+   "id": "photos",
+   "name": "Photos"
+  },
+  {
+   "id": "pdf",
+   "name": "PDF"
+  },
+  {
+   "id": "utilities",
+   "name": "Utilities"
+  }
+ ],
+ "tools": [
+  {
+   "id": "pdf-split",
+   "name": "Split PDF",
+   "cat": "pdf",
+   "desc": "Split into single pages, every N pages, custom ranges, or pick the pages to keep.",
+   "kw": [
+    "split",
+    "separate",
+    "extract pages",
+    "cut",
+    "divide",
+    "ranges"
+   ]
+  },
+  {
+   "id": "pdf-organize",
+   "name": "Organize PDF Pages",
+   "cat": "pdf",
+   "desc": "Reorder, rotate, delete and duplicate pages with thumbnails. Combine pages from several PDFs.",
+   "kw": [
+    "organize",
+    "reorder",
+    "rotate pages",
+    "delete pages",
+    "arrange",
+    "sort",
+    "remove page"
+   ]
+  },
+  {
+   "id": "pdf-sign",
+   "name": "Sign PDF",
+   "cat": "pdf",
+   "desc": "Draw, type or upload your signature and place it anywhere on the pages.",
+   "kw": [
+    "sign",
+    "signature",
+    "esign",
+    "autograph",
+    "initials"
+   ]
+  },
+  {
+   "id": "pdf-annotate",
+   "name": "Fill and Annotate PDF",
+   "cat": "pdf",
+   "desc": "Add text, dates, ticks, crosses, highlights and white-out to forms and documents.",
+   "kw": [
+    "fill",
+    "form",
+    "annotate",
+    "write",
+    "text",
+    "tick",
+    "check",
+    "whiteout",
+    "highlight",
+    "edit pdf"
+   ]
+  },
+  {
+   "id": "pdf-protect",
+   "name": "Protect or Unlock PDF",
+   "cat": "pdf",
+   "desc": "Add a password with AES-256, limit printing and copying, or remove a password you know.",
+   "kw": [
+    "password",
+    "protect",
+    "encrypt",
+    "lock",
+    "unlock",
+    "decrypt",
+    "secure",
+    "remove password"
+   ]
+  },
+  {
+   "id": "pdf-stamp",
+   "name": "Watermark and Page Numbers",
+   "cat": "pdf",
+   "desc": "Stamp text or a logo on every page and add page numbers in the style you like.",
+   "kw": [
+    "watermark",
+    "page numbers",
+    "numbering",
+    "stamp",
+    "confidential",
+    "draft",
+    "logo"
+   ]
+  },
+  {
+   "id": "pdf-text",
+   "name": "PDF and Image to Text",
+   "cat": "pdf",
+   "desc": "Copy the text out of PDFs and photos. Scanned pages are read with OCR, right in your browser.",
+   "kw": [
+    "ocr",
+    "text",
+    "extract",
+    "scan",
+    "read",
+    "copy text",
+    "image to text",
+    "tesseract"
+   ]
+  },
+  {
+   "id": "img-rotate",
+   "name": "Rotate and Flip",
+   "cat": "images",
+   "desc": "Rotate, flip and straighten photos one by one or in a batch, with automatic crop.",
+   "kw": [
+    "rotate",
+    "flip",
+    "mirror",
+    "straighten",
+    "turn",
+    "upside down",
+    "level"
+   ]
+  },
+  {
+   "id": "img-adjust",
+   "name": "Image Editor",
+   "cat": "images",
+   "desc": "Brightness, contrast, saturation, warmth, sharpness and one-tap filters.",
+   "kw": [
+    "edit",
+    "brightness",
+    "contrast",
+    "saturation",
+    "filter",
+    "enhance",
+    "sharpen",
+    "vignette",
+    "warm",
+    "black and white"
+   ]
+  },
+  {
+   "id": "img-watermark",
+   "name": "Watermark Images",
+   "cat": "images",
+   "desc": "Add text or your logo to many photos at once: position, tile, opacity and size.",
+   "kw": [
+    "watermark",
+    "logo",
+    "copyright",
+    "stamp",
+    "brand",
+    "protect photos"
+   ]
+  },
+  {
+   "id": "img-colors",
+   "name": "Color Picker and Palette",
+   "cat": "images",
+   "desc": "Pick any colour from an image and get its main palette as HEX, RGB and HSL.",
+   "kw": [
+    "color",
+    "colour",
+    "picker",
+    "palette",
+    "hex",
+    "rgb",
+    "eyedropper",
+    "scheme"
+   ]
+  },
+  {
+   "id": "img-beautify",
+   "name": "Screenshot Beautifier",
+   "cat": "images",
+   "desc": "Put screenshots on a gradient with padding, rounded corners, shadow and a window frame.",
+   "kw": [
+    "screenshot",
+    "mockup",
+    "beautify",
+    "frame",
+    "background",
+    "shadow",
+    "share",
+    "social"
+   ]
+  },
+  {
+   "id": "svg-png",
+   "name": "SVG to PNG",
+   "cat": "images",
+   "desc": "Turn SVG files or code into sharp PNG, JPG or WebP at any size.",
+   "kw": [
+    "svg",
+    "vector",
+    "convert",
+    "rasterize",
+    "icon",
+    "logo"
+   ]
+  },
+  {
+   "id": "img-base64",
+   "name": "Image to Base64",
+   "cat": "images",
+   "desc": "Make data URIs, CSS and HTML snippets from images, or turn Base64 back into a file.",
+   "kw": [
+    "base64",
+    "data uri",
+    "encode",
+    "decode",
+    "embed",
+    "css",
+    "html"
+   ]
+  },
+  {
+   "id": "bg-remove",
+   "name": "Background Remover",
+   "cat": "photos",
+   "desc": "Remove the background with on-device AI, touch it up, then keep it clear or put in a colour.",
+   "kw": [
+    "background",
+    "remove background",
+    "transparent",
+    "cutout",
+    "erase",
+    "remove bg",
+    "png"
+   ]
+  },
+  {
+   "id": "img-redact",
+   "name": "Blur and Redact",
+   "cat": "photos",
+   "desc": "Hide faces, number plates and ID numbers with blur, pixelation or solid boxes.",
+   "kw": [
+    "blur",
+    "redact",
+    "pixelate",
+    "hide",
+    "censor",
+    "privacy",
+    "face",
+    "number plate"
+   ]
+  },
+  {
+   "id": "id-photo",
+   "name": "Passport and ID Photo",
+   "cat": "photos",
+   "desc": "Crop to official sizes for passports, visas and ID cards, then print copies on one sheet.",
+   "kw": [
+    "passport",
+    "visa",
+    "id photo",
+    "pan card",
+    "35x45",
+    "2x2",
+    "print sheet",
+    "photo size"
+   ]
+  },
+  {
+   "id": "meme",
+   "name": "Meme and Text on Image",
+   "cat": "photos",
+   "desc": "Add bold captions or any text to a picture: fonts, outline, shadow, drag to place.",
+   "kw": [
+    "meme",
+    "caption",
+    "text on image",
+    "impact",
+    "quote",
+    "add text",
+    "poster"
+   ]
+  },
+  {
+   "id": "image-converter",
+   "name": "Image Converter",
+   "cat": "images",
+   "desc": "HEIC, PNG, WebP, TIFF, BMP, GIF or AVIF to JPG, PNG, WebP or AVIF. Batch supported.",
+   "kw": [
+    "convert",
+    "converter",
+    "format",
+    "iphone",
+    "samsung",
+    "heic to jpg",
+    "png to jpg",
+    "jpg to png",
+    "webp to jpg"
+   ]
+  },
+  {
+   "id": "image-compress",
+   "name": "Image Compressor",
+   "cat": "images",
+   "desc": "Shrink photos to a target size in KB or MB, or by quality. See exactly how much you saved.",
+   "kw": [
+    "compress",
+    "reduce",
+    "smaller",
+    "kb",
+    "mb",
+    "size",
+    "shrink",
+    "optimize",
+    "quality"
+   ]
+  },
+  {
+   "id": "image-resize",
+   "name": "Image Resizer",
+   "cat": "images",
+   "desc": "Resize by pixels or percentage with aspect lock, social presets and an optional size cap.",
+   "kw": [
+    "resize",
+    "dimensions",
+    "width",
+    "height",
+    "scale",
+    "pixels",
+    "instagram"
+   ]
+  },
+  {
+   "id": "pdf-compress",
+   "name": "PDF Compressor",
+   "cat": "pdf",
+   "desc": "Make PDFs smaller for email and uploads, with a clear before and after.",
+   "kw": [
+    "compress",
+    "reduce",
+    "smaller",
+    "shrink",
+    "size"
+   ]
+  },
+  {
+   "id": "pdf-merge",
+   "name": "Merge PDF",
+   "cat": "pdf",
+   "desc": "Combine several PDFs into one, in any order, without quality loss.",
+   "kw": [
+    "merge",
+    "combine",
+    "join"
+   ]
+  },
+  {
+   "id": "images-to-pdf",
+   "name": "Images → PDF",
+   "cat": "pdf",
+   "desc": "Turn JPG, PNG, HEIC or any images into one PDF. Reorder pages, pick size and margins.",
+   "kw": [
+    "jpg to pdf",
+    "png to pdf",
+    "photos to pdf",
+    "scan",
+    "image to pdf"
+   ]
+  },
+  {
+   "id": "pdf-to-images",
+   "name": "PDF → Images",
+   "cat": "pdf",
+   "desc": "Save every page, or a range, as JPG or PNG images.",
+   "kw": [
+    "pdf to jpg",
+    "pdf to png",
+    "pdf to image",
+    "extract",
+    "pages"
+   ]
+  },
+  {
+   "id": "image-crop",
+   "name": "Quick Crop",
+   "cat": "photos",
+   "desc": "Crop freely or to 1:1, 4:3, 3:2, 16:9, 9:16 or exact pixel sizes.",
+   "kw": [
+    "crop",
+    "cut",
+    "trim",
+    "aspect",
+    "ratio",
+    "square"
+   ]
+  },
+  {
+   "id": "circle-crop",
+   "name": "Circle Crop",
+   "cat": "photos",
+   "desc": "Round profile pictures with a transparent background and an optional border.",
+   "kw": [
+    "circle",
+    "round",
+    "profile",
+    "avatar",
+    "pfp"
+   ]
+  },
+  {
+   "id": "collage",
+   "name": "Collage Maker",
+   "cat": "photos",
+   "desc": "5 to 50 photos, 21 layouts, titles and watermarks. Export JPG, PNG, WebP or PDF.",
+   "kw": [
+    "collage",
+    "grid",
+    "montage",
+    "polaroid",
+    "layout"
+   ]
+  },
+  {
+   "id": "image-metadata",
+   "name": "Photo Metadata",
+   "cat": "photos",
+   "desc": "See the camera, date and GPS location hidden in photos, and remove it before sharing.",
+   "kw": [
+    "exif",
+    "gps",
+    "location",
+    "metadata",
+    "privacy",
+    "remove",
+    "strip"
+   ]
+  },
+  {
+   "id": "qr-generator",
+   "name": "QR Code Generator",
+   "cat": "utilities",
+   "desc": "QR codes for links, text, Wi-Fi, email and phone. Custom colours, PNG or SVG.",
+   "kw": [
+    "qr",
+    "qrcode",
+    "barcode",
+    "wifi"
+   ]
+  },
+  {
+   "id": "favicon",
+   "name": "Favicon Downloader & Maker",
+   "cat": "utilities",
+   "desc": "Grab any website's favicon, or turn your logo into a complete favicon pack with .ico and app icons.",
+   "kw": [
+    "favicon",
+    "icon",
+    "ico",
+    "website icon",
+    "apple touch icon",
+    "favicon generator",
+    "favicon downloader",
+    "logo"
+   ]
+  },
+  {
+   "id": "json-formatter",
+   "name": "JSON Formatter",
+   "cat": "utilities",
+   "desc": "Format, minify, sort and validate JSON with exact error locations.",
+   "kw": [
+    "json",
+    "format",
+    "beautify",
+    "validate",
+    "validator",
+    "minify",
+    "pretty"
+   ]
+  },
+  {
+   "id": "text-tools",
+   "name": "Text Tools",
+   "cat": "utilities",
+   "desc": "Word counter, case converter, Base64 and URL encoding in one place.",
+   "kw": [
+    "word count",
+    "counter",
+    "characters",
+    "case",
+    "uppercase",
+    "lowercase",
+    "title case",
+    "base64",
+    "url encode",
+    "decode",
+    "encode"
+   ]
+  },
+  {
+   "id": "generators",
+   "name": "Password & UUID",
+   "cat": "utilities",
+   "desc": "Strong random passwords and UUIDs, generated on your device.",
+   "kw": [
+    "password",
+    "random",
+    "secure",
+    "uuid",
+    "guid",
+    "generator"
+   ]
+  },
+  {
+   "id": "hash-generator",
+   "name": "Hash Generator",
+   "cat": "utilities",
+   "desc": "SHA-1, SHA-256, SHA-384 and SHA-512 checksums for text or files.",
+   "kw": [
+    "hash",
+    "checksum",
+    "sha256",
+    "sha1",
+    "verify",
+    "integrity"
+   ]
+  },
+  {
+   "id": "zip-creator",
+   "name": "ZIP Creator",
+   "cat": "utilities",
+   "desc": "Bundle any files into a ZIP archive, with a choice of compression.",
+   "kw": [
+    "zip",
+    "archive",
+    "bundle"
+   ]
+  }
+ ]
+}

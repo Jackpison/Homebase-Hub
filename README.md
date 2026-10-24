@@ -62,16 +62,16 @@ Start page, bookmarks, notes, cards, tasks and browser tools. One login, one loo
 
 ## Features
 
-Six pages share one login, one bar and one Settings page. Pick a name to see it on the website.
+Six pages share one login, one bar and one Settings page. Pick a name to see its own page on the website.
 
 | Page | What it does | Highlights |
 |---|---|---|
-| [🏠&nbsp;**Home**](https://jackpison.github.io/Homebase-Hub/#p-home) | A start page that feels like yours | Background photos that change, phone-sized copies that load fast, with or without the bar |
-| [🔖&nbsp;**Links**](https://jackpison.github.io/Homebase-Hub/#p-links) | Bookmarks in tabs and categories | Import from any browser, icons saved on your server, colours and sizes for each tab, encrypted tabs |
-| [📝&nbsp;**Info**](https://jackpison.github.io/Homebase-Hub/#p-info) | Notes in boxes, or as a document | 1 to 12 boxes in each tab, cards or one document with an outline, export as PDF or text |
-| [💳&nbsp;**Cards**](https://jackpison.github.io/Homebase-Hub/#p-cards) | Your cards in one searchable table | Filter by bank, network, type and holder, yearly charges added up, export to Excel |
-| [✅&nbsp;**Tasks**](https://jackpison.github.io/Homebase-Hub/#p-tasks) | Bills, renewals and chores | Due dates, repeats and prices, calendar and analytics, Year in Review PDF |
-| [🧰&nbsp;**Tools**](https://jackpison.github.io/Homebase-Hub/#p-tools) | Small tools that run in your browser | 36 tools: resize, crop and convert images, merge and sign PDFs, OCR, QR codes |
+| [🏠&nbsp;**Home**](https://jackpison.github.io/Homebase-Hub/features/home/) | A start page that feels like yours | Background photos that change, phone-sized copies that load fast, with or without the bar |
+| [🔖&nbsp;**Links**](https://jackpison.github.io/Homebase-Hub/features/links/) | Bookmarks in tabs and categories | Import from any browser, icons saved on your server, colours and sizes for each tab, encrypted tabs |
+| [📝&nbsp;**Info**](https://jackpison.github.io/Homebase-Hub/features/info/) | Notes in boxes, or as a document | 1 to 12 boxes in each tab, cards or one document with an outline, export as PDF or text |
+| [💳&nbsp;**Cards**](https://jackpison.github.io/Homebase-Hub/features/cards/) | Your cards in one searchable table | Filter by bank, network, type and holder, yearly charges added up, export to Excel |
+| [✅&nbsp;**Tasks**](https://jackpison.github.io/Homebase-Hub/features/tasks/) | Bills, renewals and chores | Due dates, repeats and prices, calendar and analytics, Year in Review PDF |
+| [🧰&nbsp;**Tools**](https://jackpison.github.io/Homebase-Hub/features/tools/) | Small tools that run in your browser | 36 tools: resize, crop and convert images, merge and sign PDFs, OCR, QR codes |
 
 And around the pages:
 

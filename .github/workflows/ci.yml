@@ -114,7 +114,11 @@ jobs:
       - name: Accessibility
         run: |
           set -o pipefail
-          python3 tests/a11y_test.py build/site-update-*.zip build/site 2>&1 | python3 tests/annotate.py "a11y chromium"
+          python3 tests/a11y_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "a11y chromium"
+      - name: Website (links, security policy, interactions, phone layout, accessibility in dark and light)
+        run: |
+          set -o pipefail
+          python3 tests/website_test.py build/site 2>&1 | python3 tests/annotate.py "website chromium"
 
   browsers:
     # The page and Tools tests (and accessibility on Firefox) in the other two engines, one job each so they run side by side
@@ -159,7 +163,12 @@ jobs:
         if: matrix.browser == 'firefox' && (success() || failure())
         run: |
           set -o pipefail
-          python3 tests/a11y_test.py build/site-update-*.zip build/site --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "a11y ${{ matrix.browser }}"
+          python3 tests/a11y_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "a11y ${{ matrix.browser }}"
+      - name: Website in ${{ matrix.browser }}
+        if: success() || failure()
+        run: |
+          set -o pipefail
+          python3 tests/website_test.py build/site --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "website ${{ matrix.browser }}"
 
   apache:
     # Installing Apache takes about five minutes on a fresh runner, so it runs beside the other tests instead of after them.

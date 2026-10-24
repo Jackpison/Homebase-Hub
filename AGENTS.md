@@ -11,9 +11,9 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 | `src/web/<page>/` | Each page: `home`, `links`, `info`, `cards`, `tasks`, `tools`, `settings`. |
 | `src/web/tools/assets/` | Tools, prebuilt and minified (there is no separate source). Small fixes are string edits in these files. |
 | `src/web/docs/` | `README.txt` and `CHANGELOG.md` (shipped inside every zip, closed to browsers). |
-| `tools/` | `build.py` (the zip), `tools-rev.py` (Tools fingerprint), `make-site.py` and `make-guide.py` (website and PDF guide), `make-latest.py`, `release-notes.py`. |
+| `tools/` | `build.py` (the zip), `tools-rev.py` (Tools fingerprint), `make-site.py`, `site_pages.py` and `make-guide.py` (website, its data-built pages, and the PDF guide), `make-latest.py`, `release-notes.py`. |
 | `tests/` | Update tests, browser tests, accessibility and library checks. See `tests/README.md`. |
-| `website/` | The GitHub Pages site: pages, styles, screenshots, logo. |
+| `website/` | The GitHub Pages site: `style.css`, `theme.js`, `site.js`, `content/` (Install, Guide, Security and Licence, written by hand), `data/tools.json` (the tool list), screenshots, logo. The home page, the six feature pages, Telegram, On your phone, the tool finder and the FAQ are built from `tools/site_pages.py`. The security policy allows no inline style or script, so colours come from classes and the numbered dots from a generated `hot.css`. |
 
 ## Rules
 
@@ -49,7 +49,8 @@ python3 tests/import_test.py build/site-update-X.Y.Z.zip
 python3 tests/app_test.py build/site-update-X.Y.Z.zip
 python3 tests/tools_test.py build/site-update-X.Y.Z.zip
 python3 tests/pages_test.py build/site-update-X.Y.Z.zip
-python3 tests/a11y_test.py build/site-update-X.Y.Z.zip build/site
+python3 tests/a11y_test.py build/site-update-X.Y.Z.zip
+python3 tests/website_test.py build/site            # after python3 tools/make-site.py --no-guide
 sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/apache_test.py
 ```
 

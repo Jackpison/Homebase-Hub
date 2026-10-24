@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Accessibility check with axe-core (WCAG 2.1 A and AA rules) on every app page, in dark and light mode, and on the website.
+"""Accessibility check with axe-core (WCAG 2.1 A and AA rules) on every app page, in dark and light mode.
   npm i --no-save axe-core
-  python3 tests/a11y_test.py build/site-update-X.Y.Z.zip [build/site]
+  python3 tests/a11y_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ and Playwright with Chromium (or --browser firefox|webkit). Nothing leaves this computer."""
 import http.cookiejar, http.server, json, os, re, shutil, socketserver, subprocess, sys, tempfile, threading, time, urllib.request, zipfile
 from functools import partial
@@ -18,8 +18,7 @@ while d and not AXE_PATH:
     d = None if os.path.dirname(d) == d else os.path.dirname(d)
 if not AXE_PATH: sys.exit('axe-core is missing: run  npm i --no-save axe-core')
 AXE = open(AXE_PATH, encoding='utf-8').read()
-ZIP = sys.argv[1]; SITE = sys.argv[2] if len(sys.argv) > 2 else None
-if SITE and not os.path.isfile(os.path.join(SITE, 'index.html')): sys.exit('No website in %s: build it first with  python3 tools/make-site.py --no-guide' % SITE)
+ZIP = sys.argv[1]
 PORT = 8197; B = 'http://127.0.0.1:%d' % PORT; UA = 'A11yTest/1.0'
 D = tempfile.mkdtemp(); zipfile.ZipFile(ZIP).extractall(D)
 php = subprocess.Popen(['php', '-S', '127.0.0.1:%d' % PORT, '-t', D], env=dict(os.environ, PHP_CLI_SERVER_WORKERS='6'), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -59,13 +58,7 @@ try:
             pg.set_input_files('#impFile', os.path.join(HERE, 'bookmarks', 'chrome.html')); pg.wait_for_timeout(600)
             check('Links: Import Bookmarks dialog (%s)' % theme, scan(pg))
             ctx.close()
-        if SITE:
-            H = partial(http.server.SimpleHTTPRequestHandler, directory=SITE); H.log_message = lambda *a: None
-            srv = socketserver.TCPServer(('127.0.0.1', 8198), H); threading.Thread(target=srv.serve_forever, daemon=True).start()
-            pg = b.new_context(bypass_csp=True).new_page()
-            for path in ('/', '/install/', '/guide/', '/security/', '/changelog/', '/about/'):
-                pg.goto('http://127.0.0.1:8198' + path); pg.wait_for_timeout(400); check('Website %s (dark)' % path, scan(pg))
-            pg.goto('http://127.0.0.1:8198/'); pg.wait_for_timeout(400); pg.click('.mode'); pg.wait_for_timeout(300); check('Website / (light)', scan(pg)); srv.shutdown()
+        # the website is checked, with axe, in dark and light on every page, by tests/website_test.py
         b.close()
 finally:
     php.terminate(); shutil.rmtree(D, ignore_errors=True)

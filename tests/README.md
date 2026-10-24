@@ -73,6 +73,18 @@ Two cases are by design, not refusals: the **same version** is accepted as a rep
 
 `python3 tests/import_test.py build/site-update-X.Y.Z.zip [--browser ...]` (port 8850) runs Links > Import Bookmarks in a real browser with the exports in `tests/bookmarks/` (Chrome, Firefox with its folder descriptions, Safari without an outer list, 12 levels deep, duplicates, a hostile file, an empty file, a web page that is not bookmarks) plus a PNG, 5,001 links, a file over 5 MB and 3,000 links made by the test. It checks the preview numbers, the result message, exactly what Links saved, a private new tab, an existing tab (its links kept, nothing added twice), that encrypted tabs are never offered, the six-tab limit, that nothing from the hostile file ran or became markup, undo through Earlier Versions, that the importer loads only when first used, and axe on the open dialog.
 
+## Website
+
+`python3 tests/website_test.py build/site [--browser chromium|firefox|webkit]` (after `python3 tools/make-site.py --no-guide`; needs Playwright and axe-core). It checks the built site and then drives it in a real browser:
+
+- **Files:** every link, image, script and style on every page exists; every `#anchor` exists; the sitemap lists real pages; the old `install.html` addresses still forward; every link from the README to the website works (pages and anchors such as `#p-links`); the tools on the website are exactly the tools in the Tools bundle (`website/data/tools.json` against `src/web/tools/assets/index-ToolsAll.js`, so a new tool fails this test until the list is updated).
+- **Policy:** no inline style or script, no event-handler attributes, nothing from other sites (the pages carry a policy that allows none), and no console error or policy violation on any page at 1280 and 390 pixels.
+- **Basics:** a title, a 50 to 200 character description, one h1 and a canonical address on each page; alt text on every image.
+- **Behaviour:** light and dark follow the device (`color_scheme`), the toggle overrides and is remembered; the tour tabs work by mouse, by arrow keys, by `/#p-info` links, and with scripts off all six panels show; the look picker re-colours the buttons and is remembered across pages; the example Telegram chat; the tool finder (search, category chips, no match); the question search; the phone menu and the phone steps.
+- **Layout and accessibility:** no sideways scrolling at 390 or 1280 pixels; axe (WCAG 2.1 A and AA) on every page in dark and in light.
+
+Colours are CSS `light-dark()` values, so one set follows the device; `theme.js` only sets `data-theme` when the visitor has used the toggle. Axe cannot judge text over the soft glows behind the heroes: look at screenshots when you change those.
+
 ## Install on a phone
 
 `python3 tests/app_test.py build/site-update-X.Y.Z.zip` (Chromium, ports 8890-8891): the manifest is valid JSON served as `application/manifest+json`, GET only and public; `start_url` (Home) is inside `scope` (the site root); every icon exists as a PNG of the stated size; the name and shortcuts follow a changed site name and the bar's names, order and hidden pages; all of this also from a sub-folder install (`/hub/`); every page has the manifest, theme colour and iPhone tags and they resolve; Chromium's `Page.getInstallabilityErrors` and `Page.getAppManifest` report nothing for the top, Home and the sub-folder Home; no service worker exists apart from Tools' own; the Settings card shows its steps, hides Install until the browser offers it, then opens the browser's prompt once. Chromium needs no service worker to install the site, so none was added. The Apache test (A7) checks the manifest and its icons with the real `.htaccess` files.
@@ -93,7 +105,7 @@ Refused content is found in every engine through the standard `securitypolicyvio
 
 - `python3 tests/tools_test.py build/site-update-X.Y.Z.zip`: every tool opens without an error, and real PDFs and images go through the main tools (convert, compress, merge, text, resize, QR, and the PDF tools with page previews).
 - `python3 tests/pages_test.py build/site-update-X.Y.Z.zip`: every page and every Settings section loads with no error and no broken request, and the Cards Excel export opens.
-- `python3 tests/a11y_test.py build/site-update-X.Y.Z.zip build/site`: axe-core (WCAG 2.1 A and AA) on every app page in dark and light mode and on the website. Needs `npm i --no-save axe-core` and the website built with `python3 tools/make-site.py --no-guide`.
+- `python3 tests/a11y_test.py build/site-update-X.Y.Z.zip`: axe-core (WCAG 2.1 A and AA) on every app page in dark and light mode, and on Links' Import Bookmarks dialog and Settings > General.
 
 The fixture files (`fixture-*.pdf`, `fixture-image.png`, `favicon-fixture.png`) are small test inputs made for these tests.
 
