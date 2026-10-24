@@ -184,7 +184,7 @@ def browser_login(pg, base, pw=PW, timeout=15000):
     """Logs in through the site's own login dialog, the way a person does (works the same in every engine).
     Returns '' when logged in, else what the dialog said."""
     pg.goto(base + '/web/links/', wait_until='domcontentloaded')
-    pg.wait_for_function("!!(window.HUB && HUB.login)", timeout=timeout)
+    wait_js(pg, "!!(window.HUB && HUB.login)", timeout)
     if pg.evaluate("HUB.isAdmin && HUB.isAdmin()"): return ''
     pg.evaluate("void HUB.login()")
     pg.wait_for_selector('#ix-pw', timeout=timeout)
@@ -197,3 +197,16 @@ def browser_login(pg, base, pw=PW, timeout=15000):
         except Exception: pass
         pg.wait_for_timeout(250)
     return said or 'not logged in'
+
+
+def wait_js(pg, expr, timeout=15000, step=200):
+    """Waits until a JavaScript expression is true in the page. Playwright's wait_for_function with a string runs eval
+    inside the page, which the site's security policy refuses; evaluate is not affected. Survives a page reload."""
+    end = time.time() + timeout / 1000
+    while True:
+        try:
+            if pg.evaluate(expr): return True
+        except Exception:
+            pass
+        if time.time() > end: raise TimeoutError('waited %d ms for: %s' % (timeout, expr))
+        pg.wait_for_timeout(step)
