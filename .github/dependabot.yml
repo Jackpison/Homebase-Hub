@@ -29,3 +29,12 @@ updates:
     groups:
       test-tools:
         patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /tools-app
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "tools"
+    groups:
+      tools-libraries:
+        patterns: ["*"]

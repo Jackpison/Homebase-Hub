@@ -19,7 +19,7 @@ const rules = {
 };
 
 module.exports = [
-  { ignores: ['src/web/tools/assets/**', '**/vendor/**', 'build/**', 'node_modules/**', 'website/**', 'tests/**', 'tools/**'] },
+  { ignores: ['src/web/tools/assets/**', '**/vendor/**', 'build/**', '**/node_modules/**', 'website/**', 'tests/**', 'tools/**'] },
   { files: ['src/web/**/*.js'], languageOptions: { ecmaVersion: 2022, sourceType: 'script', globals: site }, rules },
   { files: ['src/web/cards/assets/cards.js', 'src/web/info/assets/info.js', 'src/web/tasks/assets/tasks.js'],
     languageOptions: { globals: ownHelpers } },
@@ -27,6 +27,8 @@ module.exports = [
   // (top-level names in info.js). It checks with typeof that they exist before using them.
   { files: ['src/web/core-data/assets/shell.js'],
     languageOptions: { globals: { TABS: 'readonly', showTab: 'readonly', setHighlight: 'readonly' } } },
+  // The Tools page's source (tools-app/): ES modules bundled by esbuild.
+  { files: ['tools-app/src/**/*.js', 'tools-app/build.mjs'], languageOptions: { ecmaVersion: 2022, sourceType: 'module', globals: { ...globals.browser, ...globals.node } }, rules },
   // The Tools service worker runs in a worker, not a page.
   { files: ['src/web/tools/sw.js'], languageOptions: { globals: { ...globals.serviceworker } } },
 ];
