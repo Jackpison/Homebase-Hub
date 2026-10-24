@@ -64,8 +64,8 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.44.1">
-<script src="../core-data/assets/shell.js?v=1.44.1" data-app="home"></script>
+<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.44.2">
+<script src="../core-data/assets/shell.js?v=1.44.2" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <?php if ($iconPath): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php endif; ?>
 <?php if ($first && ($first['type'] ?? 'image') === 'image'): ?>

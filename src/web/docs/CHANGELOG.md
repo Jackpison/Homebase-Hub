@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.44.2 | PDF to Text works in Safari; Earlier Versions never overwrites the version being restored; no stale "ready to apply" update after a refused upload; many more tests, now also in Firefox and WebKit |
 | 1.44.1 | Cleaner padlock pictures for private and encrypted tabs; Server Check rows laid out properly, and no false warning for the favicon service; a more compact Tools start box |
 | 1.44.0 | Telegram: Snooze buttons under Due Now messages and a `/snooze` command; a slightly smaller update zip; more tests behind the scenes |
 | 1.43.1 | Tools loads its code once (the React error in the console is gone); pages pre-load when you hover over their link in the bar |
@@ -62,6 +63,22 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.44.2
+
+### Fixes
+
+- **PDF to Text works in Safari.** Since 1.43.0, PDF to Text failed in Safari and other browsers built on WebKit: the PDF reader used a way of reading text those browsers do not have. Tools now adds it where it is missing.
+- **Earlier Versions no longer loses the version you pick.** Restoring a version made in the same second as the restore (for example, undoing a restore straight away) could overwrite that version first. A kept copy now always gets a name of its own; Links' own backups do the same.
+- **Updates: no stale "ready to apply".** If a checked update was waiting and you then uploaded a zip that was refused, Settings still showed the first update as ready, and Apply failed with a server error. The waiting update is now cleared, and Apply or Go Back with nothing ready says so plainly.
+
+### Behind the scenes
+
+- **Stricter upload pieces.** An update upload now refuses piece numbers that are not plain whole numbers.
+- **More tests, more browsers.** New tests cover backup and restore, two-step login, Start Over, the login lockout and the security token on every action (`tests/core_test.py`), and 65 kinds of damaged or hostile update zips (`tests/update_attack_test.py`). The page and Tools tests now also run in Firefox and WebKit, which is how the Safari problem was found.
+- **Upkeep.** A weekly security check of the bundled libraries, a yearly reminder to check PHP's support dates, `tools/release.py` for the version bump, ESLint, and a security policy (SECURITY.md).
 
 ---
 
