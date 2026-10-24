@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.45.0 | Import Bookmarks in Links: bookmarks from any browser, with a preview, into a new or existing tab, easy to undo; readable main buttons in Links' light mode |
 | 1.44.2 | PDF to Text works in Safari; Earlier Versions never overwrites the version being restored; no stale "ready to apply" update after a refused upload; many more tests, now also in Firefox and WebKit |
 | 1.44.1 | Cleaner padlock pictures for private and encrypted tabs; Server Check rows laid out properly, and no false warning for the favicon service; a more compact Tools start box |
 | 1.44.0 | Telegram: Snooze buttons under Due Now messages and a `/snooze` command; a slightly smaller update zip; more tests behind the scenes |
@@ -63,6 +64,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.45.0
+
+### New: Import Bookmarks
+
+- **Bring your bookmarks from any browser.** In Links, the pencil menu has **Import Bookmarks**. Export your bookmarks from Chrome, Edge, Firefox, Brave, Opera or Safari (each saves an .html file), pick the file, and see a preview first: how many links, which folder becomes which category, how many are already in Links, and what will be left out.
+- **Where they go.** Into a new tab (you can make it private) or into one of your tabs. Folders become categories, and a folder inside a folder becomes "Folder / Subfolder". Links already in that tab are not added twice. Encrypted tabs are never written to.
+- **Safe with any file.** The file is read in your browser and never uploaded; only the links are saved. Addresses that are not web links (such as javascript: or file:) are left out, and titles are kept as plain text. Up to 5,000 links and 5 MB at a time.
+- **Easy to undo.** Links keeps a copy from just before the import, in Settings › Backup & Restore › Earlier Versions. Choose **Fetch Icons** afterwards to save the new links' icons.
+
+### Fix
+
+- **Readable buttons in light mode.** The main button in Links' dialogs (Save, Import and the rest) had white text on a gold that was slightly too light to read well. A deeper gold now meets the accessibility standard.
 
 ---
 
