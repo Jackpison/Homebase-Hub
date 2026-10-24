@@ -4,8 +4,6 @@
 
 <h1 align="center">Homebase Hub</h1>
 
-<p align="center"><img src="website/brand/social-preview.png" alt="Homebase Hub: start page, bookmarks, notes, cards, tasks and tools, on your own server" width="860"></p>
-
 <p align="center"><b>Everything you open every day, in one private place on your own hosting.</b><br>
 Start page, bookmarks, notes, cards, tasks and browser tools. One login, one look, no database.</p>
 
@@ -37,6 +35,8 @@ Start page, bookmarks, notes, cards, tasks and browser tools. One login, one loo
 <a href="#contributing">Contributing</a> &nbsp;·&nbsp;
 <a href="https://jackpison.github.io/Homebase-Hub/changelog/">Changelog</a>
 </p>
+
+<p align="center"><img src="website/brand/social-preview.png" alt="Homebase Hub: start page, bookmarks, notes, cards, tasks and tools, on your own server" width="860"></p>
 
 ---
 
@@ -194,7 +194,7 @@ Optional. Set it up in **Settings > Telegram** and your site can message you:
 | ♻️&nbsp;**Safe updates** | They come only from this project's GitHub releases, are checked before anything changes, and need your password. Releases are not signed: the checksum catches damaged downloads, not a compromised account. |
 | ⏳&nbsp;**PHP support** | Settings tells you when your PHP stops getting security fixes. |
 
-More on the [Security page](https://jackpison.github.io/Homebase-Hub/security/). To report a problem, see [SECURITY.md](.github/SECURITY.md): please message on Telegram rather than opening a public issue.
+More on the [Security page](https://jackpison.github.io/Homebase-Hub/security/). To report a problem, [open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose). For anything else, message me on Telegram: [@Jackpison](https://t.me/Jackpison).
 
 ### Where things are stored
 
