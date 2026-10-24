@@ -43,13 +43,15 @@ python3 tests/check_libraries.py
 python3 tools/build.py
 python3 tools/make-site.py --no-guide
 python3 tests/update_test.py build/site-update-X.Y.Z.zip <previous release zip> <an older release zip>
+python3 tests/update_attack_test.py build/site-update-X.Y.Z.zip
+python3 tests/core_test.py build/site-update-X.Y.Z.zip
 python3 tests/tools_test.py build/site-update-X.Y.Z.zip
 python3 tests/pages_test.py build/site-update-X.Y.Z.zip
 python3 tests/a11y_test.py build/site-update-X.Y.Z.zip build/site
 sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/apache_test.py
 ```
 
-All of them must pass. CI runs the same checks on every pull request and on every push to `main`.
+All of them must pass. CI runs the same checks on every pull request and on every push to `main`, and also runs the page and Tools tests on Firefox and WebKit (`--browser firefox|webkit`) and the accessibility check on Firefox.
 
 ## Release checklist
 

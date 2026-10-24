@@ -85,12 +85,50 @@ jobs:
           gh release download v1.37.0 -p 'site-update-*.zip' -D rel-old
       - name: Update tests
         run: python3 tests/update_test.py build/site-update-*.zip rel-prev/site-update-*.zip rel-old/site-update-*.zip
+      - name: Hostile update zips
+        run: python3 tests/update_attack_test.py build/site-update-*.zip
+      - name: Core features (backup, two-step login, Start Over, lockout, security token)
+        run: python3 tests/core_test.py build/site-update-*.zip
       - name: Tools in a browser
         run: python3 tests/tools_test.py build/site-update-*.zip
       - name: Pages in a browser
         run: python3 tests/pages_test.py build/site-update-*.zip
       - name: Accessibility
         run: python3 tests/a11y_test.py build/site-update-*.zip build/site
+
+  browsers:
+    # The page and Tools tests (and accessibility on Firefox) in the other two engines, one job each so they run side by side
+    # and a failure names the browser.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    name: browser (${{ matrix.browser }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24', cache: npm }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
+      - name: Tools for the tests
+        run: |
+          npm ci
+          pip install -r tests/requirements.txt
+          python -m playwright install --with-deps ${{ matrix.browser }}
+      - name: Build the zip and the website
+        run: python3 tools/build.py && python3 tools/make-site.py --no-guide
+      - name: Pages in ${{ matrix.browser }}
+        if: success() || failure()
+        run: python3 tests/pages_test.py build/site-update-*.zip --browser ${{ matrix.browser }}
+      - name: Tools in ${{ matrix.browser }}
+        if: success() || failure()
+        run: python3 tests/tools_test.py build/site-update-*.zip --browser ${{ matrix.browser }}
+      - name: Accessibility in ${{ matrix.browser }}
+        if: matrix.browser == 'firefox' && (success() || failure())
+        run: python3 tests/a11y_test.py build/site-update-*.zip build/site --browser ${{ matrix.browser }}
 
   apache:
     # Installing Apache takes about five minutes on a fresh runner, so it runs beside the other tests instead of after them.

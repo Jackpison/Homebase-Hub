@@ -161,6 +161,12 @@ function up_status(): array {
             'staged' => $s['staged'] ?? null, 'notes' => isset($s['staged']) ? (string)($s['notes'] ?? '') : '', 'plan' => isset($s['staged']) ? ($s['plan'] ?? null) : null, 'previous' => $prev, 'last' => $s['last'] ?? null, 'autoUndo' => !isset($s['autoUndo']) || !empty($s['autoUndo']), 'gh' => (function () { require_once __DIR__ . '/ghupdate.php'; return gh_info(); })()];
 }
 
+/** The id, i and n of an upload piece from the address, or null when one is missing or not a plain whole number ("zz" is not 0). */
+function up_chunk_args(array $q): ?array {
+    $id = $q['id'] ?? null; $i = $q['i'] ?? null; $n = $q['n'] ?? null;
+    if (!is_string($id) || !is_string($i) || !is_string($n) || !preg_match('/^\d{1,4}$/', $i) || !preg_match('/^\d{1,4}$/', $n)) return null;
+    return [$id, (int)$i, (int)$n];
+}
 /** One piece of the upload. The pieces arrive in order; the last one completes the zip. */
 function up_chunk(string $id, int $i, int $n, string $data): array {
     if (!preg_match('/^[a-f0-9]{16}$/', $id) || $n < 1 || $n > 256 || $i < 0 || $i >= $n) return ['ok' => false, 'error' => 'That piece of the upload makes no sense.'];
@@ -190,6 +196,9 @@ function up_check(string $name): array {
     $add = function (bool $ok, string $title, string $note = '') use (&$checks, &$block) { $checks[] = ['ok' => $ok, 'title' => $title, 'note' => $note]; if (!$ok) $block[] = $note !== '' ? $note : $title; };
     if (!is_file($zip)) return ['ok' => false, 'error' => 'Nothing has been uploaded yet.'];
     $stage = up_dir() . '/staging'; if (is_dir($stage)) hub_rm_tree($stage);
+    // the staging folder is gone, so an update checked earlier is no longer ready: forget it (Settings showed it as ready,
+    // and Apply then failed when this new zip was refused)
+    $s0 = up_state(); if (isset($s0['staged']) || isset($s0['plan'])) { unset($s0['staged'], $s0['plan'], $s0['notes']); up_state_save($s0); }
     $fail = function (string $why) use (&$checks) { return ['ok' => false, 'error' => $why, 'checks' => $checks]; };
     try { $entries = up_zip_entries($zip); } catch (RuntimeException $e) { return $fail($e->getMessage()); }
     $files = []; $seen = []; $total = 0; $bad = [];
@@ -346,17 +355,17 @@ function up_self_check(string $expect): ?bool {
 /** Applies the checked zip (Update) or the saved version ($fromPrevious: Go Back). */
 function up_apply(bool $fromPrevious, bool $autoUndo): array {
     ignore_user_abort(true); @set_time_limit(300);
-    $lk = fopen(up_dir() . '/apply.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['ok' => false, 'error' => 'An update is already running. Wait a minute and look again.'];
+    $lk = fopen(up_dir() . '/apply.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['ok' => false, 'code' => 409, 'error' => 'An update is already running. Wait a minute and look again.'];
     try {
         up_neutralise_saved();
         $root = up_root(); $s = up_state();
         if ($fromPrevious) {
-            if (!is_file(up_dir() . '/previous/web/core-data/manifest.json')) return ['ok' => false, 'error' => 'There is no saved version to go back to.'];
+            if (!is_file(up_dir() . '/previous/web/core-data/manifest.json')) return ['ok' => false, 'code' => 409, 'error' => 'There is no saved version to go back to.'];
             $src = up_dir() . '/previous'; $target = (up_manifest($src) ?? ['version' => '?'])['version'];
         } else {
             $st = $s['staged'] ?? null; $src = up_dir() . '/staging';
-            if (!$st || !is_file($src . '/web/core-data/manifest.json')) return ['ok' => false, 'error' => 'There is no checked update to apply. Upload the zip again.'];
-            $sm = up_manifest($src); if (!$sm || $sm['version'] !== $st['version']) return ['ok' => false, 'error' => 'The checked update changed. Upload the zip again.'];
+            if (!$st || !is_file($src . '/web/core-data/manifest.json')) return ['ok' => false, 'code' => 409, 'error' => 'There is no checked update to apply. Upload the zip again.'];
+            $sm = up_manifest($src); if (!$sm || $sm['version'] !== $st['version']) return ['ok' => false, 'code' => 409, 'error' => 'The checked update changed. Upload the zip again.'];
             $target = $sm['version'];
         }
         $fromVersion = HUB; $oldMan = up_manifest();

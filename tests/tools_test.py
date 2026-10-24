@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Tools in a real browser: every tool opens without an error, and the main PDF and image tools turn real files into real downloads.
   python3 tests/tools_test.py build/site-update-X.Y.Z.zip
-Needs PHP 8.3+ and Playwright with Chromium (pip install playwright; python3 -m playwright install chromium).
+Needs PHP 8.3+ and Playwright with Chromium (or --browser firefox|webkit) (pip install playwright; python3 -m playwright install chromium).
 Nothing leaves this computer: every request to another site is blocked."""
 import io, os, re, shutil, subprocess, sys, tempfile, time, zipfile
 from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from helpers import browser_name, launch, CSP_REPORTER
+BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 ZIP = sys.argv[1]; PORT = 8190; B = 'http://127.0.0.1:%d' % PORT
 D = tempfile.mkdtemp(); zipfile.ZipFile(ZIP).extractall(D)
@@ -40,7 +43,7 @@ def body(dl):
 
 try:
     with sync_playwright() as p:
-        b = p.chromium.launch(args=['--no-sandbox'])
+        b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1280, 'height': 900}, accept_downloads=True)
         ctx.route('**/*', lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith(('data:', 'blob:')) else r.abort())
         pg = ctx.new_page(); errs = []

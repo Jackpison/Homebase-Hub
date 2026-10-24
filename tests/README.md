@@ -45,13 +45,37 @@ PHP's built-in server ignores `.htaccess`, so the browser blocks on `site-data`,
 
 `prepend.php` is loaded only by these tests (`php -d auto_prepend_file=...`). It points the site at the stand-in. The site itself never defines those constants.
 
+## Shared helper
+
+`helpers.py` holds what the tests that run a real site share: `Site(zip, port)` installs a zip into `/tmp/site<port>`, starts PHP's built-in server, sets the site up and logs in; `site.get()` and `site.post()` call the API as that browser (cookies, User-Agent, security token); `site.client('other/1.0')` is a second browser on the same site; `site.chunks()` uploads a zip in pieces; `mutate_zip()` makes a copy of a release with another version or PHP minimum; `Checks()` prints PASS or FAIL and the total. It also has `--browser` handling for the browser tests.
+
+## Core features
+
+`python3 tests/core_test.py build/site-update-X.Y.Z.zip` (no browser, about a minute, ports 8700 to 8760):
+
+- **Backup and restore:** with demo data, a full backup, a change, a restore (whole and one part), a one-tab backup merged back, Earlier Versions undoing a restore, and a file that is not a backup refused. An encrypted backup opens with the right passphrase (the same PBKDF2 and AES-GCM steps the browser uses) and not with a wrong one. A backup never holds the password, its hash, the two-step secret, recovery codes, the passphrase or the backup key.
+- **Two-step login:** turned on with a code computed in the test (RFC 6238), then the password alone is not enough, a wrong code and a reused code are refused, a recovery code works once, New Recovery Codes replaces the old ones, a trusted browser skips the code but never the password, and Log Out Other Devices, one device from the Devices list, and a password change each end the other sessions.
+- **Start Over:** needs ERASE and the password; afterwards pages, media, settings, Telegram, the watch list and the passphrase are gone, and the password and two-step login remain.
+- **Login lockout:** five wrong passwords pause logins for 15 minutes, then 30, never more than a day. The test moves the clock by editing the rate-limit file in its own copy instead of waiting. The limit is per address: another browser at the same address shares the pause, a second address (127.0.0.2) does not. A right password clears the count for that address.
+- **Security token:** every action in `api.php` that changes something (found by reading the file) refuses a request without the token, with a wrong one, and from a visitor who is not logged in.
+
+## Hostile update zips
+
+`python3 tests/update_attack_test.py build/site-update-X.Y.Z.zip` (about a minute, ports 8800 to 8810, a few hundred MB in `/tmp`). Each zip goes through the real upload and check and must be refused with a sentence (never a PHP error, a blank page or a 500), and afterwards the version, `files_scan`, `site-data` and the code are unchanged and nothing was written outside the site. Cases: `../` and `..\` paths, absolute paths and drive letters, a null byte, names over 200 characters, 120 folders deep, duplicates and names that differ only in case, non-ASCII names, symlinks, files outside `web/` and `index.php`, `site-data`, `config.php`, the pictures folder, PHP files in the wrong place, a fingerprint that does not match, files missing from or extra to the list, a list naming a path outside the site, a missing or broken `manifest.json`, a PHP syntax error, no updater, a version mismatch, an older version, `minPhp` 99.0, a declared size of 2 GB, a zip bomb (60 MB of zeros declared as 1 KB), 474 MB unpacked, an upload over 128 MB, files that are not zips, the zip cut at 50 places and 200 random bit flips (fixed seed), and the chunk upload abused (bad id, n or i, out of order, twice, no token, a second upload while one is staged).
+
+Two cases are by design, not refusals: the **same version** is accepted as a repair of the installed files (the screen says so), and a **bit flip in a field no file depends on** (a date or an attribute) can still give a valid zip; the test then checks that every file matched its fingerprint. Many cases use a smaller but valid update (the release without the Tools files) so that 250 uploads take seconds, not minutes.
+
 ## Library check
 
 `python3 tests/check_libraries.py` checks that the two known problems in bundled libraries (pdf.js in Tools and SheetJS in Cards) cannot be reached: every place that opens a PDF sets `isEvalSupported:false`, and no code reads Excel files. With `--audit` it also asks npm for advisories on the exact versions and fails on any new one. CI runs the offline part on every push.
 
 ## Browser tests
 
-Need Playwright with Chromium (`pip install playwright openpyxl pypdf`, then `python3 -m playwright install chromium`).
+Need Playwright with Chromium (`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`). `pages_test.py`, `tools_test.py` and `a11y_test.py` take `--browser chromium|firefox|webkit` (default Chromium; install the engine first with `python3 -m playwright install firefox webkit`). CI runs the page and Tools tests on Firefox and WebKit, and the accessibility check on Firefox, in the jobs `browser (firefox)` and `browser (webkit)`.
+
+Checks skipped in an engine: none so far. A check that cannot work in an engine is skipped by name, with the reason written here.
+
+Refused content is found in every engine through the standard `securitypolicyviolation` event (`CSP_REPORTER` in `helpers.py`); each engine words its own console message differently.
 
 - `python3 tests/tools_test.py build/site-update-X.Y.Z.zip`: every tool opens without an error, and real PDFs and images go through the main tools (convert, compress, merge, text, resize, QR, and the PDF tools with page previews).
 - `python3 tests/pages_test.py build/site-update-X.Y.Z.zip`: every page and every Settings section loads with no error and no broken request, and the Cards Excel export opens.

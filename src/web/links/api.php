@@ -131,7 +131,7 @@ function write_data($data, $forceBackup = false) {
         $files = backup_files();
         if ($forceBackup || !$files || time() - filemtime($files[0]) >= BM_BACKUP_EVERY) {
             need_dir($backupDir);
-            write_guarded($backupDir . '/bookmarks-' . date('Ymd-His') . '.php', current_raw());
+            write_guarded(hub_version_path($backupDir, 'bookmarks-'), current_raw());
             $files = backup_files();
             foreach (array_slice($files, BM_MAX_BACKUPS) as $old) @unlink($old);
         }

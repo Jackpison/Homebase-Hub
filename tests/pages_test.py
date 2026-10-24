@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Every page and every Settings section in a real browser, with demo data: no page error, no broken request, and the Cards Excel export opens.
   python3 tests/pages_test.py build/site-update-X.Y.Z.zip
-Needs PHP 8.3+ and Playwright with Chromium; openpyxl is used to read the Excel file when it is installed.
+Needs PHP 8.3+ and Playwright with Chromium (or --browser firefox|webkit); openpyxl is used to read the Excel file when it is installed.
 Nothing leaves this computer: every request to another site is blocked."""
 import io, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.request, http.cookiejar, zipfile
 from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from helpers import browser_name, launch, CSP_REPORTER
+BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 ZIP = sys.argv[1]; PORT = 8195; B = 'http://127.0.0.1:%d' % PORT; UA = 'PagesTest/1.0'; PW = 'correct horse battery staple'
 D = tempfile.mkdtemp(); zipfile.ZipFile(ZIP).extractall(D)
@@ -29,9 +32,10 @@ try:
     cookies = [{'name': c.name, 'value': c.value, 'domain': '127.0.0.1', 'path': '/'} for c in cj]
     panes = re.findall(r"\['([a-z]+)', '[A-Z][^']*', ICON", open(D + '/web/docs/src/core-data/shell-admin.src.js', encoding='utf-8').read())
     with sync_playwright() as p:
-        b = p.chromium.launch(args=['--no-sandbox'])
+        b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(user_agent=UA, accept_downloads=True, viewport={'width': 1280, 'height': 860}); ctx.add_cookies(cookies)
         ctx.add_init_script("try{localStorage.setItem('ix-seen-ver','%s')}catch(e){}" % ver)
+        ctx.add_init_script(CSP_REPORTER)
         # PHP's test server ignores .htaccess, so each page gets the security policy Apache would send, read from its own .htaccess
         CSP = {}
         for app in ('links', 'info', 'cards', 'tasks', 'tools', 'settings'):
@@ -48,7 +52,7 @@ try:
         pg = ctx.new_page(); errs = []; bad = []
         pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
         refused = []; tools_main = set()
-        pg.on('console', lambda m: refused.append(m.text[:160]) if m.type in ('error', 'warning') and ('Content Security Policy' in m.text or 'Refused to' in m.text or 'React error' in m.text) else None)
+        pg.on('console', lambda m: refused.append(m.text[:160]) if m.type in ('error', 'warning') and ('Content Security Policy' in m.text or 'Content-Security-Policy' in m.text or 'Refused to' in m.text or 'React error' in m.text) else None)
         pg.on('request', lambda r: tools_main.add(r.url.replace(B, '')) if 'index-ToolsAll.js' in r.url else None)
         pg.on('response', lambda r: bad.append((r.status, r.url.replace(B, ''))) if r.url.startswith(B) and r.status >= 400 else None)
         problems = []

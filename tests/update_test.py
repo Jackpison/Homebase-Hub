@@ -3,9 +3,8 @@
 Needs PHP 8.3+ with curl, zip and mbstring. See tests/README.md."""
 import json, os, shutil, subprocess, sys, threading, time, urllib.request, urllib.error, http.cookiejar, zipfile, hashlib, http.server, socketserver, glob
 
-UA = 'ghtest/1.0'
-PW = 'correct horse battery staple'
-HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from helpers import UA, PW, HERE, Site, Checks, mutate_zip, zip_version, sha, stop_all
 if len(sys.argv) < 4:
     sys.exit('Usage: python3 tests/update_test.py CURRENT.zip PREVIOUS.zip OLDER.zip\n'
              '  CURRENT   the zip just built (tools/build.py)\n'
@@ -15,32 +14,12 @@ if len(sys.argv) < 4:
 CUR, REL38, OLD = sys.argv[1:4]
 import re, tempfile, urllib.parse
 
-def zip_version(p): return re.search(r"define\('HUB', '([^']+)'\)", zipfile.ZipFile(p).read('web/core-data/lib/boot.php').decode()).group(1)
-
-def mutate_zip(src, dst, version=None, minphp=None):
-    """A copy of a release zip with another version and/or minPhp, its file list kept consistent."""
-    zin = zipfile.ZipFile(src); items = {i.filename: zin.read(i.filename) for i in zin.infolist()}
-    man = json.loads(items['web/core-data/manifest.json'])
-    def put(n, data): items[n] = data; man['files'][n] = hashlib.sha256(data).hexdigest()
-    if version:
-        put('web/core-data/lib/boot.php', re.sub(r"define\('HUB', '[^']+'\)", "define('HUB', '%s')" % version, items['web/core-data/lib/boot.php'].decode()).encode())
-        man['version'] = version
-        for ch in ('web/docs/CHANGELOG.md',):
-            if ch in items:
-                x = items[ch].decode(); i = x.index('\n## '); put(ch, (x[:i] + '\n## %s\n\n### Test build\n\nTest build.\n\n---\n' % version + x[i:]).encode())
-    if minphp: man['minPhp'] = minphp
-    items['web/core-data/manifest.json'] = json.dumps(man).encode()
-    with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as z:
-        for n, d in items.items(): z.writestr(n, d)
-    return dst
-
 CURV, PREVV, OLDV = zip_version(CUR), zip_version(REL38), zip_version(OLD)
 _p = CURV.split('.'); NEXTV = '%s.%s.%d' % (_p[0], _p[1], int(_p[2]) + 1); NEXT2V = '%s.%s.%d' % (_p[0], _p[1], int(_p[2]) + 2)
 TMP = tempfile.mkdtemp()
 NEW = mutate_zip(CUR, TMP + '/next.zip', version=NEXTV)
 _cl = zipfile.ZipFile(CUR).read('web/docs/CHANGELOG.md').decode()
 NOTEMARK = re.search(r'^## ' + re.escape(CURV) + r'\b[^\n]*\n+### ([^\n]+)', _cl, re.M).group(1)   # first heading of the newest notes
-def sha(p): return hashlib.sha256(open(p, 'rb').read()).hexdigest()
 
 # ---------- stand-in for GitHub ----------
 ROUTES, LOG = {}, []
@@ -65,46 +44,8 @@ def route_good(ver=f'{NEXTV}', zp=NEW, **over):
     d.update(over); ROUTES['/latest.json'] = jl(d)
     LOG.clear()
 
-# ---------- sites ----------
-procs = []
-class Site:
-    def __init__(self, zp, port):
-        self.dir = '/tmp/site%d' % port; shutil.rmtree(self.dir, ignore_errors=True); os.makedirs(self.dir)
-        zipfile.ZipFile(zp).extractall(self.dir)
-        env = dict(os.environ, PHP_CLI_SERVER_WORKERS='6')
-        self.p = subprocess.Popen(['php', '-d', 'auto_prepend_file=' + os.path.join(HERE, 'prepend.php'), '-S', '127.0.0.1:%d' % port, '-t', self.dir], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        procs.append(self.p); self.base = 'http://127.0.0.1:%d' % port
-        self.cj = http.cookiejar.CookieJar(); self.op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cj))
-        time.sleep(1.0); self.csrf = ''
-        self.get('state')
-        code = open(self.dir + '/site-data/core/SETUP-CODE.php').read()
-        import re; code = re.search(r'([A-Z0-9]{4}(?:-[A-Z0-9]{4})+|[A-Z0-9]{8,})', code.split('?>')[-1] if '?>' in code else code.replace('<?php', '')).group(1)
-        r = self.post('setup', {'code': code, 'password': PW}); assert r.get('ok'), r
-        self.csrf = r.get('csrf') or self.get('state').get('csrf', ''); assert self.csrf, r
-    def req(self, url, data=None, method=None, hdr=None):
-        h = {'User-Agent': UA}; h.update(hdr or {})
-        rq = urllib.request.Request(url, data=data, headers=h, method=method)
-        try: r = self.op.open(rq, timeout=300); return json.loads(r.read() or b'{}')
-        except urllib.error.HTTPError as e:
-            b = e.read()
-            try: j = json.loads(b)
-            except Exception: j = {'error': b[:200].decode('latin1')}
-            j['_status'] = e.code; return j
-    def get(self, a): return self.req(self.base + '/web/core-data/api.php?action=' + a)
-    def post(self, a, b=None, qs=''): return self.req(self.base + '/web/core-data/api.php?action=' + a + qs, data=json.dumps(b or {}).encode(), method='POST', hdr={'Content-Type': 'application/json', 'X-Hub-CSRF': self.csrf})
-    def chunks(self, zp, name):
-        raw = open(zp, 'rb').read(); n = max(1, -(-len(raw) // 1048576)); id = os.urandom(8).hex()
-        for i in range(n):
-            r = self.req(self.base + '/web/core-data/api.php?action=update_chunk&id=%s&i=%d&n=%d' % (id, i, n), data=raw[i*1048576:(i+1)*1048576], method='POST', hdr={'Content-Type': 'application/octet-stream', 'X-Hub-CSRF': self.csrf}); assert r.get('ok'), r
-        return self.post('update_check', {'name': name})
-    def version(self): return open(self.dir + '/web/core-data/lib/boot.php').read().split("define('HUB', '")[1].split("'")[0]
-    def clean(self):
-        sc = self.get('files_scan'); return (len(sc.get('changed', [])), len(sc.get('missing', [])), len(sc.get('extra', [])), sc.get('matched'))
-    def incoming(self): return [os.path.basename(f) for f in glob.glob(self.dir + '/site-data/updates/incoming*')]
-
-res = []
-def check(name, cond, extra=''):
-    res.append(bool(cond)); print(('PASS ' if cond else 'FAIL ') + name + (('  -> ' + str(extra)[:220]) if (extra and not cond) else ''))
+# ---------- sites (tests/helpers.py) ----------
+check = Checks(); res = check.res
 
 try:
     # ===== A. the GitHub path, 1.38.0 -> 1.39.1 =====
@@ -241,6 +182,5 @@ try:
     out = subprocess.run(['php', '-r', prog], capture_output=True, text=True).stdout.strip()
     check('F8 only a real PNG of a sensible size is passed on (not a GIF, a web page or a stub)', out == 'ynnn', out)
 finally:
-    for p in procs: p.terminate()
-print('\n%d/%d passed' % (sum(res), len(res)))
-sys.exit(0 if all(res) else 1)
+    stop_all()
+sys.exit(check.done())

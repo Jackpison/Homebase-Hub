@@ -203,6 +203,18 @@ function hub_ip(): string {
     return $r;
 }
 
+/**
+ * A free file name for an earlier version, made from the current second: "<dir>/<prefix>20261024-090702.php", or with -2, -3...
+ * when that name is taken (two saves in one second must not overwrite each other, and restoring a version made in the same
+ * second must not overwrite the version being restored).
+ */
+function hub_version_path(string $dir, string $prefix = '', ?int $now = null): string {
+    $base = $dir . '/' . $prefix . date('Ymd-His', $now ?? time());
+    $p = $base . '.php';
+    for ($i = 2; is_file($p) && $i < 1000; $i++) $p = $base . '-' . $i . '.php';
+    return $p;
+}
+
 /* ======================= login lockout ======================= */
 
 function hub_rate_file(): string { return hub_dir('core') . '/ratelimit.php'; }

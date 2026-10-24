@@ -419,7 +419,7 @@ case 'version_restore':
     if (!isset($where[$app]) || !preg_match($where[$app][2], $id) || !is_file($where[$app][0] . '/' . $id)) hub_json(404, ['ok' => false, 'error' => 'That version is gone.']);
     [$dir, $target] = $where[$app];
     // keep what's there now, so this restore can be undone too
-    if (is_file($target)) @copy($target, $dir . '/' . ($app === 'links' ? 'bookmarks-' . date('Ymd-His') . '.php' : date('Ymd-His') . '.php'));
+    if (is_file($target)) @copy($target, hub_version_path($dir, $app === 'links' ? 'bookmarks-' : ''));   // a free name: never the version being restored
     $content = (string)file_get_contents($dir . '/' . $id);
     if ($app === 'links') {   // an earlier version of this site: Links' encrypted tabs keep the key this site uses now
         $old = hub_read_guarded($dir . '/' . $id); $now = hub_read_guarded($target);
@@ -511,7 +511,8 @@ case 'update_status':
 case 'update_chunk':   // one piece (about 1 MB) of the zip, sent as the raw request body
     need_post(); need_admin();
     require_once __DIR__ . '/lib/update.php';
-    $r = up_chunk((string)($_GET['id'] ?? ''), (int)($_GET['i'] ?? -1), (int)($_GET['n'] ?? 0), (string)file_get_contents('php://input', false, null, 0, 4194305));
+    $ca = up_chunk_args($_GET);
+    $r = $ca ? up_chunk($ca[0], $ca[1], $ca[2], (string)file_get_contents('php://input', false, null, 0, 4194305)) : ['ok' => false, 'error' => 'That piece of the upload makes no sense.'];
     hub_json($r['ok'] ? 200 : 400, $r);
 
 case 'update_check':   // checks the uploaded zip completely; changes nothing on the site
@@ -546,7 +547,8 @@ case 'update_apply':   // applies the checked zip, or goes back to the saved ver
     require_once __DIR__ . '/lib/update.php';
     if (isset($b['autoUndo'])) { $us = up_state(); $us['autoUndo'] = (bool)$b['autoUndo']; up_state_save($us); }
     $us = up_state(); $r = up_apply(!empty($b['back']), !isset($us['autoUndo']) || !empty($us['autoUndo']));
-    hub_json($r['ok'] ? 200 : 500, $r);
+    $code = $r['ok'] ? 200 : (int)($r['code'] ?? 500); unset($r['code']);   // 409: nothing ready to apply (not a server failure)
+    hub_json($code, $r);
 
 case 'update_autoundo':
     need_post(); need_admin();

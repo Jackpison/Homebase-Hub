@@ -2,12 +2,15 @@
 """Accessibility check with axe-core (WCAG 2.1 A and AA rules) on every app page, in dark and light mode, and on the website.
   npm i --no-save axe-core
   python3 tests/a11y_test.py build/site-update-X.Y.Z.zip [build/site]
-Needs PHP 8.3+ and Playwright with Chromium. Nothing leaves this computer."""
+Needs PHP 8.3+ and Playwright with Chromium (or --browser firefox|webkit). Nothing leaves this computer."""
 import http.cookiejar, http.server, json, os, re, shutil, socketserver, subprocess, sys, tempfile, threading, time, urllib.request, zipfile
 from functools import partial
 from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from helpers import browser_name, launch, CSP_REPORTER
+BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 AXE_PATH, d = None, ROOT   # npm puts it in the nearest node_modules: the repo's, or a parent folder's
 while d and not AXE_PATH:
@@ -41,7 +44,7 @@ try:
     pages = [('Home', '/'), ('Links', '/web/links/'), ('Info', '/web/info/'), ('Cards', '/web/cards/'), ('Tasks', '/web/tasks/'), ('Tools', '/web/tools/'),
              ('Tools: a tool', '/web/tools/#/tool/image-resize'), ('Settings', '/web/settings/#overview'), ('Settings: Security', '/web/settings/#security'), ('Settings: Updates', '/web/settings/#updates')]
     with sync_playwright() as p:
-        b = p.chromium.launch(args=['--no-sandbox'])
+        b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         for theme in ('dark', 'light'):
             ctx = b.new_context(bypass_csp=True, user_agent=UA, viewport={'width': 1280, 'height': 860})
             ctx.add_cookies([{'name': c.name, 'value': c.value, 'domain': '127.0.0.1', 'path': '/'} for c in cj])

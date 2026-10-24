@@ -301,7 +301,7 @@ function bk_restore_link_icons($icons): void {
 function bk_keep_links_version(array $cur): void {
     $dir = hub_dir('links') . '/backups';
     if (!is_dir($dir)) @mkdir($dir, 0700, true);
-    hub_write_guarded($dir . '/bookmarks-' . date('Ymd-His') . '.php', $cur);
+    hub_write_guarded(hub_version_path($dir, 'bookmarks-'), $cur);
     $files = glob($dir . '/*.php') ?: []; sort($files);
     while (count($files) > 40) @unlink(array_shift($files));
 }
