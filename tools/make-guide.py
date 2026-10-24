@@ -152,7 +152,7 @@ story += chapter('5', 'Links', 'Bookmarks in tabs, each with categories of links
  shot('links-crop', 'Links with six categories. Each link shows its saved icon.'),
  *sub('Edit your bookmarks'),
  steps(['Open the pencil menu in the bar and choose %s.' % C('Edit This Page'), 'Add, rename, reorder or remove tabs, categories and links.', 'Press %s when you are finished.' % C('Done Editing')]),
- P('The pencil menu also has %s (saves each link\'s icon on your server), %s, %s and %s.' % (C('Fetch Icons'), C('Column Colors'), C('Text Sizes'), C('Export'))),
+ P('The pencil menu also has %s, %s (saves each link\'s icon on your server), %s, %s and %s.' % (C('Import Bookmarks'), C('Fetch Icons'), C('Colors'), C('Text Sizes'), C('Page Settings'))),
  *sub('Import from your browser'),
  steps(['In your browser, open the bookmarks manager and choose %s. Chrome, Edge, Firefox, Brave, Opera and Safari all save an .html file.' % C('Export Bookmarks'),
         'In Links, open the pencil menu and choose %s, then pick that file.' % C('Import Bookmarks'),
