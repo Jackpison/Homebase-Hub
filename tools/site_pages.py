@@ -55,7 +55,7 @@ FEATURES = [
          details=[('image', 'Photos with credit', 'Each photo keeps its credit in the corner.'), ('phone', 'Phone-sized copies', 'Large photos get a smaller copy for phones, so the page opens quickly.'),
                   ('settings', 'With or without the bar', 'Show the start page full screen, or keep the bar. It is a setting in Settings, General, Navigation.'), ('search', 'Search from anywhere', 'Press / or Ctrl+K on any page to search Links, Info, Tasks and Tools at once.')],
          tour=[('Photos that change', 'A background photo for your start page.'), ('Credit in the corner', 'Every photo keeps its credit, so you know whose picture it is.')],
-         hot=[(38, 58), (88, 9)], everyday=('Ten tabs to open every morning', 'One bar with every page, and search on /')),
+         hot=[(38, 58), (78, 7)], everyday=('Ten tabs to open every morning', 'One bar with every page, and search on /')),
     dict(id='links', name='Links', ac='a-links', icon='link', url='yourdomain.com/web/links',
          h1='Every bookmark, *in its place*.',
          lead='Bookmarks in tabs and categories, with icons saved on your server. Bring yours from any browser in a minute.',
@@ -70,7 +70,7 @@ FEATURES = [
                   ('palette', 'Colours and sizes', 'Each tab can have its own column colours and text sizes.'), ('lock', 'Encrypted tabs', 'Tabs can be encrypted with your passphrase. The keys are made in your browser.')],
          tour=[('Tabs and categories', 'Group links in categories, and the categories in tabs.'), ('Icons on your server', 'Fetch Icons saves each link\'s icon, so pages load without asking other sites.'),
                ('Private and encrypted tabs', 'Make a tab private, or encrypt it with your passphrase.')],
-         hot=[(30, 13), (9, 31), (53, 13)], everyday=('Bookmarks stuck in one browser', 'Import from any browser, preview first, undo anytime')),
+         hot=[(12, 13), (9, 31), (56, 13)], everyday=('Bookmarks stuck in one browser', 'Import from any browser, preview first, undo anytime')),
     dict(id='info', name='Info', ac='a-info', icon='note', url='yourdomain.com/web/info',
          h1='Notes you can *actually find*.',
          lead='Notes in tabs. Each tab holds 1 to 12 boxes, or is written as one document with an outline.',
@@ -123,7 +123,7 @@ FEATURES = [
          details=[('tools', 'Heavy engines load on demand', 'OCR, background removal and PDF encryption load only when a tool needs them.'), ('star', 'Favourites and your own order', 'Star favourites, drag tools to reorder them or move them between sections, and hide the ones you never use.'),
                   ('table', 'Side menu or tabs', 'Show the sections as a side menu, or as tabs on top. Phones always get tabs.'), ('search', 'Search them all', 'Find a tool by name or by what it does.')],
          tour=[('Search first', 'Type what you want to do and the right tool appears.'), ('Recently used', 'Your recent tools are one click away.'), ('Sections', 'Images, Photos, PDF and Utilities, plus Favourites.')],
-         hot=[(50, 27), (50, 56), (9, 40)], everyday=('Sketchy free PDF websites', '36 tools that run in your own browser')),
+         hot=[(55, 38), (30, 70), (9, 40)], everyday=('Sketchy free PDF websites', '36 tools that run in your own browser')),
 ]
 BY = {f['id']: f for f in FEATURES}
 for _f in FEATURES: assert len(_f['tour']) == len(_f['hot']), _f['id']

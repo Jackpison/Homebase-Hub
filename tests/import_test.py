@@ -15,7 +15,7 @@ ZIP = sys.argv[1]
 FX = os.path.join(HERE, 'bookmarks')
 ROOT = os.path.dirname(HERE)
 AXE = open(os.path.join(ROOT, 'node_modules', 'axe-core', 'axe.min.js'), encoding='utf-8').read()
-AXE_RUN = "async()=>{const r=await axe.run(document.querySelector('#impDlg'),{resultTypes:['violations'],runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return r.violations.map(v=>v.id+' x'+v.nodes.length+' '+v.nodes[0].target.join(' '))}"
+AXE_RUN = "async()=>{const r=await axe.run(document.querySelector('#impDlg'),{resultTypes:['violations'],runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return r.violations.map(v=>v.id+' x'+v.nodes.length+' '+v.nodes[0].target.join(' ')+' '+JSON.stringify(((v.nodes[0].any||[])[0]||{}).data||{}).slice(0,260))}"
 check = Checks()
 TMP = tempfile.mkdtemp(prefix='hub-import-')
 
@@ -172,6 +172,8 @@ try:
         opts = pg.evaluate("[...document.querySelectorAll('#impTab option')].map(o => o.value)")
         check('I35b an encrypted tab is never offered as a target', 'locked1' not in opts and 'daily' in opts, opts)
         choose('chrome.html')
+        pg.mouse.move(2, 2)   # a hovered button is slightly lighter: axe must see the resting colours
+        pg.wait_for_timeout(200)
         pg.evaluate(AXE)
         viol = pg.evaluate(AXE_RUN)
         check('I36 axe (WCAG 2.1 A and AA) finds nothing in the open dialog with a preview', not viol, viol)
