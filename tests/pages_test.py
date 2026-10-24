@@ -67,7 +67,10 @@ try:
         check('P5 Tools loads its main file once (one copy of React)', len(tools_main) == 1, sorted(tools_main))
         pg.goto(B + '/web/cards/'); pg.wait_for_timeout(1500)
         admin = pg.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())")
-        check('P6 the browser is logged in (the login cookie was accepted)', admin)
+        diag = '' if admin else (
+            [(c['name'], c['domain'], c['path'], c.get('sameSite'), c.get('secure'), c.get('expires')) for c in ctx.cookies()],
+            pg.evaluate("fetch('../core-data/api.php?action=state', {credentials: 'same-origin'}).then(r => r.json()).then(j => ({admin: j.admin}), e => String(e))"))
+        check('P6 the browser is logged in (the login cookie was accepted)', admin, diag)
         with pg.expect_download(timeout=20000) as dl: pg.evaluate("document.querySelector('[data-a=xlsx]').click()")
         data = open(dl.value.path(), 'rb').read()
         try:

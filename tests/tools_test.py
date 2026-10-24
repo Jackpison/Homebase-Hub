@@ -102,6 +102,20 @@ try:
         pg.locator('main textarea, main input[type=text], main input[type=url]').first.fill('https://example.com')
         pg.wait_for_timeout(600); d = act(pg, 'Download PNG'); data = body(d)
         check('T8 QR Code Generator downloads a PNG', data[:8] == b'\x89PNG\r\n\x1a\n' and not errs, (data[:8], errs))
+        # 10. a browser that cannot loop over a ReadableStream with for await (Safari, WebKit): pdf.js reads text that way,
+        # so Tools adds it. Here the browser's own version is removed first, to prove the added one works everywhere.
+        ctx2 = b.new_context(viewport={'width': 1280, 'height': 900})
+        ctx2.add_init_script("try{delete ReadableStream.prototype[Symbol.asyncIterator]}catch(e){}")
+        ctx2.route('**/*', lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith(('data:', 'blob:')) else r.abort())
+        main_pg = pg; pg = ctx2.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        tool('pdf-text', [F('fixture-3pages.pdf')]); act(pg, 'Text Layer Only', download=False); act(pg, 'Get the Text', download=False)
+        txt = ''
+        for _ in range(40):
+            txt = ' '.join(pg.locator('main textarea').nth(i).input_value() for i in range(pg.locator('main textarea').count())) + pg.locator('main').inner_text()
+            if 'quick brown fox' in txt: break
+            pg.wait_for_timeout(500)
+        check('T10 PDF to Text works in a browser without for await over streams (Safari, WebKit)', 'quick brown fox' in txt and not errs, (txt[-200:], errs))
+        pg = main_pg; ctx2.close()
         b.close()
 finally:
     php.terminate(); shutil.rmtree(D, ignore_errors=True)
