@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from helpers import browser_name, launch, CSP_REPORTER
+from helpers import browser_name, launch, browser_login, CSP_REPORTER
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 ZIP = sys.argv[1]; PORT = 8195; B = 'http://127.0.0.1:%d' % PORT; UA = 'PagesTest/1.0'; PW = 'correct horse battery staple'
@@ -34,10 +34,6 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(user_agent=UA, accept_downloads=True, viewport={'width': 1280, 'height': 860})
-        # log in through the browser context, so the server's own Set-Cookie lands in this engine's cookie store
-        # (planting the cookie with add_cookies is not accepted by WebKit for an IP address)
-        lr = ctx.request.post(B + '/web/core-data/api.php?action=login', data=json.dumps({'password': PW}), headers={'Content-Type': 'application/json'})
-        check('P0 the browser logs in', lr.ok and lr.json().get('ok'), lr.text()[:200])
         ctx.add_init_script("try{localStorage.setItem('ix-seen-ver','%s')}catch(e){}" % ver)
         ctx.add_init_script(CSP_REPORTER)
         # PHP's test server ignores .htaccess, so each page gets the security policy Apache would send, read from its own .htaccess
@@ -54,6 +50,8 @@ try:
             r.continue_()
         ctx.route('**/*', handle)
         pg = ctx.new_page(); errs = []; bad = []
+        why = browser_login(pg, B, PW)
+        check('P0 the browser logs in through the login dialog', why == '', why)
         pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
         refused = []; tools_main = set()
         pg.on('console', lambda m: refused.append(m.text[:160]) if m.type in ('error', 'warning') and ('Content Security Policy' in m.text or 'Content-Security-Policy' in m.text or 'Refused to' in m.text or 'React error' in m.text) else None)

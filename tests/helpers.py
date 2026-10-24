@@ -178,3 +178,22 @@ def launch(p, name):
 
 # Every engine fires this event when its security policy refuses something; the message wording differs per engine.
 CSP_REPORTER = "document.addEventListener('securitypolicyviolation', function (e) { console.error('Refused to load (security policy): ' + e.violatedDirective + ' ' + e.blockedURI); });"
+
+
+def browser_login(pg, base, pw=PW, timeout=15000):
+    """Logs in through the site's own login dialog, the way a person does (works the same in every engine).
+    Returns '' when logged in, else what the dialog said."""
+    pg.goto(base + '/web/links/', wait_until='domcontentloaded')
+    pg.wait_for_function("!!(window.HUB && HUB.login)", timeout=timeout)
+    if pg.evaluate("HUB.isAdmin && HUB.isAdmin()"): return ''
+    pg.evaluate("void HUB.login()")
+    pg.wait_for_selector('#ix-pw', timeout=timeout)
+    pg.fill('#ix-pw', pw); pg.click('#ix-lg')
+    end = time.time() + timeout / 1000; said = ''
+    while time.time() < end:   # the page may reload after logging in, so look again until it says so
+        try:
+            if pg.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())"): return ''
+            said = pg.evaluate("(document.querySelector('#ix-le') || {}).textContent || ''") or said
+        except Exception: pass
+        pg.wait_for_timeout(250)
+    return said or 'not logged in'

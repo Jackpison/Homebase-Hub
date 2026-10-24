@@ -17,7 +17,7 @@ php = subprocess.Popen(['php', '-S', '127.0.0.1:%d' % PORT, '-t', D], env=dict(o
 time.sleep(1)
 res = []
 def check(name, ok, extra=''):
-    res.append(bool(ok)); print(('PASS ' if ok else 'FAIL ') + name + ('' if ok or not extra else '  -> ' + str(extra)[:240]))
+    res.append(bool(ok)); print(('PASS ' if ok else 'FAIL ') + name + ('' if ok or not extra else '  -> ' + str(extra)[:1500]))
 
 # the tool list comes from the Tools code itself, so a new tool is covered without editing this file
 bundle = zipfile.ZipFile(ZIP).read('web/tools/assets/index-ToolsAll.js').decode('utf-8', 'replace')
