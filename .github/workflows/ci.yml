@@ -84,17 +84,29 @@ jobs:
           gh release download "$PREV" -p 'site-update-*.zip' -D rel-prev
           gh release download v1.37.0 -p 'site-update-*.zip' -D rel-old
       - name: Update tests
-        run: python3 tests/update_test.py build/site-update-*.zip rel-prev/site-update-*.zip rel-old/site-update-*.zip
+        run: |
+          set -o pipefail
+          python3 tests/update_test.py build/site-update-*.zip rel-prev/site-update-*.zip rel-old/site-update-*.zip 2>&1 | python3 tests/annotate.py "updates"
       - name: Hostile update zips
-        run: python3 tests/update_attack_test.py build/site-update-*.zip
+        run: |
+          set -o pipefail
+          python3 tests/update_attack_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "hostile zips"
       - name: Core features (backup, two-step login, Start Over, lockout, security token)
-        run: python3 tests/core_test.py build/site-update-*.zip
+        run: |
+          set -o pipefail
+          python3 tests/core_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "core"
       - name: Tools in a browser
-        run: python3 tests/tools_test.py build/site-update-*.zip
+        run: |
+          set -o pipefail
+          python3 tests/tools_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "tools chromium"
       - name: Pages in a browser
-        run: python3 tests/pages_test.py build/site-update-*.zip
+        run: |
+          set -o pipefail
+          python3 tests/pages_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "pages chromium"
       - name: Accessibility
-        run: python3 tests/a11y_test.py build/site-update-*.zip build/site
+        run: |
+          set -o pipefail
+          python3 tests/a11y_test.py build/site-update-*.zip build/site 2>&1 | python3 tests/annotate.py "a11y chromium"
 
   browsers:
     # The page and Tools tests (and accessibility on Firefox) in the other two engines, one job each so they run side by side
@@ -122,13 +134,19 @@ jobs:
         run: python3 tools/build.py && python3 tools/make-site.py --no-guide
       - name: Pages in ${{ matrix.browser }}
         if: success() || failure()
-        run: python3 tests/pages_test.py build/site-update-*.zip --browser ${{ matrix.browser }}
+        run: |
+          set -o pipefail
+          python3 tests/pages_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "pages ${{ matrix.browser }}"
       - name: Tools in ${{ matrix.browser }}
         if: success() || failure()
-        run: python3 tests/tools_test.py build/site-update-*.zip --browser ${{ matrix.browser }}
+        run: |
+          set -o pipefail
+          python3 tests/tools_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "tools ${{ matrix.browser }}"
       - name: Accessibility in ${{ matrix.browser }}
         if: matrix.browser == 'firefox' && (success() || failure())
-        run: python3 tests/a11y_test.py build/site-update-*.zip build/site --browser ${{ matrix.browser }}
+        run: |
+          set -o pipefail
+          python3 tests/a11y_test.py build/site-update-*.zip build/site --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "a11y ${{ matrix.browser }}"
 
   apache:
     # Installing Apache takes about five minutes on a fresh runner, so it runs beside the other tests instead of after them.

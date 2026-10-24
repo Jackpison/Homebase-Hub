@@ -45,6 +45,10 @@ PHP's built-in server ignores `.htaccess`, so the browser blocks on `site-data`,
 
 `prepend.php` is loaded only by these tests (`php -d auto_prepend_file=...`). It points the site at the stand-in. The site itself never defines those constants.
 
+## CI annotations
+
+`annotate.py` passes a test's output through and turns each FAIL line (and a crash's last line) into a GitHub annotation, so failures show on the run page without opening the log.
+
 ## Shared helper
 
 `helpers.py` holds what the tests that run a real site share: `Site(zip, port)` installs a zip into `/tmp/site<port>`, starts PHP's built-in server, sets the site up and logs in; `site.get()` and `site.post()` call the API as that browser (cookies, User-Agent, security token); `site.client('other/1.0')` is a second browser on the same site; `site.chunks()` uploads a zip in pieces; `mutate_zip()` makes a copy of a release with another version or PHP minimum; `Checks()` prints PASS or FAIL and the total. It also has `--browser` handling for the browser tests.
