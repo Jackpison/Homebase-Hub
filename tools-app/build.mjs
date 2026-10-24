@@ -18,8 +18,15 @@ const r = await build({
   entryPoints: [path.join(HERE, 'src', 'main.js')], bundle: true, splitting: true, format: 'esm', minify: true, target: ['es2021'],
   outdir: A, entryNames: 'app-[hash]', chunkNames: 't-[name]-[hash]', assetNames: '[name]-[hash]', legalComments: 'eof', metafile: true, logLevel: 'warning',
   loader: { '.json': 'json', '.wasm': 'file' },
+  external: ['fs', 'path'],   // qpdf's Node-only branch; never runs in a browser
 });
 // WebAssembly that a library loads next to its own script (new URL('x.wasm', import.meta.url)): copied into assets/
+for (const w of ['pdfjs-dist/legacy/build/pdf.worker.min.mjs', '@neslinesli93/qpdf-wasm/dist/qpdf.wasm'])
+  fs.copyFileSync(path.join(HERE, 'node_modules', w), path.join(A, path.basename(w)));
+for (const d of ['cmaps', 'standard_fonts', 'wasm']) fs.cpSync(path.join(HERE, 'node_modules/pdfjs-dist', d), path.join(A, 'vendor/pdfjs', d), { recursive: true });
+fs.mkdirSync(path.join(A, 'vendor/tesseract'), { recursive: true });
+for (const f of ['tesseract.js/dist/worker.min.js', 'tesseract.js-core/tesseract-core-lstm.wasm.js', 'tesseract.js-core/tesseract-core-simd-lstm.wasm.js', 'tesseract.js-core/tesseract-core-relaxedsimd-lstm.wasm.js'])
+  fs.copyFileSync(path.join(HERE, 'node_modules', f), path.join(A, 'vendor/tesseract', path.basename(f)));
 for (const w of ['@jsquash/avif/codec/enc/avif_enc.wasm', 'onnxruntime-web/dist/ort-wasm-simd-threaded.wasm']) fs.copyFileSync(path.join(HERE, 'node_modules', w), path.join(A, path.basename(w)));
 for (const d of fs.readdirSync(path.join(HERE, 'static'))) if (d !== 'sw.js' && fs.statSync(path.join(HERE, 'static', d)).isDirectory()) fs.cpSync(path.join(HERE, 'static', d), path.join(A, d), { recursive: true });
 

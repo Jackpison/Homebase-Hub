@@ -34,6 +34,17 @@ const LOAD = {
   'circle-crop': () => import('./tools/circle-crop.js'),
   'collage': () => import('./tools/collage.js'),
   'image-metadata': () => import('./tools/image-metadata.js'),
+  'pdf-split': () => import('./tools/pdf-split.js'),
+  'pdf-organize': () => import('./tools/pdf-organize.js'),
+  'pdf-sign': () => import('./tools/pdf-sign.js'),
+  'pdf-annotate': () => import('./tools/pdf-annotate.js'),
+  'pdf-protect': () => import('./tools/pdf-protect.js'),
+  'pdf-stamp': () => import('./tools/pdf-stamp.js'),
+  'pdf-text': () => import('./tools/pdf-text.js'),
+  'pdf-compress': () => import('./tools/pdf-compress.js'),
+  'pdf-merge': () => import('./tools/pdf-merge.js'),
+  'images-to-pdf': () => import('./tools/images-to-pdf.js'),
+  'pdf-to-images': () => import('./tools/pdf-to-images.js'),
 };
 
 const TOOLS = DATA.tools, CATS = DATA.categories;

@@ -222,6 +222,66 @@ try:
         check('P13 ...a 3-column grid of 6 photos at 2400 x 2400', co.size == (2400, 2400) and near(co.getpixel((400, 600)), (230, 60, 60)) and near(co.getpixel((2000, 1800)), (240, 120, 30)), (co.size, co.getpixel((400, 600)), co.getpixel((2000, 1800))))
         pg.get_by_role('button', name='PDF', exact=True).click(); data, name = run_save('Save the Collage')
         check('P14 ...and as a PDF', data[:5] == b'%PDF-' and name == 'collage.pdf', data[:8])
+        # ---------- PDF ----------
+        from pypdf import PdfReader
+        P3, P2 = os.path.join(HERE, 'fixture-3pages.pdf'), os.path.join(HERE, 'fixture-2pages.pdf')
+        rd = lambda b: PdfReader(io.BytesIO(b))
+        load('pdf-merge', [P3, P2]); data, name = run_save('Merge'); check('D1 Merge PDF: 3 + 2 pages make one 5-page PDF', len(rd(data).pages) == 5 and name == 'merged.pdf', name)
+        load('pdf-split', P3); wait_js(pg, "document.querySelector('#root').innerText.includes('3 pages')", 20000)
+        pg.get_by_role('button', name='Split', exact=True).click(); wait_js(pg, "[...document.querySelectorAll('#root button')].some(b => b.textContent.includes('Download All'))", 30000)
+        with pg.expect_download() as d: pg.get_by_role('button', name='Download All (ZIP)').click()
+        zz = zipfile.ZipFile(d.value.path()); check('D2 Split PDF: single pages make 3 one-page PDFs', len(zz.namelist()) == 3 and all(len(rd(zz.read(n)).pages) == 1 for n in zz.namelist()), zz.namelist())
+        load('pdf-split', P3); wait_js(pg, "document.querySelector('#root').innerText.includes('3 pages')", 20000); pg.get_by_role('button', name='Your ranges', exact=True).click(); pg.fill('#root input[aria-label="Ranges"]', '1-2, 3')
+        pg.get_by_role('button', name='Split', exact=True).click(); wait_js(pg, "[...document.querySelectorAll('#root button')].some(b => b.textContent.includes('Download All'))", 30000)
+        with pg.expect_download() as d: pg.get_by_role('button', name='Download All (ZIP)').click()
+        zz = zipfile.ZipFile(d.value.path()); check('D3 ...your ranges 1-2, 3 make files of 2 and 1 pages', sorted(len(rd(zz.read(n)).pages) for n in zz.namelist()) == [1, 2], zz.namelist())
+        load('pdf-organize', P3); wait_js(pg, "document.querySelectorAll('#root .thumb').length === 3", 30000)
+        pg.click('button[aria-label="Delete, page 2"]'); pg.click('button[aria-label="Rotate, page 1"]'); data, name = run_save('Save the New PDF'); r_ = rd(data)
+        check('D4 Organize PDF Pages: delete one page and turn another', len(r_.pages) == 2 and r_.pages[0].rotation == 90, (len(r_.pages), r_.pages[0].rotation))
+        load('pdf-to-images', P3); wait_js(pg, "document.querySelector('#root').innerText.includes('3 pages')", 20000)
+        pg.get_by_role('button', name='Make Images', exact=True).click(); wait_js(pg, "[...document.querySelectorAll('#root button')].some(b => b.textContent.includes('Download All'))", 60000)
+        with pg.expect_download() as d: pg.get_by_role('button', name='Download All (ZIP)').click()
+        zz = zipfile.ZipFile(d.value.path()); check('D5 PDF to Images: 3 pages make 3 JPGs', len(zz.namelist()) == 3 and all(zz.read(n)[:3] == b'\xff\xd8\xff' for n in zz.namelist()), zz.namelist())
+        load('images-to-pdf', [FIX, HEIC]); data, name = run_save('Make PDF'); r_ = rd(data)
+        dims = [sorted((round(float(p.mediabox.width)), round(float(p.mediabox.height)))) for p in r_.pages]
+        check('D6 Images to PDF: a PNG and a HEIC make a 2-page A4 PDF (landscape photos on landscape pages)', len(r_.pages) == 2 and dims == [[595, 842], [595, 842]] and float(r_.pages[0].mediabox.width) > float(r_.pages[0].mediabox.height), dims)
+        load('pdf-compress', P3); pg.get_by_role('button', name='Light (keeps the text)', exact=True).click(); data, name = run_save('Compress', 60000)
+        check('D7 PDF Compressor: Light keeps a valid PDF with its 3 pages and its text', len(rd(data).pages) == 3 and 'quick brown fox' in rd(data).pages[0].extract_text().lower(), name)
+        load('pdf-compress', P3); data, name = run_save('Compress', 120000); check('D8 ...Strong rebuilds the pages', len(rd(data).pages) == 3, name)
+        load('pdf-protect', P3); pg.fill('#root input[type=password] >> nth=0', 'open sesame'); pg.fill('#root input[type=password] >> nth=1', 'open sesame'); data, name = run_save('Protect', 60000)
+        r_ = rd(data); enc = r_.is_encrypted; ok = r_.decrypt('open sesame') if enc else 0
+        check('D9 Protect or Unlock: AES-256 with a password (qpdf)', enc and ok and len(r_.pages) == 3 and '/AESV3' in str(r_.trailer['/Encrypt'].get_object()), (enc, ok))
+        prot = os.path.join(TMP, 'locked.pdf'); open(prot, 'wb').write(data)
+        open_tool('pdf-protect'); pg.get_by_role('button', name='Remove a Password', exact=True).click(); pg.set_input_files('#root .dropwrap input[type=file]', prot); pg.wait_for_timeout(300)
+        pg.fill('#root input[type=password]', 'wrong one'); pg.get_by_role('button', name='Remove the Password', exact=True).click()
+        wait_js(pg, "document.body.innerText.includes('not right')", 30000)
+        check('D10 ...a wrong password is refused with a plain message', 'That password is not right.' in pg.inner_text('body'))
+        pg.fill('#root input[type=password]', 'open sesame'); data, name = run_save('Remove the Password', 60000)
+        check('D11 ...and the right one removes it', not rd(data).is_encrypted and len(rd(data).pages) == 3, name)
+        load('pdf-text', P3); pg.get_by_role('button', name='Text Layer Only', exact=True).click(); pg.get_by_role('button', name='Get the Text', exact=True).click()
+        wait_js(pg, "document.querySelector('#root textarea').value.length > 10", 60000); txt = pg.input_value('#root textarea')
+        check('D12 PDF to Text reads the text layer, page by page', 'quick brown fox' in txt.lower() and '--- page 3 ---' in txt, txt[:120])
+        ocr = os.path.join(TMP, 'note.png'); im_ = PI.new('RGB', (900, 260), 'white'); from PIL import ImageDraw, ImageFont
+        ImageDraw.Draw(im_).text((40, 70), 'HELLO WORLD 2026', fill='black', font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 72)); im_.save(ocr)
+        load('pdf-text', ocr); pg.get_by_role('button', name='Get the Text', exact=True).click()
+        wait_js(pg, "document.querySelector('#root textarea').value.length > 5", 180000); txt = pg.input_value('#root textarea')
+        check('D13 ...and reads a photo of text with OCR (Tesseract 7, in the browser)', 'HELLO WORLD' in txt.upper(), txt[:120])
+        load('pdf-stamp', P3); data, name = run_save('Stamp and Save', 60000); t1 = rd(data).pages[0].extract_text()
+        check('D14 Watermark and Page Numbers: CONFIDENTIAL and "Page 1 of 3"', 'CONFIDENTIAL' in t1 and 'Page 1 of 3' in t1 and 'Page 3 of 3' in rd(data).pages[2].extract_text(), t1[-120:])
+        load('pdf-sign', P3); wait_js(pg, "!!document.querySelector('#root .stage canvas')", 30000)
+        pg.locator('#root canvas.pad').scroll_into_view_if_needed(); pg.wait_for_timeout(200)
+        box = pg.locator('#root canvas.pad').bounding_box(); W2, H2 = box['width'], box['height']   # draw a zigzag across the pad, whatever its size
+        pg.mouse.move(box['x'] + W2 * 0.1, box['y'] + H2 * 0.5); pg.mouse.down()
+        for k in range(1, 12): pg.mouse.move(box['x'] + W2 * (0.1 + k * 0.07), box['y'] + H2 * (0.5 + (0.25 if k % 2 else -0.25)))
+        pg.mouse.up(); pg.wait_for_timeout(200); pg.click('#root .layer', position={'x': 300, 'y': 500}); pg.wait_for_timeout(300)
+        check('D15 Sign PDF: a drawn signature is placed on the page', pg.evaluate("document.querySelectorAll('#root .layer .item').length") == 1)
+        data, name = run_save('Save the Signed PDF', 60000); res = rd(data).pages[0]['/Resources']
+        check('D16 ...and saved into the PDF as an image', '/XObject' in res and len(res['/XObject']) >= 1, list(res.keys()))
+        load('pdf-annotate', P3); wait_js(pg, "!!document.querySelector('#root .stage canvas')", 30000); pg.fill('#root input[aria-label="Text to add"]', 'Hello PDF')
+        pg.click('#root .layer', position={'x': 200, 'y': 300}); pg.get_by_role('button', name='Tick', exact=True).click(); pg.click('#root .layer', position={'x': 200, 'y': 400})
+        pg.get_by_role('button', name='Highlight', exact=True).click(); pg.click('#root .layer', position={'x': 400, 'y': 200}); pg.wait_for_timeout(200)
+        check('D17 Fill and Annotate: text, a tick and a highlight are placed', pg.evaluate("document.querySelectorAll('#root .layer .item').length") == 3)
+        data, name = run_save('Save the PDF', 60000); check('D18 ...and the text is in the saved PDF', 'Hello PDF' in rd(data).pages[0].extract_text(), name)
         shutil.rmtree(TMP, ignore_errors=True)
 
         # the app itself
@@ -254,7 +314,7 @@ try:
         for scheme in ('dark', 'light'):
             pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme)
             found = []
-            for u in ('#/', '#/tool/qr-generator', '#/tool/json-formatter', '#/tool/generators', '#/tool/image-converter', '#/tool/image-resize', '#/tool/img-adjust', '#/tool/img-watermark', '#/tool/collage', '#/tool/id-photo', '#/tool/image-crop', '#/tool/img-redact', '#/tool/meme', '#/tool/bg-remove', '#/organise', '#/settings'):
+            for u in ('#/', '#/tool/qr-generator', '#/tool/json-formatter', '#/tool/generators', '#/tool/image-converter', '#/tool/image-resize', '#/tool/img-adjust', '#/tool/img-watermark', '#/tool/collage', '#/tool/id-photo', '#/tool/image-crop', '#/tool/img-redact', '#/tool/meme', '#/tool/bg-remove', '#/tool/pdf-merge', '#/tool/pdf-split', '#/tool/pdf-protect', '#/tool/pdf-text', '#/tool/pdf-stamp', '#/tool/pdf-sign', '#/tool/pdf-annotate', '#/organise', '#/settings'):
                 pg.goto(U + u); pg.wait_for_timeout(300); pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme); pg.mouse.move(2, 2); pg.wait_for_timeout(100)
                 pg.evaluate(AXE); v = pg.evaluate(RUN)
                 if v: found.append(u + ': ' + '; '.join(v[:3]))

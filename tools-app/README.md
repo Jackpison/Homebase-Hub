@@ -16,6 +16,7 @@ python3 tools/build-tools.py --install    # builds into src/web/tools (replaces 
 - `src/tools/<id>.js`: one file per tool, `export default function (root, ctx)`, loaded only when the tool is opened.
 - `src/lib/image.js`: opening every image format (HEIC through libheif, TIFF through UTIF, the rest through the browser), saving as JPG, PNG, WebP or AVIF (the AVIF encoder's `avif_enc.wasm` is copied into `assets/` by `build.mjs`), shrinking to a target size, and the results list with Download All (ZIP).
 - `src/lib/cropper.js`: the crop box (drag, corners, arrow keys) used by Quick Crop, Circle Crop and the ID photo. `static/vendor/u2netp.onnx` is the background-removal model; `build.mjs` also copies ONNX Runtime's `ort-wasm-simd-threaded.wasm` (its glue code is in the bundle, so only the .wasm path is set).
+- `src/lib/pdf.js`: pdf.js (the **legacy** build: pdf.js 6 uses JavaScript too new for many browsers; its worker, character maps, standard fonts and decoders are copied into `assets/`), pdf-lib, page ranges. `src/lib/placer.js`: placing signatures and notes on a page (positions go through pdf.js, so rotated pages work). qpdf (`qpdf.wasm`) writes its messages to `console.error`, which `pdf-protect.js` captures before qpdf starts. Tesseract 7 needs tesseract.js-core 7 (its worker and three core files are copied into `assets/vendor/tesseract/`, with `static/vendor/tesseract/eng.traineddata`).
 - Libraries come from npm, pinned to versions at least two weeks old (`package.json`, `package-lock.json`); Dependabot proposes updates.
 - Text from users and files is only set with `textContent` or as a value. The page's security policy (`src/web/tools/.htaccess`) allows
   only this site's own scripts and WebAssembly.
@@ -29,4 +30,6 @@ The old, prebuilt Tools stays in `src/web/tools` until every tool is rebuilt her
 | Utilities (7) | QR Code Generator, Favicon Downloader and Maker, JSON Formatter, Text Tools, Password and UUID, Hash Generator, ZIP Creator |
 | Images (10) | Rotate and Flip, Image Editor, Watermark Images, Color Picker and Palette, Screenshot Beautifier, SVG to PNG, Image to Base64, Image Converter (HEIC, TIFF, AVIF in and out), Image Compressor (target size), Image Resizer (social sizes, size cap) |
 | Photos (8) | Background Remover (U-2-Net on ONNX Runtime 1.30, touch-up brush), Blur and Redact, Passport and ID Photo (print sheets), Meme and Text, Quick Crop, Circle Crop, Collage Maker (21 layouts, PDF), Photo Metadata (see and remove) |
-| PDF (11) | not yet |
+| PDF (11) | Merge, Split, Organize Pages, Sign, Fill and Annotate, Protect or Unlock (qpdf, AES-256), Watermark and Page Numbers, PDF and Image to Text (text layer and Tesseract OCR), PDF Compressor, Images to PDF, PDF to Images |
+
+**All 36 tools are rebuilt.** Next: the switch-over release (see START-HERE.md).
