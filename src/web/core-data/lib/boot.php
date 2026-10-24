@@ -215,6 +215,15 @@ function hub_version_path(string $dir, string $prefix = '', ?int $now = null): s
     return $p;
 }
 
+/**
+ * Links keeps an earlier version of its data before a save at most every $every seconds (10 minutes), and always when
+ * asked: a restore, a rollback, and a save the page marks with "keep" (Import Bookmarks, so the import can be undone from
+ * Backup & Restore > Earlier Versions). $newest is the time of the newest kept version, null when there is none.
+ */
+function hub_links_keep_due(?int $newest, bool $force, int $every, ?int $now = null): bool {
+    return $force || $newest === null || ($now ?? time()) - $newest >= $every;
+}
+
 /* ======================= login lockout ======================= */
 
 function hub_rate_file(): string { return hub_dir('core') . '/ratelimit.php'; }

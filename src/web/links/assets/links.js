@@ -595,6 +595,34 @@ $('#iconGo').onclick = async e => {
 };
 $('#iconDlg').addEventListener('close', () => { iconStop = true; });
 
+/* ---------- Import Bookmarks: links-import.js is loaded the first time the menu item is used ---------- */
+let importer = null;
+// What the importer may use. It changes Links only through save(), which keeps an earlier version first (so Backup & Restore >
+// Earlier Versions can undo the import) and sends the page's revision, so a change made in another window is never overwritten.
+const BM = {
+  tabs: () => S.data.tabs, maxTabs: MAX_TABS, uid, toast, shortestCol, host,
+  size: async () => JSON.stringify(await buildSnapshot()).length,
+  async save(apply, undo, msg) {
+    await saving;
+    apply(); render();
+    try { const j = await api('save', { rev: S.rev, data: await buildSnapshot(), keep: true }); S.rev = j.rev; render(); return true; }
+    catch (e) { undo(); render(); if (e.status === 401) endSession('Session ended. Log in again to keep editing.', true); throw e; }
+  },
+  showTab(id) { S.tab = id; location.hash = encodeURIComponent(id); render(); },
+};
+function openImport() {
+  if (!S.auth) return toast('Log in to import bookmarks.', true);
+  importer ||= new Promise((ok, no) => {
+    const s = document.createElement('script');
+    s.src = 'assets/links-import.js?v=1.44.2';
+    s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
+    s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
+    document.head.append(s);
+  });
+  importer.then(m => m.open(BM), e => { importer = null; toast(e.message, true); });
+}
+$('#importBmBtn').onclick = openImport;
+
 /* ---------- render ---------- */
 function visibleCols() { return innerWidth >= 1100 ? 4 : innerWidth >= 700 ? 2 : 1; }
 

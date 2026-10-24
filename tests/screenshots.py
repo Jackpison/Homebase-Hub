@@ -57,6 +57,11 @@ with sync_playwright() as p:
         snap(pg,'links'+s,'/web/links/'); snap(pg,'info'+s,'/web/info/'); snap(pg,'cards'+s,'/web/cards/'); snap(pg,'tasks'+s,'/web/tasks/')
         if theme=='dark':
             snap(pg,'info-doc','/web/info/',click='text=Trip Notes')
+            # Links > Import Bookmarks with a preview of a Chrome export
+            pg.goto(B+'/web/links/',wait_until='domcontentloaded'); pg.wait_for_timeout(1500)
+            pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]')
+            pg.set_input_files('#impFile',os.path.join(os.path.dirname(os.path.abspath(__file__)),'bookmarks','chrome.html')); pg.wait_for_timeout(800)
+            pg.screenshot(path=f'{OUT}/links-import.png'); print('links-import')
             snap(pg,'tasks-calendar','/web/tasks/',click='#views button[data-view="cal"]')
             snap(pg,'tasks-analytics','/web/tasks/',click='#views button[data-view="an"]')
             snap(pg,'tools','/web/tools/')

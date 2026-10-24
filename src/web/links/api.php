@@ -13,7 +13,7 @@
  *  GET  ?action=get        page data (private tabs/site hidden unless logged in)
  *  POST ?action=login      { password }            the shared site login (core/boot.php), brute-force protected
  *  POST ?action=logout
- *  POST ?action=save       { rev, data }
+ *  POST ?action=save       { rev, data, keep }   keep: keep an earlier version first (Import Bookmarks)
  *  GET  ?action=backup                             full backup file (data + icons)
  *  POST ?action=restore    { backup }
  *  GET  ?action=backups                            list automatic server backups
@@ -129,7 +129,7 @@ function write_data($data, $forceBackup = false) {
     $hasOld = is_file($dataFile);
     if ($hasOld) {
         $files = backup_files();
-        if ($forceBackup || !$files || time() - filemtime($files[0]) >= BM_BACKUP_EVERY) {
+        if (hub_links_keep_due($files ? (int)filemtime($files[0]) : null, (bool)$forceBackup, BM_BACKUP_EVERY)) {
             need_dir($backupDir);
             write_guarded(hub_version_path($backupDir, 'bookmarks-'), current_raw());
             $files = backup_files();
@@ -566,7 +566,7 @@ case 'save':
     $newlyEnc = [];   // tabs that were readable until now and are encrypted in this save
     foreach ($data['tabs'] as $nt) if (!empty($nt['enc']) && isset($oldById[(string)($nt['id'] ?? '')]) && empty($oldById[(string)$nt['id']]['enc'])) $newlyEnc[] = $oldById[(string)$nt['id']];
     $map = organize_icons($data, $iconDir, ($auth['secret'] ?? ''));
-    $rev = write_data($data);
+    $rev = write_data($data, !empty($b['keep']));   // keep: a version first, so this save can be undone (Import Bookmarks)
     if ($newlyEnc) purge_readable_copies($newlyEnc, $iconDir, ($auth['secret'] ?? ''));
     links_unlock($lk);
     out(200, ['ok' => true, 'rev' => $rev, 'iconMap' => (object)$map]);

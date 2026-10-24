@@ -53,6 +53,11 @@ try:
             pg = ctx.new_page()
             for name, url in pages:
                 pg.goto(B + url); pg.wait_for_timeout(1400); check('%s (%s)' % (name, theme), scan(pg))
+            # Links > Import Bookmarks, open with a preview
+            pg.goto(B + '/web/links/'); pg.wait_for_timeout(1400)
+            pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]', timeout=10000)
+            pg.set_input_files('#impFile', os.path.join(HERE, 'bookmarks', 'chrome.html')); pg.wait_for_timeout(600)
+            check('Links: Import Bookmarks dialog (%s)' % theme, scan(pg))
             ctx.close()
         if SITE:
             H = partial(http.server.SimpleHTTPRequestHandler, directory=SITE); H.log_message = lambda *a: None
