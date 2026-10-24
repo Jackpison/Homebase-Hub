@@ -264,7 +264,7 @@ story += chapter('A', 'Help and recovery', 'What to do when something goes wrong
  *sub('Moving the site'),
  P('Copy the whole site folder, data included. Or export a backup, install a new site, and import the backup there. Backups made before a passphrase change need the old passphrase.'),
  *sub('Contact'),
- table(['For', 'Where'], [['Questions and ideas', 'Telegram @Jackpison (t.me/Jackpison)'], ['Bugs', 'github.com/Jackpison/Homebase-Hub/issues'], ['Security problems', 'Telegram @Jackpison, not a public issue'], ['Website and downloads', 'jackpison.github.io/Homebase-Hub']]))
+ table(['For', 'Where'], [['Bugs and security problems', 'github.com/Jackpison/Homebase-Hub/issues'], ['Questions, ideas and anything else', 'Telegram @Jackpison (t.me/Jackpison)'], ['Website and downloads', 'jackpison.github.io/Homebase-Hub']]))
 
 # ------------------------------------------------------------------ pages
 class Doc(BaseDocTemplate):

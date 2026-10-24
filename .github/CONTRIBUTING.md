@@ -2,9 +2,8 @@
 
 Thank you for helping with Homebase Hub.
 
-- **Found a bug?** Open a [GitHub Issue](https://github.com/Jackpison/Homebase-Hub/issues). Include your version (Settings > Changelog), what you did, what you expected and what happened.
-- **Have an idea or a question?** Message [@Jackpison](https://t.me/Jackpison) on Telegram.
-- **Found a security problem?** Message on Telegram instead of opening a public issue. See [SECURITY.md](SECURITY.md).
+- **Found a bug or another problem?** Open a [GitHub Issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose). Include your version (Settings > Changelog), what you did, what you expected and what happened. This goes for security problems too: see [SECURITY.md](SECURITY.md).
+- **Anything else?** An idea, a question: message [@Jackpison](https://t.me/Jackpison) on Telegram.
 
 ## Changing the code
 

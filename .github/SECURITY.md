@@ -2,10 +2,9 @@
 
 ## Reporting a problem
 
-Please do not open a public issue for a security problem.
+To report a problem, [open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose). For anything else, message [@Jackpison](https://t.me/Jackpison) on Telegram.
 
-- Message [@Jackpison](https://t.me/Jackpison) on Telegram, or
-- use GitHub's private reporting: **Security > Report a vulnerability** on this repository (when it is switched on).
+If you would rather report it privately, GitHub's **Security > Report a vulnerability** on this repository works too, when it is switched on.
 
 Say which version you use (Settings > Changelog), what you found, and how to see it happen. A short example or a few steps is enough.
 

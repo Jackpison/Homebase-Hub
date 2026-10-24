@@ -275,9 +275,8 @@ Every version is in [CHANGELOG.md](CHANGELOG.md) and on the [website](https://ja
 
 ## Contact
 
-- 💬 **Questions and feature requests:** Telegram [@Jackpison](https://t.me/Jackpison)
-- 🐞 **Bugs:** [GitHub Issues](https://github.com/Jackpison/Homebase-Hub/issues)
-- 🛡️ **Security problems:** message on Telegram rather than opening a public issue (see [SECURITY.md](.github/SECURITY.md))
+- 🐞 **Bugs and other problems, security problems included:** [open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose) (see [SECURITY.md](.github/SECURITY.md))
+- 💬 **Questions, feature requests and anything else:** Telegram [@Jackpison](https://t.me/Jackpison)
 
 ## Licence and credits
 
