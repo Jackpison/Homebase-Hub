@@ -20,7 +20,7 @@ const r = await build({
   loader: { '.json': 'json', '.wasm': 'file' },
 });
 // WebAssembly that a library loads next to its own script (new URL('x.wasm', import.meta.url)): copied into assets/
-for (const w of ['@jsquash/avif/codec/enc/avif_enc.wasm']) fs.copyFileSync(path.join(HERE, 'node_modules', w), path.join(A, path.basename(w)));
+for (const w of ['@jsquash/avif/codec/enc/avif_enc.wasm', 'onnxruntime-web/dist/ort-wasm-simd-threaded.wasm']) fs.copyFileSync(path.join(HERE, 'node_modules', w), path.join(A, path.basename(w)));
 for (const d of fs.readdirSync(path.join(HERE, 'static'))) if (d !== 'sw.js' && fs.statSync(path.join(HERE, 'static', d)).isDirectory()) fs.cpSync(path.join(HERE, 'static', d), path.join(A, d), { recursive: true });
 
 // fingerprint of every file in assets/

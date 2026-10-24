@@ -26,6 +26,14 @@ const LOAD = {
   'image-converter': () => import('./tools/image-converter.js'),
   'image-compress': () => import('./tools/image-compress.js'),
   'image-resize': () => import('./tools/image-resize.js'),
+  'bg-remove': () => import('./tools/bg-remove.js'),
+  'img-redact': () => import('./tools/img-redact.js'),
+  'id-photo': () => import('./tools/id-photo.js'),
+  'meme': () => import('./tools/meme.js'),
+  'image-crop': () => import('./tools/image-crop.js'),
+  'circle-crop': () => import('./tools/circle-crop.js'),
+  'collage': () => import('./tools/collage.js'),
+  'image-metadata': () => import('./tools/image-metadata.js'),
 };
 
 const TOOLS = DATA.tools, CATS = DATA.categories;

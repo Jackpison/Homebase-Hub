@@ -106,7 +106,9 @@ try:
         PI.effect_noise((1600, 1200), 70).convert('RGB').resize((2000, 1500)).save(noisy, quality=95)
         tif = os.path.join(TMP, 'scan.tif'); PI.open(os.path.join(HERE, 'fixture-image.png')).save(tif)
         FIX = os.path.join(HERE, 'fixture-image.png'); HEIC = os.path.join(HERE, 'fixture-photo.heic')
+        OPENED = []
         def open_tool(i):   # through the home, so the tool starts fresh even when it was the last one open
+            OPENED.append(i)
             pg.goto(U + '#/'); wait_js(pg, "location.hash === '#/'"); pg.goto(U + '#/tool/' + i); wait_js(pg, "!!document.querySelector('#root .dropwrap input[type=file]')")
         def go(name, files, timeout=60000):
             pg.set_input_files('#root .dropwrap input[type=file] >> nth=0', files); pg.wait_for_timeout(400)
@@ -168,6 +170,58 @@ try:
         pg.get_by_role('button', name='Base64 to Image', exact=True).click(); pg.fill('#root textarea', uri); pg.get_by_role('button', name='Make the File', exact=True).click()
         with pg.expect_download() as d: pg.get_by_role('button', name='Download image.png', exact=True).click()
         check('I17 ...and turns it back into the same file', open(d.value.path(), 'rb').read() == open(FIX, 'rb').read())
+        # ---------- Photos ----------
+        def run_save(btn='Save', timeout=60000):
+            with pg.expect_download(timeout=timeout) as d: pg.get_by_role('button', name=btn, exact=True).click()
+            return open(d.value.path(), 'rb').read(), d.value.suggested_filename
+        def load(i, f): open_tool(i); pg.set_input_files('#root .dropwrap input[type=file] >> nth=0', f); pg.wait_for_timeout(600)
+
+        load('image-crop', FIX); pg.get_by_role('button', name='1:1', exact=True).click(); data, name = run_save('Crop and Save')
+        w_, h_ = img(data).size; check('P1 Quick Crop: 1:1 gives a square', w_ == h_ and w_ >= 500, (w_, h_))
+        load('image-crop', FIX); pg.get_by_role('button', name='Exact pixels', exact=True).click(); pg.fill('#root input[aria-label="Width in pixels"]', '300'); pg.fill('#root input[aria-label="Height in pixels"]', '200'); pg.wait_for_timeout(200)
+        data, name = run_save('Crop and Save'); check('P2 ...exact pixels give exactly 300 x 200', img(data).size == (300, 200), img(data).size)
+        pg.focus('#root .cbox'); before = pg.evaluate("document.querySelector('#root .cbox').style.left"); pg.keyboard.press('ArrowLeft'); pg.keyboard.press('ArrowLeft')
+        check('P3 ...the crop box moves with the arrow keys', pg.evaluate("document.querySelector('#root .cbox').style.left") != before)
+
+        load('circle-crop', FIX); data, name = run_save('Save PNG'); ci = img(data).convert('RGBA')
+        check('P4 Circle Crop: a 512 px round PNG, see-through in the corners', ci.size == (512, 512) and ci.getpixel((2, 2))[3] == 0 and ci.getpixel((256, 256))[3] == 255, (ci.size, ci.getpixel((2, 2))))
+
+        load('id-photo', FIX); pg.get_by_role('button', name='One photo', exact=True).click(); data, name = run_save('Make and Save')
+        check('P5 Passport and ID Photo: 35 x 45 mm at 300 dpi is 413 x 531 pixels', img(data).size == (413, 531), img(data).size)
+        load('id-photo', FIX); data, name = run_save('Make and Save'); txt = pg.inner_text('#root')
+        check('P6 ...a 4 x 6 in print sheet (1200 x 1800) with several copies', img(data).size == (1200, 1800) and 'copies on the sheet' in txt, (img(data).size, txt[-200:]))
+
+        load('bg-remove', FIX); wait_js(pg, "!!document.querySelector('#root .preview canvas')", 120000)
+        data, name = run_save('Save'); bi = img(data).convert('RGBA'); W_, H_ = bi.size
+        check('P7 Background Remover (ONNX Runtime 1.30, on the device): the background goes, the subject stays', bi.getpixel((5, 5))[3] < 80 and bi.getpixel((W_ // 2, H_ // 2))[3] > 170 and name.endswith('.png'), (bi.getpixel((5, 5)), bi.getpixel((W_ // 2, H_ // 2))))
+
+        load('img-redact', FIX); pg.get_by_role('button', name='Add an Area in the Middle', exact=True).click(); pg.get_by_role('button', name='Solid box', exact=True).click()
+        data, name = run_save(); ri = img(data).convert('RGB')
+        check('P8 Blur and Redact: a solid box covers the marked area and nothing else', ri.getpixel((400, 300)) == (0, 0, 0) and ri.getpixel((10, 10)) == PI.open(FIX).convert('RGB').getpixel((10, 10)), (ri.getpixel((400, 300)), ri.getpixel((10, 10))))
+
+        load('meme', FIX); data, name = run_save(); mi = img(data).convert('RGB'); orig = PI.open(FIX).convert('RGB')
+        diff = sum(1 for x in range(0, 800, 8) if mi.getpixel((x, 60)) != orig.getpixel((x, 60)))
+        check('P9 Meme and Text: the caption is drawn at the top', mi.size == (800, 600) and diff > 10, diff)
+
+        gpsf = os.path.join(TMP, 'holiday.jpg'); ex = PI.Exif(); ex[0x010F] = 'TestMaker'; ex[0x0110] = 'Model 7'
+        ex[0x8825] = {1: 'N', 2: (12.0, 58.0, 0.0), 3: 'E', 4: (77.0, 35.0, 0.0)}
+        PI.new('RGB', (400, 300), (200, 100, 50)).save(gpsf, exif=ex.tobytes())
+        load('image-metadata', gpsf); wait_js(pg, "document.querySelector('#root').innerText.includes('Location') || document.querySelector('#root').innerText.includes('No camera')", 20000)
+        txt = pg.inner_text('#root')
+        check('P10 Photo Metadata shows the camera and the GPS location, with a warning', 'TestMaker' in txt and '12.96667' in txt and 'shows where it was taken' in txt, txt[-300:])
+        data, name = run_save('Remove Metadata and Save'); ci2 = img(data)
+        check('P11 ...and saves the photo without any metadata', len(ci2.getexif()) == 0 and ci2.size == (400, 300), dict(ci2.getexif()))
+
+        open_tool('collage'); cols = [(230, 60, 60), (60, 160, 230), (250, 200, 40), (60, 200, 120), (150, 80, 220), (240, 120, 30)]
+        tiles = []
+        for k, c in enumerate(cols): f = os.path.join(TMP, 'p%d.png' % k); PI.new('RGB', (600 + k * 50, 400 + k * 30), c).save(f); tiles.append(f)
+        pg.set_input_files('#root .dropwrap input[type=file]', tiles); pg.wait_for_timeout(800)
+        check('P12 Collage Maker offers 21 layouts', pg.evaluate("document.querySelectorAll('#root select')[0].options.length") == 21)
+        pg.select_option('#root select >> nth=0', 'g3'); data, name = run_save('Save the Collage'); co = img(data).convert('RGB')
+        near = lambda p, q: all(abs(x - y) <= 6 for x, y in zip(p, q))   # JPEG rounds colours a little
+        check('P13 ...a 3-column grid of 6 photos at 2400 x 2400', co.size == (2400, 2400) and near(co.getpixel((400, 600)), (230, 60, 60)) and near(co.getpixel((2000, 1800)), (240, 120, 30)), (co.size, co.getpixel((400, 600)), co.getpixel((2000, 1800))))
+        pg.get_by_role('button', name='PDF', exact=True).click(); data, name = run_save('Save the Collage')
+        check('P14 ...and as a PDF', data[:5] == b'%PDF-' and name == 'collage.pdf', data[:8])
         shutil.rmtree(TMP, ignore_errors=True)
 
         # the app itself
@@ -177,7 +231,10 @@ try:
         check('N17 a star adds a favourite, and Favourites lists it', '#/tool/json-formatter' in favs and '#/tool/image-resize' in favs, favs)
         pg.goto(U + '#/recent'); pg.wait_for_timeout(150)
         rec = pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))")
-        check('N18 Recent lists the tools just used, newest first (the last one opened is first)', rec[0] == '#/tool/img-base64' and rec.index('#/tool/favicon') > rec.index('#/tool/img-rotate'), rec[:4])
+        last = []
+        for i in reversed(OPENED):
+            if i not in last: last.append(i)
+        check('N18 Recent lists the tools just used, newest first, and keeps at most 12', rec[:3] == ['#/tool/' + i for i in last[:3]] and len(rec) == 12, (rec[:4], last[:3], len(rec)))
         pg.goto(U + '#/organise'); pg.wait_for_timeout(150)
         pg.click('button[aria-label="Show QR Code Generator"]'); pg.goto(U + '#/s/utilities'); pg.wait_for_timeout(150)
         ul = pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))")
@@ -197,7 +254,7 @@ try:
         for scheme in ('dark', 'light'):
             pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme)
             found = []
-            for u in ('#/', '#/tool/qr-generator', '#/tool/json-formatter', '#/tool/generators', '#/tool/image-converter', '#/tool/image-resize', '#/tool/img-adjust', '#/tool/img-watermark', '#/organise', '#/settings'):
+            for u in ('#/', '#/tool/qr-generator', '#/tool/json-formatter', '#/tool/generators', '#/tool/image-converter', '#/tool/image-resize', '#/tool/img-adjust', '#/tool/img-watermark', '#/tool/collage', '#/tool/id-photo', '#/tool/image-crop', '#/tool/img-redact', '#/tool/meme', '#/tool/bg-remove', '#/organise', '#/settings'):
                 pg.goto(U + u); pg.wait_for_timeout(300); pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme); pg.mouse.move(2, 2); pg.wait_for_timeout(100)
                 pg.evaluate(AXE); v = pg.evaluate(RUN)
                 if v: found.append(u + ': ' + '; '.join(v[:3]))
