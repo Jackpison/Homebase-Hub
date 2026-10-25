@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Write latest.json (published on GitHub Pages).
-Usage: python3 tools/make-latest.py OWNER REPO VERSION SHA256 SIZE [OUTFILE]
+Usage: python3 scripts/make-latest.py OWNER REPO VERSION SHA256 SIZE [OUTFILE]
 The short notes come from the Version Map row of CHANGELOG.md."""
 import datetime, json, os, re, sys
 owner, repo, ver, sha, size = sys.argv[1:6]

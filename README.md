@@ -260,14 +260,14 @@ The readable source is in `src/`. To build the update zip you need Python 3 and 
 
 ```
 npm ci
-python3 tools/build.py
+python3 scripts/build.py
 ```
 
-This writes `build/site-update-X.Y.Z.zip` and its `.sha256`. `python3 tools/make-site.py` builds the website and the PDF guide into `build/site`. The tests are described in [tests/README.md](tests/README.md).
+This writes `build/site-update-X.Y.Z.zip` and its `.sha256`. `python3 scripts/make-site.py` builds the website and the PDF guide into `build/site`. The tests are described in [tests/README.md](tests/README.md).
 
 ### Releases
 
-`python3 tools/release.py X.Y.Z` raises the version everywhere, and `python3 tools/release.py --check` checks that it agrees. A release is made by pushing a tag `vX.Y.Z` that matches the version in `src/web/core-data/lib/boot.php`. The release workflow builds the zip, publishes the release and updates the website.
+`python3 scripts/release.py X.Y.Z` raises the version everywhere, and `python3 scripts/release.py --check` checks that it agrees. A release is made by pushing a tag `vX.Y.Z` that matches the version in `src/web/core-data/lib/boot.php`. The release workflow builds the zip, publishes the release and updates the website.
 
 ## Changelog
 
@@ -280,6 +280,6 @@ Every version is in [CHANGELOG.md](CHANGELOG.md) and on the [website](https://ja
 
 ## Licence and credits
 
-Homebase Hub is free software under the [GPL-3.0](LICENSE). Bundled libraries keep their own licences, listed in [THIRD-PARTY.md](docs/THIRD-PARTY.md). The website uses the Manrope font (SIL Open Font License). Start page photos in the screenshots carry their own credits.
+Homebase Hub is free software under the [GPL-3.0](LICENSE). Bundled libraries keep their own licences, listed in [THIRD-PARTY.md](src/web/docs/THIRD-PARTY.md). The website uses the Manrope font (SIL Open Font License). Start page photos in the screenshots carry their own credits.
 
 <p align="right"><a href="#readme-top">↑ Back to top</a></p>

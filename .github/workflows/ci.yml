@@ -35,13 +35,13 @@ jobs:
         run: |
           curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.1.33/phpstan.phar
           echo "48caad125554d6b416159db71dd7fd890295ba1a24b3650b49e32752e24fd6a0  phpstan.phar" | sha256sum -c -
-          php -d memory_limit=1G phpstan.phar analyse --no-progress
+          php -d memory_limit=1G phpstan.phar analyse -c tests/repo/phpstan.neon --no-progress
       - name: Library safety check
         run: python3 tests/repo/check_libraries.py
-      - name: Version agrees everywhere (tools/release.py --check) and its own test
-        run: python3 tools/release.py --check && python3 tests/repo/release_test.py
+      - name: Version agrees everywhere (scripts/release.py --check) and its own test
+        run: python3 scripts/release.py --check && python3 tests/repo/release_test.py
       - name: Build
-        run: npm ci && python3 tools/build.py
+        run: npm ci && python3 scripts/build.py
       - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
         run: npx eslint src
       - name: Check zip name and changelog
@@ -68,7 +68,7 @@ jobs:
           npm ci
           pip install -r tests/requirements.txt
       - name: Build the zip
-        run: python3 tools/build.py
+        run: python3 scripts/build.py
       - name: Get the previous and an older release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -124,7 +124,7 @@ jobs:
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Build the zip and the website
-        run: python3 tools/build.py && python3 tools/make-site.py --no-guide
+        run: python3 scripts/build.py && python3 scripts/make-site.py --no-guide
       - name: Install on a phone (manifest, icons, head tags, Settings card, Chromium installability)
         if: success() || failure()
         run: |
@@ -191,7 +191,7 @@ jobs:
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Build the zip
-        run: python3 tools/build.py
+        run: python3 scripts/build.py
       - name: Get the previous and an older release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -243,7 +243,7 @@ jobs:
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps ${{ matrix.browser }}
       - name: Build the zip and the website
-        run: python3 tools/build.py && python3 tools/make-site.py --no-guide
+        run: python3 scripts/build.py && python3 scripts/make-site.py --no-guide
       - name: Pages in ${{ matrix.browser }}
         if: success() || failure()
         run: |
@@ -294,7 +294,7 @@ jobs:
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Build the zip
-        run: python3 tools/build.py
+        run: python3 scripts/build.py
       - name: On real Apache (the .htaccess files)
         run: |
           sudo sh tests/server/apache_setup.sh build/site-update-*.zip

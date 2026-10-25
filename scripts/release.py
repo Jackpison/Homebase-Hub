@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """One command for the version bump of a release, and a check that everything agrees.
 
-  python3 tools/release.py X.Y.Z     raise the version to X.Y.Z (must be higher than HUB; the working tree must be clean):
+  python3 scripts/release.py X.Y.Z     raise the version to X.Y.Z (must be higher than HUB; the working tree must be clean):
                                      HUB in boot.php, every ?v= of the old version in src (not Tools' own fingerprints,
                                      not the changelog, not web/docs/src), a "## X.Y.Z" changelog section and a Version Map
                                      row, both with a TODO marker for you to fill in, and the copy in the root CHANGELOG.md.
-  python3 tools/release.py --check   fail if HUB, the ?v= on every page, the newest changelog heading, the top Version Map
+  python3 scripts/release.py --check   fail if HUB, the ?v= on every page, the newest changelog heading, the top Version Map
                                      row and the root CHANGELOG.md disagree, if a TODO marker is left, or if src/site-data exists.
 
 Run the check before tagging. CI and the release workflow run it too.
@@ -93,8 +93,8 @@ def check():
         errs.append('a %s marker is left in the %s changelog section or its Version Map row' % (MARK, nv))
     if not os.path.isfile(ROOT_LOG) or read(ROOT_LOG) != t:
         errs.append('root CHANGELOG.md is not a copy of src/web/docs/CHANGELOG.md')
-    r = subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'tools-rev.py'), '--check'], cwd=ROOT, capture_output=True, text=True)
-    if r.returncode != 0: errs.append('Tools fingerprint is stale: run python3 tools/tools-rev.py --write')
+    r = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'tools-rev.py'), '--check'], cwd=ROOT, capture_output=True, text=True)
+    if r.returncode != 0: errs.append('Tools fingerprint is stale: run python3 scripts/tools-rev.py --write')
     if errs:
         for e in errs: print('FAIL ' + e)
         sys.exit(1)
@@ -124,9 +124,9 @@ def bump(new):
     t = re.sub(r'^## \d+\.\d+\.\d+', lambda m: skel + m.group(0), t, count=1, flags=re.M)
     write(LOG, t); write(ROOT_LOG, t)
 
-    r = subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'tools-rev.py'), '--check'], cwd=ROOT)
+    r = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'tools-rev.py'), '--check'], cwd=ROOT)
     print('Version %s -> %s: HUB, ?v= in %d file(s), changelog skeleton and Version Map row (fill in the %s markers), root CHANGELOG.md.' % (old, new, n, MARK))
-    if r.returncode != 0: sys.exit('Tools fingerprint is stale: run python3 tools/tools-rev.py --write')
+    if r.returncode != 0: sys.exit('Tools fingerprint is stale: run python3 scripts/tools-rev.py --write')
 
 
 if __name__ == '__main__':

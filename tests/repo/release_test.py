@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests tools/release.py on a temporary copy of the repo: bump, fill in, check passes; then break each thing in turn
+"""Tests scripts/release.py on a temporary copy of the repo: bump, fill in, check passes; then break each thing in turn
 and see the check fail. Needs git and Python only.   python3 tests/repo/release_test.py"""
 import os, re, shutil, subprocess, sys, tempfile
 
@@ -14,7 +14,7 @@ def check(name, ok, detail=''):
 
 
 def run(d, *a):
-    return subprocess.run([sys.executable, os.path.join(d, 'tools', 'release.py'), *a], cwd=d, capture_output=True, text=True)
+    return subprocess.run([sys.executable, os.path.join(d, 'scripts', 'release.py'), *a], cwd=d, capture_output=True, text=True)
 
 
 def git(d, *a): subprocess.run(['git', *a], cwd=d, check=True, capture_output=True)

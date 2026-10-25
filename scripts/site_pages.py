@@ -1,5 +1,5 @@
 """Pages of the website that are built from data: the home page, the features hub, one page for each of the six app pages,
-Telegram, On your phone, the Tools finder and the FAQ. tools/make-site.py imports this and wraps each body in the site's
+Telegram, On your phone, the Tools finder and the FAQ. scripts/make-site.py imports this and wraps each body in the site's
 header and footer. Plain HTML, no inline styles or scripts (the site's security policy allows neither), so the colours come
 from classes (a-home, a-tasks ...) and the few positions that vary (the numbered dots on screenshots) from hot.css,
 which make-site.py writes from HOT.

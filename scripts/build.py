@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the update zip from src/.
 
-Usage: python3 tools/build.py [--out build]
+Usage: python3 scripts/build.py [--out build]
 Needs: Node (npx esbuild). Writes build/site-update-X.Y.Z.zip and .sha256.
 Steps: copy src/ -> build/tree, save readable copies in web/docs/src, minify own
 JS/CSS (not Tools, not vendor), write manifest.json, zip with dots in the name.
@@ -32,7 +32,7 @@ def sha(p):
 
 def main():
     ver = version()
-    chk = subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'tools-rev.py'), '--check'], capture_output=True, text=True)
+    chk = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'tools-rev.py'), '--check'], capture_output=True, text=True)
     if chk.returncode: sys.exit('Refusing to build: ' + (chk.stderr or chk.stdout).strip())
     for bad in ('src/site-data', 'src/web/core-data/config.php', 'src/web/core-data/data'):
         if os.path.exists(os.path.join(ROOT, bad)):

@@ -8,7 +8,7 @@ from helpers import ROOT, FIX, SEED
 from helpers import UA, PW, HERE, Site, Checks, mutate_zip, zip_version, sha, stop_all
 if len(sys.argv) < 4:
     sys.exit('Usage: python3 tests/server/update_test.py CURRENT.zip PREVIOUS.zip OLDER.zip\n'
-             '  CURRENT   the zip just built (tools/build.py)\n'
+             '  CURRENT   the zip just built (scripts/build.py)\n'
              '  PREVIOUS  the latest published release zip (before CURRENT)\n'
              '  OLDER     any older release zip (for the upload upgrade and Go Back tests)\n'
              'A "next" version (CURRENT with its patch number raised) is made by this script.')

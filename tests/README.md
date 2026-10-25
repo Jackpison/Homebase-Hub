@@ -31,7 +31,7 @@ Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen'
 
 ## Static analysis
 
-`phpstan.neon` (level 1) is run by CI with a pinned PHPStan, and CI checks the download's SHA-256 before it runs it. See AGENTS.md for the command. To raise the PHPStan version, change the version and the checksum in both `.github/workflows/ci.yml` and `AGENTS.md` (get the new checksum with `sha256sum phpstan.phar`). The checksum is pinned when you first download a version, so it guards against the file changing later, not against a bad first download. `tests/lib/phpstan-bootstrap.php` only tells it the folder constants that `boot.php` defines at run time.
+`tests/repo/phpstan.neon` (level 1) is run by CI with a pinned PHPStan, and CI checks the download's SHA-256 before it runs it. See AGENTS.md for the command. To raise the PHPStan version, change the version and the checksum in both `.github/workflows/ci.yml` and `AGENTS.md` (get the new checksum with `sha256sum phpstan.phar`). The checksum is pinned when you first download a version, so it guards against the file changing later, not against a bad first download. `tests/lib/phpstan-bootstrap.php` only tells it the folder constants that `boot.php` defines at run time.
 
 ## Python packages
 
@@ -41,7 +41,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 
 ## Release script and lint
 
-- `python3 tools/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
+- `python3 scripts/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
 - `python3 tests/repo/release_test.py`: tests `release.py` itself on a temporary copy of the repo (a bump, then each thing broken in turn must fail the check). Needs git.
 - `npx eslint src`: `no-undef`, `no-redeclare`, `no-dupe-keys`, `no-unreachable` and `no-const-assign` on the readable scripts in `src/web` (not Tools, not `vendor/`). `eslint.config.js` lists each page's real globals and says why.
 
@@ -51,7 +51,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 
 ```
 npm ci
-python3 tools/build.py                        # CURRENT
+python3 scripts/build.py                        # CURRENT
 python3 tests/server/update_test.py build/site-update-1.40.0.zip site-update-1.39.0.zip site-update-1.37.0.zip
 ```
 
@@ -93,7 +93,7 @@ Two cases are by design, not refusals: the **same version** is accepted as a rep
 
 ## Tools
 
-`python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser chromium|firefox|webkit]` (port 8960; needs PHP, Playwright, axe-core, Pillow, pypdf and cryptography). It installs a site and drives every one of the 36 tools with real files: the app (search, favourites and recent tools carried over from the old Tools, Organise, Settings, light and dark), conversions checked by opening the output (HEIC and TIFF in, AVIF out, a photo under a target size, exact resize and crop sizes, round PNGs, 300 dpi ID photos and print sheets), background removal on the device, GPS read from a photo and removed, a 21-layout collage and its PDF, and the PDF tools checked with pypdf (merge, split, organize, AES-256 protect and unlock, stamps, signatures, annotations, the text layer, and OCR of a rendered image), plus axe on 26 pages in dark and light. Give `build/tools-new` (from `python3 tools/build-tools.py`) to test a build before installing it.
+`python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser chromium|firefox|webkit]` (port 8960; needs PHP, Playwright, axe-core, Pillow, pypdf and cryptography). It installs a site and drives every one of the 36 tools with real files: the app (search, favourites and recent tools carried over from the old Tools, Organise, Settings, light and dark), conversions checked by opening the output (HEIC and TIFF in, AVIF out, a photo under a target size, exact resize and crop sizes, round PNGs, 300 dpi ID photos and print sheets), background removal on the device, GPS read from a photo and removed, a 21-layout collage and its PDF, and the PDF tools checked with pypdf (merge, split, organize, AES-256 protect and unlock, stamps, signatures, annotations, the text layer, and OCR of a rendered image), plus axe on 26 pages in dark and light. Give `build/tools-new` (from `python3 scripts/build-tools.py`) to test a build before installing it.
 
 ## Settings and Home
 
@@ -103,7 +103,7 @@ Two cases are by design, not refusals: the **same version** is accepted as a rep
 
 ## Website
 
-`python3 tests/browser/website_test.py build/site [--browser chromium|firefox|webkit]` (after `python3 tools/make-site.py --no-guide`; needs Playwright and axe-core). It checks the built site and then drives it in a real browser:
+`python3 tests/browser/website_test.py build/site [--browser chromium|firefox|webkit]` (after `python3 scripts/make-site.py --no-guide`; needs Playwright and axe-core). It checks the built site and then drives it in a real browser:
 
 - **Files:** every link, image, script and style on every page exists; every `#anchor` exists; the sitemap lists real pages; the old `install.html` addresses still forward; every link from the README to the website works (pages and anchors such as `#p-links`); the tools on the website are exactly the tools in the Tools bundle (`website/data/tools.json` against `src/web/tools/assets/index-ToolsAll.js`, so a new tool fails this test until the list is updated).
 - **Policy:** no inline style or script, no event-handler attributes, nothing from other sites (the pages carry a policy that allows none), and no console error or policy violation on any page at 1280 and 390 pixels.
@@ -150,4 +150,4 @@ It checks that every page answers with its policy and pre-loading header, privat
 
 ## Screenshots
 
-`tools/screenshots.py` installs a zip, adds invented demo data (`seed_demo.php`), and saves dark, light and phone screenshots with Playwright and Chromium. The website and the guide use these.
+`scripts/screenshots.py` installs a zip, adds invented demo data (`seed_demo.php`), and saves dark, light and phone screenshots with Playwright and Chromium. The website and the guide use these.

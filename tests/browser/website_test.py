@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests the built website (build/site, from  python3 tools/make-site.py --no-guide):
+"""Tests the built website (build/site, from  python3 scripts/make-site.py --no-guide):
   * every link, image and in-page anchor resolves, in every page and in the README's links to the website; the sitemap lists real pages;
   * the site's security policy is respected: no inline style or script, no event handler attributes, nothing from other sites;
   * page basics: a title, a description, one h1, alt text on every image, a canonical address;
@@ -24,7 +24,7 @@ BASE = 'https://jackpison.github.io/Homebase-Hub/'
 AXE = open(os.path.join(ROOT, 'node_modules', 'axe-core', 'axe.min.js'), encoding='utf-8').read()
 RUN = "async()=>{const r=await axe.run(document,{resultTypes:['violations'],runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return r.violations.map(v=>v.id+' x'+v.nodes.length+' '+v.nodes[0].target.join(' '))}"
 check = Checks()
-if not os.path.isfile(os.path.join(SITE, 'index.html')): sys.exit('No website in %s: build it first with  python3 tools/make-site.py --no-guide' % SITE)
+if not os.path.isfile(os.path.join(SITE, 'index.html')): sys.exit('No website in %s: build it first with  python3 scripts/make-site.py --no-guide' % SITE)
 
 
 class Page(html.parser.HTMLParser):

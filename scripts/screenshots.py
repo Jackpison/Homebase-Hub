@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Screenshots of the real app with demo data: python3 tools/screenshots.py build/site-update-X.Y.Z.zip OUTDIR
+"""Screenshots of the real app with demo data: python3 scripts/screenshots.py build/site-update-X.Y.Z.zip OUTDIR
 Needs PHP and Playwright with Chromium. Pages load only from the local test server."""
 import sys, os, time, json, subprocess, shutil, zipfile, urllib.request, http.cookiejar, re, datetime, threading, http.server, hashlib
 os.environ['PHP_CLI_SERVER_WORKERS']='6'

@@ -2,7 +2,7 @@
 """The Tools page (built from tools-app/), installed in a real site: the app (sections, search, favourites, recent, organise,
 settings, the carry-over from the old Tools, light and dark) and every tool built so far, in a real browser, plus axe.
     python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser ...]
-With a second argument (python3 tools/build-tools.py makes build/tools-new) that staging copy is swapped in first.
+With a second argument (python3 scripts/build-tools.py makes build/tools-new) that staging copy is swapped in first.
 Needs PHP, Playwright and axe-core (npm ci). Port 8960."""
 import hashlib, io, json, os, shutil, sys, zipfile
 

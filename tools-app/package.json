@@ -1,7 +1,7 @@
 {
   "name": "homebase-hub-tools",
   "private": true,
-  "description": "Source of the Tools page (web/tools). Built with esbuild by tools/build-tools.py; the output goes into src/web/tools/.",
+  "description": "Source of the Tools page (web/tools). Built with esbuild by scripts/build-tools.py; the output goes into src/web/tools/.",
   "license": "GPL-3.0-only",
   "type": "module",
   "dependencies": {

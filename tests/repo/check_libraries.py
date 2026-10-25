@@ -20,7 +20,7 @@ LOCK = json.load(open(os.path.join(ROOT, 'tools-app', 'package-lock.json'), enco
 pv = LOCK['packages'].get('node_modules/pdfjs-dist', {}).get('version', '?')
 print('pdf.js:', pv)
 if pv == '?' or ver(pv) < (6, 2, 108): bad.append('pdf.js is %s; it must be 6.2.108 or newer' % pv)
-if not os.path.isfile(os.path.join(T, 'pdf.worker.min.mjs')): bad.append('the pdf.js worker is missing from Tools: run python3 tools/build-tools.py --install')
+if not os.path.isfile(os.path.join(T, 'pdf.worker.min.mjs')): bad.append('the pdf.js worker is missing from Tools: run python3 scripts/build-tools.py --install')
 old = [os.path.basename(f) for f in glob.glob(os.path.join(T, 'pdfjs6')) + glob.glob(os.path.join(T, 'pdf.worker.min-*.js')) + glob.glob(os.path.join(T, 'index-ToolsAll*.js'))]
 if old: bad.append('an old Tools file is still in web/tools/assets: ' + ', '.join(old))
 for f in glob.glob(os.path.join(ROOT, 'tools-app', 'src', '**', '*.js'), recursive=True):

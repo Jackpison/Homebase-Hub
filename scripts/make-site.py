@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Build the GitHub Pages site into build/site from website/, tools/site_pages.py and CHANGELOG.md.
-Usage: python3 tools/make-site.py [--no-guide] [--latest OWNER REPO VERSION SHA256 SIZE]   (adds latest.json)
-Also builds Homebase-Hub-Guide.pdf (tools/make-guide.py). Plain HTML and CSS and two small scripts (theme.js, site.js), a security
+"""Build the GitHub Pages site into build/site from website/, scripts/site_pages.py and CHANGELOG.md.
+Usage: python3 scripts/make-site.py [--no-guide] [--latest OWNER REPO VERSION SHA256 SIZE]   (adds latest.json)
+Also builds Homebase-Hub-Guide.pdf (scripts/make-guide.py). Plain HTML and CSS and two small scripts (theme.js, site.js), a security
 policy that allows nothing else (no inline styles or scripts, no other sites), no trackers."""
 import html, os, re, shutil, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -210,11 +210,11 @@ def main():
     open(os.path.join(OUT, 'sitemap.xml'), 'w', encoding='utf-8').write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join('<url><loc>%s%s</loc></url>\n' % (BASE, url(s)) for s in slugs) + '</urlset>\n')
     open(os.path.join(OUT, 'robots.txt'), 'w', encoding='utf-8').write('User-agent: *\nAllow: /\nSitemap: %ssitemap.xml\n' % BASE)
     if '--no-guide' not in sys.argv:
-        subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'make-guide.py'), os.path.join(OUT, 'Homebase-Hub-Guide.pdf')], check=True)
-        subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'make-guide.py'), os.path.join(OUT, 'Homebase-Hub-Guide-Print.pdf'), '--print'], check=True)
+        subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'make-guide.py'), os.path.join(OUT, 'Homebase-Hub-Guide.pdf')], check=True)
+        subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'make-guide.py'), os.path.join(OUT, 'Homebase-Hub-Guide-Print.pdf'), '--print'], check=True)
     if '--latest' in sys.argv:
         a = sys.argv[sys.argv.index('--latest') + 1:][:5]
-        subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'make-latest.py')] + a + [os.path.join(OUT, 'latest.json')], check=True)
+        subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'make-latest.py')] + a + [os.path.join(OUT, 'latest.json')], check=True)
     print('smaller screenshot copies:', make_sizes())
     open(os.path.join(OUT, '.nojekyll'), 'w').close()
     print('site built:', len(slugs), 'pages,', len(os.listdir(OUT)), 'files')

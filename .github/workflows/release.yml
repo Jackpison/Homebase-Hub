@@ -15,9 +15,9 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: '24', cache: npm }
       - name: Version agrees everywhere (HUB, ?v=, changelog, Version Map, root copy, no TODO)
-        run: python3 tools/release.py --check
+        run: python3 scripts/release.py --check
       - name: Build
-        run: npm ci && python3 tools/build.py
+        run: npm ci && python3 scripts/build.py
       - name: Check the tag matches the version in the code
         run: |
           V=$(ls build/site-update-*.zip | sed -E 's/.*site-update-(.*)\.zip/\1/')
@@ -26,7 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python3 tools/release-notes.py "${GITHUB_REF_NAME}" > /tmp/notes.md
+          python3 scripts/release-notes.py "${GITHUB_REF_NAME}" > /tmp/notes.md
           # A release made on github.com's "Draft a new release" page already exists by now: fill it in instead of failing.
           if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
             gh release upload "${GITHUB_REF_NAME}" build/site-update-*.zip build/site-update-*.zip.sha256 --clobber

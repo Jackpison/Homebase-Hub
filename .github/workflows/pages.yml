@@ -2,7 +2,7 @@ name: Pages
 on:
   push:
     branches: [main]
-    paths: ['website/**', 'tools/make-*.py', 'tools/site_pages.py', 'tools-app/src/tools.json', 'CHANGELOG.md', '.github/workflows/pages.yml']
+    paths: ['website/**', 'tools/make-*.py', 'scripts/site_pages.py', 'tools-app/src/tools.json', 'CHANGELOG.md', '.github/workflows/pages.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -47,9 +47,9 @@ jobs:
           SIZE: ${{ steps.rel.outputs.size }}
         run: |
           if [ -n "$TAG" ]; then
-            python3 tools/make-site.py --latest Jackpison Homebase-Hub "$VER" "$SHA" "$SIZE"
+            python3 scripts/make-site.py --latest Jackpison Homebase-Hub "$VER" "$SHA" "$SIZE"
           else
-            python3 tools/make-site.py
+            python3 scripts/make-site.py
           fi
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

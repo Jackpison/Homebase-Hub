@@ -3,9 +3,9 @@
 The source of the Tools page (`web/tools`). Plain JavaScript modules, bundled by esbuild; no framework.
 
 ```
-python3 tools/build-tools.py --install    # builds into src/web/tools and refreshes the fingerprint; commit the result
-python3 tools/build.py && python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip
-python3 tools/build-tools.py              # or: a staging copy in build/tools-new, tested with  tests/browser/tools_test.py ZIP build/tools-new
+python3 scripts/build-tools.py --install    # builds into src/web/tools and refreshes the fingerprint; commit the result
+python3 scripts/build.py && python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip
+python3 scripts/build-tools.py              # or: a staging copy in build/tools-new, tested with  tests/browser/tools_test.py ZIP build/tools-new
 ```
 
 - `src/tools.json`: the one list of tools (id, name, section, description, search words, icon, popular order). The app, the website's
@@ -23,7 +23,7 @@ python3 tools/build-tools.py              # or: a staging copy in build/tools-ne
 
 ## Status of the rebuild
 
-Every tool is rebuilt here and installed in `src/web/tools` (release 1.47.0). Never edit `src/web/tools/assets` by hand: change `tools-app/` and run `python3 tools/build-tools.py --install`.
+Every tool is rebuilt here and installed in `src/web/tools` (release 1.47.0). Never edit `src/web/tools/assets` by hand: change `tools-app/` and run `python3 scripts/build-tools.py --install`.
 
 | Section | Built |
 |---|---|

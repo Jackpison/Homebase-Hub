@@ -1,10 +1,10 @@
-# Static analysis of the site's PHP (see AGENTS.md). Run:  php phpstan.phar analyse
+# Static analysis of the site's PHP (see AGENTS.md). Run from the repo folder:  php phpstan.phar analyse -c tests/repo/phpstan.neon
 parameters:
     level: 1
     paths:
-        - src
+        - ../../src
     bootstrapFiles:
-        - tests/lib/phpstan-bootstrap.php
+        - ../lib/phpstan-bootstrap.php
     ignoreErrors:
         # every page's api.php has its own small out() helper; PHPStan reads all pages as one program and mixes them up
         - '#^Function out invoked with \d+ parameters?, \d+ required\.$#'

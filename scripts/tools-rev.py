@@ -2,10 +2,10 @@
 """The Tools fingerprint: a short code of every file in web/tools/assets.
 It goes into web/tools/sw.js (TOOLS_REV) and into the ?v= of the page's own two files (app-*.css, app-*.js) in web/tools/index.html,
 so a browser's saved copy of the Tools files is emptied and refilled exactly when one of them changed (and never otherwise).
-tools/build-tools.py --install runs --write for you.
+scripts/build-tools.py --install runs --write for you.
 
-  python3 tools/tools-rev.py --check     fails if the saved code is out of date (the build and CI run this)
-  python3 tools/tools-rev.py --write     updates sw.js and index.html after a Tools file changed
+  python3 scripts/tools-rev.py --check     fails if the saved code is out of date (the build and CI run this)
+  python3 scripts/tools-rev.py --write     updates sw.js and index.html after a Tools file changed
 """
 import hashlib, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         p = os.path.join(T, '.htaccess'); t = open(p, encoding='utf-8').read()   # the page has no inline script, so the policy allows none
         open(p, 'w', encoding='utf-8').write(re.sub(r"script-src 'self' 'sha256-[A-Za-z0-9+/=]+'", "script-src 'self'", t))
         print('Tools fingerprint:', now); sys.exit(0)
-    if re.search(r"'sha256-", open(os.path.join(T, '.htaccess'), encoding='utf-8').read()): sys.exit('The Tools security policy still allows an inline script. Run: python3 tools/tools-rev.py --write')
+    if re.search(r"'sha256-", open(os.path.join(T, '.htaccess'), encoding='utf-8').read()): sys.exit('The Tools security policy still allows an inline script. Run: python3 scripts/tools-rev.py --write')
     if sw_rev != now or len(html_revs) != 2 or any(h != now for h in html_revs):
-        sys.exit('The Tools fingerprint is out of date (files say %s and %s, the files are %s). Run: python3 tools/tools-rev.py --write' % (sw_rev, html_revs, now))
+        sys.exit('The Tools fingerprint is out of date (files say %s and %s, the files are %s). Run: python3 scripts/tools-rev.py --write' % (sw_rev, html_revs, now))
     print('Tools fingerprint is up to date:', now)

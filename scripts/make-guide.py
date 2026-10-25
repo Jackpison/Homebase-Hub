@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build the PDF guide.
-  python3 tools/make-guide.py OUT.pdf            dark pages (matches the app)
-  python3 tools/make-guide.py OUT.pdf --print    light pages, for printing
-Needs reportlab and pillow. Screenshots come from website/img, fonts from tools/fonts (Manrope, SIL OFL)."""
+  python3 scripts/make-guide.py OUT.pdf            dark pages (matches the app)
+  python3 scripts/make-guide.py OUT.pdf --print    light pages, for printing
+Needs reportlab and pillow. Screenshots come from website/img, fonts from scripts/fonts (Manrope, SIL OFL)."""
 import io, os, re, sys
 from PIL import Image as PI
 from reportlab.lib.pagesizes import A4
@@ -16,7 +16,7 @@ from reportlab.platypus import (BaseDocTemplate, PageTemplate, Frame, Paragraph,
 from reportlab.platypus.tableofcontents import TableOfContents
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IMG = os.path.join(ROOT, 'website', 'img'); FONTS = os.path.join(ROOT, 'tools', 'fonts')
+IMG = os.path.join(ROOT, 'website', 'img'); FONTS = os.path.join(ROOT, 'scripts', 'fonts')
 VER = re.search(r"define\('HUB',\s*'([^']+)'\)", open(os.path.join(ROOT, 'src/web/core-data/lib/boot.php'), encoding='utf-8').read()).group(1)
 PRINT = '--print' in sys.argv
 OUT = [a for a in sys.argv[1:] if not a.startswith('--')]
