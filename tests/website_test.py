@@ -6,7 +6,7 @@
   * in a real browser: the tour tabs (mouse, keyboard, #p-... links, and with scripts off), the look picker, light and dark following
     the device with the toggle on top, the example Telegram chat, the tool finder, the question search and the phone menu;
   * no sideways scrolling at 390 and 1280 pixels, and no console error or policy violation;
-  * moving between pages: the fade, the pre-loading rules (the only inline script allowed) and the header that hides while scrolling down;
+  * moving between pages: the fade (where the browser has it) and the header that hides while scrolling down;
   * axe (WCAG 2.1 A and AA) on every page, in dark and in light.
     python3 tests/website_test.py build/site [--browser chromium|firefox|webkit]
 Needs Playwright and axe-core (npm ci). The built tools list is compared with the Tools bundle in src/."""
@@ -45,8 +45,7 @@ class Page(html.parser.HTMLParser):
         if tag == 'img': self.imgs.append(a)
         if 'style' in a: self.bad.append('style attribute on <%s>' % tag)
         if tag == 'style': self.bad.append('<style> element')
-        # the one inline script allowed: the pre-loading rules (data the browser reads, never code; 'inline-speculation-rules' in the policy)
-        if tag == 'script' and 'src' not in a and a.get('type') != 'speculationrules': self.bad.append('inline <script>')
+        if tag == 'script' and 'src' not in a: self.bad.append('inline <script>')
         for k in a:
             if k.startswith('on'): self.bad.append('%s on <%s>' % (k, tag))
         if tag in ('img', 'script', 'link', 'iframe', 'video', 'audio', 'source', 'object', 'embed'):
@@ -214,19 +213,16 @@ try:
         pg.goto(B + '/phone/'); pg.wait_for_timeout(200); pg.click('#t-android'); pg.wait_for_timeout(100)
         check('W35 On your phone: choosing Android shows the Android steps only', pg.is_visible('#p-android') and not pg.is_visible('#p-ios') and 'Chrome' in pg.inner_text('#p-android')); c2.close()
 
-        # moving between pages: the fade, the pre-loading rules, and the header that hides while scrolling down
+        # moving between pages: the fade (where the browser has it) and the header that hides while scrolling down
         c2 = ctx('dark', 1280); pg = c2.new_page(); pg.goto(B + '/'); pg.wait_for_timeout(300)
-        rules = pg.evaluate("(() => { const s = document.querySelector('script[type=speculationrules]'); try { return JSON.parse(s.textContent); } catch (e) { return null; } })()")
-        csp = pg.evaluate("document.querySelector('meta[http-equiv=Content-Security-Policy]').content")
-        check('W37 every page carries the pre-loading rules, and the policy allows only those inline (no unsafe-inline)',
-              bool(rules and rules.get('prerender')) and "script-src 'self' 'inline-speculation-rules';" in csp and 'unsafe-inline' not in csp, (rules, csp))
-        check('W38 the header stays put while the page fades to the next one', pg.evaluate("getComputedStyle(document.querySelector('.top')).viewTransitionName") == 'hh-top')
+        vt = pg.evaluate("CSS.supports('view-transition-name', 'a') ? getComputedStyle(document.querySelector('.top')).viewTransitionName : 'no fade in this browser'")
+        check('W37 the header stays put while the page fades to the next one (browsers without the fade just change page)', vt in ('hh-top', 'no fade in this browser'), vt)
         pg.evaluate("document.documentElement.style.scrollBehavior = 'auto'"); pg.mouse.move(600, 500)
         pg.evaluate("window.scrollTo(0, 400)"); pg.wait_for_timeout(80); pg.evaluate("window.scrollTo(0, 1200)"); pg.wait_for_timeout(450)
         hid = pg.evaluate("document.querySelector('.top').getBoundingClientRect().bottom <= 1")
         pg.evaluate("window.scrollTo(0, 1000)"); pg.wait_for_timeout(450)
         back = pg.evaluate("Math.abs(document.querySelector('.top').getBoundingClientRect().top) < 1")
-        check('W39 the header slides away while scrolling down and comes back on a scroll up', hid and back, (hid, back)); c2.close()
+        check('W38 the header slides away while scrolling down and comes back on a scroll up', hid and back, (hid, back)); c2.close()
 
         # axe, every page, both themes (this context bypasses the page policy, which would stop axe from running)
         for scheme in ('dark', 'light'):

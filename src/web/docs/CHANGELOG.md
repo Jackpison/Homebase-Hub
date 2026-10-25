@@ -96,7 +96,7 @@ Nothing to migrate by hand unless an entry says so.
 
 ### Website
 
-- Pages fade into each other, the next page is prepared when you point at a link, and the header hides while you scroll down.
+- Pages fade into each other (Chrome, Edge and Safari) and the header hides while you scroll down.
 
 ### For developers
 
