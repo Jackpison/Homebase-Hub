@@ -95,7 +95,8 @@ def main():
     zp = os.path.join(OUT, name)
     with zipfile.ZipFile(zp, 'w', zipfile.ZIP_DEFLATED) as z:
         for d in sorted(KEEP_DIRS):
-            z.writestr(zipfile.ZipInfo(d), '')
+            zi = zipfile.ZipInfo(d); zi.external_attr = (0o40755 << 16) | 0x10   # a folder anyone can open (unzip used 0600 before)
+            z.writestr(zi, '')
         for dp, dn, fns in os.walk(TREE):
             dn.sort()
             for fn in sorted(fns):

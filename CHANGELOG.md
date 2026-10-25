@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.50.0 | A tidier folder layout: the engine, your pictures and the documents now live in `web/hub` |
 | 1.49.0 | Gets your site ready for the new folder layout of 1.50, plus small fixes |
 | 1.48.9 | Home themes (a Starter theme and your own, with export and import), a welcome text, and no background repeats until the others had their turn |
 | 1.48.5 | A new Cards page (a cleaner table, or grouped by holder), Settings regrouped into Web, Data and System Setting, and tidier pencil menus |
@@ -73,6 +74,26 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.50.0
+
+### A Tidier Folder Layout
+
+- **Update to 1.49.0 first.** A site on 1.48 or older refuses this update (nothing changes); install 1.49.0, then this one.
+- The site's own engine moved from `web/core-data` to `web/hub/core`, your pictures and logo to `web/hub/media`, and the README, changelog and licences to `web/hub/docs`. Your pictures and settings move by themselves on the first page you open after the update, and move back if you Go Back.
+- **Your cron job needs the new address.** If you run the schedule from your hosting panel, change `web/core-data/cron.php` to `web/hub/core/cron.php` (the exact line is in Settings > Telegram > Run It on a Schedule). Until then the reminders still go out while the site is open.
+- **Instant replies on Telegram** tell Telegram the new address by themselves, the next time reminders run.
+- The old `web/core-data` folder is removed once it is empty.
+
+### Fixed
+
+- **Unzipping an update by hand** (for a first install) now gives the empty picture folders normal permissions; before, the web server could not open them until you changed them.
+
+### For developers
+
+- `HUB_MEDIA` and `HUB_DOCS` in `boot.php` name the pictures and documents folders; `tests/lib/helpers.py` reads either layout.
 
 ---
 

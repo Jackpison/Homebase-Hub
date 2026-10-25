@@ -5,7 +5,7 @@ import json, os, shutil, subprocess, sys, threading, time, urllib.request, urlli
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, SEED
-from helpers import UA, PW, HERE, Site, Checks, mutate_zip, zip_version, sha, stop_all
+from helpers import UA, PW, HERE, Site, Checks, mutate_zip, zip_version, zip_core, sha, stop_all
 if len(sys.argv) < 4:
     sys.exit('Usage: python3 tests/server/update_test.py CURRENT.zip PREVIOUS.zip OLDER.zip\n'
              '  CURRENT   the zip just built (scripts/build.py)\n'
@@ -115,16 +115,32 @@ try:
 
     # ===== C. the real upgrade path 1.37.0 -> 1.39.0 by uploading the zip =====
     s = Site(OLD, 9200); r = s.chunks(CUR, f'site-update-{CURV}.zip')
-    check(f'C1 uploaded {CURV} passes every check on a {OLDV} site', r.get('ok') and all(c['ok'] for c in r['checks']), r)
-    r = s.post('update_apply', {'password': PW}); time.sleep(0.5)
-    check(f'C2 {OLDV} -> {CURV} applied by the old updater', r.get('ok') and s.version() == f'{CURV}', r)
-    check('C3 file check afterwards: 0 changed, 0 missing, 0 extra', s.clean()[:3] == (0, 0, 0), s.clean())
-    st = s.get('update_status'); check('C4 new GitHub card data is there, daily check off', st['gh']['auto'] is False and st['gh']['curl'], st.get('gh'))
-    r = s.post('update_apply', {'password': PW, 'back': True}); time.sleep(0.5)
-    check(f'C5 Go Back to {OLDV} works', r.get('ok') and s.version() == f'{OLDV}', r)
+    # 1.50 moved the engine to web/hub/core; an updater from before 1.49 cannot take that step and must refuse it safely
+    OLD_TOO_OLD = zip_core(CUR) != zip_core(OLD) and b'UP_CORES' not in zipfile.ZipFile(OLD).read(zip_core(OLD) + '/lib/update.php')
+    if OLD_TOO_OLD:
+        check(f'C1 a {OLDV} site refuses {CURV} (new folder layout; 1.49 is needed first)', not r.get('ok') and 'Refused' in r.get('error', ''), str(r)[:200])
+        r = s.post('update_apply', {'password': PW})
+        check('C2 ...nothing can be applied and nothing changed', not r.get('ok') and s.version() == f'{OLDV}' and s.clean()[:3] == (0, 0, 0), (r, s.clean()))
+    else:
+        check(f'C1 uploaded {CURV} passes every check on a {OLDV} site', r.get('ok') and all(c['ok'] for c in r['checks']), r)
+        r = s.post('update_apply', {'password': PW}); time.sleep(0.5)
+        check(f'C2 {OLDV} -> {CURV} applied by the old updater', r.get('ok') and s.version() == f'{CURV}', r)
+        check('C3 file check afterwards: 0 changed, 0 missing, 0 extra', s.clean()[:3] == (0, 0, 0), s.clean())
+        st = s.get('update_status'); check('C4 new GitHub card data is there, daily check off', st['gh']['auto'] is False and st['gh']['curl'], st.get('gh'))
+        r = s.post('update_apply', {'password': PW, 'back': True}); time.sleep(0.5)
+        check(f'C5 Go Back to {OLDV} works', r.get('ok') and s.version() == f'{OLDV}', r)
 
     # ===== D. the docs move: 1.38.0 (real release) -> 1.39.0 =====
-    s = Site(REL38, 9300); r = s.chunks(CUR, f'site-update-{CURV}.zip')
+    s = Site(REL38, 9300)
+    moving = zip_core(REL38) != zip_core(CUR)   # 1.49 -> 1.50: the engine, pictures and docs move to web/hub
+    if moving:   # a picture and the logo where the old layout keeps them
+        om = s.dir + '/web/core-data/media'
+        import base64
+        r = s.post('logo', {'data': 'data:image/png;base64,' + base64.b64encode(open(os.path.join(FIX, 'favicon-fixture.png'), 'rb').read()).decode()})
+        LOGO = os.path.basename(s.php("echo hub_settings()['logo'];"))
+        check('D0 the old site keeps its logo in web/core-data/media', r.get('ok') and LOGO.startswith('logo-') and os.path.isfile(om + '/brand/' + LOGO), (r, LOGO))
+        os.makedirs(om + '/home/photos', exist_ok=True); open(om + '/home/photos/mine.jpg', 'wb').write(b'my photo')
+    r = s.chunks(CUR, f'site-update-{CURV}.zip')
     check(f'D1 a {PREVV} site shows the {CURV} notes before updating ', r.get('ok') and NOTEMARK in (r.get('notes') or ''), (r.get('ok'), (r.get('notes') or '')[:120]))
     r = s.post('update_apply', {'password': PW}); time.sleep(0.5)
     check(f'D2 {PREVV} -> {CURV} applied', r.get('ok') and s.version() == f'{CURV}', r)
@@ -132,11 +148,24 @@ try:
     had_old = 'web/core-data/docs/CHANGELOG.md' in zipfile.ZipFile(REL38).namelist()
     check('D3b the old second copy of the changelog (web/core-data/docs) is gone after the update', not os.path.exists(s.dir + '/web/core-data/docs/CHANGELOG.md'), 'previous zip had it: %s' % had_old)
     check('D4 docs are now in web/hub/docs; the old readable source is gone', os.path.isfile(s.dir + '/web/hub/docs/CHANGELOG.md') and os.path.isfile(s.dir + '/web/hub/docs/.htaccess') and not os.path.isdir(s.dir + '/web/core-data/docs/src'), os.listdir(s.dir + '/web/hub/core') )
+    if moving:
+        s.get('state')   # the first request after the update moves your files
+        nm = s.dir + '/web/hub/media'
+        check('D4b your pictures moved to web/hub/media', os.path.isfile(nm + '/brand/' + LOGO) and open(nm + '/home/photos/mine.jpg', 'rb').read() == b'my photo', sorted(os.listdir(nm)))
+        check('D4c the old web/core-data folder is gone', not os.path.exists(s.dir + '/web/core-data'), os.listdir(s.dir + '/web/core-data') if os.path.isdir(s.dir + '/web/core-data') else '')
+        logo = s.php("echo hub_settings()['logo'];")
+        ok = urllib.request.urlopen(s.base + '/' + logo).status == 200 if logo else False
+        check('D4d the logo is read from its new place and loads', logo == 'web/hub/media/brand/' + LOGO and ok, logo)
+        r = subprocess.run(['php', s.dir + '/web/hub/core/cron.php'], capture_output=True, text=True)
+        check('D4e the schedule runs from its new address (web/hub/core/cron.php)', r.returncode == 0 and 'Reminders' in r.stdout, (r.stdout[-200:], r.stderr[-200:]))
     cl = s.get('changelog'); check('D5 Settings > Changelog reads the new place', f'{CURV}' in (cl.get('text') or cl.get('md') or json.dumps(cl))[:4000], str(cl)[:200])
     st = s.get('update_status'); check('D6 GitHub card still there after the move', 'gh' in st and st['gh']['auto'] is False, st.get('gh'))
     r = s.post('update_apply', {'password': PW, 'back': True}); time.sleep(0.5)
     check(f'D7 Go Back to {PREVV} works', r.get('ok') and s.version() == f'{PREVV}', r)
     check(f'D8 after going back, {PREVV} is whole again', s.clean()[:3] == (0, 0, 0), s.clean())
+    if moving:
+        s.get('state')
+        check(f'D8b after going back, your pictures are where {PREVV} looks for them', os.path.isfile(s.dir + '/web/core-data/media/brand/' + LOGO) and s.php("echo hub_settings()['logo'];") == 'web/core-data/media/brand/' + LOGO and os.path.isfile(s.dir + '/web/core-data/media/home/photos/mine.jpg') and not os.path.exists(s.dir + '/web/hub/media/home/photos/mine.jpg'), '')
     # a 1.39.0 site reads notes of the next zip from the new place
     s = Site(CUR, 9301); r = s.chunks(NEW, f'site-update-{NEXTV}.zip')
     check(f'D9 a {CURV} site reads the next version\'s notes from web/hub/docs', r.get('ok') and 'Test build' in (r.get('notes') or ''), (r.get('notes') or '')[:120])

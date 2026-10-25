@@ -6,15 +6,17 @@ FOLDERS
 <site folder>/       the folder of one domain (public_html, an add-on domain folder, a subdomain folder...)
   index.php          the start page (the only file kept in the root)
   web/               everything the site is made of
-    hub/core/       the engine shared by every page, and YOUR OWN FILES
-      api.php cron.php telegram.php     the only PHP files a browser calls: site API, schedule, Telegram replies
-      lib/           PHP that other files load: boot, backup, notify, approval, watch, health, update, overview (blocked from the web)
-      assets/        what every page loads: shell.js, shell.css, shell-admin.js, vendor/ (PDF, Excel and QR libraries)
-      manifest.json  every file of this release with its fingerprint (made when the release is built; Updates uses it)
+    hub/             the site's own engine, your pictures and these notes
+      core/          the engine shared by every page
+        api.php cron.php telegram.php   the only PHP files a browser calls: site API, schedule, Telegram replies
+        lib/         PHP that other files load: boot, backup, notify, approval, watch, health, update, overview (blocked from the web)
+        assets/      what every page loads: shell.js, shell.css, shell-admin.js, vendor/ (PDF, Excel and QR libraries)
+        manifest.json  every file of this release with its fingerprint (made when the release is built; Updates uses it)
       media/         YOUR OWN FILES: brand (the site logo), home/photos, home/uploads, home/icons (start page) and links/icons
                      (saved link icons). Visitors load them from here. Never replaced by an update.
-    docs/            README.txt (this file), CHANGELOG.md (every change since 1.0.0, newest first) and src/ (the readable
-                     source of every minified script and style); all blocked from the web
+      docs/          README.txt (this file), CHANGELOG.md (every change since 1.0.0, newest first), THIRD-PARTY.md (the
+                     libraries' licences) and src/ (the readable source of every minified script and style); all blocked from the web
+                     (up to 1.49 these three were web/core-data, web/core-data/media and web/docs)
     home/            start page      (its pictures are in hub/media/home)
     links/ info/ cards/ tasks/        each has index.html (the page), api.php, and assets/ (its CSS and JavaScript)
     settings/        the Settings page (a small shell: hub/core/assets/shell-admin.js draws everything in it)
@@ -233,7 +235,7 @@ RULES FOR CHANGING THE CODE
    Home, authed() in Info).
 3. Security headers come from ONE place per file type: PHP files send their own (hub_headers() in boot.php, or the page's own header() calls);
    .htaccess sets them only for files that are not PHP. Never both: two copies, or two values, can make a browser ignore the header.
-4. Your pictures, icons and the logo live in web/hub/media/... : in PHP use HUB_CORE . '/media/...' (never a path next to the page), in the browser map
+4. Your pictures, icons and the logo live in web/hub/media/... : in PHP use HUB_MEDIA . '/...' (never a path next to the page), in the browser map
    the stored "icons/..." / "photos/..." values with mediaUrl() (Links) or media() (start page).
 5. Include files (lib.php, web/hub/core/lib/*.php, config.php) start with the guard line that answers 404 if one is opened directly.
 6. Do not leave an API action that nothing calls: it is attack surface.

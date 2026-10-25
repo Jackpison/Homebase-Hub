@@ -193,7 +193,7 @@ try:
     s.post('pp_set', {'password': PW, 'passphrase': PP})
     s.php("""hub_jput(hub_dir('core') . '/notify.json', json_encode(['token' => '1:test', 'chat' => '1']));
       hub_jput(hub_dir('core') . '/watch.json', json_encode(['domains' => [['d' => 'example.com']]]));
-      @mkdir(HUB_CORE . '/media/home/uploads', 0755, true); file_put_contents(HUB_CORE . '/media/home/uploads/a.jpg', 'x');
+      @mkdir(HUB_MEDIA . '/home/uploads', 0755, true); file_put_contents(HUB_MEDIA . '/home/uploads/a.jpg', 'x');
       $st = hub_settings(); $st['siteName'] = 'Before Start Over'; hub_settings_save($st);""")
     full = snap(s)
     r = s.post('reset_all', {'confirm': 'erase', 'password': PW})
@@ -204,7 +204,7 @@ try:
     r = s.post('reset_all', {'confirm': 'ERASE', 'password': PW})
     gone = snap(s)
     left = s.php("""echo json_encode(['notify' => is_file(hub_jpath(hub_dir('core') . '/notify.json')), 'watch' => is_file(hub_jpath(hub_dir('core') . '/watch.json')),
-      'pp' => hub_pp_on(), 'key' => is_file(hub_jpath(hub_dir('core') . '/backup-key.json')), 'media' => is_file(HUB_CORE . '/media/home/uploads/a.jpg'),
+      'pp' => hub_pp_on(), 'key' => is_file(hub_jpath(hub_dir('core') . '/backup-key.json')), 'media' => is_file(HUB_MEDIA . '/home/uploads/a.jpg'),
       'name' => hub_settings()['siteName'], 'totp' => !empty(hub_auth()['totp']['on'])]);""")
     left = json.loads(left)
     check('C3 ERASE and the password erase every page', r.get('ok') and not gone['info'] and not gone['cards'] and not gone['links'] and not gone['tasks'], (r, gone))
