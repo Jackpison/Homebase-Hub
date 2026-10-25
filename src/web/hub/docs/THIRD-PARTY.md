@@ -8,6 +8,7 @@ Every bundled component is compatible with GPL-3.0. Each keeps its own licence a
 | QR code library | `hub/core/assets/vendor` | MIT | Upstream licence (earlier check) |
 | pdf.js 6.4.299 (Mozilla), legacy build | Tools (`pdf.worker.min.mjs`, `vendor/pdfjs/`) | Apache-2.0 | npm package `pdfjs-dist` |
 | pdf.js image decoders: OpenJPEG, JBIG2 (from PDFium), qcms | Tools `vendor/pdfjs/wasm/` | BSD-2-Clause, BSD-3-Clause, MIT | The licence files next to each decoder |
+| pdf.js character maps (Adobe) and standard fonts (Foxit from PDFium, Liberation Sans) | Tools `vendor/pdfjs/cmaps/`, `vendor/pdfjs/standard_fonts/` | BSD-3-Clause (Adobe, Foxit); Liberation: GPL-2.0 with the font exception | `LICENSE.txt`, `LICENSE_FOXIT.txt`, `LICENSE_LIBERATION.txt` next to the files |
 | pdf-lib 1.17.1 | Tools | MIT | npm package |
 | qpdf, WebAssembly build `@neslinesli93/qpdf-wasm` 0.3.0 (`qpdf.wasm`) | Tools | Apache-2.0 (qpdf); ISC (the package) | npm package and qpdf's licence |
 | Tesseract.js 7.0.0 and tesseract.js-core 7.0.0, with `eng.traineddata` | Tools `vendor/tesseract/` | Apache-2.0 | npm packages; tesseract-ocr/tessdata states its data is Apache-2.0 |

@@ -262,6 +262,9 @@ try:
         load('pdf-text', P3); pg.get_by_role('button', name='Text Layer Only', exact=True).click(); pg.get_by_role('button', name='Get the Text', exact=True).click()
         wait_js(pg, "document.querySelector('#root textarea').value.length > 10", 60000); txt = pg.input_value('#root textarea')
         check('D12 PDF to Text reads the text layer, page by page', 'quick brown fox' in txt.lower() and '--- page 3 ---' in txt, txt[:120])
+        load('pdf-text', os.path.join(FIXDIR, 'japanese-cid.pdf')); pg.get_by_role('button', name='Text Layer Only', exact=True).click(); pg.get_by_role('button', name='Get the Text', exact=True).click()
+        wait_js(pg, "document.querySelector('#root textarea').value.length > 10", 60000); txt = pg.input_value('#root textarea')
+        check('D12b ...and Japanese text in a PDF that does not carry its font (pdf.js character maps)', '日本語のテキスト' in txt, txt[:120])
         ocr = os.path.join(TMP, 'note.png'); im_ = PI.new('RGB', (900, 260), 'white'); from PIL import ImageDraw, ImageFont
         ImageDraw.Draw(im_).text((40, 70), 'HELLO WORLD 2026', fill='black', font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 72)); im_.save(ocr)
         load('pdf-text', ocr); pg.get_by_role('button', name='Get the Text', exact=True).click()

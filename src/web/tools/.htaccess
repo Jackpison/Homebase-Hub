@@ -14,7 +14,8 @@ Options -Indexes
 # The OCR, background-removal and PDF engines (.wasm, .traineddata) shrink to 30-60% of their size.
 # .onnx is already dense, so it gets its own type and is left uncompressed.
 <IfModule mod_mime.c>
-  AddType application/octet-stream .traineddata
+  AddType application/octet-stream .traineddata .bcmap .pfb
+  AddType font/ttf .ttf
   AddType application/x-onnx .onnx
 </IfModule>
 <IfModule mod_brotli.c>
@@ -27,7 +28,7 @@ Options -Indexes
 <IfModule mod_headers.c>
   # Files are re-checked every time (a quick 304 when unchanged). Addresses that carry ?v=<fingerprint> (the page's own scripts, see
   # assets/.htaccess) are kept for a year. The service worker keeps assets/ for instant repeat visits and drops it when a file changes.
-  <FilesMatch "\.(js|css|woff2?|png|svg|wasm|onnx|traineddata)$">
+  <FilesMatch "\.(js|css|woff2?|ttf|png|svg|wasm|onnx|traineddata|bcmap|pfb)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
   <FilesMatch "^(index\.html|config\.json|sw\.js)$">
