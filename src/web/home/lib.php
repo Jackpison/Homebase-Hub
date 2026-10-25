@@ -18,9 +18,9 @@ const SITE_FILE  = DATA_DIR . '/site.json';
 const POOL_FILE  = DATA_DIR . '/photos.json';
 const CACHE_DIR  = DATA_DIR . '/cache';
 const LOCK_FILE  = DATA_DIR . '/refill.lock';
-const UPLOAD_DIR = HUB_CORE . '/media/home/uploads';   // your own pictures and videos live in web/core-data/media (before 1.29.3 they sat next to the page)
-const ICON_DIR   = HUB_CORE . '/media/home/icons';
-const PHOTO_DIR  = HUB_CORE . '/media/home/photos';
+const UPLOAD_DIR = HUB_MEDIA . '/home/uploads';   // your own pictures and videos live in web/core-data/media (before 1.29.3 they sat next to the page)
+const ICON_DIR   = HUB_MEDIA . '/home/icons';
+const PHOTO_DIR  = HUB_MEDIA . '/home/photos';
 /** An address, from the start page, for a saved file: "photos/x.jpg" is stored that way, the page finds it in web/core-data/media/home. */
 function media_url(string $u): string { return preg_match('~^(photos|uploads|icons)/~', $u) ? '../core-data/media/home/' . $u : $u; }
 

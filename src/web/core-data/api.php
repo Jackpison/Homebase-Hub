@@ -308,7 +308,7 @@ case 'settings':
 case 'logo':   // POST {data: "data:image/png;base64,..."} sets the site logo; POST {remove: true} removes it
     need_post(); need_admin();
     $b = body(1); $s = hub_settings();
-    $dir = HUB_CORE . '/media/brand';
+    $dir = HUB_MEDIA . '/brand';
     $path = '';
     if (empty($b['remove'])) {
         if (!preg_match('#^data:image/(png|jpeg|webp|gif|x-icon|vnd\.microsoft\.icon);base64,([A-Za-z0-9+/=]+)$#', (string)($b['data'] ?? ''), $m)) hub_json(400, ['ok' => false, 'error' => 'Pick a PNG, JPG, WebP or GIF image.']);
@@ -316,7 +316,7 @@ case 'logo':   // POST {data: "data:image/png;base64,..."} sets the site logo; P
         $ext = $bin === false ? '' : image_ext($bin);
         if ($ext === '' || strlen($bin) > 400000) hub_json(400, ['ok' => false, 'error' => 'That image is not usable (max 400 KB).']);
         if (!is_dir($dir)) @mkdir($dir, 0755, true);
-        $path = 'web/core-data/media/brand/logo-' . dechex(time()) . bin2hex(random_bytes(2)) . '.' . $ext;
+        $path = HUB_LAYOUT_HERE['media'] . '/brand/logo-' . dechex(time()) . bin2hex(random_bytes(2)) . '.' . $ext;
         if (!hub_write(HUB_PUBLIC . '/' . $path, $bin)) hub_json(500, ['ok' => false, 'error' => 'Could not save the logo (check folder permissions).']);
     }
     foreach (glob($dir . '/logo-*') ?: [] as $f) if ($path === '' || basename($f) !== basename($path)) @unlink($f);   // old logos, only now
@@ -360,8 +360,8 @@ case 'diag':   // Settings > Server check
         $add('Reach: ' . $n, $fav ? ($code >= 200 && $code < 500) : ($code >= 200 && $code < 400), $code ? "Answered HTTP $code ($note)." : "No connection: $note. Your host may block outgoing requests; ask them to allow outbound HTTPS. Link icons then fall back to being loaded by the visitor's browser.");
     }
     $add('allow_url_fopen', true, ini_get('allow_url_fopen') ? 'On.' : 'Off (fine when cURL works).');
-    foreach (['Data folder' => hub_data_root(), 'Links icons' => HUB_CORE . '/media/links/icons', 'Start page icons' => HUB_CORE . '/media/home/icons', 'Start page photos' => HUB_CORE . '/media/home/photos',
-              'Start page uploads' => HUB_CORE . '/media/home/uploads', 'Logo folder' => HUB_CORE . '/media/brand'] as $n => $d) {
+    foreach (['Data folder' => hub_data_root(), 'Links icons' => HUB_MEDIA . '/links/icons', 'Start page icons' => HUB_MEDIA . '/home/icons', 'Start page photos' => HUB_MEDIA . '/home/photos',
+              'Start page uploads' => HUB_MEDIA . '/home/uploads', 'Logo folder' => HUB_MEDIA . '/brand'] as $n => $d) {
         if (!is_dir($d)) @mkdir($d, 0755, true);
         $t = $d . '/.write-test-' . bin2hex(random_bytes(3));
         $ok = @file_put_contents($t, 'x') !== false; if ($ok) @unlink($t);
@@ -483,7 +483,7 @@ case 'pp_check':   // the website password, checked like a login (before the bro
 
 case 'changelog':   // Settings > Changelog: the history of every version (docs/ is closed to browsers, so it is read here, for you only)
     need_admin(false);
-    $cl = HUB_WEB . '/docs/CHANGELOG.md';
+    $cl = HUB_DOCS . '/CHANGELOG.md';
     if (!is_file($cl)) $cl = HUB_CORE . '/docs/CHANGELOG.md';   // before 1.39.0 the docs were in web/core-data/docs
     if (!is_file($cl)) hub_json(200, ['ok' => false, 'error' => 'The changelog file is not on your server (web/docs/CHANGELOG.md).']);
     hub_json(200, ['ok' => true, 'version' => HUB, 'md' => (string)file_get_contents($cl, false, null, 0, 1500000), 'time' => (int)filemtime($cl)]);

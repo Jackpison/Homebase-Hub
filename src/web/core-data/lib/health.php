@@ -165,7 +165,7 @@ function health_report(): array {
     $sec = [
         ['Links', $sd . '/links'], ['Info', $sd . '/info'], ['Cards', $sd . '/cards'], ['Tasks', $sd . '/tasks'], ['Start page data', $sd . '/home'],
         ['Site settings and logins', $sd . '/core'], ['Sessions', $sd . '/sessions'],
-        ['Start page photos', HUB_CORE . '/media/home/photos'], ['Start page uploads', HUB_CORE . '/media/home/uploads'], ['Link icons', HUB_CORE . '/media/links/icons'],
+        ['Start page photos', HUB_MEDIA . '/home/photos'], ['Start page uploads', HUB_MEDIA . '/home/uploads'], ['Link icons', HUB_MEDIA . '/links/icons'],
         ['Site code', HUB_WEB],
     ];
     $sizes = []; $total = 0;

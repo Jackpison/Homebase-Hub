@@ -127,7 +127,7 @@ function nt_day(string $ymd): string { return date('D, j M', strtotime($ymd)); }
 function nt_site_url(): string {
     $host = (string)($_SERVER['HTTP_HOST'] ?? '');
     if ($host === '' || !preg_match('/^[A-Za-z0-9.:\[\]-]+$/', $host)) return '';
-    $path = rtrim(preg_replace('#/web/[^/]+/[^/]*$#', '', str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '/web/core-data/api.php'))), '/');   // the site's folder, whichever page is asking
+    $path = rtrim(preg_replace('#/web/(?:hub/)?[^/]+/[^/]*$#', '', str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '/web/core-data/api.php'))), '/');   // the site's folder, whichever page is asking
     return (hub_https() ? 'https' : 'http') . '://' . $host . $path . '/';
 }
 

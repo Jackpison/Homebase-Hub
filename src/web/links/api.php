@@ -37,7 +37,7 @@ $dataDir    = hub_dir('links');
 $dataFile   = $dataDir . '/bookmarks.php';
 $seedFile   = $dataDir . '/seed.php';         // starter bookmarks for a fresh install
 $backupDir  = $dataDir . '/backups';
-$iconDir    = HUB_CORE . '/media/links/icons';   // before 1.29.3 this folder sat next to the page
+$iconDir    = HUB_MEDIA . '/links/icons';   // before 1.29.3 this folder sat next to the page
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');

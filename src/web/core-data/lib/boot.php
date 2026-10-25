@@ -48,9 +48,48 @@ const HUB_GUARD        = "<?php http_response_code(404); exit; ?>\n";
 const HUB_APPS         = ['home', 'links', 'info', 'cards', 'tasks', 'tools'];   // the tabs of the bar, in their default order
 const HUB_PAGE_NAMES   = ['home' => 'Home', 'links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'tools' => 'Tools'];
 
-define('HUB_CORE', dirname(__DIR__));          // .../public_html/web/core-data  (the shared engine, its docs, and your pictures)
+define('HUB_CORE', dirname(__DIR__));          // .../public_html/web/core-data  (the shared engine)
 define('HUB_WEB', dirname(HUB_CORE));        // .../public_html/web  (the pages, and core-data)
 define('HUB_PUBLIC', dirname(HUB_WEB));      // .../public_html  (index.php, web and site-data sit here)
+define('HUB_MEDIA', HUB_CORE . '/media');    // your pictures, icons and logo (from 1.50: web/hub/media)
+define('HUB_DOCS', HUB_WEB . '/docs');       // README.txt, CHANGELOG.md, THIRD-PARTY.md (from 1.50: web/hub/docs)
+/* The two layouts (see lib/update.php): this version uses the first; the second is where an update or Go Back may have left your files. */
+const HUB_LAYOUT_HERE  = ['media' => 'web/core-data/media', 'config' => 'web/core-data/config.php', 'data' => 'web/core-data/data'];
+const HUB_LAYOUT_OTHER = ['media' => 'web/hub/media', 'config' => 'web/hub/core/config.php', 'data' => 'web/hub/core/data'];
+const HUB_LAYOUT_EMPTY = ['web/hub/core/lib', 'web/hub/core/assets', 'web/hub/core', 'web/hub/media', 'web/hub/docs', 'web/hub'];   // left empty by Go Back
+
+/* ======================= your files follow the layout ======================= */
+
+/** Moves everything in $from into $to (made where missing). A file already at $to stays, except the shipped .htaccess, which wins.
+ *  Nothing is copied or deleted: only renamed, so even a stop half-way loses nothing, and the next request carries on. */
+function hub_merge_move(string $from, string $to): void {
+    if (!is_dir($from) || is_link($from)) return;
+    if (!is_dir($to) && !@mkdir($to, 0755, true)) return;
+    foreach (scandir($from) ?: [] as $n) {
+        if ($n === '.' || $n === '..') continue;
+        $a = $from . '/' . $n; $b = $to . '/' . $n;
+        if (is_link($a)) continue;
+        if (is_dir($a)) { if (!file_exists($b)) @rename($a, $b); else hub_merge_move($a, $b); continue; }
+        if (!file_exists($b)) @rename($a, $b); elseif ($n === '.htaccess' || $n === '.gitkeep') @unlink($a);
+    }
+    @rmdir($from);   // only when empty
+}
+/** After an update that moved the engine (1.49 and 1.50, either way), puts your pictures, config.php and the old fallback data folder
+ *  where this version looks for them, then removes the folders left empty. One look per request when there is nothing to do. */
+function hub_settle_layout(): void {
+    $pub = HUB_PUBLIC;
+    $o = HUB_LAYOUT_OTHER; $h = HUB_LAYOUT_HERE;
+    if (!is_dir($pub . '/' . $o['media']) && !is_file($pub . '/' . $o['config']) && !is_dir($pub . '/' . $o['data'])) return;
+    // never while an update or Go Back is putting files in place (lib/update.php holds this lock); the next request carries on
+    $lk = @fopen($pub . '/site-data/updates/apply.lock', 'c');
+    if ($lk && !flock($lk, LOCK_EX | LOCK_NB)) { fclose($lk); return; }
+    hub_merge_move($pub . '/' . $o['media'], $pub . '/' . $h['media']);
+    if (is_file($pub . '/' . $o['config']) && !is_file($pub . '/' . $h['config'])) @rename($pub . '/' . $o['config'], $pub . '/' . $h['config']);
+    hub_merge_move($pub . '/' . $o['data'], $pub . '/' . $h['data']);
+    foreach (HUB_LAYOUT_EMPTY as $d) if (is_dir($pub . '/' . $d)) @rmdir($pub . '/' . $d);
+    if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
+}
+hub_settle_layout();
 
 /* ======================= where data lives ======================= */
 
@@ -226,17 +265,17 @@ function hub_links_keep_due(?int $newest, bool $force, int $every, ?int $now = n
 
 /* ======================= install on a phone or computer (web app manifest) ======================= */
 
-/** The site's own path from the address of a script inside it: "/hub" for /hub/web/core-data/api.php, "" at the top. */
+/** The site's own path from the address of a script inside it: "/hub" for /hub/web/core-data/api.php (or /hub/web/hub/core/api.php), "" at the top. */
 function hub_site_path(string $script): string {
     $s = str_replace('\\', '/', $script);
-    $p = preg_replace('#/web/[^/]+/[^/]*$#', '', $s);
+    $p = preg_replace('#/web/(?:hub/)?[^/]+/[^/]*$#', '', $s);
     if ($p === null || $p === $s) $p = rtrim(dirname($s), '/');   // a script at the top (index.php)
     return rtrim($p, '/');
 }
 
 /** The owner's logo, when it can be an app icon: a square PNG of at least 512 px. Its address inside the site, or ''. */
 function hub_app_logo(string $logo, string $public): string {
-    if (!preg_match('#^web/core-data/media/brand/logo-[0-9a-f]+\.png$#', $logo)) return '';
+    if (!preg_match('#^web/(?:core-data|hub)/media/brand/logo-[0-9a-f]+\.png$#', $logo)) return '';
     $f = $public . '/' . $logo;
     $i = is_file($f) ? @getimagesize($f) : false;
     return ($i && $i[2] === IMAGETYPE_PNG && $i[0] === $i[1] && $i[0] >= 512) ? $logo : '';
@@ -769,8 +808,8 @@ function hub_settings(): array {
 function hub_clean_settings(array $in): array {
     $d = hub_settings_default(); $o = [];
     $o['siteName'] = mb_substr(trim(strip_tags((string)($in['siteName'] ?? $d['siteName']))), 0, 30) ?: $d['siteName'];
-    // the logo lives in web/core-data/media/brand; the address a logo had before (core/media/brand, or core/brand) is still read, so it is not lost
-    $o['logo']     = preg_match('#^(?:web/)?core(?:-data)?/(?:media/)?brand/(logo-[a-z0-9]+\\.(?:png|jpg|webp|gif|ico))$#', (string)($in['logo'] ?? ''), $lm) ? 'web/core-data/media/brand/' . $lm[1] : '';
+    // the logo lives in the media folder's brand/; every address a logo had before (web/hub/media/brand, core/media/brand, core/brand) is still read, so it is not lost
+    $o['logo']     = preg_match('#^(?:web/)?(?:core(?:-data)?|hub)/(?:media/)?brand/(logo-[a-z0-9]+\\.(?:png|jpg|webp|gif|ico))$#', (string)($in['logo'] ?? ''), $lm) ? HUB_LAYOUT_HERE['media'] . '/brand/' . $lm[1] : '';
     $o['nav']      = in_array($in['nav'] ?? '', ['top', 'side', 'dock'], true) ? $in['nav'] : 'top';
     $o['theme']    = in_array($in['theme'] ?? '', ['dark', 'light', 'auto'], true) ? $in['theme'] : 'dark';
     $o['accent']   = preg_match('/^#[0-9a-f]{6}$/i', (string)($in['accent'] ?? '')) ? strtolower($in['accent']) : $d['accent'];

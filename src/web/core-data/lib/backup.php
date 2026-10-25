@@ -67,7 +67,7 @@ function bk_export(array $pick, bool $secrets = false): array {
         $d = bk_links_data();
         if (is_array($pick['links'])) $d['tabs'] = array_values(array_filter($d['tabs'] ?? [], function ($t) use ($pick) { return in_array((string)($t['id'] ?? ''), $pick['links'], true); }));
         $icons = [];
-        $base = HUB_CORE . '/media/links/';
+        $base = HUB_MEDIA . '/links/';
         $add = function ($rel) use (&$icons, $base) {
             $rel = preg_replace('/\?.*$/', '', (string)$rel);
             if (!preg_match('#^icons/([A-Za-z0-9._-]+/)?[A-Za-z0-9._-]+\.(png|ico|jpe?g|gif|webp|svg)$#', $rel)) return;
@@ -86,7 +86,7 @@ function bk_export(array $pick, bool $secrets = false): array {
     if (!empty($pick['tasks'])) { $t = bk_tasks_data(); $parts['tasks'] = ['tasks' => $t['tasks'] ?? [], 'log' => $t['log'] ?? [], 'settings' => (object)($t['settings'] ?? [])]; }
     if (!empty($pick['home']) && ($h = bk_home_data())) {
         $icons = [];
-        foreach (glob(HUB_CORE . '/media/home/icons/*') ?: [] as $f) {
+        foreach (glob(HUB_MEDIA . '/home/icons/*') ?: [] as $f) {
             $b = basename($f);
             if (preg_match('/^[A-Za-z0-9._-]+\.(png|ico|jpe?g|gif|webp)$/', $b) && filesize($f) < 600000) $icons[$b] = base64_encode((string)file_get_contents($f));
         }
@@ -214,7 +214,7 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
         foreach ((array)($parts['home']['icons'] ?? []) as $name => $b64) {
             if (!preg_match('/^[A-Za-z0-9_-][A-Za-z0-9._-]*\.(png|ico|jpe?g|gif|webp)$/', (string)$name)) continue;
             $bin = base64_decode((string)$b64, true);
-            if ($bin !== false && bk_is_image($bin)) hub_write(HUB_CORE . '/media/home/icons/' . $name, $bin);
+            if ($bin !== false && bk_is_image($bin)) hub_write(HUB_MEDIA . '/home/icons/' . $name, $bin);
         }
         if (!hub_jput(bk_home_file(), json_encode($parts['home']['site'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new Exception('Could not save the start page.');
         $done[] = 'Home';
@@ -222,10 +222,10 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
     if (!empty($pick['settings']) && isset($parts['settings']) && is_array($parts['settings'])) {
         $s = $parts['settings']; $s['backupLast'] = hub_settings()['backupLast']; $s['logo'] = hub_settings()['logo'];
         if (!empty($s['logoData']) && preg_match('/^([A-Za-z0-9+\/=]+);(png|jpg|webp|gif|ico)$/', (string)$s['logoData'], $m) && ($bin = base64_decode($m[1], true)) !== false && strlen($bin) < 400000 && bk_is_image($bin)) {
-            @mkdir(HUB_CORE . '/media/brand', 0755, true);
-            $logo = 'web/core-data/media/brand/logo-' . dechex(time()) . bin2hex(random_bytes(2)) . '.' . $m[2];
+            @mkdir(HUB_MEDIA . '/brand', 0755, true);
+            $logo = HUB_LAYOUT_HERE['media'] . '/brand/logo-' . dechex(time()) . bin2hex(random_bytes(2)) . '.' . $m[2];
             if (hub_write(HUB_PUBLIC . '/' . $logo, $bin)) {   // the old logo is only removed once the new one is saved
-                foreach (glob(HUB_CORE . '/media/brand/logo-*') ?: [] as $f) if (basename($f) !== basename($logo)) @unlink($f);
+                foreach (glob(HUB_MEDIA . '/brand/logo-*') ?: [] as $f) if (basename($f) !== basename($logo)) @unlink($f);
                 $s['logo'] = $logo;
             }
         }
@@ -268,7 +268,7 @@ function bk_reset_all(): array {
         if (is_dir("$sd/$app")) { hub_rm_tree("$sd/$app"); $done[] = $name; }
     }
     foreach (['home/photos', 'home/uploads', 'home/icons', 'links/icons', 'brand'] as $m)
-        foreach (glob(HUB_CORE . "/media/$m/*") ?: [] as $f) { if (is_dir($f)) hub_rm_tree($f); else @unlink($f); }   // the folder's own .htaccess is hidden from glob and stays
+        foreach (glob(HUB_MEDIA . "/$m/*") ?: [] as $f) { if (is_dir($f)) hub_rm_tree($f); else @unlink($f); }   // the folder's own .htaccess is hidden from glob and stays
     $done[] = 'Pictures, icons and logo';
     require_once __DIR__ . '/notify.php';
     $n = nt_load();
@@ -293,7 +293,7 @@ function bk_restore_link_icons($icons): void {
         if ($bin === false || strlen($bin) > 600000) continue;
         $isSvg = substr($rel, -4) === '.svg';
         if ($isSvg ? !hub_svg_safe($bin) : !bk_is_image($bin)) continue;
-        hub_write(HUB_CORE . '/media/links/icons/' . $rel, $bin);
+        hub_write(HUB_MEDIA . '/links/icons/' . $rel, $bin);
     }
 }
 /** Same automatic backups Links makes itself (data/backups, last 40). */
