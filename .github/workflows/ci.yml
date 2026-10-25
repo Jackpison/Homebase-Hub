@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.c.outputs.code }}
+      app: ${{ steps.c.outputs.app }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false, fetch-depth: 0 }
@@ -44,6 +45,7 @@ jobs:
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with: { php-version: '${{ matrix.php }}' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: matrix.php == '8.3'
         with: { node-version: '24', cache: npm }
       - name: PHP lint
         run: find src -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
@@ -56,22 +58,28 @@ jobs:
           echo "48caad125554d6b416159db71dd7fd890295ba1a24b3650b49e32752e24fd6a0  phpstan.phar" | sha256sum -c -
           php -d memory_limit=1G phpstan.phar analyse -c tests/repo/phpstan.neon --no-progress
       - name: Library safety check
+        if: matrix.php == '8.3'   # the same answer on any PHP: 8.4 and 8.5 run only lint and the unit tests
         run: python3 tests/repo/check_libraries.py
       - name: Workflow files keep their safety settings (pinned Actions, no kept token, time limits)
-        run: python3 tests/repo/workflows_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py
+        if: matrix.php == '8.3'
+        run: python3 tests/repo/workflows_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py && python3 tests/repo/releases_test.py
       - name: Workflow check (zizmor, strictest setting)
         if: matrix.php == '8.3'
         run: python3 -m venv /tmp/zz && /tmp/zz/bin/pip install -q zizmor==1.30.1 && /tmp/zz/bin/zizmor --offline --persona=auditor .github/workflows/
       - name: Version agrees everywhere (scripts/release.py --check) and its own test
+        if: matrix.php == '8.3'
         run: python3 scripts/release.py --check && python3 tests/repo/release_test.py
       - name: Build
+        if: matrix.php == '8.3'
         run: npm ci --ignore-scripts && python3 scripts/build.py
       - name: Tools is exactly what tools-app builds (no stale library in the committed files)
         if: matrix.php == '8.3'
         run: python3 scripts/build-tools.py --check
       - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
+        if: matrix.php == '8.3'
         run: npx eslint src tools-app
       - name: Check zip name and changelog
+        if: matrix.php == '8.3'
         run: |
           ls build/site-update-*.zip
           unzip -l build/site-update-*.zip | grep -q 'web/hub/docs/CHANGELOG.md'
@@ -99,21 +107,15 @@ jobs:
           pip install -r tests/requirements.txt
       - name: Build the zip
         run: python3 scripts/build.py
-      - name: Get the previous and an older release
+      - name: Get the previous and an older release (checked against their SHA-256)
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          PREV=$(python3 - <<'PY'
-          import json, re, subprocess
-          cur = re.search(r"define\('HUB', '([^']+)'\)", open('src/web/hub/core/lib/boot.php').read()).group(1)
-          v = lambda s: tuple(int(x) for x in s.split('.'))
-          tags = [t['tagName'] for t in json.loads(subprocess.check_output(['gh', 'release', 'list', '--limit', '100', '--json', 'tagName']))]
-          print(max((t for t in tags if re.match(r'^v\d+\.\d+\.\d+$', t) and v(t[1:]) < v(cur)), key=lambda t: v(t[1:])))
-          PY
-          )
+          PREV=$(python3 tests/lib/releases.py previous)
           echo "previous release: $PREV"
-          gh release download "$PREV" -p 'site-update-*.zip' -D rel-prev
-          gh release download v1.37.0 -p 'site-update-*.zip' -D rel-old
+          python3 tests/lib/releases.py download "$PREV" rel-prev
+          python3 tests/lib/releases.py download v1.37.0 rel-old
       - name: Update tests
         if: success() || failure()
         run: |
@@ -132,7 +134,7 @@ jobs:
 
   visual:
     needs: changes
-    if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
+    if: needs.changes.outputs.app == 'true'   # only when the site, Tools or the build changed (scripts/ci_changes.py)
     # What changed on screen since the last release: the same pages from both zips, photographed on this machine and compared.
     # A report (job summary and the visual-changes artifact), not a gate: it fails only when a page cannot be shown.
     runs-on: ubuntu-latest
@@ -159,21 +161,14 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Build the zip
         run: python3 scripts/build.py
-      - name: Get the previous and an older release
+      - name: Get the previous release (checked against its SHA-256)
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          PREV=$(python3 - <<'PY'
-          import json, re, subprocess
-          cur = re.search(r"define\('HUB', '([^']+)'\)", open('src/web/hub/core/lib/boot.php').read()).group(1)
-          v = lambda s: tuple(int(x) for x in s.split('.'))
-          tags = [t['tagName'] for t in json.loads(subprocess.check_output(['gh', 'release', 'list', '--limit', '100', '--json', 'tagName']))]
-          print(max((t for t in tags if re.match(r'^v\d+\.\d+\.\d+$', t) and v(t[1:]) < v(cur)), key=lambda t: v(t[1:])))
-          PY
-          )
+          PREV=$(python3 tests/lib/releases.py previous)
           echo "previous release: $PREV"
-          gh release download "$PREV" -p 'site-update-*.zip' -D rel-prev
-          gh release download v1.37.0 -p 'site-update-*.zip' -D rel-old
+          python3 tests/lib/releases.py download "$PREV" rel-prev
       - name: Photograph and compare
         run: python3 tests/browser/visual_compare.py build/site-update-*.zip rel-prev/site-update-*.zip build/visual
       - name: Keep the pictures
