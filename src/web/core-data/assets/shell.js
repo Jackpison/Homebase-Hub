@@ -255,11 +255,11 @@
   function sameSite(u) { try { return new URL(u, location.href).origin === location.origin; } catch (e) { return false; } }
   /* only web addresses become links; anything like javascript: turns into a harmless "#" */
   function safeHref(u) { u = String(u || '').trim(); if (/^(https?:|mailto:|\/|\.\/|#)/i.test(u)) return u; return /^[a-z][a-z0-9+.-]*:/i.test(u) ? '#' : (u ? 'https://' + u : '#'); }
-  function api(action, body, method) {
+  function api(action, body, method, wait) {   // wait: {timeout: ms} for the few jobs that take a while (hubFetch gives up after 30 s otherwise)
     var o = { method: method || (body ? 'POST' : 'GET'), headers: {}, credentials: 'same-origin', cache: 'no-store' };
     if (body) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
     if (S.csrf) o.headers['X-Hub-CSRF'] = S.csrf;
-    return hubFetch(CORE + 'api.php?action=' + action, o).then(function (r) {
+    return hubFetch(CORE + 'api.php?action=' + action, o, wait).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; });
     });
   }

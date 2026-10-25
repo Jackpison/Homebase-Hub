@@ -16,7 +16,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
 
 // Largest background upload, in megabytes. Your host has its own limit too
 // (your hosting PHP settings: upload_max_filesize).
-const MAX_UPLOAD_MB = 40;
+const MAX_UPLOAD_MB = 128;
 
 // Largest link/site icon upload, in kilobytes.
 const MAX_ICON_KB = 500;

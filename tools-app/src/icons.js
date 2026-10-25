@@ -58,6 +58,7 @@ const P = {
   plus: '<path d="M12 5v14M5 12h14"/>',
   trash: '<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/>',
   refresh: '<path d="M20 7v4.5h-4.5"/><path d="M4 17v-4.5h4.5"/><path d="M6.2 9.5A7 7 0 0 1 19 11.5M17.8 14.5A7 7 0 0 1 5 12.5"/>',
+  ext: '<path d="M7 17 17 7M8 7h9v9"/>',
   panel: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15"/>',
 };
 export function icon(name, cls) {

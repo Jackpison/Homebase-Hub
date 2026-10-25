@@ -27,3 +27,8 @@ $a = up_apply(false, true);
 t('Apply with nothing ready says so with 409, not a server failure', $a['ok'] === false && ($a['code'] ?? 0) === 409 && strpos($a['error'], 'no checked update') !== false, json_encode($a));
 $a = up_apply(true, true);
 t('Go Back with nothing saved is a 409 too', $a['ok'] === false && ($a['code'] ?? 0) === 409, json_encode($a));
+
+// file types an update may hold: pdf.js's character maps and fonts are allowed, anything runnable or unknown is not
+t('pdf.js character maps (.bcmap) and fonts (.pfb) are accepted', up_name_problem('web/tools/assets/vendor/pdfjs/cmaps/78-EUC-H.bcmap', false) === '' && up_name_problem('web/tools/assets/vendor/pdfjs/standard_fonts/FoxitDingbats.pfb', false) === '');
+t('...and a program, a script type or an unknown type is still refused', up_name_problem('web/tools/a.exe', false) !== '' && up_name_problem('web/tools/a.phtml', false) !== '' && up_name_problem('web/tools/a.sh', false) !== '' && up_name_problem('web/tools/a.bin', false) !== '');
+t('...and a file with no type at all is refused', up_name_problem('web/tools/assets/vendor/LICENSE', false) !== '');

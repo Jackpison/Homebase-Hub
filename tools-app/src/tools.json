@@ -40,7 +40,14 @@
     "ranges"
    ],
    "icon": "scissors",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "pdf"
+   ],
+   "out": [
+    "pdf",
+    "zip"
+   ]
   },
   {
    "id": "pdf-organize",
@@ -57,7 +64,13 @@
     "remove page"
    ],
    "icon": "layers",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "pdf"
+   ],
+   "out": [
+    "pdf"
+   ]
   },
   {
    "id": "pdf-sign",
@@ -72,7 +85,13 @@
     "initials"
    ],
    "icon": "pen",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "pdf"
+   ],
+   "out": [
+    "pdf"
+   ]
   },
   {
    "id": "pdf-annotate",
@@ -92,7 +111,13 @@
     "edit pdf"
    ],
    "icon": "edit",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "pdf"
+   ],
+   "out": [
+    "pdf"
+   ]
   },
   {
    "id": "pdf-protect",
@@ -110,7 +135,13 @@
     "remove password"
    ],
    "icon": "lock",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "pdf"
+   ],
+   "out": [
+    "pdf"
+   ]
   },
   {
    "id": "pdf-stamp",
@@ -127,7 +158,13 @@
     "logo"
    ],
    "icon": "stamp",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "pdf"
+   ],
+   "out": [
+    "pdf"
+   ]
   },
   {
    "id": "pdf-text",
@@ -145,7 +182,16 @@
     "tesseract"
    ],
    "icon": "text",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "pdf",
+    "jpg",
+    "png",
+    "webp"
+   ],
+   "out": [
+    "txt"
+   ]
   },
   {
    "id": "img-rotate",
@@ -162,7 +208,18 @@
     "level"
    ],
    "icon": "rotate",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "jpg",
+    "png",
+    "webp"
+   ]
   },
   {
    "id": "img-adjust",
@@ -182,7 +239,18 @@
     "black and white"
    ],
    "icon": "sliders",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "jpg",
+    "png",
+    "webp"
+   ]
   },
   {
    "id": "img-watermark",
@@ -198,7 +266,18 @@
     "protect photos"
    ],
    "icon": "droplet",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "jpg",
+    "png",
+    "webp"
+   ]
   },
   {
    "id": "img-colors",
@@ -216,7 +295,17 @@
     "scheme"
    ],
    "icon": "palette",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp"
+   ],
+   "out": [
+    "css",
+    "json",
+    "png"
+   ]
   },
   {
    "id": "img-beautify",
@@ -234,7 +323,16 @@
     "social"
    ],
    "icon": "sparkle",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "png",
+    "jpg",
+    "webp"
+   ],
+   "out": [
+    "png",
+    "jpg"
+   ]
   },
   {
    "id": "svg-png",
@@ -250,7 +348,15 @@
     "logo"
    ],
    "icon": "filecode",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "svg"
+   ],
+   "out": [
+    "png",
+    "jpg",
+    "webp"
+   ]
   },
   {
    "id": "img-base64",
@@ -267,7 +373,17 @@
     "html"
    ],
    "icon": "code",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "gif",
+    "svg"
+   ],
+   "out": [
+    "txt"
+   ]
   },
   {
    "id": "bg-remove",
@@ -284,7 +400,18 @@
     "png"
    ],
    "icon": "eraser",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "png",
+    "jpg",
+    "webp"
+   ]
   },
   {
    "id": "img-redact",
@@ -302,7 +429,18 @@
     "number plate"
    ],
    "icon": "blur",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "jpg",
+    "png",
+    "webp"
+   ]
   },
   {
    "id": "id-photo",
@@ -320,7 +458,17 @@
     "photo size"
    ],
    "icon": "id",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "jpg",
+    "pdf"
+   ]
   },
   {
    "id": "meme",
@@ -337,7 +485,17 @@
     "poster"
    ],
    "icon": "type",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "jpg",
+    "png"
+   ]
   },
   {
    "id": "image-converter",
@@ -356,7 +514,24 @@
     "webp to jpg"
    ],
    "icon": "convert",
-   "popular": 1
+   "popular": 1,
+   "in": [
+    "heic",
+    "jpg",
+    "png",
+    "webp",
+    "avif",
+    "gif",
+    "bmp",
+    "tiff",
+    "svg"
+   ],
+   "out": [
+    "jpg",
+    "png",
+    "webp",
+    "avif"
+   ]
   },
   {
    "id": "image-compress",
@@ -375,7 +550,20 @@
     "quality"
    ],
    "icon": "compress",
-   "popular": 2
+   "popular": 2,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic",
+    "avif"
+   ],
+   "out": [
+    "jpg",
+    "webp",
+    "png",
+    "avif"
+   ]
   },
   {
    "id": "image-resize",
@@ -392,7 +580,18 @@
     "instagram"
    ],
    "icon": "resize",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "jpg",
+    "png",
+    "webp"
+   ]
   },
   {
    "id": "pdf-compress",
@@ -407,7 +606,13 @@
     "size"
    ],
    "icon": "compress",
-   "popular": 3
+   "popular": 3,
+   "in": [
+    "pdf"
+   ],
+   "out": [
+    "pdf"
+   ]
   },
   {
    "id": "pdf-merge",
@@ -420,7 +625,13 @@
     "join"
    ],
    "icon": "merge",
-   "popular": 6
+   "popular": 6,
+   "in": [
+    "pdf"
+   ],
+   "out": [
+    "pdf"
+   ]
   },
   {
    "id": "images-to-pdf",
@@ -435,7 +646,18 @@
     "image to pdf"
    ],
    "icon": "filepdf",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic",
+    "gif",
+    "bmp"
+   ],
+   "out": [
+    "pdf"
+   ]
   },
   {
    "id": "pdf-to-images",
@@ -450,7 +672,14 @@
     "pages"
    ],
    "icon": "image",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "pdf"
+   ],
+   "out": [
+    "jpg",
+    "png"
+   ]
   },
   {
    "id": "image-crop",
@@ -466,7 +695,18 @@
     "square"
    ],
    "icon": "crop",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "jpg",
+    "png",
+    "webp"
+   ]
   },
   {
    "id": "circle-crop",
@@ -481,7 +721,17 @@
     "pfp"
    ],
    "icon": "circle",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "png",
+    "webp"
+   ]
   },
   {
    "id": "collage",
@@ -496,7 +746,19 @@
     "layout"
    ],
    "icon": "grid",
-   "popular": 4
+   "popular": 4,
+   "in": [
+    "jpg",
+    "png",
+    "webp",
+    "heic"
+   ],
+   "out": [
+    "jpg",
+    "png",
+    "webp",
+    "pdf"
+   ]
   },
   {
    "id": "image-metadata",
@@ -513,7 +775,18 @@
     "strip"
    ],
    "icon": "info",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "jpg",
+    "heic",
+    "png",
+    "webp"
+   ],
+   "out": [
+    "jpg",
+    "png",
+    "webp"
+   ]
   },
   {
    "id": "qr-generator",
@@ -562,7 +835,13 @@
     "pretty"
    ],
    "icon": "braces",
-   "popular": 0
+   "popular": 0,
+   "in": [
+    "json"
+   ],
+   "out": [
+    "json"
+   ]
   },
   {
    "id": "text-tools",

@@ -851,20 +851,8 @@ function hub_settings_save(array $s): array {
     $s = hub_clean_settings($s);
     if (!hub_write_guarded(hub_dir('core') . '/settings.php', $s)) hub_json(500, ['ok' => false, 'error' => 'Could not save settings.']);
     $GLOBALS['__hub_settings'] = $s;
-    hub_tools_config($s);
     return $s;
 }
-/** Tools reads its branding from tools/config.json; site Settings writes it, so you never upload that file by hand. */
-function hub_tools_config(array $s): void {
-    $t = $s['tools'];
-    $logo = $s['logo'] !== '' ? '../' . substr($s['logo'], 4) : '';   // web/core-data/media/brand/x.png -> ../core-data/media/brand/x.png (Tools lives in web/tools)
-    $cfg = ['brand' => ['title' => $t['title'], 'titleColor' => $s['accent'], 'emoji' => $t['emoji'], 'logo' => $logo, 'favicon' => $logo],
-            'accent' => $s['accent'],
-            // Tools' own branding editor is replaced by site Settings; this random lock keeps it closed.
-            'admin' => ['salt' => bin2hex(random_bytes(16)), 'hash' => bin2hex(random_bytes(32)), 'iterations' => 310000]];
-    hub_write(HUB_WEB . '/tools/config.json', json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
-}
-
 /** What every page needs to draw the shared bar. Safe to send to visitors. */
 function hub_public_state(): array {
     $s = hub_settings(); $admin = hub_admin();
@@ -934,10 +922,10 @@ function hub_rm_tree(string $dir): void {
     @rmdir($dir);
 }
 
-/* After every update the site rewrites Tools' branding from your settings (web/tools/config.json is made from them, never shipped by an update).
-   One file check per request: the marker carries the version, so this runs once per version. */
+/* Once per version, after an update: removes web/tools/config.json, which older versions wrote for the old Tools and nothing reads any more.
+   One file check per request: the marker carries the version. */
 if (!is_file(hub_dir('core') . '/after-update-' . HUB . '.done')) {
     foreach (glob(hub_dir('core') . '/after-update-*.done') ?: [] as $old) @unlink($old);
-    try { hub_tools_config(hub_settings()); } catch (Throwable $e) {}
+    @unlink(HUB_WEB . '/tools/config.json');
     @file_put_contents(hub_dir('core') . '/after-update-' . HUB . '.done', date('c'));
 }

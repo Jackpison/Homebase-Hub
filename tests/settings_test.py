@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""Small things in Settings and Home, in a real browser:
+  * Telegram > Backups > Send Backup Now: the button waits as long as the server may take (4 minutes, not 30 seconds), and never stays stuck on
+    "Sending…": when the answer does not come it frees itself and says the backup may still arrive in Telegram
+  * Settings > Updates has a link to the project on GitHub
+  * Home takes uploads of up to 128 MB
+  * the first request after an update removes the old Tools config.json
+    python3 tests/settings_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8970)"""
+import os, sys, glob, re, json
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch
+from playwright.sync_api import sync_playwright
+
+if len(sys.argv) < 2: sys.exit(__doc__)
+BROWSER = browser_name(); ZIP = sys.argv[1]; check = Checks()
+try:
+    s = Site(ZIP, 8970)
+    r = s.post('notify_save', {'token': '123456789:AAEabcdefghijklmnopqrstuvwxyz0123456', 'chat': '424242'})
+    check('S0 setup: a bot token and chat are saved, so the backup button is ready', r.get('ok') is not False and r.get('hasToken'), r)
+
+    # the first request after an update removes the old Tools config.json
+    cfg = os.path.join(s.dir, 'web', 'tools', 'config.json'); open(cfg, 'w').write('{"brand":{}}')
+    for m in glob.glob(os.path.join(s.dir, 'site-data', 'core', 'after-update-*.done')): os.remove(m)
+    s.get('state')
+    check('S1 the first request after an update removes the old Tools config.json (and the site stays up)', not os.path.exists(cfg) and s.get('state').get('csrf') is not None)
+
+    # Home: uploads up to 128 MB
+    lim = s.get('state')  # make sure we are logged in as the owner
+    h = s.raw(s.host + '/web/home/api.php?action=admin') if hasattr(s, 'raw') else None
+    cf = open(os.path.join(s.dir, 'web', 'home', 'config.php')).read()
+    check('S2 Home takes uploads of up to 128 MB (the setting, and what the page tells you)', re.search(r'const MAX_UPLOAD_MB = 128;', cf) is not None)
+
+    with sync_playwright() as p:
+        b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
+        ctx = b.new_context(viewport={'width': 1280, 'height': 1000}); ctx.add_init_script("""window.__waits = []; const st = window.setTimeout;
+            window.setTimeout = function (f, d, ...a) { if (d >= 100000) window.__waits.push(d); return st.call(window, f, d, ...a); };""")
+        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        why = browser_login(pg, s.base); check('S3 logged in', not why, why)
+
+        pg.goto(s.base + '/web/settings/#updates'); wait_js(pg, "!!document.querySelector('.ix-card a[href^=\"https://github.com/\"]')", 20000)
+        a = pg.locator('.ix-card a[href^="https://github.com/"]').first
+        check('S4 Settings > Updates > Update From GitHub links to the project on GitHub (in a new tab, safely)', a.get_attribute('href') == 'https://github.com/Jackpison/Homebase-Hub' and a.get_attribute('target') == '_blank' and 'noopener' in a.get_attribute('rel'), a.get_attribute('href'))
+
+        def open_backups():
+            pg.goto(s.base + '/web/settings/#telegram'); wait_js(pg, "document.querySelectorAll('#ix-pc [role=tab], #ix-pc .ix-tab, #ix-pc summary').length > 0", 20000)
+            pg.get_by_text('Backups', exact=True).first.click(); wait_js(pg, "!!document.querySelector('#nt-bknow')", 10000)
+        # a quick answer: the button waits for the long time, then goes back to normal and says it was sent
+        view = {k: v for k, v in s.post('notify_save', {}).items() if not k.startswith('_')}   # what the real answer carries: the whole Telegram state
+        body = json.dumps({**view, 'ok': True, 'note': 'Backup sent. Check Telegram.', 'backupLast': 1893456000})
+        pg.route('**/api.php?action=notify_backup*', lambda route: route.fulfill(status=200, content_type='application/json', body=body))
+        open_backups(); pg.click('#nt-bknow'); pg.wait_for_timeout(600)
+        waits = pg.evaluate('window.__waits')
+        check('S5 Send Backup Now waits up to 4 minutes for the site (the usual 30 seconds is too short for a big backup)', 240000 in waits, waits)
+        check('S6 ...and when it is done the button is back to "Send Backup Now" and ready', pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return !!b && !b.disabled && b.textContent === 'Send Backup Now'; })()"))
+        # no answer at all (the connection drops): the button must not stay stuck
+        pg.unroute('**/api.php?action=notify_backup*'); pg.route('**/api.php?action=notify_backup*', lambda route: route.abort('connectionreset'))
+        open_backups(); pg.click('#nt-bknow'); wait_js(pg, "((document.getElementById('ix-toast') || {}).textContent || '').includes('did not answer in time')", 20000)   # the helper retries a dropped connection twice first
+        state = pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return [!!b, b && !b.disabled, b && b.textContent, (document.querySelector('#ix-pc .ix-err') || {}).textContent.includes('look there before you try again')]; })()")
+        check('S7 with no answer, the button is free again, and a message (and the Status tab) say the backup may still arrive in Telegram', state == [True, True, 'Send Backup Now', True], state)
+        check('S8 no page error', not errs, errs)
+        b.close()
+finally:
+    stop_all()
+sys.exit(check.done())

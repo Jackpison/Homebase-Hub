@@ -66,27 +66,43 @@ function layout() {
   app.dataset.layout = S.layout; app.dataset.compact = String(S.layout === 'side' && S.compact);
 }
 
-function drawNav(route) {
-  const item = (href, ic, label, on) => h('a', { href, class: 'ni', 'aria-current': on ? 'page' : null, title: label }, icon(ic), h('span', { text: label }));
-  const S = st.state();
+function drawNav(route, cur) {
+  const S = st.state(), side = S.layout === 'side';
+  const count = (c) => visible(TOOLS.filter((t) => t.cat === c)).length;
+  const item = (href, ic, label, on, cls, n, open) => h('a', { href, class: 'ni ' + cls + (open ? ' open' : ''), 'aria-current': on ? 'page' : null, title: label },
+    h('span', { class: 'nt' }, icon(ic)), h('span', { class: 'nl', text: label }), n != null ? h('span', { class: 'nb', text: String(n) }) : null);
+  const sections = CATS.flatMap((c) => {
+    const here = cur && cur.cat === c.id, out = [item('#/s/' + c.id, c.icon, c.name, route === '#/s/' + c.id, 'c-' + c.id, count(c.id), here)];
+    if (here && side && !S.compact) out.push(h('ul', { class: 'nsub c-' + c.id }, visible(st.ordered(c.id, TOOLS.filter((t) => t.cat === c.id))).map((t) => h('li', {}, h('a', { href: '#/tool/' + t.id, class: 'nsi', 'aria-current': cur.id === t.id ? 'page' : null }, icon(t.icon), h('span', { text: t.name }))))));
+    return out;
+  });
+  const collapse = side ? h('button', { type: 'button', class: 'ncollapse', 'aria-label': S.compact ? 'Expand the menu to show names' : 'Collapse the menu to icons', title: S.compact ? 'Expand the menu' : 'Collapse the menu', onClick: () => { st.setCompact(!S.compact); layout(); drawNav(route, cur); } }, icon('panel')) : null;
   nav.replaceChildren(...[
-    item('#/', 'apps', 'All Tools', route === '#/'),
-    item('#/recent', 'clock', 'Recent', route === '#/recent'),
-    item('#/favourites', 'star', 'Favourites', route === '#/favourites'),
+    item('#/', 'apps', 'All Tools', route === '#/', 'c-gold', visible(TOOLS).length),
+    item('#/recent', 'clock', 'Recent', route === '#/recent', 'c-gold'),
+    item('#/favourites', 'star', 'Favourites', route === '#/favourites', 'c-gold'),
     h('span', { class: 'nsep', text: 'Sections', 'aria-hidden': 'true' }),
-    ...CATS.map((c) => item('#/s/' + c.id, c.icon, c.name, route === '#/s/' + c.id)),
-    h('span', { class: 'nsep', 'aria-hidden': 'true' }),
-    item('#/organise', 'organise', 'Organise', route === '#/organise'),
-    item('#/settings', 'settings', 'Settings', route === '#/settings'),
-    S.layout === 'side' ? h('button', { type: 'button', class: 'ni ncollapse', 'aria-label': S.compact ? 'Expand: show the menu names' : 'Collapse: show icons only', title: S.compact ? 'Expand: show the menu names' : 'Collapse: show icons only', onClick: () => { st.setCompact(!S.compact); layout(); drawNav(route); } }, icon('panel'), h('span', { text: S.compact ? 'Expand' : 'Collapse' })) : null,
+    ...sections,
+    h('div', { class: 'nbot' }, item('#/organise', 'organise', 'Organise', route === '#/organise', 'c-gold'),
+      h('div', { class: 'nrow' }, item('#/settings', 'settings', 'Settings', route === '#/settings', 'c-gold'), collapse)),
   ].filter(Boolean));
+}
+
+/** The file types a tool takes and gives, as small chips: JPG PNG +3 → JPG WEBP. */
+function chips(t) {
+  if (!t.in || !t.out) return null;
+  const cut = (a, n) => (a.length > n ? [...a.slice(0, n), '+' + (a.length - n)] : a);
+  const f = (x, o) => h('span', { class: 'f' + (o ? ' o' : ''), text: x.startsWith('+') ? x : x.toUpperCase() });
+  return h('span', { class: 'fc' }, cut(t.in, 3).map((x) => f(x, false)), h('span', { class: 'fa', 'aria-hidden': 'true', text: '→' }), cut(t.out, 4).map((x) => f(x, true)));
 }
 
 function card(t) {
   const star = h('button', { type: 'button', class: 'star', 'aria-pressed': String(st.isFav(t.id)), 'aria-label': 'Favourite: ' + t.name }, icon(st.isFav(t.id) ? 'starf' : 'star'));
   star.addEventListener('click', () => { const on = st.toggleFav(t.id); star.setAttribute('aria-pressed', String(on)); star.replaceChildren(icon(on ? 'starf' : 'star')); toast(on ? t.name + ' is a favourite' : t.name + ' is no longer a favourite'); });
   return h('article', { class: 'tc c-' + t.cat },
-    h('a', { href: '#/tool/' + t.id, class: 'tcm' }, h('span', { class: 'tci' }, icon(t.icon)), h('span', { class: 'tct' }, h('b', { text: t.name }), h('span', { text: t.desc }))), star);
+    h('a', { href: '#/tool/' + t.id, class: 'tcm' }, h('span', { class: 'tci' }, icon(t.icon)), h('b', { text: t.name }), h('span', { class: 'td', text: t.desc }),
+      h('span', { class: 'tf' }, chips(t) || h('span'), h('span', { class: 'go', 'aria-hidden': 'true' }, icon('ext')))),
+    t.popular ? h('span', { class: 'pop-b', text: 'Popular' }) : null, star);
 }
 const grid = (list) => list.length ? h('div', { class: 'grid' }, list.map(card)) : null;
 const heading = (title, sub) => h('header', { class: 'vh' }, h('h1', { text: title }), sub ? h('p', { text: sub }) : null);
@@ -108,7 +124,7 @@ function pageHome(q = '') {
       results.replaceChildren(...[
         recent.length ? h('section', { class: 'sec' }, h('div', { class: 'sh' }, h('h2', { text: 'Recently Used' }), h('a', { href: '#/recent', text: 'See all' })), grid(recent)) : null,
         favs.length ? h('section', { class: 'sec' }, h('div', { class: 'sh' }, h('h2', { text: 'Favourites' })), grid(favs)) : null,
-        ...CATS.map((c) => { const list = visible(st.ordered(c.id, TOOLS.filter((t) => t.cat === c.id))); return list.length ? h('section', { class: 'sec' }, h('div', { class: 'sh' }, h('h2', {}, icon(c.icon), c.name, h('small', { text: String(list.length) })), h('a', { href: '#/s/' + c.id, text: 'Open' })), h('p', { class: 'sd', text: c.desc }), grid(list)) : null; }),
+        ...CATS.map((c) => { const list = visible(st.ordered(c.id, TOOLS.filter((t) => t.cat === c.id))); return list.length ? h('section', { class: 'sec c-' + c.id }, h('div', { class: 'sh' }, h('h2', {}, h('span', { class: 'sdot' }, icon(c.icon)), c.name, h('small', { text: String(list.length) })), h('a', { href: '#/s/' + c.id, text: 'Open' })), h('p', { class: 'sd', text: c.desc }), grid(list)) : null; }),
       ].filter(Boolean));
       return;
     }
@@ -168,10 +184,13 @@ async function pageTool(id) {
   const star = h('button', { type: 'button', class: 'star big', 'aria-pressed': String(st.isFav(id)), 'aria-label': 'Favourite: ' + t.name }, icon(st.isFav(id) ? 'starf' : 'star'));
   star.addEventListener('click', () => { const on = st.toggleFav(id); star.setAttribute('aria-pressed', String(on)); star.replaceChildren(icon(on ? 'starf' : 'star')); });
   const body = h('div', { class: 'tbody', 'aria-busy': 'true' }, h('p', { class: 'loading', text: 'Loading the tool…' }));
+  view.dataset.cat = t.cat;   // the page takes its section's colour
+  const more = visible(TOOLS.filter((x) => x.cat === t.cat && x.id !== t.id)).slice(0, 8);
   view.replaceChildren(
-    h('header', { class: 'th c-' + t.cat }, h('a', { href: lastList, class: 'back' }, icon('back'), h('span', { text: 'All Tools' })),
-      h('div', { class: 'tt' }, h('span', { class: 'tci' }, icon(t.icon)), h('div', {}, h('h1', { text: t.name }), h('p', { text: t.desc })), star)),
-    body);
+    h('header', { class: 'th c-' + t.cat }, h('nav', { class: 'crumbs', 'aria-label': 'Breadcrumb' }, h('a', { href: '#/', text: 'Home' }), h('span', { 'aria-hidden': 'true', text: '/' }), h('a', { href: '#/s/' + t.cat, text: catName(t.cat) }), h('span', { 'aria-hidden': 'true', text: '/' }), h('span', { 'aria-current': 'page', text: t.name })),
+      h('div', { class: 'tt' }, h('span', { class: 'tci big' }, icon(t.icon)), h('div', {}, h('h1', { text: t.name }), h('p', { text: t.desc }), chips(t)), star)),
+    body,
+    more.length ? h('section', { class: 'moretools c-' + t.cat }, h('h2', { text: 'More Tools' }), h('div', { class: 'mgrid' }, more.map((x) => h('a', { href: '#/tool/' + x.id, class: 'mt' }, h('span', { class: 'tci' }, icon(x.icon)), h('span', { text: x.name }), icon('ext'))))) : null);
   if (!LOAD[id]) { body.replaceChildren(h('p', { class: 'note', text: 'This tool is being rebuilt and will be back in the next version.' })); body.removeAttribute('aria-busy'); return; }
   try {
     const mod = await LOAD[id]();
@@ -190,7 +209,9 @@ function route() {
   const hash = location.hash || '#/';
   const [path, qs] = hash.split('?');
   document.title = 'Tools';
-  drawNav(path.startsWith('#/tool/') ? lastList : path);
+  const cur = path.startsWith('#/tool/') ? { id: decodeURIComponent(path.slice(7)), cat: (BY[decodeURIComponent(path.slice(7))] || {}).cat } : path.startsWith('#/s/') ? { cat: path.slice(4) } : null;
+  if (!path.startsWith('#/tool/')) delete view.dataset.cat;
+  drawNav(path.startsWith('#/tool/') ? lastList : path, cur);
   if (path.startsWith('#/tool/')) pageTool(decodeURIComponent(path.slice(7)));
   else {
     lastList = path;

@@ -919,12 +919,15 @@
             '<code>/backup</code><span>A backup file now</span><code>/status</code><span>A quick health check</span></div>'));
       p.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { var d = p.querySelector('details[data-tg="' + x.dataset.go + '"]'); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
       var eg = p.querySelector('#nt-encgo'); if (eg) eg.onclick = function (e) { e.preventDefault(); go('security'); };
-      var call = function (action, body, btn) {
+      var call = function (action, body, btn, wait) {
         if (btn) btn.disabled = true;
-        return api(action, body || {}).then(function (j) {
+        return api(action, body || {}, null, wait).then(function (j) {
           if (btn) btn.disabled = false;
           if (!j || !j.ok) { draw(j && j.cronCmd ? j : n, chats, (j && j.error) || 'Something went wrong.', true); return null; }
           return j;
+        }, function () {   // no answer in time (a slow host, or the connection dropped): free the button, and say the action may still have worked
+          if (btn) btn.disabled = false;
+          draw(n, chats, 'The site did not answer in time. A backup can still arrive in Telegram: look there before you try again.', true); return null;
         });
       };
       var tok = p.querySelector('#nt-tok');
@@ -963,7 +966,7 @@
       });
       p.querySelector('#nt-bknow').onclick = function () {
         var b = this; b.textContent = 'Sending…';
-        call('notify_backup', {}, b).then(function (j) { if (j) { S.backupLast = j.backupLast || S.backupLast; remember(S); redraw(); draw(j, null, 'Backup sent. Check Telegram.'); } else b.textContent = 'Send Backup Now'; });
+        call('notify_backup', {}, b, { timeout: 240000 }).then(function (j) { if (j) { S.backupLast = j.backupLast || S.backupLast; remember(S); redraw(); draw(j, null, 'Backup sent. Check Telegram.'); } else b.textContent = 'Send Backup Now'; });
       };
       p.querySelector('#nt-hour').onchange = function (e) { call('notify_save', { hour: +e.target.value }).then(function (j) { if (j) { n = j; draw(j, null); toast('Daily messages at ' + hourLabel(j.hour) + '.'); } }); };
       p.querySelectorAll('[data-copy]').forEach(function (b) { b.onclick = function () {
@@ -1340,7 +1343,7 @@
     h += '<p class="ix-err" id="ix-ghe"></p><div class="ix-row"><button type="button" class="ix-btn" id="ix-ghc"' + (g.curl ? '' : ' disabled') + '>Check Now</button><span class="ix-mu">' + (g.at ? 'Last checked ' + esc(ago(g.at)) : 'Not checked yet') + '</span></div>' +
       '<label class="ix-chk" style="margin-top:10px"><input type="checkbox" id="ix-gha"' + (g.auto ? ' checked' : '') + '> Check GitHub Once a Day</label>' +
       '<p class="ix-note">Off by default. While it is off, this site makes no request to GitHub unless you press Check Now. When it is on, the check runs with the schedule from Telegram Setup (the cron job). Nothing ever installs by itself.</p>';
-    return '<section class="ix-card"><div class="ix-cardh"><h3>Update From GitHub</h3><span class="ix-mu">Installed: <b>' + esc(st.version) + '</b></span></div>' + h + '</section>';
+    return '<section class="ix-card"><div class="ix-cardh"><h3>Update From GitHub</h3><span class="ix-mu">Installed: <b>' + esc(st.version) + '</b>' + (/^[\w.-]+\/[\w.-]+$/.test(g.repo || '') ? ' · <a href="https://github.com/' + esc(g.repo) + '" target="_blank" rel="noopener">Project on GitHub</a>' : '') + '</span></div>' + h + '</section>';
   }
   function ghWire(p, st) {
     var e = function (m) { var x = p.querySelector('#ix-ghe'); if (x) x.textContent = m || ''; };

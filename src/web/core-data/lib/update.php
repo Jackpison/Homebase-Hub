@@ -18,7 +18,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  *           that are not part of this version (leftovers, copies, a planted script) and files that were changed by hand.
  *
  * Never touched, by an update or by the clean-up: site-data (all your data), web/core-data/media (your pictures and logo), web/core-data/config.php,
- * web/core-data/data (the old fallback data folder) and web/tools/config.json (made from your settings).
+ * web/core-data/data (the old fallback data folder).
  * The zip is read here in plain PHP (gzinflate), so no zip extension is needed.
  */
 require_once __DIR__ . '/boot.php';
@@ -27,7 +27,7 @@ const UP_MAX_ZIP   = 134217728;   // 128 MB: the whole upload
 const UP_MAX_FILES = 3000;
 const UP_MAX_FILE  = 83886080;    // 80 MB: one file inside
 const UP_MAX_TOTAL = 419430400;   // 400 MB: everything once unpacked
-const UP_EXT = ['php', 'js', 'css', 'html', 'json', 'txt', 'md', 'htaccess', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'woff', 'woff2', 'ttf', 'otf', 'wasm', 'traineddata', 'onnx', 'map', 'mjs', 'xml'];
+const UP_EXT = ['php', 'js', 'css', 'html', 'json', 'txt', 'md', 'htaccess', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'woff', 'woff2', 'ttf', 'otf', 'wasm', 'traineddata', 'onnx', 'map', 'mjs', 'xml', 'bcmap', 'pfb'];
 
 function up_root(): string { return rtrim(str_replace('\\', '/', HUB_PUBLIC), '/'); }
 function up_dir(): string { return hub_dir('updates'); }
@@ -36,7 +36,7 @@ function up_state_save(array $s): void { hub_jput(up_dir() . '/state.json', json
 
 /** Paths no update and no clean-up may write, list or delete (your pictures and logo keep only their own .htaccess in the release). */
 function up_protected(string $rel): bool {
-    return $rel === 'web/core-data/config.php' || strpos($rel, 'web/core-data/data/') === 0 || $rel === 'web/tools/config.json'
+    return $rel === 'web/core-data/config.php' || strpos($rel, 'web/core-data/data/') === 0
         || (strpos($rel, 'web/core-data/media/') === 0 && basename($rel) !== '.htaccess');
 }
 function up_hash(string $file): string { return (string)@hash_file('sha256', $file); }

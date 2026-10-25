@@ -276,7 +276,6 @@ function bk_reset_all(): array {
     foreach (['notify.json', 'watch.json', 'passphrase.json', 'backup-key.json'] as $f) { @unlink(hub_jpath("$core/$f")); @unlink("$core/$f"); }
     @unlink("$core/login-approval.php");   // Telegram is gone, so approving logins there is turned off too (or nobody could log in)
     @unlink("$core/settings.php"); unset($GLOBALS['__hub_settings']);
-    try { hub_tools_config(hub_settings()); } catch (Throwable $e) {}
     array_push($done, 'Site settings', 'Telegram', 'Domain watch', 'Encryption passphrase', 'Telegram login approval');
     return $done;
 }

@@ -162,7 +162,7 @@ case 'notify_backup':
         hub_json(200, ['ok' => true] + nt_view($d));
     }
     if ($action === 'notify_backup') {
-        @set_time_limit(240);
+        @set_time_limit(240); @ignore_user_abort(true);   // finish and remember the backup even if the browser stopped waiting
         $r = nt_backup_send($d); $d = nt_save_keys($d, array_merge(NT_USER_KEYS, ['bkLast', 'bkError']));
         if (empty($r['ok'])) hub_json(400, ['ok' => false, 'error' => 'Telegram: ' . ($r['description'] ?? 'no answer')] + nt_view($d));
         hub_json(200, ['ok' => true, 'note' => 'Backup sent. Check Telegram.', 'backupLast' => time()] + nt_view($d));
