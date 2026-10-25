@@ -49,6 +49,7 @@ python3 tests/import_test.py build/site-update-X.Y.Z.zip
 python3 tests/app_test.py build/site-update-X.Y.Z.zip
 python3 tests/tools_test.py build/site-update-X.Y.Z.zip
 python3 tests/pages_test.py build/site-update-X.Y.Z.zip
+python3 tests/nav_test.py build/site-update-X.Y.Z.zip
 python3 tests/a11y_test.py build/site-update-X.Y.Z.zip
 python3 tests/website_test.py build/site            # after python3 tools/make-site.py --no-guide
 sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/apache_test.py

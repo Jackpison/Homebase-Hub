@@ -92,8 +92,10 @@ try:
         why = browser_login(pg, s.base)
         pg.goto(s.base + '/web/settings/#general'); wait_js(pg, "!!document.querySelector('#ix-inst')", 15000)
         card = pg.get_by_text('Install on Your Phone', exact=True)
+        hidden = pg.evaluate("!document.querySelector('.ix-how').open && !document.querySelector('.ix-how .ix-steps').checkVisibility()")
+        pg.click('.ix-how > summary')
         txt = pg.inner_text('#ix-pc')
-        check('Settings > General has the Install on Your Phone card with steps for iPhone, Android and a computer', not why and card.count() == 1 and all(x in txt for x in ('iPhone or iPad', 'Add to Home Screen', 'Android', 'Install App', 'Computer')), (why, card.count()))
+        check('Settings > General has the Install on Your Phone card; its steps for iPhone, Android and a computer open under "How?"', not why and card.count() == 1 and hidden and all(x in txt for x in ('iPhone or iPad', 'Add to Home Screen', 'Android', 'Install App', 'Computer')), (why, card.count(), hidden))
         check('the Install button is hidden when the browser offers no install', pg.evaluate("document.querySelector('#ix-inst').hidden"))
         check('each description shows once (inside its card, not again below it)', txt.count('Today, due times, backups and Telegram all follow it.') == 1, txt.count('Today, due times'))
         # a browser that offers to install: the button appears, and pressing it opens the browser's own install prompt

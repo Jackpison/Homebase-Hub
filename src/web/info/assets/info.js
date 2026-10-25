@@ -1265,6 +1265,7 @@ function fillSettings(){
     :"Visitors see only a login screen. To hide single tabs instead, use the pencil on a tab and choose Private tab.";
 }
 $("setcancel").onclick=()=>setdlg.close();
+$("setsizes").onclick=()=>setdlg.close();   // the shell then opens Text Sizes (data-hub-action="sizes")
 async function saveSettings(){
   const p={title:$("gin").value.trim().slice(0,60),icon:"",private:$("spriv").checked},m=$("setmsg");   // icon "": the page icon is gone, the site logo is used
   m.textContent="";

@@ -76,4 +76,18 @@
     };
     fq.addEventListener('input', frun); frun();
   }
+
+  /* The header slides away while you scroll down and comes back on any scroll up or near the top, like the Top Bar in the app.
+     It stays while the phone menu is open or something in it has focus. */
+  var top = d.querySelector('.top');
+  if (top) {
+    var lastY = window.scrollY || 0;
+    window.addEventListener('scroll', function () {
+      var y = window.scrollY || 0, dy = y - lastY; lastY = y;
+      var keep = top.contains(d.activeElement) || !!d.querySelector('.mm[open]');
+      if (y < 80 || dy < -4 || keep) root.classList.remove('hh-hide');
+      else if (dy > 6) root.classList.add('hh-hide');
+    }, { passive: true });
+    top.addEventListener('focusin', function () { root.classList.remove('hh-hide'); });
+  }
 })();

@@ -151,7 +151,7 @@ Chrome, Edge, Firefox, Brave, Opera and Safari all export an .html file that Lin
 
 ### Updating
 
-Open **Settings > Updates**.
+Open **Settings > System > Updates**.
 
 1. Press **Check Now** to look for a new version on GitHub. The daily check is off unless you turn it on.
 2. Press **Download and Check**. The download is verified against its SHA-256, and you see what will change.
@@ -241,7 +241,7 @@ No, on purpose. Your data is private, so it always comes from your server. Added
 <details>
 <summary><b>What if an update goes wrong?</b></summary>
 <br>
-A copy of the current version is kept before every update, and <b>Go Back</b> in Settings > Updates restores it. Your data in <code>site-data/</code> is never touched by an update.
+A copy of the current version is kept before every update, and <b>Go Back</b> in Settings > System > Updates restores it. Your data in <code>site-data/</code> is never touched by an update.
 </details>
 
 <details>

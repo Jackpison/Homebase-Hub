@@ -5,6 +5,9 @@
   * Settings > Updates has a link to the project on GitHub
   * Home takes uploads of up to 128 MB
   * the first request after an update removes the old Tools config.json
+  * the simpler Settings (plan A): 7 menu items, System holds Updates, Health and Changelog, Look shows Theme, Accent Color and
+    Navigation Style with the rest under More Options, old addresses still open the right place, hidden settings survive a save,
+    and the site search has no field checkboxes
     python3 tests/settings_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8970)"""
 import os, sys, glob, re, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -57,6 +60,50 @@ try:
         open_backups(); pg.click('#nt-bknow'); wait_js(pg, "((document.getElementById('ix-toast') || {}).textContent || '').includes('did not answer in time')", 20000)   # the helper retries a dropped connection twice first
         state = pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return [!!b, b && !b.disabled, b && b.textContent, (document.querySelector('#ix-pc .ix-err') || {}).textContent.includes('look there before you try again')]; })()")
         check('S7 with no answer, the button is free again, and a message (and the Status tab) say the backup may still arrive in Telegram', state == [True, True, 'Send Backup Now', True], state)
+        # the simpler Settings
+        pg.unroute('**/api.php?action=notify_backup*')
+        pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "document.querySelectorAll('#ix-page .ix-snav [data-sec]').length > 0", 20000)
+        menu = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav [data-sec] span')].map(e => e.textContent)")
+        check('S9 the Settings menu has 7 items', menu == ['Overview', 'General', 'Look', 'Security', 'Telegram', 'Backup & Restore', 'System'], menu)
+        def at(h, expr):
+            pg.goto(s.base + '/web/settings/' + h); pg.wait_for_timeout(150); pg.evaluate("void 0")
+            try: wait_js(pg, expr, 10000); return True
+            except Exception: return False
+        tabs = "[...document.querySelectorAll('#ix-pane .ix-subt [role=tab]')].map(e => e.textContent).join('|')"
+        sel = "(document.querySelector('#ix-pane .ix-subt [aria-selected=true]') || {}).textContent"
+        sub = "(document.querySelector('#ix-pane .ix-subseg [aria-selected=true]') || {}).textContent"
+        ok = at('#updates', tabs + " === 'Updates|Health|Changelog' && " + sel + " === 'Updates'")
+        check('S10 System has the tabs Updates, Health and Changelog', ok, pg.evaluate(tabs))
+        old = [('#files', 'Updates', 'Files'), ('#health', 'Health', 'Overview'), ('#domains', 'Health', 'Domains and Uptime'), ('#check', 'Health', 'Server Check'),
+               ('#changelog', 'Changelog', 'Versions'), ('#chmap', 'Changelog', 'Version Map'), ('#system', 'Updates', 'Update')]
+        bad = [h for h, t, u in old if not at(h, sel + " === %s && %s === %s" % (json.dumps(t), sub, json.dumps(u)))]
+        check('S11 old addresses (#files, #health, #domains, #check, #changelog, #chmap) open the right tab of System', not bad, bad)
+        check('S12 #pages (removed) opens General, and General has only Basics and Tabs', at('#pages', tabs + " === 'Basics|Tabs'"), pg.evaluate(tabs))
+        ok = at('#look', "!!document.querySelector('#ix-lmore')")
+        cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
+        closed = pg.evaluate("!document.querySelector('#ix-lmore').open && !document.querySelector('#ix-font').checkVisibility()")
+        check('S13 Look shows Theme, Accent Color and Navigation Style; Font and the rest wait closed under More Options', ok and cards == ['Theme', 'Accent Color', 'Navigation Style'] and closed, (cards, closed))
+        check('S14 Look offers 8 accent colors and your own', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 8 and pg.evaluate("!!document.querySelector('#ix-acc')"))
+        pg.click('#ix-lmore > summary'); pg.click('[data-to="themes"]')
+        ok = wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)
+        n = pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # the dark-mode list
+        pg.click('#ix-pc [data-seg="cmode"] [data-v="light"]'); pg.wait_for_timeout(300)
+        n += pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # and the light-mode list
+        pg.click('#ix-pc [data-seg="cmode"] [data-v="dark"]'); pg.wait_for_timeout(200)
+        check('S15 More Options > Presets still has all 166 presets (dark and light together)', n == 166 and pg.evaluate(tabs) == 'Look|More Options', (n, pg.evaluate(tabs)))
+        # a font chosen under More Options survives a save made from the visible part of Look
+        at('#look', "!!document.querySelector('#ix-lmore')")
+        pg.evaluate("document.querySelector('#ix-lmore').open = true"); pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); pg.wait_for_timeout(800)
+        at('#look', "!!document.querySelector('#ix-lmore')")
+        pg.click('#ix-pc .ix-sw [data-c="#4cc9f0"]'); pg.click('#ix-save'); pg.wait_for_timeout(800)
+        st = s.get('state')
+        check('S16 a save from Look keeps the font chosen under More Options', st.get('font') == 'georgia' and st.get('accent') == '#4cc9f0', (st.get('font'), st.get('accent')))
+        s.post('settings', {'settings': {'font': 'default', 'accent': '#ffc21a'}})
+        # the site search: where to look, and one tab; no field checkboxes or "Whole Words Only"
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!document.querySelector('#ix-q')", 15000)
+        pg.click('#ix-sbox .ix-fbtn'); wait_js(pg, "!!document.querySelector('#ix-sres .ix-chips')", 10000)
+        txt = pg.inner_text('#ix-sres')
+        check('S17 the search panel keeps "search in" and has no field checkboxes or Whole Words Only', 'Everything' in txt and 'Whole Words' not in txt and not pg.evaluate("!!document.querySelector('#ix-sres input[type=checkbox]')"), txt[:200])
         check('S8 no page error', not errs, errs)
         b.close()
 finally:

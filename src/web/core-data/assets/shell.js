@@ -29,7 +29,7 @@
   var ASSETS = new URL('.', me ? me.src : location.href).href;        // .../web/core-data/assets/
   var CORE = new URL('../', ASSETS).href;                             // .../web/core-data/
   var ROOT = new URL('../../', CORE).href;                            // site root
-  /* every page of the site: [id, default name, address, icon]. Names, order and hidden tabs come from Settings > General > Navigation. */
+  /* every page of the site: [id, default name, address, icon]. Names, order and hidden tabs come from Settings > General > Tabs. */
   var PAGE_DEF = [
     ['home', 'Home', ROOT, 'M3 11l9-7 9 7M5 10v10h14V10'],
     ['links', 'Links', ROOT + 'web/links/', 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'],
@@ -116,7 +116,7 @@
     H.setAttribute('data-ix-nav', S.nav || 'top');
     if (S.look !== false) H.setAttribute('data-ix-look', ''); else H.removeAttribute('data-ix-look');
     if (APP !== 'home' || S.homeBar === true) H.setAttribute('data-ix-bar', ''); else H.removeAttribute('data-ix-bar');
-    var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Appearance > Colors)
+    var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Look > More Options > Colors)
     H.style.setProperty('--ix-accent', acc);
     H.style.setProperty('--ix-ink', inkFor(acc));
   }
@@ -127,7 +127,7 @@
     var l = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
     return (l + 0.05) / 0.05 >= 1.05 / (l + 0.05) ? '#000' : '#fff';   // contrast with black against contrast with white
   }
-  /* Custom colors (Settings > Appearance > Colors): which CSS variable each portion of the site sets, per page.
+  /* Custom colors (Settings > Look > More Options > Colors): which CSS variable each portion of the site sets, per page.
      Written as one <style> so every page gets them before it paints. They only apply while "Same look on every page" is on. */
   var COLOR_KEYS = [['bg', 'Page Background'], ['box', 'Boxes and Cards'], ['panel', 'Menus and Dialogs'], ['line', 'Borders'], ['text', 'Text'], ['mute', 'Secondary Text'],
                     ['bar', 'Bar Background'], ['barText', 'Bar Tabs and Icons']];
@@ -179,7 +179,7 @@
     var css = colorsCss(st.colors, st.look);
     if (el.textContent !== css) el.textContent = css;
   }
-  /* Site-wide font (Settings > Appearance). One <style> overrides the font of every page, but leaves code and keyboard keys alone. */
+  /* Site-wide font (Settings > Look > More Options). One <style> overrides the font of every page, but leaves code and keyboard keys alone. */
   var FONTS = [['default', 'Each page\'s own font', ''],
     ['trebuchet', 'Trebuchet MS', '"Trebuchet MS","Lucida Grande","Lucida Sans Unicode","Lucida Sans",Tahoma,system-ui,sans-serif'],
     ['system', 'System Default', 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif'],
@@ -337,40 +337,63 @@
     popMenu(anchor, items);
   }
 
-  /* ---------- 4. the bar ---------- */
+  /* ---------- 4. the bar: three styles, each with its own layout ----------
+     top:  logo, pages, search box, theme, pencil, round menu. It slides away while you scroll down (4b).
+     side: an 80 px rail: logo, search, pages, then theme, pencil, round menu. Phones: a floating button (or a swipe
+           from the left edge) opens the same things as a panel.
+     dock: one floating pill: pages, search, pencil, round menu. Phones: the pill holds the pages, a round button
+           beside it opens a sheet with the rest.
+     The round menu holds Settings, Backup and Log Out; it shows a red dot while a backup is due. */
   var lastBar = '';
+  var NAV = function () { var n = H.getAttribute('data-ix-nav'); return n === 'side' || n === 'dock' ? n : 'top'; };
+  var phone = function () { return matchMedia('(max-width:760px)').matches; };
+  function iconBtn(k, label, icon, cls, id) {
+    return '<button type="button" class="ix-ib' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '"' : '') + ' data-ix="' + k + '" aria-label="' + label + '" title="' + label + '">' + icon + '</button>';
+  }
+  function themeLabel() { var n = themeNow() === 'light' ? 'Dark' : 'Light'; return 'Switch to ' + n + ' Mode'; }
+  function meButton(adm) {
+    if (!adm) return iconBtn('login', 'Log In', svg(ICON.key), 'ix-key');
+    var due = backupDue(), ch = esc(((S.siteName || 'Homebase Hub').trim().charAt(0) || 'H').toUpperCase());
+    return '<button type="button" class="ix-me' + (due ? ' due' : '') + '" data-ix="me" aria-haspopup="menu" aria-label="Menu: Settings, Backup, Log Out' +
+      (due ? ' (a backup is due)' : '') + '" title="Settings, Backup and Log Out">' + ch + '</button>';
+  }
+  function pageLinks() {
+    return '<div class="ix-links">' + pages().map(function (p) {
+      return '<a href="' + p[2] + '" data-page="' + p[0] + '"' + (p[0] === APP ? ' aria-current="page"' : '') + ' title="' + esc(p[1]) + '">' + svg(p[3]) + '<span>' + esc(p[1]) + '</span></a>';
+    }).join('') + '</div>';
+  }
   function drawBar() {
     var bar = document.getElementById('ix-bar');
     cornerButton();
     if (!H.hasAttribute('data-ix-bar')) { if (bar) bar.remove(); lastBar = ''; return; }
     if (!document.body) return whenBody(drawBar);
-    var adm = isAdmin();
-    var links = pages().map(function (p) {
-      return '<a href="' + p[2] + '" data-page="' + p[0] + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + svg(p[3]) + '<span>' + esc(p[1]) + '</span></a>';
-    }).join('');
-    var next = themeNow() === 'light' ? 'dark' : 'light';
+    var adm = isAdmin(), nav = NAV();
     var mark = '<img class="ix-logo" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt="">';   // your logo, or Homebase Hub's own
-    var html =
-      '<button class="ix-ib ix-menu" data-ix="menu" aria-label="Pages">' + svg(ICON.menu) + '</button>' +
-      '<a class="ix-brand" href="' + ROOT + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>' +
-      '<div class="ix-links">' + links + '</div>' +
-      '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="Search" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
-        '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
-      '<div class="ix-tools">' +
-        '<button class="ix-ib ix-only-dock" data-ix="search" aria-label="Search" title="Search">' + svg(ICON.search) + '</button>' +
-        '<button class="ix-ib" data-ix="theme" aria-label="Switch to ' + next.charAt(0).toUpperCase() + next.slice(1) + ' Mode" title="Switch to ' + next.charAt(0).toUpperCase() + next.slice(1) + ' Mode">' + ICON_THEME + '</button>' +
-        (HAS_EDIT ? '<button class="ix-ib" data-ix="edit" id="ix-editb" aria-label="Edit" title="Edit">' + svg(ICON.edit) + '</button>' : '') +
-        (adm ? (backupDue() ? '<button class="ix-ib ix-bk due" data-ix="backup" aria-label="Backup (a backup is due)" title="A backup is due: open Backup">'
-                            : '<button class="ix-ib ix-bk" data-ix="backup" aria-label="Backup" title="Backup and Import">') + svg(ICON.box) + '</button>' : '') +
-        (adm ? '<button class="ix-ib" data-ix="account" aria-label="Settings" title="Settings">' + svg(ICON.gear) + '</button>'
-             : '<button class="ix-ib" data-ix="login" aria-label="Log in" title="Log in">' + svg(ICON.key) + '</button>') +
-      '</div>';
+    var brand = '<a class="ix-brand" href="' + ROOT + '" aria-label="' + esc(S.siteName || 'Homebase Hub') + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>';
+    var theme = iconBtn('theme', themeLabel(), ICON_THEME);
+    var edit = HAS_EDIT ? iconBtn('edit', 'Edit', svg(ICON.edit), '', 'ix-editb') : '';
+    var me = meButton(adm), links = pageLinks();
+    var html;
+    if (nav === 'side') {
+      html = brand + iconBtn('search', 'Search (press /)', svg(ICON.search), 'ix-sbtn') + links +
+        '<div class="ix-tools">' + theme + edit + me + '</div>' +
+        '<button type="button" class="ix-fab" data-ix="menu" aria-label="Pages and Menu" title="Pages and Menu">' + svg(ICON.menu) + '</button>';
+    } else if (nav === 'dock') {
+      html = '<div class="ix-pill">' + links + '<span class="ix-div" aria-hidden="true"></span><div class="ix-tools">' +
+        iconBtn('search', 'Search (press /)', svg(ICON.search), 'ix-sbtn') + edit + me + '</div></div>' +
+        '<button type="button" class="ix-fab" data-ix="sheet" aria-label="Search and Menu" title="Search and Menu">' + svg(ICON.search) + '</button>';
+    } else {
+      html = '<button type="button" class="ix-ib ix-menu" data-ix="menu" aria-label="Pages" title="Pages">' + svg(ICON.menu) + '</button>' + brand + links +
+        '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="Search" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
+          '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
+        '<div class="ix-tools">' + iconBtn('search', 'Search', svg(ICON.search), 'ix-sbtn') + theme + edit + me + '</div>';
+    }
     if (html === lastBar && bar) return;
     lastBar = html;
     if (!bar) { bar = document.createElement('div'); bar.id = 'ix-bar'; bar.setAttribute('role', 'navigation'); bar.setAttribute('aria-label', 'Site'); document.body.prepend(bar); }
     var q = document.getElementById('ix-q'), qv = q ? q.value : '', had = q && document.activeElement === q;
     bar.innerHTML = html;
-    if (qv) { q = document.getElementById('ix-q'); q.value = qv; if (had) q.focus(); }
+    if (qv && (q = document.getElementById('ix-q'))) { q.value = qv; if (had) q.focus(); }
     bindInlineSearch();
     markEditing();
   }
@@ -395,8 +418,20 @@
     items.push({ sep: true }, { label: 'Settings', icon: ICON.gear, run: function () { settings(); } }, { label: 'Log Out', icon: ICON.out, danger: true, run: logout });
     popMenu(b, items, { corner: true });
   }
+  /* The round menu: Settings, Backup (with when it last ran, or "Due"), the theme where the bar has no theme button, Log Out. */
+  function meMenu(b) {
+    var due = backupDue(), last = +S.backupLast || 0, days = last ? Math.floor((Date.now() / 1000 - last) / 86400) : -1;
+    var note = due ? 'Due' : days < 0 ? '' : days === 0 ? 'Today' : days === 1 ? '1 day ago' : days + ' days ago';
+    var items = [
+      { label: 'Settings', icon: ICON.gear, run: function () { settings(); } },
+      { label: 'Backup', icon: ICON.box, note: note, warn: due, run: function () { backupSeen(); openBackup(); } }
+    ];
+    if (NAV() === 'dock' || phone()) items.push({ label: themeLabel(), icon: themeNow() === 'light' ? ICON.moon : ICON.sun, run: function () { setTheme(themeNow() === 'light' ? 'dark' : 'light'); } });
+    items.push({ sep: true }, { label: 'Log Out', icon: ICON.out, danger: true, run: logout });
+    popMenu(b, items);
+  }
   function markEditing() { var b = document.getElementById('ix-editb'); if (b) b.classList.toggle('on', editing()); }
-  /* The Backup icon is green, and red while a backup is due (Backup > Remind me every). Clicking it turns it green again
+  /* The round menu's dot is red while a backup is due (Backup > Remind me every). Opening Backup from it clears the dot
      for a day; exporting a full backup starts the countdown over. */
   function backupDue() {
     var every = +S.backupEvery || 0, last = +S.backupLast || 0;
@@ -408,24 +443,92 @@
   function backupSeen() { if (backupDue()) { ls.set('hub-bk-ack', String(Date.now())); lastBar = ''; drawBar(); } }
   /* ...and one quiet message per visit while it is due */
   function backupReminder() {
-    if (!S.admin || !backupDue()) return;   // same rule as the red icon: not after it was clicked today
+    if (!S.admin || !backupDue()) return;   // same rule as the red dot: not after it was opened today
     var days = Math.floor((Date.now() / 1000 - (S.backupLast || 0)) / 86400);
     if (S.backupLast && days < S.backupEvery) return;
     try { if (sessionStorage.getItem('hub-bk-told')) return; sessionStorage.setItem('hub-bk-told', '1'); } catch (e) {}
-    toast(S.backupLast ? 'Backup reminder: your last backup was ' + days + ' days ago. Use the Backup icon.' : 'Backup reminder: no backup yet. Use the Backup icon.');
+    toast(S.backupLast ? 'Backup reminder: your last backup was ' + days + ' days ago. Open the round menu, then Backup.' : 'Backup reminder: no backup yet. Open the round menu, then Backup.');
+  }
+  /* A panel that slides in (the page list on phones, and the whole sidebar on phones) or a sheet from the bottom (the dock on phones).
+     Both are drawn fresh each time they open, so they always show the current login, theme and backup state. */
+  function panelFoot(adm) {
+    return (HAS_EDIT ? '<button type="button" class="ix-pbtn" data-ix="edit">' + svg(ICON.edit) + '<span>Edit</span></button>' : '') +
+      '<button type="button" class="ix-pbtn" data-ix="theme">' + ICON_THEME + '<span>' + (themeNow() === 'light' ? 'Dark' : 'Light') + '</span></button>' + meButton(adm);
+  }
+  function openPanel(id, open, build) {
+    var d = document.getElementById(id);
+    if (!open) {
+      if (d && d.classList.contains('open')) { d.classList.remove('open'); if (d._from && d._from.focus && document.contains(d._from)) d._from.focus(); }
+      return;
+    }
+    if (!d) { d = document.createElement('div'); d.id = id; document.body.appendChild(d); }
+    d._from = document.activeElement;
+    d.innerHTML = build(isAdmin());
+    d.classList.add('open');
+    var f = d.querySelector('[aria-current="page"]') || d.querySelector('button,a'); if (f) setTimeout(function () { f.focus(); }, 30);
   }
   function drawer(open) {
-    var d = document.getElementById('ix-drawer');
-    if (!d) {
-      d = document.createElement('div'); d.id = 'ix-drawer';
-      d.innerHTML = '<div class="ix-scrim" data-ix="close"></div><nav aria-label="Pages">' + pages().map(function (p) {
-        return '<a href="' + p[2] + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + svg(p[3]) + esc(p[1]) + '</a>'; }).join('') + '</nav>';
-      document.body.appendChild(d);
-    }
-    d.classList.toggle('open', open);
+    openPanel('ix-drawer', open, function (adm) {
+      return '<div class="ix-scrim" data-ix="close"></div><nav aria-label="Pages"><a class="ix-brand" href="' + ROOT + '"><img class="ix-logo" src="' +
+        esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt=""><span>' + esc(S.siteName || 'Homebase Hub') + '</span></a>' +
+        '<button type="button" class="ix-psearch" data-ix="search">' + svg(ICON.search) + '<span>Search</span></button>' +
+        pages().map(function (p) { return '<a href="' + p[2] + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + svg(p[3]) + esc(p[1]) + '</a>'; }).join('') +
+        '<div class="ix-pfoot">' + panelFoot(adm) + '</div></nav>';
+    });
   }
+  function sheet(open) {
+    openPanel('ix-sheet', open, function (adm) {
+      var due = backupDue();
+      var tile = function (k, icon, label, cls) { return '<button type="button" class="ix-tile' + (cls ? ' ' + cls : '') + '" data-ix="' + k + '">' + icon + '<span>' + label + '</span></button>'; };
+      return '<div class="ix-scrim" data-ix="close"></div><div class="ix-shp" role="dialog" aria-modal="true" aria-label="Search and Menu"><span class="ix-grab" aria-hidden="true"></span>' +
+        '<button type="button" class="ix-psearch" data-ix="search">' + svg(ICON.search) + '<span>Search everything</span></button><div class="ix-tiles6">' +
+        (HAS_EDIT ? tile('edit', svg(ICON.edit), editing() ? 'Editing' : 'Edit') : '') +
+        tile('theme', ICON_THEME, themeNow() === 'light' ? 'Dark Mode' : 'Light Mode') +
+        (adm ? tile('backup', svg(ICON.box), due ? 'Backup Due' : 'Backup', due ? 'due' : '') + tile('account', svg(ICON.gear), 'Settings') + tile('logout', svg(ICON.out), 'Log Out', 'danger')
+             : tile('login', svg(ICON.key), 'Log In')) + '</div></div>';
+    });
+  }
+  function closePanels() { drawer(false); sheet(false); }
+  /* Sidebar style on a phone: a swipe from the left edge opens the panel */
+  var swipe = null;
+  document.addEventListener('touchstart', function (e) {
+    var t = e.touches[0]; swipe = null;
+    if (t && t.clientX < 18 && NAV() === 'side' && phone() && H.hasAttribute('data-ix-bar')) swipe = { x: t.clientX, y: t.clientY };
+  }, { passive: true });
+  document.addEventListener('touchmove', function (e) {
+    var t = e.touches[0]; if (!swipe || !t) return;
+    if (t.clientX - swipe.x > 50 && Math.abs(t.clientY - swipe.y) < 40) { swipe = null; drawer(true); }
+  }, { passive: true });
 
-  /* ---------- 5. small popup menu (Edit, Settings/Log out) ---------- */
+  /* ---------- 4b. the top bar hides while you scroll down and comes back on any scroll up ----------
+     It stays while the search box has focus, a menu is open, or the mouse is at the top edge. The dock gets smaller while you scroll.
+     Pages that scroll inside a box count too (the listener catches every scroll), but small boxes (a list in a dialog) do not. */
+  var scrollT = 0;
+  function holdBar() {
+    var bar = document.getElementById('ix-bar');
+    var a = document.activeElement;   // typing in the search box keeps it; a button that was just tapped does not
+    return !!(popEl || (bar && a && bar.contains(a) && a.tagName === 'INPUT') || (sres && !sres.hidden) || document.querySelector('#ix-drawer.open,#ix-sheet.open,#ix-spot.open'));
+  }
+  function barHidden(on) {
+    if (on && holdBar()) on = false;
+    if (H.classList.contains('ix-hide') !== on) H.classList.toggle('ix-hide', on);
+  }
+  document.addEventListener('scroll', function (e) {
+    if (!H.hasAttribute('data-ix-bar')) return;
+    var t = e.target, el = (t === document || t === H || t === document.body) ? null : t;
+    if (el && (el.nodeType !== 1 || el.clientHeight < innerHeight * 0.5 || el.closest('#ix-bar,#ix-pop,#ix-drawer,#ix-sheet,#ix-spot,.ix-panel,#ix-dlg,dialog'))) return;
+    var box = el || window, y = el ? el.scrollTop : (window.scrollY || 0), prev = box.__ixY == null ? y : box.__ixY;
+    box.__ixY = y;
+    H.classList.add('ix-scrolling'); clearTimeout(scrollT); scrollT = setTimeout(function () { H.classList.remove('ix-scrolling'); }, 240);
+    if (NAV() !== 'top') return;
+    if (y < 8) barHidden(false);
+    else if (y - prev > 6 && y > 60) barHidden(true);
+    else if (y - prev < -4) barHidden(false);
+  }, { capture: true, passive: true });
+  document.addEventListener('focusin', function (e) { var bar = document.getElementById('ix-bar'); if (bar && bar.contains(e.target)) barHidden(false); });
+  document.addEventListener('mousemove', function (e) { if (e.clientY < 10 && H.classList.contains('ix-hide')) barHidden(false); }, { passive: true });
+
+  /* ---------- 5. small popup menu (Edit, the round menu) ---------- */
   var popEl = null, popAnchor = null;
   function closePop() { if (popEl) { popEl.remove(); popEl = null; } popAnchor = null; }
   function popMenu(anchor, items, opts) {
@@ -433,22 +536,23 @@
     popAnchor = anchor;
     popEl = document.createElement('div'); popEl.id = 'ix-pop'; popEl.setAttribute('role', 'menu');
     popEl.innerHTML = items.map(function (it, i) {
-      return it.sep ? '<hr>' : '<button type="button" role="menuitem" data-i="' + i + '"' + (it.danger ? ' class="danger"' : it.accent ? ' class="accent"' : '') + '>' + (it.icon ? svg(it.icon) : '<span class="ix-gap"></span>') + esc(it.label) + '</button>';
+      return it.sep ? '<hr>' : '<button type="button" role="menuitem" data-i="' + i + '"' + (it.danger ? ' class="danger"' : it.accent ? ' class="accent"' : '') + '>' +
+        (it.icon ? svg(it.icon) : '<span class="ix-gap"></span>') + '<span class="ix-pl">' + esc(it.label) + '</span>' +
+        (it.note ? '<small' + (it.warn ? ' class="warn"' : '') + '>' + esc(it.note) + '</small>' : '') + '</button>';
     }).join('');
     document.body.appendChild(popEl);
-    var r = anchor.getBoundingClientRect(), w = popEl.offsetWidth, h = popEl.offsetHeight, nav = H.getAttribute('data-ix-nav');
-    var corner = opts && opts.corner;   // the start page's corner button: opens toward the middle of the screen
-    var up = corner && r.top > innerHeight / 2;
-    var below = corner ? !up : (nav === 'top' || matchMedia('(max-width:760px)').matches && nav !== 'dock');
-    var top = below ? r.bottom + 8 : r.top - h - 8;
-    var sideMode = !corner && nav === 'side' && !matchMedia('(max-width:760px)').matches;
-    if (sideMode) { top = Math.min(r.top, innerHeight - h - 8); }
-    var left = sideMode ? r.right + 8 : r.right - w;
+    var r = anchor.getBoundingClientRect(), w = popEl.offsetWidth, h = popEl.offsetHeight;
+    // the rail's menus open beside it; everything else opens below its button, or above it when the button sits low on the screen
+    var sideMode = !(opts && opts.corner) && NAV() === 'side' && !phone() && !!anchor.closest('#ix-bar');
+    var top = r.top > innerHeight / 2 ? r.top - h - 8 : r.bottom + 8;
+    if (sideMode) top = Math.min(r.top, innerHeight - h - 8);
+    var left = sideMode ? anchor.closest('#ix-bar').getBoundingClientRect().right + 8 : r.right - w;
     popEl.style.top = Math.max(8, Math.min(top, innerHeight - h - 8)) + 'px';
     popEl.style.left = Math.max(8, Math.min(left, innerWidth - w - 8)) + 'px';
     popEl.onclick = function (e) {
       var b = e.target.closest('button[data-i]'); if (!b) return;
-      var it = items[+b.dataset.i]; closePop(); if (it && it.run) it.run();
+      var it = items[+b.dataset.i]; closePop();
+      if (it && it.run) { if (!/…$/.test(it.label) && it.label !== 'Back') closePanels(); it.run(); }
     };
     var f = popEl.querySelector('button'); if (f) f.focus();
   }
@@ -492,10 +596,10 @@
      Filters (scope, one tab, which fields, whole words) are remembered in this browser.
      Typing "links: text", "info: text" or "tools: text" is a shortcut for the scope. */
   var SX = { at: 0, p: null, links: [], info: [], linkTabs: [], infoTabs: [] };
-  var SF = { scope: 'all', tab: '', title: true, url: true, notes: true, whole: false, more: false };
-  try { Object.assign(SF, JSON.parse(ls.get('hub-sfilter') || '{}') || {}); } catch (e) {}
+  var SF = { scope: 'all', tab: '' };   // where to look; names, web addresses and note text are always searched
+  try { var sf0 = JSON.parse(ls.get('hub-sfilter') || '{}') || {}; ['scope', 'tab'].forEach(function (k) { if (k in sf0) SF[k] = sf0[k]; }); } catch (e) {}
   var saveSF = function () { ls.set('hub-sfilter', JSON.stringify(SF)); };
-  var SF_DEFAULT = function () { return SF.scope === 'all' && !SF.tab && SF.title && SF.url && SF.notes && !SF.whole; };
+  var SF_DEFAULT = function () { return SF.scope === 'all' && !SF.tab; };
 
   function plainNote(t) {
     return String(t || '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[#*_`>~|]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -543,28 +647,26 @@
   }
   function searchResults(p) {
     var q = p.q.toLowerCase(), scope = p.scope;
-    var re = SF.whole ? new RegExp('(^|[^\\p{L}\\p{N}])' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^\\p{L}\\p{N}])', 'iu') : null;
     var rank = function (s) {
       s = String(s || '').toLowerCase();
-      if (re) return re.test(s) ? 1 : 9;
       var i = s.indexOf(q); return i < 0 ? 9 : i === 0 ? 0 : /[\s./:-]/.test(s.charAt(i - 1)) ? 1 : 2;
     };
     var links = [], info = [], seen = {}, tabFilter = SF.tab ? SF.tab.split(':') : null;
     if (scope === 'all' || scope === 'links') SX.links.forEach(function (l, i) {
       if (tabFilter && !(tabFilter[0] === 'links' && tabFilter[1] === l.tab)) return;
-      var r = Math.min(SF.title ? rank(l.title) : 9, SF.url ? rank(l.url) + 1 : 9, SF.title ? rank(l.where) + 2 : 9);
+      var r = Math.min(rank(l.title), rank(l.url) + 1, rank(l.where) + 2);
       if (r < 9) links.push({ r: r, i: i, v: l });
     });
     if (scope === 'all' || scope === 'info') SX.info.forEach(function (x, i) {
       if (tabFilter && !(tabFilter[0] === 'info' && tabFilter[1] === x.tab)) return;
-      var r = Math.min(SF.title ? rank(x.title) : 9, SF.title && x.text ? rank(x.text) + 1 : 9, SF.notes && x.body ? rank(x.body) + 2 : 9);
+      var r = Math.min(rank(x.title), x.text ? rank(x.text) + 1 : 9, x.body ? rank(x.body) + 2 : 9);
       if (r >= 9) return;
       var key = x.tab + '|' + x.text; if (seen[key]) return; seen[key] = 1;
       info.push({ r: r, i: i, v: x });
     });
     var tasks = [];
     if ((scope === 'all' || scope === 'tasks') && !tabFilter) (SX.tasks || []).forEach(function (t, i) {
-      var r = Math.min(SF.title ? rank(t.name) : 9, SF.title ? rank(t.cat) + 1 : 9, SF.title ? rank(t.pay) + 2 : 9, SF.notes && t.notes ? rank(t.notes) + 2 : 9);
+      var r = Math.min(rank(t.name), rank(t.cat) + 1, rank(t.pay) + 2, t.notes ? rank(t.notes) + 2 : 9);
       if (r < 9) tasks.push({ r: r + (t.status === 'done' ? 3 : 0), i: i, v: t });
     });
     var cmp = function (a, b) { return a.r - b.r || a.i - b.i; };
@@ -583,11 +685,10 @@
       if (SF.scope !== 'links' && SX.infoTabs.length) opts += '<optgroup label="Info">' + SX.infoTabs.map(function (t) { return '<option value="info:' + esc(t.id) + '"' + (SF.tab === 'info:' + t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('') + '</optgroup>';
       tabs = '<label class="ix-fl">Only in Tab<select data-sf="tab">' + opts + '</select></label>';
     }
-    var chk = function (k, l) { return '<label class="ix-fc"><input type="checkbox" data-sf="' + k + '"' + (SF[k] ? ' checked' : '') + '>' + l + '</label>'; };
+    // where to look, and (Links and Info) one tab only; names, web addresses and note text are always searched
     return '<div class="ix-fs"><div class="ix-chips" role="group" aria-label="Search in">' + chip('all', 'Everything') + chip('links', 'Links') + chip('info', 'Info') + (S.admin ? chip('tasks', 'Tasks') : '') + chip('tools', 'Tools') +
-      '<button type="button" class="ix-more" data-sf="more" aria-expanded="' + SF.more + '">' + svg(ICON.filter) + 'Options' + (SF_DEFAULT() ? '' : ' •') + '</button></div>' +
-      (SF.more ? '<div class="ix-fx">' + tabs + '<div class="ix-fcs">' + chk('title', 'Names and Titles') + chk('url', 'Web Addresses') + chk('notes', 'Note Text') + chk('whole', 'Whole Words Only') + '</div>' +
-        (SF_DEFAULT() ? '' : '<button type="button" class="ix-reset" data-sf="reset">Reset Options</button>') + '</div>' : '') + '</div>';
+      (SF_DEFAULT() ? '' : '<button type="button" class="ix-reset ix-more" data-sf="reset">Reset</button>') + '</div>' +
+      (tabs ? '<div class="ix-fx">' + tabs + '</div>' : '') + '</div>';
   }
   function resultsHtml(p) {
     var r = searchResults(p), n = 0, h = '', q = p.q, ql = q.toLowerCase();
@@ -606,7 +707,7 @@
       var d = ''; try { d = new Date(t.due + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) {}
       var pr = ''; if (t.price != null) { try { pr = new Intl.NumberFormat(t.cur === 'INR' ? 'en-IN' : undefined, t.cur ? { style: 'currency', currency: t.cur, maximumFractionDigits: 2, minimumFractionDigits: 0 } : {}).format(t.price); } catch (e) { pr = String(t.price); } }
       var sub = [t.status === 'done' ? 'Done' : t.status === 'paused' ? 'Paused' : 'Due ' + d, t.cat, pr].filter(Boolean).map(esc).join(' · ');
-      return row(ROOT + 'web/tasks/#task=' + encodeURIComponent(t.id), false, '<i class="ix-d"></i>', snip(t.name, ql), sub + (SF.notes && t.notes && t.notes.toLowerCase().indexOf(ql) >= 0 ? ' — ' + snip(t.notes, ql) : ''));
+      return row(ROOT + 'web/tasks/#task=' + encodeURIComponent(t.id), false, '<i class="ix-d"></i>', snip(t.name, ql), sub + (t.notes && t.notes.toLowerCase().indexOf(ql) >= 0 ? ' — ' + snip(t.notes, ql) : ''));
     }).join('');
     if (p.scope === 'all' || p.scope === 'tools') h += '<div class="ix-rh">Tools</div>' + row(ROOT + 'web/tools/#/search/' + encodeURIComponent(q), false, '<i class="ix-d"></i>', 'Search Tools for “' + esc(q) + '”', 'Image, PDF and Utility Tools');
     if (!n) h += '<div class="ix-none">No matches. Try “Everything” or fewer options.</div>';
@@ -641,14 +742,13 @@
       else if (e.key === 'Escape') { if (input.value) { input.value = ''; show(); } else { forceOpen = false; panel.hidden = true; input.blur(); onPick && onPick(true); } }
     });
     panel.addEventListener('mousedown', function (e) { if (!e.target.closest('select,input,label')) e.preventDefault(); });
-    panel.addEventListener('change', function (e) { var f = e.target.getAttribute && e.target.getAttribute('data-sf'); if (!f) return; if (f === 'tab') SF.tab = e.target.value; else SF[f] = e.target.checked; saveSF(); show(); });
+    panel.addEventListener('change', function (e) { var f = e.target.getAttribute && e.target.getAttribute('data-sf'); if (!f) return; if (f === 'tab') { SF.tab = e.target.value; saveSF(); show(); } });
     panel.addEventListener('click', function (e) {
       var s = e.target.closest('[data-sf]');
       if (s && s.tagName === 'BUTTON') {
         var f = s.getAttribute('data-sf');
         if (f === 'scope') { SF.scope = s.getAttribute('data-v'); if (SF.tab && SF.scope !== 'all' && SF.tab.split(':')[0] !== SF.scope) SF.tab = ''; }
-        else if (f === 'more') SF.more = !SF.more;
-        else if (f === 'reset') SF = { scope: 'all', tab: '', title: true, url: true, notes: true, whole: false, more: true };
+        else if (f === 'reset') SF = { scope: 'all', tab: '' };
         saveSF(); forceOpen = true; show(); input.focus(); return;
       }
       var a = e.target.closest('a.ix-r'); if (!a) return;
@@ -691,6 +791,7 @@
   }
   function focusSearch() {
     var q = document.getElementById('ix-q');
+    barHidden(false);
     if (q && q.offsetParent !== null) { q.focus(); q.select(); } else openSpot();
   }
   document.addEventListener('keydown', function (e) {
@@ -794,7 +895,9 @@
     $('#ix-sf').onsubmit = function (e) {
       e.preventDefault();
       if ($('#ix-p1').value !== $('#ix-p2').value) { $('#ix-se').textContent = "The two passwords don't match."; return; }
-      api('setup', { code: $('#ix-sc').value, password: $('#ix-p1').value, siteName: $('#ix-sn').value }).then(function (j) {
+      var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (x) {}
+      // a new site starts with this browser's time zone and the theme that follows the device
+      api('setup', { code: $('#ix-sc').value, password: $('#ix-p1').value, siteName: $('#ix-sn').value, tz: tz, theme: 'auto' }).then(function (j) {
         if (j.ok) { S.setup = false; return loggedIn().then(function () { location.reload(); }); }
         $('#ix-se').textContent = j.error || 'Could not save.';
       });
@@ -937,21 +1040,23 @@
   /* ---------- 12. clicks on the bar and dialogs ---------- */
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-ix]'); if (!b) return;
-    var k = b.dataset.ix;
-    if (k === 'close') { closeDlg(); drawer(false); return; }
+    var k = b.dataset.ix, inPanel = !!b.closest('#ix-drawer,#ix-sheet');
+    if (k === 'close') { closeDlg(); closePanels(); return; }
     if (k === 'spotx') { if (spot) spot.classList.remove('open'); return; }
     if (k === 'menu') return drawer(true);
-    if (k === 'theme') return setTheme(themeNow() === 'light' ? 'dark' : 'light');
+    if (k === 'sheet') return sheet(true);
+    if (k === 'theme') { if (inPanel) closePanels(); return setTheme(themeNow() === 'light' ? 'dark' : 'light'); }
     if (k === 'login') return login().then(function () { location.reload(); }, function () {});
     if (k === 'logout') return logout();
-    if (k === 'search') return openSpot();
+    if (k === 'search') { closePanels(); return openSpot(); }
     if (k === 'filters') return toggleFilters(b);
-    if (k === 'backup') { backupSeen(); return openBackup(); }
+    if (k === 'backup') { closePanels(); backupSeen(); return openBackup(); }
     if (k === 'corner') return cornerMenu(b);
-    if (k === 'edit') return (!S.admin && q1('toggle')) ? startEdit() : editMenu(b);
-    if (k === 'account') return settings();   // the gear simply opens the Settings page (Health and Log Out are in its menu)
+    if (k === 'me') return meMenu(b);
+    if (k === 'edit') { if (!S.admin && q1('toggle')) { closePanels(); return startEdit(); } return editMenu(b); }
+    if (k === 'account') { closePanels(); return settings(); }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') drawer(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !popEl) closePanels(); });
 
 
   /* what shell-admin.js may use (it holds this same S object, so it always sees the current state) */

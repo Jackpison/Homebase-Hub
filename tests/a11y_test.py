@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Accessibility check with axe-core (WCAG 2.1 A and AA rules) on every app page, in dark and light mode.
+"""Accessibility check with axe-core (WCAG 2.1 A and AA rules) on every app page, in dark and light mode, and the bar in all three styles.
   npm i --no-save axe-core
   python3 tests/a11y_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ and Playwright with Chromium (or --browser firefox|webkit). Nothing leaves this computer."""
@@ -57,6 +57,16 @@ try:
             pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]', timeout=10000)
             pg.set_input_files('#impFile', os.path.join(HERE, 'bookmarks', 'chrome.html')); pg.wait_for_timeout(600)
             check('Links: Import Bookmarks dialog (%s)' % theme, scan(pg))
+            # the bar in each style, on a computer and on a phone, with the phone panel (Sidebar) and sheet (Bottom Dock) open
+            for nav in ('side', 'dock', 'top'):
+                pg.evaluate("window.__ixShell.api('settings', {settings: {nav: '%s'}})" % nav); pg.wait_for_timeout(300)
+                for size, vp in (('computer', {'width': 1280, 'height': 860}), ('phone', {'width': 390, 'height': 844})):
+                    pg.set_viewport_size(vp); pg.goto(B + '/web/links/'); pg.wait_for_timeout(1200)
+                    check('Bar: %s, %s (%s)' % (nav, size, theme), scan(pg))
+                    if size == 'phone' and nav != 'top':
+                        pg.click('#ix-bar .ix-fab'); pg.wait_for_timeout(500)
+                        check('Bar: %s, phone, %s open (%s)' % (nav, 'panel' if nav == 'side' else 'sheet', theme), scan(pg))
+                pg.set_viewport_size({'width': 1280, 'height': 860})
             ctx.close()
         # the website is checked, with axe, in dark and light on every page, by tests/website_test.py
         b.close()

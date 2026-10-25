@@ -53,9 +53,8 @@
           <button data-a="editbank" data-hub="item" data-hub-label="Banks" data-hub-group="Manage" data-hub-icon="card" data-hub-order="11">Banks</button>
           <hr>
           <span class="ph">Page</span>
-          <button data-a="title" data-hub="item" data-hub-label="Title and Icon" data-hub-group="Page Look" data-hub-icon="edit" data-hub-order="20" data-hub-sep>Title and Icon</button>
+          <button data-a="title" data-hub="item" data-hub-label="Page Settings" data-hub-group="Page Look" data-hub-icon="gear" data-hub-order="20" data-hub-sep>Page Settings</button>
           <button data-a="reorder" data-hub="item" data-hub-label="Column Order" data-hub-group="Page Look" data-hub-icon="cols" data-hub-order="21">Column Order</button>
-          <button data-hub="item" data-hub-action="sizes" data-hub-label="Text Sizes" data-hub-group="Page Look" data-hub-icon="type" data-hub-order="22">Text Sizes</button>
           <hr>
           <button data-a="password" id="mPw">Password &amp; Security</button>
           <button data-a="lock" id="mLock">Log Out</button>
@@ -138,10 +137,11 @@
 </dialog>
 
 <dialog id="tdlg">
-  <h2>Title</h2>
+  <h2>Page Settings</h2>
   <div class="f">
     <label class="w">Page Title<input id="ttl" maxlength="60"></label>
   </div>
+  <div class="f"><button type="button" id="tsizes" data-hub-action="sizes">Change Text Sizes</button></div>
   <div class="act"><button type="button" id="tcancel">Cancel</button><button type="button" class="pri" id="tsave">Save</button></div>
 </dialog>
 

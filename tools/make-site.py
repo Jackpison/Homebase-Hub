@@ -65,6 +65,13 @@ def relink(doc, root):
     return re.sub(r'\b(href|src)="([^"]*)"', f, doc)
 
 
+# The next page is ready before the click: Chrome and Edge prepare a page of this site in the background when the pointer rests
+# on a link to it (or a finger touches it). Only this list of rules is allowed inline ('inline-speculation-rules' in the policy):
+# it is data, never code that runs. PDFs and downloads are left out.
+SPECULATION = ('<script type="speculationrules">{"prerender":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":"*.pdf"}},'
+               '{"not":{"selector_matches":"[download],[target=_blank]"}}]},"eagerness":"moderate"}]}</script>')
+
+
 def page(slug, title, body, wide=False, desc=None, cls=''):
     desc = desc or 'Homebase Hub is a self-hosted start page with bookmarks, notes, cards, tasks and browser tools. One login, private, on your own server.'
     cur = lambda h: slug == h.rstrip('/') or slug.startswith(h)
@@ -76,12 +83,12 @@ def page(slug, title, body, wide=False, desc=None, cls=''):
     foot_links = lambda items: ''.join('<li><a href="%s">%s</a></li>' % (h, n) for h, n in items)
     doc = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light">'
            '<title>%s</title><meta name="description" content="%s">'
-           '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\'; style-src \'self\'; img-src \'self\'; font-src \'self\'; base-uri \'self\'; form-action \'none\'">'
+           '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\' \'inline-speculation-rules\'; style-src \'self\'; img-src \'self\'; font-src \'self\'; base-uri \'self\'; form-action \'none\'">'
            '<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a10"><meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbf6ec">'
            '<link rel="icon" type="image/png" href="brand/favicon-32.png"><link rel="apple-touch-icon" href="brand/apple-touch-icon.png">%s'
            '<meta property="og:type" content="website"><meta property="og:title" content="%s"><meta property="og:description" content="%s"><meta property="og:image" content="%sbrand/social-preview.png"><meta name="twitter:card" content="summary_large_image">'
            '<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="hot.css">'
-           '<script src="theme.js"></script><script src="site.js" defer></script></head><body>'
+           '<script src="theme.js"></script><script src="site.js" defer></script>' + SPECULATION + '</head><body>'
            '<a class="skip" href="#main">Skip to the content</a>'
            '<header class="top"><div class="in bar"><a class="brand" href="index.html"><img src="brand/logo-192.png" alt="" width="36" height="36">Homebase Hub</a>'
            '<nav class="menu" aria-label="Main">%s</nav>'

@@ -79,6 +79,17 @@ try:
         why7 = browser_login(p7, B, PW); p7.goto(B + '/web/cards/'); p7.wait_for_timeout(1500)
         check('P7 logged in on a second page without the test routing', p7.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())"), why7)
         c7.close()
+        # P8: Text Sizes now opens from each page's own settings dialog, and is no longer its own item in the pencil menu
+        p8 = []
+        for app, dlg, btn, done in (('links', 'setDlg', 'sTextBtn', "document.getElementById('textDlg').open"),
+                                    ('info', 'setdlg', 'setsizes', "!!document.querySelector('#ix-dlg.open #ix-tzs')"),
+                                    ('cards', 'tdlg', 'tsizes', "!!document.querySelector('#ix-dlg.open #ix-tzs')")):
+            pg.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); pg.wait_for_timeout(1200)
+            item = pg.evaluate("document.querySelectorAll('[data-hub=item][data-hub-label=\"Text Sizes\"]').length")
+            pg.evaluate("document.getElementById('%s').showModal(); document.getElementById('%s').click()" % (dlg, btn)); pg.wait_for_timeout(700)
+            ok = pg.evaluate(done) and not pg.evaluate("document.getElementById('%s').open" % dlg)
+            if item or not ok: p8.append((app, item, ok))
+        check('P8 Text Sizes opens from the Settings dialog of Links, Info and Cards (and is not a separate pencil-menu item)', not p8, p8)
         data = b''
         try:
             with pg.expect_download(timeout=20000) as dl: pg.evaluate("document.querySelector('[data-a=xlsx]').click()")

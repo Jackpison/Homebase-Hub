@@ -7,6 +7,7 @@ These run on your own computer. Nothing here is part of the update zip.
 `php tests/unit/run.php` runs every `tests/unit/*_test.php` on its own fresh copy of `src/`. Telegram is replaced by `telegram_stub.php`, a local stand-in, through `NT_TEST_API`, which only the tests define. It takes a few seconds and needs only PHP 8.3 with openssl and curl.
 
 - `snooze_test.php`: the Snooze buttons, `/snooze`, the daily digest and the Due Now card.
+- `nav_settings_test.php`: the bar style is top, side or dock; a new site takes the setup browser's time zone and Follow Device, while existing sites keep theirs.
 - `logic_test.php`: `/add` parsing, money, repeat dates, completing tasks, the Favicon helpers, the PHP support notice, safe names in an update zip, backup encryption, and a check that no PHP file defines a test shortcut.
 
 Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen', $ok)`.
@@ -79,7 +80,9 @@ Two cases are by design, not refusals: the **same version** is accepted as a rep
 
 ## Settings and Home
 
-`python3 tests/settings_test.py build/site-update-X.Y.Z.zip [--browser ...]` (port 8970): Telegram > Backups > Send Backup Now waits as long as the server may take (4 minutes) and is never left stuck on "Sending..." when no answer comes; Settings > Updates links to the project on GitHub; Home accepts uploads of up to 128 MB; the first request after an update removes the old Tools `config.json`.
+`python3 tests/settings_test.py build/site-update-X.Y.Z.zip [--browser ...]` (port 8970): Telegram > Backups > Send Backup Now waits as long as the server may take (4 minutes) and is never left stuck on "Sending..." when no answer comes; Settings > System > Updates links to the project on GitHub; Home accepts uploads of up to 128 MB; the first request after an update removes the old Tools `config.json`; and the simpler Settings: 7 menu items, System with Updates, Health and Changelog, Look with More Options (all 166 presets still there), old addresses such as `#health` and `#pages` still working, a font chosen under More Options surviving a save, and a site search without field checkboxes.
+
+`python3 tests/nav_test.py build/site-update-X.Y.Z.zip [--browser ...] [--shots DIR]` (port 8231): the bar in all three styles (Top Bar, Sidebar, Bottom Dock) at 1280 and 390 pixels: the pages listed and the current one marked, no sideways scroll, the round menu (Settings, Backup, Log Out) on screen, the Top Bar sliding away on scroll down and back on scroll up or `/`, the phone panel and sheet opening and closing with Escape, the dock never covering the end of a page, the red backup dot, and no movement with reduced motion. `--shots DIR` also saves screenshots of each style, including Home, Tools and Settings.
 
 ## Website
 
@@ -103,7 +106,7 @@ Colours are CSS `light-dark()` values, so one set follows the device; `theme.js`
 
 ## Browser tests
 
-Need Playwright with Chromium (`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`). `pages_test.py`, `tools_test.py` and `a11y_test.py` take `--browser chromium|firefox|webkit` (default Chromium; install the engine first with `python3 -m playwright install firefox webkit`). CI runs the page and Tools tests on Firefox and WebKit, and the accessibility check on Firefox, in the jobs `browser (firefox)` and `browser (webkit)`.
+Need Playwright with Chromium (`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`). `pages_test.py`, `nav_test.py`, `tools_test.py` and `a11y_test.py` take `--browser chromium|firefox|webkit` (default Chromium; install the engine first with `python3 -m playwright install firefox webkit`). CI runs the page, bar and Tools tests on Firefox and WebKit, and the accessibility check on Firefox, in the jobs `browser (firefox)` and `browser (webkit)`.
 
 Checks skipped in an engine: none. A check that cannot work in an engine is skipped by name, with the reason written here.
 
@@ -112,7 +115,7 @@ One difference in how the test runs: `pages_test.py` adds each page's `.htaccess
 Refused content is found in every engine through the standard `securitypolicyviolation` event (`CSP_REPORTER` in `helpers.py`); each engine words its own console message differently.
 
 - `python3 tests/tools_test.py build/site-update-X.Y.Z.zip`: every tool opens without an error, and real PDFs and images go through the main tools (convert, compress, merge, text, resize, QR, and the PDF tools with page previews).
-- `python3 tests/pages_test.py build/site-update-X.Y.Z.zip`: every page and every Settings section loads with no error and no broken request, and the Cards Excel export opens.
+- `python3 tests/pages_test.py build/site-update-X.Y.Z.zip`: every page and every Settings section loads with no error and no broken request, Text Sizes opens from the Page Settings of Links, Info and Cards, and the Cards Excel export opens.
 - `python3 tests/a11y_test.py build/site-update-X.Y.Z.zip`: axe-core (WCAG 2.1 A and AA) on every app page in dark and light mode, and on Links' Import Bookmarks dialog and Settings > General.
 
 The fixture files (`fixture-*.pdf`, `fixture-image.png`, `favicon-fixture.png`) are small test inputs made for these tests.

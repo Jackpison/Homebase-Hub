@@ -524,7 +524,7 @@ function linkIcon(l, noWeb) {
   return box;
 }
 // If this server can't reach the site (some hosts block outgoing requests), save the favicon web service's address instead,
-// so the icon still shows and is kept. Settings > Health > Server Check explains what the host allows.
+// so the icon still shows and is kept. Settings > System > Health > Server Check explains what the host allows.
 const fetchIcon = url => api('icon', { url: safeUrl(url) }).then(j => j.icon).catch(e => {
   if (e.status === 401 || e.status === 400) throw e;                                  // not logged in / not a fetchable address
   if (e.status === 404 && !(e.data && e.data.fallback)) throw e;                      // the server could reach the site and really found no icon
@@ -572,7 +572,7 @@ function iconSummary(n) {
   if (n.service) parts.push(`${n.service} using the favicon service`);
   if (n.none) parts.push(`${n.none} with no icon found`);
   let t = parts.join(', ') + '.';
-  if (n.service && !n.saved) t += ' Your host could not reach those sites, so the favicon service address was saved instead. See Settings > Health > Server Check.';
+  if (n.service && !n.saved) t += ' Your host could not reach those sites, so the favicon service address was saved instead. See Settings > System > Health > Server Check.';
   else if (n.none && n.reason) t += ' ' + n.reason;
   return t;
 }
@@ -1173,7 +1173,7 @@ colorInputs().forEach(inp => inp.addEventListener('input', () => {
 $('#colorReset').onclick = () => { const m = $('#colorDlg').dataset.mode || mode(); for (const k of ['ribbon', 'c0', 'c1', 'c2', 'c3']) if (draft[m]) delete draft[m][k]; fillColorInputs(); applyLook(draft); };
 $('#colorSave').onclick = e => { e.preventDefault(); commitDraft($('#colorDlg'), 'Colors saved'); };
 
-/* text: separate sizes for tabs, categories and links (the font is one site-wide setting in Settings > Appearance) */
+/* text: separate sizes for tabs, categories and links (the font is one site-wide setting in Settings > Look > More Options) */
 for (const [k, label, min, max] of SIZE_KEYS) $('#xSizes').append(h('div', { class: 'field' },
   h('label', { for: 'xSize-' + k }, label),
   h('div', { class: 'range' }, h('input', { type: 'range', id: 'xSize-' + k, min, max, step: 1 }), h('output', { id: 'xOut-' + k }))));
@@ -1207,6 +1207,8 @@ function readSettingsForm() {
   draft.private = $('#sPrivate').checked;
   applyLook(draft);
 }
+// Text Sizes lives inside Settings: close it, then open the sizes
+$('#sTextBtn').onclick = () => { $('#setDlg').close(); $('#textBtn').click(); };
 $('#settingsBtn').onclick = () => {
   openDraft();
   $('#sTitle').value = draft.title || '';

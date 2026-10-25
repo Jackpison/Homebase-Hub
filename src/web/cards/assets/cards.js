@@ -433,6 +433,7 @@ $("osave").onclick=()=>{ST.order=[...wo];persist();render();odlg.close()};
 const tdlg=$("tdlg");
 function openTitle(){$("ttl").value=pageTitle();tdlg.showModal()}
 $("tcancel").onclick=()=>tdlg.close();
+$("tsizes").onclick=()=>tdlg.close();   // the shell then opens Text Sizes (data-hub-action="sizes")
 $("tsave").onclick=()=>{
   const t=$("ttl").value.trim();
   ST.title=(t&&t!==DEF_TITLE)?t:"";

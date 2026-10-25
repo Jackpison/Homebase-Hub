@@ -115,6 +115,10 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/pages_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "pages chromium"
+      - name: The bar in all three styles (computer and phone)
+        run: |
+          set -o pipefail
+          python3 tests/nav_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "nav chromium"
       - name: Accessibility
         run: |
           set -o pipefail
@@ -153,6 +157,11 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/pages_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "pages ${{ matrix.browser }}"
+      - name: The bar in ${{ matrix.browser }}
+        if: success() || failure()
+        run: |
+          set -o pipefail
+          python3 tests/nav_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "nav ${{ matrix.browser }}"
       - name: Tools in ${{ matrix.browser }}
         if: success() || failure()
         run: |

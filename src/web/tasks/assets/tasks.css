@@ -148,7 +148,7 @@ html[data-ix-bar] .top h1{display:none}
 .ylg i{width:13px;height:13px;border-radius:4px;display:inline-block}
 /* the chosen day */
 .ag{position:sticky;top:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
-html[data-ix-bar][data-ix-nav="top"] .ag{top:calc(var(--ix-top,52px) + 14px)}
+html[data-ix-bar][data-ix-nav="top"] .ag{top:calc(var(--ix-top-now,52px) + 14px);transition:top .26s cubic-bezier(.2,.8,.2,1)}
 .agc{border:1px solid var(--line);border-radius:16px;background:var(--box);padding:14px}
 .agh small{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
 .agh h3{margin:2px 0 2px;font-size:22px;font-weight:800;letter-spacing:-.01em}
@@ -207,7 +207,7 @@ html[data-ix-bar][data-ix-nav="top"] .ag{top:calc(var(--ix-top,52px) + 14px)}
 .shell{display:grid;grid-template-columns:272px minmax(0,1fr);gap:28px;align-items:start}
 .main{min-width:0}
 .side{position:sticky;top:14px;max-height:calc(100dvh - 28px);overflow-y:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:12px;min-width:0;padding:2px 2px 8px}
-html[data-ix-bar][data-ix-nav="top"] .side{top:calc(var(--ix-top,52px) + 14px);max-height:calc(100dvh - var(--ix-top,52px) - 28px)}
+html[data-ix-bar][data-ix-nav="top"] .side{top:calc(var(--ix-top-now,52px) + 14px);max-height:calc(100dvh - var(--ix-top-now,52px) - 28px);transition:top .26s cubic-bezier(.2,.8,.2,1)}
 .slist{display:flex;flex-direction:column;gap:1px}
 .slh{display:flex;justify-content:space-between;margin:12px 12px 6px;font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
 .slh:first-child{margin-top:2px}

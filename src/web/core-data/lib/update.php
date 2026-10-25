@@ -9,7 +9,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /**
- * Updates (Settings > Updates).
+ * Updates (Settings > System > Updates).
  *
  *   Update  You upload the update zip. It is checked completely before anything on the site is touched; then, after you confirm with your
  *           password, the site saves the version it has now, replaces its own files one by one, removes the files the old version had and

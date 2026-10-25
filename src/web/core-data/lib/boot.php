@@ -260,7 +260,7 @@ function hub_manifest(array $s, string $root, string $public): array {
     if ($own !== '') { $sz = getimagesize($public . '/' . $own); $icons[1]['sizes'] = $sz[0] . 'x' . $sz[1]; }
     $names = ['links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'tools' => 'Tools'];
     $order = array_keys($names); $hidden = [];
-    foreach ((array)($s['pages'] ?? []) as $pg) {   // the bar's own names, order and hidden pages (Settings > General > Navigation)
+    foreach ((array)($s['pages'] ?? []) as $pg) {   // the bar's own names, order and hidden pages (Settings > General > Tabs)
         $id = (string)($pg['id'] ?? '');
         if (!isset($names[$id])) continue;
         if (trim((string)($pg['name'] ?? '')) !== '') $names[$id] = mb_substr(trim(strip_tags((string)$pg['name'])), 0, 30);
@@ -882,6 +882,14 @@ function hub_public_state(): array {
 
 /* ======================= time zone ======================= */
 /** Every date and time the server works out (today, backups, versions, reminders) uses the site's time zone (Settings > General). */
+/* A brand-new site starts with the time zone of the browser that set it up and the theme that follows the device; the setup
+   dialog sends both. Existing sites keep what they have: the fallbacks in hub_settings() ('dark', 'Asia/Kolkata') stay as they were. */
+function hub_setup_defaults(array $s, array $b): array {
+    $tz = (string)($b['tz'] ?? '');
+    if ($tz !== '' && hub_tz_ok($tz)) $s['tz'] = $tz;
+    if (in_array($b['theme'] ?? '', ['auto', 'dark', 'light'], true)) $s['theme'] = $b['theme'];
+    return $s;
+}
 function hub_tz_ok(string $t): bool { static $all = null; if ($all === null) $all = array_flip(timezone_identifiers_list()); return isset($all[$t]); }
 function hub_tz(): string { $t = (string)(hub_settings()['tz'] ?? 'Asia/Kolkata'); return hub_tz_ok($t) ? $t : 'Asia/Kolkata'; }
 date_default_timezone_set('Asia/Kolkata');
