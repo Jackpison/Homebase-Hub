@@ -6,10 +6,10 @@ import { openDoc, renderPage, isPdf } from '../lib/pdf.js';
 let WORKER = null;
 async function ocrWorker(say) {
   if (WORKER) return WORKER;
-  say('Loading the text reader (about 9 MB the first time)…');
+  say('Loading the text reader (about 9 MB the first time)…');   // worker, SIMD core and English data
   const T = await import('tesseract.js'), createWorker = T.createWorker || (T.default && T.default.createWorker);   // a CommonJS package: its exports may sit under default
   const V = new URL('./vendor/tesseract/', import.meta.url).href;
-  WORKER = await createWorker('eng', 1, { workerPath: V + 'worker.min.js', corePath: V, langPath: V, gzip: false, workerBlobURL: false, cacheMethod: 'none', logger: () => {} });
+  WORKER = await createWorker('eng', 1, { workerPath: V + 'worker.min.js', corePath: V + 'tesseract-core-simd-lstm.wasm.js', langPath: V, gzip: false, workerBlobURL: false, cacheMethod: 'none', logger: () => {} });
   return WORKER;
 }
 export async function layerText(page) {

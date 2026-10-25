@@ -12,5 +12,7 @@ if not os.path.isdir(os.path.join(ROOT, 'node_modules', 'esbuild')):
     subprocess.run(['npm', 'ci', '--no-audit', '--no-fund'], cwd=ROOT, check=True)
 out = os.path.join(ROOT, 'src', 'web', 'tools') if '--install' in sys.argv else os.path.join(ROOT, 'build', 'tools-new')
 subprocess.run(['node', os.path.join(APP, 'build.mjs'), '--out', out], check=True)
+if '--install' in sys.argv:   # the fingerprint tools-rev.py checks, and a policy without the old inline-script hash
+    subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'tools-rev.py'), '--write'], check=True)
 if '--install' not in sys.argv:   # the staging copy also needs the page's server rules
     shutil.copy(os.path.join(ROOT, 'src', 'web', 'tools', '.htaccess'), os.path.join(out, '.htaccess'))

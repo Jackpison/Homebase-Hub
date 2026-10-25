@@ -57,7 +57,7 @@ try:
         pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
         refused = []; tools_main = set()
         pg.on('console', lambda m: refused.append(m.text[:160]) if m.type in ('error', 'warning') and ('Content Security Policy' in m.text or 'Content-Security-Policy' in m.text or 'Refused to' in m.text or 'React error' in m.text) else None)
-        pg.on('request', lambda r: tools_main.add(r.url.replace(B, '')) if 'index-ToolsAll.js' in r.url else None)
+        pg.on('request', lambda r: tools_main.add(r.url.replace(B, '')) if '/tools/assets/app-' in r.url and r.url.split('?')[0].endswith('.js') else None)
         pg.on('response', lambda r: bad.append((r.status, r.url.replace(B, ''))) if r.url.startswith(B) and r.status >= 400 else None)
         problems = []
         for name, url in [('Home', '/'), ('Links', '/web/links/'), ('Info', '/web/info/'), ('Cards', '/web/cards/'), ('Tasks', '/web/tasks/'), ('Tools', '/web/tools/'), ('Tools: a tool', '/web/tools/#/tool/image-resize')] + [('Settings ' + s, '/web/settings/#' + s) for s in panes]:
@@ -66,7 +66,7 @@ try:
             if errs or bad: problems.append((name, errs[:1], bad[:2]))
         check('P2 every page and all %d Settings sections load with no page error and no broken request' % len(panes), len(panes) >= 8 and not problems, problems)
         check('P4 with the real security policies, nothing is refused and React reports no error', len(CSP) >= 5 and not refused, (len(CSP), refused[:3]))
-        check('P5 Tools loads its main file once (one copy of React)', len(tools_main) == 1, sorted(tools_main))
+        check('P5 Tools loads its main file once', len(tools_main) == 1, sorted(tools_main))
         pg.goto(B + '/web/cards/'); pg.wait_for_timeout(1500)
         admin = pg.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())")
         diag = '' if admin else (

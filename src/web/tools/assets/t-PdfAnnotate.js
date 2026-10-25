@@ -1,1 +1,0 @@
-import{a as t}from"./t-chunk-DDJKJJ37.js";import"./t-chunk-FXFEOJ3O.js";import"./t-chunk-4WQG4DME.js";import{a as o}from"./t-chunk-BH2WJTUJ.js";import"./t-chunk-Y5TG4TMJ.js";import"./t-chunk-Y7BB2NFJ.js";function d({tool:n}){return o(t,{tool:n,kind:"annotate"})}export{d as default};

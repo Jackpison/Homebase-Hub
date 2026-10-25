@@ -130,8 +130,8 @@ for _f in FEATURES: assert len(_f['tour']) == len(_f['hot']), _f['id']
 
 
 def load_tools():
-    d = json.load(open(os.path.join(ROOT, 'website', 'data', 'tools.json'), encoding='utf-8'))
-    return d['categories'], d['tools']
+    d = json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))   # the one list the Tools page is built from
+    return d['categories'], [{**t, 'desc': t['desc'], 'kw': t['kw']} for t in d['tools']]
 
 
 # ---------------------------------------------------------------- shared pieces

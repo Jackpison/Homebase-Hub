@@ -3,9 +3,9 @@
 The source of the Tools page (`web/tools`). Plain JavaScript modules, bundled by esbuild; no framework.
 
 ```
-python3 tools/build-tools.py              # builds into build/tools-new (a staging copy)
-python3 tests/tools_new_test.py build/site-update-X.Y.Z.zip
-python3 tools/build-tools.py --install    # builds into src/web/tools (replaces the live page)
+python3 tools/build-tools.py --install    # builds into src/web/tools and refreshes the fingerprint; commit the result
+python3 tools/build.py && python3 tests/tools_test.py build/site-update-X.Y.Z.zip
+python3 tools/build-tools.py              # or: a staging copy in build/tools-new, tested with  tests/tools_test.py ZIP build/tools-new
 ```
 
 - `src/tools.json`: the one list of tools (id, name, section, description, search words, icon, popular order). The app, the website's
@@ -23,7 +23,7 @@ python3 tools/build-tools.py --install    # builds into src/web/tools (replaces 
 
 ## Status of the rebuild
 
-The old, prebuilt Tools stays in `src/web/tools` until every tool is rebuilt here; then one release swaps it.
+Every tool is rebuilt here and installed in `src/web/tools` (release 1.47.0). Never edit `src/web/tools/assets` by hand: change `tools-app/` and run `python3 tools/build-tools.py --install`.
 
 | Section | Built |
 |---|---|
@@ -32,4 +32,4 @@ The old, prebuilt Tools stays in `src/web/tools` until every tool is rebuilt her
 | Photos (8) | Background Remover (U-2-Net on ONNX Runtime 1.30, touch-up brush), Blur and Redact, Passport and ID Photo (print sheets), Meme and Text, Quick Crop, Circle Crop, Collage Maker (21 layouts, PDF), Photo Metadata (see and remove) |
 | PDF (11) | Merge, Split, Organize Pages, Sign, Fill and Annotate, Protect or Unlock (qpdf, AES-256), Watermark and Page Numbers, PDF and Image to Text (text layer and Tesseract OCR), PDF Compressor, Images to PDF, PDF to Images |
 
-**All 36 tools are rebuilt.** Next: the switch-over release (see START-HERE.md).
+**All 36 tools are rebuilt and installed.**

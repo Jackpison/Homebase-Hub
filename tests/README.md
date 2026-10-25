@@ -73,6 +73,10 @@ Two cases are by design, not refusals: the **same version** is accepted as a rep
 
 `python3 tests/import_test.py build/site-update-X.Y.Z.zip [--browser ...]` (port 8850) runs Links > Import Bookmarks in a real browser with the exports in `tests/bookmarks/` (Chrome, Firefox with its folder descriptions, Safari without an outer list, 12 levels deep, duplicates, a hostile file, an empty file, a web page that is not bookmarks) plus a PNG, 5,001 links, a file over 5 MB and 3,000 links made by the test. It checks the preview numbers, the result message, exactly what Links saved, a private new tab, an existing tab (its links kept, nothing added twice), that encrypted tabs are never offered, the six-tab limit, that nothing from the hostile file ran or became markup, undo through Earlier Versions, that the importer loads only when first used, and axe on the open dialog.
 
+## Tools
+
+`python3 tests/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser chromium|firefox|webkit]` (port 8960; needs PHP, Playwright, axe-core, Pillow, pypdf and cryptography). It installs a site and drives every one of the 36 tools with real files: the app (search, favourites and recent tools carried over from the old Tools, Organise, Settings, light and dark), conversions checked by opening the output (HEIC and TIFF in, AVIF out, a photo under a target size, exact resize and crop sizes, round PNGs, 300 dpi ID photos and print sheets), background removal on the device, GPS read from a photo and removed, a 21-layout collage and its PDF, and the PDF tools checked with pypdf (merge, split, organize, AES-256 protect and unlock, stamps, signatures, annotations, the text layer, and OCR of a rendered image), plus axe on 26 pages in dark and light. Give `build/tools-new` (from `python3 tools/build-tools.py`) to test a build before installing it.
+
 ## Website
 
 `python3 tests/website_test.py build/site [--browser chromium|firefox|webkit]` (after `python3 tools/make-site.py --no-guide`; needs Playwright and axe-core). It checks the built site and then drives it in a real browser:

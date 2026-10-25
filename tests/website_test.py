@@ -113,11 +113,11 @@ for m in re.finditer(r'https://jackpison\.github\.io/Homebase-Hub/([^\s)"\'<>]*)
     if not os.path.isfile(os.path.join(SITE, f)): rb.append(m.group(0)); continue
     if frag and frag not in parsed.get(f, parse(f)).ids: rb.append(m.group(0))
 check('W8 every link from the README to this website still works (pages and #anchors)', not rb, rb[:5])
-data = json.load(open(os.path.join(ROOT, 'website', 'data', 'tools.json'), encoding='utf-8'))
-bundle = open(os.path.join(ROOT, 'src', 'web', 'tools', 'assets', 'index-ToolsAll.js'), encoding='utf-8').read()
-cats = {'images', 'photos', 'pdf', 'utilities'}
-ids = {m.group(1) for m in re.finditer(r'\{id:"([a-z0-9-]+)",name:"', bundle)} - cats
-check('W9 the website lists exactly the %d tools the app has (website/data/tools.json against the Tools bundle)' % len(ids), {t['id'] for t in data['tools']} == ids and len(ids) >= 30, sorted(ids ^ {t['id'] for t in data['tools']})[:5])
+data = json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))
+ids = {t['id'] for t in data['tools']}
+loads = set(re.findall(r"^  '([a-z0-9-]+)': \(\) => import\(", open(os.path.join(ROOT, 'tools-app', 'src', 'main.js'), encoding='utf-8').read(), re.M))
+listed = set(re.findall(r'data-cat="[a-z]+" data-text', open(os.path.join(SITE, 'tools', 'index.html'), encoding='utf-8').read()))
+check('W9 the website lists the %d tools of tools-app/src/tools.json, and every one of them is built into the Tools page' % len(ids), len(ids) >= 30 and ids == loads and open(os.path.join(SITE, 'tools', 'index.html'), encoding='utf-8').read().count('class="tool ') == len(ids), sorted(ids ^ loads)[:5])
 
 # ---------- B. in a browser ----------
 socketserver.ThreadingTCPServer.allow_reuse_address = True

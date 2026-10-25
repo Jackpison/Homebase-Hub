@@ -87,11 +87,6 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/update_test.py build/site-update-*.zip rel-prev/site-update-*.zip rel-old/site-update-*.zip 2>&1 | python3 tests/annotate.py "updates"
-      - name: The rebuilt Tools page (tools-app, staging build)
-        run: |
-          set -o pipefail
-          python3 tools/build-tools.py
-          python3 tests/tools_new_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "tools-app"
       - name: Hostile update zips
         run: |
           set -o pipefail

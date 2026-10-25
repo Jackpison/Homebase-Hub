@@ -67,7 +67,7 @@ try:
     check('no ?v= of the old version is left (outside the changelog and Tools assets)', not pages, pages)
     check('every page loads the new version', rd(p(d, 'src/web/links/index.html')).count('?v=' + new) >= 1 and rd(p(d, 'src/web/home/index.php')).count('?v=' + new) >= 1)
     t2 = rd(p(d, 'src/web/tools/index.html'))
-    check('Tools fingerprints are untouched', re.findall(r'\?v=([0-9a-f]{8})\b', t2) == re.findall(r'\?v=([0-9a-f]{8})\b', tools_before) and len(re.findall(r'\?v=([0-9a-f]{8})\b', t2)) == 3)
+    check('Tools fingerprints are untouched', re.findall(r'\?v=([0-9a-f]{8})\b', t2) == re.findall(r'\?v=([0-9a-f]{8})\b', tools_before) and len(re.findall(r'\?v=([0-9a-f]{8})\b', t2)) == 2)
     check('the jsPDF ?v=4.2.1 is untouched', rd(p(d, 'src/web/info/assets/info.js')) == jspdf_before)
     log = rd(p(d, 'src/web/docs/CHANGELOG.md'))
     check('a changelog section with a TODO marker is on top', re.search(r'^## (\S+)', log[log.index('---'):], re.M).group(1) == new and 'TODO' in log)

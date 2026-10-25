@@ -9,9 +9,9 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 | `src/` | The site, readable. `index.php` and `web/` are what ships. Edit here, never in `build/`. |
 | `src/web/core-data/` | The shared engine: login, settings, updates, Telegram, the bar (`assets/shell.js`, `shell.css`, `shell-admin.js`). |
 | `src/web/<page>/` | Each page: `home`, `links`, `info`, `cards`, `tasks`, `tools`, `settings`. |
-| `src/web/tools/assets/` | Tools, prebuilt and minified (there is no separate source). Small fixes are string edits in these files. |
+| `tools-app/` | The source of Tools (plain ES modules, esbuild). `python3 tools/build-tools.py --install` builds it into `src/web/tools/` (index.html, sw.js, assets/); never edit `src/web/tools/assets/` by hand. See `tools-app/README.md`. |
 | `src/web/docs/` | `README.txt` and `CHANGELOG.md` (shipped inside every zip, closed to browsers). |
-| `tools/` | `build.py` (the zip), `tools-rev.py` (Tools fingerprint), `make-site.py`, `site_pages.py` and `make-guide.py` (website, its data-built pages, and the PDF guide), `make-latest.py`, `release-notes.py`. |
+| `tools/` | `build.py` (the zip), `build-tools.py` (Tools from `tools-app/`), `tools-rev.py` (Tools fingerprint), `make-site.py`, `site_pages.py` and `make-guide.py` (website, its data-built pages, and the PDF guide), `make-latest.py`, `release-notes.py`. |
 | `tests/` | Update tests, browser tests, accessibility and library checks. See `tests/README.md`. |
 | `website/` | The GitHub Pages site: `style.css`, `theme.js`, `site.js`, `content/` (Install, Guide, Security and Licence, written by hand), `data/tools.json` (the tool list), screenshots, logo. The home page, the six feature pages, Telegram, On your phone, the tool finder and the FAQ are built from `tools/site_pages.py`. The security policy allows no inline style or script, so colours come from classes and the numbered dots from a generated `hot.css`. |
 
@@ -22,7 +22,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 - Updates must stay safe: a zip is checked before anything changes, nothing installs without the website password, a snapshot is taken first, and Go Back must work. Do not weaken `src/web/core-data/lib/update.php` or `ghupdate.php` without tests that prove the same safety.
 - The site makes no request to another server unless the person turned that feature on or pressed a button for it. Keep it that way.
 - Test-only shortcuts (`GH_TEST_*`, `HUB_TEST_FAVICON`) are defined only by `tests/prepend.php`. The site must never define them.
-- After changing any file in `src/web/tools/assets/`, run `python3 tools/tools-rev.py --write`. The build refuses a stale fingerprint. It also keeps the Tools import map and its security-policy hash in step.
+- After changing anything in `tools-app/`, run `python3 tools/build-tools.py --install` (it also refreshes the Tools fingerprint) and commit `src/web/tools/` with it. A new tool also needs its line in `tools-app/src/tools.json` and in `LOAD` in `tools-app/src/main.js`; the website's tool finder reads the same list.
 - `.htaccess` files only work on Apache: a comment must be on its own line (Apache refuses `Directive value  # comment`). Test them with `tests/apache_test.py`.
 - Write plainly in everything a user reads: short sentences, the same names the screen shows, Title Case on buttons and headings in the app.
 - **Every new feature and every bug fix in the PHP code gets at least one unit test** in `tests/unit/` (a new `*_test.php` is picked up by itself; for a fix, write a test that fails without it). A change to a page or a tool gets a check in the matching browser test (`tests/*_test.py`). A green run proves only what the tests cover, so do not describe it as proof that everything works.

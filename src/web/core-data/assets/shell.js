@@ -110,11 +110,6 @@
   /* Every page remembers its theme under its own key; write them all so each page's own early script agrees. */
   function syncThemeKeys(t) {
     ls.set('bm-theme', t); ls.set('info3-theme', t); ls.set('theme4', t);
-    try {   // Tools keeps its theme inside tools.settings.v2
-      var o = JSON.parse(ls.get('tools.settings.v2') || '{}') || {};
-      o.appearance = o.appearance || {};
-      if (o.appearance.theme !== t) { o.appearance.theme = t; ls.set('tools.settings.v2', JSON.stringify(o)); }
-    } catch (e) {}
   }
   function applyAttrs() {
     H.setAttribute('data-ix-app', APP);
@@ -466,7 +461,6 @@
   function applyTheme(t, preview) {
     if (!preview) { ls.set('hub-theme', t); syncThemeKeys(t); }
     H.setAttribute('data-theme', t);
-    if (APP === 'tools' && !preview) window.dispatchEvent(new CustomEvent('tools:storage', { detail: 'tools.settings.v2' }));   // Tools' own React state follows
     document.dispatchEvent(new CustomEvent('hub:theme', { detail: t }));   // pages that recolour themselves listen to this
     var m = document.querySelector('meta[name="theme-color"]'); if (m && APP !== 'tools') m.setAttribute('content', t === 'light' ? '#f6f5f1' : '#000000');
     drawBar();

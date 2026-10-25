@@ -78,7 +78,7 @@ function drawNav(route) {
     h('span', { class: 'nsep', 'aria-hidden': 'true' }),
     item('#/organise', 'organise', 'Organise', route === '#/organise'),
     item('#/settings', 'settings', 'Settings', route === '#/settings'),
-    S.layout === 'side' ? h('button', { type: 'button', class: 'ni ncollapse', 'aria-label': S.compact ? 'Show the menu names' : 'Show icons only', title: S.compact ? 'Show the menu names' : 'Show icons only', onClick: () => { st.setCompact(!S.compact); layout(); drawNav(route); } }, icon('panel'), h('span', { text: S.compact ? 'Expand' : 'Collapse' })) : null,
+    S.layout === 'side' ? h('button', { type: 'button', class: 'ni ncollapse', 'aria-label': S.compact ? 'Expand: show the menu names' : 'Collapse: show icons only', title: S.compact ? 'Expand: show the menu names' : 'Collapse: show icons only', onClick: () => { st.setCompact(!S.compact); layout(); drawNav(route); } }, icon('panel'), h('span', { text: S.compact ? 'Expand' : 'Collapse' })) : null,
   ].filter(Boolean));
 }
 
@@ -199,6 +199,7 @@ function route() {
     else if (path.startsWith('#/s/') && CATS.some((c) => c.id === path.slice(4))) { const c = CATS.find((x) => x.id === path.slice(4)); pageList(c.name, c.desc, visible(st.ordered(c.id, TOOLS.filter((t) => t.cat === c.id))), 'Every tool in this section is hidden. Show them again in Organise.'); }
     else if (path === '#/organise') pageOrganise();
     else if (path === '#/settings') pageSettings();
+    else if (path.startsWith('#/search/')) pageHome(decodeURIComponent(path.slice(9)));   // the site's search sends people here
     else pageHome(new URLSearchParams(qs || '').get('q') || '');
   }
   if (document.activeElement && document.activeElement !== document.body && !view.contains(document.activeElement)) view.focus({ preventScroll: true });

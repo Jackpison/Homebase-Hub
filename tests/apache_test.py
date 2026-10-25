@@ -3,7 +3,7 @@
   sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip
   python3 tests/apache_test.py [http://127.0.0.1:8300]
 Checks: every page answers with its security policy and the page pre-loading header; private files and folders are refused;
-the pre-loading rules file is served with its type; the app manifest and its icons are public; in a browser nothing is refused, React reports no error and Tools loads
+the pre-loading rules file is served with its type; the app manifest and its icons are public; in a browser nothing is refused; no error and Tools loads
 its main file once."""
 import sys, urllib.request, urllib.error
 from playwright.sync_api import sync_playwright
@@ -42,11 +42,11 @@ with sync_playwright() as p:
     pg = ctx.new_page(); refused = []; main = set(); errs = []
     pg.on('console', lambda m: refused.append(m.text[:160]) if ('Refused' in m.text or 'Content Security Policy' in m.text or 'React error' in m.text) else None)
     pg.on('pageerror', lambda e: errs.append(str(e)[:160]))
-    pg.on('request', lambda r: main.add(r.url.replace(B, '')) if 'index-ToolsAll.js' in r.url else None)
+    pg.on('request', lambda r: main.add(r.url.replace(B, '')) if '/tools/assets/app-' in r.url and r.url.split('?')[0].endswith('.js') else None)
     for u in pages + ['/web/tools/#/tool/image-resize', '/web/tools/#/tool/qr-generator']:
         pg.goto(B + u); pg.wait_for_timeout(1300)
     check('A5 in a browser, no security-policy message, no React error and no page error on any page', not refused and not errs, (refused[:2], errs[:2]))
-    check('A6 Tools loads its main file once (one copy of React)', len(main) == 1, sorted(main))
+    check('A6 Tools loads its main file once', len(main) == 1, sorted(main))
     b.close()
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)
