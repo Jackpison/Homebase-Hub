@@ -794,8 +794,10 @@
      Pages set their own icons while loading; this puts the logo from Settings > General (or Homebase Hub's own) back, whenever one changes it. */
   function applyFavicon() {
     if (!document.head) return;
-    var href = S.logo ? ROOT + S.logo : CORE + 'assets/brand/favicon-64.png', links = document.head.querySelectorAll('link[rel~="icon"],link[rel="apple-touch-icon"]');
-    if (!links.length) { var l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l); links = [l]; }
+    var href = S.logo ? ROOT + S.logo : CORE + 'assets/brand/favicon-64.png';
+    // a page without a tab icon of its own (an iPhone icon alone does not count) gets one, so the browser never shows a blank globe
+    if (!document.head.querySelector('link[rel~="icon"]')) { var l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l); }
+    var links = document.head.querySelectorAll('link[rel~="icon"],link[rel="apple-touch-icon"]');
     [].forEach.call(links, function (l) {
       if (l.getAttribute('href') === href) return;
       l.setAttribute('href', href); l.removeAttribute('type'); l.removeAttribute('sizes');

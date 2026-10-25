@@ -59,12 +59,15 @@ try:
         pg.on('console', lambda m: refused.append(m.text[:160]) if m.type in ('error', 'warning') and ('Content Security Policy' in m.text or 'Content-Security-Policy' in m.text or 'Refused to' in m.text or 'React error' in m.text) else None)
         pg.on('request', lambda r: tools_main.add(r.url.replace(B, '')) if '/tools/assets/app-' in r.url and r.url.split('?')[0].endswith('.js') else None)
         pg.on('response', lambda r: bad.append((r.status, r.url.replace(B, ''))) if r.url.startswith(B) and r.status >= 400 else None)
-        problems = []
+        problems = []; noicon = []
         for name, url in [('Home', '/'), ('Links', '/web/links/'), ('Info', '/web/info/'), ('Cards', '/web/cards/'), ('Tasks', '/web/tasks/'), ('Tools', '/web/tools/'), ('Tools: a tool', '/web/tools/#/tool/image-resize')] + [('Settings ' + s, '/web/settings/#' + s) for s in panes]:
             errs.clear(); bad.clear()
             pg.goto(B + url, wait_until='domcontentloaded'); pg.wait_for_timeout(1100)
             if errs or bad: problems.append((name, errs[:1], bad[:2]))
+            ic = pg.evaluate("(document.querySelector('link[rel~=icon]') || {}).href || ''")
+            if not ic.endswith(('/brand/favicon-64.png', '/brand/logo-192.png')) and '/media/' not in ic: noicon.append((name, ic[:60]))
         check('P2 every page and all %d Settings sections load with no page error and no broken request' % len(panes), len(panes) >= 8 and not problems, problems)
+        check('P9 every page, Tools included, shows the site logo as its tab icon', not noicon, noicon)
         check('P4 with the real security policies, nothing is refused and React reports no error', len(CSP) >= 5 and not refused, (len(CSP), refused[:3]))
         check('P5 Tools loads its main file once', len(tools_main) == 1, sorted(tools_main))
         pg.goto(B + '/web/cards/'); pg.wait_for_timeout(1500)

@@ -115,7 +115,7 @@ One difference in how the test runs: `pages_test.py` adds each page's `.htaccess
 Refused content is found in every engine through the standard `securitypolicyviolation` event (`CSP_REPORTER` in `helpers.py`); each engine words its own console message differently.
 
 - `python3 tests/tools_test.py build/site-update-X.Y.Z.zip`: every tool opens without an error, and real PDFs and images go through the main tools (convert, compress, merge, text, resize, QR, and the PDF tools with page previews).
-- `python3 tests/pages_test.py build/site-update-X.Y.Z.zip`: every page and every Settings section loads with no error and no broken request, Text Sizes opens from the Page Settings of Links, Info and Cards, and the Cards Excel export opens.
+- `python3 tests/pages_test.py build/site-update-X.Y.Z.zip`: every page and every Settings section loads with no error and no broken request, every page (Tools too) shows the site logo as its tab icon, Text Sizes opens from the Page Settings of Links, Info and Cards, and the Cards Excel export opens.
 - `python3 tests/a11y_test.py build/site-update-X.Y.Z.zip`: axe-core (WCAG 2.1 A and AA) on every app page in dark and light mode, and on Links' Import Bookmarks dialog and Settings > General.
 
 The fixture files (`fixture-*.pdf`, `fixture-image.png`, `favicon-fixture.png`) are small test inputs made for these tests.

@@ -56,6 +56,7 @@ fs.writeFileSync(path.join(OUT, 'index.html'), `<!doctype html>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
 <link rel="manifest" href="../core-data/api.php?action=manifest">
 <meta name="theme-color" content="#1a1a1a">
+<link rel="icon" type="image/png" href="../core-data/assets/brand/favicon-64.png">
 <link rel="apple-touch-icon" href="../core-data/assets/brand/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">

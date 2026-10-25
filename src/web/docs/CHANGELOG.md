@@ -17,7 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
-| 1.48.2 | The Settings menu as before 1.48, the Backup icon and gear back, a sun and moon theme button, a softer look for new sites, and the Security and Telegram cards fixed |
+| 1.48.2 | The Settings menu as before 1.48, the Backup icon and gear back, a sun and moon theme button, a softer look for new sites, and fixes for the Settings cards and the Tools tab icon |
 | 1.48.1 | Fix: the Security and Telegram cards in Settings look right again |
 | 1.48.0 | Navigation and fluidity: three redesigned bar styles, a Top Bar that hides while you scroll, a round menu, and a simpler Settings |
 | 1.47.1 | Small fixes: the Telegram backup button no longer sticks, Tools has its section colours back, Home uploads up to 128 MB, a GitHub link in Updates |
@@ -86,6 +86,7 @@ Nothing to migrate by hand unless an entry says so.
 ### Fix
 
 - **The cards in Settings > Security and Telegram look right again.** Since 1.48.0 they were squashed, with their icons above the card.
+- **Tools shows your logo in the browser tab** like every other page (it showed a blank globe since 1.47.0).
 ---
 
 ## 1.48.1
