@@ -5,3 +5,4 @@ openpyxl==3.1.5
 pypdf==5.9.0
 pillow==12.1.1
 reportlab==4.4.10
+cryptography==50.0.2   # pypdf needs it to open AES-encrypted PDFs (the Protect or Unlock checks)
