@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.48.1 | Fix: the Security and Telegram cards in Settings look right again |
 | 1.48.0 | Navigation and fluidity: three redesigned bar styles, a Top Bar that hides while you scroll, a round menu, and a simpler Settings |
 | 1.47.1 | Small fixes: the Telegram backup button no longer sticks, Tools has its section colours back, Home uploads up to 128 MB, a GitHub link in Updates |
 | 1.47.0 | Tools rebuilt from source: all 36 tools, the same addresses and favourites, newer engines (ONNX Runtime 1.30, Tesseract 7), AVIF saving, and fixes |
@@ -68,6 +69,14 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.48.1
+
+### Fix
+
+- **The cards in Settings > Security and Telegram look right again.** Since 1.48.0 they were squashed, with their icons above the card, because the new phone menu of the Bottom Dock shared their style.
 
 ---
 
