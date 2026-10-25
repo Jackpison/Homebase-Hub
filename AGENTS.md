@@ -61,7 +61,7 @@ python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip <previous re
 sudo sh tests/server/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/server/apache_test.py
 ```
 
-All of them must pass. CI runs the same checks on every pull request and on every push to `main`, and also runs the page and Tools tests on Firefox and WebKit (`--browser firefox|webkit`) and the accessibility check on Firefox.
+All of them must pass. `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs them one after another with one summary table (`--quick`: lint, unit, repo and server checks only, for small changes; `--apache` adds the Apache test). CI runs the same checks on every pull request and on every push to `main`, the browser tests also on Firefox and WebKit (`--browser firefox|webkit`), and the accessibility check also on Firefox. On a docs-only change CI skips the slow jobs; `ci-ok` sums up every job.
 
 ## Release checklist
 

@@ -2,14 +2,16 @@
 
 These run on your own computer. Nothing here is part of the update zip.
 
+**All at once:** `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs every check below in order and prints one table (check, result, passed, seconds). `--quick` runs only lint, unit, repo and server checks (about 2 minutes); `--browser firefox|webkit` runs the browser tests in another engine; `--apache` adds the Apache test (needs sudo); `--prev` and `--old` give the update test its zips (otherwise they are downloaded and checked against their `.sha256`).
+
 | Folder | What is in it |
 |---|---|
 | `unit/` | PHP unit tests (`php tests/unit/run.php`) |
 | `browser/` | Tests in a real browser: `pages_test`, `nav_test`, `settings_test`, `tools_test`, `import_test`, `a11y_test`, `app_test`, `website_test` |
 | `server/` | Tests of the server side: `update_test`, `update_attack_test`, `core_test`, and Apache (`apache_setup.sh`, `apache_test.py`) |
-| `repo/` | Checks of the repository itself: `release_test`, `check_libraries`, `workflows_test` |
+| `repo/` | Checks of the repository itself: `release_test`, `check_libraries`, `workflows_test`, `ci_status_test`, `ci_changes_test`, `releases_test` |
 | `fixtures/` | Files the tests open: PDFs, pictures, a HEIC photo, the favicon stand-in, bookmark exports |
-| `lib/` | Shared helpers: `helpers.py` (sites, logins, paths), `annotate.py` (CI annotations), `prepend.php` (test-only shortcuts), `seed_demo.php` (demo data), `phpstan-bootstrap.php` |
+| `lib/` | Shared helpers: `helpers.py` (sites, logins, paths), `releases.py` (the previous release and its zip), `annotate.py` (CI annotations), `prepend.php` (test-only shortcuts), `seed_demo.php` (demo data), `phpstan-bootstrap.php` |
 
 `requirements.txt` stays here (Dependabot and the pip cache look for it in `tests/`).
 

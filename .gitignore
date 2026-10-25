@@ -19,3 +19,4 @@ __pycache__/
 src/web/core-data/config.php
 src/web/core-data/data/
 src/web/core-data/media/
+phpstan.phar
