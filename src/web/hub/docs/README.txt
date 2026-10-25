@@ -106,9 +106,9 @@ and Tools (rename, reorder or hide them in Settings > General > Tabs).
 - Search covers Links, Info, Tasks (while logged in) and Tools; Cards keeps its own search. Press / or Ctrl+K anywhere. The sliders button in
   the search box chooses where to look: Everything or only Links / Info / Tasks / Tools, and one tab. Names, web addresses
   and note text are always searched. Shortcut: type  links: text  or  info: text.
-- Settings is a page of its own (web/settings/, the gear in the bar). A menu on the left in three groups: Site (General: Basics,
-  Navigation, Pages; Appearance: Look, Presets, Colors), Protection & Data (Security, Telegram, Backup & Restore) and System
-  (Updates, Health, Changelog). A search box at the top of the menu jumps to any setting (press /). Overview › Guided Setup walks through the protection steps in order. Overview comes first: how things stand and what to look at next. Security, Telegram and Backup &
+- Settings is a page of its own (web/settings/, the gear in the bar). A menu on the left: Overview, then three groups: Web Setting (General:
+  Basics, Tabs; Appearance: Look, Presets, Colors), Data Setting (Security, Telegram, Backup & Restore) and System Setting
+  (Health, Updates, Changelog). A search box at the top of the menu jumps to any setting (press /). Overview › Guided Setup walks through the protection steps in order. Overview comes first: how things stand and what to look at next. Security, Telegram and Backup &
   Restore are tabs, one part on screen at a time; every tab has a link (settings/#security/encryption). On a phone the menu is shown
   first and each section opens with a back button.
   General and Appearance preview live and are kept with Save Settings (a bar at the bottom appears while something is unsaved;
