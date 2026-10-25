@@ -11,7 +11,7 @@ from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, SEED
-from helpers import browser_name, launch, browser_login, wait_js, CSP_REPORTER
+from helpers import browser_name, launch, browser_login, wait_js, CSP_REPORTER, TRACK_REQUESTS, settle, until
 BROWSER = browser_name()
 SHOTS = None
 if '--shots' in sys.argv:
@@ -46,7 +46,7 @@ def open_page(ctx, path='/web/links/'):
     pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
     pg.goto(B + path, wait_until='domcontentloaded')
     wait_js(pg, "!!document.querySelector('#ix-bar .ix-links a') && !!(window.HUB && HUB.isAdmin && HUB.isAdmin())")
-    pg.wait_for_timeout(300)
+    settle(pg)
     return pg, errs
 
 def rect(pg, sel):
@@ -89,6 +89,7 @@ try:
             c = b.new_context(user_agent=UA, storage_state=state, **dict(size, **kw)); c.route('**/*', block)
             c.add_init_script("try{localStorage.setItem('ix-seen-ver','%s')}catch(e){}" % ver)
             c.add_init_script(CSP_REPORTER)
+            c.add_init_script(TRACK_REQUESTS)
             return c
 
         for nav in ('top', 'side', 'dock'):
@@ -108,12 +109,12 @@ try:
                 # Backup and the gear: in the bar, or (phone sidebar, phone dock) inside the panel or sheet
                 if nav == 'side' and phone:
                     check('%s: only the floating button shows; it opens the sidebar as a panel' % L, visible(pg, '#ix-bar .ix-fab') and not visible(pg, '#ix-bar .ix-links'))
-                    pg.click('#ix-bar .ix-fab'); pg.wait_for_timeout(350)
+                    pg.click('#ix-bar .ix-fab'); until(lambda: pg.evaluate("!!document.querySelector('#ix-drawer.open')"), 3000); settle(pg)
                     check('%s: the panel lists the pages and has search and Edit' % L,
                           pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 6 and visible(pg, '#ix-drawer .ix-psearch') and visible(pg, '#ix-drawer [data-ix=edit]'))
                     if SHOTS: pg.screenshot(path=os.path.join(SHOTS, '%s-%s-panel.png' % (nav, size_name)))
                     backup_and_gear(pg, L, '#ix-drawer.open')
-                    pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+                    pg.keyboard.press('Escape'); settle(pg)   # the panel slides away
                     check('%s: Escape closes the panel and gives focus back to the button' % L,
                           not visible(pg, '#ix-drawer.open nav') and pg.evaluate("document.activeElement && document.activeElement.classList.contains('ix-fab')"))
                 elif nav == 'dock' and phone:
@@ -121,31 +122,31 @@ try:
                     check('%s: one row (the pill and its round button), under 70 px tall' % L, bar and bar['h'] < 70 and visible(pg, '#ix-bar .ix-fab'), bar)
                     lbl = pg.evaluate("[...document.querySelectorAll('#ix-bar .ix-links a span')].filter(s => s.getBoundingClientRect().width > 0).map(s => s.textContent)")
                     check('%s: only the current page shows its name' % L, lbl == ['Links'], lbl)
-                    pg.click('#ix-bar .ix-fab'); pg.wait_for_timeout(350)
+                    pg.click('#ix-bar .ix-fab'); until(lambda: pg.evaluate("!!document.querySelector('#ix-sheet.open')"), 3000); settle(pg)
                     tiles = pg.evaluate("[...document.querySelectorAll('#ix-sheet.open .ix-stile span')].map(s => s.textContent)")
                     check('%s: the sheet has search, Edit, the theme, Backup, Settings and Log Out' % L, visible(pg, '#ix-sheet .ix-psearch') and tiles == ['Edit', 'Light Mode', 'Backup', 'Settings', 'Log Out'], tiles)
                     if SHOTS: pg.screenshot(path=os.path.join(SHOTS, '%s-%s-sheet.png' % (nav, size_name)))
-                    pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+                    pg.keyboard.press('Escape'); settle(pg)   # the panel slides away
                     check('%s: Escape closes the sheet' % L, not visible(pg, '#ix-sheet.open .ix-shp'))
                 else:
                     backup_and_gear(pg, L, '#ix-bar')
                 if nav == 'top' and phone:
-                    pg.click('#ix-bar .ix-menu'); pg.wait_for_timeout(350)
+                    pg.click('#ix-bar .ix-menu'); until(lambda: pg.evaluate("!!document.querySelector('#ix-drawer.open')"), 3000); settle(pg)
                     check('%s: the menu button opens the page list' % L, pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 6)
-                    pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+                    pg.keyboard.press('Escape'); settle(pg)   # the panel slides away
                 if not phone or nav == 'dock':
                     vtn = pg.evaluate("getComputedStyle(document.querySelector('#ix-bar .ix-links a[aria-current=page]')).viewTransitionName")
                     check('%s: the current page carries the name its pill glides with (ix-cur)' % L, vtn in ('ix-cur', None), vtn)
                 if nav == 'top' and not phone:
                     sun = pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M12 7.5')")
-                    pg.click('#ix-bar [data-ix=theme]'); pg.wait_for_timeout(700)
+                    pg.click('#ix-bar [data-ix=theme]'); until(lambda: pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M20.99')"), 3000); settle(pg)
                     moon = pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M20.99')")
-                    pg.click('#ix-bar [data-ix=theme]'); pg.wait_for_timeout(700)
+                    pg.click('#ix-bar [data-ix=theme]'); until(lambda: pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M12 7.5')"), 3000); settle(pg)
                     check('%s: the theme button shows a sun in dark mode and a moon in light mode' % L, sun and moon, (sun, moon))
                 if nav == 'side' and not phone:
                     w = rect(pg, '#ix-bar')['w']
                     check('%s: the rail is 80 px wide' % L, abs(w - 80) < 1, w)
-                    pg.click('#ix-editb'); pg.wait_for_timeout(200)
+                    pg.click('#ix-editb'); until(lambda: pg.evaluate("!!document.querySelector('#ix-pop')"), 3000); settle(pg)
                     pop, bar = rect(pg, '#ix-pop'), rect(pg, '#ix-bar')
                     check('%s: the Edit menu opens beside the rail' % L, pop and pop['x'] >= bar['r'], (pop, bar))
                     pg.keyboard.press('Escape')
@@ -158,24 +159,25 @@ try:
                 if nav == 'top':
                     pg.evaluate("document.documentElement.style.scrollBehavior = 'auto'; document.body.style.minHeight = '4000px'")
                     pg.mouse.move(600, 400)
-                    pg.evaluate("window.scrollTo(0, 300)"); pg.wait_for_timeout(80); pg.evaluate("window.scrollTo(0, 900)"); pg.wait_for_timeout(500)
+                    pg.evaluate("window.scrollTo(0, 300)"); pg.wait_for_timeout(80)   # on purpose: two scroll events, so the page sees the direction
+                    pg.evaluate("window.scrollTo(0, 900)"); until(lambda: pg.evaluate("document.documentElement.classList.contains('ix-hide')"), 3000); settle(pg)
                     hid = pg.evaluate("document.documentElement.classList.contains('ix-hide')"); r = rect(pg, '#ix-bar')
                     check('%s: scrolling down slides the bar away' % L, hid and r['b'] <= 1, (hid, r))
-                    pg.evaluate("window.scrollTo(0, 700)"); pg.wait_for_timeout(500)
+                    pg.evaluate("window.scrollTo(0, 700)"); until(lambda: not pg.evaluate("document.documentElement.classList.contains('ix-hide')"), 3000); settle(pg)
                     r = rect(pg, '#ix-bar')
                     check('%s: scrolling up brings it back' % L, not pg.evaluate("document.documentElement.classList.contains('ix-hide')") and abs(r['y']) < 1, r)
                     if not phone:
-                        pg.evaluate("window.scrollTo(0, 1500)"); pg.wait_for_timeout(400)
-                        pg.keyboard.press('/'); pg.wait_for_timeout(400)
+                        pg.evaluate("window.scrollTo(0, 1500)"); until(lambda: pg.evaluate("document.documentElement.classList.contains('ix-hide')"), 3000); settle(pg)
+                        pg.keyboard.press('/'); until(lambda: not pg.evaluate("document.documentElement.classList.contains('ix-hide')") and pg.evaluate("document.activeElement && document.activeElement.id === 'ix-q'"), 3000); settle(pg)
                         check('%s: pressing / shows the bar and puts the cursor in search' % L,
                               not pg.evaluate("document.documentElement.classList.contains('ix-hide')") and pg.evaluate("document.activeElement && document.activeElement.id === 'ix-q'"))
                 if nav in ('side', 'dock') and not phone:
-                    pg.evaluate("document.documentElement.style.scrollBehavior = 'auto'; document.body.style.minHeight = '4000px'; window.scrollTo(0, 900)"); pg.wait_for_timeout(400)
+                    pg.evaluate("document.documentElement.style.scrollBehavior = 'auto'; document.body.style.minHeight = '4000px'; window.scrollTo(0, 900)"); pg.wait_for_timeout(400)   # on purpose: checks the bar does NOT hide, so give it the time hiding takes
                     check('%s: this style never hides' % L, visible(pg, '#ix-bar .ix-links') and not pg.evaluate("document.documentElement.classList.contains('ix-hide')"))
                 check('%s: no page errors' % L, not errs, errs)
                 if SHOTS:   # the pages with layouts of their own, for a look by eye
                     for name, path in (('home', '/'), ('tools', '/web/tools/'), ('settings', '/web/settings/#general')):
-                        q = ctx.new_page(); q.goto(B + path, wait_until='domcontentloaded'); q.wait_for_timeout(1500)
+                        q = ctx.new_page(); q.goto(B + path, wait_until='domcontentloaded'); settle(q)
                         q.screenshot(path=os.path.join(SHOTS, '%s-%s-%s.png' % (nav, size_name, name))); q.close()
                 ctx.close()
 
@@ -187,9 +189,9 @@ try:
         check('N3 the Backup icon is red while a backup is due', bool(due) and due != pg.evaluate("getComputedStyle(document.querySelector('#ix-bar [data-ix=account]')).color"), due)
         pg.click('#ix-bar [data-ix=backup]')
         wait_js(pg, "location.pathname.indexOf('/web/settings/') >= 0 && !!document.querySelector('#ix-bar')")
-        pg.wait_for_timeout(500)
+        until(lambda: '#backup' in pg.url and not pg.evaluate("!!document.querySelector('#ix-bar [data-ix=backup].due')"), 5000); settle(pg)
         check('N4 Backup opens Settings > Backup, and the icon is green again', '#backup' in pg.url and not pg.evaluate("!!document.querySelector('#ix-bar [data-ix=backup].due')"), pg.url)
-        pg.click('#ix-bar [data-ix=account]'); pg.wait_for_timeout(600)
+        pg.click('#ix-bar [data-ix=account]'); settle(pg)
         check('N5 the gear opens the Settings page', '/web/settings/' in pg.url, pg.url)
         ctx.close()
         set_nav('top', backupEvery=7)
