@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, SEED
-from helpers import browser_name, launch, browser_login, CSP_REPORTER
+from helpers import browser_name, launch, browser_login, CSP_REPORTER, TRACK_REQUESTS, settle, until
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 ZIP = sys.argv[1]; PORT = 8195; B = 'http://127.0.0.1:%d' % PORT; UA = 'PagesTest/1.0'; PW = 'correct horse battery staple'
@@ -36,6 +36,7 @@ try:
         ctx = b.new_context(user_agent=UA, accept_downloads=True, viewport={'width': 1280, 'height': 860})
         ctx.add_init_script("try{localStorage.setItem('ix-seen-ver','%s')}catch(e){}" % ver)
         ctx.add_init_script(CSP_REPORTER)
+        ctx.add_init_script(TRACK_REQUESTS)
         # PHP's test server ignores .htaccess, so each page gets the security policy Apache would send, read from its own .htaccess
         CSP = {}
         for app in ('links', 'info', 'cards', 'tasks', 'tools', 'settings'):
@@ -62,7 +63,7 @@ try:
         problems = []; noicon = []
         for name, url in [('Home', '/'), ('Links', '/web/links/'), ('Info', '/web/info/'), ('Cards', '/web/cards/'), ('Tasks', '/web/tasks/'), ('Tools', '/web/tools/'), ('Tools: a tool', '/web/tools/#/tool/image-resize')] + [('Settings ' + s, '/web/settings/#' + s) for s in panes]:
             errs.clear(); bad.clear()
-            pg.goto(B + url, wait_until='domcontentloaded'); pg.wait_for_timeout(1100)
+            pg.goto(B + url, wait_until='domcontentloaded'); settle(pg)   # every request of the page has answered
             if errs or bad: problems.append((name, errs[:1], bad[:2]))
             ic = pg.evaluate("(document.querySelector('link[rel~=icon]') || {}).href || ''")
             if not ic.endswith(('/brand/favicon-64.png', '/brand/logo-192.png')) and '/media/' not in ic: noicon.append((name, ic[:60]))
@@ -70,7 +71,7 @@ try:
         check('P9 every page, Tools included, shows the site logo as its tab icon', not noicon, noicon)
         check('P4 with the real security policies, nothing is refused and React reports no error', len(CSP) >= 5 and not refused, (len(CSP), refused[:3]))
         check('P5 Tools loads its main file once', len(tools_main) == 1, sorted(tools_main))
-        pg.goto(B + '/web/cards/'); pg.wait_for_timeout(1500)
+        pg.goto(B + '/web/cards/'); until(lambda: pg.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())"), 10000)
         admin = pg.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())")
         diag = '' if admin else (
             [(c['name'], c['domain'], c['path'], c.get('sameSite'), c.get('secure'), c.get('expires')) for c in ctx.cookies()],
@@ -78,8 +79,8 @@ try:
         check('P6 the browser is logged in (the login cookie was accepted)', admin, diag)
         # P7: the same, in a context without the test's request routing (the routing hands each page to the browser with its
         # security policy added). If P7 passes where P6 fails, the difference is in the routing, not in the site.
-        c7 = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); p7 = c7.new_page()
-        why7 = browser_login(p7, B, PW); p7.goto(B + '/web/cards/'); p7.wait_for_timeout(1500)
+        c7 = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); c7.add_init_script(TRACK_REQUESTS); p7 = c7.new_page()
+        why7 = browser_login(p7, B, PW); p7.goto(B + '/web/cards/'); until(lambda: p7.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())"), 10000)
         check('P7 logged in on a second page without the test routing', p7.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())"), why7)
         c7.close()
         # P8: Text Sizes now opens from each page's own settings dialog, and is no longer its own item in the pencil menu
@@ -87,9 +88,10 @@ try:
         for app, dlg, btn, done in (('links', 'setDlg', 'sTextBtn', "document.getElementById('textDlg').open"),
                                     ('info', 'setdlg', 'setsizes', "!!document.querySelector('#ix-dlg.open #ix-tzs')"),
                                     ('cards', 'tdlg', 'tsizes', "!!document.querySelector('#ix-dlg.open #ix-tzs')")):
-            pg.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); pg.wait_for_timeout(1200)
+            pg.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); until(lambda: pg.evaluate("document.querySelectorAll('[data-hub=item]').length > 0"), 10000); settle(pg)
             item = pg.evaluate("document.querySelectorAll('[data-hub=item][data-hub-label=\"Text Sizes\"]').length")
-            pg.evaluate("document.getElementById('%s').showModal(); document.getElementById('%s').click()" % (dlg, btn)); pg.wait_for_timeout(700)
+            pg.evaluate("document.getElementById('%s').showModal(); document.getElementById('%s').click()" % (dlg, btn))
+            until(lambda: pg.evaluate(done) and not pg.evaluate("document.getElementById('%s').open" % dlg), 5000)
             ok = pg.evaluate(done) and not pg.evaluate("document.getElementById('%s').open" % dlg)
             if item or not ok: p8.append((app, item, ok))
         check('P8 Text Sizes opens from the Settings dialog of Links, Info and Cards (and is not a separate pencil-menu item)', not p8, p8)
@@ -112,7 +114,7 @@ try:
         check('P3 Cards exports a real Excel file with numbers and the money format', data[:2] == b'PK' and ok, detail)
         # P10-P16: the 1.48.5 Cards page (Table or By Holder sections, four total boxes, holder chips) and the tidied pencil menus
         def items(app):
-            pg.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); pg.wait_for_timeout(900)
+            pg.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); until(lambda: pg.evaluate("document.querySelectorAll('[data-hub=item]').length > 0"), 10000); settle(pg)
             return pg.evaluate("[...document.querySelectorAll('[data-hub=item]')].map((e, i) => [+(e.dataset.hubOrder || 0), i, e.dataset.hubLabel]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(x => x[2])")
         want = {'links': ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings'], 'info': ['Export', 'Info Settings'],
                 'tasks': ['Add Task', 'Spreadsheet (CSV)', 'Calendar File (.ics)', 'Print or PDF', 'Tasks Settings'],
@@ -128,20 +130,20 @@ try:
         check('P11 Cards opens as the Table (every card, with a Holder column) under four boxes: Cards, Lifetime Free, Charges a Year, Expiring Soon; the first chip is All Cards',
               first[:3] == (0, 9, 'block') and first[3] == ['Cards=9', 'Lifetime Free=4 of 9', 'Charges a Year=₹8,499', 'Expiring Soon=1'] and pg.evaluate("document.querySelector('#fchips [data-h=All]').textContent") == 'All Cards'
               and pg.evaluate("document.querySelector('#fview [aria-pressed=true]').textContent") == 'Table', first)
-        pg.click('#fview [data-v=holder]'); pg.wait_for_timeout(200)
+        pg.click('#fview [data-v=holder]'); until(lambda: len(grp()) > 0, 5000)
         check('P12 By Holder: one section per holder with its totals, and the choice is kept',
               grp() == ['Alex', 'Sam', 'Jordan'] and rows() == 9 and pg.evaluate("document.querySelector('#list .grp .gh').textContent.includes('4 cards')") and pg.evaluate("localStorage.getItem('cards-view')") == 'holder', grp())
-        pg.click('#list .gh[data-fold="Jordan"]'); pg.wait_for_timeout(200); folded = rows()
+        pg.click('#list .gh[data-fold="Jordan"]'); until(lambda: rows() < 9, 5000); folded = rows()
         pg.reload(wait_until='domcontentloaded'); pg.wait_for_selector('#list .row.item', timeout=15000)
         check('P13 a holder section folds, and stays folded (and By Holder stays on) after a reload', folded == 7 and rows() == 7 and len(grp()) == 3, (folded, rows()))
-        pg.click('#list .gh[data-fold="Jordan"]'); pg.click('#fview [data-v=list]'); pg.wait_for_timeout(200)
-        pg.click('#fchips [data-h="Sam"]'); pg.wait_for_timeout(200)
+        pg.click('#list .gh[data-fold="Jordan"]'); pg.click('#fview [data-v=list]'); until(lambda: not grp() and rows() == 9, 5000)
+        pg.click('#fchips [data-h="Sam"]'); until(lambda: rows() < 9, 5000)
         sam = (rows(), stat()[0], pg.evaluate("!document.getElementById('fclear').hidden"))
-        pg.click('#fclear'); pg.wait_for_timeout(200)
+        pg.click('#fclear'); until(lambda: rows() == 9, 5000)
         check('P16 a holder chip filters to that holder (the boxes follow), and Clear brings every card back', sam == (3, 'Cards=3', True) and rows() == 9, sam)
-        pg.click('#list .row.item[data-id] .cn small'); pg.wait_for_timeout(300)
+        pg.click('#list .row.item[data-id] .cn small'); until(lambda: pg.evaluate("document.getElementById('dlg').open"), 5000)
         opened = pg.evaluate("document.getElementById('dlg').open"); pg.evaluate("document.getElementById('dlg').close()")
-        pg.evaluate("document.getElementById('tdlg').showModal()"); pg.click('#tcols'); pg.wait_for_timeout(400)
+        pg.evaluate("document.getElementById('tdlg').showModal()"); pg.click('#tcols'); until(lambda: pg.evaluate("document.getElementById('odlg').open && document.querySelectorAll('#olist .orow').length > 0"), 5000)
         cols = pg.evaluate("document.getElementById('odlg').open && document.querySelectorAll('#olist .orow').length"); pg.evaluate("document.getElementById('odlg').close()")
         check('P14 clicking a card row opens Edit Card, and Cards Settings opens Column Order', opened and cols == 11, (opened, cols))
         pctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 844}); pctx.add_cookies(cookies); pctx.add_init_script("try{localStorage.setItem('ix-seen-ver','%s')}catch(e){}" % ver)
@@ -151,10 +153,11 @@ try:
         pctx.close()
         # P17: Home's Welcome Text shows once per visit, in the middle, and is gone after about 4.5 seconds
         wctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); wctx.add_cookies(cookies); wctx.route('**/*', handle)
-        wp = wctx.new_page(); wp.goto(B + '/', wait_until='domcontentloaded'); wp.wait_for_timeout(600)
+        wp = wctx.new_page(); wp.goto(B + '/', wait_until='domcontentloaded'); until(lambda: wp.evaluate("!!document.querySelector('#welcome.in')"), 5000)
         w1 = wp.evaluate("(() => { const e = document.querySelector('#welcome'); return e ? [e.textContent, e.classList.contains('in'), getComputedStyle(document.querySelector('.stage')).opacity] : null })()")
-        wp.wait_for_timeout(4600); gone = wp.evaluate("!document.querySelector('#welcome')")
-        wp.reload(wait_until='domcontentloaded'); wp.wait_for_timeout(600); again = wp.evaluate("!!document.querySelector('#welcome.in')")
+        until(lambda: wp.evaluate("!document.querySelector('#welcome')"), 8000); gone = wp.evaluate("!document.querySelector('#welcome')")   # it fades away by itself after about 4.5 s
+        wp.reload(wait_until='domcontentloaded'); wp.wait_for_timeout(600)   # on purpose: P17 checks the welcome does NOT come back, so give it the time it took the first time
+        again = wp.evaluate("!!document.querySelector('#welcome.in')")
         check('P17 Home shows "Welcome Home" in the middle with the links hidden, it fades away, and not again on a reload', w1 and w1[0] == 'Welcome Home' and w1[1] and float(w1[2]) < 0.2 and gone and not again, (w1, gone, again))
         bgnow = wp.evaluate("(() => { const n = document.querySelector('#bg .on'); return n ? (n.currentSrc || n.src) : '' })()")
         check('P18 a new site shows the Starter theme (its own pictures, nothing downloaded from other sites)', '/web/home/starter/' in bgnow and not wp.evaluate("window.PUB.bg.photos.length") and wp.evaluate("window.PUB.bg.theme") == 'starter', bgnow)
