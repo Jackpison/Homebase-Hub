@@ -41,6 +41,9 @@ jobs:
         run: python3 tests/repo/check_libraries.py
       - name: Workflow files keep their safety settings (pinned Actions, no kept token, time limits)
         run: python3 tests/repo/workflows_test.py
+      - name: Workflow check (zizmor, strictest setting)
+        if: matrix.php == '8.3'
+        run: python3 -m venv /tmp/zz && /tmp/zz/bin/pip install -q zizmor==1.30.1 && /tmp/zz/bin/zizmor --offline --persona=auditor .github/workflows/
       - name: Version agrees everywhere (scripts/release.py --check) and its own test
         run: python3 scripts/release.py --check && python3 tests/repo/release_test.py
       - name: Build
@@ -230,6 +233,8 @@ jobs:
         browser: [firefox, webkit]
     timeout-minutes: 25
     name: browser (${{ matrix.browser }})
+    env:
+      BROWSER: ${{ matrix.browser }}   # scripts read it from here, never pasted into the script text
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
@@ -248,39 +253,39 @@ jobs:
         run: |
           npm ci
           pip install -r tests/requirements.txt
-          python -m playwright install --with-deps ${{ matrix.browser }}
+          python -m playwright install --with-deps "$BROWSER"
       - name: Build the zip and the website
         run: python3 scripts/build.py && python3 scripts/make-site.py --no-guide
       - name: Pages in ${{ matrix.browser }}
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/browser/pages_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "pages ${{ matrix.browser }}"
+          python3 tests/browser/pages_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "pages $BROWSER"
       - name: The bar in ${{ matrix.browser }}
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/browser/nav_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "nav ${{ matrix.browser }}"
+          python3 tests/browser/nav_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "nav $BROWSER"
       - name: Tools in ${{ matrix.browser }}
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/browser/tools_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "tools ${{ matrix.browser }}"
+          python3 tests/browser/tools_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "tools $BROWSER"
       - name: Import Bookmarks in ${{ matrix.browser }}
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/browser/import_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "import ${{ matrix.browser }}"
+          python3 tests/browser/import_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "import $BROWSER"
       - name: Accessibility in ${{ matrix.browser }}
         if: matrix.browser == 'firefox' && (success() || failure())
         run: |
           set -o pipefail
-          python3 tests/browser/a11y_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "a11y ${{ matrix.browser }}"
+          python3 tests/browser/a11y_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "a11y $BROWSER"
       - name: Website in ${{ matrix.browser }}
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/browser/website_test.py build/site --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "website ${{ matrix.browser }}"
+          python3 tests/browser/website_test.py build/site --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "website $BROWSER"
 
   apache:
     # Installing Apache takes about five minutes on a fresh runner, so it runs beside the other tests instead of after them.

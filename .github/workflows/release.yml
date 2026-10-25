@@ -4,18 +4,22 @@ on:
     tags: ['v*']
 permissions:
   contents: read
+concurrency:
+  group: release
+  cancel-in-progress: false
 jobs:
   release:
+    name: build and publish the release
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: write
-      actions: write
+      contents: write   # create the release and attach the zip
+      actions: write    # start the Pages workflow afterwards
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with: { node-version: '24', cache: npm }
+        with: { node-version: '24', package-manager-cache: false }   # no download cache: the release builds from a clean npm ci
       - name: Version agrees everywhere (HUB, ?v=, changelog, Version Map, root copy, no TODO)
         run: python3 scripts/release.py --check
       - name: Build

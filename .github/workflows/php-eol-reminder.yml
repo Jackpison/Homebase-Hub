@@ -5,12 +5,16 @@ on:
   schedule:
     - cron: '0 8 15 11 *'
   workflow_dispatch:
-permissions:
-  issues: write
+permissions: {}
+concurrency:
+  group: php-eol-reminder
+  cancel-in-progress: false
 jobs:
   remind:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      issues: write   # open the reminder issue
     name: open the reminder issue
     steps:
       - name: Open the issue (once per year)

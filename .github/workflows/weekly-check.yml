@@ -6,9 +6,7 @@ on:
   schedule:
     - cron: '17 6 * * 1'
   workflow_dispatch:
-permissions:
-  contents: read
-  issues: write
+permissions: {}
 concurrency:
   group: weekly-check
   cancel-in-progress: false
@@ -17,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     name: security check (libraries and build tools)
+    permissions:
+      contents: read   # check out the repo
+      issues: write    # open or comment on the "security" issue
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }

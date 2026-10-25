@@ -11,15 +11,16 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
+    name: deploy (website, guides, latest.json)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     permissions:
-      contents: read
-      pages: write
-      id-token: write
+      contents: read   # check out the repo and read the releases
+      pages: write     # publish the website
+      id-token: write  # prove to GitHub Pages that this workflow is the one deploying
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
