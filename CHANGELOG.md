@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.49.0 | Gets your site ready for the new folder layout of 1.50, plus small fixes |
 | 1.48.9 | Home themes (a Starter theme and your own, with export and import), a welcome text, and no background repeats until the others had their turn |
 | 1.48.5 | A new Cards page (a cleaner table, or grouped by holder), Settings regrouped into Web, Data and System Setting, and tidier pencil menus |
 | 1.48.2 | The Settings menu as before 1.48, the Backup icon and gear back, a sun and moon theme button, a softer look for new sites, and fixes for the Settings cards and the Tools tab icon |
@@ -72,6 +73,28 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.49.0
+
+### Getting Ready for 1.50
+
+- **Install this update before 1.50.** Version 1.50 moves the site's own engine to a tidier place (`web/hub/core`, your pictures to `web/hub/media`, the documents to `web/hub/docs`). The updater in 1.48 and older cannot take that step; this one can, in either direction, so Go Back keeps working. A 1.48 site that tries 1.50 directly simply refuses it, and nothing changes.
+- Nothing you see changes in this version.
+
+### Changed
+
+- **The Starter theme has no videos after all.** The 1.48.9 notes said two short videos would come in the next update; they were dropped to keep updates small. The three Starter photos stay.
+- **Import Bookmarks** removes pictures and event handlers from a bookmarks file before reading it (bookmark exports never contain them).
+- **Tools:** its ZIP library is updated (fflate 0.8.3).
+- **Every update now carries the licences of the bundled libraries** (`THIRD-PARTY.md`, beside the README and changelog).
+
+### For developers
+
+- The build scripts moved from `tools/` to `scripts/`; `phpstan.neon` moved to `tests/repo/`.
+- `tests/` is grouped into `unit/`, `browser/`, `server/`, `repo/`, `fixtures/` and `lib/`; CI runs a server job and a browser job, and reports visual changes since the last release.
+- `tests/unit/layout_test.php` covers both folder layouts and moving your pictures between them.
 
 ---
 
