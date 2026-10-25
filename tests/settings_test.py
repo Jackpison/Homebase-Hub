@@ -60,6 +60,12 @@ try:
         open_backups(); pg.click('#nt-bknow'); wait_js(pg, "((document.getElementById('ix-toast') || {}).textContent || '').includes('did not answer in time')", 20000)   # the helper retries a dropped connection twice first
         state = pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return [!!b, b && !b.disabled, b && b.textContent, (document.querySelector('#ix-pc .ix-err') || {}).textContent.includes('look there before you try again')]; })()")
         check('S7 with no answer, the button is free again, and a message (and the Status tab) say the backup may still arrive in Telegram', state == [True, True, 'Send Backup Now', True], state)
+        # Security > Overview: each card keeps its icon inside the card (the phone sheet's tiles once shared the class name and squashed them)
+        pg.goto(s.base + '/web/settings/#security'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-tile').length >= 6", 15000); pg.wait_for_timeout(300)
+        bad = pg.evaluate("""[...document.querySelectorAll('#ix-pc .ix-tile')].filter(t => t.getBoundingClientRect().width > 0).map(t => {
+            const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
+            return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 90 ? '' : t.textContent.slice(0, 30); }).filter(Boolean)""")
+        check('S19 Security > Overview: every card holds its icon and text (nothing spills out)', not bad, bad)
         # the simpler Settings
         pg.unroute('**/api.php?action=notify_backup*')
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "document.querySelectorAll('#ix-page .ix-snav [data-sec]').length > 0", 20000)

@@ -479,7 +479,7 @@
   function sheet(open, from) {
     openPanel('ix-sheet', open, function (adm) {
       var due = backupDue();
-      var tile = function (k, icon, label, cls) { return '<button type="button" class="ix-tile' + (cls ? ' ' + cls : '') + '" data-ix="' + k + '">' + icon + '<span>' + label + '</span></button>'; };
+      var tile = function (k, icon, label, cls) { return '<button type="button" class="ix-stile' + (cls ? ' ' + cls : '') + '" data-ix="' + k + '">' + icon + '<span>' + label + '</span></button>'; };
       return '<div class="ix-scrim" data-ix="close"></div><div class="ix-shp" role="dialog" aria-modal="true" aria-label="Search and Menu"><span class="ix-grab" aria-hidden="true"></span>' +
         '<button type="button" class="ix-psearch" data-ix="search">' + svg(ICON.search) + '<span>Search everything</span></button><div class="ix-tiles6">' +
         (HAS_EDIT ? tile('edit', svg(ICON.edit), editing() ? 'Editing' : 'Edit') : '') +

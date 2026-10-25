@@ -120,7 +120,7 @@ try:
                     lbl = pg.evaluate("[...document.querySelectorAll('#ix-bar .ix-links a span')].filter(s => s.getBoundingClientRect().width > 0).map(s => s.textContent)")
                     check('%s: only the current page shows its name' % L, lbl == ['Links'], lbl)
                     pg.click('#ix-bar .ix-fab'); pg.wait_for_timeout(350)
-                    tiles = pg.evaluate("[...document.querySelectorAll('#ix-sheet.open .ix-tile span')].map(s => s.textContent)")
+                    tiles = pg.evaluate("[...document.querySelectorAll('#ix-sheet.open .ix-stile span')].map(s => s.textContent)")
                     check('%s: the sheet has search, Edit, the theme, Backup, Settings and Log Out' % L, visible(pg, '#ix-sheet .ix-psearch') and tiles == ['Edit', 'Light Mode', 'Backup', 'Settings', 'Log Out'], tiles)
                     if SHOTS: pg.screenshot(path=os.path.join(SHOTS, '%s-%s-sheet.png' % (nav, size_name)))
                     pg.keyboard.press('Escape'); pg.wait_for_timeout(300)

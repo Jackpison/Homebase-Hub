@@ -171,11 +171,11 @@ html[data-ix-app="home"][data-ix-nav="dock"] .ix-pill{background:color-mix(in sr
 .ix-grab{align-self:center;width:40px;height:5px;border-radius:3px;background:var(--ix-line2)}
 .ix-shp .ix-psearch{margin:0}
 .ix-tiles6{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.ix-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:84px;border-radius:16px;border:1px solid var(--ix-line);background:var(--ix-s2);color:var(--ix-tx);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;transition:transform .18s,background-color .18s}
-.ix-tile:active{transform:scale(.96)}
-.ix-tile svg{width:22px!important;height:22px!important}
-.ix-tile.due{color:var(--ix-bad);border-color:color-mix(in srgb,var(--ix-bad) 40%,transparent)}
-.ix-tile.danger{color:var(--ix-err)}
+.ix-stile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:84px;border-radius:16px;border:1px solid var(--ix-line);background:var(--ix-s2);color:var(--ix-tx);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;transition:transform .18s,background-color .18s}
+.ix-stile:active{transform:scale(.96)}
+.ix-stile svg{width:22px!important;height:22px!important}
+.ix-stile.due{color:var(--ix-bad);border-color:color-mix(in srgb,var(--ix-bad) 40%,transparent)}
+.ix-stile.danger{color:var(--ix-err)}
 @keyframes ix-slide{from{transform:translateX(-100%)}to{transform:none}}
 @keyframes ix-up{from{transform:translateY(100%)}to{transform:none}}
 @keyframes ix-fadein{from{opacity:0}}
