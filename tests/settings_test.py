@@ -70,7 +70,9 @@ try:
         pg.unroute('**/api.php?action=notify_backup*')
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "document.querySelectorAll('#ix-page .ix-snav [data-sec]').length > 0", 20000)
         menu = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav [data-sec] span')].map(e => e.textContent)")
-        check('S9 the Settings menu has 7 items', menu == ['Overview', 'General', 'Look', 'Security', 'Telegram', 'Backup & Restore', 'System'], menu)
+        groups = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav .ix-sgl')].map(e => e.textContent)")
+        check('S9 the Settings menu has 6 items under Web Setting, System Setting and Data Setting, in that order',
+              menu == ['Overview', 'General', 'System', 'Security', 'Telegram', 'Backup & Restore'] and groups == ['Web Setting', 'System Setting', 'Data Setting'], (menu, groups))
         def at(h, expr):
             pg.goto(s.base + '/web/settings/' + h); pg.wait_for_timeout(150); pg.evaluate("void 0")
             try: wait_js(pg, expr, 10000); return True
@@ -84,19 +86,22 @@ try:
                ('#changelog', 'Changelog', 'Versions'), ('#chmap', 'Changelog', 'Version Map'), ('#system', 'Updates', 'Update')]
         bad = [h for h, t, u in old if not at(h, sel + " === %s && %s === %s" % (json.dumps(t), sub, json.dumps(u)))]
         check('S11 old addresses (#files, #health, #domains, #check, #changelog, #chmap) open the right tab of System', not bad, bad)
-        check('S12 #pages (removed) opens General, and General has only Basics and Tabs', at('#pages', tabs + " === 'Basics|Tabs'"), pg.evaluate(tabs))
+        check('S12 #pages (removed) opens General > General, which has Basics and Tabs; General\'s other tab is Look',
+              at('#pages', tabs + " === 'General|Look' && " + sel + " === 'General' && [...document.querySelectorAll('#ix-pane .ix-subseg [role=tab]')].map(e => e.textContent).join('|') === 'Basics|Tabs'"), pg.evaluate(tabs))
         ok = at('#look', "!!document.querySelector('#ix-lmore')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
         closed = pg.evaluate("!document.querySelector('#ix-lmore').open && !document.querySelector('#ix-font').checkVisibility()")
-        check('S13 Look shows Theme, Accent Color and Navigation Style; Font and the rest wait closed under More Options', ok and cards == ['Theme', 'Accent Color', 'Navigation Style'] and closed, (cards, closed))
+        lk = pg.evaluate("[...document.querySelectorAll('#ix-pane .ix-subseg [role=tab]')].map(e => e.textContent).join('|')")
+        check('S13 General > Look shows Theme, Accent Color and Navigation Style (Font and Same Look closed under More Options), with Presets and Colors as tabs beside it',
+              ok and cards == ['Theme', 'Accent Color', 'Navigation Style'] and closed and lk == 'Look|Presets|Colors' and pg.evaluate(sel) == 'Look', (cards, closed, lk))
         check('S14 Look offers 8 accent colors and your own', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 8 and pg.evaluate("!!document.querySelector('#ix-acc')"))
-        pg.click('#ix-lmore > summary'); pg.click('[data-to="themes"]')
+        pg.click('#ix-pane .ix-subseg [data-sub="themes"]')
         ok = wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)
         n = pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # the dark-mode list
         pg.click('#ix-pc [data-seg="cmode"] [data-v="light"]'); pg.wait_for_timeout(300)
         n += pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # and the light-mode list
         pg.click('#ix-pc [data-seg="cmode"] [data-v="dark"]'); pg.wait_for_timeout(200)
-        check('S15 More Options > Presets still has all 166 presets (dark and light together)', n == 166 and pg.evaluate(tabs) == 'Look|More Options', (n, pg.evaluate(tabs)))
+        check('S15 General > Look > Presets still has all 166 presets (dark and light together)', n == 166 and pg.evaluate(sel) == 'Look', (n, pg.evaluate(sel)))
         # a font chosen under More Options survives a save made from the visible part of Look
         at('#look', "!!document.querySelector('#ix-lmore')")
         pg.evaluate("document.querySelector('#ix-lmore').open = true"); pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); pg.wait_for_timeout(800)

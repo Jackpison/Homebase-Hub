@@ -78,7 +78,7 @@ Keep these folders if you replace files by hand: web/core-data/media (home/photo
 
 THE BAR
 -------
-Three styles (Settings > Look > Navigation Style), each with its own layout. The pages are Home, Links, Info, Cards, Tasks
+Three styles (Settings > General > Look > Navigation Style), each with its own layout. The pages are Home, Links, Info, Cards, Tasks
 and Tools (rename, reorder or hide them in Settings > General > Tabs).
   Top Bar (the default): logo, pages, search, then Theme / Edit (pencil) / the round menu. It slides away while you
     scroll down and comes back on any scroll up, at the top of the page, when you press / or move the mouse to the top
@@ -104,16 +104,17 @@ and Tools (rename, reorder or hide them in Settings > General > Tabs).
 - Search covers Links, Info, Tasks (while logged in) and Tools; Cards keeps its own search. Press / or Ctrl+K anywhere. The sliders button in
   the search box chooses where to look: Everything or only Links / Info / Tasks / Tools, and one tab. Names, web addresses
   and note text are always searched. Shortcut: type  links: text  or  info: text.
-- Settings is a page of its own (web/settings/, from the round menu). A menu on the left in three groups: Site (General: Basics,
-  Tabs; Look: Theme, Accent Color, Navigation Style, and under More Options the Font, Same Look on Every Page, Presets and
-  Colors), Protection & Data (Security, Telegram, Backup & Restore) and System (tabs Updates, Health, Changelog, each with its
-  own small row: Update / Files; Overview / Domains and Uptime / Server Check; Versions / Version Map / Notes). Old links such as
+- Settings is a page of its own (web/settings/, from the round menu). A menu on the left in three groups: Web Setting (General,
+  with the tabs General: Basics / Tabs, and Look: Look / Presets / Colors; Look holds Theme, Accent Color, Navigation Style, and
+  under More Options the Font and Same Look on Every Page), System Setting (System, with the tabs Updates, Health, Changelog,
+  each with its own small row: Update / Files; Overview / Domains and Uptime / Server Check; Versions / Version Map / Notes) and
+  Data Setting (Security, Telegram, Backup & Restore). Old links such as
   settings/#health or #changelog still open the right place. A search box at the top of the menu jumps to any setting (press /). Overview › Guided Setup walks through the protection steps in order. Overview comes first: how things stand and what to look at next. Security, Telegram and Backup &
   Restore are tabs, one part on screen at a time; every tab has a link (settings/#security/encryption). On a phone the menu is shown
   first and each section opens with a back button.
-  General and Look preview live and are kept with Save Settings (a bar at the bottom appears while something is unsaved;
+  General (with Look, Presets and Colors) previews live and are kept with Save Settings (a bar at the bottom appears while something is unsaved;
   Discard puts the saved look back). The other sections save each change straight away.
-- Settings > Look > More Options > Colors: one mode at a time (Dark or Light), in groups: Menu Bar (bar background, tabs and icons), Page
+- Settings > General > Look > Colors: one mode at a time (Dark or Light), in groups: Menu Bar (bar background, tabs and icons), Page
   (background, boxes, menus, borders) and Text. Presets (166 looks, a search box, a Surprise Me button, and your own saved looks that can be exported and imported) fill a whole mode in one click; Colors also holds a separate accent for each page; the arrow next to a color puts it
   back to the default. Page Backgrounds gives one page its own background. Tab colors in Links and Info are set on each tab.
 - Text sizes: Links, Info and Cards each have "Change Text Sizes" inside their own Page Settings (pencil menu > Page Settings).

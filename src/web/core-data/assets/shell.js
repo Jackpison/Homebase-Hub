@@ -116,7 +116,7 @@
     H.setAttribute('data-ix-nav', S.nav || 'top');
     if (S.look !== false) H.setAttribute('data-ix-look', ''); else H.removeAttribute('data-ix-look');
     if (APP !== 'home' || S.homeBar === true) H.setAttribute('data-ix-bar', ''); else H.removeAttribute('data-ix-bar');
-    var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Look > More Options > Colors)
+    var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > General > Look > Colors)
     H.style.setProperty('--ix-accent', acc);
     H.style.setProperty('--ix-ink', inkFor(acc));
   }
@@ -127,7 +127,7 @@
     var l = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
     return (l + 0.05) / 0.05 >= 1.05 / (l + 0.05) ? '#000' : '#fff';   // contrast with black against contrast with white
   }
-  /* Custom colors (Settings > Look > More Options > Colors): which CSS variable each portion of the site sets, per page.
+  /* Custom colors (Settings > General > Look > Colors): which CSS variable each portion of the site sets, per page.
      Written as one <style> so every page gets them before it paints. They only apply while "Same look on every page" is on. */
   var COLOR_KEYS = [['bg', 'Page Background'], ['box', 'Boxes and Cards'], ['panel', 'Menus and Dialogs'], ['line', 'Borders'], ['text', 'Text'], ['mute', 'Secondary Text'],
                     ['bar', 'Bar Background'], ['barText', 'Bar Tabs and Icons']];
@@ -179,7 +179,7 @@
     var css = colorsCss(st.colors, st.look);
     if (el.textContent !== css) el.textContent = css;
   }
-  /* Site-wide font (Settings > Look > More Options). One <style> overrides the font of every page, but leaves code and keyboard keys alone. */
+  /* Site-wide font (Settings > General > Look > More Options). One <style> overrides the font of every page, but leaves code and keyboard keys alone. */
   var FONTS = [['default', 'Each page\'s own font', ''],
     ['trebuchet', 'Trebuchet MS', '"Trebuchet MS","Lucida Grande","Lucida Sans Unicode","Lucida Sans",Tahoma,system-ui,sans-serif'],
     ['system', 'System Default', 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif'],

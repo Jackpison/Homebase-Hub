@@ -1173,7 +1173,7 @@ colorInputs().forEach(inp => inp.addEventListener('input', () => {
 $('#colorReset').onclick = () => { const m = $('#colorDlg').dataset.mode || mode(); for (const k of ['ribbon', 'c0', 'c1', 'c2', 'c3']) if (draft[m]) delete draft[m][k]; fillColorInputs(); applyLook(draft); };
 $('#colorSave').onclick = e => { e.preventDefault(); commitDraft($('#colorDlg'), 'Colors saved'); };
 
-/* text: separate sizes for tabs, categories and links (the font is one site-wide setting in Settings > Look > More Options) */
+/* text: separate sizes for tabs, categories and links (the font is one site-wide setting in Settings > General > Look > More Options) */
 for (const [k, label, min, max] of SIZE_KEYS) $('#xSizes').append(h('div', { class: 'field' },
   h('label', { for: 'xSize-' + k }, label),
   h('div', { class: 'range' }, h('input', { type: 'range', id: 'xSize-' + k, min, max, step: 1 }), h('output', { id: 'xOut-' + k }))));

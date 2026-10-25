@@ -595,12 +595,6 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 #ix-page .ix-mrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--ix-line);font-size:14.5px}
 #ix-page .ix-mrow small{display:block;color:var(--ix-mu2);font-size:12.5px;margin-top:2px}
 #ix-page .ix-mrow .ix-sel{max-width:50%}
-#ix-page .ix-mlink{display:flex;align-items:center;gap:14px;width:100%;padding:12px 14px;margin-top:6px;border-radius:14px;border:1px solid var(--ix-line2);background:var(--ix-bg);color:var(--ix-tx);font:inherit;font-size:15px;text-align:left;cursor:pointer;transition:border-color .18s,background-color .18s}
-#ix-page .ix-mlink:hover{border-color:var(--ix-accent);background:var(--ix-soft)}
-#ix-page .ix-mlink span{flex:1}
-#ix-page .ix-mlink small{display:block;color:var(--ix-mu2);font-size:12.5px;margin-top:2px}
-#ix-page .ix-mlink svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--ix-accent-tx)}
-#ix-page .ix-mlink svg:last-child{color:var(--ix-mu2);width:16px;height:16px}
 #ix-page .ix-swc{position:relative;width:34px;height:34px;border-radius:50%;overflow:hidden;cursor:pointer;background:conic-gradient(#ff6b6b,#ffc21a,#5fd68a,#4cc9f0,#2d8cff,#b392f0,#ff2d95,#ff6b6b);border:2px solid var(--ix-line2)}
 #ix-page .ix-sw .ix-swc input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 #ix-page .ix-subseg{display:flex;width:max-content;max-width:100%;margin:12px 0 0;border-radius:999px;padding:3px;background:var(--ix-s2);border:0;gap:2px;overflow-x:auto;flex-wrap:nowrap}
