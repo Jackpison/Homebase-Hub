@@ -70,6 +70,16 @@ def main():
     body = '{\n"files": {\n' + ',\n'.join(f'{json.dumps(k)}: {json.dumps(files[k])}' for k in sorted(files)) \
         + '\n},\n"minPhp": ' + json.dumps(minphp) + ',\n"version": ' + json.dumps(ver) + '\n}'
     open(os.path.join(TREE, 'web/core-data/manifest.json'), 'w', encoding='utf-8', newline='\n').write(body)
+    # every file must be a type the updater accepts (UP_EXT in update.php): older sites refuse the whole zip otherwise
+    up = open(os.path.join(ROOT, 'src/web/core-data/lib/update.php'), encoding='utf-8').read()
+    exts = set(re.findall(r"'([a-z0-9]+)'", re.search(r"const UP_EXT = \[([^\]]+)\]", up).group(1)))
+    wrong = []
+    for dp, dn, fns in os.walk(TREE):
+        for fn in fns:
+            e = 'htaccess' if fn == '.htaccess' else (fn.rsplit('.', 1)[-1].lower() if '.' in fn else '')
+            if e not in exts: wrong.append(os.path.relpath(os.path.join(dp, fn), TREE).replace(os.sep, '/'))
+    if wrong:
+        sys.exit('These files have a type the site updater refuses (UP_EXT in update.php), so no site could install this zip:\n  ' + '\n  '.join(wrong[:20]) + ('\n  ... and %d more' % (len(wrong) - 20) if len(wrong) > 20 else ''))
     # zip
     name = f'site-update-{ver}.zip'
     zp = os.path.join(OUT, name)

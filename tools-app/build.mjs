@@ -23,7 +23,12 @@ const r = await build({
 // WebAssembly that a library loads next to its own script (new URL('x.wasm', import.meta.url)): copied into assets/
 for (const w of ['pdfjs-dist/legacy/build/pdf.worker.min.mjs', '@neslinesli93/qpdf-wasm/dist/qpdf.wasm'])
   fs.copyFileSync(path.join(HERE, 'node_modules', w), path.join(A, path.basename(w)));
-for (const d of ['cmaps', 'standard_fonts', 'wasm']) fs.cpSync(path.join(HERE, 'node_modules/pdfjs-dist', d), path.join(A, 'vendor/pdfjs', d), { recursive: true, filter: (s) => !s.endsWith('quickjs-eval.wasm') });   // quickjs runs PDF scripts: switched off (isEvalSupported: false)
+// pdf.js's image decoders (JPEG 2000, JBIG2, colour profiles). Not its character maps (.bcmap) or standard fonts (.pfb): a site update may only
+// hold the file types the updater accepts (UP_EXT in update.php), and older sites refuse anything else. Without them pdf.js uses system fonts.
+// Not quickjs either: it runs scripts inside PDFs, which the tools switch off (isEvalSupported: false). Licence files get a .txt name.
+fs.mkdirSync(path.join(A, 'vendor/pdfjs/wasm'), { recursive: true });
+for (const f of fs.readdirSync(path.join(HERE, 'node_modules/pdfjs-dist/wasm'))) if (!f.startsWith('quickjs-eval')) fs.copyFileSync(path.join(HERE, 'node_modules/pdfjs-dist/wasm', f), path.join(A, 'vendor/pdfjs/wasm', /\./.test(f) ? f : f + '.txt'));
+fs.copyFileSync(path.join(HERE, 'node_modules/pdfjs-dist/LICENSE'), path.join(A, 'vendor/pdfjs/LICENSE.txt'));
 fs.mkdirSync(path.join(A, 'vendor/tesseract'), { recursive: true });
 for (const f of ['tesseract.js/dist/worker.min.js', 'tesseract.js-core/tesseract-core-simd-lstm.wasm.js'])   // the SIMD core only: every current browser has WebAssembly SIMD
   fs.copyFileSync(path.join(HERE, 'node_modules', f), path.join(A, 'vendor/tesseract', path.basename(f)));

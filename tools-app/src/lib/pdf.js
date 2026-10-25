@@ -16,7 +16,8 @@ const bytesOf = async (f) => (f instanceof Uint8Array ? f.slice() : new Uint8Arr
 /** Opens a PDF with pdf.js (to show or read it). */
 export async function openDoc(file, password) {
   const pj = await pdfjs(), name = file.name || 'This PDF';
-  const task = pj.getDocument({ data: await bytesOf(file), password, cMapUrl: A('./vendor/pdfjs/cmaps/'), cMapPacked: true, standardFontDataUrl: A('./vendor/pdfjs/standard_fonts/'), wasmUrl: A('./vendor/pdfjs/wasm/'), isEvalSupported: false });
+  // no cMapUrl or standardFontDataUrl: those files cannot be in a site update (see build.mjs); pdf.js then uses the system's fonts
+  const task = pj.getDocument({ data: await bytesOf(file), password, wasmUrl: A('./vendor/pdfjs/wasm/'), useSystemFonts: true, isEvalSupported: false });
   try { return await task.promise; }
   catch (e) { throw new Error(e && e.name === 'PasswordException' ? name + ' has a password. Remove it first with Protect or Unlock PDF.' : name + ' could not be read as a PDF.'); }
 }

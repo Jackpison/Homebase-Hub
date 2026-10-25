@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.47.0 | Tools rebuilt from source: all 36 tools, the same addresses and favourites, newer engines (ONNX Runtime 1.30, Tesseract 7), AVIF saving, and fixes |
 | 1.46.0 | Install on Your Phone: the site on a phone's or computer's home screen, opening like an app with its own icon and page shortcuts; Settings descriptions no longer shown twice |
 | 1.45.0 | Import Bookmarks in Links: bookmarks from any browser, with a preview, into a new or existing tab, easy to undo; readable main buttons in Links' light mode |
 | 1.44.2 | PDF to Text works in Safari; Earlier Versions never overwrites the version being restored; no stale "ready to apply" update after a refused upload; many more tests, now also in Firefox and WebKit |
@@ -65,6 +66,29 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.47.0
+
+### New: Tools, rebuilt
+
+Tools was made with a separate project whose source was lost, so every fix had to be made by hand in minified code and its libraries could not be updated. It is now rebuilt from scratch, with its source in the project (`tools-app/`).
+
+- **All 36 tools, at the same addresses.** Links like `web/tools/#/tool/image-resize` still work, and your **favourites and recently used tools carry over**. The layout, your own order and hidden tools start fresh: set them again in Tools > Organise and Tools > Settings.
+- **One look with the site.** Tools follows the site's light or dark mode and your colours from Settings > Appearance. Its home has search, popular tools, recently used tools and favourites; the sections show as a side menu (which can collapse to icons) or as tabs.
+- **Newer engines.** Background removal runs on ONNX Runtime 1.30 (was 1.17.3), and reading text from scans and photos on Tesseract 7. Heavy engines still load only when a tool needs them.
+- **Better tools.** Images can be saved as AVIF; the compressor never hands back a bigger file in the same format; Photo Metadata warns when a photo shows where it was taken; Protect or Unlock says plainly when a password is wrong; the collage takes 2 to 50 photos in 21 layouts and saves as a PDF too; Sign and Fill and Annotate show the page larger.
+- **Safer page.** The Tools page no longer needs an inline script, so its security policy allows none.
+
+### Changed
+
+- **Tools Settings** now holds the layout and the reset buttons. Light and dark, and colours, come from the site's own Settings.
+
+### For developers
+
+- Tools is built with `python3 tools/build-tools.py --install`; never edit `web/tools/assets` by hand. Its libraries are pinned in `tools-app/package-lock.json` and watched by Dependabot. `tests/tools_test.py` now checks all 36 tools with real files (76 checks).
+- `tools/build.py` refuses to make a zip with a file type the site updater does not accept, so no release can be one that older sites refuse.
 
 ---
 
