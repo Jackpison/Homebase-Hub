@@ -2,7 +2,7 @@
 // Test and screenshot only: invented demo data for Info and Cards.
 // Demo data for screenshots (invented). Usage: php seed.php /path/to/site
 $site = $argv[1];
-require $site . '/web/core-data/lib/boot.php';
+require $site . '/web/hub/core/lib/boot.php';
 function rid8() { return bin2hex(random_bytes(4)); }
 function box($t, $n, $w = '', $h = '') { return ['id' => rid8(), 'w' => $w, 'h' => $h, 'title' => $t, 'notes' => $n, 'rev' => 1, 'saved' => time()]; }
 $info = ['rev' => 3, 'tabs' => [

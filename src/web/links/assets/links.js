@@ -47,8 +47,8 @@ function safeUrl(u) {
   if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return '#';
   return 'https://' + u;
 }
-// Saved icons are stored as "icons/…" and live in web/core-data/media/links (before 1.29.3: next to this page). Only the address shown changes.
-const mediaUrl = u => /^icons\//i.test(u) ? '../core-data/media/links/' + u : u;
+// Saved icons are stored as "icons/…" and live in web/hub/media/links (before 1.29.3: next to this page). Only the address shown changes.
+const mediaUrl = u => /^icons\//i.test(u) ? '../hub/media/links/' + u : u;
 function host(u) { try { return new URL(safeUrl(u), location.href).hostname; } catch { return ''; } }
 const uid = () => Math.random().toString(36).slice(2, 9);
 const isWeb = u => /^https?:/i.test(u || '');

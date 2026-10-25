@@ -59,7 +59,7 @@ The three zips are: the one just built, the latest published release, and any ol
 
 It needs PHP 8.3 or newer with curl, zip and mbstring, and free ports from 8123. Every check prints PASS or FAIL, then a total.
 
-PHP's built-in server ignores `.htaccess`, so the browser blocks on `site-data`, `web/docs` and `lib` are not tested here.
+PHP's built-in server ignores `.htaccess`, so the browser blocks on `site-data`, `web/hub/docs` and `lib` are not tested here.
 
 `prepend.php` is loaded only by these tests (`php -d auto_prepend_file=...`). It points the site at the stand-in. The site itself never defines those constants.
 

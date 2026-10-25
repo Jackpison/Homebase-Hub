@@ -25,10 +25,10 @@ jobs:
           cat > body.md <<'EOF'
           PHP has (or soon has) a new version. Go through this list once a year.
 
-          - [ ] Compare `hub_php_eol()` in `src/web/core-data/lib/boot.php` with https://www.php.net/supported-versions and add the row for the new version.
+          - [ ] Compare `hub_php_eol()` in `src/web/hub/core/lib/boot.php` with https://www.php.net/supported-versions and add the row for the new version.
           - [ ] Decide whether `HUB_MIN_PHP` (same file) rises. The build carries it into the zip as `minPhp`.
           - [ ] Update the PHP matrix in `.github/workflows/ci.yml` (`build`) and the PHP used by the other jobs.
-          - [ ] Update every "PHP 8.x" sentence: `README.md`, `src/web/docs/README.txt`, `website/content/index.html`, `website/content/install.html`, and the guide (`scripts/make-guide.py`).
+          - [ ] Update every "PHP 8.x" sentence: `README.md`, `src/web/hub/docs/README.txt`, `website/content/index.html`, `website/content/install.html`, and the guide (`scripts/make-guide.py`).
           - [ ] Check test E6 in `tests/server/update_test.py` (it uses a fixed date) and the `hub_php_notice` checks in `tests/unit/logic_test.php`.
           - [ ] Changelog entry (in the next release).
           EOF

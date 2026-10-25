@@ -11,7 +11,7 @@
 // PRIVATE: card data is only ever sent to a browser that is logged in to the site.
 // Visitors get the page title and a login screen, nothing else.
 // Data lives in the private site-data folder (site-data/cards/cards.json), with earlier versions in versions/.
-require __DIR__ . '/../core-data/lib/boot.php';
+require __DIR__ . '/../hub/core/lib/boot.php';
 hub_headers();
 header('Content-Type: application/json; charset=utf-8');
 hub_same_origin();

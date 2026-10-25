@@ -3,7 +3,7 @@
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
 define('NT_TEST_API', 'http://127.0.0.1:' . getenv('NT_STUB_PORT'));
-require $site . '/web/core-data/lib/notify.php';
+require $site . '/web/hub/core/lib/notify.php';
 require_once HUB_WEB . '/tasks/lib.php';
 
 $log = getenv('NT_STUB_LOG');

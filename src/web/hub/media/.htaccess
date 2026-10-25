@@ -1,0 +1,22 @@
+# media/ holds your pictures, icons and the logo. Nothing here is ever run as a script.
+Options -Indexes
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "same-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+  Header always set X-Robots-Tag "noindex, nofollow"
+  # An SVG icon opened on its own can run no script
+  Header always set Content-Security-Policy "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+  # The site logo gets a new file name every time it changes, so browsers can keep each copy for good
+  <FilesMatch "^logo-[a-z0-9]+\.(png|jpg|webp|gif|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# Only pictures and icons are served
+<FilesMatch "(^\.|\.(php[0-9]?|phtml|phar|pl|py|cgi|sh|html?|js|mjs|json|md|txt|bak|old|orig|tmp|log|sql|zip|swp|ini|inc|lock)$|~$|^error_log)">
+  Require all denied
+</FilesMatch>

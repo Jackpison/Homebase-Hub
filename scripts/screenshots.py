@@ -10,7 +10,7 @@ D='/tmp/shotsite3'; shutil.rmtree(D,ignore_errors=True); os.makedirs(D); zipfile
 php=subprocess.Popen(['php','-S','127.0.0.1:8140','-t',D],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); time.sleep(1)
 B='http://127.0.0.1:8140'; cj=http.cookiejar.CookieJar(); op=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj)); csrf=''
 def call(a,b=None):
-    rq=urllib.request.Request(B+'/web/core-data/api.php?action='+a,data=json.dumps(b).encode() if b is not None else None,headers={'User-Agent':UA,'Content-Type':'application/json','X-Hub-CSRF':csrf},method='POST' if b is not None else 'GET')
+    rq=urllib.request.Request(B+'/web/hub/core/api.php?action='+a,data=json.dumps(b).encode() if b is not None else None,headers={'User-Agent':UA,'Content-Type':'application/json','X-Hub-CSRF':csrf},method='POST' if b is not None else 'GET')
     return json.loads(op.open(rq).read())
 def post(path,b):
     rq=urllib.request.Request(B+path,data=json.dumps(b).encode(),headers={'User-Agent':UA,'Content-Type':'application/json','X-Hub-CSRF':csrf,'X-Requested-With':'bookmarks'},method='POST'); return json.loads(op.open(rq).read())

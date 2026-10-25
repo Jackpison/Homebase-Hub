@@ -3,7 +3,7 @@
 // emptied and refilled only when a Tools file really changed. The page itself is always fetched fresh first, so new uploads show at once.
 const TOOLS_REV = '__REV__';
 const CACHE = 'tools-' + TOOLS_REV;
-const ASSETS = new URL('./assets/', self.location).pathname;   // this folder only: never web/core-data/assets or another page's assets
+const ASSETS = new URL('./assets/', self.location).pathname;   // this folder only: never web/hub/core/assets or another page's assets
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {

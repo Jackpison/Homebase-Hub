@@ -30,11 +30,11 @@ SMALL = {k: v for k, v in BASE.items() if not k.startswith('web/tools/assets/')}
 def relisted(items, version=NEXTV):
     """A copy with the version set and the file list made to match every file (so only the planted problem remains)."""
     it = dict(items)
-    it['web/core-data/lib/boot.php'] = re.sub(rb"define\('HUB', '[^']+'\)", b"define('HUB', '" + version.encode() + b"')", it['web/core-data/lib/boot.php'])
-    man = json.loads(it['web/core-data/manifest.json'])
+    it['web/hub/core/lib/boot.php'] = re.sub(rb"define\('HUB', '[^']+'\)", b"define('HUB', '" + version.encode() + b"')", it['web/hub/core/lib/boot.php'])
+    man = json.loads(it['web/hub/core/manifest.json'])
     man['version'] = version
-    man['files'] = {k: hashlib.sha256(v).hexdigest() for k, v in it.items() if k != 'web/core-data/manifest.json' and not k.endswith('/')}
-    it['web/core-data/manifest.json'] = json.dumps(man).encode()
+    man['files'] = {k: hashlib.sha256(v).hexdigest() for k, v in it.items() if k != 'web/hub/core/manifest.json' and not k.endswith('/')}
+    it['web/hub/core/manifest.json'] = json.dumps(man).encode()
     return it
 
 
@@ -59,10 +59,10 @@ def rename(raw, old, new):
 
 
 def with_manifest(items, files_extra=None, files_drop=()):
-    it = relisted(items); man = json.loads(it['web/core-data/manifest.json'])
+    it = relisted(items); man = json.loads(it['web/hub/core/manifest.json'])
     for k in files_drop: man['files'].pop(k, None)
     for k, v in (files_extra or {}).items(): man['files'][k] = v
-    it['web/core-data/manifest.json'] = json.dumps(man).encode(); return it
+    it['web/hub/core/manifest.json'] = json.dumps(man).encode(); return it
 
 
 def tree_hash(root, skip=()):
@@ -136,47 +136,47 @@ try:
         zi = zipfile.ZipInfo(n); zi.filename = n   # the name exactly as given
         raw = build(with_manifest(SMALL, {n: hashlib.sha256(b'<?php echo 1;').hexdigest()}), [(zi, b'<?php echo 1;')])
         v.attack('P1 refused: %s (%s)' % (label, n), raw, 'cannot be used')
-    ph = 'web/core-data/nb-%s-.js' % MARK
+    ph = 'web/hub/core/nb-%s-.js' % MARK
     raw = build(with_manifest(SMALL, {ph: hashlib.sha256(b'x').hexdigest()}), [(ph, b'x')])
     v.attack('P2 refused: a name with a null byte', rename(raw, ph.encode(), ph.encode()[:-4] + b'\x00.js'), 'cannot be used')
     long = 'web/' + 'a' * 240 + MARK + '.js'
     v.attack('P3 refused: a name longer than 200 characters', build(with_manifest(SMALL, {long: hashlib.sha256(b'x').hexdigest()}), [(long, b'x')]), 'cannot be used')
     deep = 'web/' + 'd/' * 120 + MARK + '.js'
     v.attack('P4 refused: 120 folders deep', build(with_manifest(SMALL, {deep: hashlib.sha256(b'x').hexdigest()}), [(deep, b'x')]), 'cannot be used')
-    v.attack('P5 refused: the same entry twice', build(relisted(SMALL), [('web/core-data/api.php', b'<?php echo "second";')]), 'listed twice')
-    v.attack('P6 refused: two names that differ only in case', build(with_manifest(SMALL, {'web/core-data/API.php': hashlib.sha256(b'<?php').hexdigest()}), [('web/core-data/API.php', b'<?php')]), 'listed twice')
+    v.attack('P5 refused: the same entry twice', build(relisted(SMALL), [('web/hub/core/api.php', b'<?php echo "second";')]), 'listed twice')
+    v.attack('P6 refused: two names that differ only in case', build(with_manifest(SMALL, {'web/hub/core/API.php': hashlib.sha256(b'<?php').hexdigest()}), [('web/hub/core/API.php', b'<?php')]), 'listed twice')
     for n in ('web/caf\u00e9-%s.js' % MARK, 'web/cafe\u0301-%s.js' % MARK):
         v.attack('P7 refused: a non-ASCII (Unicode) name %r' % n, build(with_manifest(SMALL, {n: hashlib.sha256(b'x').hexdigest()}), [(n, b'x')]), 'cannot be used')
-    zi = zipfile.ZipInfo('web/core-data/%s-link.js' % MARK); zi.create_system = 3; zi.external_attr = (0o120777 << 16)
+    zi = zipfile.ZipInfo('web/hub/core/%s-link.js' % MARK); zi.create_system = 3; zi.external_attr = (0o120777 << 16)
     v.attack('P8 refused: a symlink entry', build(with_manifest(SMALL, {zi.filename: hashlib.sha256(b'/etc/passwd').hexdigest()}), [(zi, b'/etc/passwd')]), 'link')
     for n, why in [('%s.php' % MARK, 'outside web/'), ('tools/%s.js' % MARK, 'outside web/'), ('site-data/core/auth.php', 'site-data'),
-                   ('web/core-data/config.php', 'your own configuration file'), ('web/core-data/media/brand/logo-%s.png' % MARK, 'pictures folder'),
-                   ('web/core-data/media/home/uploads/%s.php' % MARK, 'pictures folder'), ('web/links/assets/%s.php' % MARK, 'PHP file'),
+                   ('web/hub/core/config.php', 'your own configuration file'), ('web/hub/media/brand/logo-%s.png' % MARK, 'pictures folder'),
+                   ('web/hub/media/home/uploads/%s.php' % MARK, 'pictures folder'), ('web/links/assets/%s.php' % MARK, 'PHP file'),
                    ('web/%s.phtml' % MARK, 'file type'), ('web/.user.ini', 'file type')]:
         v.attack('P9 refused: %s (%s)' % (n, why), build(with_manifest(SMALL, {n: hashlib.sha256(b'<?php phpinfo();').hexdigest()}), [(n, b'<?php phpinfo();')]), 'cannot be used')
 
     # ----- the file list -----
-    it = relisted(SMALL); it['web/core-data/api.php'] = it['web/core-data/api.php'] + b'\n// changed after listing'
+    it = relisted(SMALL); it['web/hub/core/api.php'] = it['web/hub/core/api.php'] + b'\n// changed after listing'
     v.attack('L1 refused: a file whose SHA-256 differs from the file list', build(it), 'fingerprints')
     v.attack('L2 refused: a file that is not on the list', build(with_manifest(SMALL, files_drop=['web/links/index.html'])), 'not on the list')
     v.attack('L3 refused: a file on the list but not in the zip', build(with_manifest(SMALL, {'web/links/gone.js': '0' * 64})), 'missing')
     v.attack('L4 refused: the list names a path outside the allowed ones', build(with_manifest(SMALL, {'../../%s.php' % MARK: '0' * 64})), 'missing|cannot')
-    it = relisted(SMALL); del it['web/core-data/manifest.json']
+    it = relisted(SMALL); del it['web/hub/core/manifest.json']
     v.attack('L5 refused: no manifest.json', build(it), 'no file list')
     for label, body in [('not JSON', b'{"version": "9.9.9", "files": {'), ('no version', b'{"files": {}}'), ('a bad hash', json.dumps({'version': NEXTV, 'files': {'index.php': 'nothex'}}).encode()), ('a list instead of files', json.dumps({'version': NEXTV, 'files': []}).encode())]:
-        it = relisted(SMALL); it['web/core-data/manifest.json'] = body
+        it = relisted(SMALL); it['web/hub/core/manifest.json'] = body
         v.attack('L6 refused: a broken manifest.json (%s)' % label, build(it), 'file list|not on the list')
 
     # ----- contents and versions -----
     it = dict(SMALL); it['web/links/api.php'] = it['web/links/api.php'][:len(it['web/links/api.php']) // 2]
     v.attack('C1 refused: a PHP file with a syntax error (cut in half)', build(relisted(it)), 'PHP')
-    it = dict(SMALL); del it['web/core-data/lib/update.php']
+    it = dict(SMALL); del it['web/hub/core/lib/update.php']
     v.attack('C2 refused: the updater itself is missing', build(relisted(it)), 'update itself|cannot be used')
-    it = relisted(SMALL); it['web/core-data/lib/boot.php'] = re.sub(rb"define\('HUB', '[^']+'\)", b"define('HUB', '9.9.9')", it['web/core-data/lib/boot.php'])
-    man = json.loads(it['web/core-data/manifest.json']); man['files']['web/core-data/lib/boot.php'] = hashlib.sha256(it['web/core-data/lib/boot.php']).hexdigest(); it['web/core-data/manifest.json'] = json.dumps(man).encode()
+    it = relisted(SMALL); it['web/hub/core/lib/boot.php'] = re.sub(rb"define\('HUB', '[^']+'\)", b"define('HUB', '9.9.9')", it['web/hub/core/lib/boot.php'])
+    man = json.loads(it['web/hub/core/manifest.json']); man['files']['web/hub/core/lib/boot.php'] = hashlib.sha256(it['web/hub/core/lib/boot.php']).hexdigest(); it['web/hub/core/manifest.json'] = json.dumps(man).encode()
     v.attack('C3 refused: boot.php says another version than the file list', build(it), 'version|cannot')
     v.attack('C4 refused: an older version', build(relisted(SMALL, '1.0.0')), 'cannot be used')
-    it = relisted(SMALL); man = json.loads(it['web/core-data/manifest.json']); man['minPhp'] = '99.0'; it['web/core-data/manifest.json'] = json.dumps(man).encode()
+    it = relisted(SMALL); man = json.loads(it['web/hub/core/manifest.json']); man['minPhp'] = '99.0'; it['web/hub/core/manifest.json'] = json.dumps(man).encode()
     v.attack('C5 refused: needs a newer PHP (minPhp 99.0)', build(it), 'PHP 99.0')
     r = v.s.chunks(None, 'same.zip', raw=build(relisted(SMALL, CURV)))
     check('C6 the same version is offered only as a repair of the installed files, marked "same"', r.get('ok') and r.get('relation') == 'same', json.dumps(r)[:300])
@@ -185,17 +185,17 @@ try:
     # ----- sizes and zip bombs -----
     raw = bytearray(build(relisted(SMALL)))
     cdpos = raw.rfind(b'PK\x05\x06'); cdoff = struct.unpack('<I', raw[cdpos + 16:cdpos + 20])[0]
-    i = raw.find(b'web/core-data/api.php', cdoff) - 46; assert raw[i:i + 4] == b'PK\x01\x02'
+    i = raw.find(b'web/hub/core/api.php', cdoff) - 46; assert raw[i:i + 4] == b'PK\x01\x02'
     raw[i + 24:i + 28] = struct.pack('<I', 0x7FFFFFFF)   # api.php claims to unpack to 2 GB
     v.attack('S1 refused: an entry that claims to unpack to 2 GB', bytes(raw), 'larger than|cannot')
-    bomb_name = 'web/core-data/assets/%s-bomb.js' % MARK; bomb = b'\0' * (60 * 1048576)
+    bomb_name = 'web/hub/core/assets/%s-bomb.js' % MARK; bomb = b'\0' * (60 * 1048576)
     it = with_manifest(SMALL, {bomb_name: hashlib.sha256(bomb).hexdigest()})
     raw = bytearray(build(it, [(bomb_name, bomb)]))
     cdpos = raw.rfind(b'PK\x05\x06'); cdoff = struct.unpack('<I', raw[cdpos + 16:cdpos + 20])[0]
     j = raw.find(b'PK\x01\x02' , raw.find(bomb_name.encode(), cdoff) - 46)
     raw[j + 24:j + 28] = struct.pack('<I', 1000)   # a 60 MB file of zeros (about 60 KB packed) that says it is 1 KB
     v.attack('S2 refused: a zip bomb (60 MB of zeros declared as 1 KB, ratio about 1000:1)', bytes(raw), 'more than the zip says|size|cannot')
-    many = {('web/core-data/assets/%s-%d.js' % (MARK, k)): b'\0' * (79 * 1048576) for k in range(6)}
+    many = {('web/hub/core/assets/%s-%d.js' % (MARK, k)): b'\0' * (79 * 1048576) for k in range(6)}
     v.attack('S3 refused: 6 files of 79 MB each (474 MB unpacked, over the 400 MB limit)', build(with_manifest(SMALL, {k: hashlib.sha256(d).hexdigest() for k, d in many.items()}), list(many.items())), 'too large|unpack')
     del many
     huge = os.urandom(1048576) * 130

@@ -12,17 +12,17 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
 
 require_once __DIR__ . '/config.php';
 
-require_once __DIR__ . '/../core-data/lib/boot.php';   // Hub: shared login + private data folder
+require_once __DIR__ . '/../hub/core/lib/boot.php';   // Hub: shared login + private data folder
 define('DATA_DIR', hub_dir('home'));
 const SITE_FILE  = DATA_DIR . '/site.json';
 const POOL_FILE  = DATA_DIR . '/photos.json';
 const CACHE_DIR  = DATA_DIR . '/cache';
 const LOCK_FILE  = DATA_DIR . '/refill.lock';
-const UPLOAD_DIR = HUB_MEDIA . '/home/uploads';   // your own pictures and videos live in web/core-data/media (before 1.29.3 they sat next to the page)
+const UPLOAD_DIR = HUB_MEDIA . '/home/uploads';   // your own pictures and videos live in web/hub/media (before 1.29.3 they sat next to the page)
 const ICON_DIR   = HUB_MEDIA . '/home/icons';
 const PHOTO_DIR  = HUB_MEDIA . '/home/photos';
-/** An address, from the start page, for a saved file: "photos/x.jpg" is stored that way, the page finds it in web/core-data/media/home. */
-function media_url(string $u): string { return preg_match('~^(photos|uploads|icons)/~', $u) ? '../core-data/media/home/' . $u : $u; }
+/** An address, from the start page, for a saved file: "photos/x.jpg" is stored that way, the page finds it in web/hub/media/home. */
+function media_url(string $u): string { return preg_match('~^(photos|uploads|icons)/~', $u) ? '../hub/media/home/' . $u : $u; }
 
 const BG_TYPES = [
     'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp',

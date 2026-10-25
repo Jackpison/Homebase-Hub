@@ -4,7 +4,7 @@
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
 define('NT_TEST_API', 'http://127.0.0.1:' . getenv('NT_STUB_PORT'));
-require $site . '/web/core-data/lib/notify.php';
+require $site . '/web/hub/core/lib/notify.php';
 require_once HUB_WEB . '/tasks/lib.php';
 
 $log = getenv('NT_STUB_LOG');
@@ -94,3 +94,19 @@ t('/backup sends one file to the chat', count($c) === 1 && ($c[0]['p']['chat_id'
 t('...it is the site backup (JSON), and the caption says it is not encrypted', strpos($doc['head'] ?? '', '{') === 0 && strpos($c[0]['p']['caption'] ?? '', 'Not encrypted') !== false && html_ok($c[0]['p']['caption'] ?? ''));
 t('...and counts as the full backup (the Backup icon turns green)', (int)hub_settings()['backupLast'] >= time() - 60 && nt_load()['bkError'] === '');
 t('no temporary file is left behind', !glob(hub_dir('core') . '/tg-*.tmp'));
+
+// instant replies set up before 1.50 (Telegram called web/core-data/telegram.php): told the new address once, on their own
+$hooks = function (int $n) { return array_values(array_filter(since($n), function ($c) { return $c['method'] === 'setWebhook'; })); };
+nt_update(function (&$d) { $d['hook'] = false; $d['hookPath'] = ''; $d['url'] = 'https://hub.example/'; });
+$n = count(calls());
+t('instant replies off: nothing is asked of Telegram', nt_hook_follow() === false && count(calls()) === $n);
+nt_update(function (&$d) { $d['hook'] = true; $d['hookKey'] = str_repeat('k', 40); $d['hookPath'] = ''; });
+$n = count(calls()); $moved = nt_hook_follow(); $h = $hooks($n);
+t('instant replies from before 1.50: Telegram is told the new address', $moved && count($h) === 1 && ($h[0]['p']['url'] ?? '') === 'https://hub.example/web/hub/core/telegram.php', json_encode($h));
+t('...with the same secret, and the new address is remembered', ($h[0]['p']['secret_token'] ?? '') === str_repeat('k', 40) && nt_load()['hookPath'] === NT_HOOK_PATH && nt_load()['hook'] === true);
+$n = count(calls());
+t('...only once', nt_hook_follow() === false && count(calls()) === $n);
+nt_update(function (&$d) { $d['hookPath'] = ''; });
+$n = count(calls()); nt_run(false);
+t('the reminders run (cron, or the site being open) does it', count($hooks($n)) === 1 && nt_load()['hookPath'] === NT_HOOK_PATH);
+nt_update(function (&$d) { $d['hook'] = false; $d['url'] = ''; });

@@ -201,8 +201,8 @@ More on the [Security page](https://jackpison.github.io/Homebase-Hub/security/).
 | What | Where |
 |---|---|
 | Your data: pages, settings, login, backups | `site-data/` in your site folder, closed to browsers |
-| Your logo, start page photos and saved link icons | `web/core-data/media/`, never replaced by an update |
-| The README, changelog and readable source | `web/docs/`, closed to browsers |
+| Your logo, start page photos and saved link icons | `web/hub/media/`, never replaced by an update |
+| The README, changelog and readable source | `web/hub/docs/`, closed to browsers |
 
 <p align="right"><a href="#readme-top">↑ Back to top</a></p>
 
@@ -267,7 +267,7 @@ This writes `build/site-update-X.Y.Z.zip` and its `.sha256`. `python3 scripts/ma
 
 ### Releases
 
-`python3 scripts/release.py X.Y.Z` raises the version everywhere, and `python3 scripts/release.py --check` checks that it agrees. A release is made by pushing a tag `vX.Y.Z` that matches the version in `src/web/core-data/lib/boot.php`. The release workflow builds the zip, publishes the release and updates the website.
+`python3 scripts/release.py X.Y.Z` raises the version everywhere, and `python3 scripts/release.py --check` checks that it agrees. A release is made by pushing a tag `vX.Y.Z` that matches the version in `src/web/hub/core/lib/boot.php`. The release workflow builds the zip, publishes the release and updates the website.
 
 ## Changelog
 
@@ -280,6 +280,6 @@ Every version is in [CHANGELOG.md](CHANGELOG.md) and on the [website](https://ja
 
 ## Licence and credits
 
-Homebase Hub is free software under the [GPL-3.0](LICENSE). Bundled libraries keep their own licences, listed in [THIRD-PARTY.md](src/web/docs/THIRD-PARTY.md). The website uses the Manrope font (SIL Open Font License). Start page photos in the screenshots carry their own credits.
+Homebase Hub is free software under the [GPL-3.0](LICENSE). Bundled libraries keep their own licences, listed in [THIRD-PARTY.md](src/web/hub/docs/THIRD-PARTY.md). The website uses the Manrope font (SIL Open Font License). Start page photos in the screenshots carry their own credits.
 
 <p align="right"><a href="#readme-top">↑ Back to top</a></p>

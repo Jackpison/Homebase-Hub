@@ -64,7 +64,7 @@ def rate_reset(s):
 def login_from(s, source, pw):
     """A login from another address on this computer (127.0.0.2): the lockout counts each address on its own."""
     c = http.client.HTTPConnection('127.0.0.1', s.port, timeout=30, source_address=(source, 0))
-    c.request('POST', '/web/core-data/api.php?action=login', body=json.dumps({'password': pw}), headers={'Content-Type': 'application/json', 'User-Agent': 'third-browser/3.0'})
+    c.request('POST', '/web/hub/core/api.php?action=login', body=json.dumps({'password': pw}), headers={'Content-Type': 'application/json', 'User-Agent': 'third-browser/3.0'})
     r = c.getresponse(); st = r.status; r.read(); c.close(); return st
 
 
@@ -250,7 +250,7 @@ try:
 
     # ===== E. The security token on every changing action =====
     s = Site(ZIP, 8740)
-    src = open(s.dir + '/web/core-data/api.php').read()
+    src = open(s.dir + '/web/hub/core/api.php').read()
     blocks = re.split(r'\n(?=case \')', src)
     acts = []
     for bl in blocks:

@@ -1,9 +1,9 @@
 // TOOLS service worker: instant repeat visits and offline use.
 // Everything in assets/ is served from cache. TOOLS_REV is a fingerprint of those files (the release script writes it): the cache is
 // emptied and refilled only when a Tools file really changed. The page itself is always fetched fresh first, so new uploads show at once.
-const TOOLS_REV = '1c80d1be';
+const TOOLS_REV = '4257dc98';
 const CACHE = 'tools-' + TOOLS_REV;
-const ASSETS = new URL('./assets/', self.location).pathname;   // this folder only: never web/core-data/assets or another page's assets
+const ASSETS = new URL('./assets/', self.location).pathname;   // this folder only: never web/hub/core/assets or another page's assets
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {

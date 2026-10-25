@@ -105,7 +105,7 @@ try:
         shown = not pg.evaluate("document.querySelector('#ix-inst').hidden")
         pg.click('#ix-inst'); pg.wait_for_timeout(300)
         check('when the browser offers it, Install appears and opens the browser\'s prompt once', shown and pg.evaluate("window.__prompted") == 1 and pg.evaluate("document.querySelector('#ix-inst').hidden"), (shown, pg.evaluate("window.__prompted")))
-        sw = pg.evaluate("fetch('../core-data/api.php?action=state').then(r => r.ok)")
+        sw = pg.evaluate("fetch('../hub/core/api.php?action=state').then(r => r.ok)")
         check('no page error anywhere in this test', not errs and sw, errs)
         b.close()
 finally:

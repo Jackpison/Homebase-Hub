@@ -11,8 +11,11 @@ node_modules
 error_log
 .DS_Store
 # Owner's own media (folders are kept with .gitkeep)
-src/web/core-data/media/**
-!src/web/core-data/media/**/
-!src/web/core-data/media/**/.gitkeep
-!src/web/core-data/media/.htaccess
+src/web/hub/media/**
+!src/web/hub/media/**/
+!src/web/hub/media/**/.gitkeep
+!src/web/hub/media/.htaccess
 __pycache__/
+src/web/core-data/config.php
+src/web/core-data/data/
+src/web/core-data/media/

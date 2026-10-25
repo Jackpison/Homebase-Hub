@@ -722,7 +722,7 @@ async function copyBox(b,btn){
 
 /* tabs */
 const PEN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
-/* Padlock pictures: a gold padlock marks a private tab, a green safe padlock marks an encrypted one (web/core-data/assets/brand). */
+/* Padlock pictures: a gold padlock marks a private tab, a green safe padlock marks an encrypted one (web/hub/core/assets/brand). */
 const IMG_LOCK='<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="#C98F00" stroke-width="2.4" stroke-linecap="round"/><rect x="4.5" y="10.5" width="15" height="10.5" rx="3" fill="#F7B500"/><rect x="4.5" y="10.5" width="15" height="3.2" rx="1.6" fill="#FFD25A" opacity=".55"/><circle cx="12" cy="15.2" r="1.7" fill="#5A3B00"/><rect x="11.2" y="15.9" width="1.6" height="3" rx=".8" fill="#5A3B00"/></svg>',IMG_SAFE='<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="#13935A" stroke-width="2.4" stroke-linecap="round"/><rect x="4.5" y="10.5" width="15" height="10.5" rx="3" fill="#25C07D"/><rect x="4.5" y="10.5" width="15" height="3.2" rx="1.6" fill="#6EE0AC" opacity=".5"/><path d="M8.9 15.9l2.3 2.3 4-4.4" fill="none" stroke="#073D26" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function renderTabs(){
   const empty=!TABS.length;
@@ -1313,7 +1313,7 @@ function exportText(all){
 }
 let pdfLoad=null;
 function loadPdfLib(){
-  return pdfLoad||(pdfLoad=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="../core-data/assets/vendor/jspdf.umd.min.js?v=4.2.1";
+  return pdfLoad||(pdfLoad=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="../hub/core/assets/vendor/jspdf.umd.min.js?v=4.2.1";
     sc.onload=()=>window.jspdf&&window.jspdf.jsPDF?ok(window.jspdf.jsPDF):no(new Error("PDF library missing"));sc.onerror=()=>{pdfLoad=null;no(new Error("PDF library could not load"))};document.head.appendChild(sc)}));
 }
 // The PDF uses a built-in font that only knows Western European letters: common symbols are spelled out, the rest becomes "?".

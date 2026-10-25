@@ -40,7 +40,7 @@ if '--audit' in sys.argv:
     # Tools: npm audit on its own lock file (the exact versions the page is built with)
     r = subprocess.run(['npm', 'audit', '--json', '--omit=dev'], cwd=os.path.join(ROOT, 'tools-app'), capture_output=True, text=True)
     found.update(json.loads(r.stdout or '{}').get('vulnerabilities', {}))
-    # the rest of the site: jsPDF, copied into core-data/assets/vendor
+    # the rest of the site: jsPDF, copied into hub/core/assets/vendor
     d = tempfile.mkdtemp()
     json.dump({'name': 'audit', 'version': '1.0.0', 'dependencies': {'jspdf': '4.2.1'}}, open(d + '/package.json', 'w'))
     subprocess.run(['npm', 'install', '--package-lock-only', '--ignore-scripts'], cwd=d, capture_output=True)

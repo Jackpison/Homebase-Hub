@@ -185,7 +185,7 @@ def main():
     os.makedirs(os.path.join(OUT, 'brand'))
     for f in ('logo-192.png', 'logo-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'social-preview.png'):
         if os.path.isfile(os.path.join(W, 'brand', f)): shutil.copy(os.path.join(W, 'brand', f), os.path.join(OUT, 'brand', f))
-    ver = re.search(r"define\('HUB',\s*'([^']+)'\)", open(os.path.join(ROOT, 'src/web/core-data/lib/boot.php'), encoding='utf-8').read()).group(1)
+    ver = re.search(r"define\('HUB',\s*'([^']+)'\)", open(os.path.join(ROOT, 'src/web/hub/core/lib/boot.php'), encoding='utf-8').read()).group(1)
     fix = lambda s: s.replace('Download {{VER}}', 'Download v' + ver).replace('{{VER}}', ver)
     slugs = ['index']
     for p in SP.all_pages():     # home, features, Telegram, phone, tools, FAQ: built from data

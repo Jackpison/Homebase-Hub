@@ -35,8 +35,8 @@ Options -Indexes
   </FilesMatch>
 
   # Security: only this site's own code may run; images/lookups only from Google's favicon service.
-  # Pre-load a page when you hover over its link in the bar (the rules are in core-data/assets/speculation-rules.json).
-  Header set Speculation-Rules "\"../core-data/assets/speculation-rules.json\""
+  # Pre-load a page when you hover over its link in the bar (the rules are in hub/core/assets/speculation-rules.json).
+  Header set Speculation-Rules "\"../hub/core/assets/speculation-rules.json\""
   Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.google.com https://*.gstatic.com; connect-src 'self' data: blob: https://www.google.com https://*.gstatic.com; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "SAMEORIGIN"

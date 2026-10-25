@@ -928,7 +928,7 @@ function openYear(){
 let pdfLib=null;
 function loadPdf(){
   if(window.jspdf)return Promise.resolve(window.jspdf.jsPDF);
-  return pdfLib||(pdfLib=new Promise((ok,no)=>{const s=document.createElement("script");s.src="../core-data/assets/vendor/jspdf.umd.min.js?v=4.2.1";
+  return pdfLib||(pdfLib=new Promise((ok,no)=>{const s=document.createElement("script");s.src="../hub/core/assets/vendor/jspdf.umd.min.js?v=4.2.1";
     s.onload=()=>window.jspdf?ok(window.jspdf.jsPDF):no();s.onerror=()=>{pdfLib=null;no()};document.head.appendChild(s)}));
 }
 async function makePdf(y){

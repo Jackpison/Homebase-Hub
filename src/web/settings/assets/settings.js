@@ -6,7 +6,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
-/* The Settings page: it only hands its element to the admin part of the shell (web/core-data/assets/shell-admin.js), which draws everything. */
+/* The Settings page: it only hands its element to the admin part of the shell (web/hub/core/assets/shell-admin.js), which draws everything. */
 (function () {
   'use strict';
   var host = document.getElementById('settings');

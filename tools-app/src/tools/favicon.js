@@ -2,7 +2,7 @@
 import { zipSync } from 'fflate';
 import { h, field, input, select, seg, range, check, button, download, dropzone, panel, note, busy, toast } from '../ui.js';
 
-const API = new URL('../core-data/api.php', location.href).href;
+const API = new URL('../hub/core/api.php', location.href).href;
 const SIZES = [16, 32, 48, 64, 128, 256, 512];
 
 function canvasOf(src, s, { bg = null, pad = 0, round = 0 } = {}) {

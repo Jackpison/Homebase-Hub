@@ -3,8 +3,8 @@ Options -Indexes
 <IfModule mod_headers.c>
   <FilesMatch "\.html$">
     # only this site's own scripts and styles may run; nothing may frame the page from elsewhere
-    # Pre-load a page when you hover over its link in the bar (the rules are in core-data/assets/speculation-rules.json).
-    Header set Speculation-Rules "\"../core-data/assets/speculation-rules.json\""
+    # Pre-load a page when you hover over its link in the bar (the rules are in hub/core/assets/speculation-rules.json).
+    Header set Speculation-Rules "\"../hub/core/assets/speculation-rules.json\""
     Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
     Header set Cache-Control "no-cache"
   </FilesMatch>

@@ -47,7 +47,7 @@ jobs:
       - name: Check zip name and changelog
         run: |
           ls build/site-update-*.zip
-          unzip -l build/site-update-*.zip | grep -q 'web/docs/CHANGELOG.md'
+          unzip -l build/site-update-*.zip | grep -q 'web/hub/docs/CHANGELOG.md'
           ! ls build/site-update-*.zip | grep -q '_'
 
   server:
@@ -75,7 +75,7 @@ jobs:
         run: |
           PREV=$(python3 - <<'PY'
           import json, re, subprocess
-          cur = re.search(r"define\('HUB', '([^']+)'\)", open('src/web/core-data/lib/boot.php').read()).group(1)
+          cur = re.search(r"define\('HUB', '([^']+)'\)", open('src/web/hub/core/lib/boot.php').read()).group(1)
           v = lambda s: tuple(int(x) for x in s.split('.'))
           tags = [t['tagName'] for t in json.loads(subprocess.check_output(['gh', 'release', 'list', '--limit', '100', '--json', 'tagName']))]
           print(max((t for t in tags if re.match(r'^v\d+\.\d+\.\d+$', t) and v(t[1:]) < v(cur)), key=lambda t: v(t[1:])))
@@ -198,7 +198,7 @@ jobs:
         run: |
           PREV=$(python3 - <<'PY'
           import json, re, subprocess
-          cur = re.search(r"define\('HUB', '([^']+)'\)", open('src/web/core-data/lib/boot.php').read()).group(1)
+          cur = re.search(r"define\('HUB', '([^']+)'\)", open('src/web/hub/core/lib/boot.php').read()).group(1)
           v = lambda s: tuple(int(x) for x in s.split('.'))
           tags = [t['tagName'] for t in json.loads(subprocess.check_output(['gh', 'release', 'list', '--limit', '100', '--json', 'tagName']))]
           print(max((t for t in tags if re.match(r'^v\d+\.\d+\.\d+$', t) and v(t[1:]) < v(cur)), key=lambda t: v(t[1:])))

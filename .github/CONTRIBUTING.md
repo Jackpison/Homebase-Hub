@@ -11,7 +11,7 @@ Read `AGENTS.md` first: it has the full rules, the checks and the release checkl
 
 
 - Edit the readable files in `src/`. The build makes the minified files; never edit those.
-- Each release raises the version in `src/web/core-data/lib/boot.php` (`HUB`) and in every `?v=` on the pages, and adds an entry and a Version Map row to `src/web/docs/CHANGELOG.md` (copied to the root `CHANGELOG.md`).
+- Each release raises the version in `src/web/hub/core/lib/boot.php` (`HUB`) and in every `?v=` on the pages, and adds an entry and a Version Map row to `src/web/hub/docs/CHANGELOG.md` (copied to the root `CHANGELOG.md`).
 - After changing any file in `src/web/tools/assets`, run `python3 scripts/tools-rev.py --write` (the build refuses to run otherwise).
 - Build with `python3 scripts/build.py`. The zip is named with dots (`site-update-1.39.0.zip`) and contains the full changelog.
 - Run the update tests and `python3 tests/repo/check_libraries.py` before a release: see `tests/README.md`. All of them must pass.

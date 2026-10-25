@@ -22,7 +22,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  *            created, updated, doneAt (unix time), history [{ d "YYYY-MM-DD", p price|null, k paid|skip, t unix time }] }
  * Everything is checked here, whatever the browser sends.
  */
-require_once __DIR__ . '/../core-data/lib/boot.php';
+require_once __DIR__ . '/../hub/core/lib/boot.php';
 
 const TASKS_MAX         = 2000;
 const TASKS_KEEP        = 40;    // earlier versions kept

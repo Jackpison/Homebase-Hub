@@ -16,24 +16,24 @@ def get(path):
         r = urllib.request.urlopen(urllib.request.Request(B + path, headers={'User-Agent': 'ApacheTest/1.0'}), timeout=20); return r.status, r.headers, r.read()
     except urllib.error.HTTPError as e: return e.code, e.headers, e.read()
 
-get('/web/core-data/api.php?action=state')   # makes site-data, so its block can be checked
+get('/web/hub/core/api.php?action=state')   # makes site-data, so its block can be checked
 pages = ['/', '/web/links/', '/web/info/', '/web/cards/', '/web/tasks/', '/web/tools/', '/web/settings/']
 bad = []
 for p in pages:
     st, h, _ = get(p)
     if st != 200 or 'speculation-rules.json' not in (h.get('Speculation-Rules') or '') or "script-src 'self'" not in (h.get('Content-Security-Policy') or ''): bad.append((p, st, h.get('Speculation-Rules'), (h.get('Content-Security-Policy') or '')[:40]))
 check('A1 every page answers 200 with its security policy and the pre-loading header', not bad, bad)
-private = ['/site-data/', '/site-data/core/', '/web/docs/CHANGELOG.md', '/web/docs/README.txt', '/web/docs/src/', '/web/core-data/config.php', '/web/core-data/manifest.json', '/web/core-data/docs/CHANGELOG.md', '/web/core-data/lib/boot.php']
+private = ['/site-data/', '/site-data/core/', '/web/hub/docs/CHANGELOG.md', '/web/hub/docs/README.txt', '/web/hub/docs/src/', '/web/hub/core/config.php', '/web/hub/core/manifest.json', '/web/core-data/docs/CHANGELOG.md', '/web/hub/core/lib/boot.php']
 open_ = [(p, get(p)[0]) for p in private if get(p)[0] not in (403, 404)]
 check('A2 private files and folders are refused', not open_, open_)
-st, h, body = get('/web/core-data/assets/speculation-rules.json')
+st, h, body = get('/web/hub/core/assets/speculation-rules.json')
 check('A3 the pre-loading rules are served as application/speculationrules+json', st == 200 and (h.get('Content-Type') or '').startswith('application/speculationrules+json') and b'prerender' in body, (st, h.get('Content-Type')))
-check('A4 other JSON files in core-data stay refused', get('/web/core-data/assets/nothing.json')[0] in (403, 404) and get('/web/core-data/manifest.json')[0] == 403)
+check('A4 other JSON files in hub/core stay refused', get('/web/hub/core/assets/nothing.json')[0] in (403, 404) and get('/web/hub/core/manifest.json')[0] == 403)
 import json
-st, h, body = get('/web/core-data/api.php?action=manifest')
+st, h, body = get('/web/hub/core/api.php?action=manifest')
 try: man = json.loads(body)
 except Exception: man = {}
-icons = [i['src'] for i in man.get('icons', [])] + ['/web/core-data/assets/brand/apple-touch-icon.png']
+icons = [i['src'] for i in man.get('icons', [])] + ['/web/hub/core/assets/brand/apple-touch-icon.png']
 shut = [(s, get(s)[0]) for s in icons if get(s)[0] != 200]
 check('A7 the app manifest is public, served as application/manifest+json, and its icons and the iPhone icon load', st == 200 and (h.get('Content-Type') or '').startswith('application/manifest+json') and man.get('start_url') == '/web/home/' and not shut, (st, h.get('Content-Type'), shut))
 with sync_playwright() as p:

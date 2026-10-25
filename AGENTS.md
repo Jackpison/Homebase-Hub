@@ -7,19 +7,19 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 | Path | What it is |
 |---|---|
 | `src/` | The site, readable. `index.php` and `web/` are what ships. Edit here, never in `build/`. |
-| `src/web/core-data/` | The shared engine: login, settings, updates, Telegram, the bar (`assets/shell.js`, `shell.css`, `shell-admin.js`). |
+| `src/web/hub/core/` | The shared engine: login, settings, updates, Telegram, the bar (`assets/shell.js`, `shell.css`, `shell-admin.js`). |
 | `src/web/<page>/` | Each page: `home`, `links`, `info`, `cards`, `tasks`, `tools`, `settings`. |
 | `tools-app/` | The source of Tools (plain ES modules, esbuild). `python3 scripts/build-tools.py --install` builds it into `src/web/tools/` (index.html, sw.js, assets/); never edit `src/web/tools/assets/` by hand. See `tools-app/README.md`. |
-| `src/web/docs/` | `README.txt` and `CHANGELOG.md` (shipped inside every zip, closed to browsers). |
+| `src/web/hub/docs/` | `README.txt` and `CHANGELOG.md` (shipped inside every zip, closed to browsers). |
 | `scripts/` | `build.py` (the zip), `build-tools.py` (Tools from `tools-app/`), `tools-rev.py` (Tools fingerprint), `make-site.py`, `site_pages.py` and `make-guide.py` (website, its data-built pages, and the PDF guide), `make-latest.py`, `release-notes.py`, `screenshots.py` (the website's screenshots from the real app). |
 | `tests/` | `unit/` PHP unit tests; `browser/` tests in a real browser (pages, bar, Settings, Tools, Import, accessibility, the website, installing on a phone); `server/` update, hostile-zip, core and Apache tests; `repo/` checks of the repository (release script, libraries); `fixtures/` files the tests open; `lib/` shared helpers (`helpers.py`, `annotate.py`, `prepend.php`, `seed_demo.php`). See `tests/README.md`. |
 | `website/` | The GitHub Pages site: `style.css`, `theme.js`, `site.js`, `content/` (Install, Guide, Security and Licence, written by hand), `data/tools.json` (the tool list), screenshots, logo. The home page, the six feature pages, Telegram, On your phone, the tool finder and the FAQ are built from `scripts/site_pages.py`. The security policy allows no inline style or script, so colours come from classes and the numbered dots from a generated `hot.css`. |
 
 ## Rules
 
-- Users' data lives in `site-data/` on their server. Never commit it, never ship it, and never write code that reads it from a browser. The build refuses to run if `src/site-data`, `src/web/core-data/config.php` or `src/web/core-data/data` exist.
+- Users' data lives in `site-data/` on their server. Never commit it, never ship it, and never write code that reads it from a browser. The build refuses to run if `src/site-data`, `src/web/hub/core/config.php` or `src/web/hub/core/data` exist.
 - Never put passwords, tokens or keys in the repo, in a test, or in a commit message.
-- Updates must stay safe: a zip is checked before anything changes, nothing installs without the website password, a snapshot is taken first, and Go Back must work. Do not weaken `src/web/core-data/lib/update.php` or `ghupdate.php` without tests that prove the same safety.
+- Updates must stay safe: a zip is checked before anything changes, nothing installs without the website password, a snapshot is taken first, and Go Back must work. Do not weaken `src/web/hub/core/lib/update.php` or `ghupdate.php` without tests that prove the same safety.
 - The site makes no request to another server unless the person turned that feature on or pressed a button for it. Keep it that way.
 - Test-only shortcuts (`GH_TEST_*`, `HUB_TEST_FAVICON`) are defined only by `tests/lib/prepend.php`. The site must never define them.
 - After changing anything in `tools-app/`, run `python3 scripts/build-tools.py --install` (it also refreshes the Tools fingerprint) and commit `src/web/tools/` with it. A new tool also needs its line in `tools-app/src/tools.json` and in `LOAD` in `tools-app/src/main.js`; the website's tool finder reads the same list.
@@ -60,7 +60,7 @@ All of them must pass. CI runs the same checks on every pull request and on ever
 
 ## Release checklist
 
-1. On a clean working tree run `python3 scripts/release.py X.Y.Z`. It raises `HUB` in `src/web/core-data/lib/boot.php` and every `?v=` of the old version in the pages, adds a `## X.Y.Z` section and a Version Map row to `src/web/docs/CHANGELOG.md`, each with a `TODO` marker, and copies the file to the root `CHANGELOG.md`.
+1. On a clean working tree run `python3 scripts/release.py X.Y.Z`. It raises `HUB` in `src/web/hub/core/lib/boot.php` and every `?v=` of the old version in the pages, adds a `## X.Y.Z` section and a Version Map row to `src/web/hub/docs/CHANGELOG.md`, each with a `TODO` marker, and copies the file to the root `CHANGELOG.md`.
 2. Replace the `TODO` markers (`###` headings and short bullet points in plain words; one line in the Version Map) and copy the file to the root `CHANGELOG.md` again. `python3 scripts/release.py --check` must pass; CI and the release workflow run it too.
 3. If the minimum PHP changes, change `HUB_MIN_PHP` in `boot.php`; the build carries it into the zip.
 4. Run every check above on the final build.

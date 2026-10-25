@@ -2,9 +2,9 @@
 // Small pieces of logic that the browser tests only reach indirectly: /add parsing, money, dates, update file names, backup encryption.
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
-require $site . '/web/core-data/lib/notify.php';
-require_once $site . '/web/core-data/lib/update.php';
-require_once $site . '/web/core-data/lib/backup.php';
+require $site . '/web/hub/core/lib/notify.php';
+require_once $site . '/web/hub/core/lib/update.php';
+require_once $site . '/web/hub/core/lib/backup.php';
 require_once HUB_WEB . '/tasks/lib.php';
 
 // /add in Telegram
@@ -61,11 +61,11 @@ t('a very old PHP always gets a warning', (hub_php_notice('7.4', $ts('2026-01-01
 t('a PHP newer than the table is fine', hub_php_notice('9.9', $ts('2026-01-01')) === null);
 
 // names inside an update zip
-$bad = ['../x.php', '/etc/passwd', 'site-data/x.php', 'web/core-data/config.php', 'web/core-data/media/logo.png', 'web/evil.exe', 'web/a/b/c/d.php', 'web\\x.php', 'web/a b.php', "web/x\0.php", '', 'index.html'];
+$bad = ['../x.php', '/etc/passwd', 'site-data/x.php', 'web/hub/core/config.php', 'web/hub/media/logo.png', 'web/evil.exe', 'web/a/b/c/d.php', 'web\\x.php', 'web/a b.php', "web/x\0.php", '', 'index.html'];
 $badOk = []; foreach ($bad as $n) if (up_name_problem($n, false) === '') $badOk[] = $n;
 t('unsafe names in an update are all refused', !$badOk, implode(', ', $badOk));
-t('normal names are accepted', up_name_problem('index.php', false) === '' && up_name_problem('web/home/index.php', false) === '' && up_name_problem('web/core-data/lib/boot.php', false) === '' && up_name_problem('web/core-data/assets/shell.js', false) === '' && up_name_problem('web/home/', true) === '');
-t('the .htaccess files are accepted, also in the pictures folder', up_name_problem('web/core-data/media/.htaccess', false) === '' && up_name_problem('web/info/.htaccess', false) === '');
+t('normal names are accepted', up_name_problem('index.php', false) === '' && up_name_problem('web/home/index.php', false) === '' && up_name_problem('web/hub/core/lib/boot.php', false) === '' && up_name_problem('web/hub/core/assets/shell.js', false) === '' && up_name_problem('web/home/', true) === '');
+t('the .htaccess files are accepted, also in the pictures folder', up_name_problem('web/hub/media/.htaccess', false) === '' && up_name_problem('web/info/.htaccess', false) === '');
 
 // encrypted backups
 if (!function_exists('openssl_encrypt')) { t('openssl is available for the backup tests', false); return; }

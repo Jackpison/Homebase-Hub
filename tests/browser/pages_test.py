@@ -21,16 +21,16 @@ def check(name, ok, extra=''):
 
 cj = http.cookiejar.CookieJar(); op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
 def call(a, b=None):
-    rq = urllib.request.Request(B + '/web/core-data/api.php?action=' + a, data=json.dumps(b).encode() if b is not None else None, headers={'User-Agent': UA, 'Content-Type': 'application/json'}, method='POST' if b is not None else 'GET')
+    rq = urllib.request.Request(B + '/web/hub/core/api.php?action=' + a, data=json.dumps(b).encode() if b is not None else None, headers={'User-Agent': UA, 'Content-Type': 'application/json'}, method='POST' if b is not None else 'GET')
     return json.loads(op.open(rq).read())
 try:
     call('state')
     code = re.search(r'([A-Z0-9]{4}(?:-[A-Z0-9]{4})+|[A-Z0-9]{8,})', open(D + '/site-data/core/SETUP-CODE.php').read().replace('<?php', '')).group(1)
     check('P1 a new site can be set up', call('setup', {'code': code, 'password': PW}).get('ok'))
     subprocess.run(['php', SEED, D], capture_output=True)
-    ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/core-data/lib/boot.php').read()).group(1)
+    ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/hub/core/lib/boot.php').read()).group(1)
     cookies = [{'name': c.name, 'value': c.value, 'url': B + '/'} for c in cj]
-    panes = re.findall(r"\['([a-z]+)', '[A-Z][^']*', ICON", open(D + '/web/docs/src/core-data/shell-admin.src.js', encoding='utf-8').read())
+    panes = re.findall(r"\['([a-z]+)', '[A-Z][^']*', ICON", open(D + '/web/hub/docs/src/hub/core/shell-admin.src.js', encoding='utf-8').read())
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(user_agent=UA, accept_downloads=True, viewport={'width': 1280, 'height': 860})
@@ -74,7 +74,7 @@ try:
         admin = pg.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())")
         diag = '' if admin else (
             [(c['name'], c['domain'], c['path'], c.get('sameSite'), c.get('secure'), c.get('expires')) for c in ctx.cookies()],
-            pg.evaluate("fetch('../core-data/api.php?action=state', {credentials: 'same-origin'}).then(r => r.json()).then(j => ({admin: j.admin}), e => String(e))"))
+            pg.evaluate("fetch('../hub/core/api.php?action=state', {credentials: 'same-origin'}).then(r => r.json()).then(j => ({admin: j.admin}), e => String(e))"))
         check('P6 the browser is logged in (the login cookie was accepted)', admin, diag)
         # P7: the same, in a context without the test's request routing (the routing hands each page to the browser with its
         # security policy added). If P7 passes where P6 fails, the difference is in the routing, not in the site.

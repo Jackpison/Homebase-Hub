@@ -17,7 +17,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMG = os.path.join(ROOT, 'website', 'img'); FONTS = os.path.join(ROOT, 'scripts', 'fonts')
-VER = re.search(r"define\('HUB',\s*'([^']+)'\)", open(os.path.join(ROOT, 'src/web/core-data/lib/boot.php'), encoding='utf-8').read()).group(1)
+VER = re.search(r"define\('HUB',\s*'([^']+)'\)", open(os.path.join(ROOT, 'src/web/hub/core/lib/boot.php'), encoding='utf-8').read()).group(1)
 PRINT = '--print' in sys.argv
 OUT = [a for a in sys.argv[1:] if not a.startswith('--')]
 OUT = OUT[0] if OUT else os.path.join(ROOT, 'build', 'Homebase-Hub-Guide' + ('-Print' if PRINT else '') + '.pdf')
@@ -124,8 +124,8 @@ story += chapter('2', 'Install', 'You need web hosting with PHP 8.3 or newer and
         'Paste the code, choose a site name and a password, and press %s. You are logged in, and the code file deletes itself.' % C('Create my site')]),
  Note('Never delete <font name="M-Bold">site-data</font>. It holds all your data, and updates never touch it. Each domain has its own site-data folder, so domains never share data.'),
  *sub('What is in the site folder'),
- table(['Folder', 'What it holds'], [['index.php', 'The start page. The only file in the root of the site folder.'], ['web/', 'Everything the site is made of: the pages, the shared engine (web/core-data) and the docs (web/docs).'],
-   ['web/core-data/media/', 'Your own files: your logo, start page photos and uploads, saved link icons. Never replaced by an update.'], ['web/docs/', 'README.txt, CHANGELOG.md and the readable source. Closed to browsers.'],
+ table(['Folder', 'What it holds'], [['index.php', 'The start page. The only file in the root of the site folder.'], ['web/', 'Everything the site is made of: the pages, the shared engine (web/hub/core) and the docs (web/hub/docs).'],
+   ['web/hub/media/', 'Your own files: your logo, start page photos and uploads, saved link icons. Never replaced by an update.'], ['web/hub/docs/', 'README.txt, CHANGELOG.md and the readable source. Closed to browsers.'],
    ['site-data/', 'Your private data, made by the site. Closed to browsers.']]))
 
 story += chapter('3', 'First steps', 'Guided Setup walks you through protecting your site, one step at a time.',
@@ -145,7 +145,7 @@ story += chapter('3', 'First steps', 'Guided Setup walks you through protecting 
 
 story += chapter('4', 'Home', 'Your start page: the first thing you see when you open your site.',
  shot('home-1', 'Home, with a photo and its credit in the top corner, next to the buttons for the next photo and for settings.'),
- P('Background photos change on their own, and the photo\'s credit is shown in the corner. Each new photo also gets a phone-sized copy, so the page loads quickly on a phone. Your own photos and uploads are kept in <font name="M-Bold">web/core-data/media/home</font>, which updates never replace.'),
+ P('Background photos change on their own, and the photo\'s credit is shown in the corner. Each new photo also gets a phone-sized copy, so the page loads quickly on a phone. Your own photos and uploads are kept in <font name="M-Bold">web/hub/media/home</font>, which updates never replace.'),
  P('The start page can be shown with the bar or without it. Without the bar, the gear button in the corner opens editing, the other pages and Settings once you are logged in.'),
  shot('home-3', 'Another photo from the start page\'s rotation.'))
 
@@ -246,7 +246,7 @@ story += chapter('11', 'Updates', 'Update from GitHub with one click and your pa
  steps(['Download the new zip on your computer.', 'In %s, upload it under %s.' % (C('Updates'), C('Update the Site')), 'Read the changes and apply with your password.']),
  *sub('What happens when you apply'),
  P('The site saves the version it has now, replaces its files one by one, removes old files, and then looks at itself. If it cannot answer, the saved version comes back by itself. %s does the same on request.' % C('Go Back')),
- table(['Never touched by an update', ''], [['site-data/', 'Your data.'], ['web/core-data/media/', 'Your logo, photos and saved icons.'], ['web/core-data/config.php', 'Site limits.'], ['Tools settings', 'Your tools layout and favourites.']]),
+ table(['Never touched by an update', ''], [['site-data/', 'Your data.'], ['web/hub/media/', 'Your logo, photos and saved icons.'], ['web/hub/core/config.php', 'Site limits.'], ['Tools settings', 'Your tools layout and favourites.']]),
  *sub('Files'),
  P('The %s tab compares your server with this version\'s file list. It shows files that do not belong, files changed by hand, and missing files. You can delete the ones that do not belong after typing your password.' % C('Files')),
  shot('s-files', 'Updates, Files.'))

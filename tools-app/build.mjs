@@ -41,7 +41,7 @@ const hsh = createHash('sha256'); for (const f of files) { hsh.update(path.relat
 const REV = hsh.digest('hex').slice(0, 8);
 const outs = Object.keys(r.metafile.outputs).map((p) => path.basename(p));
 const js = outs.find((f) => /^app-.*\.js$/.test(f)), css = outs.find((f) => /^app-.*\.css$/.test(f));
-const HUB = (fs.readFileSync(path.join(ROOT, 'src/web/core-data/lib/boot.php'), 'utf8').match(/define\('HUB', '([^']+)'\)/) || [])[1];
+const HUB = (fs.readFileSync(path.join(ROOT, 'src/web/hub/core/lib/boot.php'), 'utf8').match(/define\('HUB', '([^']+)'\)/) || [])[1];
 fs.writeFileSync(path.join(OUT, 'index.html'), `<!doctype html>
 <html lang="en" data-theme="dark">
 <head>
@@ -49,15 +49,15 @@ fs.writeFileSync(path.join(OUT, 'index.html'), `<!doctype html>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Tools</title>
   <meta name="description" content="Tools for images, photos, PDFs and everyday jobs. Everything runs in your browser.">
-  <link rel="stylesheet" href="../core-data/assets/shell.css?v=${HUB}">
-  <script src="../core-data/assets/shell.js?v=${HUB}" data-app="tools"></script>
+  <link rel="stylesheet" href="../hub/core/assets/shell.css?v=${HUB}">
+  <script src="../hub/core/assets/shell.js?v=${HUB}" data-app="tools"></script>
   <link rel="stylesheet" href="./assets/${css}?v=${REV}">
   <script type="module" src="./assets/${js}?v=${REV}"></script>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
-<link rel="manifest" href="../core-data/api.php?action=manifest">
+<link rel="manifest" href="../hub/core/api.php?action=manifest">
 <meta name="theme-color" content="#1a1a1a">
-<link rel="icon" type="image/png" href="../core-data/assets/brand/favicon-64.png">
-<link rel="apple-touch-icon" href="../core-data/assets/brand/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="../hub/core/assets/brand/favicon-64.png">
+<link rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

@@ -29,7 +29,7 @@ def fresh(tmp):
     return d
 
 
-def hub(d): return re.search(r"define\('HUB', '([^']+)'\)", open(os.path.join(d, 'src/web/core-data/lib/boot.php')).read()).group(1)
+def hub(d): return re.search(r"define\('HUB', '([^']+)'\)", open(os.path.join(d, 'src/web/hub/core/lib/boot.php')).read()).group(1)
 def p(d, *x): return os.path.join(d, *x)
 def rd(f): return open(f, encoding='utf-8').read()
 def wr(f, t): open(f, 'w', encoding='utf-8', newline='').write(t)
@@ -37,7 +37,7 @@ def wr(f, t): open(f, 'w', encoding='utf-8', newline='').write(t)
 
 def fill(d):
     """What a person does after the bump: replace the TODO markers, copy to the root."""
-    f = p(d, 'src/web/docs/CHANGELOG.md')
+    f = p(d, 'src/web/hub/docs/CHANGELOG.md')
     t = rd(f).replace('### TODO', '### Test').replace('- TODO: describe the changes in plain words.', '- A test change.').replace('TODO: one line for this version', 'A test version')
     wr(f, t); wr(p(d, 'CHANGELOG.md'), t)
 
@@ -69,7 +69,7 @@ try:
     t2 = rd(p(d, 'src/web/tools/index.html'))
     check('Tools fingerprints are untouched', re.findall(r'\?v=([0-9a-f]{8})\b', t2) == re.findall(r'\?v=([0-9a-f]{8})\b', tools_before) and len(re.findall(r'\?v=([0-9a-f]{8})\b', t2)) == 2)
     check('the jsPDF ?v=4.2.1 is untouched', rd(p(d, 'src/web/info/assets/info.js')) == jspdf_before)
-    log = rd(p(d, 'src/web/docs/CHANGELOG.md'))
+    log = rd(p(d, 'src/web/hub/docs/CHANGELOG.md'))
     check('a changelog section with a TODO marker is on top', re.search(r'^## (\S+)', log[log.index('---'):], re.M).group(1) == new and 'TODO' in log)
     check('a Version Map row is on top', re.search(r'^\| ---[^\n]*\n\| ' + re.escape(new) + r' \| TODO', log, re.M) is not None)
     check('the root CHANGELOG.md is a copy', rd(p(d, 'CHANGELOG.md')) == log)
@@ -79,7 +79,7 @@ try:
     git(d, 'add', '-A'); git(d, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '-qm', 'bumped')
 
     def broken(name, change, expect):
-        snap = {f: rd(p(d, f)) for f in ('src/web/core-data/lib/boot.php', 'src/web/links/index.html', 'src/web/docs/CHANGELOG.md', 'CHANGELOG.md', 'src/web/tools/sw.js')}
+        snap = {f: rd(p(d, f)) for f in ('src/web/hub/core/lib/boot.php', 'src/web/links/index.html', 'src/web/hub/docs/CHANGELOG.md', 'CHANGELOG.md', 'src/web/tools/sw.js')}
         change()
         r = run(d, '--check')
         check('the check fails: ' + name, r.returncode != 0 and expect in r.stdout, r.stdout)
@@ -89,12 +89,12 @@ try:
     def sub(f, a, b):
         t = rd(p(d, f)); assert a in t, (f, a); wr(p(d, f), t.replace(a, b, 1))
 
-    broken('HUB differs', lambda: sub('src/web/core-data/lib/boot.php', "define('HUB', '%s')" % new, "define('HUB', '%s.1')" % new[:-2]), 'HUB')
+    broken('HUB differs', lambda: sub('src/web/hub/core/lib/boot.php', "define('HUB', '%s')" % new, "define('HUB', '%s.1')" % new[:-2]), 'HUB')
     broken('a page loads an old ?v=', lambda: sub('src/web/links/index.html', '?v=' + new, '?v=' + old), 'links/index.html')
-    broken('the newest heading differs', lambda: sub('src/web/docs/CHANGELOG.md', '## ' + new + '\n', '## 9.9.9\n'), 'heading')
-    broken('the Version Map row differs', lambda: sub('src/web/docs/CHANGELOG.md', '| ' + new + ' | A test version', '| 9.9.9 | A test version'), 'Version Map')
+    broken('the newest heading differs', lambda: sub('src/web/hub/docs/CHANGELOG.md', '## ' + new + '\n', '## 9.9.9\n'), 'heading')
+    broken('the Version Map row differs', lambda: sub('src/web/hub/docs/CHANGELOG.md', '| ' + new + ' | A test version', '| 9.9.9 | A test version'), 'Version Map')
     broken('the root CHANGELOG.md differs', lambda: wr(p(d, 'CHANGELOG.md'), rd(p(d, 'CHANGELOG.md')) + '\nextra\n'), 'root CHANGELOG')
-    broken('a TODO is back in the section', lambda: sub('src/web/docs/CHANGELOG.md', '- A test change.', '- A test change. TODO'), 'TODO')
+    broken('a TODO is back in the section', lambda: sub('src/web/hub/docs/CHANGELOG.md', '- A test change.', '- A test change. TODO'), 'TODO')
     broken('src/site-data exists', lambda: os.makedirs(p(d, 'src/site-data')), 'site-data')
     broken('the Tools fingerprint is stale', lambda: sub('src/web/tools/sw.js', "const TOOLS_REV = '", "const TOOLS_REV = '0"), 'fingerprint')
     r = run(d, '--check'); check('after every repair the check passes again', r.returncode == 0, r.stdout)

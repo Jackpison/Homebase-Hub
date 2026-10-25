@@ -23,7 +23,7 @@ header('Content-Type: application/json; charset=utf-8');
 // Compress responses when the browser supports it (smaller downloads, faster loads).
 if (extension_loaded('zlib') && !ini_get('zlib.output_compression')) { @ob_start('ob_gzhandler'); }
 
-require __DIR__ . '/../core-data/lib/boot.php';   // Hub: one login, private data folder
+require __DIR__ . '/../hub/core/lib/boot.php';   // Hub: one login, private data folder
 hub_headers();
 hub_same_origin();
 

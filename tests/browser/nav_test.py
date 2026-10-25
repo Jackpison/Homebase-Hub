@@ -29,7 +29,7 @@ cj = http.cookiejar.CookieJar(); op = urllib.request.build_opener(urllib.request
 def call(a, b=None):
     h = {'User-Agent': UA, 'Content-Type': 'application/json'}
     if CSRF[0]: h['X-Hub-CSRF'] = CSRF[0]
-    rq = urllib.request.Request(B + '/web/core-data/api.php?action=' + a, data=json.dumps(b).encode() if b is not None else None, headers=h, method='POST' if b is not None else 'GET')
+    rq = urllib.request.Request(B + '/web/hub/core/api.php?action=' + a, data=json.dumps(b).encode() if b is not None else None, headers=h, method='POST' if b is not None else 'GET')
     j = json.loads(op.open(rq).read())
     if isinstance(j, dict) and j.get('csrf'): CSRF[0] = j['csrf']
     return j
@@ -70,7 +70,7 @@ try:
     st0 = call('state')
     check('N0b a new site starts with the Default look (accent #ffd45c, softer black)', st0.get('accent') == '#ffd45c' and (st0.get('colors') or {}).get('dark', {}).get('bg') == '#101010', (st0.get('accent'), (st0.get('colors') or {}).get('dark')))
     subprocess.run(['php', SEED, D], capture_output=True)
-    ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/core-data/lib/boot.php').read()).group(1)
+    ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/hub/core/lib/boot.php').read()).group(1)
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         def block(r):

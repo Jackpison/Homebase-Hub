@@ -33,13 +33,13 @@ def scan(pg):
 try:
     cj = http.cookiejar.CookieJar(); op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
     def call(a, b=None):
-        rq = urllib.request.Request(B + '/web/core-data/api.php?action=' + a, data=json.dumps(b).encode() if b is not None else None, headers={'User-Agent': UA, 'Content-Type': 'application/json'}, method='POST' if b is not None else 'GET')
+        rq = urllib.request.Request(B + '/web/hub/core/api.php?action=' + a, data=json.dumps(b).encode() if b is not None else None, headers={'User-Agent': UA, 'Content-Type': 'application/json'}, method='POST' if b is not None else 'GET')
         return json.loads(op.open(rq).read())
     call('state')
     code = re.search(r'([A-Z0-9]{4}(?:-[A-Z0-9]{4})+|[A-Z0-9]{8,})', open(D + '/site-data/core/SETUP-CODE.php').read().replace('<?php', '')).group(1)
     call('setup', {'code': code, 'password': 'correct horse battery staple'})
     subprocess.run(['php', SEED, D], capture_output=True)
-    ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/core-data/lib/boot.php').read()).group(1)
+    ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/hub/core/lib/boot.php').read()).group(1)
     pages = [('Home', '/'), ('Links', '/web/links/'), ('Info', '/web/info/'), ('Cards', '/web/cards/'), ('Tasks', '/web/tasks/'), ('Tools', '/web/tools/'),
              ('Tools: a tool', '/web/tools/#/tool/image-resize'), ('Settings', '/web/settings/#overview'), ('Settings: General (Install on Your Phone)', '/web/settings/#general'), ('Settings: Security', '/web/settings/#security'), ('Settings: Updates', '/web/settings/#updates')]
     with sync_playwright() as p:

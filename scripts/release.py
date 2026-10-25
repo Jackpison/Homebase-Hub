@@ -3,7 +3,7 @@
 
   python3 scripts/release.py X.Y.Z     raise the version to X.Y.Z (must be higher than HUB; the working tree must be clean):
                                      HUB in boot.php, every ?v= of the old version in src (not Tools' own fingerprints,
-                                     not the changelog, not web/docs/src), a "## X.Y.Z" changelog section and a Version Map
+                                     not the changelog, not web/hub/docs/src), a "## X.Y.Z" changelog section and a Version Map
                                      row, both with a TODO marker for you to fill in, and the copy in the root CHANGELOG.md.
   python3 scripts/release.py --check   fail if HUB, the ?v= on every page, the newest changelog heading, the top Version Map
                                      row and the root CHANGELOG.md disagree, if a TODO marker is left, or if src/site-data exists.
@@ -14,10 +14,10 @@ import os, re, subprocess, sys
 
 ROOT = os.environ.get('HUB_REPO_ROOT') or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
-BOOT = os.path.join(SRC, 'web', 'core-data', 'lib', 'boot.php')
-LOG = os.path.join(SRC, 'web', 'docs', 'CHANGELOG.md')
+BOOT = os.path.join(SRC, 'web', 'hub', 'core', 'lib', 'boot.php')
+LOG = os.path.join(SRC, 'web', 'hub', 'docs', 'CHANGELOG.md')
 ROOT_LOG = os.path.join(ROOT, 'CHANGELOG.md')
-SKIP_DIRS = [os.path.join(SRC, 'web', 'tools', 'assets'), os.path.join(SRC, 'web', 'docs', 'src')]
+SKIP_DIRS = [os.path.join(SRC, 'web', 'tools', 'assets'), os.path.join(SRC, 'web', 'hub', 'docs', 'src')]
 SKIP_FILES = [LOG]
 TEXT = ('.html', '.php', '.js', '.css', '.json', '.txt', '.md', '.htaccess', '.webmanifest', '.svg')
 SEMVER = re.compile(r'^\d+\.\d+\.\d+$')
@@ -92,7 +92,7 @@ def check():
     if MARK in body or MARK in mtext:
         errs.append('a %s marker is left in the %s changelog section or its Version Map row' % (MARK, nv))
     if not os.path.isfile(ROOT_LOG) or read(ROOT_LOG) != t:
-        errs.append('root CHANGELOG.md is not a copy of src/web/docs/CHANGELOG.md')
+        errs.append('root CHANGELOG.md is not a copy of src/web/hub/docs/CHANGELOG.md')
     r = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'tools-rev.py'), '--check'], cwd=ROOT, capture_output=True, text=True)
     if r.returncode != 0: errs.append('Tools fingerprint is stale: run python3 scripts/tools-rev.py --write')
     if errs:

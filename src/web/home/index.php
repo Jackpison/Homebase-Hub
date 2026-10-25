@@ -13,7 +13,7 @@ header('Cache-Control: no-cache, must-revalidate');
 $nonce = rtrim(strtr(base64_encode(random_bytes(16)), '+/', '-_'), '=');   // lets our own two data scripts run; any other inline script is blocked
 // Same protection as the other pages: only this site's scripts, no plugins, no framing from elsewhere, no sending data out.
 // Images may come from https (link icons are loaded from the sites and favicon services); backgrounds are local.
-header('Speculation-Rules: "' . (defined('HOME_BASE') ? '' : '../../') . 'web/core-data/assets/speculation-rules.json"');   // pre-load a page when you hover over its link in the bar
+header('Speculation-Rules: "' . (defined('HOME_BASE') ? '' : '../../') . 'web/hub/core/assets/speculation-rules.json"');   // pre-load a page when you hover over its link in the bar
 header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$nonce'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'");
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
@@ -53,7 +53,7 @@ $v = fn($f) => $f . '?v=' . (is_file(__DIR__ . '/' . $f) ? filemtime(__DIR__ . '
 // The tab icon is the site logo from the main Settings.
 $siteLogo = hub_settings()['logo'] ?? '';
 $logoOk = $siteLogo !== '' && is_file(HUB_PUBLIC . '/' . $siteLogo);
-$brand = 'web/core-data/assets/brand/favicon-64.png';   // Homebase Hub's own logo, when no site logo is set
+$brand = 'web/hub/core/assets/brand/favicon-64.png';   // Homebase Hub's own logo, when no site logo is set
 $iconPath = '../../' . ($logoOk ? $siteLogo : $brand);   // one logo for the whole site (no separate start page icon)
 $iconFile = HUB_PUBLIC . '/' . ($logoOk ? $siteLogo : $brand);
 $iconType = ['ico' => 'image/x-icon', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp'][pathinfo($iconPath, PATHINFO_EXTENSION)] ?? 'image/svg+xml';
@@ -67,12 +67,12 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../core-data/assets/shell.css?v=1.49.0">
-<script src="../core-data/assets/shell.js?v=1.49.0" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.49.0">
+<script src="../hub/core/assets/shell.js?v=1.49.0" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
-<?php if ($iconPath): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../core-data/assets/brand/apple-touch-icon.png"><?php endif; ?>
+<?php if ($iconPath): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png"><?php endif; ?>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
-<link rel="manifest" href="../core-data/api.php?action=manifest">
+<link rel="manifest" href="../hub/core/api.php?action=manifest">
 <meta name="theme-color" content="#1a1a1a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">

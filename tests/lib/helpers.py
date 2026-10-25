@@ -20,8 +20,18 @@ PREPEND = os.path.join(HERE, 'prepend.php')
 _procs = []
 
 
+def zip_core(p):
+    """Where a release keeps its engine: web/hub/core from 1.50, web/core-data before."""
+    return 'web/hub/core' if 'web/hub/core/manifest.json' in zipfile.ZipFile(p).namelist() else 'web/core-data'
+
+
+def dir_core(d):
+    """The same for an installed site."""
+    return 'web/hub/core' if os.path.isfile(os.path.join(d, 'web/hub/core/manifest.json')) else 'web/core-data'
+
+
 def zip_version(p):
-    return re.search(r"define\('HUB', '([^']+)'\)", zipfile.ZipFile(p).read('web/core-data/lib/boot.php').decode()).group(1)
+    return re.search(r"define\('HUB', '([^']+)'\)", zipfile.ZipFile(p).read(zip_core(p) + '/lib/boot.php').decode()).group(1)
 
 
 def sha(p): return hashlib.sha256(open(p, 'rb').read()).hexdigest()
@@ -30,16 +40,17 @@ def sha(p): return hashlib.sha256(open(p, 'rb').read()).hexdigest()
 def mutate_zip(src, dst, version=None, minphp=None):
     """A copy of a release zip with another version and/or minPhp, its file list kept consistent."""
     zin = zipfile.ZipFile(src); items = {i.filename: zin.read(i.filename) for i in zin.infolist()}
-    man = json.loads(items['web/core-data/manifest.json'])
+    core = zip_core(src)
+    man = json.loads(items[core + '/manifest.json'])
     def put(n, data): items[n] = data; man['files'][n] = hashlib.sha256(data).hexdigest()
     if version:
-        put('web/core-data/lib/boot.php', re.sub(r"define\('HUB', '[^']+'\)", "define('HUB', '%s')" % version, items['web/core-data/lib/boot.php'].decode()).encode())
+        put(core + '/lib/boot.php', re.sub(r"define\('HUB', '[^']+'\)", "define('HUB', '%s')" % version, items[core + '/lib/boot.php'].decode()).encode())
         man['version'] = version
-        for ch in ('web/docs/CHANGELOG.md',):
+        for ch in ('web/hub/docs/CHANGELOG.md', 'web/docs/CHANGELOG.md'):
             if ch in items:
                 x = items[ch].decode(); i = x.index('\n## '); put(ch, (x[:i] + '\n## %s\n\n### Test build\n\nTest build.\n\n---\n' % version + x[i:]).encode())
     if minphp: man['minPhp'] = minphp
-    items['web/core-data/manifest.json'] = json.dumps(man).encode()
+    items[core + '/manifest.json'] = json.dumps(man).encode()
     with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as z:
         for n, d in items.items(): z.writestr(n, d)
     return dst
@@ -115,7 +126,8 @@ class Site(Client):
         _procs.append(self.p)
         self.host = 'http://127.0.0.1:%d' % port
         base = self.host + ('/' + sub if sub else '')
-        super().__init__(base, base + '/web/core-data/api.php')
+        self.site_base = base
+        super().__init__(base, None)
         for _ in range(50):
             try: urllib.request.urlopen(self.host + '/', timeout=2); break
             except urllib.error.HTTPError: break
@@ -130,11 +142,19 @@ class Site(Client):
         self.csrf = r.get('csrf') or self.get('state').get('csrf', ''); assert self.csrf, r
         return r
 
+    # the engine's address follows the layout the site has now (an update or Go Back can change it)
+    @property
+    def core(self): return dir_core(self.dir)
+    @property
+    def api(self): return self.site_base + '/' + self.core + '/api.php'
+    @api.setter
+    def api(self, v): pass
+
     def client(self, ua='other-browser/2.0'): return Client(self.base, self.api, ua)
 
     def php(self, code):
         """Runs PHP inside this site (boot.php loaded) and returns stdout."""
-        prog = "chdir(%r); require %r; %s" % (self.dir, self.dir + '/web/core-data/lib/boot.php', code)
+        prog = "chdir(%r); require %r; %s" % (self.dir, self.dir + '/' + self.core + '/lib/boot.php', code)
         return subprocess.run(['php', '-r', prog], capture_output=True, text=True).stdout
 
     def chunks(self, zp, name, raw=None):
@@ -145,7 +165,7 @@ class Site(Client):
             if not r.get('ok'): return r
         return self.post('update_check', {'name': name})
 
-    def version(self): return open(self.dir + '/web/core-data/lib/boot.php').read().split("define('HUB', '")[1].split("'")[0]
+    def version(self): return open(self.dir + '/' + self.core + '/lib/boot.php').read().split("define('HUB', '")[1].split("'")[0]
     def clean(self):
         sc = self.get('files_scan'); return (len(sc.get('changed', [])), len(sc.get('missing', [])), len(sc.get('extra', [])), sc.get('matched'))
     def incoming(self): return [os.path.basename(f) for f in glob.glob(self.dir + '/site-data/updates/incoming*')]

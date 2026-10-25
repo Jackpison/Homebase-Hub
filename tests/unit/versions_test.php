@@ -2,7 +2,7 @@
 // Earlier versions: a new copy never overwrites one made in the same second (hub_version_path, used by version_restore and Links).
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
-require $site . '/web/core-data/lib/boot.php';
+require $site . '/web/hub/core/lib/boot.php';
 
 $d = sys_get_temp_dir() . '/hub-ver-' . bin2hex(random_bytes(4)); mkdir($d);
 $now = strtotime('2026-10-24 09:07:02 UTC');
@@ -20,5 +20,5 @@ t('nothing was overwritten', file_get_contents($p1) === 'first' && file_get_cont
 array_map('unlink', glob("$d/*")); rmdir($d);
 
 // The bug this fixes: restoring a version made in the same second used to overwrite that version first, then "restore" the current data.
-$api = file_get_contents($site . '/web/core-data/api.php');
+$api = file_get_contents($site . '/web/hub/core/api.php');
 t('version_restore keeps the current data under a free name', strpos($api, "hub_version_path(\$dir, \$app === 'links' ? 'bookmarks-' : '')") !== false && strpos($api, "'bookmarks-' . date('Ymd-His') . '.php' : date('Ymd-His')") === false);

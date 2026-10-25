@@ -2,7 +2,7 @@
 // Links keeps an earlier version before a save every 10 minutes, and always when the save asks for it (Import Bookmarks).
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
-require $site . '/web/core-data/lib/boot.php';
+require $site . '/web/hub/core/lib/boot.php';
 $now = 2000000000;
 t('no version yet: one is kept', hub_links_keep_due(null, false, 600, $now));
 t('the last one is 5 minutes old: none for an ordinary save', !hub_links_keep_due($now - 300, false, 600, $now));

@@ -31,8 +31,8 @@ const PER_COL = 5;
 /* ======================================================================
    ICONS & BOARD
    ====================================================================== */
-/* Saved pictures are stored as "photos/…", "uploads/…" and "icons/…" and live in web/core-data/media/home (before 1.29.3: next to this page). Only the address shown changes. */
-const media = u => /^(photos|uploads|icons)\//.test(u || '') ? '../core-data/media/home/' + u : u;
+/* Saved pictures are stored as "photos/…", "uploads/…" and "icons/…" and live in web/hub/media/home (before 1.29.3: next to this page). Only the address shown changes. */
+const media = u => /^(photos|uploads|icons)\//.test(u || '') ? '../hub/media/home/' + u : u;
 function hostOf(u){ try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } }
 
 function iconHTML(l){

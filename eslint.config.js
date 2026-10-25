@@ -25,7 +25,7 @@ module.exports = [
     languageOptions: { globals: ownHelpers } },
   // On the Info page only, shell.js opens a tab from a search link with Info's own TABS, showTab() and setHighlight()
   // (top-level names in info.js). It checks with typeof that they exist before using them.
-  { files: ['src/web/core-data/assets/shell.js'],
+  { files: ['src/web/hub/core/assets/shell.js'],
     languageOptions: { globals: { TABS: 'readonly', showTab: 'readonly', setHighlight: 'readonly' } } },
   // The Tools page's source (tools-app/): ES modules bundled by esbuild.
   { files: ['tools-app/src/**/*.js', 'tools-app/build.mjs'], languageOptions: { ecmaVersion: 2022, sourceType: 'module', globals: { ...globals.browser, ...globals.node } }, rules },
