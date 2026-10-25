@@ -149,6 +149,14 @@ try:
         ph = pp.evaluate("({sw: document.documentElement.scrollWidth - innerWidth, head: getComputedStyle(document.querySelector('#list .row.head')).display, tall: Math.max(...[...document.querySelectorAll('#list .row.item')].map(r => r.getBoundingClientRect().height))})")
         check('P15 Cards on a phone: nothing scrolls sideways, no column headings, and each card takes two short lines', ph['sw'] <= 1 and ph['head'] == 'none' and ph['tall'] < 80, ph)
         pctx.close()
+        # P17: Home's Welcome Text shows once per visit, in the middle, and is gone after about 4.5 seconds
+        wctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); wctx.add_cookies(cookies); wctx.route('**/*', handle)
+        wp = wctx.new_page(); wp.goto(B + '/', wait_until='domcontentloaded'); wp.wait_for_timeout(600)
+        w1 = wp.evaluate("(() => { const e = document.querySelector('#welcome'); return e ? [e.textContent, e.classList.contains('in'), getComputedStyle(document.querySelector('.stage')).opacity] : null })()")
+        wp.wait_for_timeout(4600); gone = wp.evaluate("!document.querySelector('#welcome')")
+        wp.reload(wait_until='domcontentloaded'); wp.wait_for_timeout(600); again = wp.evaluate("!!document.querySelector('#welcome.in')")
+        check('P17 Home shows "Welcome Home" in the middle with the links hidden, it fades away, and not again on a reload', w1 and w1[0] == 'Welcome Home' and w1[1] and float(w1[2]) < 0.2 and gone and not again, (w1, gone, again))
+        wctx.close()
         b.close()
 finally:
     php.terminate(); shutil.rmtree(D, ignore_errors=True)

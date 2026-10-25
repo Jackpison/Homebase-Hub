@@ -24,12 +24,11 @@ if (hub_https()) header('Strict-Transport-Security: max-age=31536000');
 $site = public_payload();
 
 // Choose the first background on the server so the browser can start loading it immediately.
-$last = (string) ($_COOKIE['hl_last'] ?? '');
-$pickFrom = function (array $list) use ($last) {
-    $fresh = array_values(array_filter($list, fn($i) => $i['url'] !== $last));
-    $list = $fresh ?: $list;
-    return $list ? $list[array_rand($list)] : null;
-};
+// Each browser remembers the backgrounds it showed last (hl_seen), so one comes back only when the others have had their turn.
+$seen = bg_seen_list((string) ($_COOKIE['hl_seen'] ?? ''));
+$last = (string) ($_COOKIE['hl_last'] ?? '');   // the one cookie of 1.48 and earlier
+if ($last !== '') $seen[] = bg_tag($last);
+$pickFrom = fn(array $list) => bg_pick_fresh($list, $seen);
 $rand = fn() => mt_rand() / mt_getrandmax();
 $all    = $site['bg']['photos'];
 $videos = array_values(array_filter($all, fn($i) => $i['type'] === 'video'));
@@ -89,6 +88,7 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 
 <div id="bg" aria-hidden="true"></div>
 <div id="scrim"></div>
+<p id="welcome" aria-hidden="true" hidden></p>
 
 <!-- Edit-mode toolbar -->
 <div class="toolbar" id="toolbar" hidden>
@@ -177,6 +177,8 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
         <div class="group">
           <label class="g-row stack"><span class="g-label">Site Title<small>Shown in the browser tab. The logo comes from the main Settings.</small></span>
             <input type="text" id="sTitle" maxlength="80"></label>
+          <label class="g-row stack"><span class="g-label">Welcome Text<small>Fades in the middle of the screen when Home opens, then slowly fades away. Leave it empty for none.</small></span>
+            <input type="text" id="sWelcome" maxlength="80" placeholder="Welcome Home"></label>
         </div>
       </section>
       <section>

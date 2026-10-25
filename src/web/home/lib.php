@@ -50,6 +50,8 @@ const API_KEYS = [
     'pixabay'  => ['name' => 'Pixabay',  'url' => 'https://pixabay.com/api/docs/',          'help' => 'Log in; your key is shown on that page. Used for photos and videos.'],
 ];
 const ROTATE_CHOICES = [0, 1, 5, 15, 30];
+const BG_REMEMBER = 30;   // each browser remembers this many backgrounds it showed last, and shows them again only when nothing else is left
+const WELCOME_DEFAULT = 'Welcome Home';
 
 /* ================= storage ================= */
 
@@ -104,6 +106,7 @@ function default_site(): array
             'custom'       => [],
         ],
         'panel' => ['opacity' => 0.40, 'blur' => 22],
+        'welcome' => WELCOME_DEFAULT,
     ];
 }
 function load_site(): array
@@ -211,6 +214,8 @@ function clean_site(array $in): array
             'opacity' => max(0, min(1, (float) ($pn['opacity'] ?? $def['panel']['opacity']))),
             'blur'    => max(0, min(40, (int) ($pn['blur'] ?? $def['panel']['blur']))),
         ],
+        // the words that fade in the middle when Home opens; empty = none (a site saved before 1.49 gets the default)
+        'welcome' => array_key_exists('welcome', $in) ? str_clip($in['welcome'], 80) : WELCOME_DEFAULT,
     ];
 }
 
@@ -321,6 +326,7 @@ function public_payload(): array
         'icon'    => '',   // no separate start page icon: the site logo is used
         'columns' => $s['columns'],
         'panel'   => $s['panel'],
+        'welcome' => $s['welcome'] ?? WELCOME_DEFAULT,
         'bg'      => [
             'uploadChance' => $s['bg']['uploadChance'],
             'videoChance'  => $s['bg']['videoChance'],
@@ -333,6 +339,32 @@ function public_payload(): array
         'uploads'     => array_map(fn($u) => ['url' => $u['url'], 'type' => $u['type'], 'credit' => 'Your upload', 'own' => true], list_uploads()),
         'hasPassword' => hub_auth() !== null,
     ];
+}
+
+/* ================= which background next ================= */
+
+/** A short tag for a background's address (FNV-1a, 32 bits, hex). app.js has the same one (bgTag), so both remember the same pictures. */
+function bg_tag(string $url): string
+{
+    $h = 0x811c9dc5;
+    foreach (unpack('C*', $url) ?: [] as $b) { $h ^= $b; $h = ($h * 0x01000193) & 0xFFFFFFFF; }
+    return dechex($h);
+}
+/** The tags in the hl_seen cookie (oldest first, newest last), at most BG_REMEMBER. */
+function bg_seen_list(string $cookie): array
+{
+    $t = array_values(array_filter(explode('.', $cookie), fn($x) => (bool) preg_match('/^[0-9a-f]{1,8}$/', $x)));
+    return array_slice($t, -BG_REMEMBER);
+}
+/** A background from $list this browser has not seen lately; when it has seen them all, the one it saw longest ago. */
+function bg_pick_fresh(array $list, array $seen): ?array
+{
+    if (!$list) return null;
+    $pos = array_flip($seen);
+    $fresh = array_values(array_filter($list, fn($i) => !isset($pos[bg_tag((string) $i['url'])])));
+    if ($fresh) return $fresh[array_rand($fresh)];
+    usort($list, fn($a, $b) => $pos[bg_tag((string) $a['url'])] <=> $pos[bg_tag((string) $b['url'])]);
+    return $list[0];
 }
 
 /* ================= files ================= */

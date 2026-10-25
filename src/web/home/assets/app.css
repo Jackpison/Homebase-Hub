@@ -264,7 +264,17 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   .icon-edit{flex-direction:column}
 }
 
+/* Welcome Text: fades in, then fades away over 3 s while the links fade in */
+#welcome{position:fixed;inset:0;z-index:4;display:grid;place-items:center;margin:0;padding:0 24px;text-align:center;pointer-events:none;
+  color:#fff;font-size:clamp(34px,7vw,88px);font-weight:700;line-height:1.1;letter-spacing:-.02em;text-wrap:balance;text-shadow:0 4px 30px rgba(0,0,0,.6);
+  opacity:0;transform:scale(.97);transition:opacity .8s ease,transform 4.4s ease}
+#welcome[hidden]{display:none}
+#welcome.in{opacity:1;transform:scale(1)}
+#welcome.out{opacity:0;transition:opacity 3s ease,transform 4.4s ease}
+.stage{transition:opacity 1.6s ease}
+html.hl-welcome .stage{opacity:0}
 @media (prefers-reduced-motion:reduce){
+  #welcome,#welcome.out{transform:none;transition:opacity 1s linear}
   #bg > .kb{animation:none}
   .sheet[open],.toolbar{animation:none}
 }

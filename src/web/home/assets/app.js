@@ -177,10 +177,17 @@ const BG = {
     remember(item.url);
   },
 
-  /** Pick a random item: uploads by chance, then videos by chance, otherwise a photo (source first, then photo). */
+  /** Pick a random item: uploads by chance, then videos by chance, otherwise a photo (source first, then photo).
+      Backgrounds this browser showed lately are skipped; when all of a kind were shown, the one shown longest ago comes back. */
   pick(exclude = []){
-    const avoid = new Set([lastBg(), ...exclude]);
-    const fresh = list => { const f = list.filter(i => !avoid.has(i.url)); return f.length ? f : list; };
+    const seen = seenTags(), last = lastBg(); if (last) seen.push(bgTag(last));
+    const fresh = list => {
+      const pool = list.filter(i => !exclude.includes(i.url)); const l = pool.length ? pool : list;
+      const f = l.filter(i => !seen.includes(bgTag(i.url)));
+      if (f.length) return f;
+      const rank = i => seen.lastIndexOf(bgTag(i.url)), oldest = Math.min(...l.map(rank));
+      return l.filter(i => rank(i) === oldest);
+    };
     const saveData = navigator.connection?.saveData;
     const all = PUB.bg.photos || [];
     const videos = saveData ? [] : all.filter(i => i.type === 'video');
@@ -276,7 +283,15 @@ const BG = {
   },
 };
 function motionOn(){ return (editing && ADMIN ? ADMIN.bg.motion : PUB.bg.motion) && !REDUCED; }
-function remember(url){ document.cookie = 'hl_last=' + encodeURIComponent(url) + ';path=/;max-age=2592000;samesite=lax'; }
+const BG_REMEMBER = 30;   // the same as BG_REMEMBER in lib.php
+/** A short tag for a background's address (FNV-1a, 32 bits, hex); bg_tag() in lib.php gives the same. */
+function bgTag(url){ let h = 0x811c9dc5; for (const b of new TextEncoder().encode(url)) { h ^= b; h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16); }
+function seenTags(){ const m = document.cookie.match(/(?:^|; )hl_seen=([^;]*)/); return m ? m[1].split('.').filter(t => /^[0-9a-f]{1,8}$/.test(t)).slice(-BG_REMEMBER) : []; }
+function remember(url){
+  const t = bgTag(url), s = seenTags().filter(x => x !== t); s.push(t);
+  document.cookie = 'hl_seen=' + s.slice(-BG_REMEMBER).join('.') + ';path=/;max-age=2592000;samesite=lax';
+  document.cookie = 'hl_last=' + encodeURIComponent(url) + ';path=/;max-age=2592000;samesite=lax';
+}
 function lastBg(){ const m = document.cookie.match(/(?:^|; )hl_last=([^;]*)/); return m ? decodeURIComponent(m[1]) : ''; }
 
 /* ======================================================================
@@ -639,6 +654,7 @@ function openSheetFor(id){
 function openSettings(){
   settingsDraft = { title:ADMIN.title, icon:ADMIN.icon, panel:{ ...ADMIN.panel } };
   $('#sTitle').value = settingsDraft.title;
+  $('#sWelcome').value = ADMIN.welcome ?? 'Welcome Home';
   $('#pOpacity').value = Math.round(settingsDraft.panel.opacity * 100); $('#pOpVal').textContent = $('#pOpacity').value + '%';
   $('#pBlur').value = settingsDraft.panel.blur; $('#pBlurVal').textContent = settingsDraft.panel.blur + 'px';
   openSheet('settingsSheet');
@@ -647,8 +663,9 @@ $('#pOpacity').addEventListener('input', e => { settingsDraft.panel.opacity = e.
 $('#pBlur').addEventListener('input', e => { settingsDraft.panel.blur = +e.target.value; $('#pBlurVal').textContent = e.target.value + 'px'; applyPanel(settingsDraft.panel); });
 $('#settingsSheet').addEventListener('close', () => { if (ADMIN) applyPanel(ADMIN.panel); });
 $('#saveSettings').addEventListener('click', e => withBusy(e.currentTarget, async () => {
-  const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel };
+  const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel, welcome:ADMIN.welcome };
   ADMIN.title = $('#sTitle').value.trim() || 'Home';
+  ADMIN.welcome = $('#sWelcome').value.trim();
   ADMIN.icon = '';   // no separate start page icon any more: the site logo is used
   ADMIN.panel = settingsDraft.panel;
   try {
@@ -942,9 +959,26 @@ $('#bgFile').addEventListener('change', e => { handleFiles([...e.target.files]);
 drop.addEventListener('drop', e => handleFiles([...e.dataTransfer.files]));
 
 /* ======================================================================
+   WELCOME TEXT: once per visit, in the middle; the links fade in as it slowly fades away (Settings > Page > Welcome Text)
+   ====================================================================== */
+function welcome(){
+  const el = $('#welcome'), text = String(PUB.welcome ?? '').trim();
+  if (!el || !text) return;
+  try { if (sessionStorage.getItem('hl-welcomed')) return; sessionStorage.setItem('hl-welcomed', '1'); } catch (x) {}
+  el.textContent = text; el.hidden = false;
+  const st = $('.stage'); if (st) st.style.transition = 'none';   // hide the links at once, then let them fade in
+  document.documentElement.classList.add('hl-welcome');
+  if (st) { void st.offsetWidth; st.style.transition = ''; }
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+  setTimeout(() => { el.classList.add('out'); document.documentElement.classList.remove('hl-welcome'); }, 1200);
+  setTimeout(() => el.remove(), 4400);   // 1.2 s on screen, then 3 s to fade away
+}
+
+/* ======================================================================
    START
    ====================================================================== */
 renderBoard();
+welcome();
 // ?bg=picsum | bing | wikimedia | wallhaven | artic | unsplash | pixabay | pixabay_video | upload  forces a source (handy for testing)
 BG.start();
 $('#nextBg').addEventListener('click', () => BG.next());
