@@ -11,7 +11,7 @@
 import os, sys, glob, re, json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, SEED
-from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch
+from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -51,7 +51,7 @@ try:
         view = {k: v for k, v in s.post('notify_save', {}).items() if not k.startswith('_')}   # what the real answer carries: the whole Telegram state
         body = json.dumps({**view, 'ok': True, 'note': 'Backup sent. Check Telegram.', 'backupLast': 1893456000})
         pg.route('**/api.php?action=notify_backup*', lambda route: route.fulfill(status=200, content_type='application/json', body=body))
-        open_backups(); pg.click('#nt-bknow'); pg.wait_for_timeout(600)
+        open_backups(); pg.click('#nt-bknow'); until(lambda: 240000 in (pg.evaluate('window.__waits') or []), 5000)
         waits = pg.evaluate('window.__waits')
         check('S5 Send Backup Now waits up to 4 minutes for the site (the usual 30 seconds is too short for a big backup)', 240000 in waits, waits)
         check('S6 ...and when it is done the button is back to "Send Backup Now" and ready', pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return !!b && !b.disabled && b.textContent === 'Send Backup Now'; })()"))
@@ -61,12 +61,18 @@ try:
         state = pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return [!!b, b && !b.disabled, b && b.textContent, (document.querySelector('#ix-pc .ix-err') || {}).textContent.includes('look there before you try again')]; })()")
         check('S7 with no answer, the button is free again, and a message (and the Status tab) say the backup may still arrive in Telegram', state == [True, True, 'Send Backup Now', True], state)
         # Security > Overview: each card keeps its icon inside the card (the phone sheet's tiles once shared the class name and squashed them)
-        pg.goto(s.base + '/web/settings/#security'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-tile').length >= 6", 15000); pg.wait_for_timeout(300)
+        pg.goto(s.base + '/web/settings/#security'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-tile').length >= 6", 15000)
+        until(lambda: pg.evaluate("""[...document.querySelectorAll('#ix-pc .ix-tile')].filter(t => t.getBoundingClientRect().width > 0).every(t => {
+            const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
+            return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 90; })"""), 3000)   # the cards settle (fonts, icons); the check below then names any that do not
         bad = pg.evaluate("""[...document.querySelectorAll('#ix-pc .ix-tile')].filter(t => t.getBoundingClientRect().width > 0).map(t => {
             const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
             return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 90 ? '' : t.textContent.slice(0, 30); }).filter(Boolean)""")
         check('S19 Security > Overview: every card holds its icon and text (nothing spills out)', not bad, bad)
-        pg.goto(s.base + '/web/settings/#telegram/overview'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-tile').length >= 4", 15000); pg.wait_for_timeout(300)
+        pg.goto(s.base + '/web/settings/#telegram/overview'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-tile').length >= 4", 15000)
+        until(lambda: pg.evaluate("""[...document.querySelectorAll('#ix-pc .ix-tile')].filter(t => t.getBoundingClientRect().width > 0).every(t => {
+            const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
+            return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 90; })"""), 3000)
         bad = pg.evaluate("""[...document.querySelectorAll('#ix-pc .ix-tile')].filter(t => t.getBoundingClientRect().width > 0).map(t => {
             const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
             return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 80 ? '' : t.textContent.slice(0, 30); }).filter(Boolean)""")
@@ -78,7 +84,7 @@ try:
         check('S9 the Settings menu: Web Setting (General, Appearance), Data Setting (Security, Telegram, Backup & Restore), System Setting (Health, Updates, Changelog)',
               menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Health', 'Updates', 'Changelog'] and groups == ['Web Setting', 'Data Setting', 'System Setting'], (menu, groups))
         def at(h, expr):
-            pg.goto(s.base + '/web/settings/' + h); pg.wait_for_timeout(150)
+            pg.goto(s.base + '/web/settings/' + h)
             try: wait_js(pg, expr, 10000); return True
             except Exception: return False
         tabs = "[...document.querySelectorAll('#ix-pane .ix-subt [role=tab]')].map(e => e.textContent).join('|')"
@@ -99,15 +105,15 @@ try:
         pg.click('#ix-pane .ix-subt [data-grp="themes"]')
         wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)
         n = pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # the dark-mode list
-        pg.click('#ix-pc [data-seg="cmode"] [data-v="light"]'); pg.wait_for_timeout(300)
+        pg.click('#ix-pc [data-seg="cmode"] [data-v="light"]'); wait_js(pg, "document.querySelector('#ix-pc [data-seg=cmode] [data-v=light]').getAttribute('aria-pressed') === 'true' && document.querySelectorAll('#ix-pc .ix-preset').length > 0", 5000)
         n += pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # and the light-mode list
-        pg.click('#ix-pc [data-seg="cmode"] [data-v="dark"]'); pg.wait_for_timeout(200)
+        pg.click('#ix-pc [data-seg="cmode"] [data-v="dark"]'); wait_js(pg, "document.querySelector('#ix-pc [data-seg=cmode] [data-v=dark]').getAttribute('aria-pressed') === 'true'", 5000)
         check('S15 Appearance > Presets has all 166 presets (dark and light together)', n == 166, n)
         # a font chosen in Look survives a later save made after changing only the accent
         at('#look', "!!document.querySelector('#ix-font')")
-        pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); pg.wait_for_timeout(800)
+        pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); until(lambda: s.get('state').get('font') == 'georgia', 5000)
         at('#look', "!!document.querySelector('#ix-font')")
-        pg.click('#ix-pc .ix-sw [data-c="#4cc9f0"]'); pg.click('#ix-save'); pg.wait_for_timeout(800)
+        pg.click('#ix-pc .ix-sw [data-c="#4cc9f0"]'); pg.click('#ix-save'); until(lambda: s.get('state').get('accent') == '#4cc9f0', 5000)
         st = s.get('state')
         check('S16 a later save keeps the font chosen earlier', st.get('font') == 'georgia' and st.get('accent') == '#4cc9f0', (st.get('font'), st.get('accent')))
         s.post('settings', {'settings': {'font': 'default', 'accent': '#ffc21a'}})
