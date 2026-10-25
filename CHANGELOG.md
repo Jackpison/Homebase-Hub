@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.48.2 | Settings menu: General holds Look, Presets and Colors; groups Web Setting, System Setting, Data Setting |
 | 1.48.1 | Fix: the Security and Telegram cards in Settings look right again |
 | 1.48.0 | Navigation and fluidity: three redesigned bar styles, a Top Bar that hides while you scroll, a round menu, and a simpler Settings |
 | 1.47.1 | Small fixes: the Telegram backup button no longer sticks, Tools has its section colours back, Home uploads up to 128 MB, a GitHub link in Updates |
@@ -69,6 +70,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.48.2
+
+### Changed
+
+- **General and Look are one menu item.** General now has two tabs: General (Basics, Tabs) and Look (Look, Presets, Colors). Presets and Colors are tabs again; More Options under Look keeps the Font and Same Look on Every Page.
+- **The menu groups have new names and a new order:** Web Setting (General), System Setting (System), then Data Setting (Security, Telegram, Backup & Restore).
+- Old links to Look, Presets, Colors and Tabs still open the right tab.
+
+### Fix
+
+- **The cards in Settings > Security and Telegram look right again** (also in 1.48.1). Since 1.48.0 they were squashed, with their icons above the card.
 
 ---
 
