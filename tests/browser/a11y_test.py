@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Accessibility check with axe-core (WCAG 2.1 A and AA rules) on every app page, in dark and light mode, and the bar in all three styles.
   npm i --no-save axe-core
-  python3 tests/a11y_test.py build/site-update-X.Y.Z.zip
+  python3 tests/browser/a11y_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ and Playwright with Chromium (or --browser firefox|webkit). Nothing leaves this computer."""
 import http.cookiejar, http.server, json, os, re, shutil, socketserver, subprocess, sys, tempfile, threading, time, urllib.request, zipfile
 from functools import partial
 from playwright.sync_api import sync_playwright
 
-HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX, SEED
 from helpers import browser_name, launch, CSP_REPORTER
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -38,7 +38,7 @@ try:
     call('state')
     code = re.search(r'([A-Z0-9]{4}(?:-[A-Z0-9]{4})+|[A-Z0-9]{8,})', open(D + '/site-data/core/SETUP-CODE.php').read().replace('<?php', '')).group(1)
     call('setup', {'code': code, 'password': 'correct horse battery staple'})
-    subprocess.run(['php', os.path.join(HERE, 'seed_demo.php'), D], capture_output=True)
+    subprocess.run(['php', SEED, D], capture_output=True)
     ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/core-data/lib/boot.php').read()).group(1)
     pages = [('Home', '/'), ('Links', '/web/links/'), ('Info', '/web/info/'), ('Cards', '/web/cards/'), ('Tasks', '/web/tasks/'), ('Tools', '/web/tools/'),
              ('Tools: a tool', '/web/tools/#/tool/image-resize'), ('Settings', '/web/settings/#overview'), ('Settings: General (Install on Your Phone)', '/web/settings/#general'), ('Settings: Security', '/web/settings/#security'), ('Settings: Updates', '/web/settings/#updates')]
@@ -55,7 +55,7 @@ try:
             # Links > Import Bookmarks, open with a preview
             pg.goto(B + '/web/links/'); pg.wait_for_timeout(1400)
             pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]', timeout=10000)
-            pg.set_input_files('#impFile', os.path.join(HERE, 'bookmarks', 'chrome.html')); pg.wait_for_timeout(600)
+            pg.set_input_files('#impFile', os.path.join(FIX, 'bookmarks', 'chrome.html')); pg.wait_for_timeout(600)
             check('Links: Import Bookmarks dialog (%s)' % theme, scan(pg))
             # the bar in each style, on a computer and on a phone, with the phone panel (Sidebar) and sheet (Bottom Dock) open
             for nav in ('side', 'dock', 'top'):
@@ -68,7 +68,7 @@ try:
                         check('Bar: %s, phone, %s open (%s)' % (nav, 'panel' if nav == 'side' else 'sheet', theme), scan(pg))
                 pg.set_viewport_size({'width': 1280, 'height': 860})
             ctx.close()
-        # the website is checked, with axe, in dark and light on every page, by tests/website_test.py
+        # the website is checked, with axe, in dark and light on every page, by tests/browser/website_test.py
         b.close()
 finally:
     php.terminate(); shutil.rmtree(D, ignore_errors=True)

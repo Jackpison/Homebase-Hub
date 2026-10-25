@@ -1,6 +1,6 @@
 #!/bin/sh
-# Serves an update zip with Apache and PHP on http://127.0.0.1:8300 for tests/apache_test.py (the .htaccess files only work on Apache).
-# Usage: sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip
+# Serves an update zip with Apache and PHP on http://127.0.0.1:8300 for tests/server/apache_test.py (the .htaccess files only work on Apache).
+# Usage: sudo sh tests/server/apache_setup.sh build/site-update-X.Y.Z.zip
 set -e
 ZIP=$(readlink -f "$1")
 apt-get install -y -q apache2 libapache2-mod-php > /dev/null

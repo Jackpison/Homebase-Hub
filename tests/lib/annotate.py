@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CI helper: passes a test's output through unchanged and turns every FAIL line (and the last line of a Python
 traceback) into a GitHub annotation, so failures show on the run's summary page and through the API.
-    python3 tests/x_test.py ... 2>&1 | python3 tests/annotate.py "title"     (use with set -o pipefail)"""
+    python3 tests/x_test.py ... 2>&1 | python3 tests/lib/annotate.py "title"     (use with set -o pipefail)"""
 import sys
 
 title = (sys.argv[1] if len(sys.argv) > 1 else 'test').replace(',', ' ').replace(':', ' ')

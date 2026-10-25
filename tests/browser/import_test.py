@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """Links > Import Bookmarks in a real browser: the dialog, the preview numbers, the result, the data Links saved, that
 nothing from a hostile file runs or appears as markup, undo through Earlier Versions, the limits, and axe on the dialog.
-    python3 tests/import_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]
+    python3 tests/browser/import_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]
 Needs PHP 8.3+, Playwright and axe-core (npm ci). Fixtures are in tests/bookmarks/. Port 8850."""
 import json, os, re, sys, tempfile
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX, SEED
 from helpers import PW, HERE, Site, Checks, stop_all, browser_name, launch, browser_login, wait_js, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 ZIP = sys.argv[1]
-FX = os.path.join(HERE, 'bookmarks')
-ROOT = os.path.dirname(HERE)
+FX = os.path.join(FIX, 'bookmarks')
 AXE = open(os.path.join(ROOT, 'node_modules', 'axe-core', 'axe.min.js'), encoding='utf-8').read()
 AXE_RUN = "async()=>{const r=await axe.run(document.querySelector('#impDlg'),{resultTypes:['violations'],runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return r.violations.map(v=>v.id+' x'+v.nodes.length+' '+v.nodes[0].target.join(' ')+' '+JSON.stringify(((v.nodes[0].any||[])[0]||{}).data||{}).slice(0,260))}"
 check = Checks()
@@ -145,7 +145,7 @@ try:
         open_dlg()
         _, er = choose('empty.html'); check('I27 an empty file: a plain message', 'empty' in er, er)
         _, er = choose('not-bookmarks.html'); check('I28 a web page that is not bookmarks: a plain message', 'not a bookmarks export' in er, er)
-        _, er = choose(os.path.join(HERE, 'fixture-image.png')); check('I29 a file that is not HTML (a PNG): a plain message, no script error', 'not a bookmarks export' in er and not errs, (er, errs))
+        _, er = choose(os.path.join(FIX, 'fixture-image.png')); check('I29 a file that is not HTML (a PNG): a plain message, no script error', 'not a bookmarks export' in er and not errs, (er, errs))
         many = os.path.join(TMP, 'many.html')
         open(many, 'w').write('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<DL><p>\n<DT><H3>Many</H3>\n<DL><p>\n' + ''.join('<DT><A HREF="https://m.example.com/%d">Link %d</A>\n' % (i, i) for i in range(5001)) + '</DL><p>\n</DL><p>\n')
         _, er = choose(many); check('I30 more than 5,000 links: refused with a plain message', '5001 links' in er and '5000' in er, er)

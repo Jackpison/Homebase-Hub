@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The bar in all three styles (Top Bar, Sidebar, Bottom Dock), on a computer and on a phone, in a real browser.
-  python3 tests/nav_test.py build/site-update-X.Y.Z.zip [--browser firefox|webkit] [--shots DIR]
+  python3 tests/browser/nav_test.py build/site-update-X.Y.Z.zip [--browser firefox|webkit] [--shots DIR]
 Checks: the pages are listed and the current one is marked, nothing scrolls sideways, Backup and the gear (Settings)
 are on screen, the top bar hides while scrolling down and comes back, the phone panel and sheet open and close,
 the dock never covers the end of a page, the red Backup icon, and that reduced motion turns the movement off.
@@ -9,8 +9,8 @@ Needs PHP 8.3+ and Playwright. Nothing leaves this computer: every request to an
 import json, os, re, subprocess, sys, tempfile, time, urllib.request, http.cookiejar, zipfile
 from playwright.sync_api import sync_playwright
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX, SEED
 from helpers import browser_name, launch, browser_login, wait_js, CSP_REPORTER
 BROWSER = browser_name()
 SHOTS = None
@@ -69,7 +69,7 @@ try:
     check('N0 a new site can be set up', call('setup', {'code': code, 'password': PW}).get('ok'))
     st0 = call('state')
     check('N0b a new site starts with the Default look (accent #ffd45c, softer black)', st0.get('accent') == '#ffd45c' and (st0.get('colors') or {}).get('dark', {}).get('bg') == '#101010', (st0.get('accent'), (st0.get('colors') or {}).get('dark')))
-    subprocess.run(['php', os.path.join(HERE, 'seed_demo.php'), D], capture_output=True)
+    subprocess.run(['php', SEED, D], capture_output=True)
     ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/core-data/lib/boot.php').read()).group(1)
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))

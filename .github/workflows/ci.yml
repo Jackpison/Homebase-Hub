@@ -36,9 +36,9 @@ jobs:
           echo "48caad125554d6b416159db71dd7fd890295ba1a24b3650b49e32752e24fd6a0  phpstan.phar" | sha256sum -c -
           php -d memory_limit=1G phpstan.phar analyse --no-progress
       - name: Library safety check
-        run: python3 tests/check_libraries.py
+        run: python3 tests/repo/check_libraries.py
       - name: Version agrees everywhere (tools/release.py --check) and its own test
-        run: python3 tools/release.py --check && python3 tests/release_test.py
+        run: python3 tools/release.py --check && python3 tests/repo/release_test.py
       - name: Build
         run: npm ci && python3 tools/build.py
       - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
@@ -86,47 +86,47 @@ jobs:
       - name: Update tests
         run: |
           set -o pipefail
-          python3 tests/update_test.py build/site-update-*.zip rel-prev/site-update-*.zip rel-old/site-update-*.zip 2>&1 | python3 tests/annotate.py "updates"
+          python3 tests/server/update_test.py build/site-update-*.zip rel-prev/site-update-*.zip rel-old/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "updates"
       - name: Hostile update zips
         run: |
           set -o pipefail
-          python3 tests/update_attack_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "hostile zips"
+          python3 tests/server/update_attack_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "hostile zips"
       - name: Install on a phone (manifest, icons, head tags, Settings card, Chromium installability)
         run: |
           set -o pipefail
-          python3 tests/app_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "app"
+          python3 tests/browser/app_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "app"
       - name: Settings and Home (Telegram backup button, GitHub link, upload limit, config.json clean-up)
         run: |
           set -o pipefail
-          python3 tests/settings_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "settings"
+          python3 tests/browser/settings_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "settings"
       - name: Links Import Bookmarks
         run: |
           set -o pipefail
-          python3 tests/import_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "import chromium"
+          python3 tests/browser/import_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "import chromium"
       - name: Core features (backup, two-step login, Start Over, lockout, security token)
         run: |
           set -o pipefail
-          python3 tests/core_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "core"
+          python3 tests/server/core_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "core"
       - name: Tools in a browser
         run: |
           set -o pipefail
-          python3 tests/tools_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "tools chromium"
+          python3 tests/browser/tools_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "tools chromium"
       - name: Pages in a browser
         run: |
           set -o pipefail
-          python3 tests/pages_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "pages chromium"
+          python3 tests/browser/pages_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "pages chromium"
       - name: The bar in all three styles (computer and phone)
         run: |
           set -o pipefail
-          python3 tests/nav_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "nav chromium"
+          python3 tests/browser/nav_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "nav chromium"
       - name: Accessibility
         run: |
           set -o pipefail
-          python3 tests/a11y_test.py build/site-update-*.zip 2>&1 | python3 tests/annotate.py "a11y chromium"
+          python3 tests/browser/a11y_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "a11y chromium"
       - name: Website (links, security policy, interactions, phone layout, accessibility in dark and light)
         run: |
           set -o pipefail
-          python3 tests/website_test.py build/site 2>&1 | python3 tests/annotate.py "website chromium"
+          python3 tests/browser/website_test.py build/site 2>&1 | python3 tests/lib/annotate.py "website chromium"
 
   browsers:
     # The page and Tools tests (and accessibility on Firefox) in the other two engines, one job each so they run side by side
@@ -156,32 +156,32 @@ jobs:
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/pages_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "pages ${{ matrix.browser }}"
+          python3 tests/browser/pages_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "pages ${{ matrix.browser }}"
       - name: The bar in ${{ matrix.browser }}
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/nav_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "nav ${{ matrix.browser }}"
+          python3 tests/browser/nav_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "nav ${{ matrix.browser }}"
       - name: Tools in ${{ matrix.browser }}
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/tools_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "tools ${{ matrix.browser }}"
+          python3 tests/browser/tools_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "tools ${{ matrix.browser }}"
       - name: Import Bookmarks in ${{ matrix.browser }}
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/import_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "import ${{ matrix.browser }}"
+          python3 tests/browser/import_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "import ${{ matrix.browser }}"
       - name: Accessibility in ${{ matrix.browser }}
         if: matrix.browser == 'firefox' && (success() || failure())
         run: |
           set -o pipefail
-          python3 tests/a11y_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "a11y ${{ matrix.browser }}"
+          python3 tests/browser/a11y_test.py build/site-update-*.zip --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "a11y ${{ matrix.browser }}"
       - name: Website in ${{ matrix.browser }}
         if: success() || failure()
         run: |
           set -o pipefail
-          python3 tests/website_test.py build/site --browser ${{ matrix.browser }} 2>&1 | python3 tests/annotate.py "website ${{ matrix.browser }}"
+          python3 tests/browser/website_test.py build/site --browser ${{ matrix.browser }} 2>&1 | python3 tests/lib/annotate.py "website ${{ matrix.browser }}"
 
   apache:
     # Installing Apache takes about five minutes on a fresh runner, so it runs beside the other tests instead of after them.
@@ -204,5 +204,5 @@ jobs:
         run: python3 tools/build.py
       - name: On real Apache (the .htaccess files)
         run: |
-          sudo sh tests/apache_setup.sh build/site-update-*.zip
-          python3 tests/apache_test.py
+          sudo sh tests/server/apache_setup.sh build/site-update-*.zip
+          python3 tests/server/apache_test.py

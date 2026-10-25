@@ -25,7 +25,7 @@ jobs:
       - name: Bundled libraries (check_libraries.py --audit)
         run: |
           set -o pipefail
-          python3 tests/check_libraries.py --audit 2>&1 | tee -a check.log
+          python3 tests/repo/check_libraries.py --audit 2>&1 | tee -a check.log
       - name: Build tools (npm audit)
         if: success() || failure()
         run: |

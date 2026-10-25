@@ -14,5 +14,5 @@ Read `AGENTS.md` first: it has the full rules, the checks and the release checkl
 - Each release raises the version in `src/web/core-data/lib/boot.php` (`HUB`) and in every `?v=` on the pages, and adds an entry and a Version Map row to `src/web/docs/CHANGELOG.md` (copied to the root `CHANGELOG.md`).
 - After changing any file in `src/web/tools/assets`, run `python3 tools/tools-rev.py --write` (the build refuses to run otherwise).
 - Build with `python3 tools/build.py`. The zip is named with dots (`site-update-1.39.0.zip`) and contains the full changelog.
-- Run the update tests and `python3 tests/check_libraries.py` before a release: see `tests/README.md`. All of them must pass.
+- Run the update tests and `python3 tests/repo/check_libraries.py` before a release: see `tests/README.md`. All of them must pass.
 - Never commit `site-data/`, `config.php`, passwords or tokens. The build refuses to run if private data is in `src/`.

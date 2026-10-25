@@ -2,11 +2,12 @@
 """Hostile update zips: every one goes through the real upload (update_chunk) and check (update_check) and must be refused
 with a clear message, and afterwards the version, the files (files_scan) and site-data must be unchanged, with nothing
 written outside the site folder. Also abuses the chunk upload itself.
-    python3 tests/update_attack_test.py build/site-update-X.Y.Z.zip
+    python3 tests/server/update_attack_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ with zip and mbstring. Uses ports 8800-8810 and a few hundred MB in /tmp."""
 import hashlib, io, json, os, random, re, struct, sys, tempfile, time, zipfile, zlib
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX, SEED
 from helpers import PW, Site, Checks, stop_all, zip_version
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -201,7 +202,7 @@ try:
     r = v.s.chunks(None, 'huge.zip', raw=huge)
     check('S4 refused: an upload over 128 MB (stopped during the upload)', is_clean_reply(r) and 'too large' in r.get('error', '') and v.unchanged(), json.dumps(r)[:300])
     del huge
-    for label, raw in [('random bytes', os.urandom(300000)), ('a text file', b'hello, this is not a zip\n' * 100), ('an empty-looking file', b'PK'), ('a PNG', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fixture-image.png'), 'rb').read())]:
+    for label, raw in [('random bytes', os.urandom(300000)), ('a text file', b'hello, this is not a zip\n' * 100), ('an empty-looking file', b'PK'), ('a PNG', open(os.path.join(FIX, 'fixture-image.png'), 'rb').read())]:
         v.attack('S5 refused: not a zip at all (%s)' % label, raw)
 
     # ----- damage: cuts and byte flips (fixed seed, so a failure repeats) -----

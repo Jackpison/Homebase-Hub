@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Screenshots of the real app with demo data: python3 tests/screenshots.py build/site-update-X.Y.Z.zip OUTDIR
+"""Screenshots of the real app with demo data: python3 tools/screenshots.py build/site-update-X.Y.Z.zip OUTDIR
 Needs PHP and Playwright with Chromium. Pages load only from the local test server."""
 import sys, os, time, json, subprocess, shutil, zipfile, urllib.request, http.cookiejar, re, datetime, threading, http.server, hashlib
 os.environ['PHP_CLI_SERVER_WORKERS']='6'
@@ -37,7 +37,7 @@ tasks=[{'name':'Renew domain name','due':d(12),'repeat':{'n':1,'unit':'year'},'p
  {'name':'Dentist check-up','due':d(21),'repeat':{'n':6,'unit':'month'},'cat':'Health'},
  {'name':'Cloud storage','due':d(16),'repeat':{'n':1,'unit':'month'},'price':75,'cur':'INR','cat':'Subscriptions','pay':'Card'}]
 print('tasks',post('/web/tasks/api.php',{'action':'save','tasks':tasks,'rev':0}).get('ok'))
-print(subprocess.run(['php',os.path.join(os.path.dirname(os.path.abspath(__file__)), 'seed_demo.php'),D],capture_output=True,text=True).stdout.strip())
+print(subprocess.run(['php',os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tests', 'lib', 'seed_demo.php'),D],capture_output=True,text=True).stdout.strip())
 cookies=[{'name':c.name,'value':c.value,'domain':'127.0.0.1','path':'/'} for c in cj]
 def snap(pg,name,url=None,wait=1800,click=None,full=False):
     if url: pg.goto(B+url,wait_until='domcontentloaded'); pg.reload(wait_until='domcontentloaded')
@@ -60,7 +60,7 @@ with sync_playwright() as p:
             # Links > Import Bookmarks with a preview of a Chrome export
             pg.goto(B+'/web/links/',wait_until='domcontentloaded'); pg.wait_for_timeout(1500)
             pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]')
-            pg.set_input_files('#impFile',os.path.join(os.path.dirname(os.path.abspath(__file__)),'bookmarks','chrome.html')); pg.wait_for_timeout(800)
+            pg.set_input_files('#impFile',os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'tests','fixtures','bookmarks','chrome.html')); pg.wait_for_timeout(800)
             pg.screenshot(path=f'{OUT}/links-import.png'); print('links-import')
             snap(pg,'tasks-calendar','/web/tasks/',click='#views button[data-view="cal"]')
             snap(pg,'tasks-analytics','/web/tasks/',click='#views button[data-view="an"]')

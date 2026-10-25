@@ -23,7 +23,7 @@
  *   Security   pSecurity, VK (devices), PP (password and encryption flows)
  *   Backup     NAMES, pBackup           Health  pHealth
  * Panes share state through the closure, so they are not separate files: splitting them needs a module loader and a real browser test of every
- * Settings section first (tests/pages_test.py opens all of them). */
+ * Settings section first (tests/browser/pages_test.py opens all of them). */
 (function (K) {
   'use strict';
   if (!K || K.impl) return;

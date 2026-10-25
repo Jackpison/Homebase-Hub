@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Core features through the real API (no browser): backup and restore (plain, per part, encrypted, earlier versions),
 two-step login, trusted browsers, sessions, password change, Start Over, the login lockout, and the CSRF token on every
-changing action.   python3 tests/core_test.py build/site-update-X.Y.Z.zip
+changing action.   python3 tests/server/core_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ with curl, zip, mbstring and openssl. Runs sites on ports 8700-8760."""
 import base64, hashlib, hmac, http.client, json, os, re, struct, subprocess, sys, time
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX, SEED
 from helpers import PW, HERE, Site, Checks, stop_all
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -29,7 +30,7 @@ def snap(s):
 
 
 def seed(s):
-    r = subprocess.run(['php', os.path.join(HERE, 'seed_demo.php'), s.dir], capture_output=True, text=True)
+    r = subprocess.run(['php', SEED, s.dir], capture_output=True, text=True)
     assert 'seeded' in r.stdout, r.stdout + r.stderr
     s.php("""hub_write_guarded(hub_dir('links') . '/bookmarks.php', ['settings' => [], 'tabs' => [['id' => 't1', 'name' => 'Daily', 'categories' => [['name' => 'News', 'links' => [['title' => 'Example', 'url' => 'https://example.com/']]]]]]]);
       require_once HUB_WEB . '/tasks/lib.php';

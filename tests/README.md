@@ -2,6 +2,17 @@
 
 These run on your own computer. Nothing here is part of the update zip.
 
+| Folder | What is in it |
+|---|---|
+| `unit/` | PHP unit tests (`php tests/unit/run.php`) |
+| `browser/` | Tests in a real browser: `pages_test`, `nav_test`, `settings_test`, `tools_test`, `import_test`, `a11y_test`, `app_test`, `website_test` |
+| `server/` | Tests of the server side: `update_test`, `update_attack_test`, `core_test`, and Apache (`apache_setup.sh`, `apache_test.py`) |
+| `repo/` | Checks of the repository itself: `release_test`, `check_libraries` |
+| `fixtures/` | Files the tests open: PDFs, pictures, a HEIC photo, the favicon stand-in, bookmark exports |
+| `lib/` | Shared helpers: `helpers.py` (sites, logins, paths), `annotate.py` (CI annotations), `prepend.php` (test-only shortcuts), `seed_demo.php` (demo data), `phpstan-bootstrap.php` |
+
+`requirements.txt` stays here (Dependabot and the pip cache look for it in `tests/`).
+
 ## Unit tests (PHP, no browser)
 
 `php tests/unit/run.php` runs every `tests/unit/*_test.php` on its own fresh copy of `src/`. Telegram is replaced by `telegram_stub.php`, a local stand-in, through `NT_TEST_API`, which only the tests define. It takes a few seconds and needs only PHP 8.3 with openssl and curl.
@@ -14,7 +25,7 @@ Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen'
 
 ## Static analysis
 
-`phpstan.neon` (level 1) is run by CI with a pinned PHPStan, and CI checks the download's SHA-256 before it runs it. See AGENTS.md for the command. To raise the PHPStan version, change the version and the checksum in both `.github/workflows/ci.yml` and `AGENTS.md` (get the new checksum with `sha256sum phpstan.phar`). The checksum is pinned when you first download a version, so it guards against the file changing later, not against a bad first download. `tests/phpstan-bootstrap.php` only tells it the folder constants that `boot.php` defines at run time.
+`phpstan.neon` (level 1) is run by CI with a pinned PHPStan, and CI checks the download's SHA-256 before it runs it. See AGENTS.md for the command. To raise the PHPStan version, change the version and the checksum in both `.github/workflows/ci.yml` and `AGENTS.md` (get the new checksum with `sha256sum phpstan.phar`). The checksum is pinned when you first download a version, so it guards against the file changing later, not against a bad first download. `tests/lib/phpstan-bootstrap.php` only tells it the folder constants that `boot.php` defines at run time.
 
 ## Python packages
 
@@ -25,7 +36,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 ## Release script and lint
 
 - `python3 tools/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
-- `python3 tests/release_test.py`: tests `release.py` itself on a temporary copy of the repo (a bump, then each thing broken in turn must fail the check). Needs git.
+- `python3 tests/repo/release_test.py`: tests `release.py` itself on a temporary copy of the repo (a bump, then each thing broken in turn must fail the check). Needs git.
 - `npx eslint src`: `no-undef`, `no-redeclare`, `no-dupe-keys`, `no-unreachable` and `no-const-assign` on the readable scripts in `src/web` (not Tools, not `vendor/`). `eslint.config.js` lists each page's real globals and says why.
 
 ## Update tests
@@ -35,7 +46,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 ```
 npm ci
 python3 tools/build.py                        # CURRENT
-python3 tests/update_test.py build/site-update-1.40.0.zip site-update-1.39.0.zip site-update-1.37.0.zip
+python3 tests/server/update_test.py build/site-update-1.40.0.zip site-update-1.39.0.zip site-update-1.37.0.zip
 ```
 
 The three zips are: the one just built, the latest published release, and any older release. The script makes the "next" version itself (the current zip with its patch number raised).
@@ -56,7 +67,7 @@ PHP's built-in server ignores `.htaccess`, so the browser blocks on `site-data`,
 
 ## Core features
 
-`python3 tests/core_test.py build/site-update-X.Y.Z.zip` (no browser, about a minute, ports 8700 to 8760):
+`python3 tests/server/core_test.py build/site-update-X.Y.Z.zip` (no browser, about a minute, ports 8700 to 8760):
 
 - **Backup and restore:** with demo data, a full backup, a change, a restore (whole and one part), a one-tab backup merged back, Earlier Versions undoing a restore, and a file that is not a backup refused. An encrypted backup opens with the right passphrase (the same PBKDF2 and AES-GCM steps the browser uses) and not with a wrong one. A backup never holds the password, its hash, the two-step secret, recovery codes, the passphrase or the backup key.
 - **Two-step login:** turned on with a code computed in the test (RFC 6238), then the password alone is not enough, a wrong code and a reused code are refused, a recovery code works once, New Recovery Codes replaces the old ones, a trusted browser skips the code but never the password, and Log Out Other Devices, one device from the Devices list, and a password change each end the other sessions.
@@ -66,27 +77,27 @@ PHP's built-in server ignores `.htaccess`, so the browser blocks on `site-data`,
 
 ## Hostile update zips
 
-`python3 tests/update_attack_test.py build/site-update-X.Y.Z.zip` (about a minute, ports 8800 to 8810, a few hundred MB in `/tmp`). Each zip goes through the real upload and check and must be refused with a sentence (never a PHP error, a blank page or a 500), and afterwards the version, `files_scan`, `site-data` and the code are unchanged and nothing was written outside the site. Cases: `../` and `..\` paths, absolute paths and drive letters, a null byte, names over 200 characters, 120 folders deep, duplicates and names that differ only in case, non-ASCII names, symlinks, files outside `web/` and `index.php`, `site-data`, `config.php`, the pictures folder, PHP files in the wrong place, a fingerprint that does not match, files missing from or extra to the list, a list naming a path outside the site, a missing or broken `manifest.json`, a PHP syntax error, no updater, a version mismatch, an older version, `minPhp` 99.0, a declared size of 2 GB, a zip bomb (60 MB of zeros declared as 1 KB), 474 MB unpacked, an upload over 128 MB, files that are not zips, the zip cut at 50 places and 200 random bit flips (fixed seed), and the chunk upload abused (bad id, n or i, out of order, twice, no token, a second upload while one is staged).
+`python3 tests/server/update_attack_test.py build/site-update-X.Y.Z.zip` (about a minute, ports 8800 to 8810, a few hundred MB in `/tmp`). Each zip goes through the real upload and check and must be refused with a sentence (never a PHP error, a blank page or a 500), and afterwards the version, `files_scan`, `site-data` and the code are unchanged and nothing was written outside the site. Cases: `../` and `..\` paths, absolute paths and drive letters, a null byte, names over 200 characters, 120 folders deep, duplicates and names that differ only in case, non-ASCII names, symlinks, files outside `web/` and `index.php`, `site-data`, `config.php`, the pictures folder, PHP files in the wrong place, a fingerprint that does not match, files missing from or extra to the list, a list naming a path outside the site, a missing or broken `manifest.json`, a PHP syntax error, no updater, a version mismatch, an older version, `minPhp` 99.0, a declared size of 2 GB, a zip bomb (60 MB of zeros declared as 1 KB), 474 MB unpacked, an upload over 128 MB, files that are not zips, the zip cut at 50 places and 200 random bit flips (fixed seed), and the chunk upload abused (bad id, n or i, out of order, twice, no token, a second upload while one is staged).
 
 Two cases are by design, not refusals: the **same version** is accepted as a repair of the installed files (the screen says so), and a **bit flip in a field no file depends on** (a date or an attribute) can still give a valid zip; the test then checks that every file matched its fingerprint. Many cases use a smaller but valid update (the release without the Tools files) so that 250 uploads take seconds, not minutes.
 
 ## Import Bookmarks
 
-`python3 tests/import_test.py build/site-update-X.Y.Z.zip [--browser ...]` (port 8850) runs Links > Import Bookmarks in a real browser with the exports in `tests/bookmarks/` (Chrome, Firefox with its folder descriptions, Safari without an outer list, 12 levels deep, duplicates, a hostile file, an empty file, a web page that is not bookmarks) plus a PNG, 5,001 links, a file over 5 MB and 3,000 links made by the test. It checks the preview numbers, the result message, exactly what Links saved, a private new tab, an existing tab (its links kept, nothing added twice), that encrypted tabs are never offered, the six-tab limit, that nothing from the hostile file ran or became markup, undo through Earlier Versions, that the importer loads only when first used, and axe on the open dialog.
+`python3 tests/browser/import_test.py build/site-update-X.Y.Z.zip [--browser ...]` (port 8850) runs Links > Import Bookmarks in a real browser with the exports in `tests/bookmarks/` (Chrome, Firefox with its folder descriptions, Safari without an outer list, 12 levels deep, duplicates, a hostile file, an empty file, a web page that is not bookmarks) plus a PNG, 5,001 links, a file over 5 MB and 3,000 links made by the test. It checks the preview numbers, the result message, exactly what Links saved, a private new tab, an existing tab (its links kept, nothing added twice), that encrypted tabs are never offered, the six-tab limit, that nothing from the hostile file ran or became markup, undo through Earlier Versions, that the importer loads only when first used, and axe on the open dialog.
 
 ## Tools
 
-`python3 tests/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser chromium|firefox|webkit]` (port 8960; needs PHP, Playwright, axe-core, Pillow, pypdf and cryptography). It installs a site and drives every one of the 36 tools with real files: the app (search, favourites and recent tools carried over from the old Tools, Organise, Settings, light and dark), conversions checked by opening the output (HEIC and TIFF in, AVIF out, a photo under a target size, exact resize and crop sizes, round PNGs, 300 dpi ID photos and print sheets), background removal on the device, GPS read from a photo and removed, a 21-layout collage and its PDF, and the PDF tools checked with pypdf (merge, split, organize, AES-256 protect and unlock, stamps, signatures, annotations, the text layer, and OCR of a rendered image), plus axe on 26 pages in dark and light. Give `build/tools-new` (from `python3 tools/build-tools.py`) to test a build before installing it.
+`python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser chromium|firefox|webkit]` (port 8960; needs PHP, Playwright, axe-core, Pillow, pypdf and cryptography). It installs a site and drives every one of the 36 tools with real files: the app (search, favourites and recent tools carried over from the old Tools, Organise, Settings, light and dark), conversions checked by opening the output (HEIC and TIFF in, AVIF out, a photo under a target size, exact resize and crop sizes, round PNGs, 300 dpi ID photos and print sheets), background removal on the device, GPS read from a photo and removed, a 21-layout collage and its PDF, and the PDF tools checked with pypdf (merge, split, organize, AES-256 protect and unlock, stamps, signatures, annotations, the text layer, and OCR of a rendered image), plus axe on 26 pages in dark and light. Give `build/tools-new` (from `python3 tools/build-tools.py`) to test a build before installing it.
 
 ## Settings and Home
 
-`python3 tests/settings_test.py build/site-update-X.Y.Z.zip [--browser ...]` (port 8970): Telegram > Backups > Send Backup Now waits as long as the server may take (4 minutes) and is never left stuck on "Sending..." when no answer comes; Settings > System > Updates links to the project on GitHub; Home accepts uploads of up to 128 MB; the first request after an update removes the old Tools `config.json`; and the simpler Settings: the menu in its groups Site, Protection & Data and System, Appearance with Look, Presets and Colors (all 166 presets still there), the 1.48 address `#system` still working, a font chosen in Look surviving a save made after changing the accent, the Security cards keeping their icons inside, and a site search without field checkboxes.
+`python3 tests/browser/settings_test.py build/site-update-X.Y.Z.zip [--browser ...]` (port 8970): Telegram > Backups > Send Backup Now waits as long as the server may take (4 minutes) and is never left stuck on "Sending..." when no answer comes; Settings > System > Updates links to the project on GitHub; Home accepts uploads of up to 128 MB; the first request after an update removes the old Tools `config.json`; and the simpler Settings: the menu in its groups Site, Protection & Data and System, Appearance with Look, Presets and Colors (all 166 presets still there), the 1.48 address `#system` still working, a font chosen in Look surviving a save made after changing the accent, the Security cards keeping their icons inside, and a site search without field checkboxes.
 
-`python3 tests/nav_test.py build/site-update-X.Y.Z.zip [--browser ...] [--shots DIR]` (port 8231): the bar in all three styles (Top Bar, Sidebar, Bottom Dock) at 1280 and 390 pixels: the pages listed and the current one marked, no sideways scroll, Backup and the gear (Settings) in every style, the Top Bar sliding away on scroll down and back on scroll up or `/`, the phone panel and sheet opening and closing with Escape, the dock never covering the end of a page, the red Backup icon, and no movement with reduced motion. `--shots DIR` also saves screenshots of each style, including Home, Tools and Settings.
+`python3 tests/browser/nav_test.py build/site-update-X.Y.Z.zip [--browser ...] [--shots DIR]` (port 8231): the bar in all three styles (Top Bar, Sidebar, Bottom Dock) at 1280 and 390 pixels: the pages listed and the current one marked, no sideways scroll, Backup and the gear (Settings) in every style, the Top Bar sliding away on scroll down and back on scroll up or `/`, the phone panel and sheet opening and closing with Escape, the dock never covering the end of a page, the red Backup icon, and no movement with reduced motion. `--shots DIR` also saves screenshots of each style, including Home, Tools and Settings.
 
 ## Website
 
-`python3 tests/website_test.py build/site [--browser chromium|firefox|webkit]` (after `python3 tools/make-site.py --no-guide`; needs Playwright and axe-core). It checks the built site and then drives it in a real browser:
+`python3 tests/browser/website_test.py build/site [--browser chromium|firefox|webkit]` (after `python3 tools/make-site.py --no-guide`; needs Playwright and axe-core). It checks the built site and then drives it in a real browser:
 
 - **Files:** every link, image, script and style on every page exists; every `#anchor` exists; the sitemap lists real pages; the old `install.html` addresses still forward; every link from the README to the website works (pages and anchors such as `#p-links`); the tools on the website are exactly the tools in the Tools bundle (`website/data/tools.json` against `src/web/tools/assets/index-ToolsAll.js`, so a new tool fails this test until the list is updated).
 - **Policy:** no inline style or script, no event-handler attributes, nothing from other sites (the pages carry a policy that allows none), and no console error or policy violation on any page at 1280 and 390 pixels.
@@ -98,11 +109,11 @@ Colours are CSS `light-dark()` values, so one set follows the device; `theme.js`
 
 ## Install on a phone
 
-`python3 tests/app_test.py build/site-update-X.Y.Z.zip` (Chromium, ports 8890-8891): the manifest is valid JSON served as `application/manifest+json`, GET only and public; `start_url` (Home) is inside `scope` (the site root); every icon exists as a PNG of the stated size; the name and shortcuts follow a changed site name and the bar's names, order and hidden pages; all of this also from a sub-folder install (`/hub/`); every page has the manifest, theme colour and iPhone tags and they resolve; Chromium's `Page.getInstallabilityErrors` and `Page.getAppManifest` report nothing for the top, Home and the sub-folder Home; no service worker exists apart from Tools' own; the Settings card shows its steps, hides Install until the browser offers it, then opens the browser's prompt once. Chromium needs no service worker to install the site, so none was added. The Apache test (A7) checks the manifest and its icons with the real `.htaccess` files.
+`python3 tests/browser/app_test.py build/site-update-X.Y.Z.zip` (Chromium, ports 8890-8891): the manifest is valid JSON served as `application/manifest+json`, GET only and public; `start_url` (Home) is inside `scope` (the site root); every icon exists as a PNG of the stated size; the name and shortcuts follow a changed site name and the bar's names, order and hidden pages; all of this also from a sub-folder install (`/hub/`); every page has the manifest, theme colour and iPhone tags and they resolve; Chromium's `Page.getInstallabilityErrors` and `Page.getAppManifest` report nothing for the top, Home and the sub-folder Home; no service worker exists apart from Tools' own; the Settings card shows its steps, hides Install until the browser offers it, then opens the browser's prompt once. Chromium needs no service worker to install the site, so none was added. The Apache test (A7) checks the manifest and its icons with the real `.htaccess` files.
 
 ## Library check
 
-`python3 tests/check_libraries.py` checks that the two known problems in bundled libraries (pdf.js in Tools and SheetJS in Cards) cannot be reached: every place that opens a PDF sets `isEvalSupported:false`, and no code reads Excel files. With `--audit` it also asks npm for advisories on the exact versions and fails on any new one. CI runs the offline part on every push.
+`python3 tests/repo/check_libraries.py` checks that the two known problems in bundled libraries (pdf.js in Tools and SheetJS in Cards) cannot be reached: every place that opens a PDF sets `isEvalSupported:false`, and no code reads Excel files. With `--audit` it also asks npm for advisories on the exact versions and fails on any new one. CI runs the offline part on every push.
 
 ## Browser tests
 
@@ -114,9 +125,9 @@ One difference in how the test runs: `pages_test.py` adds each page's `.htaccess
 
 Refused content is found in every engine through the standard `securitypolicyviolation` event (`CSP_REPORTER` in `helpers.py`); each engine words its own console message differently.
 
-- `python3 tests/tools_test.py build/site-update-X.Y.Z.zip`: every tool opens without an error, and real PDFs and images go through the main tools (convert, compress, merge, text, resize, QR, and the PDF tools with page previews).
-- `python3 tests/pages_test.py build/site-update-X.Y.Z.zip`: every page and every Settings section loads with no error and no broken request, every page (Tools too) shows the site logo as its tab icon, Text Sizes opens from the Page Settings of Links, Info and Cards, and the Cards Excel export opens.
-- `python3 tests/a11y_test.py build/site-update-X.Y.Z.zip`: axe-core (WCAG 2.1 A and AA) on every app page in dark and light mode, and on Links' Import Bookmarks dialog and Settings > General.
+- `python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip`: every tool opens without an error, and real PDFs and images go through the main tools (convert, compress, merge, text, resize, QR, and the PDF tools with page previews).
+- `python3 tests/browser/pages_test.py build/site-update-X.Y.Z.zip`: every page and every Settings section loads with no error and no broken request, every page (Tools too) shows the site logo as its tab icon, Text Sizes opens from the Page Settings of Links, Info and Cards, and the Cards Excel export opens.
+- `python3 tests/browser/a11y_test.py build/site-update-X.Y.Z.zip`: axe-core (WCAG 2.1 A and AA) on every app page in dark and light mode, and on Links' Import Bookmarks dialog and Settings > General.
 
 The fixture files (`fixture-*.pdf`, `fixture-image.png`, `favicon-fixture.png`) are small test inputs made for these tests.
 
@@ -125,12 +136,12 @@ The fixture files (`fixture-*.pdf`, `fixture-image.png`, `favicon-fixture.png`) 
 The `.htaccess` files (security policies, private folders, caching, the page pre-loading header) only work on Apache, and PHP's test server ignores them.
 
 ```
-sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip   # installs Apache with PHP and serves the zip on port 8300
-python3 tests/apache_test.py
+sudo sh tests/server/apache_setup.sh build/site-update-X.Y.Z.zip   # installs Apache with PHP and serves the zip on port 8300
+python3 tests/server/apache_test.py
 ```
 
 It checks that every page answers with its policy and pre-loading header, private files and folders are refused, the rules file has its type, and in a browser nothing is refused and Tools loads its main file once.
 
 ## Screenshots
 
-`screenshots.py` installs a zip, adds invented demo data (`seed_demo.php`), and saves dark, light and phone screenshots with Playwright and Chromium. The website and the guide use these.
+`tools/screenshots.py` installs a zip, adds invented demo data (`seed_demo.php`), and saves dark, light and phone screenshots with Playwright and Chromium. The website and the guide use these.

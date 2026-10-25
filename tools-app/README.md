@@ -4,8 +4,8 @@ The source of the Tools page (`web/tools`). Plain JavaScript modules, bundled by
 
 ```
 python3 tools/build-tools.py --install    # builds into src/web/tools and refreshes the fingerprint; commit the result
-python3 tools/build.py && python3 tests/tools_test.py build/site-update-X.Y.Z.zip
-python3 tools/build-tools.py              # or: a staging copy in build/tools-new, tested with  tests/tools_test.py ZIP build/tools-new
+python3 tools/build.py && python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip
+python3 tools/build-tools.py              # or: a staging copy in build/tools-new, tested with  tests/browser/tools_test.py ZIP build/tools-new
 ```
 
 - `src/tools.json`: the one list of tools (id, name, section, description, search words, icon, popular order). The app, the website's

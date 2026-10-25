@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The site on real Apache, where the .htaccess files apply (PHP's test server ignores them).
-  sudo sh tests/apache_setup.sh build/site-update-X.Y.Z.zip
-  python3 tests/apache_test.py [http://127.0.0.1:8300]
+  sudo sh tests/server/apache_setup.sh build/site-update-X.Y.Z.zip
+  python3 tests/server/apache_test.py [http://127.0.0.1:8300]
 Checks: every page answers with its security policy and the page pre-loading header; private files and folders are refused;
 the pre-loading rules file is served with its type; the app manifest and its icons are public; in a browser nothing is refused; no error and Tools loads
 its main file once."""

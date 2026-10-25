@@ -3,10 +3,11 @@
 Needs PHP 8.3+ with curl, zip and mbstring. See tests/README.md."""
 import json, os, shutil, subprocess, sys, threading, time, urllib.request, urllib.error, http.cookiejar, zipfile, hashlib, http.server, socketserver, glob
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX, SEED
 from helpers import UA, PW, HERE, Site, Checks, mutate_zip, zip_version, sha, stop_all
 if len(sys.argv) < 4:
-    sys.exit('Usage: python3 tests/update_test.py CURRENT.zip PREVIOUS.zip OLDER.zip\n'
+    sys.exit('Usage: python3 tests/server/update_test.py CURRENT.zip PREVIOUS.zip OLDER.zip\n'
              '  CURRENT   the zip just built (tools/build.py)\n'
              '  PREVIOUS  the latest published release zip (before CURRENT)\n'
              '  OLDER     any older release zip (for the upload upgrade and Go Back tests)\n'
@@ -44,7 +45,7 @@ def route_good(ver=f'{NEXTV}', zp=NEW, **over):
     d.update(over); ROUTES['/latest.json'] = jl(d)
     LOG.clear()
 
-# ---------- sites (tests/helpers.py) ----------
+# ---------- sites (tests/lib/helpers.py) ----------
 check = Checks(); res = check.res
 
 try:
@@ -157,7 +158,7 @@ try:
     out = subprocess.run(['php', '-r', prog], capture_output=True, text=True).stdout.strip()
     check('E6 the PHP support notice: 7.4 and 8.1 warn, 8.2 gives notice, newer ones stay quiet (at 23 Oct 2026)', out == '7.4=warn 8.1=warn 8.2=info 8.3=none 8.4=none 8.5=none 9.0=none', out)
     # ===== F. Tools > Favicon: the icon address (the icon service is replaced by a fixture; nothing leaves this computer) =====
-    fixture = open(os.path.join(HERE, 'favicon-fixture.png'), 'rb').read()
+    fixture = open(os.path.join(FIX, 'favicon-fixture.png'), 'rb').read()
     s = Site(CUR, 9500)
     def anon(qs, method='GET'):
         rq = urllib.request.Request(s.base + '/web/core-data/api.php?action=favicon' + qs, method=method, data=b'{}' if method == 'POST' else None, headers={'User-Agent': UA})
@@ -178,7 +179,7 @@ try:
     check('F6 a visitor is limited to 60 icons per 10 minutes, then gets a clear wait message', code == 429 and st_ == 429 and 58 <= n_ok <= 60 and hd.get('Retry-After') == '600', (code, n_ok, hd.get('Retry-After')))
     zf = zipfile.ZipFile(CUR); defs = [n for n in zf.namelist() if n.endswith('.php') and re.search(rb"define\('HUB_TEST_", zf.read(n))]
     check('F7 the release never turns the test shortcut on by itself', not defs, defs)
-    prog = ("require '%s/web/core-data/lib/boot.php'; echo (hub_png_ok(file_get_contents('%s')) ? 'y' : 'n'), (hub_png_ok('GIF89a' . str_repeat('x', 200)) ? 'y' : 'n'), (hub_png_ok('<html>' . str_repeat('x', 200)) ? 'y' : 'n'), (hub_png_ok(\"\\x89PNG\\r\\n\\x1a\\n\" . str_repeat('x', 30)) ? 'y' : 'n');" % (s.dir, os.path.join(HERE, 'favicon-fixture.png')))
+    prog = ("require '%s/web/core-data/lib/boot.php'; echo (hub_png_ok(file_get_contents('%s')) ? 'y' : 'n'), (hub_png_ok('GIF89a' . str_repeat('x', 200)) ? 'y' : 'n'), (hub_png_ok('<html>' . str_repeat('x', 200)) ? 'y' : 'n'), (hub_png_ok(\"\\x89PNG\\r\\n\\x1a\\n\" . str_repeat('x', 30)) ? 'y' : 'n');" % (s.dir, os.path.join(FIX, 'favicon-fixture.png')))
     out = subprocess.run(['php', '-r', prog], capture_output=True, text=True).stdout.strip()
     check('F8 only a real PNG of a sensible size is passed on (not a GIF, a web page or a stub)', out == 'ynnn', out)
 finally:

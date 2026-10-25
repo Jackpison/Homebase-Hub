@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """The Tools page (built from tools-app/), installed in a real site: the app (sections, search, favourites, recent, organise,
 settings, the carry-over from the old Tools, light and dark) and every tool built so far, in a real browser, plus axe.
-    python3 tests/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser ...]
+    python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser ...]
 With a second argument (python3 tools/build-tools.py makes build/tools-new) that staging copy is swapped in first.
 Needs PHP, Playwright and axe-core (npm ci). Port 8960."""
 import hashlib, io, json, os, shutil, sys, zipfile
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX as FIXDIR, SEED
 from helpers import Site, Checks, stop_all, browser_name, launch, wait_js, HERE
 from playwright.sync_api import sync_playwright
 
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 ZIP = sys.argv[1]
-ROOT = os.path.dirname(HERE)
 NEW = sys.argv[2] if len(sys.argv) > 2 else ''
 DATA = json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))
 AXE = open(os.path.join(ROOT, 'node_modules', 'axe-core', 'axe.min.js'), encoding='utf-8').read()
@@ -92,7 +92,7 @@ try:
         check('N15 ZIP Creator puts both files into one ZIP', sorted(z.namelist()) == ['a.txt', 'b.txt'] and z.read('a.txt') == b'hello ' * 100 and name == 'files.zip', (z.namelist(), name))
 
         pg.goto(U + '#/tool/favicon'); wait_js(pg, "!!document.querySelector('#root .seg')")
-        pg.get_by_role('button', name='Make an Icon Pack', exact=True).click(); pg.set_input_files('#root .dropwrap input[type=file]', os.path.join(HERE, 'fixture-image.png'))
+        pg.get_by_role('button', name='Make an Icon Pack', exact=True).click(); pg.set_input_files('#root .dropwrap input[type=file]', os.path.join(FIXDIR, 'fixture-image.png'))
         wait_js(pg, "document.querySelectorAll('#root .icons img').length === 5")
         data, name = dl(lambda: pg.get_by_role('button', name='Download the Icon Pack (ZIP)', exact=True).click())
         z = zipfile.ZipFile(io.BytesIO(data)); ico = z.read('favicon.ico')
@@ -105,8 +105,8 @@ try:
         def img(data): return PI.open(io.BytesIO(data))
         noisy = os.path.join(TMP, 'big-photo.jpg')
         PI.effect_noise((1600, 1200), 70).convert('RGB').resize((2000, 1500)).save(noisy, quality=95)
-        tif = os.path.join(TMP, 'scan.tif'); PI.open(os.path.join(HERE, 'fixture-image.png')).save(tif)
-        FIX = os.path.join(HERE, 'fixture-image.png'); HEIC = os.path.join(HERE, 'fixture-photo.heic')
+        tif = os.path.join(TMP, 'scan.tif'); PI.open(os.path.join(FIXDIR, 'fixture-image.png')).save(tif)
+        FIX = os.path.join(FIXDIR, 'fixture-image.png'); HEIC = os.path.join(FIXDIR, 'fixture-photo.heic')
         OPENED = []
         def open_tool(i):   # through the home, so the tool starts fresh even when it was the last one open
             OPENED.append(i)
@@ -225,7 +225,7 @@ try:
         check('P14 ...and as a PDF', data[:5] == b'%PDF-' and name == 'collage.pdf', data[:8])
         # ---------- PDF ----------
         from pypdf import PdfReader
-        P3, P2 = os.path.join(HERE, 'fixture-3pages.pdf'), os.path.join(HERE, 'fixture-2pages.pdf')
+        P3, P2 = os.path.join(FIXDIR, 'fixture-3pages.pdf'), os.path.join(FIXDIR, 'fixture-2pages.pdf')
         rd = lambda b: PdfReader(io.BytesIO(b))
         load('pdf-merge', [P3, P2]); data, name = run_save('Merge'); check('D1 Merge PDF: 3 + 2 pages make one 5-page PDF', len(rd(data).pages) == 5 and name == 'merged.pdf', name)
         load('pdf-split', P3); wait_js(pg, "document.querySelector('#root').innerText.includes('3 pages')", 20000)

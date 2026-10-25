@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Checks that the bundled libraries have no known security problem that this site could reach. Run it before a release (CI runs it).
-  python3 tests/check_libraries.py            fast checks on the source tree, offline
-  python3 tests/check_libraries.py --audit    also asks npm for advisories on the exact versions (needs network and npm)
+  python3 tests/repo/check_libraries.py            fast checks on the source tree, offline
+  python3 tests/repo/check_libraries.py --audit    also asks npm for advisories on the exact versions (needs network and npm)
 
 1. pdf.js (Tools, from tools-app/package-lock.json) must be 6.2.108 or newer, opened with eval switched off: older versions have two advisories where a crafted PDF can run script
    (GHSA-wgrm-67xf-hhpq before 4.2.67, GHSA-hq66-cqwq-w95j from 5.6.83 to 6.2.107). No older copy may be left behind.
 2. SheetJS is no longer used (its last npm version has advisories and gets no fixes): Cards writes Excel files itself.
    No code may load it again."""
 import glob, json, os, re, subprocess, sys
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 W = os.path.join(ROOT, 'src', 'web')
 T = os.path.join(W, 'tools', 'assets')
 bad = []

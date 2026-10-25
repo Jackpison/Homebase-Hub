@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Every page and every Settings section in a real browser, with demo data: no page error, no broken request, and the Cards Excel export opens.
-  python3 tests/pages_test.py build/site-update-X.Y.Z.zip
+  python3 tests/browser/pages_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ and Playwright with Chromium (or --browser firefox|webkit); openpyxl is used to read the Excel file when it is installed.
 Nothing leaves this computer: every request to another site is blocked."""
 import io, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.request, http.cookiejar, zipfile
 from playwright.sync_api import sync_playwright
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX, SEED
 from helpers import browser_name, launch, browser_login, CSP_REPORTER
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -27,7 +27,7 @@ try:
     call('state')
     code = re.search(r'([A-Z0-9]{4}(?:-[A-Z0-9]{4})+|[A-Z0-9]{8,})', open(D + '/site-data/core/SETUP-CODE.php').read().replace('<?php', '')).group(1)
     check('P1 a new site can be set up', call('setup', {'code': code, 'password': PW}).get('ok'))
-    subprocess.run(['php', os.path.join(HERE, 'seed_demo.php'), D], capture_output=True)
+    subprocess.run(['php', SEED, D], capture_output=True)
     ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/core-data/lib/boot.php').read()).group(1)
     cookies = [{'name': c.name, 'value': c.value, 'url': B + '/'} for c in cj]
     panes = re.findall(r"\['([a-z]+)', '[A-Z][^']*', ICON", open(D + '/web/docs/src/core-data/shell-admin.src.js', encoding='utf-8').read())

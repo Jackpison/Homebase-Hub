@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Tests tools/release.py on a temporary copy of the repo: bump, fill in, check passes; then break each thing in turn
-and see the check fail. Needs git and Python only.   python3 tests/release_test.py"""
+and see the check fail. Needs git and Python only.   python3 tests/repo/release_test.py"""
 import os, re, shutil, subprocess, sys, tempfile
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 passed = failed = 0
 
 

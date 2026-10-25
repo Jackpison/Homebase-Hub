@@ -11,7 +11,11 @@ import glob, hashlib, http.cookiejar, json, os, re, shutil, subprocess, sys, tim
 
 UA = 'ghtest/1.0'
 PW = 'correct horse battery staple'
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.abspath(__file__))   # tests/lib: these helpers, prepend.php, seed_demo.php
+TESTS = os.path.dirname(HERE)
+ROOT = os.path.dirname(TESTS)                        # the repository
+FIX = os.path.join(TESTS, 'fixtures')                # files the tests open: PDFs, pictures, bookmark exports
+SEED = os.path.join(HERE, 'seed_demo.php')           # invented demo data for Info and Cards
 PREPEND = os.path.join(HERE, 'prepend.php')
 _procs = []
 

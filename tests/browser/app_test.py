@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Install on a phone or computer: the web app manifest, its icons, the head tags on every page, a sub-folder install,
 the Settings card and its Install button, and that Chromium finds nothing missing for installing (Page.getInstallabilityErrors).
-    python3 tests/app_test.py build/site-update-X.Y.Z.zip
+    python3 tests/browser/app_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+, Playwright with Chromium and Pillow. Ports 8890-8891."""
 import io, json, os, re, sys
 from urllib.parse import urljoin
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX, SEED
 from helpers import Site, Checks, stop_all, browser_login, wait_js
 from playwright.sync_api import sync_playwright
 from PIL import Image

@@ -8,18 +8,18 @@
   * no sideways scrolling at 390 and 1280 pixels, and no console error or policy violation;
   * moving between pages: the fade (where the browser has it) and the header that hides while scrolling down;
   * axe (WCAG 2.1 A and AA) on every page, in dark and in light.
-    python3 tests/website_test.py build/site [--browser chromium|firefox|webkit]
+    python3 tests/browser/website_test.py build/site [--browser chromium|firefox|webkit]
 Needs Playwright and axe-core (npm ci). The built tools list is compared with the Tools bundle in src/."""
 import functools, html.parser, http.server, json, os, re, socketserver, sys, threading, urllib.parse
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
+from helpers import ROOT, FIX, SEED
 from helpers import Checks, browser_name, launch, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 SITE = os.path.abspath(sys.argv[1])
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = 'https://jackpison.github.io/Homebase-Hub/'
 AXE = open(os.path.join(ROOT, 'node_modules', 'axe-core', 'axe.min.js'), encoding='utf-8').read()
 RUN = "async()=>{const r=await axe.run(document,{resultTypes:['violations'],runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return r.violations.map(v=>v.id+' x'+v.nodes.length+' '+v.nodes[0].target.join(' '))}"

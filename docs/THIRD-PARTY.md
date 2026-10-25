@@ -27,7 +27,7 @@ libheif is unmodified and is loaded as a separate file (`web/tools/assets/t-libh
 
 ## Security review of the bundled libraries
 
-Last checked 23 October 2026 with `npm audit` against the exact versions in the site: **no known advisory**. Run `python3 tests/check_libraries.py --audit` to repeat it; CI runs the offline part on every push.
+Last checked 23 October 2026 with `npm audit` against the exact versions in the site: **no known advisory**. Run `python3 tests/repo/check_libraries.py --audit` to repeat it; CI runs the offline part on every push.
 
 | Library | Version | Notes |
 |---|---|---|
