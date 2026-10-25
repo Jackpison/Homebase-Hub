@@ -46,7 +46,8 @@ try:
         pg.on('request', lambda r: loads.append(r.url) if 'links-import' in r.url else None)
         why = browser_login(pg, s.base)
         check('I0 the browser logs in', why == '', why)
-        pg.goto(s.base + '/web/links/', wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.isAdmin && HUB.isAdmin())", 15000); pg.wait_for_timeout(600)
+        pg.goto(s.base + '/web/links/', wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.isAdmin && HUB.isAdmin()) && !!document.querySelector('#importBmBtn') && document.querySelectorAll('[data-hub=item]').length > 0", 15000)
+        pg.wait_for_timeout(500)   # on purpose: I1 checks the importer is NOT fetched, so give the page time it could have used
         check('I1 Links does not load the importer until it is used', not loads, loads)
         items = pg.evaluate("[...document.querySelectorAll('[data-hub=item]')].map(e => e.getAttribute('data-hub-label'))")
         check('I2 Import Bookmarks is in the Links menu, right after Fetch Icons', 'Import Bookmarks' in items and items.index('Fetch Icons') + 1 == items.index('Import Bookmarks'), items)
@@ -91,7 +92,7 @@ try:
         r = s.post('version_restore', {'app': 'links', 'id': vers[0]['id']}) if vers else {}
         d = links_data(s)
         check('I12 Earlier Versions undoes the import (the version was kept right before it)', vers and r.get('ok') and tab_named(d, 'From Chrome') is None and tab_named(d, 'Daily'), (vers[:2], r))
-        pg.reload(wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.isAdmin && HUB.isAdmin())", 15000); pg.wait_for_timeout(600)
+        pg.reload(wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.isAdmin && HUB.isAdmin()) && !!document.querySelector('#importBmBtn') && document.querySelectorAll('[data-hub=item]').length > 0", 15000)
 
         # ----- Firefox export into the existing tab, made private -----
         open_dlg(); pv, er = choose('firefox.html')
@@ -136,7 +137,7 @@ try:
         check('I23 only the 8 web links were saved, all http(s)', len(ls) == 8 and all(l['url'].startswith('https://safe.example.com/') for l in ls), [l['url'] for l in ls])
         check('I24 titles are kept as plain text (markup shown, never run)', "<script>window.__pwned='title'</script>" in titles and any(x.startswith('<img src=x onerror=') for x in titles), titles[:3])
         check('I25 control characters, the null byte and direction overrides are gone; a huge title is cut to 200; an empty one uses the host', all(not re.search(r'[\x00-\x1f\u202e\ufffd]', x) for x in titles) and max(map(len, titles)) == 200 and 'safe.example.com' in titles, [len(x) for x in titles])
-        pg.wait_for_timeout(500)
+        pg.wait_for_timeout(500)   # on purpose: I26 checks nothing from the file ran, so give a planted onerror time to fire
         markup = pg.evaluate("document.querySelectorAll('#grid img[src=\"x\"], #grid script, #grid b').length")
         check('I26 nothing from the file ran or became markup on the page', pg.evaluate("window.__pwned === undefined") and markup == 0 and not errs, (pg.evaluate("window.__pwned"), markup, errs))
         close()
@@ -166,14 +167,14 @@ try:
 
         # ----- six tabs: the new-tab choice is off, existing tabs offered -----
         s.php("""$d = hub_read_guarded(hub_dir('links') . '/bookmarks.php'); $d['tabs'][] = ['id' => 'locked1', 'title' => 'Locked Tab', 'private' => true, 'enc' => 'enc1:' . base64_encode(random_bytes(64)), 'categories' => []]; while (count($d['tabs']) < 6) $d['tabs'][] = ['id' => 'x' . count($d['tabs']), 'title' => 'Extra ' . count($d['tabs']), 'categories' => []]; hub_write_guarded(hub_dir('links') . '/bookmarks.php', $d);""")
-        pg.reload(wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.isAdmin && HUB.isAdmin())", 15000); pg.wait_for_timeout(600)
+        pg.reload(wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.isAdmin && HUB.isAdmin()) && !!document.querySelector('#importBmBtn') && document.querySelectorAll('[data-hub=item]').length > 0", 15000)
         open_dlg()
         check('I35 with 6 tabs (the most Links holds) the new-tab choice is off and says why', pg.is_disabled('#impToNew') and pg.is_checked('#impToTab') and '6 tabs' in pg.inner_text('#impTabNote'))
         opts = pg.evaluate("[...document.querySelectorAll('#impTab option')].map(o => o.value)")
         check('I35b an encrypted tab is never offered as a target', 'locked1' not in opts and 'daily' in opts, opts)
         choose('chrome.html')
         pg.mouse.move(2, 2)   # a hovered button is slightly lighter: axe must see the resting colours
-        pg.wait_for_timeout(200)
+        pg.wait_for_timeout(200)   # on purpose: the hover colour fades out (a CSS transition) before axe reads the colours
         pg.evaluate(AXE)
         viol = pg.evaluate(AXE_RUN)
         check('I36 axe (WCAG 2.1 A and AA) finds nothing in the open dialog with a preview', not viol, viol)
