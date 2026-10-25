@@ -7,7 +7,7 @@ These run on your own computer. Nothing here is part of the update zip.
 | `unit/` | PHP unit tests (`php tests/unit/run.php`) |
 | `browser/` | Tests in a real browser: `pages_test`, `nav_test`, `settings_test`, `tools_test`, `import_test`, `a11y_test`, `app_test`, `website_test` |
 | `server/` | Tests of the server side: `update_test`, `update_attack_test`, `core_test`, and Apache (`apache_setup.sh`, `apache_test.py`) |
-| `repo/` | Checks of the repository itself: `release_test`, `check_libraries` |
+| `repo/` | Checks of the repository itself: `release_test`, `check_libraries`, `workflows_test` |
 | `fixtures/` | Files the tests open: PDFs, pictures, a HEIC photo, the favicon stand-in, bookmark exports |
 | `lib/` | Shared helpers: `helpers.py` (sites, logins, paths), `annotate.py` (CI annotations), `prepend.php` (test-only shortcuts), `seed_demo.php` (demo data), `phpstan-bootstrap.php` |
 
@@ -42,6 +42,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 ## Release script and lint
 
 - `python3 scripts/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
+- `python3 tests/repo/workflows_test.py`: the workflow files keep their safety settings: every outside Action pinned to a full commit SHA, `persist-credentials: false` on every checkout, a time limit on every job.
 - `python3 tests/repo/release_test.py`: tests `release.py` itself on a temporary copy of the repo (a bump, then each thing broken in turn must fail the check). Needs git.
 - `npx eslint src tools-app`: `no-undef`, `no-redeclare`, `no-dupe-keys`, `no-unreachable` and `no-const-assign` on the readable scripts in `src/web` and the Tools source in `tools-app/` (not the built Tools files, not `vendor/`). `eslint.config.js` lists each page's real globals and says why.
 

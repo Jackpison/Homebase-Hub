@@ -10,6 +10,7 @@ permissions:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     name: open the reminder issue
     steps:
       - name: Open the issue (once per year)

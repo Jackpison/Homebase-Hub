@@ -22,6 +22,7 @@ jobs:
     name: build (PHP ${{ matrix.php }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with: { php-version: '${{ matrix.php }}' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -38,6 +39,8 @@ jobs:
           php -d memory_limit=1G phpstan.phar analyse -c tests/repo/phpstan.neon --no-progress
       - name: Library safety check
         run: python3 tests/repo/check_libraries.py
+      - name: Workflow files keep their safety settings (pinned Actions, no kept token, time limits)
+        run: python3 tests/repo/workflows_test.py
       - name: Version agrees everywhere (scripts/release.py --check) and its own test
         run: python3 scripts/release.py --check && python3 tests/repo/release_test.py
       - name: Build
@@ -57,6 +60,7 @@ jobs:
     name: server (updates, hostile zips, core)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -107,6 +111,7 @@ jobs:
     name: tests (browser, accessibility, website)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -174,6 +179,7 @@ jobs:
     name: visual changes since the last release
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -226,6 +232,7 @@ jobs:
     name: browser (${{ matrix.browser }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -282,6 +289,7 @@ jobs:
     name: apache (the .htaccess files)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
