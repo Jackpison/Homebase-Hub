@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.48.5 | A new Cards page (by holder, with totals), Settings regrouped into Web, Data and System Setting, and tidier pencil menus |
 | 1.48.2 | The Settings menu as before 1.48, the Backup icon and gear back, a sun and moon theme button, a softer look for new sites, and fixes for the Settings cards and the Tools tab icon |
 | 1.48.1 | Fix: the Security and Telegram cards in Settings look right again |
 | 1.48.0 | Navigation and fluidity: three redesigned bar styles, a Top Bar that hides while you scroll, a round menu, and a simpler Settings |
@@ -70,6 +71,31 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.48.5
+
+### Cards
+
+- **Cards are grouped by holder.** Each person has a section with their number of cards, total limit and yearly charges; click a heading to fold it, and it stays folded. **One List** shows every card together, with a Holder column.
+- **One line of totals** replaces the five boxes: cards, total limit, charges a year, and how many expire soon or have expired.
+- **Six columns instead of eleven:** the card with its bank and remark under it, Limit, Charges, Expiry and Details (network, variant and base as small labels). On a phone each card takes two lines.
+- **Colour now means something:** a yearly fee and a card that expires within 3 months are amber; an expired card is red.
+- **Filters:** a search box, a button for each holder, and **More Filters** for bank, network and type. **Clear** shows only when a filter is on.
+- Click anywhere on a card's row to edit it, or use the pencil at the end of the row.
+- **The pencil menu is simpler:** Add Card, Add Holder, Edit Holders, Edit Banks, Export and Cards Settings. **Column Order** (for Excel and PDF) is inside Cards Settings.
+
+### Settings
+
+- **The menu groups are now Web Setting** (General, Appearance), **Data Setting** (Security, Telegram, Backup & Restore) and **System Setting** (Health, Updates, Changelog).
+- **Navigation Style** (Top Bar, Sidebar or Bottom Dock) and **Show the Bar on the Start Page** moved to Appearance > Look.
+- General has Basics and **Tabs** (rename, reorder or hide the pages in the bar). The Pages tab was removed; links to it open Tabs.
+
+### Pencil Menus
+
+- **Links:** Edit This Page, Colors, Fetch Icons, then Import Bookmarks and Links Settings.
+- **Page Settings is renamed** Links Settings, Info Settings, Tasks Settings and Cards Settings, and each settings window has the same name.
 
 ---
 
