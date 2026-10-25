@@ -180,7 +180,7 @@ story += chapter('6', 'Info', 'Notes in tabs. Each tab holds from 1 to 12 boxes.
  Tip('The PDF export uses a built-in font. For text in non-Latin scripts, export as text instead.'))
 
 story += chapter('7', 'Cards', 'Your cards in one table, or grouped by holder, with the totals worked out.',
- shot('cards-crop', 'Cards with example data. The boxes at the top add up limits and yearly charges, and count cards that expire soon.'),
+ shot('cards-crop', 'Cards with example data. The coloured boxes at the top count cards and Lifetime Free cards, add up yearly charges, and count cards that expire soon.'),
  table(['Column', 'What it shows'], [['Card', 'The card\'s name, with its bank and your remark under it. Both are linked to their pages where known.'], ['Holder', 'Whose card it is (in Table).'],
    ['Limit', 'The credit limit.'], ['Charges', 'The yearly fee, or Free. A fee is amber.'], ['Expiry', 'Month and year. Amber when it expires within 3 months, red once it has expired.'], ['Details', 'Network and variant, the base (LTF, FD or Paid), and Debit for a debit card.']]),
  P('%s (the default) shows every card together. %s gives each person a section with their totals; click a heading to fold it. Use the search box, the holder buttons, or %s for bank, network and type. Click a row to edit the card.' % (C('Table'), C('By Holder'), C('More Filters'))),

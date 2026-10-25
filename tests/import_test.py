@@ -49,7 +49,7 @@ try:
         pg.goto(s.base + '/web/links/', wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.isAdmin && HUB.isAdmin())", 15000); pg.wait_for_timeout(600)
         check('I1 Links does not load the importer until it is used', not loads, loads)
         items = pg.evaluate("[...document.querySelectorAll('[data-hub=item]')].map(e => e.getAttribute('data-hub-label'))")
-        check('I2 Import Bookmarks is in the Links menu, next to Fetch Icons', 'Import Bookmarks' in items and items.index('Import Bookmarks') + 1 == items.index('Fetch Icons'), items)
+        check('I2 Import Bookmarks is in the Links menu, right after Fetch Icons', 'Import Bookmarks' in items and items.index('Fetch Icons') + 1 == items.index('Import Bookmarks'), items)
 
         def open_dlg():
             pg.evaluate("document.querySelector('#importBmBtn').click()")

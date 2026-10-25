@@ -125,8 +125,8 @@ try:
         rows = lambda: pg.evaluate("document.querySelectorAll('#list .row.item').length")
         stat = lambda: pg.evaluate("[...document.querySelectorAll('#stats .stat')].map(e => e.querySelector('.sl').textContent + '=' + e.querySelector('b').textContent)")
         first = (len(grp()), rows(), pg.evaluate("getComputedStyle(document.querySelector('#list .row.item .co')).display"), stat())
-        check('P11 Cards opens as the Table (every card, with a Holder column) under four boxes: Cards, Total Limit, Charges a Year, Expiring Soon',
-              first[:3] == (0, 9, 'block') and first[3] == ['Cards=9', 'Total Limit=₹16,90,000', 'Charges a Year=₹8,499', 'Expiring Soon=1']
+        check('P11 Cards opens as the Table (every card, with a Holder column) under four boxes: Cards, Lifetime Free, Charges a Year, Expiring Soon; the first chip is All Cards',
+              first[:3] == (0, 9, 'block') and first[3] == ['Cards=9', 'Lifetime Free=4 of 9', 'Charges a Year=₹8,499', 'Expiring Soon=1'] and pg.evaluate("document.querySelector('#fchips [data-h=All]').textContent") == 'All Cards'
               and pg.evaluate("document.querySelector('#fview [aria-pressed=true]').textContent") == 'Table', first)
         pg.click('#fview [data-v=holder]'); pg.wait_for_timeout(200)
         check('P12 By Holder: one section per holder with its totals, and the choice is kept',

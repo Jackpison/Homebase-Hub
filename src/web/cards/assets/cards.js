@@ -205,19 +205,20 @@ function render(){
   $("fkind").value=F.kind;
   if(F.bank||F.net||F.kind)$("fx").hidden=false;
   $("fmore").setAttribute("aria-expanded",String(!$("fx").hidden));
-  $("fchips").innerHTML=P.length>1?["All",...P].map(p=>`<button type="button" class="chip" data-h="${esc(p)}" aria-pressed="${active===p}">${p==="All"?"All Holders":dot(p)+esc(p)}</button>`).join(""):"";
+  $("fchips").innerHTML=P.length>1?["All",...P].map(p=>`<button type="button" class="chip" data-h="${esc(p)}" aria-pressed="${active===p}">${p==="All"?"All Cards":dot(p)+esc(p)}</button>`).join(""):"";
   $("fview").hidden=P.length<2;
   $("fview").querySelectorAll("[data-v]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===VIEW)));
   $("fclear").hidden=!hasF();
   $("sortSel").value=sort.k?sort.k+":"+sort.d:"";
   const t=totals(list);
-  const box=(label,value,sub,cl)=>`<div class="stat${cl?" "+cl:""}"><span class="sl">${label}</span><b>${value}</b><small>${sub}</small></div>`;
-  const bases=[["LTF","LTF"],["FD","FD"],["Paid","Paid"]].map(([k,l])=>t.base(k)?t.base(k)+" "+l:"").filter(Boolean).join(" · ");
+  // four coloured boxes; each colour is its own (s-cards, s-ltf, s-fee, s-exp), Expiring Soon turns red once a card has expired
+  const box=(cl,label,value,sub)=>`<div class="stat ${cl}"><span class="sl">${label}</span><b>${value}</b><small>${sub}</small></div>`;
+  const others=[["FD","FD"],["Paid","Paid"]].map(([k,l])=>t.base(k)?t.base(k)+" "+l:"").filter(Boolean).join(" · ");
   $("stats").innerHTML=!D.length?"":
-    box("Cards",t.n,`${t.n-t.debit} credit · ${t.debit} debit`)+
-    box("Total Limit",inr(t.limit),bases||"&nbsp;")+
-    box("Charges a Year",inr(t.fee),t.fee?plural(list.filter(c=>c.fee).length,"card has a fee","cards have a fee"):"Every card is free")+
-    box("Expiring Soon",t.soon||"None",t.past?`<span class="bad">${t.past} expired</span>`:`Within ${SOON_MONTHS} months`,t.soon?"warn":t.past?"bad":"");
+    box("s-cards","Cards",t.n,`${t.n-t.debit} credit · ${t.debit} debit`)+
+    box("s-ltf","Lifetime Free",`${t.base("LTF")}<span class="of"> of ${t.n}</span>`,others||"No fee-based cards")+
+    box("s-fee","Charges a Year",inr(t.fee),t.fee?plural(list.filter(c=>c.fee).length,"card has a fee","cards have a fee"):"Every card is free")+
+    box(t.past?"s-exp bad":"s-exp","Expiring Soon",t.soon||"None",t.past?`${t.past} expired`:`Within ${SOON_MONTHS} months`);
   const g=grouped();
   $("list").classList.toggle("grouped",g);
   const head=`<div class="row head">`+HEADS.map(([k,l,c])=>`<span class="h-${k||"d"}${c?" "+c:""}">${k?`<button class="sh" data-k="${k}" data-on="${sort.k===k?1:0}" aria-label="Sort by ${l}">${l}${sort.k===k?(sort.d===1?" ▲":" ▼"):""}</button>`:l}</span>`).join("")+`<span></span></div>`;

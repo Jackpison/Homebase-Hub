@@ -79,10 +79,10 @@ Nothing to migrate by hand unless an entry says so.
 ### Cards
 
 - **A cleaner table, or your cards grouped by holder.** **Table** (the default) shows every card with a Holder column. **By Holder** gives each person a section with their number of cards, total limit and yearly charges; click a heading to fold it, and it stays folded.
-- **Four boxes at the top:** Cards (credit and debit), Total Limit (with how many are LTF, FD and Paid), Charges a Year, and Expiring Soon (amber when a card expires within 3 months; red when one has expired). They follow the search and filters.
+- **Four coloured boxes at the top:** Cards (credit and debit), Lifetime Free (how many of your cards, plus FD and Paid), Charges a Year, and Expiring Soon (red once a card has expired). They follow the search and filters.
 - **Six columns instead of eleven:** the card with its bank and remark under it, Limit, Charges, Expiry and Details (network, variant and base as small labels). On a phone each card takes two lines.
 - **Colour now means something:** a yearly fee and a card that expires within 3 months are amber; an expired card is red.
-- **Filters:** a search box, a button for each holder, and **More Filters** for bank, network and type. **Clear** shows only when a filter is on.
+- **Filters:** a search box, **All Cards** and a button for each holder, and **More Filters** for bank, network and type. **Clear** shows only when a filter is on.
 - Click anywhere on a card's row to edit it, or use the pencil at the end of the row.
 - **The pencil menu is simpler:** Add Card, Add Holder, Edit Holders, Edit Banks, Export and Cards Settings. **Column Order** (for Excel and PDF) is inside Cards Settings.
 
