@@ -158,12 +158,12 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Python packages
         run: pip install -r tests/requirements.txt
-      - name: Browser system packages from Ubuntu (up to 3 tries of 4 minutes; a stuck download used to hold a job for 20)
-        timeout-minutes: 14
+      - name: Browser system packages from Ubuntu (up to 3 tries of 2 minutes; a good install takes under a minute, a stuck one used to hold a job for 20)
+        timeout-minutes: 8
         run: |
           for i in 1 2 3; do
-            sudo timeout -k 15 240 "$(command -v python)" -m playwright install-deps chromium && exit 0
-            echo "::warning::try $i to install the browser's system packages failed or took over 4 minutes"
+            sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps chromium && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
             sudo killall -q apt-get dpkg || true; sleep 10
           done
           exit 1
@@ -221,12 +221,12 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Python packages
         run: pip install -r tests/requirements.txt
-      - name: Browser system packages from Ubuntu (up to 3 tries of 4 minutes; a stuck download used to hold a job for 20)
-        timeout-minutes: 14
+      - name: Browser system packages from Ubuntu (up to 3 tries of 2 minutes; a good install takes under a minute, a stuck one used to hold a job for 20)
+        timeout-minutes: 8
         run: |
           for i in 1 2 3; do
-            sudo timeout -k 15 240 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
-            echo "::warning::try $i to install the browser's system packages failed or took over 4 minutes"
+            sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
             sudo killall -q apt-get dpkg || true; sleep 10
           done
           exit 1
@@ -296,12 +296,12 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Python packages
         run: pip install -r tests/requirements.txt
-      - name: Browser system packages from Ubuntu (up to 3 tries of 4 minutes; a stuck download used to hold a job for 20)
-        timeout-minutes: 14
+      - name: Browser system packages from Ubuntu (up to 3 tries of 2 minutes; a good install takes under a minute, a stuck one used to hold a job for 20)
+        timeout-minutes: 8
         run: |
           for i in 1 2 3; do
-            sudo timeout -k 15 240 "$(command -v python)" -m playwright install-deps chromium && exit 0
-            echo "::warning::try $i to install the browser's system packages failed or took over 4 minutes"
+            sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps chromium && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
             sudo killall -q apt-get dpkg || true; sleep 10
           done
           exit 1
