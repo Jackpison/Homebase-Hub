@@ -190,19 +190,17 @@ jobs:
   browsers:
     needs: changes
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
-    # Every page in a real browser: Chromium, Firefox and WebKit, each in two halves that run side by side
-    # (A: install, Settings, Import Bookmarks, pages, the bar; B: Tools, accessibility, the website). A failure names both.
+    # Every page in a real browser: Chromium, Firefox and WebKit, one job each (a failure names the browser).
+    # Split in two halves once (step 6); merged back, because each job's Ubuntu download can hang and more jobs hung more often.
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
-        part: [a, b]
     timeout-minutes: 25
-    name: browser (${{ matrix.browser }}, ${{ matrix.part }})
+    name: browser (${{ matrix.browser }})
     env:
       BROWSER: ${{ matrix.browser }}   # scripts read it from here, never pasted into the script text
-      PART: ${{ matrix.part }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
@@ -233,45 +231,46 @@ jobs:
       - name: The browser
         timeout-minutes: 10
         run: python -m playwright install "$BROWSER"
-      - name: Build the zip (and the website for part b)
-        run: python3 scripts/build.py && { [ "$PART" = a ] || python3 scripts/make-site.py --no-guide; }
+      - name: Build the zip and the website
+        id: build
+        run: python3 scripts/build.py && python3 scripts/make-site.py --no-guide
       - name: Install on a phone (manifest, icons, head tags, Settings card, Chromium installability)
-        if: matrix.part == 'a' && matrix.browser == 'chromium' && (success() || failure())
+        if: matrix.browser == 'chromium' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/app_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "app"
       - name: Settings and Home (Telegram backup button, GitHub link, upload limit, config.json clean-up)
-        if: matrix.part == 'a' && matrix.browser == 'chromium' && (success() || failure())
+        if: matrix.browser == 'chromium' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/settings_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "settings"
       - name: Import Bookmarks
-        if: matrix.part == 'a' && (success() || failure())
+        if: (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/import_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "import $BROWSER"
       - name: Pages
-        if: matrix.part == 'a' && (success() || failure())
+        if: (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/pages_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "pages $BROWSER"
       - name: The bar in all three styles (computer and phone)
-        if: matrix.part == 'a' && (success() || failure())
+        if: (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/nav_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "nav $BROWSER"
       - name: Tools
-        if: matrix.part == 'b' && (success() || failure())
+        if: (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/tools_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "tools $BROWSER"
       - name: Accessibility (Chromium and Firefox)
-        if: matrix.part == 'b' && matrix.browser != 'webkit' && (success() || failure())
+        if: matrix.browser != 'webkit' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/a11y_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "a11y $BROWSER"
       - name: Website (links, security policy, interactions, phone layout, accessibility in dark and light)
-        if: matrix.part == 'b' && (success() || failure())
+        if: (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/website_test.py build/site --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "website $BROWSER"

@@ -130,7 +130,7 @@ Colours are CSS `light-dark()` values, so one set follows the device; `theme.js`
 
 ## Browser tests
 
-Need Playwright with Chromium (`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`). `pages_test.py`, `nav_test.py`, `tools_test.py` and `a11y_test.py` take `--browser chromium|firefox|webkit` (default Chromium; install the engine first with `python3 -m playwright install firefox webkit`). CI runs the browser tests in six jobs side by side, `browser (<chromium|firefox|webkit>, <a|b>)`: part a has Import Bookmarks, pages and the bar (plus install and Settings in Chromium), part b has Tools, the website and accessibility (Chromium and Firefox).
+Need Playwright with Chromium (`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`). `pages_test.py`, `nav_test.py`, `tools_test.py` and `a11y_test.py` take `--browser chromium|firefox|webkit` (default Chromium; install the engine first with `python3 -m playwright install firefox webkit`). CI runs the browser tests in one job per engine, `browser (chromium|firefox|webkit)`: Import Bookmarks, pages, the bar, Tools and the website in all three, install and Settings in Chromium, accessibility in Chromium and Firefox. The tests run only when the zip was built, so a failed install shows as that one step.
 
 Checks skipped in an engine: none. A check that cannot work in an engine is skipped by name, with the reason written here.
 
