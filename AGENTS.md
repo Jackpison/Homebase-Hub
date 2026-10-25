@@ -38,6 +38,7 @@ python3 scripts/release.py --check
 python3 tests/repo/release_test.py
 python3 tests/repo/workflows_test.py
 python3 tests/repo/ci_status_test.py
+python3 tests/repo/ci_changes_test.py
 pip install zizmor==1.30.1 && zizmor --offline --persona=auditor .github/workflows/
 curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.1.33/phpstan.phar
 echo "48caad125554d6b416159db71dd7fd890295ba1a24b3650b49e32752e24fd6a0  phpstan.phar" | sha256sum -c -

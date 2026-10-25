@@ -5,7 +5,7 @@ so a release is never built from a commit whose tests failed or never ran.
 Exit 0: every CI job passed (or was skipped). Exit 1: a job failed, CI never ran, or it was still running when time ran out."""
 import json, subprocess, sys, time
 
-REQUIRED = 'build (PHP 8.3)'                                  # always runs on a pushed commit: proof that CI ran at all
+REQUIRED = 'ci-ok'                                            # CI's last job, after every other one: proof that CI ran to the end
 IGNORED = ('build and publish the release', 'deploy')         # the release itself, and the website deploy (not a test)
 GOOD = ('success', 'skipped', 'neutral')
 

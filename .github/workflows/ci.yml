@@ -12,6 +12,24 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  changes:
+    # Lists what this push or pull request changed. On a docs-only change (scripts/ci_changes.py says which files count)
+    # the slow jobs below skip themselves; any doubt (a new branch, a manual run, no base) runs everything.
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.c.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false, fetch-depth: 0 }
+      - id: c
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: python3 scripts/ci_changes.py >> "$GITHUB_OUTPUT"
+
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -40,7 +58,7 @@ jobs:
       - name: Library safety check
         run: python3 tests/repo/check_libraries.py
       - name: Workflow files keep their safety settings (pinned Actions, no kept token, time limits)
-        run: python3 tests/repo/workflows_test.py && python3 tests/repo/ci_status_test.py
+        run: python3 tests/repo/workflows_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py
       - name: Workflow check (zizmor, strictest setting)
         if: matrix.php == '8.3'
         run: python3 -m venv /tmp/zz && /tmp/zz/bin/pip install -q zizmor==1.30.1 && /tmp/zz/bin/zizmor --offline --persona=auditor .github/workflows/
@@ -60,6 +78,8 @@ jobs:
           ! ls build/site-update-*.zip | grep -q '_'
 
   server:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
     # Updates, hostile zips and the core features: PHP and Python only, no browser to install. Runs beside the browser jobs.
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -111,6 +131,8 @@ jobs:
           python3 tests/server/core_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "core"
 
   tests:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
     # Every page in a real browser (Chromium), the accessibility check and the website, on every push.
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -178,6 +200,8 @@ jobs:
           python3 tests/browser/website_test.py build/site 2>&1 | python3 tests/lib/annotate.py "website chromium"
 
   visual:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
     # What changed on screen since the last release: the same pages from both zips, photographed on this machine and compared.
     # A report (job summary and the visual-changes artifact), not a gate: it fails only when a page cannot be shown.
     runs-on: ubuntu-latest
@@ -227,6 +251,8 @@ jobs:
         with: { name: visual-changes, path: build/visual, retention-days: 14, if-no-files-found: ignore }
 
   browsers:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
     # The page and Tools tests (and accessibility on Firefox) in the other two engines, one job each so they run side by side
     # and a failure names the browser.
     runs-on: ubuntu-latest
@@ -291,6 +317,8 @@ jobs:
           python3 tests/browser/website_test.py build/site --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "website $BROWSER"
 
   apache:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
     # Installing Apache takes about five minutes on a fresh runner, so it runs beside the other tests instead of after them.
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -315,3 +343,20 @@ jobs:
         run: |
           sudo sh tests/server/apache_setup.sh build/site-update-*.zip
           python3 tests/server/apache_test.py
+
+  ci-ok:
+    # The one check that sums up CI: it fails when any job failed or was cancelled, and passes when every job passed
+    # or was skipped (a docs-only change). The check to require on main if required checks are ever turned on.
+    name: ci-ok
+    needs: [changes, build, server, tests, visual, browsers, apache]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in success|skipped) ;; *) echo "A job ended as: $r"; exit 1 ;; esac
+          done

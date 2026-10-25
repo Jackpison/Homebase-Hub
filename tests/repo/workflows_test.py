@@ -51,5 +51,12 @@ ci = open(os.path.join(ROOT, '.github', 'workflows', 'ci.yml'), encoding='utf-8'
 check('W6 CI checks the committed Tools against a fresh build', 'scripts/build-tools.py --check' in ci)
 rel = open(os.path.join(ROOT, '.github', 'workflows', 'release.yml'), encoding='utf-8').read()
 check('W7 the release waits for CI and refuses unless every job passed, before it builds the zip', 'scripts/ci_status.py' in rel and 'checks: read' in rel and rel.index('scripts/ci_status.py') < rel.index('scripts/build.py'))
+cij = jobs(ci)
+others = [j for j in cij if j != 'ci-ok']
+okbody = '\n'.join(cij.get('ci-ok', []))
+m = re.search(r'needs:\s*\[([^\]]*)\]', okbody)
+check('W8 ci-ok needs every other CI job and runs even when one failed (if: always())', m and sorted(x.strip() for x in m.group(1).split(',')) == sorted(others) and 'if: always()' in okbody, (m and m.group(1), others))
+gated = [j for j in others if "if: needs.changes.outputs.code == 'true'" in '\n'.join(cij[j])]
+check('W9 on a docs-only change only the slow jobs skip; changes and build always run', sorted(gated) == ['apache', 'browsers', 'server', 'tests', 'visual'], gated)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)
