@@ -43,7 +43,7 @@ jobs:
       - name: Build
         run: npm ci && python3 scripts/build.py
       - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
-        run: npx eslint src
+        run: npx eslint src tools-app
       - name: Check zip name and changelog
         run: |
           ls build/site-update-*.zip

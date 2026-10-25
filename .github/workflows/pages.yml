@@ -2,7 +2,7 @@ name: Pages
 on:
   push:
     branches: [main]
-    paths: ['website/**', 'tools/make-*.py', 'scripts/site_pages.py', 'tools-app/src/tools.json', 'CHANGELOG.md', '.github/workflows/pages.yml']
+    paths: ['website/**', 'scripts/make-*.py', 'scripts/site_pages.py', 'tools-app/src/tools.json', 'CHANGELOG.md', '.github/workflows/pages.yml']
   workflow_dispatch:
 permissions:
   contents: read

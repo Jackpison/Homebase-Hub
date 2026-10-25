@@ -1,4 +1,4 @@
-// ESLint for the readable site scripts in src/web (run: npx eslint src). Build and test tool only; nothing here ships.
+// ESLint for the readable site scripts in src/web (run: npx eslint src tools-app), and the Tools source in tools-app. Build and test tool only; nothing here ships.
 // Not linted: Tools (prebuilt and minified, src/web/tools/assets) and every vendor/ folder (third-party libraries).
 const globals = require('globals');
 
