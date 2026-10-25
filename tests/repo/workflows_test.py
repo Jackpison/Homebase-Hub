@@ -49,5 +49,7 @@ bt = open(os.path.join(ROOT, 'scripts', 'build-tools.py'), encoding='utf-8').rea
 check('W5 scripts/build-tools.py installs with --ignore-scripts too', "'--ignore-scripts'" in bt and not re.search(r"\['npm', 'ci'(?![^\]]*--ignore-scripts)", bt))
 ci = open(os.path.join(ROOT, '.github', 'workflows', 'ci.yml'), encoding='utf-8').read()
 check('W6 CI checks the committed Tools against a fresh build', 'scripts/build-tools.py --check' in ci)
+rel = open(os.path.join(ROOT, '.github', 'workflows', 'release.yml'), encoding='utf-8').read()
+check('W7 the release waits for CI and refuses unless every job passed, before it builds the zip', 'scripts/ci_status.py' in rel and 'checks: read' in rel and rel.index('scripts/ci_status.py') < rel.index('scripts/build.py'))
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

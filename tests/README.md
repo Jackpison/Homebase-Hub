@@ -43,6 +43,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 
 - `python3 scripts/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
 - `zizmor --offline --persona=auditor .github/workflows/` (zizmor 1.30.1 from pip): Trail of Bits' checker for workflow files, at its strictest setting. Fix what it finds; never silence it.
+- `python3 tests/repo/ci_status_test.py`: the release waits for CI on the tagged commit (`scripts/ci_status.py`, up to 20 minutes) and refuses to build unless every job passed; this tests that decision with made-up check runs.
 - `python3 tests/repo/workflows_test.py`: the workflow files keep their safety settings: every outside Action pinned to a full commit SHA, `persist-credentials: false` on every checkout, a time limit on every job.
 - `python3 tests/repo/release_test.py`: tests `release.py` itself on a temporary copy of the repo (a bump, then each thing broken in turn must fail the check). Needs git.
 - `npx eslint src tools-app`: `no-undef`, `no-redeclare`, `no-dupe-keys`, `no-unreachable` and `no-const-assign` on the readable scripts in `src/web` and the Tools source in `tools-app/` (not the built Tools files, not `vendor/`). `eslint.config.js` lists each page's real globals and says why.

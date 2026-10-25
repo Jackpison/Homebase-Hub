@@ -11,13 +11,19 @@ jobs:
   release:
     name: build and publish the release
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40   # up to 20 minutes waiting for CI, then the build
     permissions:
       contents: write   # create the release and attach the zip
       actions: write    # start the Pages workflow afterwards
+      checks: read      # read CI's results for the tagged commit
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
+      - name: Wait for CI on this commit; refuse unless every job passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python3 scripts/ci_status.py "$GITHUB_SHA" --wait 20
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: '24', package-manager-cache: false }   # no download cache: the release builds from a clean npm ci --ignore-scripts
       - name: Version agrees everywhere (HUB, ?v=, changelog, Version Map, root copy, no TODO)
