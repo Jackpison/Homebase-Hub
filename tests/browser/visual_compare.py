@@ -6,7 +6,7 @@ table (how much of each page changed), and fails only when a page cannot be show
 CI uploads OUTDIR as an artifact and puts the table in the job summary. Needs PHP, Playwright with Chromium and Pillow."""
 import json, os, sys, datetime
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import UA, SEED, Site, stop_all, launch, zip_version
+from helpers import UA, SEED, Site, stop_all, launch, zip_version, TRACK_REQUESTS, settle, until
 import subprocess
 from PIL import Image, ImageChops, ImageOps
 from playwright.sync_api import sync_playwright
@@ -43,12 +43,14 @@ def shoot(zp, port, tag, p):
     ver = zip_version(zp)
     for name, url, w, h in VIEWS:
         c = b.new_context(user_agent=UA, viewport={'width': w, 'height': h}, reduced_motion='reduce', color_scheme='dark')   # the login belongs to this browser name
+        c.add_init_script(TRACK_REQUESTS)
         c.add_cookies(cookies)
         c.add_init_script("try{localStorage.setItem('ix-seen-ver','%s');sessionStorage.setItem('hl-welcomed','1')}catch(e){}" % ver)
         c.route('**/*', lambda r: r.continue_() if r.request.url.startswith(s.host) or r.request.url.startswith(('data:', 'blob:')) else r.abort())
         pg = c.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:160]))
         try:
-            pg.goto(s.host + url, wait_until='domcontentloaded'); pg.add_style_tag(content=STILL); pg.wait_for_timeout(1800)
+            pg.goto(s.host + url, wait_until='domcontentloaded'); pg.add_style_tag(content=STILL)
+            settle(pg); until(lambda: pg.evaluate("[...document.images].every(i => i.complete)"), 10000); settle(pg)   # data, fonts and pictures are in
             if not pg.evaluate("!!(window.HUB && HUB.isAdmin && HUB.isAdmin())"): errs.append('not logged in (the picture would show the login screen)')
             pg.screenshot(path=os.path.join(OUT, '%s-%s.png' % (name, tag)))
         except Exception as e: errs.append(str(e)[:160])
