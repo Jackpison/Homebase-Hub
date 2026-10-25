@@ -58,5 +58,6 @@ m = re.search(r'needs:\s*\[([^\]]*)\]', okbody)
 check('W8 ci-ok needs every other CI job and runs even when one failed (if: always())', m and sorted(x.strip() for x in m.group(1).split(',')) == sorted(others) and 'if: always()' in okbody, (m and m.group(1), others))
 gated = [j for j in others if "if: needs.changes.outputs.code == 'true'" in '\n'.join(cij[j])]
 check('W9 on a docs-only change only the slow jobs skip; changes and build always run', sorted(gated) == ['apache', 'browsers', 'server'] and "if: needs.changes.outputs.app == 'true'" in '\n'.join(cij['visual']), gated)
+check('W10 browsers install in named steps, the Ubuntu packages with a time limit and retries (no --with-deps in one step)', '--with-deps' not in ci and ci.count('playwright install-deps') == 3 and ci.count('for i in 1 2 3') == 3)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

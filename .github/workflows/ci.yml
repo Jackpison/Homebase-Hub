@@ -154,11 +154,22 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
-      - name: Tools for the comparison
+      - name: npm packages
+        run: npm ci --ignore-scripts
+      - name: Python packages
+        run: pip install -r tests/requirements.txt
+      - name: Browser system packages from Ubuntu (up to 3 tries of 4 minutes; a stuck download used to hold a job for 20)
+        timeout-minutes: 14
         run: |
-          npm ci --ignore-scripts
-          pip install -r tests/requirements.txt
-          python -m playwright install --with-deps chromium
+          for i in 1 2 3; do
+            sudo timeout -k 15 240 "$(command -v python)" -m playwright install-deps chromium && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 4 minutes"
+            sudo killall -q apt-get dpkg || true; sleep 10
+          done
+          exit 1
+      - name: The browser
+        timeout-minutes: 10
+        run: python -m playwright install chromium
       - name: Build the zip
         run: python3 scripts/build.py
       - name: Get the previous release (checked against its SHA-256)
@@ -206,11 +217,22 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
-      - name: Tools for the tests
+      - name: npm packages
+        run: npm ci --ignore-scripts
+      - name: Python packages
+        run: pip install -r tests/requirements.txt
+      - name: Browser system packages from Ubuntu (up to 3 tries of 4 minutes; a stuck download used to hold a job for 20)
+        timeout-minutes: 14
         run: |
-          npm ci --ignore-scripts
-          pip install -r tests/requirements.txt
-          python -m playwright install --with-deps "$BROWSER"
+          for i in 1 2 3; do
+            sudo timeout -k 15 240 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 4 minutes"
+            sudo killall -q apt-get dpkg || true; sleep 10
+          done
+          exit 1
+      - name: The browser
+        timeout-minutes: 10
+        run: python -m playwright install "$BROWSER"
       - name: Build the zip (and the website for part b)
         run: python3 scripts/build.py && { [ "$PART" = a ] || python3 scripts/make-site.py --no-guide; }
       - name: Install on a phone (manifest, icons, head tags, Settings card, Chromium installability)
@@ -270,11 +292,22 @@ jobs:
         with: { node-version: '24', cache: npm }
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
-      - name: Tools for the test
+      - name: npm packages
+        run: npm ci --ignore-scripts
+      - name: Python packages
+        run: pip install -r tests/requirements.txt
+      - name: Browser system packages from Ubuntu (up to 3 tries of 4 minutes; a stuck download used to hold a job for 20)
+        timeout-minutes: 14
         run: |
-          npm ci --ignore-scripts
-          pip install -r tests/requirements.txt
-          python -m playwright install --with-deps chromium
+          for i in 1 2 3; do
+            sudo timeout -k 15 240 "$(command -v python)" -m playwright install-deps chromium && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 4 minutes"
+            sudo killall -q apt-get dpkg || true; sleep 10
+          done
+          exit 1
+      - name: The browser
+        timeout-minutes: 10
+        run: python -m playwright install chromium
       - name: Build the zip
         run: python3 scripts/build.py
       - name: On real Apache (the .htaccess files)
