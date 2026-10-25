@@ -19,11 +19,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with: { node-version: '24', package-manager-cache: false }   # no download cache: the release builds from a clean npm ci
+        with: { node-version: '24', package-manager-cache: false }   # no download cache: the release builds from a clean npm ci --ignore-scripts
       - name: Version agrees everywhere (HUB, ?v=, changelog, Version Map, root copy, no TODO)
         run: python3 scripts/release.py --check
       - name: Build
-        run: npm ci && python3 scripts/build.py
+        run: npm ci --ignore-scripts && python3 scripts/build.py
       - name: Check the tag matches the version in the code
         run: |
           V=$(ls build/site-update-*.zip | sed -E 's/.*site-update-(.*)\.zip/\1/')

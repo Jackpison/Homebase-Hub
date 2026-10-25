@@ -31,7 +31,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 ## Checks before a pull request
 
 ```
-npm ci
+npm ci --ignore-scripts
 npx eslint src tools-app
 php tests/unit/run.php
 python3 scripts/release.py --check

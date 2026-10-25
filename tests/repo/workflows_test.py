@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Checks the GitHub workflow files (.github/workflows/*.yml) keep their safety settings:
 every outside Action is pinned to a full commit SHA, every checkout drops the token from git's settings,
-and every job has a time limit. Plain text checks, no YAML library needed.
+every job has a time limit, and npm never runs install scripts. Plain text checks, no YAML library needed.
   python3 tests/repo/workflows_test.py"""
 import glob, os, re, sys
 
@@ -24,10 +24,11 @@ def jobs(text):
     return out
 
 check('W0 the workflow folder has the five workflows', {os.path.basename(f) for f in FILES} >= {'ci.yml', 'pages.yml', 'release.yml', 'weekly-check.yml', 'php-eol-reminder.yml'}, [os.path.basename(f) for f in FILES])
-unpinned, nocred, notime = [], [], []
+unpinned, nocred, notime, scripts = [], [], [], []
 for f in FILES:
     name = os.path.basename(f); lines = open(f, encoding='utf-8').read().split('\n')
     for i, line in enumerate(lines):
+        if re.search(r'\bnpm ci\b(?!.*--ignore-scripts)', line): scripts.append('%s:%d' % (name, i + 1))
         m = re.match(r'^\s*(?:-\s*)?uses:\s*([^\s#]+)', line)
         if not m or m.group(1).startswith('./'): continue
         if not re.match(r'^[^@\s]+@[0-9a-f]{40}$', m.group(1)): unpinned.append('%s:%d %s' % (name, i + 1, m.group(1)))
@@ -43,5 +44,10 @@ for f in FILES:
 check('W1 every outside Action is pinned to a 40-character commit SHA', not unpinned, unpinned)
 check('W2 every checkout has persist-credentials: false (no step needs the token kept in git)', not nocred, nocred)
 check('W3 every job has a time limit (timeout-minutes)', not notime, notime)
+check('W4 every npm ci has --ignore-scripts (no package runs its own install script)', not scripts, scripts)
+bt = open(os.path.join(ROOT, 'scripts', 'build-tools.py'), encoding='utf-8').read()
+check('W5 scripts/build-tools.py installs with --ignore-scripts too', "'--ignore-scripts'" in bt and not re.search(r"\['npm', 'ci'(?![^\]]*--ignore-scripts)", bt))
+ci = open(os.path.join(ROOT, '.github', 'workflows', 'ci.yml'), encoding='utf-8').read()
+check('W6 CI checks the committed Tools against a fresh build', 'scripts/build-tools.py --check' in ci)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

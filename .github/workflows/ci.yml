@@ -47,7 +47,10 @@ jobs:
       - name: Version agrees everywhere (scripts/release.py --check) and its own test
         run: python3 scripts/release.py --check && python3 tests/repo/release_test.py
       - name: Build
-        run: npm ci && python3 scripts/build.py
+        run: npm ci --ignore-scripts && python3 scripts/build.py
+      - name: Tools is exactly what tools-app builds (no stale library in the committed files)
+        if: matrix.php == '8.3'
+        run: python3 scripts/build-tools.py --check
       - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
         run: npx eslint src tools-app
       - name: Check zip name and changelog
@@ -72,7 +75,7 @@ jobs:
         with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
       - name: Tools for the tests
         run: |
-          npm ci
+          npm ci --ignore-scripts
           pip install -r tests/requirements.txt
       - name: Build the zip
         run: python3 scripts/build.py
@@ -128,7 +131,7 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
       - name: Tools for the tests
         run: |
-          npm ci
+          npm ci --ignore-scripts
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Build the zip and the website
@@ -196,7 +199,7 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
       - name: Tools for the comparison
         run: |
-          npm ci
+          npm ci --ignore-scripts
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Build the zip
@@ -251,7 +254,7 @@ jobs:
           key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
       - name: Tools for the tests
         run: |
-          npm ci
+          npm ci --ignore-scripts
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps "$BROWSER"
       - name: Build the zip and the website
@@ -303,7 +306,7 @@ jobs:
         with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
       - name: Tools for the test
         run: |
-          npm ci
+          npm ci --ignore-scripts
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Build the zip
