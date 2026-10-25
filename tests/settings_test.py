@@ -66,6 +66,11 @@ try:
             const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
             return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 90 ? '' : t.textContent.slice(0, 30); }).filter(Boolean)""")
         check('S19 Security > Overview: every card holds its icon and text (nothing spills out)', not bad, bad)
+        pg.goto(s.base + '/web/settings/#telegram/overview'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-tile').length >= 4", 15000); pg.wait_for_timeout(300)
+        bad = pg.evaluate("""[...document.querySelectorAll('#ix-pc .ix-tile')].filter(t => t.getBoundingClientRect().width > 0).map(t => {
+            const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
+            return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 80 ? '' : t.textContent.slice(0, 30); }).filter(Boolean)""")
+        check('S20 Telegram > Status: every card holds its icon and text', not bad, bad)
         # the simpler Settings
         pg.unroute('**/api.php?action=notify_backup*')
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "document.querySelectorAll('#ix-page .ix-snav [data-sec]').length > 0", 20000)

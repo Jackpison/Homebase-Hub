@@ -882,6 +882,18 @@ function hub_public_state(): array {
 
 /* ======================= time zone ======================= */
 /** Every date and time the server works out (today, backups, versions, reminders) uses the site's time zone (Settings > General). */
+/* The look a brand-new site starts with (the owner's "Default" preset): a softer black and warm off-white, with a light gold accent.
+   Existing sites keep their own colors; this is only written when a site is first set up. */
+const HUB_NEW_SITE_LOOK = [
+    'accent' => '#ffd45c',
+    'dark' => ['bg' => '#101010', 'box' => '#161616', 'panel' => '#1c1c1c', 'line' => '#2a2a2a', 'text' => '#d8d8d8', 'mute' => '#a0a0a0', 'bar' => '#0a0a0a', 'barText' => '#a0a0a0'],
+    'light' => ['bg' => '#f3efec', 'box' => '#ffffff', 'panel' => '#ffffff', 'line' => '#ded6d1', 'text' => '#221711', 'mute' => '#655953', 'bar' => '#ede7e3', 'barText' => '#5f544e'],
+];
+function hub_new_site_look(array $s): array {
+    $s['accent'] = HUB_NEW_SITE_LOOK['accent'];
+    $s['colors'] = ['dark' => HUB_NEW_SITE_LOOK['dark'], 'light' => HUB_NEW_SITE_LOOK['light'], 'pg' => $s['colors']['pg'] ?? []];
+    return hub_clean_settings($s);
+}
 /* A brand-new site starts with the time zone of the browser that set it up and the theme that follows the device; the setup
    dialog sends both. Existing sites keep what they have: the fallbacks in hub_settings() ('dark', 'Asia/Kolkata') stay as they were. */
 function hub_setup_defaults(array $s, array $b): array {

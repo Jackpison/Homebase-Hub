@@ -17,7 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
-| 1.48.2 | Settings menu: General holds Look, Presets and Colors; groups Web Setting, System Setting, Data Setting |
+| 1.48.2 | Settings menu regrouped, the Backup icon and gear back, a softer look for new sites, and the Security and Telegram cards fixed |
 | 1.48.1 | Fix: the Security and Telegram cards in Settings look right again |
 | 1.48.0 | Navigation and fluidity: three redesigned bar styles, a Top Bar that hides while you scroll, a round menu, and a simpler Settings |
 | 1.47.1 | Small fixes: the Telegram backup button no longer sticks, Tools has its section colours back, Home uploads up to 128 MB, a GitHub link in Updates |
@@ -80,10 +80,13 @@ Nothing to migrate by hand unless an entry says so.
 - **General and Look are one menu item.** General now has two tabs: General (Basics, Tabs) and Look (Look, Presets, Colors). Presets and Colors are tabs again; More Options under Look keeps the Font and Same Look on Every Page.
 - **The menu groups have new names and a new order:** Web Setting (General), System Setting (System), then Data Setting (Security, Telegram, Backup & Restore).
 - Old links to Look, Presets, Colors and Tabs still open the right tab.
+- **The Backup icon and the gear are back** in every bar style, in place of the round menu: Backup is green, red with a dot while a backup is due, and the gear opens the Settings page.
+- **A new site starts with a softer look:** a deep grey instead of pure black, warm off-white in light mode, and a lighter gold accent. Existing sites keep their colors.
+- Light mode: the green "good" labels and the Images teal and Photos blue in Tools are a little darker, so they stay easy to read.
 
 ### Fix
 
-- **The cards in Settings > Security and Telegram look right again** (also in 1.48.1). Since 1.48.0 they were squashed, with their icons above the card.
+- **The cards in Settings > Security and Telegram look right again.** Since 1.48.0 they were squashed, with their icons above the card.
 
 ---
 

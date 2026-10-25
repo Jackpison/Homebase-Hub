@@ -189,7 +189,7 @@ case 'setup':
     hub_rate_clear();
     hub_setup_done();
     $nm = trim(strip_tags((string)($b['siteName'] ?? '')));
-    hub_settings_update(function ($s) use ($nm, $b) { if ($nm !== '') $s['siteName'] = $nm; return hub_setup_defaults($s, $b); });   // writes settings.php and Tools' config.json right away
+    hub_settings_update(function ($s) use ($nm, $b) { if ($nm !== '') $s['siteName'] = $nm; return hub_new_site_look(hub_setup_defaults($s, $b)); });   // writes settings.php and Tools' config.json right away
     hub_start_session($a);
     hub_json(200, ['ok' => true]);
 

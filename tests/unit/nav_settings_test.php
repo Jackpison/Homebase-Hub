@@ -20,6 +20,11 @@ t('an unknown time zone or theme from setup is ignored', $bad['tz'] === 'Asia/Ko
 t('a setup that sends nothing changes nothing', hub_setup_defaults(['tz' => 'UTC', 'theme' => 'dark'], []) === ['tz' => 'UTC', 'theme' => 'dark']);
 
 $api = file_get_contents($site . '/web/core-data/api.php');
-t('the setup action uses these defaults', strpos($api, 'return hub_setup_defaults($s, $b);') !== false);
+t('the setup action uses these defaults and the new-site look', strpos($api, 'return hub_new_site_look(hub_setup_defaults($s, $b));') !== false);
+
+$look = hub_new_site_look(hub_clean_settings(['tz' => 'UTC', 'colors' => ['pg' => ['links' => ['dark' => '#123456']]]]));
+t('a new site starts with the Default preset: accent #ffd45c and its dark and light colors', $look['accent'] === '#ffd45c' && $look['colors']['dark']['bg'] === '#101010' && $look['colors']['light']['text'] === '#221711' && count($look['colors']['dark']) === 8 && count($look['colors']['light']) === 8, json_encode($look['colors']));
+t('the new-site look keeps everything else (time zone, page backgrounds)', $look['tz'] === 'UTC' && $look['colors']['pg']['links']['dark'] === '#123456');
+t('the fallback for sites that never saved keeps the old gold and no colors', hub_clean_settings([])['accent'] === '#ffc21a' && hub_clean_settings([])['colors']['dark'] === []);
 $shell = file_get_contents($site . '/web/core-data/assets/shell.js');
 t('the setup dialog sends the browser\'s time zone and Follow Device', strpos($shell, "tz: tz, theme: 'auto' }") !== false);

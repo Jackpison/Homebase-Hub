@@ -338,12 +338,12 @@
   }
 
   /* ---------- 4. the bar: three styles, each with its own layout ----------
-     top:  logo, pages, search box, theme, pencil, round menu. It slides away while you scroll down (4b).
-     side: an 80 px rail: logo, search, pages, then theme, pencil, round menu. Phones: a floating button (or a swipe
+     top:  logo, pages, search box, theme, pencil, Backup, gear. It slides away while you scroll down (4b).
+     side: an 80 px rail: logo, search, pages, then theme, pencil, Backup, gear. Phones: a floating button (or a swipe
            from the left edge) opens the same things as a panel.
-     dock: one floating pill: pages, search, pencil, round menu. Phones: the pill holds the pages, a round button
+     dock: one floating pill: pages, search, pencil, Backup, gear. Phones: the pill holds the pages, a round button
            beside it opens a sheet with the rest.
-     The round menu holds Settings, Backup and Log Out; it shows a red dot while a backup is due. */
+     Every style ends with Backup (red while a backup is due) and the gear, which opens the Settings page. */
   var lastBar = '';
   var NAV = function () { var n = H.getAttribute('data-ix-nav'); return n === 'side' || n === 'dock' ? n : 'top'; };
   var phone = function () { return matchMedia('(max-width:760px)').matches; };
@@ -351,11 +351,12 @@
     return '<button type="button" class="ix-ib' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '"' : '') + ' data-ix="' + k + '" aria-label="' + label + '" title="' + label + '">' + icon + '</button>';
   }
   function themeLabel() { var n = themeNow() === 'light' ? 'Dark' : 'Light'; return 'Switch to ' + n + ' Mode'; }
-  function meButton(adm) {
+  /* Logged in: Backup (green, red with a dot while a backup is due) and the gear that opens Settings. Logged out: the key. */
+  function acctButtons(adm) {
     if (!adm) return iconBtn('login', 'Log In', svg(ICON.key), 'ix-key');
-    var due = backupDue(), ch = esc(((S.siteName || 'Homebase Hub').trim().charAt(0) || 'H').toUpperCase());
-    return '<button type="button" class="ix-me' + (due ? ' due' : '') + '" data-ix="me" aria-haspopup="menu" aria-label="Menu: Settings, Backup, Log Out' +
-      (due ? ' (a backup is due)' : '') + '" title="Settings, Backup and Log Out">' + ch + '</button>';
+    var due = backupDue();
+    return '<button type="button" class="ix-ib ix-bk' + (due ? ' due' : '') + '" data-ix="backup" aria-label="' + (due ? 'Backup (a backup is due)' : 'Backup') + '" title="' +
+      (due ? 'A backup is due: open Backup' : 'Backup and Import') + '">' + svg(ICON.box) + '</button>' + iconBtn('account', 'Settings', svg(ICON.gear));
   }
   function pageLinks() {
     return '<div class="ix-links">' + pages().map(function (p) {
@@ -372,7 +373,7 @@
     var brand = '<a class="ix-brand" href="' + ROOT + '" aria-label="' + esc(S.siteName || 'Homebase Hub') + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>';
     var theme = iconBtn('theme', themeLabel(), ICON_THEME);
     var edit = HAS_EDIT ? iconBtn('edit', 'Edit', svg(ICON.edit), '', 'ix-editb') : '';
-    var me = meButton(adm), links = pageLinks();
+    var me = acctButtons(adm), links = pageLinks();
     var html;
     if (nav === 'side') {
       html = brand + iconBtn('search', 'Search (press /)', svg(ICON.search), 'ix-sbtn') + links +
@@ -418,20 +419,8 @@
     items.push({ sep: true }, { label: 'Settings', icon: ICON.gear, run: function () { settings(); } }, { label: 'Log Out', icon: ICON.out, danger: true, run: logout });
     popMenu(b, items, { corner: true });
   }
-  /* The round menu: Settings, Backup (with when it last ran, or "Due"), the theme where the bar has no theme button, Log Out. */
-  function meMenu(b) {
-    var due = backupDue(), last = +S.backupLast || 0, days = last ? Math.floor((Date.now() / 1000 - last) / 86400) : -1;
-    var note = due ? 'Due' : days < 0 ? '' : days === 0 ? 'Today' : days === 1 ? '1 day ago' : days + ' days ago';
-    var items = [
-      { label: 'Settings', icon: ICON.gear, run: function () { settings(); } },
-      { label: 'Backup', icon: ICON.box, note: note, warn: due, run: function () { backupSeen(); openBackup(); } }
-    ];
-    if (NAV() === 'dock' || phone()) items.push({ label: themeLabel(), icon: themeNow() === 'light' ? ICON.moon : ICON.sun, run: function () { setTheme(themeNow() === 'light' ? 'dark' : 'light'); } });
-    items.push({ sep: true }, { label: 'Log Out', icon: ICON.out, danger: true, run: logout });
-    popMenu(b, items);
-  }
   function markEditing() { var b = document.getElementById('ix-editb'); if (b) b.classList.toggle('on', editing()); }
-  /* The round menu's dot is red while a backup is due (Backup > Remind me every). Opening Backup from it clears the dot
+  /* The Backup icon is green, and red while a backup is due (Backup > Remind me every). Clicking it turns it green again
      for a day; exporting a full backup starts the countdown over. */
   function backupDue() {
     var every = +S.backupEvery || 0, last = +S.backupLast || 0;
@@ -443,17 +432,17 @@
   function backupSeen() { if (backupDue()) { ls.set('hub-bk-ack', String(Date.now())); lastBar = ''; drawBar(); } }
   /* ...and one quiet message per visit while it is due */
   function backupReminder() {
-    if (!S.admin || !backupDue()) return;   // same rule as the red dot: not after it was opened today
+    if (!S.admin || !backupDue()) return;   // same rule as the red icon: not after it was clicked today
     var days = Math.floor((Date.now() / 1000 - (S.backupLast || 0)) / 86400);
     if (S.backupLast && days < S.backupEvery) return;
     try { if (sessionStorage.getItem('hub-bk-told')) return; sessionStorage.setItem('hub-bk-told', '1'); } catch (e) {}
-    toast(S.backupLast ? 'Backup reminder: your last backup was ' + days + ' days ago. Open the round menu, then Backup.' : 'Backup reminder: no backup yet. Open the round menu, then Backup.');
+    toast(S.backupLast ? 'Backup reminder: your last backup was ' + days + ' days ago. Use the Backup icon.' : 'Backup reminder: no backup yet. Use the Backup icon.');
   }
   /* A panel that slides in (the page list on phones, and the whole sidebar on phones) or a sheet from the bottom (the dock on phones).
      Both are drawn fresh each time they open, so they always show the current login, theme and backup state. */
   function panelFoot(adm) {
     return (HAS_EDIT ? '<button type="button" class="ix-pbtn" data-ix="edit">' + svg(ICON.edit) + '<span>Edit</span></button>' : '') +
-      '<button type="button" class="ix-pbtn" data-ix="theme">' + ICON_THEME + '<span>' + (themeNow() === 'light' ? 'Dark' : 'Light') + '</span></button>' + meButton(adm);
+      '<button type="button" class="ix-pbtn" data-ix="theme">' + ICON_THEME + '<span>' + (themeNow() === 'light' ? 'Dark' : 'Light') + '</span></button>' + acctButtons(adm);
   }
   function openPanel(id, open, build, from) {   // from: the button that opened it (Safari does not focus a clicked button)
     var d = document.getElementById(id);
@@ -528,7 +517,7 @@
   document.addEventListener('focusin', function (e) { var bar = document.getElementById('ix-bar'); if (bar && bar.contains(e.target)) barHidden(false); });
   document.addEventListener('mousemove', function (e) { if (e.clientY < 10 && H.classList.contains('ix-hide')) barHidden(false); }, { passive: true });
 
-  /* ---------- 5. small popup menu (Edit, the round menu) ---------- */
+  /* ---------- 5. small popup menu (Edit) ---------- */
   var popEl = null, popAnchor = null;
   function closePop() { if (popEl) { popEl.remove(); popEl = null; } popAnchor = null; }
   function popMenu(anchor, items, opts) {
@@ -1052,7 +1041,6 @@
     if (k === 'filters') return toggleFilters(b);
     if (k === 'backup') { closePanels(); backupSeen(); return openBackup(); }
     if (k === 'corner') return cornerMenu(b);
-    if (k === 'me') return meMenu(b);
     if (k === 'edit') { if (!S.admin && q1('toggle')) { closePanels(); return startEdit(); } return editMenu(b); }
     if (k === 'account') { closePanels(); return settings(); }
   });

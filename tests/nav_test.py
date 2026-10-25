@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """The bar in all three styles (Top Bar, Sidebar, Bottom Dock), on a computer and on a phone, in a real browser.
   python3 tests/nav_test.py build/site-update-X.Y.Z.zip [--browser firefox|webkit] [--shots DIR]
-Checks: the pages are listed and the current one is marked, nothing scrolls sideways, the round menu (Settings, Backup,
-Log Out) opens on screen, the top bar hides while scrolling down and comes back, the phone panel and sheet open and close,
-the dock never covers the end of a page, the red backup dot, and that reduced motion turns the movement off.
+Checks: the pages are listed and the current one is marked, nothing scrolls sideways, Backup and the gear (Settings)
+are on screen, the top bar hides while scrolling down and comes back, the phone panel and sheet open and close,
+the dock never covers the end of a page, the red Backup icon, and that reduced motion turns the movement off.
 --shots DIR also saves a screenshot of each style and size there.
 Needs PHP 8.3+ and Playwright. Nothing leaves this computer: every request to another site is blocked."""
 import json, os, re, subprocess, sys, tempfile, time, urllib.request, http.cookiejar, zipfile
@@ -55,18 +55,20 @@ def rect(pg, sel):
 def visible(pg, sel):
     return pg.evaluate("(s => { var e = document.querySelector(s); if (!e) return false; var r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; })", sel)
 
-def round_menu(pg, label):
-    """Opens the round menu from wherever this style keeps it and checks what is in it."""
-    items = pg.evaluate("[...document.querySelectorAll('#ix-pop [role=menuitem] .ix-pl')].map(e => e.textContent)")
-    box = rect(pg, '#ix-pop'); vw = pg.evaluate('innerWidth'); vh = pg.evaluate('innerHeight')
-    ok = bool(box) and box['x'] >= 0 and box['y'] >= 0 and box['r'] <= vw and box['b'] <= vh
-    check('%s: the round menu has Settings, Backup and Log Out, on screen' % label, ok and items[:2] == ['Settings', 'Backup'] and 'Log Out' in items, (items, box))
+def backup_and_gear(pg, label, where):
+    """Backup (green) and the gear (Settings) are there and on screen, wherever this style keeps them."""
+    vw = pg.evaluate('innerWidth'); vh = pg.evaluate('innerHeight'); ok = []
+    for k in ('backup', 'account'):
+        r = rect(pg, '%s [data-ix="%s"]' % (where, k))
+        ok.append(bool(r) and r['w'] > 0 and r['x'] >= 0 and r['y'] >= 0 and r['r'] <= vw and r['b'] <= vh)
+    check('%s: Backup and the gear (Settings) are there, on screen' % label, all(ok), ok)
 
 try:
     call('state')
     code = re.search(r'([A-Z0-9]{4}(?:-[A-Z0-9]{4})+|[A-Z0-9]{8,})', open(D + '/site-data/core/SETUP-CODE.php').read().replace('<?php', '')).group(1)
     check('N0 a new site can be set up', call('setup', {'code': code, 'password': PW}).get('ok'))
-    call('state')
+    st0 = call('state')
+    check('N0b a new site starts with the Default look (accent #ffd45c, softer black)', st0.get('accent') == '#ffd45c' and (st0.get('colors') or {}).get('dark', {}).get('bg') == '#101010', (st0.get('accent'), (st0.get('colors') or {}).get('dark')))
     subprocess.run(['php', os.path.join(HERE, 'seed_demo.php'), D], capture_output=True)
     ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/core-data/lib/boot.php').read()).group(1)
     with sync_playwright() as p:
@@ -103,15 +105,15 @@ try:
                 check('%s: nothing scrolls sideways' % L, sw <= 1, sw)
                 if SHOTS: pg.screenshot(path=os.path.join(SHOTS, '%s-%s.png' % (nav, size_name)))
                 phone = size_name == 'phone'
-                # the round menu: in the bar, or (phone sidebar, phone dock) inside the panel or sheet
+                # Backup and the gear: in the bar, or (phone sidebar, phone dock) inside the panel or sheet
                 if nav == 'side' and phone:
                     check('%s: only the floating button shows; it opens the sidebar as a panel' % L, visible(pg, '#ix-bar .ix-fab') and not visible(pg, '#ix-bar .ix-links'))
                     pg.click('#ix-bar .ix-fab'); pg.wait_for_timeout(350)
-                    check('%s: the panel lists the pages and has search, Edit and the round menu' % L,
-                          pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 6 and visible(pg, '#ix-drawer .ix-psearch') and visible(pg, '#ix-drawer .ix-me'))
+                    check('%s: the panel lists the pages and has search and Edit' % L,
+                          pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 6 and visible(pg, '#ix-drawer .ix-psearch') and visible(pg, '#ix-drawer [data-ix=edit]'))
                     if SHOTS: pg.screenshot(path=os.path.join(SHOTS, '%s-%s-panel.png' % (nav, size_name)))
-                    pg.click('#ix-drawer .ix-me'); pg.wait_for_timeout(200); round_menu(pg, L)
-                    pg.keyboard.press('Escape'); pg.wait_for_timeout(100); pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+                    backup_and_gear(pg, L, '#ix-drawer.open')
+                    pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
                     check('%s: Escape closes the panel and gives focus back to the button' % L,
                           not visible(pg, '#ix-drawer.open nav') and pg.evaluate("document.activeElement && document.activeElement.classList.contains('ix-fab')"))
                 elif nav == 'dock' and phone:
@@ -126,8 +128,7 @@ try:
                     pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
                     check('%s: Escape closes the sheet' % L, not visible(pg, '#ix-sheet.open .ix-shp'))
                 else:
-                    pg.click('#ix-bar .ix-me'); pg.wait_for_timeout(200); round_menu(pg, L)
-                    pg.keyboard.press('Escape')
+                    backup_and_gear(pg, L, '#ix-bar')
                 if nav == 'top' and phone:
                     pg.click('#ix-bar .ix-menu'); pg.wait_for_timeout(350)
                     check('%s: the menu button opens the page list' % L, pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 6)
@@ -172,18 +173,18 @@ try:
                         q.screenshot(path=os.path.join(SHOTS, '%s-%s-%s.png' % (nav, size_name, name))); q.close()
                 ctx.close()
 
-        # the red dot on the round menu while a backup is due, gone for a day after opening Backup from it
+        # the Backup icon is red while a backup is due, and green again for a day after it is clicked
         # (a new site counts as backed up today, so the browser's clock is moved 3 days on)
         set_nav('top', backupEvery=1)
         ctx = ctx_for(DESK); ctx.add_init_script("(function(){var n=Date.now;Date.now=function(){return n()+3*86400000;};})()"); pg, errs = open_page(ctx)
-        check('N3 the round menu shows a red dot while a backup is due', pg.evaluate("!!document.querySelector('#ix-bar .ix-me.due')"))
-        pg.click('#ix-bar .ix-me'); pg.wait_for_timeout(200)
-        note = pg.evaluate("[...document.querySelectorAll('#ix-pop small.warn')].map(e => e.textContent)")
-        check('N4 its Backup item says Due', note == ['Due'], note)
-        pg.click('#ix-pop [role=menuitem]:nth-child(2)')
+        due = pg.evaluate("(() => { const b = document.querySelector('#ix-bar [data-ix=backup]'); return !!b && b.classList.contains('due') && getComputedStyle(b).color; })()")
+        check('N3 the Backup icon is red while a backup is due', bool(due) and due != pg.evaluate("getComputedStyle(document.querySelector('#ix-bar [data-ix=account]')).color"), due)
+        pg.click('#ix-bar [data-ix=backup]')
         wait_js(pg, "location.pathname.indexOf('/web/settings/') >= 0 && !!document.querySelector('#ix-bar')")
         pg.wait_for_timeout(500)
-        check('N5 Backup opens Settings > Backup and the dot goes', '#backup' in pg.url and not pg.evaluate("!!document.querySelector('#ix-bar .ix-me.due')"), pg.url)
+        check('N4 Backup opens Settings > Backup, and the icon is green again', '#backup' in pg.url and not pg.evaluate("!!document.querySelector('#ix-bar [data-ix=backup].due')"), pg.url)
+        pg.click('#ix-bar [data-ix=account]'); pg.wait_for_timeout(600)
+        check('N5 the gear opens the Settings page', '/web/settings/' in pg.url, pg.url)
         ctx.close()
         set_nav('top', backupEvery=7)
 

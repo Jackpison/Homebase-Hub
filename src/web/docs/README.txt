@@ -80,16 +80,16 @@ THE BAR
 -------
 Three styles (Settings > General > Look > Navigation Style), each with its own layout. The pages are Home, Links, Info, Cards, Tasks
 and Tools (rename, reorder or hide them in Settings > General > Tabs).
-  Top Bar (the default): logo, pages, search, then Theme / Edit (pencil) / the round menu. It slides away while you
+  Top Bar (the default): logo, pages, search, then Theme / Edit (pencil) / Backup / Settings (gear). It slides away while you
     scroll down and comes back on any scroll up, at the top of the page, when you press / or move the mouse to the top
-    edge. Phones: a menu button opens the pages; search, pencil and the round menu stay in the bar.
-  Sidebar: an 80 px rail: logo, search, the pages with small labels, then Theme / Edit / the round menu. It never hides.
+    edge. Phones: a menu button opens the pages; search, pencil, Backup and the gear stay in the bar.
+  Sidebar: an 80 px rail: logo, search, the pages with small labels, then Theme / Edit / Backup / gear. It never hides.
     Phones: a floating button at the bottom left (or a swipe from the left edge) opens it as a panel.
-  Bottom Dock: one floating pill: the pages (the current one shows its name), search, Edit and the round menu. It gets a
+  Bottom Dock: one floating pill: the pages (the current one shows its name), search, Edit, Backup and the gear. It gets a
     little smaller while you scroll. Phones: one row; the round button beside the pill opens search, Edit, Light/Dark,
     Backup, Settings and Log Out.
-  The round menu (the first letter of your site name) holds Settings, Backup (with when it last ran) and Log Out; a red dot
-  shows while a backup is due. Logged out it is a key. The current page's pill glides to its new place when you change
+  Backup is green, red with a dot while a backup is due. The gear opens the Settings page (Log Out is in its menu).
+  Logged out, a key takes the place of both. The current page's pill glides to its new place when you change
   page (Chrome, Edge, Safari).
 - The pencil holds each page's edit options: "Edit this page" (becomes "Done editing"), then the page's own options such as
   Fetch icons, Column colors, Text sizes, Export, Add card, Background, and Page settings at the bottom.
@@ -104,7 +104,7 @@ and Tools (rename, reorder or hide them in Settings > General > Tabs).
 - Search covers Links, Info, Tasks (while logged in) and Tools; Cards keeps its own search. Press / or Ctrl+K anywhere. The sliders button in
   the search box chooses where to look: Everything or only Links / Info / Tasks / Tools, and one tab. Names, web addresses
   and note text are always searched. Shortcut: type  links: text  or  info: text.
-- Settings is a page of its own (web/settings/, from the round menu). A menu on the left in three groups: Web Setting (General,
+- Settings is a page of its own (web/settings/, the gear in the bar). A menu on the left in three groups: Web Setting (General,
   with the tabs General: Basics / Tabs, and Look: Look / Presets / Colors; Look holds Theme, Accent Color, Navigation Style, and
   under More Options the Font and Same Look on Every Page), System Setting (System, with the tabs Updates, Health, Changelog,
   each with its own small row: Update / Files; Overview / Domains and Uptime / Server Check; Versions / Version Map / Notes) and

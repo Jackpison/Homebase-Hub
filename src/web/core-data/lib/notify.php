@@ -266,7 +266,7 @@ function nt_run(bool $force = false): array {
         $last = (int)($s['backupLast'] ?? 0); $days = $last ? (int)floor((time() - $last) / 86400) : -1;
         if ($days < 0 || $days >= (int)$s['backupEvery']) {
             $msg = '💾 <b>Backup Reminder</b>' . "\n\n" . ($days < 0 ? 'There is no full backup of ' . nt_h($s['siteName']) . ' yet.' : 'The last full backup of ' . nt_h($s['siteName']) . ' was <b>' . $days . ($days === 1 ? ' day' : ' days') . ' ago</b> (' . nt_h(date('j M Y', (int)$s['backupLast'])) . ').') .
-                   "\nOpen the site, open the round menu in the bar, choose Backup, then Back Up. Keep the file off the server." . ($d['url'] !== '' ? "\n\n" . '👉 <a href="' . nt_h($d['url']) . '">Open the site</a>' : '');
+                   "\nOpen the site, click the red Backup icon and choose Back Up. Keep the file off the server." . ($d['url'] !== '' ? "\n\n" . '👉 <a href="' . nt_h($d['url']) . '">Open the site</a>' : '');
             if ($try($msg)) $d['sent']['backup'] = $today;
         } elseif (!$force) $d['sent']['backup'] = $today;
     }
@@ -323,7 +323,7 @@ function nt_security(array $c): void {
     else $m .= "\n\n<i>If that wasn't you trying, someone is guessing your password. Turn on two-step login in Settings › Security.</i>";
     nt_send($d, $m);
 }
-/** The whole site as one backup file, sent to the chat. Counts as your full backup (the round menu's red dot goes). */
+/** The whole site as one backup file, sent to the chat. Counts as your full backup (the Backup icon turns green). */
 function nt_backup_send(array &$d): array {
     require_once __DIR__ . '/backup.php';
     $s = hub_settings();
@@ -339,7 +339,7 @@ function nt_backup_send(array &$d): array {
     if (@file_put_contents($tmp, $data) === false) return ['ok' => false, 'description' => 'Could not write a temporary file in site-data/core.'];
     $size = strlen($data) >= 1048576 ? round(strlen($data) / 1048576, 1) . ' MB' : max(1, round(strlen($data) / 1024)) . ' KB';
     $cap = '💾 <b>' . nt_h($s['siteName']) . ' Backup</b>' . "\n" . nt_h(date('l, j M Y, g:i A')) . ', ' . $size .
-           "\n\nEverything: Links, Info, Cards, Tasks, Start Page and Settings. To restore: round menu › Backup › Restore." .
+           "\n\nEverything: Links, Info, Cards, Tasks, Start Page and Settings. To restore: Backup icon › Restore." .
            ($enc ? (bk_key_mode() === 'login' ? "\n🔒 Encrypted: it opens with your website password (the one you have today)." : "\n🔒 Encrypted: it opens only with your encryption passphrase.")
                  : "\n⚠️ Not encrypted. Set an encryption passphrase (Settings › Security › Encryption) to lock these files.");
     $r = nt_tg_file((string)$d['token'], (string)$d['chat'], $tmp, $name, $cap);

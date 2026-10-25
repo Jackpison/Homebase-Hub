@@ -109,8 +109,8 @@ story += chapter('1', 'Welcome', 'Homebase Hub puts the small things you open ev
  table(['Page', 'What it is for'], [['Home', 'Your start page, with background photos that change.'], ['Links', 'Bookmarks in tabs and categories.'], ['Info', 'Notes in tabs, arranged as boxes or written as a document.'],
    ['Cards', 'Your cards in one table you can search.'], ['Tasks', 'Bills, renewals and chores with due dates.'], ['Tools', 'Image, PDF and text tools that run in your browser.'], ['Settings', 'Everything about the site: look, security, Telegram, backups, updates, health.']]),
  *sub('The bar'),
- P('On the left are the logo and the site name, then the pages. In the middle is search. On the right are %s (dark or light), %s (the pencil, with the edit options of the page you are on) and the round menu with %s, %s and Log Out. A red dot on the round menu means a backup is due.' % (C('Theme'), C('Edit'), C('Settings'), C('Backup'))),
- P('The bar comes in three styles (%s): the %s, which slides away while you scroll down and comes back as soon as you scroll up; the %s, a slim rail on the left; and the %s, one floating pill at the bottom. On a phone the Sidebar opens from a floating button and the Bottom Dock keeps everything in one row.' % (C('Settings › Look'), C('Top Bar'), C('Sidebar'), C('Bottom Dock'))),
+ P('On the left are the logo and the site name, then the pages. In the middle is search. On the right are %s (dark or light), %s (the pencil, with the edit options of the page you are on), %s (green, red while a backup is due) and %s (the gear).' % (C('Theme'), C('Edit'), C('Backup'), C('Settings'))),
+ P('The bar comes in three styles (%s): the %s, which slides away while you scroll down and comes back as soon as you scroll up; the %s, a slim rail on the left; and the %s, one floating pill at the bottom. On a phone the Sidebar opens from a floating button and the Bottom Dock keeps everything in one row.' % (C('Settings › General › Look'), C('Top Bar'), C('Sidebar'), C('Bottom Dock'))),
  shot('links-crop', 'The bar is the same on every page. Here it sits above Links.'),
  *sub('Search'),
  P('Search covers Links, Info, Tasks and Tools; Cards has its own search box. The sliders button in the search box chooses where to look: everything, one page, or one tab. Names, web addresses and note text are always searched.'),
@@ -129,7 +129,7 @@ story += chapter('2', 'Install', 'You need web hosting with PHP 8.3 or newer and
    ['site-data/', 'Your private data, made by the site. Closed to browsers.']]))
 
 story += chapter('3', 'First steps', 'Guided Setup walks you through protecting your site, one step at a time.',
- steps(['Open %s (the round menu in the bar).' % C('Settings'), 'Choose %s, then the %s tab.' % (C('Overview'), C('Guided Setup')),
+ steps(['Open %s (the gear in the bar).' % C('Settings'), 'Choose %s, then the %s tab.' % (C('Overview'), C('Guided Setup')),
         'Work through the steps: a strong password, two-step login, an encryption passphrase, a first backup, and Telegram.', 'Come back to Overview any time: it shows what still needs a look.']),
  shot('s-overview', 'Settings, Overview: a card for each area, the things to look at next, and a status on every menu item.'),
  Tip('You can do the steps in any order, and skip the ones you do not need. Each one also lives in its own section of Settings.'),
