@@ -86,7 +86,7 @@
 @media (prefers-reduced-motion:reduce){#ix-page .ix-tg input[type=checkbox]::after{transition:none}}
 #ix-page input.ix-hex{width:92px;height:34px;padding:0 8px;border-radius:8px;font:13px ui-monospace,Menlo,Consolas,monospace;text-align:center}
 #ix-page input.ix-hex.bad{border-color:var(--ix-err)}
-/* ---------- Settings > Navigation > Tabs ---------- */
+/* ---------- Settings > General > Tabs ---------- */
 #ix-page .ix-pgl{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 #ix-page .ix-pgr{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--ix-line);border-radius:12px;background:var(--ix-s1);cursor:grab}
 #ix-page .ix-pgr.drag{opacity:.45}

@@ -70,12 +70,12 @@ try:
             const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
             return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 80 ? '' : t.textContent.slice(0, 30); }).filter(Boolean)""")
         check('S20 Telegram > Status: every card holds its icon and text', not bad, bad)
-        # the Settings menu, as it was before 1.48 (the owner preferred it)
+        # the Settings menu of 1.48.5: Web Setting, Data Setting, System Setting (Health first)
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "document.querySelectorAll('#ix-page .ix-snav [data-sec]').length > 0", 20000)
         menu = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav [data-sec] span')].map(e => e.textContent)")
         groups = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav .ix-sgl')].map(e => e.textContent)")
-        check('S9 the Settings menu: Site (General, Appearance), Protection & Data (Security, Telegram, Backup & Restore), System (Updates, Health, Changelog)',
-              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Updates', 'Health', 'Changelog'] and groups == ['Site', 'Protection & Data', 'System'], (menu, groups))
+        check('S9 the Settings menu: Web Setting (General, Appearance), Data Setting (Security, Telegram, Backup & Restore), System Setting (Health, Updates, Changelog)',
+              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Health', 'Updates', 'Changelog'] and groups == ['Web Setting', 'Data Setting', 'System Setting'], (menu, groups))
         def at(h, expr):
             pg.goto(s.base + '/web/settings/' + h); pg.wait_for_timeout(150)
             try: wait_js(pg, expr, 10000); return True
@@ -85,15 +85,15 @@ try:
         h2 = "(document.querySelector('#ix-pane .ix-ph h2') || {}).textContent"
         places = [('#updates', 'Updates', 'Update'), ('#files', 'Updates', 'Files'), ('#health', 'Health', 'Overview'), ('#domains', 'Health', 'Domains and Uptime'), ('#check', 'Health', 'Server Check'),
                   ('#changelog', 'Changelog', 'Versions'), ('#chmap', 'Changelog', 'Version Map'), ('#system', 'Updates', 'Update'), ('#look', 'Appearance', 'Look'), ('#themes', 'Appearance', 'Presets'),
-                  ('#colors', 'Appearance', 'Colors'), ('#nav', 'General', 'Navigation'), ('#pages', 'General', 'Pages')]
+                  ('#colors', 'Appearance', 'Colors'), ('#nav', 'General', 'Tabs'), ('#pages', 'General', 'Tabs')]
         bad = [h for h, t, u in places if not at(h, h2 + " === %s && %s === %s" % (json.dumps(t), sel, json.dumps(u)))]
-        check('S10 every address opens its section and tab (and #system, from 1.48, opens Updates)', not bad, bad)
-        ok = at('#nav', tabs + " === 'Basics|Navigation|Pages' && !!document.querySelector('#ix-pc .ix-navpick')")
-        check('S11 General has Basics, Navigation and Pages; Navigation holds the Navigation Style', ok, pg.evaluate(tabs))
+        check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages, removed in 1.48.5, opens Tabs)', not bad, bad)
+        ok = at('#nav', tabs + " === 'Basics|Tabs' && !!document.querySelector('#ix-pc #ix-pgl .ix-pgr') && !document.querySelector('#ix-pc .ix-navpick')")
+        check('S11 General has Basics and Tabs; Tabs holds the tab list and no longer the Navigation Style', ok, pg.evaluate(tabs))
         ok = at('#look', tabs + " === 'Look|Presets|Colors' && !!document.querySelector('#ix-font')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
-        check('S13 Appearance has Look, Presets and Colors; Look shows Font, Theme and Accent Color, and Same Look on Every Page',
-              ok and cards == ['Font', 'Theme', 'Accent Color'] and pg.evaluate("document.querySelector('#ix-look').checkVisibility()"), (pg.evaluate(tabs), cards))
+        check('S13 Appearance has Look, Presets and Colors; Look shows Font, Theme, Navigation Style (with the start-page bar switch) and Accent Color, and Same Look on Every Page',
+              ok and cards == ['Font', 'Theme', 'Navigation Style', 'Accent Color'] and pg.evaluate("!!document.querySelector('#ix-pc .ix-navpick') && !!document.querySelector('#ix-hb')") and pg.evaluate("document.querySelector('#ix-look').checkVisibility()"), (pg.evaluate(tabs), cards))
         check('S14 Look offers 8 accent colors and your own', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 8 and pg.evaluate("!!document.querySelector('#ix-acc')"))
         pg.click('#ix-pane .ix-subt [data-grp="themes"]')
         wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)

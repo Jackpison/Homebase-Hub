@@ -110,6 +110,43 @@ try:
         except ImportError:
             z = zipfile.ZipFile(io.BytesIO(data)); ok = 'xl/worksheets/sheet1.xml' in z.namelist(); detail = z.namelist()
         check('P3 Cards exports a real Excel file with numbers and the money format', data[:2] == b'PK' and ok, detail)
+        # P10-P14: the 1.48.5 Cards page (By Holder sections or One List, totals line, holder chips) and the tidied pencil menus
+        def items(app):
+            pg.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); pg.wait_for_timeout(900)
+            return pg.evaluate("[...document.querySelectorAll('[data-hub=item]')].map((e, i) => [+(e.dataset.hubOrder || 0), i, e.dataset.hubLabel]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(x => x[2])")
+        want = {'links': ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings'], 'info': ['Export', 'Info Settings'],
+                'tasks': ['Add Task', 'Spreadsheet (CSV)', 'Calendar File (.ics)', 'Print or PDF', 'Tasks Settings'],
+                'cards': ['Add Card', 'Add Holder', 'Edit Holders', 'Edit Banks', 'PDF (print)', 'Excel Spreadsheet', 'Cards Settings']}
+        got = {k: items(k) for k in want}
+        check('P10 the pencil menus: Links (Colors, Fetch Icons, Import Bookmarks, Links Settings), Info, Tasks and Cards name their own settings', got == want, got)
+        pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.evaluate("localStorage.removeItem('cards-view'); localStorage.removeItem('cards-fold')")
+        pg.reload(wait_until='domcontentloaded'); pg.wait_for_selector('#list .row.item', timeout=15000)
+        grp = lambda: pg.evaluate("[...document.querySelectorAll('#list .grp .gn')].map(e => e.textContent)")
+        rows = lambda: pg.evaluate("document.querySelectorAll('#list .row.item').length")
+        sumt = pg.evaluate("document.getElementById('stats').textContent")
+        check('P11 Cards opens By Holder: one section per holder with its totals, and the totals line counts every card and the one expiring soon',
+              grp() == ['Alex', 'Sam', 'Jordan'] and rows() == 9 and '9 cards' in sumt and '1 expiring soon' in sumt and 'charges a year' in sumt
+              and pg.evaluate("document.querySelector('#list .grp .gh').textContent.includes('4 cards')"), (grp(), rows(), sumt))
+        pg.click('#list .gh[data-fold="Jordan"]'); pg.wait_for_timeout(200); folded = rows()
+        pg.reload(wait_until='domcontentloaded'); pg.wait_for_selector('#list .row.item', timeout=15000)
+        check('P12 a holder section folds, and stays folded after a reload', folded == 7 and rows() == 7 and pg.evaluate("document.querySelector('#list .gh[data-fold=\"Jordan\"]').getAttribute('aria-expanded')") == 'false', (folded, rows()))
+        pg.click('#list .gh[data-fold="Jordan"]'); pg.click('#fview [data-v=list]'); pg.wait_for_timeout(200)
+        one = (len(grp()), rows(), pg.evaluate("getComputedStyle(document.querySelector('#list .row.item .co')).display"))
+        pg.click('#fchips [data-h="Sam"]'); pg.wait_for_timeout(200)
+        sam = (rows(), pg.evaluate("document.getElementById('stats').textContent"), pg.evaluate("!document.getElementById('fclear').hidden"))
+        pg.click('#fclear'); pg.click('#fview [data-v=holder]'); pg.wait_for_timeout(200)
+        check('P13 One List shows every card with a Holder column; a holder chip filters to that holder, and Clear brings them back',
+              one == (0, 9, 'block') and sam[0] == 3 and '3 cards' in sam[1] and sam[2] and rows() == 9 and len(grp()) == 3, (one, sam))
+        pg.click('#list .row.item[data-id] .cn small'); pg.wait_for_timeout(300)
+        opened = pg.evaluate("document.getElementById('dlg').open"); pg.evaluate("document.getElementById('dlg').close()")
+        pg.evaluate("document.getElementById('tdlg').showModal()"); pg.click('#tcols'); pg.wait_for_timeout(400)
+        cols = pg.evaluate("document.getElementById('odlg').open && document.querySelectorAll('#olist .orow').length"); pg.evaluate("document.getElementById('odlg').close()")
+        check('P14 clicking a card row opens Edit Card, and Cards Settings opens Column Order', opened and cols == 11, (opened, cols))
+        pctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 844}); pctx.add_cookies(cookies); pctx.add_init_script("try{localStorage.setItem('ix-seen-ver','%s')}catch(e){}" % ver)
+        pctx.route('**/*', handle); pp = pctx.new_page(); pp.goto(B + '/web/cards/', wait_until='domcontentloaded'); pp.wait_for_selector('#list .row.item', timeout=15000)
+        ph = pp.evaluate("({sw: document.documentElement.scrollWidth - innerWidth, head: getComputedStyle(document.querySelector('#list .row.head')).display, tall: Math.max(...[...document.querySelectorAll('#list .row.item')].map(r => r.getBoundingClientRect().height))})")
+        check('P15 Cards on a phone: nothing scrolls sideways, no column headings, and each card takes two short lines', ph['sw'] <= 1 and ph['head'] == 'none' and ph['tall'] < 80, ph)
+        pctx.close()
         b.close()
 finally:
     php.terminate(); shutil.rmtree(D, ignore_errors=True)

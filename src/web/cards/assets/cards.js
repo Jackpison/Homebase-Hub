@@ -146,19 +146,6 @@ const hh=t=>{let h=0;for(const ch of String(t))h=(h*31+ch.charCodeAt(0))>>>0;ret
 const hsl=h=>`hsl(${h} 82% var(--tl))`;
 const netColor=n=>hsl(NETH[nk(n)]??hh(n||""));
 const holderColor=o=>hsl(HOLDERH[nk(o)]??hh(o));
-const CELLS={
- bank:c=>`<div data-l="Bank">${linkTo(bankUrl(c),c.bank)}</div>`,
- name:c=>`<div class="name" data-l="Card">${linkTo(cardUrl(c),c.name)}</div>`,
- network:c=>`<div data-l="Network"${c.network?` style="color:${netColor(c.network)};font-weight:700"`:""}>${esc(c.network)||"—"}</div>`,
- variant:c=>`<div data-l="Variant">${esc(c.variant)||"—"}</div>`,
- limit:c=>`<div data-l="Limit"${c.limit?' class="c-lim"':""}>${c.limit?inr(c.limit):"Not Set"}</div>`,
- owner:c=>`<div data-l="Holder" style="color:${holderColor(c.owner)};font-weight:700">${esc(c.owner)}</div>`,
- kind:c=>`<div data-l="Type" class="k-${esc((c.kind||"Credit").toLowerCase())}">${esc(c.kind||"Credit")}</div>`,
- type:c=>`<div data-l="Base"><span class="badge ${cls(c.type)}">${esc(c.type)}</span></div>`,
- fee:c=>`<div data-l="Charges">${feeTxt(c)}</div>`,
- expiry:c=>`<div data-l="Expiry"${c.expiry?' class="c-exp"':""}>${esc(c.expiry)||"—"}</div>`,
- remark:c=>`<div class="rem w" data-l="Remark">${esc(c.remark)||"—"}</div>`
-};
 const favEl=$("fav"),touchEl=$("touch"),DEF_FAV=favEl.href,DEF_TOUCH=touchEl.href,DEF_TITLE="Cards";
 const pageTitle=()=>ST.title||DEF_TITLE;
 function applySettings(){const t=pageTitle();document.title=t;$("ptitle").textContent=t;favEl.href=DEF_FAV;touchEl.href=DEF_TOUCH}
@@ -180,31 +167,67 @@ const saveSort=()=>{try{localStorage.setItem("sort4",JSON.stringify(sort))}catch
   $("sortSel").innerHTML=o;
   $("sortSel").onchange=e=>{const v=e.target.value;if(!v)sort={k:null,d:1};else{const[a,b]=v.split(":");sort={k:a,d:+b}}saveSort();render()};
 })();
+/* expiry: "soon" is within SOON_MONTHS months (this month included); before this month it has expired */
+const SOON_MONTHS=3;
+const expState=c=>{const k=expKey(c.expiry);if(k==null)return"";const d=new Date(),left=(Math.floor(k/100)*12+k%100)-(d.getFullYear()*12+d.getMonth()+1);return left<0?"past":left<SOON_MONTHS?"soon":""};
+/* By Holder (one section per person) or One List; which sections are folded. Both are this browser's choice. */
+let VIEW="holder",FOLD=[];
+try{VIEW=localStorage.getItem("cards-view")==="list"?"list":"holder";const f=JSON.parse(localStorage.getItem("cards-fold")||"[]");if(Array.isArray(f))FOLD=f.filter(x=>typeof x==="string")}catch(e){}
+const grouped=()=>VIEW==="holder"&&P.length>1&&active==="All";
+const totals=l=>({n:l.length,debit:l.filter(c=>c.kind==="Debit").length,limit:l.reduce((s,c)=>s+(c.limit||0),0),fee:l.reduce((s,c)=>s+(c.fee||0),0),
+  soon:l.filter(c=>expState(c)==="soon").length,past:l.filter(c=>expState(c)==="past").length});
+const plural=(n,one,many)=>n+" "+(n===1?one:many);
+const dot=o=>`<i class="dot" style="background:${holderColor(o)}" aria-hidden="true"></i>`;
+const feeCell=c=>c.fee?`<span class="warn">${inr(c.fee)}/yr</span>`:c.fee===0?"Free":"—";
+const expCell=c=>{const st=expState(c);return !c.expiry?"—":st==="past"?`<span class="bad" title="Expired">${esc(c.expiry)}, expired</span>`:st==="soon"?`<span class="warn" title="Expires soon">${esc(c.expiry)}</span>`:esc(c.expiry)};
+const pills=c=>[c.network?`<span class="pill" style="color:${netColor(c.network)}">${esc(c.network)}${c.variant?" "+esc(c.variant):""}</span>`:(c.variant?`<span class="pill">${esc(c.variant)}</span>`:""),
+  c.type&&c.type!=="NA"?`<span class="pill ${cls(c.type)}">${esc(c.type)}</span>`:"",(c.kind||"Credit")==="Debit"?'<span class="pill">Debit</span>':""].join("");
+const HEADS=[["name","Card"],["owner","Holder"],["limit","Limit","num"],["fee","Charges","num"],["expiry","Expiry"],["","Details"]];
+function rowHtml(c){
+  const rem=c.remark?`<span class="rm"> · ${esc(c.remark)}</span>`:"";
+  return `<div class="row item" data-id="${c.id}">
+    <div class="cn"><b>${linkTo(cardUrl(c),c.name)}</b><small>${linkTo(bankUrl(c),c.bank)}<span class="ho"> · ${dot(c.owner)}${esc(c.owner)}</span>${rem}</small></div>
+    <div class="co">${dot(c.owner)}${esc(c.owner)}</div>
+    <div class="num">${c.limit?inr(c.limit):"—"}</div>
+    <div class="num cf">${feeCell(c)}</div>
+    <div class="ce">${expCell(c)}</div>
+    <div class="cd">${pills(c)}</div>
+    <div class="ph2">${feeCell(c)} · ${expCell(c)}</div>
+    <div class="ced"><button type="button" class="rowedit" data-id="${c.id}" aria-label="Edit ${esc(c.bank)} ${esc(c.name)}" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button></div>
+  </div>`;
+}
 function render(){
   if(active!=="All"&&!P.includes(active))active="All";
   const list=view();
   const uniq=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y));
-  fillSel("fbank","bank","Any bank",uniq(D.map(c=>c.bank)));
-  fillSel("fnet","net","Any network",uniq(D.map(c=>c.network)));
+  fillSel("fbank","bank","Any Bank",uniq(D.map(c=>c.bank)));
+  fillSel("fnet","net","Any Network",uniq(D.map(c=>c.network)));
   $("fkind").value=F.kind;
-  $("fholder").innerHTML='<option value="All">All Holders</option>'+P.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join("");
-  $("fholder").value=active;
+  if(F.bank||F.net||F.kind)$("fx").hidden=false;
+  $("fmore").setAttribute("aria-expanded",String(!$("fx").hidden));
+  $("fchips").innerHTML=P.length>1?["All",...P].map(p=>`<button type="button" class="chip" data-h="${esc(p)}" aria-pressed="${active===p}">${p==="All"?"All Holders":dot(p)+esc(p)}</button>`).join(""):"";
+  $("fview").hidden=P.length<2;
+  $("fview").querySelectorAll("[data-v]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===VIEW)));
+  $("fclear").hidden=!hasF();
   $("sortSel").value=sort.k?sort.k+":"+sort.d:"";
-  const count=t=>list.filter(c=>c.type===t).length;
-  const total=list.reduce((s,c)=>s+(c.limit||0),0);
-  const yearly=list.reduce((s,c)=>s+(c.fee||0),0);
-  const nDebit=list.filter(c=>c.kind==="Debit").length;
-  $("stats").innerHTML=
-    `<div class="stat" style="--sc:var(--s-cards)"><b>${list.length}</b><span>Cards (${list.length-nDebit} credit, ${nDebit} debit)</span></div>
-     <div class="stat" style="--sc:var(--ltf)"><b>${count("LTF")}</b><span>Lifetime Free</span></div>
-     <div class="stat" style="--sc:var(--fd)"><b>${count("FD")}</b><span>FD</span></div>
-     <div class="stat" style="--sc:var(--paid)"><b>${count("Paid")}</b><span>Paid</span></div>
-     <div class="stat" style="--sc:var(--s-teal)"><b>${inr(yearly)}</b><span>Charges per Year</span></div>`;
-  const order=colOrder();
-  $("list").style.setProperty("--cols",order.map(k=>defOf(k).w).join(" ")+" 56px");
-  $("list").innerHTML=
-    `<div class="row head">`+order.map(k=>{const d=defOf(k);return d.ns?`<span>${d.l}</span>`:`<span><button class="sh" data-k="${k}" data-on="${sort.k===k?1:0}" aria-label="Sort by ${d.l}">${d.l}${sort.k===k?(sort.d===1?" ▲":" ▼"):""}</button></span>`}).join("")+`<span></span></div>`+
-    (list.map(c=>`<div class="row item" data-id="${c.id}">${order.map(k=>CELLS[k](c)).join("")}<div class="w"><button class="edit rowedit" data-id="${c.id}">Edit</button></div></div>`).join("")||`<div class="empty">${hasF()?"No cards match these filters. Press Clear to show them all.":"No cards here yet. Use the pencil icon in the bar, then Add card."}</div>`);
+  const t=totals(list);
+  $("stats").innerHTML=!D.length?"":
+    `<span><b>${plural(t.n,"card","cards")}</b>${t.debit?` (${t.n-t.debit} credit, ${t.debit} debit)`:""}</span><span><b>${inr(t.limit)}</b> total limit</span><span><b>${inr(t.fee)}</b> charges a year</span>`+
+    (t.soon?`<span class="warn"><b>${t.soon}</b> expiring soon</span>`:"")+(t.past?`<span class="bad"><b>${t.past}</b> expired</span>`:"");
+  const g=grouped();
+  $("list").classList.toggle("grouped",g);
+  const head=`<div class="row head">`+HEADS.map(([k,l,c])=>`<span class="h-${k||"d"}${c?" "+c:""}">${k?`<button class="sh" data-k="${k}" data-on="${sort.k===k?1:0}" aria-label="Sort by ${l}">${l}${sort.k===k?(sort.d===1?" ▲":" ▼"):""}</button>`:l}</span>`).join("")+`<span></span></div>`;
+  if(!list.length){$("list").innerHTML=`<div class="empty">${hasF()?"No cards match these filters. Press Clear to show them all.":"No cards here yet. Open the pencil menu in the bar and choose Add Card."}</div>`;return}
+  if(!g){$("list").innerHTML=head+list.map(rowHtml).join("");return}
+  const owners=[...P,...uniq(list.map(c=>c.owner)).filter(o=>!P.includes(o))];
+  $("list").innerHTML=head+owners.map(o=>{
+    const l=list.filter(c=>c.owner===o);if(!l.length)return"";
+    const s=totals(l),open=!FOLD.includes(o);
+    return `<section class="grp"><button type="button" class="gh" data-fold="${esc(o)}" aria-expanded="${open}"><span class="gn">${dot(o)}${esc(o)}</span>`+
+      `<span>${plural(s.n,"card","cards")}</span><span>${inr(s.limit)} limit</span><span>${inr(s.fee)} a year</span>`+
+      (s.soon?`<span class="warn">${s.soon} expiring soon</span>`:"")+(s.past?`<span class="bad">${s.past} expired</span>`:"")+`<i class="chev2" aria-hidden="true"></i></button>`+
+      (open?l.map(rowHtml).join(""):"")+`</section>`;
+  }).join("");
 }
 
 function openCard(c){
@@ -273,8 +296,12 @@ document.addEventListener("click",e=>{
     if(sort.k!==k)sort={k,d:1};else if(sort.d===1)sort.d=-1;else sort={k:null,d:1};
     saveSort();render();return;
   }
-  const r=e.target.closest(".rowedit");
-  if(r){const c=D.find(x=>x.id===+r.dataset.id);guard(()=>openCard(c))}
+  const fo=e.target.closest(".gh");
+  if(fo){const o=fo.dataset.fold;FOLD=FOLD.includes(o)?FOLD.filter(x=>x!==o):[...FOLD,o];try{localStorage.setItem("cards-fold",JSON.stringify(FOLD))}catch(x){}
+    render();const nb=[...document.querySelectorAll(".gh")].find(x=>x.dataset.fold===o);if(nb)nb.focus();return}
+  // a click anywhere on a card's row (not on its links) opens it, like its Edit button
+  const r=e.target.closest(".rowedit")||(!e.target.closest("a,button,input,select")&&e.target.closest(".row.item"));
+  if(r){const c=D.find(x=>x.id===+r.dataset.id);if(c)guard(()=>openCard(c))}
 });
 $("cancel").onclick=()=>dlg.close();
 $("hcancel").onclick=()=>hdlg.close();
@@ -434,6 +461,7 @@ const tdlg=$("tdlg");
 function openTitle(){$("ttl").value=pageTitle();tdlg.showModal()}
 $("tcancel").onclick=()=>tdlg.close();
 $("tsizes").onclick=()=>tdlg.close();   // the shell then opens Text Sizes (data-hub-action="sizes")
+$("tcols").onclick=()=>{tdlg.close();guard(openOrder)};
 $("tsave").onclick=()=>{
   const t=$("ttl").value.trim();
   ST.title=(t&&t!==DEF_TITLE)?t:"";
@@ -478,8 +506,10 @@ $("infoSave").onclick=()=>{NOTES=$("notes").value;persist();renderInfo();infoMod
 
 $("fq").addEventListener("input",e=>{F.q=e.target.value;render()});
 [["fbank","bank"],["fnet","net"],["fkind","kind"]].forEach(([id,k])=>$(id).addEventListener("change",e=>{F[k]=e.target.value;render()}));
-$("fholder").addEventListener("change",e=>{active=e.target.value;render()});
-$("fclear").onclick=()=>{F={q:"",bank:"",net:"",kind:""};active="All";$("fq").value="";render()};
+$("fchips").addEventListener("click",e=>{const b=e.target.closest("[data-h]");if(!b)return;active=b.dataset.h;render();const nb=$("fchips").querySelector(`[data-h="${CSS.escape(active)}"]`);if(nb)nb.focus()});
+$("fview").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;VIEW=b.dataset.v;try{localStorage.setItem("cards-view",VIEW)}catch(x){}render()});
+$("fmore").onclick=()=>{$("fx").hidden=!$("fx").hidden;$("fmore").setAttribute("aria-expanded",String(!$("fx").hidden))};
+$("fclear").onclick=()=>{F={q:"",bank:"",net:"",kind:""};active="All";$("fq").value="";$("fx").hidden=true;render();$("fq").focus()};
 
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';

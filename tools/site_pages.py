@@ -53,7 +53,7 @@ FEATURES = [
                    ('A start page you did not choose', 'Choose the background photos, the look and which pages show in the bar', 'palette'),
                    ('Heavy pictures on a slow phone', 'Every photo gets a phone-sized copy, so it loads fast', 'phone')],
          details=[('image', 'Photos with credit', 'Each photo keeps its credit in the corner.'), ('phone', 'Phone-sized copies', 'Large photos get a smaller copy for phones, so the page opens quickly.'),
-                  ('settings', 'With or without the bar', 'Show the start page full screen, or keep the bar. It is a setting in Settings, General, Navigation.'), ('search', 'Search from anywhere', 'Press / or Ctrl+K on any page to search Links, Info, Tasks and Tools at once.')],
+                  ('settings', 'With or without the bar', 'Show the start page full screen, or keep the bar. It is a setting in Settings, Appearance, Look.'), ('search', 'Search from anywhere', 'Press / or Ctrl+K on any page to search Links, Info, Tasks and Tools at once.')],
          tour=[('Photos that change', 'A background photo for your start page.'), ('Credit in the corner', 'Every photo keeps its credit, so you know whose picture it is.')],
          hot=[(38, 58), (78, 7)], everyday=('Ten tabs to open every morning', 'One bar with every page, and search on /')),
     dict(id='links', name='Links', ac='a-links', icon='link', url='yourdomain.com/web/links',

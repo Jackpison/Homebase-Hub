@@ -14,7 +14,7 @@
  *   frame      SECTIONS, PANES, mount(), go(), pane(), tabify(), cardify(), the draft and "Save Settings" (saveSettings)
  *   search     SEARCH: add a line here for every new setting
  *   General    pGeneral, textSizes        Appearance  pLook, pColors, PRESETS / PRESET_GROUPS (data), pThemes
- *   Navigation pNav, tabEditor            Pages       pPages
+ *   Tabs       pNav, tabEditor
  *   Telegram   pRemind                    Health      pCheck (Server Check), pDomains
  *   Overview   pOverview, whatsNew, decorateNav, pSetup (Guided Setup, WZ, setupSteps)
  *   Changelog  mdInline, mdBlocks, clParse, pChangelog, pChMap, pChNotes
@@ -51,15 +51,15 @@
   // [id, name, icon, what it is for (shown under the title), sub-tabs [[id, name]], menu group]
   var SECTIONS = [
     ['overview', 'Overview', ICON.grid, 'How your site stands right now, and what to look at next.', [['overview', 'Overview'], ['setup', 'Guided Setup']], ''],
-    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and which pages appear in the bar.', [['general', 'Basics'], ['nav', 'Navigation'], ['pages', 'Pages']], 'Site'],
-    ['look', 'Appearance', ICON.palette, 'How your site looks everywhere: theme, font, accent color and the colors of every page.', [['look', 'Look'], ['themes', 'Presets'], ['colors', 'Colors']], 'Site'],
-    ['security', 'Security', ICON.shield, 'Who can get in, and how well your private things are protected.', null, 'Protection & Data'],
-    ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and backups, sent to your phone.', null, 'Protection & Data'],
-    ['backup', 'Backup & Restore', ICON.box, 'One file holds your pages and every setting you chose. Download it, restore it, or start over.', null, 'Protection & Data'],
-    ['updates', 'Updates', ICON.upload, 'Update the site from GitHub or by uploading a zip, go back to the last version, and clear out files that do not belong.', [['updates', 'Update'], ['files', 'Files']], 'System'],
-    ['health', 'Health', ICON.pulse, 'Version, disk, speed, errors, your domains, and what your hosting allows.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System'],
-    ['changelog', 'Changelog', ICON.log, 'What changed in every version of your site, newest first.', [['changelog', 'Versions'], ['chmap', 'Version Map'], ['chnotes', 'Notes']], 'System']];
-  var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, pages: pPages, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
+    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and the tabs in the bar.', [['general', 'Basics'], ['nav', 'Tabs']], 'Web Setting'],
+    ['look', 'Appearance', ICON.palette, 'How your site looks everywhere: the bar, theme, font, accent color and the colors of every page.', [['look', 'Look'], ['themes', 'Presets'], ['colors', 'Colors']], 'Web Setting'],
+    ['security', 'Security', ICON.shield, 'Who can get in, and how well your private things are protected.', null, 'Data Setting'],
+    ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and backups, sent to your phone.', null, 'Data Setting'],
+    ['backup', 'Backup & Restore', ICON.box, 'One file holds your pages and every setting you chose. Download it, restore it, or start over.', null, 'Data Setting'],
+    ['health', 'Health', ICON.pulse, 'Version, disk, speed, errors, your domains, and what your hosting allows.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
+    ['updates', 'Updates', ICON.upload, 'Update the site from GitHub or by uploading a zip, go back to the last version, and clear out files that do not belong.', [['updates', 'Update'], ['files', 'Files']], 'System Setting'],
+    ['changelog', 'Changelog', ICON.log, 'What changed in every version of your site, newest first.', [['changelog', 'Versions'], ['chmap', 'Version Map'], ['chnotes', 'Notes']], 'System Setting']];
+  var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
   var SUB_OF = {};   // sub-tab -> its section (nav -> general, colors -> look)
   SECTIONS.forEach(function (x) { (x[4] || [[x[0]]]).forEach(function (t) { SUB_OF[t[0]] = x[0]; }); });
   var DRAFTED = ['general', 'look'];
@@ -127,8 +127,7 @@
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
-    ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom'], ['Show the Bar on the Start Page', 'nav', 'home corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'pages names order'],
-    ['Open a Page in Edit Mode', 'pages', 'shortcuts pencil'],
+    ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Start Page', 'look', 'home corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], ['Same Look on Every Page', 'look', 'unified'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
@@ -168,6 +167,7 @@
     target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'overview';
     if (id === 'remind') id = 'telegram';
     if (id === 'system') id = 'updates';   // the System section of 1.48 is Updates, Health and Changelog again
+    if (id === 'pages') id = 'nav';        // General > Pages was removed in 1.48.5: its old links open Tabs
     if (!PAGE) { location.href = K.ROOT + 'web/settings/#' + target; return; }
     if (!SUB_OF[id]) id = 'overview';
     if (parts[1]) TABSEL[id] = parts[1];
@@ -224,11 +224,11 @@
   /* The long sections (Security, Telegram, Backup) are drawn as a list of folded parts. Here each part becomes a tab and the status
      above them becomes the first tab, so only one thing is on screen at a time. The parts keep working as they were: they are only shown and hidden. */
   var tabObs = null;
-  /* The plain panes (General, Navigation, Pages, Look) are written as "heading, one line, controls". Each heading with what follows it
+  /* The plain panes (General, Tabs, Look) are written as "heading, one line, controls". Each heading with what follows it
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
-  var CARDIFY = { general: 1, nav: 1, pages: 1, look: 1 };
+  var CARDIFY = { general: 1, nav: 1, look: 1 };
   var CARD_ICON = { 'install on your phone': ICON.down, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
-    'navigation style': ICON.menu, 'tabs': ICON.pages, 'open a page in edit mode': ICON.edit };
+    'navigation style': ICON.menu, 'tabs': ICON.pages };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
     var groups = [], cur = null;
@@ -363,6 +363,9 @@
       '<input type="text" id="ix-fontc" maxlength="40" placeholder="A font installed on your device, like Calibri" value="' + esc(draft.fontCustom || '') + '" aria-label="Font Name"' + (draft.font === 'custom' ? '' : ' hidden') + '>' +
       '<h3>Theme</h3><p>The look for anyone who has not chosen one. The theme button in the bar changes it for you alone, on every page at once.</p>' +
       seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
+      '<h3>Navigation Style</h3><p>Applies to every page. Only the Top Bar hides itself while you scroll.</p>' +
+      '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
+      '<label class="ix-tg"><span>Show the Bar on the Start Page<small>Off keeps the start page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
       '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw">' + sw.map(function (c) { return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (draft.accent === c) + '"></button>'; }).join('') +
       '<label class="ix-swc" title="Your Own Color"><input type="color" id="ix-acc" value="' + esc(draft.accent) + '" aria-label="Your Own Color"></label><input type="text" class="ix-hex" id="ix-acch" maxlength="7" value="' + esc(draft.accent) + '" aria-label="Accent Color Hex" spellcheck="false"></div>' +
       '<label class="ix-tg"><span>Same Look on Every Page<small>Your colors and accent on every page. Turn off to let each page use its own colors.</small></span><input type="checkbox" id="ix-look"' + (draft.look ? ' checked' : '') + '></label>' +
@@ -372,6 +375,9 @@
     p.querySelector('#ix-acc').oninput = function (e) { setAcc(e.target.value); };
     p.querySelector('#ix-acch').oninput = function (e) { var h = hexOf(e.target.value); e.target.classList.toggle('bad', !h); if (h) setAcc(h, true); };
     p.querySelector('#ix-look').onchange = function (e) { draft.look = e.target.checked; preview(); };
+    p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
+      draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
+    p.querySelector('#ix-hb').onchange = function (e) { draft.homeBar = e.target.checked; preview(); };
     p.querySelector('#ix-font').onchange = function (e) { draft.font = e.target.value; p.querySelector('#ix-fontc').hidden = draft.font !== 'custom'; if (draft.font === 'custom') p.querySelector('#ix-fontc').focus(); preview(); };
     p.querySelector('#ix-fontc').oninput = function (e) { draft.fontCustom = e.target.value; preview(); };
     function setAcc(c, fromText) {
@@ -781,19 +787,12 @@
     };
   }
   function pNav(p) {
-    var n = [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']];
-    p.innerHTML = '<h3>Navigation Style</h3><p>Applies to every page. Only the Top Bar hides itself while you scroll.</p>' +
-      '<div class="ix-navpick">' + n.map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
-      '<label class="ix-tg"><span>Show the Bar on the Start Page<small>Off keeps the start page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
-      '<h3>Tabs</h3><p>Rename, reorder (drag or arrows) or hide tabs.</p>' +
+    p.innerHTML = '<h3>Tabs</h3><p>Rename, reorder (drag or arrows) or hide tabs.</p>' +
       '<div class="ix-pgl" id="ix-pgl"></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-pgr">Reset Names and Order</button></div>';
     tabEditor(p.querySelector('#ix-pgl'));
     p.querySelector('#ix-pgr').onclick = function () { draft.pages = []; tabEditor(p.querySelector('#ix-pgl')); preview(); };
-    p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
-      draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
-    p.querySelector('#ix-hb').onchange = function (e) { draft.homeBar = e.target.checked; preview(); };
   }
-  /* Settings > General > Navigation > Tabs: one row per page (name, up/down, show/hide), drag a row to move it. */
+  /* Settings > General > Tabs: one row per page (name, up/down, show/hide), drag a row to move it. */
   function tabEditor(box) {
     var list = pageList(draft).map(function (q) { var d = PAGE_DEF.filter(function (x) { return x[0] === q[0]; })[0];
       return { id: q[0], name: q[1] === d[1] ? '' : q[1], hide: q[4], def: d[1], icon: d[3] }; });
@@ -826,12 +825,6 @@
     box.ondrop = function (e) { var r = e.target.closest('.ix-pgr'); if (dragFrom >= 0 && r) { e.preventDefault(); move(dragFrom, +r.dataset.i); } dragFrom = -1; };
     box.ondragend = function () { dragFrom = -1; box.querySelectorAll('.drag').forEach(function (x) { x.classList.remove('drag'); }); };
     draw();
-  }
-  function pPages(p) {
-    var rows = [['Start Page', ''], ['Links', 'web/links/'], ['Info', 'web/info/'], ['Cards', 'web/cards/'], ['Tasks', 'web/tasks/']];
-    p.innerHTML = '<h3>Open a Page in Edit Mode</h3><p>Jumps to the page and starts editing. The same options are always under the pencil icon in the bar.</p>' +
-      rows.map(function (r) { return '<div class="ix-part"><label style="justify-content:space-between">' + r[0] +
-        '<a class="ix-btn" href="' + ROOT + r[1] + (r[0] === 'Cards' || r[0] === 'Tasks' ? '' : '#hub-edit') + '">' + svg(ICON.edit) + 'Open &amp; Edit</a></label></div>'; }).join('');
   }
   /* Settings > Telegram: task and backup reminders through your own Telegram bot. Saved straight away (not with Save settings). */
   function pRemind(p) {

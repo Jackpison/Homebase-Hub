@@ -78,8 +78,8 @@ Keep these folders if you replace files by hand: web/core-data/media (home/photo
 
 THE BAR
 -------
-Three styles (Settings > General > Navigation), each with its own layout. The pages are Home, Links, Info, Cards, Tasks
-and Tools (rename, reorder or hide them in Settings > General > Navigation).
+Three styles (Settings > Appearance > Look), each with its own layout. The pages are Home, Links, Info, Cards, Tasks
+and Tools (rename, reorder or hide them in Settings > General > Tabs).
   Top Bar (the default): logo, pages, search, then Theme / Edit (pencil) / Backup / Settings (gear). It slides away while you
     scroll down and comes back on any scroll up, at the top of the page, when you press / or move the mouse to the top
     edge. Phones: a menu button opens the pages; search, pencil, Backup and the gear stay in the bar.
@@ -120,7 +120,7 @@ and Tools (rename, reorder or hide them in Settings > General > Navigation).
   Computer: the install icon in Chrome's or Edge's address bar. The site describes itself to the phone through
   web/core-data/api.php?action=manifest (public: the site name, icons, colours and the pages' names). There is no offline
   mode: pages and data always come from your server.
-- Start page without the bar (Settings > General > Navigation): a gear button in its corner opens editing, the other
+- Start page without the bar (Settings > Appearance > Look): a gear button in its corner opens editing, the other
   sections and Settings once you are logged in.
 
 

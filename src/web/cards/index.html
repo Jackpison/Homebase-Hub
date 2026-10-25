@@ -48,13 +48,11 @@
           <button data-a="card" data-hub="item" data-hub-label="Add Card" data-hub-icon="card" data-hub-order="1">Add Card</button>
           <button data-a="holder" data-hub="item" data-hub-label="Add Holder" data-hub-icon="user" data-hub-order="2">Add Holder</button>
           <hr>
-          <span class="ph">Manage</span>
-          <button data-a="editholder" data-hub="item" data-hub-label="Holders" data-hub-group="Manage" data-hub-icon="user" data-hub-order="10" data-hub-sep>Holders</button>
-          <button data-a="editbank" data-hub="item" data-hub-label="Banks" data-hub-group="Manage" data-hub-icon="card" data-hub-order="11">Banks</button>
+          <span class="ph">Change</span>
+          <button data-a="editholder" data-hub="item" data-hub-label="Edit Holders" data-hub-icon="user" data-hub-order="10" data-hub-sep>Edit Holders</button>
+          <button data-a="editbank" data-hub="item" data-hub-label="Edit Banks" data-hub-icon="card" data-hub-order="11">Edit Banks</button>
           <hr>
-          <span class="ph">Page</span>
-          <button data-a="title" data-hub="item" data-hub-label="Page Settings" data-hub-group="Page Look" data-hub-icon="gear" data-hub-order="20" data-hub-sep>Page Settings</button>
-          <button data-a="reorder" data-hub="item" data-hub-label="Column Order" data-hub-group="Page Look" data-hub-icon="cols" data-hub-order="21">Column Order</button>
+          <button data-a="title" data-hub="item" data-hub-label="Cards Settings" data-hub-icon="gear" data-hub-order="50" data-hub-sep>Cards Settings</button>
           <hr>
           <button data-a="password" id="mPw">Password &amp; Security</button>
           <button data-a="lock" id="mLock">Log Out</button>
@@ -62,18 +60,25 @@
       </div>
     </div>
   </div>
-  <div class="stats" id="stats"></div>
+  <div class="sum" id="stats" aria-live="polite"></div>
   <div class="filters" id="filters">
-    <input id="fq" type="search" placeholder="Find a card, bank, holder or network…" aria-label="Find a Card">
-    <select id="fbank" aria-label="Bank"></select>
-    <select id="fnet" aria-label="Network"></select>
-    <select id="fkind" aria-label="Type"><option value="">Any Type</option><option>Credit</option><option>Debit</option></select>
-    <select id="fholder" aria-label="Holder"></select>
-    <button class="fclear" id="fclear" type="button">Clear</button>
+    <div class="frow">
+      <input id="fq" type="search" placeholder="Find a card, bank or network…" aria-label="Find a Card">
+      <div class="seg" id="fview" role="group" aria-label="Show Cards">
+        <button type="button" data-v="holder" aria-pressed="true">By Holder</button><button type="button" data-v="list" aria-pressed="false">One List</button>
+      </div>
+      <button type="button" class="fbtn" id="fmore" aria-expanded="false" aria-controls="fx">More Filters</button>
+      <button type="button" class="fbtn" id="fclear" hidden>Clear</button>
+    </div>
+    <div class="chips" id="fchips" role="group" aria-label="Holder"></div>
+    <div class="fx" id="fx" hidden>
+      <select id="fbank" aria-label="Bank"></select>
+      <select id="fnet" aria-label="Network"></select>
+      <select id="fkind" aria-label="Type"><option value="">Credit and Debit</option><option>Credit</option><option>Debit</option></select>
+    </div>
   </div>
   <div class="msort"><label>Sort By<select id="sortSel"></select></label></div>
   <div class="list" id="list"></div>
-  <p class="hint">Hover over a row to show its Edit button.</p>
   <section class="notes">
     <div class="nh"><h2>Information</h2><button class="edit" id="infoEdit">Edit</button></div>
     <div class="info" id="info"></div>
@@ -130,18 +135,18 @@
 </dialog>
 
 <dialog id="odlg">
-  <h2>Reorder Columns</h2>
-  <p>Use the arrows to move a column. The list, Excel and PDF follow this order.</p>
+  <h2>Column Order</h2>
+  <p>Use the arrows to move a column. The Excel and PDF files follow this order.</p>
   <div id="olist"></div>
   <div class="act"><button type="button" id="oreset" class="left">Default Order</button><button type="button" id="ocancel">Cancel</button><button type="button" class="pri" id="osave">Save Order</button></div>
 </dialog>
 
 <dialog id="tdlg">
-  <h2>Page Settings</h2>
+  <h2>Cards Settings</h2>
   <div class="f">
     <label class="w">Page Title<input id="ttl" maxlength="60"></label>
   </div>
-  <div class="f"><button type="button" id="tsizes" data-hub-action="sizes">Change Text Sizes</button></div>
+  <div class="f tb"><button type="button" id="tsizes" data-hub-action="sizes">Change Text Sizes</button><button type="button" id="tcols">Column Order for Excel and PDF</button></div>
   <div class="act"><button type="button" id="tcancel">Cancel</button><button type="button" class="pri" id="tsave">Save</button></div>
 </dialog>
 

@@ -29,7 +29,7 @@
   var ASSETS = new URL('.', me ? me.src : location.href).href;        // .../web/core-data/assets/
   var CORE = new URL('../', ASSETS).href;                             // .../web/core-data/
   var ROOT = new URL('../../', CORE).href;                            // site root
-  /* every page of the site: [id, default name, address, icon]. Names, order and hidden tabs come from Settings > General > Navigation. */
+  /* every page of the site: [id, default name, address, icon]. Names, order and hidden tabs come from Settings > General > Tabs. */
   var PAGE_DEF = [
     ['home', 'Home', ROOT, 'M3 11l9-7 9 7M5 10v10h14V10'],
     ['links', 'Links', ROOT + 'web/links/', 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'],

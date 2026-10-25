@@ -42,8 +42,8 @@ const tsDay=ts=>partsTz(new Date(ts*1000)).d;   // the site's date of a moment
 const todayS=()=>nowTz().d;
 const today=()=>parse(todayS());
 const t12=hm=>{if(!hm)return"";const[h,m]=hm.split(":").map(Number);return(h%12||12)+":"+pad(m)+" "+(h<12?"AM":"PM")};
-const LOC=()=>SET.dates==="us"?"en-US":"en-IN";   // Page Settings > Dates
-const WS=()=>SET.week==="mon"?1:0;                  // Page Settings > Week Starts On
+const LOC=()=>SET.dates==="us"?"en-US":"en-IN";   // Tasks Settings > Dates
+const WS=()=>SET.week==="mon"?1:0;                  // Tasks Settings > Week Starts On
 const fmtD=(s,o)=>parse(s).toLocaleDateString(LOC(),o||{day:"numeric",month:"short",year:"numeric"});
 const fmtLong=s=>{const d=parse(s);return d.toLocaleDateString(LOC(),{weekday:"long"})+", "+d.getDate()+" "+MONTHS[d.getMonth()]+" "+d.getFullYear()};
 const weekEnd=s=>addDays(s,6);   // "This Week" = today and the next 6 days (rolling, so it never ends on a Saturday with nothing in it)
@@ -146,7 +146,7 @@ function privateScreen(){
   if(window.HUB&&HUB.ready)HUB.ready();
 }
 function take(j){T=Array.isArray(j.tasks)?j.tasks:[];LOG=Array.isArray(j.log)?j.log:[];SET={...SET_DEF,...(j.settings||{})};REV=j.rev|0;for(const k in NF)delete NF[k];loaded=true}
-// Page Settings > When the Page Opens: applied once per page load, on top of what this browser remembers
+// Tasks Settings > When the Page Opens: applied once per page load, on top of what this browser remembers
 function openWith(){
   if(SET.start)V.view=SET.start;
   if(SET.range){V.range=SET.range;V.st="";V.day=""}
