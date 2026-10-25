@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.47.1 | Small fixes: the Telegram backup button no longer sticks, Tools has its section colours back, Home uploads up to 128 MB, a GitHub link in Updates |
 | 1.47.0 | Tools rebuilt from source: all 36 tools, the same addresses and favourites, newer engines (ONNX Runtime 1.30, Tesseract 7), AVIF saving, and fixes |
 | 1.46.0 | Install on Your Phone: the site on a phone's or computer's home screen, opening like an app with its own icon and page shortcuts; Settings descriptions no longer shown twice |
 | 1.45.0 | Import Bookmarks in Links: bookmarks from any browser, with a preview, into a new or existing tab, easy to undo; readable main buttons in Links' light mode |
@@ -66,6 +67,26 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.47.1
+
+### Fix
+
+- **Send Backup Now no longer sticks on "Sending…".** On a big site the backup takes longer than the 30 seconds the page waits for an answer, so the file reached Telegram but the button never came back. The page now waits up to 4 minutes, the site finishes and remembers the backup even if the page stopped waiting, and if no answer does come the button is freed with a note that the backup may still arrive in Telegram.
+
+### Changed
+
+- **Tools has its colours back.** Images are teal, Photos blue, PDF red and Utilities purple, in the side menu (with the number of tools in each and, inside a section, its tools listed underneath), on the cards (with a Popular badge, small file-type labels and an arrow), on each tool's title and buttons, and in a new breadcrumb and a More Tools row. Organise and Settings sit at the bottom of the side menu with a button to collapse it. The search box has one clean border.
+- **Home: Your Uploads accepts files up to 128 MB** (it was 40 MB).
+- **Settings > Updates: Update From GitHub** now has a link to the project on GitHub.
+- **A cleaner site.** `web/tools/config.json`, written for the old Tools and read by nothing, is no longer made, and the first request after this update removes it.
+
+### For developers
+
+- The updater now accepts `.bcmap` and `.pfb` files, so a later release can ship pdf.js's character maps and fonts (this release contains none, because older sites would refuse them).
+- `tests/settings_test.py` (9 checks) covers the backup button, the GitHub link, the upload limit and the clean-up.
 
 ---
 

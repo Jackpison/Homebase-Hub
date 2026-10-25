@@ -7,7 +7,7 @@
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../core-data/assets/shell.js?v=1.47.0" data-app="links"></script>
+ *   <script src="../core-data/assets/shell.js?v=1.47.1" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
