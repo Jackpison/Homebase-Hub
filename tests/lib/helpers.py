@@ -234,6 +234,19 @@ SETTLED = ("document.readyState === 'complete' && (window.__inflight || 0) === 0
            "document.getAnimations().every(a => a.playState !== 'running' || !isFinite(a.effect.getTiming().iterations))")
 
 
+WATCH_DOM = """(() => { if (!window.__mutObs) { window.__lastMut = performance.now();
+  window.__mutObs = new MutationObserver(() => { window.__lastMut = performance.now(); });
+  window.__mutObs.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true }); }
+  window.__mark = performance.now(); })()"""
+
+
+def after(pg, action, quiet=250, timeout=15000):
+    """Does action() and waits until the page has reacted (something on it changed) and then stayed still for `quiet` ms.
+    For steps with no single result to wait for, such as a tool reading the file it was given. Returns False on timeout."""
+    pg.evaluate(WATCH_DOM); action()
+    return bool(until(lambda: pg.evaluate("window.__lastMut > window.__mark && performance.now() - window.__lastMut >= %d" % quiet), timeout, 50))
+
+
 def settle(pg, timeout=10000):
     """Waits until the page has settled: loaded, no request of its own in flight (needs TRACK_REQUESTS), fonts loaded, and no
     fade or slide still running (endless spinners do not count). True twice in a row, 150 ms apart. Returns False on timeout."""

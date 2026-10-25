@@ -8,7 +8,7 @@ import hashlib, io, json, os, shutil, sys, zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX as FIXDIR, SEED
-from helpers import Site, Checks, stop_all, browser_name, launch, wait_js, HERE
+from helpers import Site, Checks, stop_all, browser_name, launch, wait_js, HERE, until, after
 from playwright.sync_api import sync_playwright
 
 BROWSER = browser_name()
@@ -40,7 +40,7 @@ try:
         check('N1b no stray "null" or "undefined" text on the home', pg.evaluate(NULLS) == 0)
         st = pg.evaluate("JSON.parse(localStorage.getItem('tools.v3'))")
         check('N2 favourites and recent tools carry over from the old Tools (unknown ids dropped)', st['fav'] == ['image-resize'] and st['recent'] == ['pdf-merge'], st)
-        pg.fill('#tools-q', 'qr'); pg.wait_for_timeout(150)
+        pg.fill('#tools-q', 'qr'); until(lambda: '#/tool/qr-generator' in pg.evaluate("[...document.querySelectorAll('#root .results .tcm')].map(a => a.getAttribute('href'))"), 3000)
         found = pg.evaluate("[...document.querySelectorAll('#root .results .tcm')].map(a => a.getAttribute('href'))")
         check('N3 searching "qr" finds the QR Code Generator', '#/tool/qr-generator' in found and len(found) < 5, found)
         pg.keyboard.press('Enter'); wait_js(pg, "location.hash === '#/tool/qr-generator' && !!document.querySelector('canvas')")
@@ -50,39 +50,40 @@ try:
             with pg.expect_download(timeout=20000) as d: click()
             return open(d.value.path(), 'rb').read(), d.value.suggested_filename
 
-        pg.fill('#root input[type=url]', 'https://example.com/hello'); pg.wait_for_timeout(200)
+        qr0 = pg.evaluate("document.querySelector('#root canvas').toDataURL()"); pg.fill('#root input[type=url]', 'https://example.com/hello')
+        until(lambda: pg.evaluate("document.querySelector('#root canvas').toDataURL()") != qr0, 3000)   # the code is drawn again for the address
         data, name = dl(lambda: pg.get_by_role('button', name='Download PNG', exact=True).click())
         check('N5 QR Code Generator downloads a PNG of the code', data[:8] == b'\x89PNG\r\n\x1a\n' and name == 'qr-code.png', name)
         data, name = dl(lambda: pg.get_by_role('button', name='Download SVG', exact=True).click())
         check('N6 ...and an SVG', data.startswith(b'<svg') and b'<path' in data, data[:40])
 
         pg.goto(U + '#/tool/json-formatter'); wait_js(pg, "!!document.querySelector('#root textarea')")
-        pg.fill('#root textarea >> nth=0', '{\n  "a": 1,\n  "b": [1, 2,]\n}'); pg.get_by_role('button', name='Format', exact=True).click(); pg.wait_for_timeout(150)
+        pg.fill('#root textarea >> nth=0', '{\n  "a": 1,\n  "b": [1, 2,]\n}'); pg.get_by_role('button', name='Format', exact=True).click(); until(lambda: pg.evaluate("!!document.querySelector('#root .note.bad')"), 3000)
         msg = pg.inner_text('#root .note.bad')
         check('N7 JSON Formatter names the exact line and column of an error', 'Line 3, column' in msg and 'comma' in msg, msg)
-        pg.fill('#root textarea >> nth=0', '{"b":2,"a":{"d":1,"c":2}}'); pg.get_by_label('Sort keys A to Z').check(); pg.get_by_role('button', name='Format', exact=True).click(); pg.wait_for_timeout(150)
+        pg.fill('#root textarea >> nth=0', '{"b":2,"a":{"d":1,"c":2}}'); pg.get_by_label('Sort keys A to Z').check(); pg.get_by_role('button', name='Format', exact=True).click(); until(lambda: pg.input_value('#root textarea >> nth=1').startswith('{'), 3000)
         check('N8 ...formats with sorted keys', pg.input_value('#root textarea >> nth=1') == '{\n  "a": {\n    "c": 2,\n    "d": 1\n  },\n  "b": 2\n}', pg.input_value('#root textarea >> nth=1'))
 
         pg.goto(U + '#/tool/hash-generator'); wait_js(pg, "!!document.querySelector('#root textarea')")
-        pg.fill('#root textarea', 'abc'); pg.wait_for_timeout(150)
+        pg.fill('#root textarea', 'abc'); until(lambda: 'ba7816bf' in pg.inner_text('#root'), 3000)
         txt = pg.inner_text('#root')
         check('N9 Hash Generator gives the known SHA-256 and SHA-1 of "abc"', 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' in txt and 'a9993e364706816aba3e25717850c26c9cd0d89d' in txt)
-        pg.fill('#root input[placeholder^="Paste a hash"]', 'BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD'); pg.wait_for_timeout(150)
+        pg.fill('#root input[placeholder^="Paste a hash"]', 'BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD'); until(lambda: 'Match:' in pg.inner_text('#root'), 3000)
         check('N10 ...and recognises a pasted hash, in capitals too', 'Match: this is the SHA-256' in pg.inner_text('#root'))
 
         pg.goto(U + '#/tool/generators'); wait_js(pg, "document.querySelectorAll('#root .flist .out').length > 0")
         pw = pg.evaluate("[...document.querySelectorAll('#root .flist .out')].map(x => x.textContent)")
         import re as _re
         check('N11 Password generator makes 5 passwords of 20 characters with every kind of character', len(pw) == 5 and all(len(x) == 20 and _re.search('[A-Z]', x) and _re.search('[a-z]', x) and _re.search('[0-9]', x) and _re.search(r'[^A-Za-z0-9]', x) for x in pw) and len(set(pw)) == 5, pw)
-        pg.get_by_role('button', name='UUIDs', exact=True).click(); pg.wait_for_timeout(150)
+        pg.get_by_role('button', name='UUIDs', exact=True).click(); until(lambda: pg.evaluate("[...document.querySelectorAll('#root .flist .out')].every(x => /^[0-9a-f]{8}-/.test(x.textContent))"), 3000)
         u = pg.evaluate("[...document.querySelectorAll('#root .flist .out')].map(x => x.textContent)")
         check('N12 ...and version 4 UUIDs', len(u) == 5 and all(_re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}', x) for x in u), u)
 
         pg.goto(U + '#/tool/text-tools'); wait_js(pg, "!!document.querySelector('#root textarea')")
-        pg.fill('#root textarea', 'One two three.\n\nFour five.'); pg.wait_for_timeout(100)
+        pg.fill('#root textarea', 'One two three.\n\nFour five.'); until(lambda: pg.evaluate("(document.querySelector('#root .kv div') || {}).textContent || ''").startswith('5'), 3000)
         check('N13 Word counter counts words, sentences and paragraphs', pg.evaluate("[...document.querySelectorAll('#root .kv div')].slice(0,5).map(d => d.firstChild.textContent).join(',')") == '5,26,21,2,2', pg.evaluate("[...document.querySelectorAll('#root .kv div')].map(d => d.textContent).join(' | ')"))
-        pg.get_by_role('button', name='Base64', exact=True).click(); pg.fill('#root textarea >> nth=0', 'héllo ✓'); pg.get_by_role('button', name='Encode', exact=True).click(); pg.wait_for_timeout(100)
-        enc = pg.input_value('#root textarea >> nth=1'); pg.get_by_role('button', name='Use as Input', exact=True).click(); pg.get_by_role('button', name='Decode', exact=True).click(); pg.wait_for_timeout(100)
+        pg.get_by_role('button', name='Base64', exact=True).click(); pg.fill('#root textarea >> nth=0', 'héllo ✓'); pg.get_by_role('button', name='Encode', exact=True).click(); until(lambda: pg.input_value('#root textarea >> nth=1') != '', 3000)
+        enc = pg.input_value('#root textarea >> nth=1'); pg.get_by_role('button', name='Use as Input', exact=True).click(); pg.get_by_role('button', name='Decode', exact=True).click(); until(lambda: 'llo' in pg.input_value('#root textarea >> nth=1'), 3000)
         check('N14 Base64 encodes and decodes UTF-8 text', enc == 'aMOpbGxvIOKckw==' and pg.input_value('#root textarea >> nth=1') == 'héllo ✓', enc)
 
         pg.goto(U + '#/tool/zip-creator'); wait_js(pg, "!!document.querySelector('#root input[type=file]')")
@@ -112,7 +113,7 @@ try:
             OPENED.append(i)
             pg.goto(U + '#/'); wait_js(pg, "location.hash === '#/'"); pg.goto(U + '#/tool/' + i); wait_js(pg, "!!document.querySelector('#root .dropwrap input[type=file]')")
         def go(name, files, timeout=60000):
-            pg.set_input_files('#root .dropwrap input[type=file] >> nth=0', files); pg.wait_for_timeout(400)
+            after(pg, lambda: pg.set_input_files('#root .dropwrap input[type=file] >> nth=0', files))   # the tool has taken the files
             with pg.expect_download(timeout=timeout) as d: pg.get_by_role('button', name=name, exact=True).click()
             return open(d.value.path(), 'rb').read(), d.value.suggested_filename
 
@@ -124,7 +125,7 @@ try:
         check('I3 ...HEIC to JPG (the HEIC reader loads and works)', data[:3] == b'\xff\xd8\xff' and name == 'fixture-photo.jpg' and img(data).size == (320, 240), (name, data[:4]))
         open_tool('image-converter'); pg.get_by_role('button', name='PNG', exact=True).click(); data, name = go('Convert', tif)
         check('I4 ...TIFF to PNG', data[:8] == b'\x89PNG\r\n\x1a\n' and img(data).size == (800, 600), name)
-        open_tool('image-converter'); pg.set_input_files('#root .dropwrap input[type=file]', [FIX, tif]); pg.wait_for_timeout(300)
+        open_tool('image-converter'); after(pg, lambda: pg.set_input_files('#root .dropwrap input[type=file]', [FIX, tif]))
         pg.get_by_role('button', name='Convert', exact=True).click(); wait_js(pg, "[...document.querySelectorAll('#root button')].some(b => b.textContent.includes('Download All (ZIP)'))", 60000)
         with pg.expect_download() as d: pg.get_by_role('button', name='Download All (ZIP)').click()
         zz = zipfile.ZipFile(d.value.path()); check('I5 ...two images at once come as a ZIP of two JPGs', len(zz.namelist()) == 2 and all(n.endswith('.jpg') for n in zz.namelist()), zz.namelist())
@@ -139,12 +140,12 @@ try:
         open_tool('image-resize'); pg.get_by_role('button', name='Social sizes', exact=True).click()
         data, name = go('Resize', FIX); check('I9 ...the Instagram square preset fills 1080 x 1080', img(data).size == (1080, 1080), img(data).size)
 
-        open_tool('img-rotate'); pg.set_input_files('#root .dropwrap input[type=file]', FIX); pg.wait_for_timeout(500)
+        open_tool('img-rotate'); after(pg, lambda: pg.set_input_files('#root .dropwrap input[type=file]', FIX))
         pg.get_by_role('button', name='Right', exact=True).click()
         with pg.expect_download() as d: pg.get_by_role('button', name='Save', exact=True).click()
         check('I10 Rotate and Flip: a quarter turn swaps width and height', img(open(d.value.path(), 'rb').read()).size == (600, 800))
 
-        open_tool('img-adjust'); pg.set_input_files('#root .dropwrap input[type=file]', FIX); pg.wait_for_timeout(500)
+        open_tool('img-adjust'); after(pg, lambda: pg.set_input_files('#root .dropwrap input[type=file]', FIX))
         pg.evaluate("(() => { const r = [...document.querySelectorAll('#root input[type=range]')][0]; r.value = 60; r.dispatchEvent(new Event('input')); })()")
         with pg.expect_download() as d: pg.get_by_role('button', name='Save', exact=True).click()
         lum = lambda im: sum(ImageStat.Stat(im.convert('L')).mean)
@@ -165,7 +166,7 @@ try:
         with pg.expect_download() as d: pg.get_by_role('button', name='Convert', exact=True).click()
         sv = img(open(d.value.path(), 'rb').read()); check('I15 SVG to PNG: code at 400 pixels wide keeps the shape and colour', sv.size == (400, 200) and sv.convert('RGB').getpixel((200, 100)) == (255, 0, 0), sv.size)
 
-        open_tool('img-base64'); pg.set_input_files('#root .dropwrap input[type=file]', FIX); pg.wait_for_timeout(500)
+        open_tool('img-base64'); pg.set_input_files('#root .dropwrap input[type=file]', FIX); until(lambda: pg.input_value('#root textarea >> nth=0').startswith('data:image'), 10000)
         uri = pg.input_value('#root textarea >> nth=0')
         check('I16 Image to Base64 makes a data URI', uri.startswith('data:image/png;base64,iVBOR'))
         pg.get_by_role('button', name='Base64 to Image', exact=True).click(); pg.fill('#root textarea', uri); pg.get_by_role('button', name='Make the File', exact=True).click()
@@ -175,11 +176,11 @@ try:
         def run_save(btn='Save', timeout=60000):
             with pg.expect_download(timeout=timeout) as d: pg.get_by_role('button', name=btn, exact=True).click()
             return open(d.value.path(), 'rb').read(), d.value.suggested_filename
-        def load(i, f): open_tool(i); pg.set_input_files('#root .dropwrap input[type=file] >> nth=0', f); pg.wait_for_timeout(600)
+        def load(i, f): open_tool(i); after(pg, lambda: pg.set_input_files('#root .dropwrap input[type=file] >> nth=0', f))
 
         load('image-crop', FIX); pg.get_by_role('button', name='1:1', exact=True).click(); data, name = run_save('Crop and Save')
         w_, h_ = img(data).size; check('P1 Quick Crop: 1:1 gives a square', w_ == h_ and w_ >= 500, (w_, h_))
-        load('image-crop', FIX); pg.get_by_role('button', name='Exact pixels', exact=True).click(); pg.fill('#root input[aria-label="Width in pixels"]', '300'); pg.fill('#root input[aria-label="Height in pixels"]', '200'); pg.wait_for_timeout(200)
+        load('image-crop', FIX); pg.get_by_role('button', name='Exact pixels', exact=True).click(); after(pg, lambda: (pg.fill('#root input[aria-label="Width in pixels"]', '300'), pg.fill('#root input[aria-label="Height in pixels"]', '200')))
         data, name = run_save('Crop and Save'); check('P2 ...exact pixels give exactly 300 x 200', img(data).size == (300, 200), img(data).size)
         pg.focus('#root .cbox'); before = pg.evaluate("document.querySelector('#root .cbox').style.left"); pg.keyboard.press('ArrowLeft'); pg.keyboard.press('ArrowLeft')
         check('P3 ...the crop box moves with the arrow keys', pg.evaluate("document.querySelector('#root .cbox').style.left") != before)
@@ -216,7 +217,7 @@ try:
         open_tool('collage'); cols = [(230, 60, 60), (60, 160, 230), (250, 200, 40), (60, 200, 120), (150, 80, 220), (240, 120, 30)]
         tiles = []
         for k, c in enumerate(cols): f = os.path.join(TMP, 'p%d.png' % k); PI.new('RGB', (600 + k * 50, 400 + k * 30), c).save(f); tiles.append(f)
-        pg.set_input_files('#root .dropwrap input[type=file]', tiles); pg.wait_for_timeout(800)
+        pg.set_input_files('#root .dropwrap input[type=file]', tiles); until(lambda: pg.evaluate("(document.querySelectorAll('#root select')[0] || {options: []}).options.length") == 21, 10000); after(pg, lambda: None, 250, 3000)
         check('P12 Collage Maker offers 21 layouts', pg.evaluate("document.querySelectorAll('#root select')[0].options.length") == 21)
         pg.select_option('#root select >> nth=0', 'g3'); data, name = run_save('Save the Collage'); co = img(data).convert('RGB')
         near = lambda p, q: all(abs(x - y) <= 6 for x, y in zip(p, q))   # JPEG rounds colours a little
@@ -253,7 +254,7 @@ try:
         r_ = rd(data); enc = r_.is_encrypted; ed = str(r_.trailer['/Encrypt'].get_object()) if enc else ''   # read without decrypting: CI has no cryptography package
         check('D9 Protect or Unlock: AES-256 with a password (qpdf)', enc and '/AESV3' in ed and "'/V': 5" in ed, ed[:160])
         prot = os.path.join(TMP, 'locked.pdf'); open(prot, 'wb').write(data)
-        open_tool('pdf-protect'); pg.get_by_role('button', name='Remove a Password', exact=True).click(); pg.set_input_files('#root .dropwrap input[type=file]', prot); pg.wait_for_timeout(300)
+        open_tool('pdf-protect'); pg.get_by_role('button', name='Remove a Password', exact=True).click(); after(pg, lambda: pg.set_input_files('#root .dropwrap input[type=file]', prot))
         pg.fill('#root input[type=password]', 'wrong one'); pg.get_by_role('button', name='Remove the Password', exact=True).click()
         wait_js(pg, "document.body.innerText.includes('not right')", 30000)
         check('D10 ...a wrong password is refused with a plain message', 'That password is not right.' in pg.inner_text('body'))
@@ -273,53 +274,55 @@ try:
         load('pdf-stamp', P3); data, name = run_save('Stamp and Save', 60000); t1 = rd(data).pages[0].extract_text()
         check('D14 Watermark and Page Numbers: CONFIDENTIAL and "Page 1 of 3"', 'CONFIDENTIAL' in t1 and 'Page 1 of 3' in t1 and 'Page 3 of 3' in rd(data).pages[2].extract_text(), t1[-120:])
         load('pdf-sign', P3); wait_js(pg, "!!document.querySelector('#root .stage canvas')", 30000)
-        pg.locator('#root canvas.pad').scroll_into_view_if_needed(); pg.wait_for_timeout(200)
+        pg.locator('#root canvas.pad').scroll_into_view_if_needed()
         box = pg.locator('#root canvas.pad').bounding_box(); W2, H2 = box['width'], box['height']   # draw a zigzag across the pad, whatever its size
         pg.mouse.move(box['x'] + W2 * 0.1, box['y'] + H2 * 0.5); pg.mouse.down()
         for k in range(1, 12): pg.mouse.move(box['x'] + W2 * (0.1 + k * 0.07), box['y'] + H2 * (0.5 + (0.25 if k % 2 else -0.25)))
-        pg.mouse.up(); pg.wait_for_timeout(200); pg.click('#root .layer', position={'x': 300, 'y': 500}); pg.wait_for_timeout(300)
+        pg.mouse.up(); until(lambda: pg.evaluate("!!document.querySelector('#root .sigprev')"), 3000)   # the signature is taken (its preview shows)
+        pg.click('#root .layer', position={'x': 300, 'y': 500}); until(lambda: pg.evaluate("document.querySelectorAll('#root .layer .item').length") == 1, 3000)
         check('D15 Sign PDF: a drawn signature is placed on the page', pg.evaluate("document.querySelectorAll('#root .layer .item').length") == 1)
         data, name = run_save('Save the Signed PDF', 60000); res = rd(data).pages[0]['/Resources']
         check('D16 ...and saved into the PDF as an image', '/XObject' in res and len(res['/XObject']) >= 1, list(res.keys()))
         load('pdf-annotate', P3); wait_js(pg, "!!document.querySelector('#root .stage canvas')", 30000); pg.fill('#root input[aria-label="Text to add"]', 'Hello PDF')
         pg.click('#root .layer', position={'x': 200, 'y': 300}); pg.get_by_role('button', name='Tick', exact=True).click(); pg.click('#root .layer', position={'x': 200, 'y': 400})
-        pg.get_by_role('button', name='Highlight', exact=True).click(); pg.click('#root .layer', position={'x': 400, 'y': 200}); pg.wait_for_timeout(200)
+        pg.get_by_role('button', name='Highlight', exact=True).click(); pg.click('#root .layer', position={'x': 400, 'y': 200}); until(lambda: pg.evaluate("document.querySelectorAll('#root .layer .item').length") == 3, 3000)
         check('D17 Fill and Annotate: text, a tick and a highlight are placed', pg.evaluate("document.querySelectorAll('#root .layer .item').length") == 3)
         data, name = run_save('Save the PDF', 60000); check('D18 ...and the text is in the saved PDF', 'Hello PDF' in rd(data).pages[0].extract_text(), name)
         shutil.rmtree(TMP, ignore_errors=True)
 
         # the app itself
         pg.goto(U + '#/'); wait_js(pg, "document.querySelectorAll('#root .tc').length > 0")
-        pg.click('#root .tc:has(a[href="#/tool/json-formatter"]) .star'); pg.goto(U + '#/favourites'); wait_js(pg, "location.hash === '#/favourites'"); pg.wait_for_timeout(150)
+        pg.click('#root .tc:has(a[href="#/tool/json-formatter"]) .star'); pg.goto(U + '#/favourites'); wait_js(pg, "location.hash === '#/favourites'"); until(lambda: '#/tool/json-formatter' in pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))"), 3000)
         favs = pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))")
         check('N17 a star adds a favourite, and Favourites lists it', '#/tool/json-formatter' in favs and '#/tool/image-resize' in favs, favs)
-        pg.goto(U + '#/recent'); pg.wait_for_timeout(150)
+        pg.goto(U + '#/recent'); until(lambda: len(pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))")) >= 3, 3000)
         rec = pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))")
         last = []
         for i in reversed(OPENED):
             if i not in last: last.append(i)
         check('N18 Recent lists the tools just used, newest first, and keeps at most 12', rec[:3] == ['#/tool/' + i for i in last[:3]] and len(rec) == 12, (rec[:4], last[:3], len(rec)))
-        pg.goto(U + '#/organise'); pg.wait_for_timeout(150)
-        pg.click('button[aria-label="Show QR Code Generator"]'); pg.goto(U + '#/s/utilities'); pg.wait_for_timeout(150)
+        pg.goto(U + '#/organise'); pg.wait_for_selector('button[aria-label="Show QR Code Generator"]', timeout=5000)
+        pg.click('button[aria-label="Show QR Code Generator"]'); pg.goto(U + '#/s/utilities'); until(lambda: '#/tool/favicon' in pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))"), 3000)
         ul = pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))")
         check('N19 Organise hides a tool from its section', '#/tool/qr-generator' not in ul and '#/tool/favicon' in ul, ul)
-        pg.goto(U + '#/organise'); pg.wait_for_timeout(150); pg.click('button[aria-label="Move Favicon Downloader down"], button[aria-label^="Move Favicon"][aria-label$="down"]')
-        pg.goto(U + '#/s/utilities'); pg.wait_for_timeout(150)
+        pg.goto(U + '#/organise'); pg.wait_for_selector('button[aria-label^="Move Favicon"]', timeout=5000); pg.click('button[aria-label="Move Favicon Downloader down"], button[aria-label^="Move Favicon"][aria-label$="down"]')
+        pg.goto(U + '#/s/utilities'); until(lambda: '#/tool/favicon' in pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))") and pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))") != ul, 3000)
         ul2 = pg.evaluate("[...document.querySelectorAll('#root .tcm')].map(a => a.getAttribute('href'))")
         check('N20 ...and changes the order within a section', ul2.index('#/tool/favicon') > ul.index('#/tool/favicon'), (ul, ul2))
-        pg.goto(U + '#/settings'); pg.wait_for_timeout(150); pg.get_by_role('button', name='Tabs on Top', exact=True).click(); pg.reload(); wait_js(pg, "!!document.querySelector('.tl')")
+        pg.goto(U + '#/settings'); pg.get_by_role('button', name='Tabs on Top', exact=True).wait_for(timeout=5000); pg.get_by_role('button', name='Tabs on Top', exact=True).click(); pg.reload(); wait_js(pg, "!!document.querySelector('.tl')")
         check('N21 Settings: tabs on top is kept after a reload, with no stray text in the menu', pg.evaluate("document.querySelector('.tl').dataset.layout") == 'tabs' and pg.evaluate(NULLS) == 0)
-        dark = pg.evaluate("getComputedStyle(document.body).backgroundColor"); pg.evaluate("document.documentElement.setAttribute('data-theme','light')"); pg.wait_for_timeout(100)
+        dark = pg.evaluate("getComputedStyle(document.body).backgroundColor"); pg.evaluate("document.documentElement.setAttribute('data-theme','light')"); until(lambda: pg.evaluate("getComputedStyle(document.body).backgroundColor") != dark, 3000)
         check('N22 light and dark follow the site', dark != pg.evaluate("getComputedStyle(document.body).backgroundColor"))
         missing = [t['id'] for t in DATA['tools']]
-        pg.goto(U + '#/tool/nothing-like-this'); pg.wait_for_timeout(200)
+        pg.goto(U + '#/tool/nothing-like-this'); until(lambda: 'Tool not found' in pg.inner_text('#root'), 5000)
         check('N23 an unknown tool address says so and offers the list', 'Tool not found' in pg.inner_text('#root'))
         check('N24 no page error anywhere', not errs, errs)
         for scheme in ('dark', 'light'):
             pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme)
             found = []
             for u in ('#/', '#/tool/qr-generator', '#/tool/json-formatter', '#/tool/generators', '#/tool/image-converter', '#/tool/image-resize', '#/tool/img-adjust', '#/tool/img-watermark', '#/tool/collage', '#/tool/id-photo', '#/tool/image-crop', '#/tool/img-redact', '#/tool/meme', '#/tool/bg-remove', '#/tool/pdf-merge', '#/tool/pdf-split', '#/tool/pdf-protect', '#/tool/pdf-text', '#/tool/pdf-stamp', '#/tool/pdf-sign', '#/tool/pdf-annotate', '#/organise', '#/settings'):
-                pg.goto(U + u); pg.wait_for_timeout(300); pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme); pg.mouse.move(2, 2); pg.wait_for_timeout(100)
+                after(pg, lambda: pg.goto(U + u), 250, 10000); pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme); pg.mouse.move(2, 2)
+                pg.wait_for_timeout(100)   # on purpose: a hovered button fades back (a CSS transition) before axe reads the colours
                 pg.evaluate(AXE); v = pg.evaluate(RUN)
                 if v: found.append(u + ': ' + '; '.join(v[:3]))
             check('N25 axe finds nothing on the home, three tools, Organise and Settings (%s)' % scheme, not found, found[:4])
