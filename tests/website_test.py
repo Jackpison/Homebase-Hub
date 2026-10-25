@@ -156,7 +156,10 @@ try:
             check('W12 with the device set to %s, the page is %s (no choice made yet)' % (scheme, scheme), lo <= l <= hi and pg.evaluate('document.documentElement.dataset.theme') is None, l); c2.close()
         c2 = ctx('dark'); pg = c2.new_page(); pg.goto(B + '/'); pg.click('.mode'); pg.wait_for_timeout(200); lit = pg.evaluate(LUM); pg.reload(); pg.wait_for_timeout(200)
         check('W13 the toggle turns a dark device light, and the choice is still there after a reload', lit > 200 and pg.evaluate(LUM) > 200 and pg.evaluate('document.documentElement.dataset.theme') == 'light', lit)
-        pg.click('.mode'); pg.wait_for_timeout(200); check('W14 and turns it back', pg.evaluate(LUM) < 60); c2.close()
+        pg.click('.mode'); pg.wait_for_timeout(200); check('W14 and turns it back', pg.evaluate(LUM) < 60)
+        icon = lambda: [pg.is_visible('.mode .m-sun'), pg.is_visible('.mode .m-moon')]
+        dark_icons = icon(); pg.click('.mode'); pg.wait_for_timeout(200); light_icons = icon(); pg.click('.mode'); pg.wait_for_timeout(200)
+        check('W14b the theme button shows a sun in dark mode and a moon in light mode', dark_icons == [True, False] and light_icons == [False, True], (dark_icons, light_icons)); c2.close()
 
         # the tour
         c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/'); pg.wait_for_timeout(300)

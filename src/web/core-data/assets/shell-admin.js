@@ -51,18 +51,18 @@
   // [id, name, icon, what it is for (shown under the title), sub-tabs [[id, name]], menu group]
   var SECTIONS = [
     ['overview', 'Overview', ICON.grid, 'How your site stands right now, and what to look at next.', [['overview', 'Overview'], ['setup', 'Guided Setup']], ''],
-    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, its tabs, and how it looks: theme, accent color, navigation style, presets and colors.',
-      [['general', 'Basics', 'General'], ['nav', 'Tabs', 'General'], ['look', 'Look', 'Look'], ['themes', 'Presets', 'Look'], ['colors', 'Colors', 'Look']], 'Web Setting'],
-    ['system', 'System', ICON.server, 'Updates, the health of your server and domains, and what changed in each version.',
-      [['updates', 'Update', 'Updates'], ['files', 'Files', 'Updates'], ['health', 'Overview', 'Health'], ['domains', 'Domains and Uptime', 'Health'], ['check', 'Server Check', 'Health'],
-       ['changelog', 'Versions', 'Changelog'], ['chmap', 'Version Map', 'Changelog'], ['chnotes', 'Notes', 'Changelog']], 'System Setting'],
-    ['security', 'Security', ICON.shield, 'Who can get in, and how well your private things are protected.', null, 'Data Setting'],
-    ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and backups, sent to your phone.', null, 'Data Setting'],
-    ['backup', 'Backup & Restore', ICON.box, 'One file holds your pages and every setting you chose. Download it, restore it, or start over.', null, 'Data Setting']];
-  var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
+    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and which pages appear in the bar.', [['general', 'Basics'], ['nav', 'Navigation'], ['pages', 'Pages']], 'Site'],
+    ['look', 'Appearance', ICON.palette, 'How your site looks everywhere: theme, font, accent color and the colors of every page.', [['look', 'Look'], ['themes', 'Presets'], ['colors', 'Colors']], 'Site'],
+    ['security', 'Security', ICON.shield, 'Who can get in, and how well your private things are protected.', null, 'Protection & Data'],
+    ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and backups, sent to your phone.', null, 'Protection & Data'],
+    ['backup', 'Backup & Restore', ICON.box, 'One file holds your pages and every setting you chose. Download it, restore it, or start over.', null, 'Protection & Data'],
+    ['updates', 'Updates', ICON.upload, 'Update the site from GitHub or by uploading a zip, go back to the last version, and clear out files that do not belong.', [['updates', 'Update'], ['files', 'Files']], 'System'],
+    ['health', 'Health', ICON.pulse, 'Version, disk, speed, errors, your domains, and what your hosting allows.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System'],
+    ['changelog', 'Changelog', ICON.log, 'What changed in every version of your site, newest first.', [['changelog', 'Versions'], ['chmap', 'Version Map'], ['chnotes', 'Notes']], 'System']];
+  var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, pages: pPages, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
   var SUB_OF = {};   // sub-tab -> its section (nav -> general, colors -> look)
   SECTIONS.forEach(function (x) { (x[4] || [[x[0]]]).forEach(function (t) { SUB_OF[t[0]] = x[0]; }); });
-  var DRAFTED = ['general'];
+  var DRAFTED = ['general', 'look'];
   var PAGE = null;                       // the page's own element when Settings runs as a page (web/settings/)
   function P() { return PAGE || D(); }
   var OV = null;                         // what the Overview last learned: the little status labels in the menu come from it
@@ -127,8 +127,9 @@
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
-    ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom'], ['Show the Bar on the Start Page', 'nav', 'home corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'pages names order navigation'],
-    ['Font', 'look', 'typeface text trebuchet georgia more options'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], ['Same Look on Every Page', 'look', 'unified more options'],
+    ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom'], ['Show the Bar on the Start Page', 'nav', 'home corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'pages names order'],
+    ['Open a Page in Edit Mode', 'pages', 'shortcuts pencil'],
+    ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], ['Same Look on Every Page', 'look', 'unified'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
     ['Two-Step Login', 'security/two-step-login', '2fa authenticator totp recovery codes'], ['Login Approval', 'security/login-approval', 'telegram approve tap'],
@@ -166,8 +167,7 @@
   function go(target) {
     target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'overview';
     if (id === 'remind') id = 'telegram';
-    if (id === 'pages') id = 'general';   // General > Pages was removed (the pencil in the bar does the same)
-    if (id === 'system') id = 'updates';
+    if (id === 'system') id = 'updates';   // the System section of 1.48 is Updates, Health and Changelog again
     if (!PAGE) { location.href = K.ROOT + 'web/settings/#' + target; return; }
     if (!SUB_OF[id]) id = 'overview';
     if (parts[1]) TABSEL[id] = parts[1];
@@ -189,8 +189,8 @@
     bindSubTabs(box, subs);
     mountPane(sub); subMark(); markDirty();
   }
-  /* The tabs along the top of a section. A tab can hold a few tabs of its own (System > Health > Domains and Uptime, General > Look >
-     Presets): its third field names the group. Each group is one tab; a group with more than one part gets a small row of its own below. */
+  /* The tabs along the top of a section. A tab can hold a few tabs of its own when its third field names a group: each group is
+     then one tab, and a group with more than one part gets a small row of its own below. (No section uses groups at the moment.) */
   function grpOf(t) { return t[2] || t[1]; }
   function subTabs(subs, sub) {
     var cur = subs.filter(function (t) { return t[0] === sub; })[0] || subs[0], cg = grpOf(cur), groups = [];
@@ -226,14 +226,14 @@
   var tabObs = null;
   /* The plain panes (General, Navigation, Pages, Look) are written as "heading, one line, controls". Each heading with what follows it
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
-  var CARDIFY = { general: 1, nav: 1, look: 1 };
+  var CARDIFY = { general: 1, nav: 1, pages: 1, look: 1 };
   var CARD_ICON = { 'install on your phone': ICON.down, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
-    'navigation style': ICON.menu, 'tabs': ICON.pages, 'start page': ICON.home };
+    'navigation style': ICON.menu, 'tabs': ICON.pages, 'open a page in edit mode': ICON.edit };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
     var groups = [], cur = null;
     [].slice.call(pc.children).forEach(function (k) {
-      if (k.tagName === 'H3') { cur = { h: k, body: [] }; groups.push(cur); } else if (k.classList.contains('ix-more')) cur = null; else if (cur) cur.body.push(k);
+      if (k.tagName === 'H3') { cur = { h: k, body: [] }; groups.push(cur); } else if (cur) cur.body.push(k);
     });
     groups.forEach(function (g) {
       var title = g.h.textContent, sec = document.createElement('section'); sec.className = 'ix-ec ix-auto';
@@ -357,26 +357,17 @@
     };
   }
   function pLook(p) {
-    var sw = ['#ffc21a', '#ff6a3d', '#ff2d95', '#b392f0', '#2d8cff', '#4cc9f0', '#5fd68a', '#ff6b6b'];
-    var n = [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']];
-    p.innerHTML = '<h3>Theme</h3><p>The look for anyone who has not chosen one. The theme button changes it for you alone, on every page at once.</p>' +
-      seg('theme', [['auto', 'Follow Device'], ['dark', 'AMOLED Dark'], ['light', 'Light']], draft.theme) +
+    var sw = ['#ffc21a', '#ffd45c', '#ff6a3d', '#ff2d95', '#b392f0', '#2d8cff', '#4cc9f0', '#5fd68a'];
+    p.innerHTML = '<h3>Font</h3><p>One font for every page. Code and keyboard keys keep their own.</p><select id="ix-font" class="ix-sel" aria-label="Font">' +
+        FONTS.map(function (f) { return '<option value="' + f[0] + '"' + (draft.font === f[0] || (!draft.font && f[0] === 'default') ? ' selected' : '') + '>' + esc(f[1]) + '</option>'; }).join('') + '</select>' +
+      '<input type="text" id="ix-fontc" maxlength="40" placeholder="A font installed on your device, like Calibri" value="' + esc(draft.fontCustom || '') + '" aria-label="Font Name"' + (draft.font === 'custom' ? '' : ' hidden') + '>' +
+      '<h3>Theme</h3><p>The look for anyone who has not chosen one. The theme button in the bar changes it for you alone, on every page at once.</p>' +
+      seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
       '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw">' + sw.map(function (c) { return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (draft.accent === c) + '"></button>'; }).join('') +
       '<label class="ix-swc" title="Your Own Color"><input type="color" id="ix-acc" value="' + esc(draft.accent) + '" aria-label="Your Own Color"></label><input type="text" class="ix-hex" id="ix-acch" maxlength="7" value="' + esc(draft.accent) + '" aria-label="Accent Color Hex" spellcheck="false"></div>' +
-      '<h3>Navigation Style</h3><p>Applies to every page. Only the Top Bar hides itself while you scroll.</p>' +
-      '<div class="ix-navpick">' + n.map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
-      '<details class="ix-more" id="ix-lmore"><summary><span><b>More Options</b><small>Font, Same Look on Every Page</small></span></summary><div class="ix-moreb">' +
-        '<div class="ix-mrow"><span>Font<small>One font for every page. Code and keyboard keys keep their own.</small></span><select id="ix-font" class="ix-sel" aria-label="Font">' +
-          FONTS.map(function (f) { return '<option value="' + f[0] + '"' + (draft.font === f[0] || (!draft.font && f[0] === 'default') ? ' selected' : '') + '>' + esc(f[1]) + '</option>'; }).join('') + '</select></div>' +
-        '<input type="text" id="ix-fontc" maxlength="40" placeholder="A font installed on your device, like Calibri" value="' + esc(draft.fontCustom || '') + '" aria-label="Font Name"' + (draft.font === 'custom' ? '' : ' hidden') + '>' +
-        '<label class="ix-tg"><span>Same Look on Every Page<small>AMOLED black with your accent color. Turn off to let each page use its own colors.</small></span><input type="checkbox" id="ix-look"' + (draft.look ? ' checked' : '') + '></label>' +
-      '</div></details>';
+      '<label class="ix-tg"><span>Same Look on Every Page<small>Your colors and accent on every page. Turn off to let each page use its own colors.</small></span><input type="checkbox" id="ix-look"' + (draft.look ? ' checked' : '') + '></label>' +
+      '<p class="ix-note">For the colors of the bar, pages and text, open the Colors tab; for ready-made looks, the Presets tab. Each page\'s own options are under its pencil icon.</p>';
     bindSeg(p, function (k, v) { draft[k] = v; if (k === 'theme') K.previewTheme(v); });
-    var more = p.querySelector('#ix-lmore');
-    try { if (sessionStorage.getItem('ix-lmore') === '1') more.open = true; } catch (e) {}
-    more.addEventListener('toggle', function () { try { sessionStorage.setItem('ix-lmore', more.open ? '1' : ''); } catch (e) {} });
-    p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
-      draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
     p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { setAcc(b.dataset.c); }; });
     p.querySelector('#ix-acc').oninput = function (e) { setAcc(e.target.value); };
     p.querySelector('#ix-acch').oninput = function (e) { var h = hexOf(e.target.value); e.target.classList.toggle('bad', !h); if (h) setAcc(h, true); };
@@ -790,15 +781,19 @@
     };
   }
   function pNav(p) {
-    p.innerHTML = '<h3>Tabs</h3><p>Rename, reorder (drag or arrows) or hide tabs. The style of the bar is under Look.</p>' +
-      '<div class="ix-pgl" id="ix-pgl"></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-pgr">Reset Names and Order</button></div>' +
-      '<h3>Start Page</h3><p>The start page shows your photo full screen.</p>' +
-      '<label class="ix-tg"><span>Show the Bar on the Start Page<small>Off keeps the start page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>';
+    var n = [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']];
+    p.innerHTML = '<h3>Navigation Style</h3><p>Applies to every page. Only the Top Bar hides itself while you scroll.</p>' +
+      '<div class="ix-navpick">' + n.map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
+      '<label class="ix-tg"><span>Show the Bar on the Start Page<small>Off keeps the start page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
+      '<h3>Tabs</h3><p>Rename, reorder (drag or arrows) or hide tabs.</p>' +
+      '<div class="ix-pgl" id="ix-pgl"></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-pgr">Reset Names and Order</button></div>';
     tabEditor(p.querySelector('#ix-pgl'));
     p.querySelector('#ix-pgr').onclick = function () { draft.pages = []; tabEditor(p.querySelector('#ix-pgl')); preview(); };
+    p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
+      draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
     p.querySelector('#ix-hb').onchange = function (e) { draft.homeBar = e.target.checked; preview(); };
   }
-  /* Settings > General > Tabs: one row per page (name, up/down, show/hide), drag a row to move it. */
+  /* Settings > General > Navigation > Tabs: one row per page (name, up/down, show/hide), drag a row to move it. */
   function tabEditor(box) {
     var list = pageList(draft).map(function (q) { var d = PAGE_DEF.filter(function (x) { return x[0] === q[0]; })[0];
       return { id: q[0], name: q[1] === d[1] ? '' : q[1], hide: q[4], def: d[1], icon: d[3] }; });
@@ -831,6 +826,12 @@
     box.ondrop = function (e) { var r = e.target.closest('.ix-pgr'); if (dragFrom >= 0 && r) { e.preventDefault(); move(dragFrom, +r.dataset.i); } dragFrom = -1; };
     box.ondragend = function () { dragFrom = -1; box.querySelectorAll('.drag').forEach(function (x) { x.classList.remove('drag'); }); };
     draw();
+  }
+  function pPages(p) {
+    var rows = [['Start Page', ''], ['Links', 'web/links/'], ['Info', 'web/info/'], ['Cards', 'web/cards/'], ['Tasks', 'web/tasks/']];
+    p.innerHTML = '<h3>Open a Page in Edit Mode</h3><p>Jumps to the page and starts editing. The same options are always under the pencil icon in the bar.</p>' +
+      rows.map(function (r) { return '<div class="ix-part"><label style="justify-content:space-between">' + r[0] +
+        '<a class="ix-btn" href="' + ROOT + r[1] + (r[0] === 'Cards' || r[0] === 'Tasks' ? '' : '#hub-edit') + '">' + svg(ICON.edit) + 'Open &amp; Edit</a></label></div>'; }).join('');
   }
   /* Settings > Telegram: task and backup reminders through your own Telegram bot. Saved straight away (not with Save settings). */
   function pRemind(p) {
@@ -1026,11 +1027,12 @@
     var late = bk.every > 0 && (!bk.last || (now - bk.last) / 86400 >= bk.every);
     pill('backup', bk.last ? ago(bk.last).replace(' ago', '') : 'Never', late ? 'warn' : bk.last ? 'good' : '');
     var n = fl ? fl.extra + fl.changed : 0;
-    // System: an update or a missing HTTPS matters most; otherwise the version
-    pill('system', up.staged ? 'Ready' : up.newer ? 'New Version' : n ? n + ' to check' : !OV.https ? 'No HTTPS' : 'v' + OV.version, up.staged || up.newer || n || !OV.https ? 'warn' : 'good');
+    pill('updates', up.staged ? 'Ready' : up.newer ? 'New Version' : n ? n + ' to check' : 'Up to date', up.staged || up.newer || n ? 'warn' : 'good');
     var al = (OV.alerts || []).length;
     pill('overview', al ? al + ' to see' : '', al ? 'warn' : '');
-    pill('general', S.theme === 'auto' ? 'Auto' : S.theme === 'light' ? 'Light' : 'Dark', '');
+    pill('look', S.theme === 'auto' ? 'Auto' : S.theme === 'light' ? 'Light' : 'Dark', '');
+    pill('health', OV.https ? 'OK' : 'No HTTPS', OV.https ? 'good' : 'warn');
+    pill('changelog', 'v' + OV.version, '');
   }
   /* ---------- Guided Setup: the protection steps one after another, using the same flows as Security and Backup ---------- */
   var WZ = { open: '', pp: '', site: '', rec: '', skipped: {} };   // what you typed stays here only while Settings is open, never saved
@@ -1174,7 +1176,7 @@
       var chip = function (id, label, cls) { return '<button type="button" class="ix-jchip" data-go="' + id + '"><i class="ix-dot ' + (cls || '') + '"></i>' + label + '</button>'; };
       var chips = '<div class="ix-jchips" role="navigation" aria-label="Jump to">' +
         chip('security', 'Security', pr.on >= pr.total ? 'good' : 'warn') + chip('telegram', 'Telegram', tg.ready ? (run ? 'good' : 'warn') : '') +
-        chip('backup', 'Backup', bk.last ? 'good' : 'warn') + chip('look', 'Look', '') + chip('updates', 'Updates', up.staged || up.newer || n ? 'warn' : 'good') +
+        chip('backup', 'Backup', bk.last ? 'good' : 'warn') + chip('look', 'Appearance', '') + chip('updates', 'Updates', up.staged || up.newer || n ? 'warn' : 'good') +
         chip('health', 'Health', j.https ? 'good' : 'warn') + chip('changelog', 'Changelog', '') + '</div>';
       var banner = stDone < stp.length ? '<div class="ix-hero ix-setupb"><div class="ix-ring" style="--p:' + Math.round(stDone / stp.length * 100) + '"><b>' + stDone + '</b><small>of ' + stp.length + '</small></div>' +
         '<div class="ix-hero-t"><div class="ix-hero-h">Protect Your Site Step by Step</div><p>' + stDone + ' of ' + stp.length + ' steps are done. Next: <b>' + esc(stp.filter(function (x) { return !x.done; })[0].title) + '</b>.</p>' +
@@ -2349,14 +2351,14 @@
   }
 
 
-  /* ---------- Health (Settings > System > Health): Overview, Domains and Uptime, Server Check ---------- */
+  /* ---------- Health (Settings > Health): Overview, Domains and Uptime, Server Check ---------- */
   function daysLeft(d) { if (!d) return null; return Math.round((new Date(d + 'T12:00:00') - new Date()) / 864e5); }
   function leftText(n) { return n === null ? '' : n < 0 ? 'ended ' + -n + ' days ago' : n === 0 ? 'ends today' : n + (n === 1 ? ' day' : ' days') + ' left'; }
   function leftCls(n, warn) { return n === null ? '' : n < 0 ? 'bad' : n <= warn ? 'warn' : 'good'; }
   function hCard(label, val, sub, cls, go) {
     return '<' + (go ? 'button type="button" data-go="' + go + '"' : 'div') + ' class="ix-hc ' + (cls || '') + '"><small>' + label + '</small><b>' + val + '</b><span>' + sub + '</span></' + (go ? 'button' : 'div') + '>';
   }
-  /* Settings > System > Health: Overview, Domains and Uptime, Server Check */
+  /* Settings > Health: Overview, Domains and Uptime, Server Check */
   function health(sub) { go(sub || 'health'); }
   function pHealth(p) {
     p.innerHTML = '<div class="ix-row"><span class="ix-spin"></span><span>Checking…</span></div>';

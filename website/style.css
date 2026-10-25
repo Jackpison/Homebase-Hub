@@ -72,3 +72,4 @@ figure{margin:24px 0}figure img{border-radius:18px;border:1px solid var(--line);
 .top{view-transition-name:hh-top;transition:transform .26s cubic-bezier(.2,.8,.2,1)}::view-transition-group(hh-top){animation:none}::view-transition-old(hh-top){display:none}::view-transition-new(hh-top){animation:none}html.hh-hide .top{transform:translateY(-100%)}
 .btn:active,.look:active,.chip:active,.mode:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+.mode span{display:grid}.mode .m-moon{display:none}:root[data-theme=light] .mode .m-sun{display:none}:root[data-theme=light] .mode .m-moon{display:grid}@media (prefers-color-scheme:light){:root:not([data-theme=dark]) .mode .m-sun{display:none}:root:not([data-theme=dark]) .mode .m-moon{display:grid}}

@@ -9,7 +9,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /**
- * Updates from GitHub (Settings > System > Updates > Update From GitHub).
+ * Updates from GitHub (Settings > Updates > Update From GitHub).
  *
  *   Check    "Check Now" always works. The daily check is OFF until you switch it on; while it is off the site makes no request to GitHub at all.
  *            The check reads latest.json on the project's GitHub Pages address. Only if that fails does it ask the GitHub API, at most once a day.

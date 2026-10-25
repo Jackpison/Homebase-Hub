@@ -9,7 +9,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /**
- * Health (Settings > System > Health): disk use per section, backups, recent PHP errors from your host's error_log files, the schedule,
+ * Health (Settings > Health): disk use per section, backups, recent PHP errors from your host's error_log files, the schedule,
  * the Telegram bot, server limits, and update checks (files left from an earlier update; an optional update address).
  */
 require_once __DIR__ . '/boot.php';

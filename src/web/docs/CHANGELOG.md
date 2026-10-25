@@ -17,7 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
-| 1.48.2 | Settings menu regrouped, the Backup icon and gear back, a softer look for new sites, and the Security and Telegram cards fixed |
+| 1.48.2 | The Settings menu as before 1.48, the Backup icon and gear back, a sun and moon theme button, a softer look for new sites, and the Security and Telegram cards fixed |
 | 1.48.1 | Fix: the Security and Telegram cards in Settings look right again |
 | 1.48.0 | Navigation and fluidity: three redesigned bar styles, a Top Bar that hides while you scroll, a round menu, and a simpler Settings |
 | 1.47.1 | Small fixes: the Telegram backup button no longer sticks, Tools has its section colours back, Home uploads up to 128 MB, a GitHub link in Updates |
@@ -77,17 +77,15 @@ Nothing to migrate by hand unless an entry says so.
 
 ### Changed
 
-- **General and Look are one menu item.** General now has two tabs: General (Basics, Tabs) and Look (Look, Presets, Colors). Presets and Colors are tabs again; More Options under Look keeps the Font and Same Look on Every Page.
-- **The menu groups have new names and a new order:** Web Setting (General), System Setting (System), then Data Setting (Security, Telegram, Backup & Restore).
-- Old links to Look, Presets, Colors and Tabs still open the right tab.
+- **The Settings menu is back to how it was before 1.48:** Site (General, Appearance), Protection & Data (Security, Telegram, Backup & Restore), then System (Updates, Health, Changelog). General has Basics, Navigation (where you choose Top Bar, Sidebar or Bottom Dock) and Pages; Appearance has Look, Presets and Colors, and Look shows the Font, Theme, Accent Color and Same Look on Every Page. Links to the System section of 1.48 open Updates.
 - **The Backup icon and the gear are back** in every bar style, in place of the round menu: Backup is green, red with a dot while a backup is due, and the gear opens the Settings page.
+- **The theme button shows a sun in dark mode and a moon in light mode,** in the app and on the website.
 - **A new site starts with a softer look:** a deep grey instead of pure black, warm off-white in light mode, and a lighter gold accent. Existing sites keep their colors.
 - Light mode: the green "good" labels and the Images teal and Photos blue in Tools are a little darker, so they stay easy to read.
 
 ### Fix
 
 - **The cards in Settings > Security and Telegram look right again.** Since 1.48.0 they were squashed, with their icons above the card.
-
 ---
 
 ## 1.48.1

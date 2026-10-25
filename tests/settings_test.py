@@ -5,9 +5,8 @@
   * Settings > Updates has a link to the project on GitHub
   * Home takes uploads of up to 128 MB
   * the first request after an update removes the old Tools config.json
-  * the simpler Settings (plan A): 7 menu items, System holds Updates, Health and Changelog, Look shows Theme, Accent Color and
-    Navigation Style with the rest under More Options, old addresses still open the right place, hidden settings survive a save,
-    and the site search has no field checkboxes
+  * the Settings menu and its groups, every address opening the right section and tab, Appearance with all 166 presets,
+    a chosen font surviving a later save, the Security and Telegram cards, and the site search without field checkboxes
     python3 tests/settings_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8970)"""
 import os, sys, glob, re, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -71,49 +70,45 @@ try:
             const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
             return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 80 ? '' : t.textContent.slice(0, 30); }).filter(Boolean)""")
         check('S20 Telegram > Status: every card holds its icon and text', not bad, bad)
-        # the simpler Settings
-        pg.unroute('**/api.php?action=notify_backup*')
+        # the Settings menu, as it was before 1.48 (the owner preferred it)
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "document.querySelectorAll('#ix-page .ix-snav [data-sec]').length > 0", 20000)
         menu = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav [data-sec] span')].map(e => e.textContent)")
         groups = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav .ix-sgl')].map(e => e.textContent)")
-        check('S9 the Settings menu has 6 items under Web Setting, System Setting and Data Setting, in that order',
-              menu == ['Overview', 'General', 'System', 'Security', 'Telegram', 'Backup & Restore'] and groups == ['Web Setting', 'System Setting', 'Data Setting'], (menu, groups))
+        check('S9 the Settings menu: Site (General, Appearance), Protection & Data (Security, Telegram, Backup & Restore), System (Updates, Health, Changelog)',
+              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Updates', 'Health', 'Changelog'] and groups == ['Site', 'Protection & Data', 'System'], (menu, groups))
         def at(h, expr):
-            pg.goto(s.base + '/web/settings/' + h); pg.wait_for_timeout(150); pg.evaluate("void 0")
+            pg.goto(s.base + '/web/settings/' + h); pg.wait_for_timeout(150)
             try: wait_js(pg, expr, 10000); return True
             except Exception: return False
         tabs = "[...document.querySelectorAll('#ix-pane .ix-subt [role=tab]')].map(e => e.textContent).join('|')"
         sel = "(document.querySelector('#ix-pane .ix-subt [aria-selected=true]') || {}).textContent"
-        sub = "(document.querySelector('#ix-pane .ix-subseg [aria-selected=true]') || {}).textContent"
-        ok = at('#updates', tabs + " === 'Updates|Health|Changelog' && " + sel + " === 'Updates'")
-        check('S10 System has the tabs Updates, Health and Changelog', ok, pg.evaluate(tabs))
-        old = [('#files', 'Updates', 'Files'), ('#health', 'Health', 'Overview'), ('#domains', 'Health', 'Domains and Uptime'), ('#check', 'Health', 'Server Check'),
-               ('#changelog', 'Changelog', 'Versions'), ('#chmap', 'Changelog', 'Version Map'), ('#system', 'Updates', 'Update')]
-        bad = [h for h, t, u in old if not at(h, sel + " === %s && %s === %s" % (json.dumps(t), sub, json.dumps(u)))]
-        check('S11 old addresses (#files, #health, #domains, #check, #changelog, #chmap) open the right tab of System', not bad, bad)
-        check('S12 #pages (removed) opens General > General, which has Basics and Tabs; General\'s other tab is Look',
-              at('#pages', tabs + " === 'General|Look' && " + sel + " === 'General' && [...document.querySelectorAll('#ix-pane .ix-subseg [role=tab]')].map(e => e.textContent).join('|') === 'Basics|Tabs'"), pg.evaluate(tabs))
-        ok = at('#look', "!!document.querySelector('#ix-lmore')")
+        h2 = "(document.querySelector('#ix-pane .ix-ph h2') || {}).textContent"
+        places = [('#updates', 'Updates', 'Update'), ('#files', 'Updates', 'Files'), ('#health', 'Health', 'Overview'), ('#domains', 'Health', 'Domains and Uptime'), ('#check', 'Health', 'Server Check'),
+                  ('#changelog', 'Changelog', 'Versions'), ('#chmap', 'Changelog', 'Version Map'), ('#system', 'Updates', 'Update'), ('#look', 'Appearance', 'Look'), ('#themes', 'Appearance', 'Presets'),
+                  ('#colors', 'Appearance', 'Colors'), ('#nav', 'General', 'Navigation'), ('#pages', 'General', 'Pages')]
+        bad = [h for h, t, u in places if not at(h, h2 + " === %s && %s === %s" % (json.dumps(t), sel, json.dumps(u)))]
+        check('S10 every address opens its section and tab (and #system, from 1.48, opens Updates)', not bad, bad)
+        ok = at('#nav', tabs + " === 'Basics|Navigation|Pages' && !!document.querySelector('#ix-pc .ix-navpick')")
+        check('S11 General has Basics, Navigation and Pages; Navigation holds the Navigation Style', ok, pg.evaluate(tabs))
+        ok = at('#look', tabs + " === 'Look|Presets|Colors' && !!document.querySelector('#ix-font')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
-        closed = pg.evaluate("!document.querySelector('#ix-lmore').open && !document.querySelector('#ix-font').checkVisibility()")
-        lk = pg.evaluate("[...document.querySelectorAll('#ix-pane .ix-subseg [role=tab]')].map(e => e.textContent).join('|')")
-        check('S13 General > Look shows Theme, Accent Color and Navigation Style (Font and Same Look closed under More Options), with Presets and Colors as tabs beside it',
-              ok and cards == ['Theme', 'Accent Color', 'Navigation Style'] and closed and lk == 'Look|Presets|Colors' and pg.evaluate(sel) == 'Look', (cards, closed, lk))
+        check('S13 Appearance has Look, Presets and Colors; Look shows Font, Theme and Accent Color, and Same Look on Every Page',
+              ok and cards == ['Font', 'Theme', 'Accent Color'] and pg.evaluate("document.querySelector('#ix-look').checkVisibility()"), (pg.evaluate(tabs), cards))
         check('S14 Look offers 8 accent colors and your own', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 8 and pg.evaluate("!!document.querySelector('#ix-acc')"))
-        pg.click('#ix-pane .ix-subseg [data-sub="themes"]')
-        ok = wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)
+        pg.click('#ix-pane .ix-subt [data-grp="themes"]')
+        wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)
         n = pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # the dark-mode list
         pg.click('#ix-pc [data-seg="cmode"] [data-v="light"]'); pg.wait_for_timeout(300)
         n += pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # and the light-mode list
         pg.click('#ix-pc [data-seg="cmode"] [data-v="dark"]'); pg.wait_for_timeout(200)
-        check('S15 General > Look > Presets still has all 166 presets (dark and light together)', n == 166 and pg.evaluate(sel) == 'Look', (n, pg.evaluate(sel)))
-        # a font chosen under More Options survives a save made from the visible part of Look
-        at('#look', "!!document.querySelector('#ix-lmore')")
-        pg.evaluate("document.querySelector('#ix-lmore').open = true"); pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); pg.wait_for_timeout(800)
-        at('#look', "!!document.querySelector('#ix-lmore')")
+        check('S15 Appearance > Presets has all 166 presets (dark and light together)', n == 166, n)
+        # a font chosen in Look survives a later save made after changing only the accent
+        at('#look', "!!document.querySelector('#ix-font')")
+        pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); pg.wait_for_timeout(800)
+        at('#look', "!!document.querySelector('#ix-font')")
         pg.click('#ix-pc .ix-sw [data-c="#4cc9f0"]'); pg.click('#ix-save'); pg.wait_for_timeout(800)
         st = s.get('state')
-        check('S16 a save from Look keeps the font chosen under More Options', st.get('font') == 'georgia' and st.get('accent') == '#4cc9f0', (st.get('font'), st.get('accent')))
+        check('S16 a later save keeps the font chosen earlier', st.get('font') == 'georgia' and st.get('accent') == '#4cc9f0', (st.get('font'), st.get('accent')))
         s.post('settings', {'settings': {'font': 'default', 'accent': '#ffc21a'}})
         # the site search: where to look, and one tab; no field checkboxes or "Whole Words Only"
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!document.querySelector('#ix-q')", 15000)

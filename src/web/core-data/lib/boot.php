@@ -260,7 +260,7 @@ function hub_manifest(array $s, string $root, string $public): array {
     if ($own !== '') { $sz = getimagesize($public . '/' . $own); $icons[1]['sizes'] = $sz[0] . 'x' . $sz[1]; }
     $names = ['links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'tools' => 'Tools'];
     $order = array_keys($names); $hidden = [];
-    foreach ((array)($s['pages'] ?? []) as $pg) {   // the bar's own names, order and hidden pages (Settings > General > Tabs)
+    foreach ((array)($s['pages'] ?? []) as $pg) {   // the bar's own names, order and hidden pages (Settings > General > Navigation)
         $id = (string)($pg['id'] ?? '');
         if (!isset($names[$id])) continue;
         if (trim((string)($pg['name'] ?? '')) !== '') $names[$id] = mb_substr(trim(strip_tags((string)$pg['name'])), 0, 30);

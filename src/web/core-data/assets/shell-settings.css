@@ -342,7 +342,6 @@
 #ix-page .ix-chr.new span{color:var(--ix-ok)}
 #ix-page .ix-chr.removed span{color:var(--ix-err)}
 #ix-page .ix-chr code,#ix-page .ix-fr code{overflow-wrap:anywhere}
-#ix-page .ix-more summary{cursor:pointer;color:var(--ix-accent-tx);margin:6px 0;font-weight:600}
 #ix-page .ix-fr{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--ix-line);cursor:pointer}
 #ix-page .ix-fr input{width:18px;height:18px;flex:none}
 #ix-page .ix-frp{flex:1;min-width:0}
@@ -582,19 +581,7 @@
 /* the menu follows the top bar as it hides and comes back; the save bar sits above the dock */
 html[data-ix-bar][data-ix-nav="top"] #ix-page .ix-snav{top:calc(var(--ix-top-now) + 24px);transition:top .26s cubic-bezier(.2,.8,.2,1)}
 html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock) + 30px)}
-/* ---------- Look: More Options, the second row of tabs, the Install card's "How?" ---------- */
-#ix-page .ix-more{margin:0 0 16px;max-width:780px;border:1px solid var(--ix-line);border-radius:20px;background:var(--ix-s1);overflow:hidden}
-#ix-page .ix-more>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 24px;cursor:pointer;color:var(--ix-tx)}
-#ix-page .ix-more>summary::-webkit-details-marker{display:none}
-#ix-page .ix-more>summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--ix-mu);border-bottom:2px solid var(--ix-mu);transform:rotate(45deg);transition:transform .2s cubic-bezier(.2,.8,.2,1);flex:none;margin-right:4px}
-#ix-page .ix-more[open]>summary::after{transform:rotate(-135deg)}
-#ix-page .ix-more>summary b{display:block;font-size:15.5px}
-#ix-page .ix-more>summary small{display:block;color:var(--ix-mu2);font-size:13px;margin-top:3px}
-#ix-page .ix-more>summary:hover{background:var(--ix-s2)}
-#ix-page .ix-moreb{padding:4px 24px 20px;display:flex;flex-direction:column;gap:6px;animation:ix-rise .22s cubic-bezier(.2,.8,.2,1)}
-#ix-page .ix-mrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--ix-line);font-size:14.5px}
-#ix-page .ix-mrow small{display:block;color:var(--ix-mu2);font-size:12.5px;margin-top:2px}
-#ix-page .ix-mrow .ix-sel{max-width:50%}
+/* ---------- the second row of tabs, the accent picker, the Install card's "How?" ---------- */
 #ix-page .ix-swc{position:relative;width:34px;height:34px;border-radius:50%;overflow:hidden;cursor:pointer;background:conic-gradient(#ff6b6b,#ffc21a,#5fd68a,#4cc9f0,#2d8cff,#b392f0,#ff2d95,#ff6b6b);border:2px solid var(--ix-line2)}
 #ix-page .ix-sw .ix-swc input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 #ix-page .ix-subseg{display:flex;width:max-content;max-width:100%;margin:12px 0 0;border-radius:999px;padding:3px;background:var(--ix-s2);border:0;gap:2px;overflow-x:auto;flex-wrap:nowrap}

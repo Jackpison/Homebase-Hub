@@ -38,14 +38,14 @@ WHAT IT NEEDS
 -------------
 Web hosting with PHP 8.3 or newer (with the curl and zip extensions for updates from GitHub) and a file manager or FTP.
 The PHP version is chosen in your hosting panel (in cPanel: MultiPHP Manager). Settings > Overview tells you when the PHP your site
-runs on stops getting security fixes, and Settings > System > Health > Server Check shows its version. An update that needs a newer PHP than
+runs on stops getting security fixes, and Settings > Health > Server Check shows its version. An update that needs a newer PHP than
 your server has is refused with a clear message, and nothing changes.
 
 KEEPING IT SAFE
 ---------------
 - The site itself needs no regular work. Its pages, data and login do not expire.
 - PHP is the one thing to watch: each version gets security fixes for about four years. Keep your hosting on a supported PHP.
-- Install new versions of Homebase Hub when they come out (Settings > System > Updates). Each release says what changed.
+- Install new versions of Homebase Hub when they come out (Settings > Updates). Each release says what changed.
 - Back up now and then (Settings > Backup and Restore), and keep the file somewhere other than your server.
 
 SET UP ON ANY DOMAIN
@@ -62,14 +62,14 @@ Nothing else needs configuring. Each domain keeps its own site-data folder, so d
 
 UPDATING LATER
 --------------
-Settings > System > Updates: upload the new zip there. The site checks it completely first (it must be a real site update, every
+Settings > Updates: upload the new zip there. The site checks it completely first (it must be a real site update, every
 file whole, a newer version), shows what will change, and only after you type your password saves the version it has now,
 replaces its own files one by one, removes the files the old version had and the new one does not, and looks at itself
 afterwards. If it cannot answer, the saved version comes back by itself, and "Go Back" does the same on request.
 Never touched: site-data (all your data), web/core-data/media (pictures and logo), web/core-data/config.php, and the Tools settings (made from yours).
-From 1.38.0 Settings > System > Updates can also fetch the update from GitHub: "Check Now" looks for a newer release, "Download and Check" downloads it, compares its size and SHA-256 with the list the project publishes, and runs the same checks as an uploaded zip. Nothing changes until you type your password. The daily check is off by default; while it is off the site never contacts GitHub unless you press Check Now.
+From 1.38.0 Settings > Updates can also fetch the update from GitHub: "Check Now" looks for a newer release, "Download and Check" downloads it, compares its size and SHA-256 with the list the project publishes, and runs the same checks as an uploaded zip. Nothing changes until you type your password. The daily check is off by default; while it is off the site never contacts GitHub unless you press Check Now.
 The very first time (when the site does not have this tab yet), upload and extract the zip with the File Manager, as below;
-after that the site can update itself. Settings > System > Updates > Files compares the server with the version's file list
+after that the site can update itself. Settings > Updates > Files compares the server with the version's file list
 (web/core-data/manifest.json) and shows files that do not belong, which you can delete from there.
 By hand, if you ever need to: upload and extract the new zip over the site folder. Everything in site-data is left alone.
 Every update zip contains web/docs/CHANGELOG.md with the full history, so you can see what each version changed.
@@ -78,8 +78,8 @@ Keep these folders if you replace files by hand: web/core-data/media (home/photo
 
 THE BAR
 -------
-Three styles (Settings > General > Look > Navigation Style), each with its own layout. The pages are Home, Links, Info, Cards, Tasks
-and Tools (rename, reorder or hide them in Settings > General > Tabs).
+Three styles (Settings > General > Navigation), each with its own layout. The pages are Home, Links, Info, Cards, Tasks
+and Tools (rename, reorder or hide them in Settings > General > Navigation).
   Top Bar (the default): logo, pages, search, then Theme / Edit (pencil) / Backup / Settings (gear). It slides away while you
     scroll down and comes back on any scroll up, at the top of the page, when you press / or move the mouse to the top
     edge. Phones: a menu button opens the pages; search, pencil, Backup and the gear stay in the bar.
@@ -104,17 +104,14 @@ and Tools (rename, reorder or hide them in Settings > General > Tabs).
 - Search covers Links, Info, Tasks (while logged in) and Tools; Cards keeps its own search. Press / or Ctrl+K anywhere. The sliders button in
   the search box chooses where to look: Everything or only Links / Info / Tasks / Tools, and one tab. Names, web addresses
   and note text are always searched. Shortcut: type  links: text  or  info: text.
-- Settings is a page of its own (web/settings/, the gear in the bar). A menu on the left in three groups: Web Setting (General,
-  with the tabs General: Basics / Tabs, and Look: Look / Presets / Colors; Look holds Theme, Accent Color, Navigation Style, and
-  under More Options the Font and Same Look on Every Page), System Setting (System, with the tabs Updates, Health, Changelog,
-  each with its own small row: Update / Files; Overview / Domains and Uptime / Server Check; Versions / Version Map / Notes) and
-  Data Setting (Security, Telegram, Backup & Restore). Old links such as
-  settings/#health or #changelog still open the right place. A search box at the top of the menu jumps to any setting (press /). Overview › Guided Setup walks through the protection steps in order. Overview comes first: how things stand and what to look at next. Security, Telegram and Backup &
+- Settings is a page of its own (web/settings/, the gear in the bar). A menu on the left in three groups: Site (General: Basics,
+  Navigation, Pages; Appearance: Look, Presets, Colors), Protection & Data (Security, Telegram, Backup & Restore) and System
+  (Updates, Health, Changelog). A search box at the top of the menu jumps to any setting (press /). Overview › Guided Setup walks through the protection steps in order. Overview comes first: how things stand and what to look at next. Security, Telegram and Backup &
   Restore are tabs, one part on screen at a time; every tab has a link (settings/#security/encryption). On a phone the menu is shown
   first and each section opens with a back button.
-  General (with Look, Presets and Colors) previews live and are kept with Save Settings (a bar at the bottom appears while something is unsaved;
+  General and Appearance preview live and are kept with Save Settings (a bar at the bottom appears while something is unsaved;
   Discard puts the saved look back). The other sections save each change straight away.
-- Settings > General > Look > Colors: one mode at a time (Dark or Light), in groups: Menu Bar (bar background, tabs and icons), Page
+- Settings > Appearance > Colors: one mode at a time (Dark or Light), in groups: Menu Bar (bar background, tabs and icons), Page
   (background, boxes, menus, borders) and Text. Presets (166 looks, a search box, a Surprise Me button, and your own saved looks that can be exported and imported) fill a whole mode in one click; Colors also holds a separate accent for each page; the arrow next to a color puts it
   back to the default. Page Backgrounds gives one page its own background. Tab colors in Links and Info are set on each tab.
 - Text sizes: Links, Info and Cards each have "Change Text Sizes" inside their own Page Settings (pencil menu > Page Settings).
@@ -123,7 +120,7 @@ and Tools (rename, reorder or hide them in Settings > General > Tabs).
   Computer: the install icon in Chrome's or Edge's address bar. The site describes itself to the phone through
   web/core-data/api.php?action=manifest (public: the site name, icons, colours and the pages' names). There is no offline
   mode: pages and data always come from your server.
-- Start page without the bar (Settings > General > Tabs): a gear button in its corner opens editing, the other
+- Start page without the bar (Settings > General > Navigation): a gear button in its corner opens editing, the other
   sections and Settings once you are logged in.
 
 
@@ -206,7 +203,7 @@ web/core-data/lib/ghupdate.php    Updates from GitHub: check (latest.json, API f
 web/core-data/lib/update.php      Updates: reads the zip (plain PHP), checks it, saves the current version, swaps files, rolls back, compares files
 web/core-data/lib/overview.php    Settings > Overview: where things stand, from what is already saved
 web/core-data/assets/shell.js     on every page: the bar, search, theme, login, page contract (numbered sections inside)
-web/core-data/assets/shell-admin.js  the Settings page: menu, Overview, tabs, General, Look, Security, Telegram, Backup, System; loaded only on that page
+web/core-data/assets/shell-admin.js  the Settings page: menu, Overview, tabs, General, Appearance, Security, Telegram, Backup, Updates, Health; loaded only on that page
 web/core-data/assets/shell.css    the bar, dialogs and the Settings page, plus the PAGE CONTRACT rules
 web/<page>/assets/       each page's own <page>.css and <page>.js, loaded as ?v=<version> and cached for a year
 web/tasks/lib.php        Tasks data rules (shared with backup.php); web/tasks/api.php is its API

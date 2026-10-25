@@ -85,7 +85,7 @@ def page(slug, title, body, wide=False, desc=None, cls=''):
            '<a class="skip" href="#main">Skip to the content</a>'
            '<header class="top"><div class="in bar"><a class="brand" href="index.html"><img src="brand/logo-192.png" alt="" width="36" height="36">Homebase Hub</a>'
            '<nav class="menu" aria-label="Main">%s</nav>'
-           '<div class="acts"><button class="mode" type="button" aria-label="Switch between dark and light">{{i:contrast}}</button>'
+           '<div class="acts"><button class="mode" type="button" aria-label="Switch between dark and light"><span class="m-sun">{{i:sun}}</span><span class="m-moon">{{i:moon}}</span></button>'
            '<a class="btn pri sm" href="%s">{{i:download}}Download</a>'
            '<details class="mm"><summary aria-label="Menu">{{i:menu}}</summary><nav aria-label="Menu">%s</nav></details></div></div></header>'
            '<main id="main" class="%s">%s</main>'
@@ -136,6 +136,7 @@ ICONS = {
     'menu': '<path d="M4 7h16M4 12h16M4 17h16"/>',
     'table': '<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M3.5 10h17M3.5 14.5h17M9.5 5v14"/>',
     'contrast': '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/>',
+    'moon': '<path d="M20.99 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.78 9.79z"/>',
 }
 def icons(doc):
     """{{i:name}} -> the inline SVG of that icon."""

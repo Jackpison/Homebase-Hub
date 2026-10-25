@@ -136,6 +136,12 @@ try:
                 if not phone or nav == 'dock':
                     vtn = pg.evaluate("getComputedStyle(document.querySelector('#ix-bar .ix-links a[aria-current=page]')).viewTransitionName")
                     check('%s: the current page carries the name its pill glides with (ix-cur)' % L, vtn in ('ix-cur', None), vtn)
+                if nav == 'top' and not phone:
+                    sun = pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M12 7.5')")
+                    pg.click('#ix-bar [data-ix=theme]'); pg.wait_for_timeout(700)
+                    moon = pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M20.99')")
+                    pg.click('#ix-bar [data-ix=theme]'); pg.wait_for_timeout(700)
+                    check('%s: the theme button shows a sun in dark mode and a moon in light mode' % L, sun and moon, (sun, moon))
                 if nav == 'side' and not phone:
                     w = rect(pg, '#ix-bar')['w']
                     check('%s: the rail is 80 px wide' % L, abs(w - 80) < 1, w)

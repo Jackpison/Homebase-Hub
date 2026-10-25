@@ -29,7 +29,7 @@
   var ASSETS = new URL('.', me ? me.src : location.href).href;        // .../web/core-data/assets/
   var CORE = new URL('../', ASSETS).href;                             // .../web/core-data/
   var ROOT = new URL('../../', CORE).href;                            // site root
-  /* every page of the site: [id, default name, address, icon]. Names, order and hidden tabs come from Settings > General > Tabs. */
+  /* every page of the site: [id, default name, address, icon]. Names, order and hidden tabs come from Settings > General > Navigation. */
   var PAGE_DEF = [
     ['home', 'Home', ROOT, 'M3 11l9-7 9 7M5 10v10h14V10'],
     ['links', 'Links', ROOT + 'web/links/', 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'],
@@ -39,8 +39,8 @@
     ['tools', 'Tools', ROOT + 'web/tools/', 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z']
   ];
   var ICON = {
-    sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5',
-    moon: 'M20 14A8 8 0 1 1 10 4a6 6 0 0 0 10 10z',
+    sun: 'M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41',
+    moon: 'M20.99 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.78 9.79z',
     gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
     key: 'M8 11a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM11 12l9-9M16 7l3 3',
     out: 'M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10',
@@ -72,8 +72,8 @@
     card: 'M3 6h18v13H3zM3 10h18M7 15h4',
     back: 'M15 6l-6 6 6 6'
   };
-  /* the theme button is ONE icon on every page (half-filled circle); its tooltip says what it will switch to */
-  var ICON_THEME = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
+  /* the theme button shows what it switches to: a sun in dark mode, a moon in light mode; its tooltip says the same */
+  function themeIcon() { return svg(themeNow() === 'light' ? ICON.moon : ICON.sun); }
   var svg = function (d) { return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>'; };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ls = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -116,7 +116,7 @@
     H.setAttribute('data-ix-nav', S.nav || 'top');
     if (S.look !== false) H.setAttribute('data-ix-look', ''); else H.removeAttribute('data-ix-look');
     if (APP !== 'home' || S.homeBar === true) H.setAttribute('data-ix-bar', ''); else H.removeAttribute('data-ix-bar');
-    var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > General > Look > Colors)
+    var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Appearance > Colors)
     H.style.setProperty('--ix-accent', acc);
     H.style.setProperty('--ix-ink', inkFor(acc));
   }
@@ -127,7 +127,7 @@
     var l = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
     return (l + 0.05) / 0.05 >= 1.05 / (l + 0.05) ? '#000' : '#fff';   // contrast with black against contrast with white
   }
-  /* Custom colors (Settings > General > Look > Colors): which CSS variable each portion of the site sets, per page.
+  /* Custom colors (Settings > Appearance > Colors): which CSS variable each portion of the site sets, per page.
      Written as one <style> so every page gets them before it paints. They only apply while "Same look on every page" is on. */
   var COLOR_KEYS = [['bg', 'Page Background'], ['box', 'Boxes and Cards'], ['panel', 'Menus and Dialogs'], ['line', 'Borders'], ['text', 'Text'], ['mute', 'Secondary Text'],
                     ['bar', 'Bar Background'], ['barText', 'Bar Tabs and Icons']];
@@ -179,7 +179,7 @@
     var css = colorsCss(st.colors, st.look);
     if (el.textContent !== css) el.textContent = css;
   }
-  /* Site-wide font (Settings > General > Look > More Options). One <style> overrides the font of every page, but leaves code and keyboard keys alone. */
+  /* Site-wide font (Settings > Appearance). One <style> overrides the font of every page, but leaves code and keyboard keys alone. */
   var FONTS = [['default', 'Each page\'s own font', ''],
     ['trebuchet', 'Trebuchet MS', '"Trebuchet MS","Lucida Grande","Lucida Sans Unicode","Lucida Sans",Tahoma,system-ui,sans-serif'],
     ['system', 'System Default', 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif'],
@@ -371,7 +371,7 @@
     var adm = isAdmin(), nav = NAV();
     var mark = '<img class="ix-logo" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt="">';   // your logo, or Homebase Hub's own
     var brand = '<a class="ix-brand" href="' + ROOT + '" aria-label="' + esc(S.siteName || 'Homebase Hub') + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>';
-    var theme = iconBtn('theme', themeLabel(), ICON_THEME);
+    var theme = iconBtn('theme', themeLabel(), themeIcon());
     var edit = HAS_EDIT ? iconBtn('edit', 'Edit', svg(ICON.edit), '', 'ix-editb') : '';
     var me = acctButtons(adm), links = pageLinks();
     var html;
@@ -442,7 +442,7 @@
      Both are drawn fresh each time they open, so they always show the current login, theme and backup state. */
   function panelFoot(adm) {
     return (HAS_EDIT ? '<button type="button" class="ix-pbtn" data-ix="edit">' + svg(ICON.edit) + '<span>Edit</span></button>' : '') +
-      '<button type="button" class="ix-pbtn" data-ix="theme">' + ICON_THEME + '<span>' + (themeNow() === 'light' ? 'Dark' : 'Light') + '</span></button>' + acctButtons(adm);
+      '<button type="button" class="ix-pbtn" data-ix="theme">' + themeIcon() + '<span>' + (themeNow() === 'light' ? 'Dark' : 'Light') + '</span></button>' + acctButtons(adm);
   }
   function openPanel(id, open, build, from) {   // from: the button that opened it (Safari does not focus a clicked button)
     var d = document.getElementById(id);
@@ -472,7 +472,7 @@
       return '<div class="ix-scrim" data-ix="close"></div><div class="ix-shp" role="dialog" aria-modal="true" aria-label="Search and Menu"><span class="ix-grab" aria-hidden="true"></span>' +
         '<button type="button" class="ix-psearch" data-ix="search">' + svg(ICON.search) + '<span>Search everything</span></button><div class="ix-tiles6">' +
         (HAS_EDIT ? tile('edit', svg(ICON.edit), editing() ? 'Editing' : 'Edit') : '') +
-        tile('theme', ICON_THEME, themeNow() === 'light' ? 'Dark Mode' : 'Light Mode') +
+        tile('theme', themeIcon(), themeNow() === 'light' ? 'Dark Mode' : 'Light Mode') +
         (adm ? tile('backup', svg(ICON.box), due ? 'Backup Due' : 'Backup', due ? 'due' : '') + tile('account', svg(ICON.gear), 'Settings') + tile('logout', svg(ICON.out), 'Log Out', 'danger')
              : tile('login', svg(ICON.key), 'Log In')) + '</div></div>';
     }, from);
