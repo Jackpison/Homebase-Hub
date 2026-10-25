@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.48.9 | Home themes (a Starter theme and your own, with export and import), a welcome text, and no background repeats until the others had their turn |
 | 1.48.5 | A new Cards page (a cleaner table, or grouped by holder), Settings regrouped into Web, Data and System Setting, and tidier pencil menus |
 | 1.48.2 | The Settings menu as before 1.48, the Backup icon and gear back, a sun and moon theme button, a softer look for new sites, and fixes for the Settings cards and the Tools tab icon |
 | 1.48.1 | Fix: the Security and Telegram cards in Settings look right again |
@@ -71,6 +72,26 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.48.9
+
+### Home
+
+- **Themes.** Background › Theme chooses the set of backgrounds Home takes turns with:
+  - **Starter** comes with the app: three photos from Unsplash. New sites start with it. Its two videos (Black Hole and Luminous Glowing Fluid) arrive in the next update, because sites before this one do not accept video files in an update. **Remove** hides Starter; **Bring Back Starter** shows it again.
+  - **Online Photos** is how Home worked before (Picsum, Bing, Wikimedia, Wallhaven and your other sources). Sites that already exist keep it.
+  - **Your own themes:** **Make a Theme** from your uploads, give it a name, and **Use** it. **Export** saves it as one file with its pictures and videos; **Import** adds it on another Homebase Hub site.
+  - While Starter or your own theme is in use, nothing is downloaded from other sites.
+- **No repeats.** Each browser remembers the last 30 backgrounds it showed, and one comes back only after the others have had their turn. Before, only the last picture was avoided.
+- **Welcome Text** (Home Settings › Page): words that fade in the middle of the screen when Home opens, once per visit, then slowly fade away while the links appear. It starts as "Welcome Home"; leave it empty for none.
+- **Videos** start on a still picture, so the screen is never black, and keep it where the video cannot play (older browsers, data saver, Reduce Motion). Background videos pause while the tab is hidden.
+- **Page Settings is now Home Settings**, like the other pages.
+
+### Updates
+
+- The updater accepts video files (`.mp4`) in an update, so the next update can bring the Starter videos.
 
 ---
 
