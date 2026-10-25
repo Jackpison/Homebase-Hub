@@ -17,7 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
-| 1.48.5 | A new Cards page (by holder, with totals), Settings regrouped into Web, Data and System Setting, and tidier pencil menus |
+| 1.48.5 | A new Cards page (a cleaner table, or grouped by holder), Settings regrouped into Web, Data and System Setting, and tidier pencil menus |
 | 1.48.2 | The Settings menu as before 1.48, the Backup icon and gear back, a sun and moon theme button, a softer look for new sites, and fixes for the Settings cards and the Tools tab icon |
 | 1.48.1 | Fix: the Security and Telegram cards in Settings look right again |
 | 1.48.0 | Navigation and fluidity: three redesigned bar styles, a Top Bar that hides while you scroll, a round menu, and a simpler Settings |
@@ -78,8 +78,8 @@ Nothing to migrate by hand unless an entry says so.
 
 ### Cards
 
-- **Cards are grouped by holder.** Each person has a section with their number of cards, total limit and yearly charges; click a heading to fold it, and it stays folded. **One List** shows every card together, with a Holder column.
-- **One line of totals** replaces the five boxes: cards, total limit, charges a year, and how many expire soon or have expired.
+- **A cleaner table, or your cards grouped by holder.** **Table** (the default) shows every card with a Holder column. **By Holder** gives each person a section with their number of cards, total limit and yearly charges; click a heading to fold it, and it stays folded.
+- **Four boxes at the top:** Cards (credit and debit), Total Limit (with how many are LTF, FD and Paid), Charges a Year, and Expiring Soon (amber when a card expires within 3 months; red when one has expired). They follow the search and filters.
 - **Six columns instead of eleven:** the card with its bank and remark under it, Limit, Charges, Expiry and Details (network, variant and base as small labels). On a phone each card takes two lines.
 - **Colour now means something:** a yearly fee and a card that expires within 3 months are amber; an expired card is red.
 - **Filters:** a search box, a button for each holder, and **More Filters** for bank, network and type. **Clear** shows only when a filter is on.

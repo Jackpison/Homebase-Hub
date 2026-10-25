@@ -110,7 +110,7 @@ try:
         except ImportError:
             z = zipfile.ZipFile(io.BytesIO(data)); ok = 'xl/worksheets/sheet1.xml' in z.namelist(); detail = z.namelist()
         check('P3 Cards exports a real Excel file with numbers and the money format', data[:2] == b'PK' and ok, detail)
-        # P10-P14: the 1.48.5 Cards page (By Holder sections or One List, totals line, holder chips) and the tidied pencil menus
+        # P10-P16: the 1.48.5 Cards page (Table or By Holder sections, four total boxes, holder chips) and the tidied pencil menus
         def items(app):
             pg.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); pg.wait_for_timeout(900)
             return pg.evaluate("[...document.querySelectorAll('[data-hub=item]')].map((e, i) => [+(e.dataset.hubOrder || 0), i, e.dataset.hubLabel]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(x => x[2])")
@@ -123,20 +123,22 @@ try:
         pg.reload(wait_until='domcontentloaded'); pg.wait_for_selector('#list .row.item', timeout=15000)
         grp = lambda: pg.evaluate("[...document.querySelectorAll('#list .grp .gn')].map(e => e.textContent)")
         rows = lambda: pg.evaluate("document.querySelectorAll('#list .row.item').length")
-        sumt = pg.evaluate("document.getElementById('stats').textContent")
-        check('P11 Cards opens By Holder: one section per holder with its totals, and the totals line counts every card and the one expiring soon',
-              grp() == ['Alex', 'Sam', 'Jordan'] and rows() == 9 and '9 cards' in sumt and '1 expiring soon' in sumt and 'charges a year' in sumt
-              and pg.evaluate("document.querySelector('#list .grp .gh').textContent.includes('4 cards')"), (grp(), rows(), sumt))
+        stat = lambda: pg.evaluate("[...document.querySelectorAll('#stats .stat')].map(e => e.querySelector('.sl').textContent + '=' + e.querySelector('b').textContent)")
+        first = (len(grp()), rows(), pg.evaluate("getComputedStyle(document.querySelector('#list .row.item .co')).display"), stat())
+        check('P11 Cards opens as the Table (every card, with a Holder column) under four boxes: Cards, Total Limit, Charges a Year, Expiring Soon',
+              first[:3] == (0, 9, 'block') and first[3] == ['Cards=9', 'Total Limit=₹16,90,000', 'Charges a Year=₹8,499', 'Expiring Soon=1']
+              and pg.evaluate("document.querySelector('#fview [aria-pressed=true]').textContent") == 'Table', first)
+        pg.click('#fview [data-v=holder]'); pg.wait_for_timeout(200)
+        check('P12 By Holder: one section per holder with its totals, and the choice is kept',
+              grp() == ['Alex', 'Sam', 'Jordan'] and rows() == 9 and pg.evaluate("document.querySelector('#list .grp .gh').textContent.includes('4 cards')") and pg.evaluate("localStorage.getItem('cards-view')") == 'holder', grp())
         pg.click('#list .gh[data-fold="Jordan"]'); pg.wait_for_timeout(200); folded = rows()
         pg.reload(wait_until='domcontentloaded'); pg.wait_for_selector('#list .row.item', timeout=15000)
-        check('P12 a holder section folds, and stays folded after a reload', folded == 7 and rows() == 7 and pg.evaluate("document.querySelector('#list .gh[data-fold=\"Jordan\"]').getAttribute('aria-expanded')") == 'false', (folded, rows()))
+        check('P13 a holder section folds, and stays folded (and By Holder stays on) after a reload', folded == 7 and rows() == 7 and len(grp()) == 3, (folded, rows()))
         pg.click('#list .gh[data-fold="Jordan"]'); pg.click('#fview [data-v=list]'); pg.wait_for_timeout(200)
-        one = (len(grp()), rows(), pg.evaluate("getComputedStyle(document.querySelector('#list .row.item .co')).display"))
         pg.click('#fchips [data-h="Sam"]'); pg.wait_for_timeout(200)
-        sam = (rows(), pg.evaluate("document.getElementById('stats').textContent"), pg.evaluate("!document.getElementById('fclear').hidden"))
-        pg.click('#fclear'); pg.click('#fview [data-v=holder]'); pg.wait_for_timeout(200)
-        check('P13 One List shows every card with a Holder column; a holder chip filters to that holder, and Clear brings them back',
-              one == (0, 9, 'block') and sam[0] == 3 and '3 cards' in sam[1] and sam[2] and rows() == 9 and len(grp()) == 3, (one, sam))
+        sam = (rows(), stat()[0], pg.evaluate("!document.getElementById('fclear').hidden"))
+        pg.click('#fclear'); pg.wait_for_timeout(200)
+        check('P16 a holder chip filters to that holder (the boxes follow), and Clear brings every card back', sam == (3, 'Cards=3', True) and rows() == 9, sam)
         pg.click('#list .row.item[data-id] .cn small'); pg.wait_for_timeout(300)
         opened = pg.evaluate("document.getElementById('dlg').open"); pg.evaluate("document.getElementById('dlg').close()")
         pg.evaluate("document.getElementById('tdlg').showModal()"); pg.click('#tcols'); pg.wait_for_timeout(400)

@@ -170,11 +170,11 @@ const saveSort=()=>{try{localStorage.setItem("sort4",JSON.stringify(sort))}catch
 /* expiry: "soon" is within SOON_MONTHS months (this month included); before this month it has expired */
 const SOON_MONTHS=3;
 const expState=c=>{const k=expKey(c.expiry);if(k==null)return"";const d=new Date(),left=(Math.floor(k/100)*12+k%100)-(d.getFullYear()*12+d.getMonth()+1);return left<0?"past":left<SOON_MONTHS?"soon":""};
-/* By Holder (one section per person) or One List; which sections are folded. Both are this browser's choice. */
-let VIEW="holder",FOLD=[];
-try{VIEW=localStorage.getItem("cards-view")==="list"?"list":"holder";const f=JSON.parse(localStorage.getItem("cards-fold")||"[]");if(Array.isArray(f))FOLD=f.filter(x=>typeof x==="string")}catch(e){}
+/* Table (the default) or By Holder (one section per person); which sections are folded. Both are this browser's choice. */
+let VIEW="list",FOLD=[];
+try{VIEW=localStorage.getItem("cards-view")==="holder"?"holder":"list";const f=JSON.parse(localStorage.getItem("cards-fold")||"[]");if(Array.isArray(f))FOLD=f.filter(x=>typeof x==="string")}catch(e){}
 const grouped=()=>VIEW==="holder"&&P.length>1&&active==="All";
-const totals=l=>({n:l.length,debit:l.filter(c=>c.kind==="Debit").length,limit:l.reduce((s,c)=>s+(c.limit||0),0),fee:l.reduce((s,c)=>s+(c.fee||0),0),
+const totals=l=>({n:l.length,debit:l.filter(c=>c.kind==="Debit").length,base:t=>l.filter(c=>c.type===t).length,limit:l.reduce((s,c)=>s+(c.limit||0),0),fee:l.reduce((s,c)=>s+(c.fee||0),0),
   soon:l.filter(c=>expState(c)==="soon").length,past:l.filter(c=>expState(c)==="past").length});
 const plural=(n,one,many)=>n+" "+(n===1?one:many);
 const dot=o=>`<i class="dot" style="background:${holderColor(o)}" aria-hidden="true"></i>`;
@@ -211,9 +211,13 @@ function render(){
   $("fclear").hidden=!hasF();
   $("sortSel").value=sort.k?sort.k+":"+sort.d:"";
   const t=totals(list);
+  const box=(label,value,sub,cl)=>`<div class="stat${cl?" "+cl:""}"><span class="sl">${label}</span><b>${value}</b><small>${sub}</small></div>`;
+  const bases=[["LTF","LTF"],["FD","FD"],["Paid","Paid"]].map(([k,l])=>t.base(k)?t.base(k)+" "+l:"").filter(Boolean).join(" · ");
   $("stats").innerHTML=!D.length?"":
-    `<span><b>${plural(t.n,"card","cards")}</b>${t.debit?` (${t.n-t.debit} credit, ${t.debit} debit)`:""}</span><span><b>${inr(t.limit)}</b> total limit</span><span><b>${inr(t.fee)}</b> charges a year</span>`+
-    (t.soon?`<span class="warn"><b>${t.soon}</b> expiring soon</span>`:"")+(t.past?`<span class="bad"><b>${t.past}</b> expired</span>`:"");
+    box("Cards",t.n,`${t.n-t.debit} credit · ${t.debit} debit`)+
+    box("Total Limit",inr(t.limit),bases||"&nbsp;")+
+    box("Charges a Year",inr(t.fee),t.fee?plural(list.filter(c=>c.fee).length,"card has a fee","cards have a fee"):"Every card is free")+
+    box("Expiring Soon",t.soon||"None",t.past?`<span class="bad">${t.past} expired</span>`:`Within ${SOON_MONTHS} months`,t.soon?"warn":t.past?"bad":"");
   const g=grouped();
   $("list").classList.toggle("grouped",g);
   const head=`<div class="row head">`+HEADS.map(([k,l,c])=>`<span class="h-${k||"d"}${c?" "+c:""}">${k?`<button class="sh" data-k="${k}" data-on="${sort.k===k?1:0}" aria-label="Sort by ${l}">${l}${sort.k===k?(sort.d===1?" ▲":" ▼"):""}</button>`:l}</span>`).join("")+`<span></span></div>`;

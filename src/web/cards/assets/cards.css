@@ -34,9 +34,14 @@ h1{font-size:var(--ix-s-title,clamp(26px,5vw,40px));font-weight:700;letter-spaci
 .pop .ph{display:block;padding:8px 12px 4px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 /* the totals line, the filters (search, view, holder chips, more filters) and the list (rows grouped by holder or one list) */
-.sum{display:flex;flex-wrap:wrap;gap:4px 22px;margin:0 2px 14px;color:var(--mute);font-size:15px}
-.sum b{color:var(--fg);font-variant-numeric:tabular-nums}
-.sum .warn b{color:var(--warn)}.sum .bad b{color:var(--c-exp)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stats:empty{display:none}
+.stat{display:grid;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;min-width:0}
+.stat .sl{color:var(--mute);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.stat b{font-size:var(--ix-s-box,24px);line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat small{color:var(--mute);font-size:13px}
+.stat.warn{border-color:color-mix(in srgb,var(--warn) 55%,var(--line))}.stat.warn b{color:var(--warn)}
+.stat.bad{border-color:color-mix(in srgb,var(--c-exp) 55%,var(--line))}.stat.bad b{color:var(--c-exp)}
 .warn{color:var(--warn)}.bad{color:var(--c-exp)}
 .filters{display:grid;gap:10px;margin-bottom:14px}
 .frow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -118,6 +123,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .list:not(.grouped) .cn .ho{display:inline}
   .rowedit{border-color:var(--line)}
   .msort{display:block}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .stat{padding:10px 12px}
   .seg button,.fbtn{padding:8px 11px}
   .gh{padding:11px 12px;gap:2px 12px}
   .gh .gn{flex-basis:100%}

@@ -179,11 +179,12 @@ story += chapter('6', 'Info', 'Notes in tabs. Each tab holds from 1 to 12 boxes.
  P('On a phone every box is full width. Tabs can be encrypted like Links tabs. %s saves the current tab or all tabs as PDF or text.' % C('Export')),
  Tip('The PDF export uses a built-in font. For text in non-Latin scripts, export as text instead.'))
 
-story += chapter('7', 'Cards', 'Your cards in one table you can search and filter.',
- shot('cards-crop', 'Cards with example data. The boxes at the top count cards and add up yearly charges.'),
- table(['Column', 'What it shows'], [['Bank and Card', 'The bank and the card\'s name, linked to their pages where known.'], ['Network', 'Visa, Mastercard, RuPay and so on.'], ['Variant', 'For example Platinum or Signature.'],
-   ['Limit', 'The credit limit.'], ['Holder', 'Whose card it is.'], ['Type and Base', 'Credit or debit, and what it is based on.'], ['Charges', 'The yearly fee, or Free.'], ['Expiry', 'Month and year.'], ['Remark', 'Your own note.']]),
- P('Filter by bank, network, type and holder, or type in the search box. Hover over a row to show its Edit button.'),
+story += chapter('7', 'Cards', 'Your cards in one table, or grouped by holder, with the totals worked out.',
+ shot('cards-crop', 'Cards with example data. The boxes at the top add up limits and yearly charges, and count cards that expire soon.'),
+ table(['Column', 'What it shows'], [['Card', 'The card\'s name, with its bank and your remark under it. Both are linked to their pages where known.'], ['Holder', 'Whose card it is (in Table).'],
+   ['Limit', 'The credit limit.'], ['Charges', 'The yearly fee, or Free. A fee is amber.'], ['Expiry', 'Month and year. Amber when it expires within 3 months, red once it has expired.'], ['Details', 'Network and variant, the base (LTF, FD or Paid), and Debit for a debit card.']]),
+ P('%s (the default) shows every card together. %s gives each person a section with their totals; click a heading to fold it. Use the search box, the holder buttons, or %s for bank, network and type. Click a row to edit the card.' % (C('Table'), C('By Holder'), C('More Filters'))),
+ P('The pencil menu has %s, %s, %s, %s, %s and %s. %s (for Excel and PDF) is inside Cards Settings.' % (C('Add Card'), C('Add Holder'), C('Edit Holders'), C('Edit Banks'), C('Export'), C('Cards Settings'), C('Column Order'))),
  Note('No card data is sent to a browser until you are logged in. Deleting cards always keeps an earlier version first, so a delete can be undone from Backup and Restore.'))
 
 story += chapter('8', 'Tasks', 'Bills, renewals and chores: anything with a due date.',
