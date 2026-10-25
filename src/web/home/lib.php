@@ -52,11 +52,9 @@ const API_KEYS = [
 const ROTATE_CHOICES = [0, 1, 5, 15, 30];
 const BG_REMEMBER = 30;   // each browser remembers this many backgrounds it showed last, and shows them again only when nothing else is left
 const WELCOME_DEFAULT = 'Welcome Home';
-/* The Starter theme: backgrounds that come with the app (web/home/starter/), in the order a new site shows them (Black Hole first).
-   A video's poster is shown at once and wherever the video can't play (AV1 needs a fairly new browser; older Safari shows the poster). */
+/* The Starter theme: backgrounds that come with the app (web/home/starter/), in the order a new site shows them.
+   An entry may be a video with a 'poster' (its still picture); the owner chose photos only, to keep updates small (25 Oct 2026). */
 const STARTER = [
-    ['file' => 'black-hole.mp4',     'type' => 'video', 'poster' => 'black-hole.jpg',     'credit' => 'Black Hole'],
-    ['file' => 'luminous-fluid.mp4', 'type' => 'video', 'poster' => 'luminous-fluid.jpg', 'credit' => 'Luminous Glowing Fluid'],
     ['file' => 'mountains.jpg',      'type' => 'image', 'credit' => 'Photo from Unsplash'],
     ['file' => 'abstract.webp',      'type' => 'image', 'credit' => 'Photo from Unsplash'],
     ['file' => 'forest-lake.jpg',    'type' => 'image', 'credit' => 'Photo from Unsplash'],

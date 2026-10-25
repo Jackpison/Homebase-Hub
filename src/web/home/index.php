@@ -35,7 +35,7 @@ $videos = array_values(array_filter($all, fn($i) => $i['type'] === 'video'));
 $images = array_values(array_filter($all, fn($i) => $i['type'] !== 'video'));
 $first = null;
 if ($site['bg']['own']) {
-    // a theme (Starter or your own): its backgrounds take turns; on Starter a browser that has never been here starts with the first one (Black Hole)
+    // a theme (Starter or your own): its backgrounds take turns; on Starter a browser that has never been here starts with the first one
     $first = !$seen && $site['bg']['theme'] === 'starter' ? $site['bg']['own'][0] : $pickFrom($site['bg']['own']);
 }
 if (!$first && $site['uploads'] && ($rand() < $site['bg']['uploadChance'] || !$all)) $first = $pickFrom($site['uploads']);

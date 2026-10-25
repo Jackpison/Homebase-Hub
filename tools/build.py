@@ -16,8 +16,8 @@ SKIP_PREFIX = ('web/core-data/data/',)
 KEEP_DIRS = []  # empty folders recreated from .gitkeep
 # File types just added to UP_EXT: installed sites check a zip with their *own* older list, so files of these types
 # stay out of the zip for one release (they wait in src/). Empty this set in the release after the one that added them.
-# mp4: added in 1.49.0 for the Starter theme's two videos (web/home/starter/*.mp4); ship them from 1.49.1 on.
-NOT_YET = {'mp4'}
+# (mp4 was added in 1.48.9; every site from 1.48.9 on accepts it.)
+NOT_YET = set()
 
 def version():
     t = open(os.path.join(ROOT, 'src/web/core-data/lib/boot.php'), encoding='utf-8').read()
