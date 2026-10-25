@@ -8,7 +8,7 @@ from urllib.parse import urljoin
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, SEED
-from helpers import Site, Checks, stop_all, browser_login, wait_js
+from helpers import Site, Checks, stop_all, browser_login, wait_js, until
 from playwright.sync_api import sync_playwright
 from PIL import Image
 
@@ -82,9 +82,11 @@ try:
         ctx = b.new_context(viewport={'width': 1280, 'height': 1000}); pg = ctx.new_page()
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
         for label, site, path in (('top', s, '/'), ('Home', s, '/web/home/'), ('sub-folder Home', sub, '/hub/web/home/')):
-            pg.goto(site.host + path); pg.wait_for_timeout(2000)
+            pg.goto(site.host + path)
             cdp = ctx.new_cdp_session(pg)
-            inst = cdp.send('Page.getInstallabilityErrors').get('installabilityErrors')
+            # Chromium reads the manifest after the page loads: ask until it has no installability errors (or 10 s pass)
+            inst = until(lambda: (lambda e: e if e == [] else None)(cdp.send('Page.getInstallabilityErrors').get('installabilityErrors')), 10000, 200)
+            if inst is None: inst = cdp.send('Page.getInstallabilityErrors').get('installabilityErrors')
             man = cdp.send('Page.getAppManifest')
             check('Chromium: %s is installable (no installability errors, no manifest errors)' % label, inst == [] and not man.get('errors') and man.get('url', '').endswith('action=manifest'), (inst, man.get('errors')))
             cdp.detach()
@@ -103,7 +105,7 @@ try:
         pg.evaluate("""() => { const e = new Event('beforeinstallprompt', { cancelable: true }); window.__prompted = 0;
             e.prompt = () => { window.__prompted++; return Promise.resolve(); }; e.userChoice = Promise.resolve({ outcome: 'accepted' }); window.dispatchEvent(e); }""")
         shown = not pg.evaluate("document.querySelector('#ix-inst').hidden")
-        pg.click('#ix-inst'); pg.wait_for_timeout(300)
+        pg.click('#ix-inst'); until(lambda: pg.evaluate("window.__prompted === 1 && document.querySelector('#ix-inst').hidden"), 3000)
         check('when the browser offers it, Install appears and opens the browser\'s prompt once', shown and pg.evaluate("window.__prompted") == 1 and pg.evaluate("document.querySelector('#ix-inst').hidden"), (shown, pg.evaluate("window.__prompted")))
         sw = pg.evaluate("fetch('../hub/core/api.php?action=state').then(r => r.ok)")
         check('no page error anywhere in this test', not errs and sw, errs)

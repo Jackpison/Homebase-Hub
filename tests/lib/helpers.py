@@ -223,6 +223,17 @@ def browser_login(pg, base, pw=PW, timeout=15000):
     return said or 'not logged in'
 
 
+def until(fn, timeout=10000, step=100):
+    """Calls fn() until it returns something true (returned) or the time is up (returns the last result). For waits whose
+    result a check reads next: a fixed pause either wastes time or is too short on a slow machine; this is neither."""
+    end = time.time() + timeout / 1000; r = None
+    while True:
+        try: r = fn()
+        except Exception: r = None
+        if r or time.time() > end: return r
+        time.sleep(step / 1000)
+
+
 def wait_js(pg, expr, timeout=15000, step=200):
     """Waits until a JavaScript expression is true in the page. Playwright's wait_for_function with a string runs eval
     inside the page, which the site's security policy refuses; evaluate is not affected. Survives a page reload."""
