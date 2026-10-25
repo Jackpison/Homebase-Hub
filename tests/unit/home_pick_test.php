@@ -48,4 +48,23 @@ t('a new site starts with the Starter theme', default_site()['bg']['theme'] === 
 t('a site saved before themes existed keeps Online Photos', clean_site(['bg' => ['dim' => 0.3]])['bg']['theme'] === 'online');
 t('Remove (starterOff) always means Online Photos', clean_site(['bg' => ['theme' => 'starter', 'starterOff' => true]])['bg']['theme'] === 'online');
 t('an unknown theme falls back to Online Photos', clean_site(['bg' => ['theme' => 'nope']])['bg']['theme'] === 'online');
-t('the first visit picks the first Starter background', strpos($index, "!\$seen && \$site['bg']['starter'] ? \$site['bg']['starter'][0]") !== false);
+t('the first visit on Starter picks its first background', strpos($index, "!\$seen && \$site['bg']['theme'] === 'starter' ? \$site['bg']['own'][0]") !== false);
+
+// your own themes
+ensure_dir(UPLOAD_DIR);
+foreach (['aaaaaaaaaaaaaaaa.jpg', 'bbbbbbbbbbbbbbbb.mp4', 'cccccccccccccccc.webp'] as $f) file_put_contents(UPLOAD_DIR . '/' . $f, 'x');
+$ups = [['url' => 'uploads/aaaaaaaaaaaaaaaa.jpg', 'type' => 'image'], ['url' => 'uploads/bbbbbbbbbbbbbbbb.mp4', 'type' => 'video'], ['url' => 'uploads/cccccccccccccccc.webp', 'type' => 'image']];
+$th = clean_themes([
+    ['id' => '0a1b2c3d', 'name' => 'Night', 'items' => ['uploads/cccccccccccccccc.webp', 'uploads/aaaaaaaaaaaaaaaa.jpg', 'uploads/dddddddddddddddd.jpg', 'uploads/aaaaaaaaaaaaaaaa.jpg', '../../etc/passwd', 'photos/x.jpg']],
+    ['id' => '0a1b2c3d', 'name' => 'Same id', 'items' => []], ['id' => 'BAD', 'name' => 'x', 'items' => []], ['id' => '11112222', 'name' => '', 'items' => []]]);
+t('a theme keeps only uploads that exist, once each, in your order; bad and repeated ids are dropped; an empty name becomes My Theme',
+  count($th) === 2 && $th[0]['items'] === ['uploads/cccccccccccccccc.webp', 'uploads/aaaaaaaaaaaaaaaa.jpg'] && $th[1]['name'] === 'My Theme', json_encode($th));
+t('at most ' . MAX_THEMES . ' themes', count(clean_themes(array_map(fn($i) => ['id' => sprintf('%08x', $i), 'name' => "T$i", 'items' => []], range(1, 20)))) === MAX_THEMES);
+t('your own theme can be the one in use', clean_site(['bg' => ['themes' => $th, 'theme' => 't:0a1b2c3d']])['bg']['theme'] === 't:0a1b2c3d');
+t('a theme that no longer exists falls back to Online Photos', clean_site(['bg' => ['themes' => $th, 'theme' => 't:99999999']])['bg']['theme'] === 'online');
+$own = theme_items('t:0a1b2c3d', $th, $ups);
+t('your theme shows its chosen uploads only, in its order', array_column($own, 'url') === ['uploads/cccccccccccccccc.webp', 'uploads/aaaaaaaaaaaaaaaa.jpg']);
+t('Starter also takes turns with your uploads', count(theme_items('starter', $th, $ups)) === count(starter_list()) + 3);
+t('Online Photos has no fixed list', theme_items('online', $th, $ups) === []);
+$api = file_get_contents($site . '/web/home/api.php');
+t('an upload tells the page its new address (used by Import)', substr_count($api, "'file' => 'uploads/' . \$name") === 2);

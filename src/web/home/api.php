@@ -238,7 +238,7 @@ switch ($action) {
             out(['error' => 'Couldn\'t save the file. Set the uploads folder permissions to 755.'], 500);
         }
         chmod(UPLOAD_DIR . '/' . $name, 0644);
-        out(['ok' => true, 'uploads' => list_uploads()]);
+        out(['ok' => true, 'uploads' => list_uploads(), 'file' => 'uploads/' . $name]);
 
     /* Big files arrive in pieces (each under the host's limit), are joined here, then checked like a normal upload.
        Fields: id (16 hex), index (0..), total (pieces), size (bytes of the whole file); the piece is the file field "piece". */
@@ -271,7 +271,7 @@ switch ($action) {
         $name = bin2hex(random_bytes(8)) . '.' . BG_TYPES[$mime];
         if (!@rename($part, UPLOAD_DIR . '/' . $name)) { @unlink($part); out(['error' => 'Couldn\'t save the file. Set the uploads folder permissions to 755.'], 500); }
         @chmod(UPLOAD_DIR . '/' . $name, 0644);
-        out(['ok' => true, 'uploads' => list_uploads()]);
+        out(['ok' => true, 'uploads' => list_uploads(), 'file' => 'uploads/' . $name]);
 
     case 'delete_upload':
         require_admin();

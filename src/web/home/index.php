@@ -34,10 +34,9 @@ $all    = $site['bg']['photos'];
 $videos = array_values(array_filter($all, fn($i) => $i['type'] === 'video'));
 $images = array_values(array_filter($all, fn($i) => $i['type'] !== 'video'));
 $first = null;
-if ($site['bg']['theme'] === 'starter') {
-    // Starter: its backgrounds and your uploads take turns; a browser that has never been here starts with the first one (Black Hole)
-    $mine = array_merge($site['bg']['starter'], $site['uploads']);
-    $first = !$seen && $site['bg']['starter'] ? $site['bg']['starter'][0] : $pickFrom($mine);
+if ($site['bg']['own']) {
+    // a theme (Starter or your own): its backgrounds take turns; on Starter a browser that has never been here starts with the first one (Black Hole)
+    $first = !$seen && $site['bg']['theme'] === 'starter' ? $site['bg']['own'][0] : $pickFrom($site['bg']['own']);
 }
 if (!$first && $site['uploads'] && ($rand() < $site['bg']['uploadChance'] || !$all)) $first = $pickFrom($site['uploads']);
 if (!$first && $videos && ($rand() < $site['bg']['videoChance'] || !$images)) $first = $pickFrom($videos);
@@ -103,7 +102,7 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
   <p class="tb-hint">Drag links to reorder, or move them between columns.</p>
   <div class="tb-actions">
     <button class="tb-btn" data-open="bgSheet" data-hub="item" data-hub-label="Background" data-hub-icon="image" data-hub-order="3">Background</button>
-    <button class="tb-btn" data-open="settingsSheet" data-hub="item" data-hub-label="Page Settings" data-hub-icon="gear" data-hub-order="8" data-hub-sep>Settings</button>
+    <button class="tb-btn" data-open="settingsSheet" data-hub="item" data-hub-label="Home Settings" data-hub-icon="gear" data-hub-order="8" data-hub-sep>Settings</button>
     <button class="tb-btn" id="logoutBtn" data-hub="logout">Log Out</button>
     <button class="tb-btn tb-done" id="doneBtn" data-hub="done">Done</button>
   </div>
@@ -178,7 +177,7 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 
 <dialog class="sheet" id="settingsSheet">
   <div class="sheet-in">
-    <header class="sh"><h2>Settings</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
+    <header class="sh"><h2>Home Settings</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
     <div class="sb">
       <section>
         <h3>Page</h3>
@@ -212,7 +211,7 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
     <div class="sb">
       <section>
         <h3>Theme</h3>
-        <p class="hint">A theme is the set of backgrounds Home takes turns with. Your uploads join either one.</p>
+        <p class="hint">A theme is the set of backgrounds Home takes turns with. Your uploads also join Starter; your own themes use the uploads you choose.</p>
         <div class="themes" id="themeRows"></div>
       </section>
       <section>
@@ -274,6 +273,26 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
   </div>
 </dialog>
 
+
+<dialog class="sheet wide" id="themeSheet">
+  <form method="dialog" class="sheet-in" id="themeForm">
+    <header class="sh"><h2 id="themeTitle">New Theme</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
+    <div class="sb">
+      <label class="field"><span>Name</span><input type="text" id="tName" maxlength="40" placeholder="My Theme" required></label>
+      <div class="field"><span>Backgrounds <b id="tCount"></b></span>
+        <small class="hint">Tick the uploads this theme takes turns with. To add pictures or videos, drop them under Your Uploads first.</small>
+        <div class="thumbs pick" id="tPick"></div></div>
+    </div>
+    <footer class="sf">
+      <button type="button" class="btn danger" id="tDelete">Delete Theme</button>
+      <div class="sf-r">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Done</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
+<input type="file" id="themeFile" accept=".zip,application/zip" hidden>
 
 <dialog class="sheet wide" id="customSheet">
   <form method="dialog" class="sheet-in" id="customForm">

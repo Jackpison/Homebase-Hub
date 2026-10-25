@@ -61,7 +61,9 @@ const STARTER = [
     ['file' => 'abstract.webp',      'type' => 'image', 'credit' => 'Photo from Unsplash'],
     ['file' => 'forest-lake.jpg',    'type' => 'image', 'credit' => 'Photo from Unsplash'],
 ];
-const THEMES = ['starter', 'online'];
+const THEMES = ['starter', 'online'];   // and "t:<id>" for a theme you made from your uploads
+const MAX_THEMES = 8;
+const MAX_THEME_ITEMS = 60;
 
 /* ================= storage ================= */
 
@@ -114,8 +116,9 @@ function default_site(): array
             'motion'       => true,
             'rotate'       => 0,
             'custom'       => [],
-            'theme'        => 'starter',   // a new site starts with the Starter theme; sites from before 1.49 keep Online Photos
+            'theme'        => 'starter',   // a new site starts with the Starter theme; sites from before 1.48.9 keep Online Photos
             'starterOff'   => false,
+            'themes'       => [],          // your own themes: [{id, name, items: ['uploads/…']}]
         ],
         'panel' => ['opacity' => 0.40, 'blur' => 22],
         'welcome' => WELCOME_DEFAULT,
@@ -222,7 +225,8 @@ function clean_site(array $in): array
             'rotate'       => in_array($rotate, ROTATE_CHOICES, true) ? $rotate : 0,
             'custom'       => $custom,
             'starterOff'   => $starterOff = (bool) ($b['starterOff'] ?? false),
-            'theme'        => !$starterOff && in_array($b['theme'] ?? '', THEMES, true) ? $b['theme'] : 'online',
+            'themes'       => $themes = clean_themes($b['themes'] ?? []),
+            'theme'        => theme_ok((string) ($b['theme'] ?? ''), $starterOff, $themes) ? (string) $b['theme'] : 'online',
         ],
         'panel' => [
             'opacity' => max(0, min(1, (float) ($pn['opacity'] ?? $def['panel']['opacity']))),
@@ -336,7 +340,9 @@ function public_payload(): array
         foreach ($mine as $i) $photos[] = pool_public($i);
     }
     $theme = $s['bg']['theme'] ?? 'online';
-    if ($theme === 'starter') { $photos = []; $need = false; }   // the Starter theme uses only its own backgrounds (and your uploads): nothing is downloaded
+    $uploads = array_map(fn($u) => ['url' => $u['url'], 'type' => $u['type'], 'credit' => 'Your upload', 'own' => true], list_uploads());
+    $own = theme_items($theme, $s['bg']['themes'] ?? [], $uploads);
+    if ($theme !== 'online') { $photos = []; $need = false; }   // Starter and your own themes use only their own backgrounds: nothing is downloaded
     return [
         'title'   => $s['title'],
         'icon'    => '',   // no separate start page icon: the site logo is used
@@ -350,16 +356,51 @@ function public_payload(): array
             'motion'       => $s['bg']['motion'],
             'rotate'       => $s['bg']['rotate'],
             'theme'        => $theme,
-            'starter'      => $theme === 'starter' ? starter_list() : [],
+            'own'          => $own,   // the theme's backgrounds, in order (empty for Online Photos)
             'photos'       => $photos,
             'refill'       => $need,
         ],
-        'uploads'     => array_map(fn($u) => ['url' => $u['url'], 'type' => $u['type'], 'credit' => 'Your upload', 'own' => true], list_uploads()),
+        'uploads'     => $uploads,
         'hasPassword' => hub_auth() !== null,
     ];
 }
 
 /* ================= which background next ================= */
+
+/** Your own themes, cleaned: an id, a name, and uploads that still exist (a deleted upload drops out of every theme). */
+function clean_themes($in): array
+{
+    $out = []; $ids = [];
+    foreach (is_array($in) ? array_slice($in, 0, MAX_THEMES) : [] as $t) {
+        if (!is_array($t) || !preg_match('/^[a-f0-9]{8}$/', (string) ($t['id'] ?? '')) || isset($ids[$t['id']])) continue;
+        $items = [];
+        foreach (is_array($t['items'] ?? null) ? $t['items'] : [] as $u) {
+            if (is_string($u) && preg_match('~^uploads/[a-f0-9]{16}\.(jpg|png|webp|gif|avif|mp4|webm)$~', $u) && is_file(UPLOAD_DIR . '/' . substr($u, 8)) && !in_array($u, $items, true)) $items[] = $u;
+            if (count($items) >= MAX_THEME_ITEMS) break;
+        }
+        $ids[$t['id']] = true;
+        $out[] = ['id' => $t['id'], 'name' => str_clip($t['name'] ?? '', 40) ?: 'My Theme', 'items' => $items];
+    }
+    return $out;
+}
+/** Whether a theme value names one that exists: Starter (unless removed), Online Photos, or one of your own ("t:<id>"). */
+function theme_ok(string $theme, bool $starterOff, array $themes): bool
+{
+    if ($theme === 'starter') return !$starterOff;
+    if ($theme === 'online') return true;
+    return str_starts_with($theme, 't:') && in_array(substr($theme, 2), array_column($themes, 'id'), true);
+}
+/** The backgrounds of the theme in use: Starter's own plus your uploads, or the uploads you chose for your theme. */
+function theme_items(string $theme, array $themes, array $uploads): array
+{
+    if ($theme === 'starter') return array_merge(starter_list(), $uploads);
+    if (!str_starts_with($theme, 't:')) return [];
+    foreach ($themes as $t) if ('t:' . $t['id'] === $theme) {
+        $byUrl = array_column($uploads, null, 'url');
+        return array_values(array_filter(array_map(fn($u) => $byUrl[$u] ?? null, $t['items'])));
+    }
+    return [];
+}
 
 /** The Starter theme's backgrounds whose files are here (a video arrives one release after its still picture). */
 function starter_list(): array

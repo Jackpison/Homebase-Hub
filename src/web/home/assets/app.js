@@ -206,8 +206,8 @@ const BG = {
     const images = all.filter(i => i.type !== 'video');
     const ups = (PUB.uploads || []).filter(u => !(saveData && u.type === 'video'));
 
-    if (PUB.bg.theme === 'starter'){   // Starter: its own backgrounds and your uploads take turns
-      const mine = [...(PUB.bg.starter || []), ...ups].filter(i => !(saveData && i.type === 'video' && !i.poster));
+    if (PUB.bg.theme && PUB.bg.theme !== 'online'){   // a theme (Starter or your own): its backgrounds take turns
+      const mine = (PUB.bg.own || []).filter(i => !(saveData && i.type === 'video' && !i.poster));
       return mine.length ? pick(fresh(mine)) : null;
     }
     if (ups.length && (Math.random() < PUB.bg.uploadChance || (!images.length && !videos.length))) return pick(fresh(ups));
@@ -719,14 +719,26 @@ function renderThemes(){
   const thumb = i => `<img src="${esc(media(i.poster || i.url))}" alt="" loading="lazy">`;
   const vids = st.filter(i => i.type === 'video').length, pics = st.length - vids;
   const what = [vids ? vids + (vids === 1 ? ' video' : ' videos') : '', pics ? pics + (pics === 1 ? ' photo' : ' photos') : ''].filter(Boolean).join(', ');
-  const card = (id, name, about, thumbs, acts) => `<div class="theme${on === id ? ' on' : ''}" data-theme="${id}"><div class="theme-mos">${thumbs}</div>
-    <div class="theme-b"><b>${name}${on === id ? ' <span class="pill">In Use</span>' : ''}</b><small>${about}</small><div class="theme-acts">${acts}</div></div></div>`;
+  const mosaic = list => { const k = list.length >= 5 ? 5 : Math.min(list.length, 3); return { n:k, html:list.slice(0, k).join('') }; };   // 1, 2, 3 or 5 pictures fill the frame
+  const card = (id, name, about, thumbs, acts) => { const m = Array.isArray(thumbs) ? mosaic(thumbs) : { n:0, html:thumbs };
+    return `<div class="theme${on === id ? ' on' : ''}" data-theme="${id}"><div class="theme-mos" data-n="${m.n}">${m.html}</div>
+    <div class="theme-b"><b>${name}${on === id ? ' <span class="pill">In Use</span>' : ''}</b><small>${about}</small><div class="theme-acts">${acts}</div></div></div>`; };
   $('#themeRows').innerHTML = (off
       ? `<div class="theme off"><div class="theme-b"><b>Starter</b><small>Removed. It comes with the app, so you can bring it back.</small><div class="theme-acts"><button type="button" class="btn small" data-t="back">Bring Back Starter</button></div></div></div>`
-      : card('starter', 'Starter', esc(what || 'Comes with the app') + (st[0] ? ' · ' + esc(st[0].credit) + ' first' : ''), st.slice(0, 5).map(thumb).join(''),
+      : card('starter', 'Starter', esc(what || 'Comes with the app') + (st[0]?.type === 'video' ? ' · ' + esc(st[0].credit) + ' first' : ''), st.map(thumb),
           (on === 'starter' ? '' : '<button type="button" class="btn small primary" data-t="use-starter">Use</button>') + '<button type="button" class="btn small danger" data-t="remove">Remove</button>'))
     + card('online', 'Online Photos', 'The photo sources below. New photos arrive by themselves.', '<span class="theme-ph">Picsum · Bing · Wikimedia · Wallhaven</span>',
-        on === 'online' ? '' : '<button type="button" class="btn small primary" data-t="use-online">Use</button>');
+        on === 'online' ? '' : '<button type="button" class="btn small primary" data-t="use-online">Use</button>')
+    + (bgDraft.themes || []).map(t => {
+        const ups = (ADMIN.uploadsAdmin || []).filter(u => t.items.includes(u.url));
+        const th = ups.length ? ups.map(u => u.type === 'video' ? `<video src="${esc(media(u.url))}#t=0.5" muted preload="metadata"></video>` : `<img src="${esc(media(u.url))}" alt="" loading="lazy">`) : '<span class="theme-ph">No backgrounds yet</span>';
+        const id = 't:' + t.id;
+        return card(id, esc(t.name), ups.length + (ups.length === 1 ? ' background' : ' backgrounds') + ' · your own', th,
+          (on === id || !ups.length ? '' : `<button type="button" class="btn small primary" data-t="use" data-id="${t.id}">Use</button>`)
+          + `<button type="button" class="btn small" data-t="edit" data-id="${t.id}">Edit</button><button type="button" class="btn small" data-t="export" data-id="${t.id}"${ups.length ? '' : ' disabled'}>Export</button>`);
+      }).join('')
+    + ((bgDraft.themes || []).length < 8 ? `<div class="theme new"><div class="theme-mos"><span class="theme-ph">+</span></div><div class="theme-b"><b>New Theme</b><small>Make one from your uploads, or import a theme file.</small>
+        <div class="theme-acts"><button type="button" class="btn small" data-t="new">Make a Theme</button><button type="button" class="btn small" data-t="import">Import</button></div></div></div>` : '');
 }
 $('#themeRows').addEventListener('click', e => {
   const b = e.target.closest('[data-t]'); if (!b) return;
@@ -735,7 +747,128 @@ $('#themeRows').addEventListener('click', e => {
   else if (t === 'use-online') bgDraft.theme = 'online';
   else if (t === 'remove'){ bgDraft.starterOff = true; bgDraft.theme = 'online'; }
   else if (t === 'back'){ bgDraft.starterOff = false; bgDraft.theme = 'starter'; }
+  else if (t === 'use') bgDraft.theme = 't:' + b.dataset.id;
+  else if (t === 'new') return openTheme(null);
+  else if (t === 'edit') return openTheme(b.dataset.id);
+  else if (t === 'import') return $('#themeFile').click();
+  else if (t === 'export') return withBusy(b, () => exportTheme(bgDraft.themes.find(x => x.id === b.dataset.id)));
   renderThemes();
+});
+
+/* Your own theme: a name and the uploads it takes turns with. Kept in bgDraft until Save Background. */
+let themeEdit = null;
+function openTheme(id){
+  const t = id ? bgDraft.themes.find(x => x.id === id) : null;
+  themeEdit = { id, name:t ? t.name : '', items:t ? [...t.items] : [] };
+  $('#themeTitle').textContent = t ? 'Edit Theme' : 'New Theme';
+  $('#tDelete').hidden = !t;
+  $('#tName').value = themeEdit.name;
+  drawThemePick();
+  openSheet('themeSheet');
+}
+function drawThemePick(){
+  const ups = ADMIN.uploadsAdmin || [];
+  $('#tPick').innerHTML = ups.length ? ups.map(u => `<label class="thumb${themeEdit.items.includes(u.url) ? ' sel' : ''}">
+      ${u.type === 'video' ? `<video src="${esc(media(u.url))}#t=0.5" muted preload="metadata"></video><span class="badge">Video</span>` : `<img src="${esc(media(u.url))}" alt="" loading="lazy">`}
+      <input type="checkbox" data-u="${esc(u.url)}"${themeEdit.items.includes(u.url) ? ' checked' : ''} aria-label="Use this background"></label>`).join('')
+    : '<p class="hint">No uploads yet. Close this, drop pictures or videos under Your Uploads, then make the theme.</p>';
+  $('#tCount').textContent = themeEdit.items.length ? '(' + themeEdit.items.length + ' chosen)' : '';
+}
+$('#tPick').addEventListener('change', e => {
+  const c = e.target.closest('[data-u]'); if (!c) return;
+  themeEdit.items = c.checked ? [...themeEdit.items, c.dataset.u] : themeEdit.items.filter(u => u !== c.dataset.u);
+  c.closest('.thumb').classList.toggle('sel', c.checked);
+  $('#tCount').textContent = themeEdit.items.length ? '(' + themeEdit.items.length + ' chosen)' : '';
+});
+$('#themeForm').addEventListener('submit', e => {
+  const name = $('#tName').value.trim();
+  if (!name){ e.preventDefault(); $('#tName').focus(); return; }
+  if (!themeEdit.items.length){ e.preventDefault(); toast('Choose at least one background.', true); return; }
+  bgDraft.themes = bgDraft.themes || [];
+  const t = themeEdit.id && bgDraft.themes.find(x => x.id === themeEdit.id);
+  if (t) Object.assign(t, { name, items:themeEdit.items });
+  else { const id = crypto.getRandomValues(new Uint32Array(1))[0].toString(16).padStart(8, '0'); bgDraft.themes.push({ id, name, items:themeEdit.items }); bgDraft.theme = 't:' + id; }
+  renderThemes();
+});
+$('#tDelete').addEventListener('click', () => {
+  bgDraft.themes = bgDraft.themes.filter(x => x.id !== themeEdit.id);
+  if (bgDraft.theme === 't:' + themeEdit.id) bgDraft.theme = bgDraft.starterOff ? 'online' : 'starter';
+  closeSheet('themeSheet'); renderThemes();
+});
+
+/* A theme file is a plain zip (stored, not compressed: pictures and videos are compressed already) with theme.json and the files. */
+const ZIP = (() => {
+  const CRC = new Uint32Array(256);
+  for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; CRC[n] = c >>> 0; }
+  const crc = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  const enc = new TextEncoder();
+  function make(files){   // [[name, Uint8Array]] -> Blob
+    const parts = [], cd = []; let off = 0;
+    for (const [name, d] of files){
+      const n = enc.encode(name), c = crc(d), h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint32(14, c, true); h.setUint32(18, d.length, true); h.setUint32(22, d.length, true); h.setUint16(26, n.length, true);
+      parts.push(new Uint8Array(h.buffer), n, d);
+      const e = new DataView(new ArrayBuffer(46));
+      e.setUint32(0, 0x02014b50, true); e.setUint16(4, 20, true); e.setUint16(6, 20, true); e.setUint16(8, 0x0800, true); e.setUint32(16, c, true); e.setUint32(20, d.length, true); e.setUint32(24, d.length, true); e.setUint16(28, n.length, true); e.setUint32(42, off, true);
+      cd.push(new Uint8Array(e.buffer), n); off += 30 + n.length + d.length;
+    }
+    const len = cd.reduce((s, x) => s + x.length, 0), end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, len, true); end.setUint32(16, off, true);
+    return new Blob([...parts, ...cd, new Uint8Array(end.buffer)], { type:'application/zip' });
+  }
+  function read(buf){   // a zip made by make() -> { name: Uint8Array }; null for anything else
+    const v = new DataView(buf), out = {}, dec = new TextDecoder(); let p = 0;
+    while (p + 30 <= buf.byteLength && v.getUint32(p, true) === 0x04034b50){
+      if (v.getUint16(p + 8, true) !== 0 || (v.getUint16(p + 6, true) & 8)) return null;   // only stored entries with their sizes up front
+      const size = v.getUint32(p + 18, true), nl = v.getUint16(p + 26, true), xl = v.getUint16(p + 28, true);
+      const name = dec.decode(new Uint8Array(buf, p + 30, nl)), at = p + 30 + nl + xl;
+      if (at + size > buf.byteLength) return null;
+      out[name] = new Uint8Array(buf, at, size); p = at + size;
+    }
+    return Object.keys(out).length ? out : null;
+  }
+  return { make, read };
+})();
+async function exportTheme(t){
+  if (!t) return;
+  const ups = (ADMIN.uploadsAdmin || []).filter(u => t.items.includes(u.url));
+  const files = [], items = [];
+  for (const [i, u] of ups.entries()){
+    const r = await fetch(media(u.url), { credentials:'same-origin' }); if (!r.ok) continue;
+    const name = String(i + 1).padStart(2, '0') + '.' + u.url.split('.').pop();
+    files.push([name, new Uint8Array(await r.arrayBuffer())]); items.push({ file:name, type:u.type });
+  }
+  files.unshift(['theme.json', new TextEncoder().encode(JSON.stringify({ format:'homebase-theme', version:1, name:t.name, items }, null, 2))]);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(ZIP.make(files));
+  a.download = 'theme-' + (t.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'mine') + '.zip';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('Theme exported');
+}
+$('#themeFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const bad = () => toast('That file isn\'t a Homebase Hub theme. Choose a file made with Export.', true);
+  let zip, meta;
+  try { zip = ZIP.read(await f.arrayBuffer()); meta = zip && JSON.parse(new TextDecoder().decode(zip['theme.json'])); } catch { zip = null; }
+  if (!zip || !meta || meta.format !== 'homebase-theme' || !Array.isArray(meta.items)) return bad();
+  const MIME = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp', gif:'image/gif', avif:'image/avif', mp4:'video/mp4', webm:'video/webm' };
+  const got = [];
+  $('#prog').classList.add('on');
+  for (const it of meta.items.slice(0, 60)){
+    const data = zip[it.file], ext = String(it.file || '').split('.').pop().toLowerCase();
+    if (!data || !MIME[ext]) continue;
+    try { $('#prog i').style.width = '0'; const r = await uploadOne(new File([data], it.file, { type:MIME[ext] })); if (r.uploads) renderThumbs(r.uploads); if (r.file) got.push(r.file); }
+    catch (err){ toast(`${it.file}: ${err.message}`, true); }
+  }
+  $('#prog').classList.remove('on');
+  if (!got.length) return bad();
+  const id = crypto.getRandomValues(new Uint32Array(1))[0].toString(16).padStart(8, '0');
+  let name = String(meta.name || 'Imported Theme').slice(0, 36), n = 1;
+  const taken = new Set((bgDraft.themes || []).map(t => t.name));
+  while (taken.has(n === 1 ? name : name + ' ' + n)) n++;
+  bgDraft.themes = [...(bgDraft.themes || []), { id, name:n === 1 ? name : name + ' ' + n, items:got }];
+  bgDraft.theme = 't:' + id;
+  renderThemes();
+  toast(`Imported ${got.length} background${got.length === 1 ? '' : 's'}. Press Save Background to use the theme.`);
 });
 function renderSources(){
   const info = ADMIN.sourceInfo, stats = ADMIN.poolStats || {};
