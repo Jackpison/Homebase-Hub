@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.48.0 | Navigation and fluidity: three redesigned bar styles, a Top Bar that hides while you scroll, a round menu, and a simpler Settings |
 | 1.47.1 | Small fixes: the Telegram backup button no longer sticks, Tools has its section colours back, Home uploads up to 128 MB, a GitHub link in Updates |
 | 1.47.0 | Tools rebuilt from source: all 36 tools, the same addresses and favourites, newer engines (ONNX Runtime 1.30, Tesseract 7), AVIF saving, and fixes |
 | 1.46.0 | Install on Your Phone: the site on a phone's or computer's home screen, opening like an app with its own icon and page shortcuts; Settings descriptions no longer shown twice |
@@ -67,6 +68,39 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.48.0
+
+### The Bar
+
+- Three styles, each with its own layout (Settings > Look > Navigation Style).
+- Top Bar: slides away while you scroll down and comes back as soon as you scroll up, press / or reach the top of the page.
+- Sidebar: now a slim rail with icons and small labels. On a phone, a floating button (or a swipe from the left edge) opens it as a panel.
+- Bottom Dock: one floating pill instead of two rows; the current page shows its name. On a phone, the round button beside it opens search, Edit, the theme, Backup and Settings.
+- A round menu holds Settings, Backup and Log Out. A red dot on it means a backup is due (it replaces the Backup and gear icons).
+- The current page's highlight glides to the next page when you move between pages (Chrome, Edge and Safari).
+
+### Settings
+
+- Fewer sections: Updates, Health and Changelog are now one System section with tabs. Old links still open the right place.
+- Look shows Theme, Accent Color and Navigation Style. Font, Same Look on Every Page, Presets (all 166) and Colors are under More Options.
+- General > Pages is gone (the pencil in the bar does the same). Install on Your Phone shows its steps under "How?".
+- A new site starts with your browser's time zone and a theme that follows your device. Existing sites keep their settings.
+
+### Search and Pages
+
+- Search chooses where to look and one tab; names, web addresses and note text are always searched.
+- Text Sizes for Links, Info and Cards is now inside each page's Page Settings.
+
+### Website
+
+- Pages fade into each other, the next page is prepared when you point at a link, and the header hides while you scroll down.
+
+### For developers
+
+- `tests/nav_test.py` (56 checks) covers the three bar styles on a computer and a phone, in Chromium, Firefox and WebKit; `tests/unit/nav_settings_test.php` covers the new-site defaults. The settings, app, pages, accessibility and website tests check the rest.
 
 ---
 

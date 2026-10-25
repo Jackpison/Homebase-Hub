@@ -7,7 +7,7 @@
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../core-data/assets/shell.js?v=1.47.1" data-app="links"></script>
+ *   <script src="../core-data/assets/shell.js?v=1.48.0" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -455,28 +455,28 @@
     return (HAS_EDIT ? '<button type="button" class="ix-pbtn" data-ix="edit">' + svg(ICON.edit) + '<span>Edit</span></button>' : '') +
       '<button type="button" class="ix-pbtn" data-ix="theme">' + ICON_THEME + '<span>' + (themeNow() === 'light' ? 'Dark' : 'Light') + '</span></button>' + meButton(adm);
   }
-  function openPanel(id, open, build) {
+  function openPanel(id, open, build, from) {   // from: the button that opened it (Safari does not focus a clicked button)
     var d = document.getElementById(id);
     if (!open) {
       if (d && d.classList.contains('open')) { d.classList.remove('open'); if (d._from && d._from.focus && document.contains(d._from)) d._from.focus(); }
       return;
     }
     if (!d) { d = document.createElement('div'); d.id = id; document.body.appendChild(d); }
-    d._from = document.activeElement;
+    d._from = from || document.activeElement;
     d.innerHTML = build(isAdmin());
     d.classList.add('open');
     var f = d.querySelector('[aria-current="page"]') || d.querySelector('button,a'); if (f) setTimeout(function () { f.focus(); }, 30);
   }
-  function drawer(open) {
+  function drawer(open, from) {
     openPanel('ix-drawer', open, function (adm) {
       return '<div class="ix-scrim" data-ix="close"></div><nav aria-label="Pages"><a class="ix-brand" href="' + ROOT + '"><img class="ix-logo" src="' +
         esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt=""><span>' + esc(S.siteName || 'Homebase Hub') + '</span></a>' +
         '<button type="button" class="ix-psearch" data-ix="search">' + svg(ICON.search) + '<span>Search</span></button>' +
         pages().map(function (p) { return '<a href="' + p[2] + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + svg(p[3]) + esc(p[1]) + '</a>'; }).join('') +
         '<div class="ix-pfoot">' + panelFoot(adm) + '</div></nav>';
-    });
+    }, from);
   }
-  function sheet(open) {
+  function sheet(open, from) {
     openPanel('ix-sheet', open, function (adm) {
       var due = backupDue();
       var tile = function (k, icon, label, cls) { return '<button type="button" class="ix-tile' + (cls ? ' ' + cls : '') + '" data-ix="' + k + '">' + icon + '<span>' + label + '</span></button>'; };
@@ -486,7 +486,7 @@
         tile('theme', ICON_THEME, themeNow() === 'light' ? 'Dark Mode' : 'Light Mode') +
         (adm ? tile('backup', svg(ICON.box), due ? 'Backup Due' : 'Backup', due ? 'due' : '') + tile('account', svg(ICON.gear), 'Settings') + tile('logout', svg(ICON.out), 'Log Out', 'danger')
              : tile('login', svg(ICON.key), 'Log In')) + '</div></div>';
-    });
+    }, from);
   }
   function closePanels() { drawer(false); sheet(false); }
   /* Sidebar style on a phone: a swipe from the left edge opens the panel */
@@ -1043,8 +1043,8 @@
     var k = b.dataset.ix, inPanel = !!b.closest('#ix-drawer,#ix-sheet');
     if (k === 'close') { closeDlg(); closePanels(); return; }
     if (k === 'spotx') { if (spot) spot.classList.remove('open'); return; }
-    if (k === 'menu') return drawer(true);
-    if (k === 'sheet') return sheet(true);
+    if (k === 'menu') return drawer(true, b);
+    if (k === 'sheet') return sheet(true, b);
     if (k === 'theme') { if (inPanel) closePanels(); return setTheme(themeNow() === 'light' ? 'dark' : 'light'); }
     if (k === 'login') return login().then(function () { location.reload(); }, function () {});
     if (k === 'logout') return logout();
