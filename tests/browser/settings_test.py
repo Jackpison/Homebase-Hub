@@ -51,7 +51,8 @@ try:
         view = {k: v for k, v in s.post('notify_save', {}).items() if not k.startswith('_')}   # what the real answer carries: the whole Telegram state
         body = json.dumps({**view, 'ok': True, 'note': 'Backup sent. Check Telegram.', 'backupLast': 1893456000})
         pg.route('**/api.php?action=notify_backup*', lambda route: route.fulfill(status=200, content_type='application/json', body=body))
-        open_backups(); pg.click('#nt-bknow'); until(lambda: 240000 in (pg.evaluate('window.__waits') or []), 5000)
+        open_backups(); pg.click('#nt-bknow')
+        until(lambda: 240000 in (pg.evaluate('window.__waits') or []) and pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return !!b && !b.disabled && b.textContent === 'Send Backup Now'; })()"), 5000)   # the answer has been handled: S5 and S6 read it
         waits = pg.evaluate('window.__waits')
         check('S5 Send Backup Now waits up to 4 minutes for the site (the usual 30 seconds is too short for a big backup)', 240000 in waits, waits)
         check('S6 ...and when it is done the button is back to "Send Backup Now" and ready', pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return !!b && !b.disabled && b.textContent === 'Send Backup Now'; })()"))
