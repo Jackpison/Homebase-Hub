@@ -14,7 +14,7 @@ import functools, html.parser, http.server, json, os, re, socketserver, sys, thr
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, SEED
-from helpers import Checks, browser_name, launch, CSP_REPORTER
+from helpers import Checks, browser_name, launch, CSP_REPORTER, TRACK_REQUESTS, settle, until
 from playwright.sync_api import sync_playwright
 
 BROWSER = browser_name()
@@ -135,7 +135,7 @@ try:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
 
         def ctx(scheme='dark', width=1280, **kw):
-            c = b.new_context(color_scheme=scheme, viewport={'width': width, 'height': 900}, **kw); c.add_init_script(CSP_REPORTER); return c
+            c = b.new_context(color_scheme=scheme, viewport={'width': width, 'height': 900}, **kw); c.add_init_script(CSP_REPORTER); c.add_init_script(TRACK_REQUESTS); return c
 
         # no console error, no policy violation, no sideways scroll, on every page (policy NOT bypassed here)
         c = ctx(); bad, wide = [], []
@@ -143,7 +143,7 @@ try:
             c2 = ctx('dark', width); pg = c2.new_page(); errs = []
             pg.on('console', lambda m: errs.append(m.text[:140]) if m.type == 'error' else None); pg.on('pageerror', lambda e: errs.append(str(e)[:140]))
             for u in URLS:
-                errs.clear(); pg.goto(B + u); pg.wait_for_timeout(250)
+                errs.clear(); pg.goto(B + u); settle(pg)
                 if errs: bad.append('%s %d: %s' % (u, width, errs[0]))
                 if pg.evaluate('document.documentElement.scrollWidth') > width: wide.append('%s at %d' % (u, width))
             c2.close()
@@ -154,15 +154,15 @@ try:
         for scheme, lo, hi in (('dark', 0, 60), ('light', 200, 256)):
             c2 = ctx(scheme); pg = c2.new_page(); pg.goto(B + '/'); l = pg.evaluate(LUM)
             check('W12 with the device set to %s, the page is %s (no choice made yet)' % (scheme, scheme), lo <= l <= hi and pg.evaluate('document.documentElement.dataset.theme') is None, l); c2.close()
-        c2 = ctx('dark'); pg = c2.new_page(); pg.goto(B + '/'); pg.click('.mode'); pg.wait_for_timeout(200); lit = pg.evaluate(LUM); pg.reload(); pg.wait_for_timeout(200)
+        c2 = ctx('dark'); pg = c2.new_page(); pg.goto(B + '/'); pg.click('.mode'); until(lambda: pg.evaluate(LUM) > 200, 3000); lit = pg.evaluate(LUM); pg.reload(); settle(pg)
         check('W13 the toggle turns a dark device light, and the choice is still there after a reload', lit > 200 and pg.evaluate(LUM) > 200 and pg.evaluate('document.documentElement.dataset.theme') == 'light', lit)
-        pg.click('.mode'); pg.wait_for_timeout(200); check('W14 and turns it back', pg.evaluate(LUM) < 60)
+        pg.click('.mode'); until(lambda: pg.evaluate(LUM) < 60, 3000); check('W14 and turns it back', pg.evaluate(LUM) < 60)
         icon = lambda: [pg.is_visible('.mode .m-sun'), pg.is_visible('.mode .m-moon')]
-        dark_icons = icon(); pg.click('.mode'); pg.wait_for_timeout(200); light_icons = icon(); pg.click('.mode'); pg.wait_for_timeout(200)
+        dark_icons = icon(); pg.click('.mode'); until(lambda: icon() == [False, True], 3000); light_icons = icon(); pg.click('.mode'); until(lambda: icon() == [True, False], 3000)
         check('W14b the theme button shows a sun in dark mode and a moon in light mode', dark_icons == [True, False] and light_icons == [False, True], (dark_icons, light_icons)); c2.close()
 
         # the tour
-        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/'); pg.wait_for_timeout(300)
+        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
         vis = lambda: pg.evaluate("[...document.querySelectorAll('#screenshots [role=tabpanel]')].filter(p => !p.hidden).map(p => p.id)")
         check('W15 the tour opens on Tasks, with one panel showing', vis() == ['p-tasks'] and pg.get_attribute('#t-tasks', 'aria-selected') == 'true', vis())
         pg.click('#t-links'); check('W16 clicking Links shows Links only', vis() == ['p-links'] and pg.get_attribute('#t-tasks', 'aria-selected') == 'false', vis())
@@ -170,73 +170,74 @@ try:
         check('W17 the arrow keys move between tabs (Links, Info, Cards)', vis() == ['p-cards'], vis())
         pg.keyboard.press('End'); check('W18 End goes to the last tab (Tools)', vis() == ['p-tools'], vis())
         n = pg.evaluate("document.querySelectorAll('#screenshots .hot').length"); check('W19 the numbered dots are on the pictures (%d)' % n, n >= 15, n)
-        pg.goto(B + '/#p-info'); pg.wait_for_timeout(400); check('W20 a link like /#p-info (used by the README) opens that tab', vis() == ['p-info'], vis()); c2.close()
-        c2 = ctx(java_script_enabled=False); pg = c2.new_page(); pg.goto(B + '/'); pg.wait_for_timeout(300)
+        pg.goto(B + '/#p-info'); until(lambda: vis() == ['p-info'], 3000); check('W20 a link like /#p-info (used by the README) opens that tab', vis() == ['p-info'], vis()); c2.close()
+        c2 = ctx(java_script_enabled=False); pg = c2.new_page(); pg.goto(B + '/')   # no script runs: the loaded page is final
         shown = pg.evaluate("[...document.querySelectorAll('#screenshots [role=tabpanel]')].filter(p => p.offsetParent !== null).length")
         check('W21 with scripts off the whole tour is still there (all 6 panels, no tabs)', shown == 6 and not pg.is_visible('#screenshots [role=tablist]'), shown); c2.close()
 
         # the look picker
-        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/'); pg.wait_for_timeout(200)
+        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
         btn = lambda: pg.evaluate("getComputedStyle(document.querySelector('.hcopy .btn.pri')).backgroundColor")
-        a = btn(); pg.click('.hcopy .look[data-look=pink]'); pg.wait_for_timeout(150)
+        a = btn(); pg.click('.hcopy .look[data-look=pink]'); until(lambda: btn() == 'rgb(255, 95, 162)', 3000)
         check('W22 picking the pink look re-colours the buttons and marks the choice', a != btn() and btn() == 'rgb(255, 95, 162)' and pg.get_attribute('.hcopy .look[data-look=pink]', 'aria-pressed') == 'true', (a, btn()))
-        pg.goto(B + '/faq/'); pg.wait_for_timeout(200)
+        pg.goto(B + '/faq/'); settle(pg)
         check('W23 the look is remembered on other pages', pg.evaluate("document.documentElement.dataset.look") == 'pink')
         pg.click('.foot .look[data-look=gold]'); check('W24 gold puts it back', pg.evaluate("document.documentElement.dataset.look") is None); c2.close()
 
         # the example Telegram chat
-        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/telegram/'); pg.wait_for_timeout(200)
-        before = pg.evaluate("document.querySelectorAll('#chat .msg').length"); pg.click('.cmd[data-cmd="/today"]'); pg.wait_for_timeout(700)
+        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/telegram/'); settle(pg)
+        before = pg.evaluate("document.querySelectorAll('#chat .msg').length"); pg.click('.cmd[data-cmd="/today"]'); until(lambda: pg.evaluate("document.querySelectorAll('#chat .msg').length") == before + 2 and 'Due today' in pg.evaluate("[...document.querySelectorAll('#chat .msg')].pop().textContent"), 5000)
         txt = pg.evaluate("[...document.querySelectorAll('#chat .msg')].slice(-2).map(m => m.textContent)")
         check('W25 tapping /today adds the command and a reply to the example chat', pg.evaluate("document.querySelectorAll('#chat .msg').length") == before + 2 and txt[0] == '/today' and 'Due today' in txt[1], txt)
-        pg.click('.cmd[data-cmd="/snooze Netflix 2h"]'); pg.wait_for_timeout(700); check('W26 and another command works too', 'Snoozed' in pg.evaluate("[...document.querySelectorAll('#chat .msg')].pop().textContent")); c2.close()
+        pg.click('.cmd[data-cmd="/snooze Netflix 2h"]'); until(lambda: 'Snoozed' in pg.evaluate("[...document.querySelectorAll('#chat .msg')].pop().textContent"), 5000); check('W26 and another command works too', 'Snoozed' in pg.evaluate("[...document.querySelectorAll('#chat .msg')].pop().textContent")); c2.close()
 
         # the tool finder
-        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/tools/'); pg.wait_for_timeout(200)
+        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/tools/'); settle(pg)
         count = lambda: pg.evaluate("[...document.querySelectorAll('.tool')].filter(t => !t.hidden).length")
         check('W27 the finder starts with all %d tools showing' % len(ids), count() == len(ids) and pg.inner_text('#tf-count') == '%d tools' % len(ids), count())
-        pg.fill('#tf-q', 'pdf'); pg.wait_for_timeout(150); n1 = count(); ok1 = pg.evaluate("[...document.querySelectorAll('.tool')].filter(t => !t.hidden).every(t => t.dataset.text.includes('pdf'))")
+        pg.fill('#tf-q', 'pdf'); until(lambda: 0 < count() < len(ids), 3000); n1 = count(); ok1 = pg.evaluate("[...document.querySelectorAll('.tool')].filter(t => !t.hidden).every(t => t.dataset.text.includes('pdf'))")
         check('W28 typing pdf narrows the list to tools about PDFs, and the count follows', 0 < n1 < len(ids) and ok1 and pg.inner_text('#tf-count').startswith('%d ' % n1), n1)
-        pg.fill('#tf-q', ''); pg.click('.chipbtn[data-cat=photos]'); pg.wait_for_timeout(150)
+        pg.fill('#tf-q', ''); pg.click('.chipbtn[data-cat=photos]'); until(lambda: pg.get_attribute('.chipbtn[data-cat=photos]', 'aria-pressed') == 'true' and count() == sum(1 for t in data['tools'] if t['cat'] == 'photos'), 3000)
         check('W29 the Photos chip shows only photo tools', count() == sum(1 for t in data['tools'] if t['cat'] == 'photos') and pg.get_attribute('.chipbtn[data-cat=photos]', 'aria-pressed') == 'true', count())
-        pg.click('.chipbtn[data-cat=all]'); pg.fill('#tf-q', 'zzzzqq'); pg.wait_for_timeout(150)
+        pg.click('.chipbtn[data-cat=all]'); pg.fill('#tf-q', 'zzzzqq'); until(lambda: count() == 0, 3000)
         check('W30 a search with no match says so', count() == 0 and pg.is_visible('#tf-none') and pg.inner_text('#tf-count') == '0 tools'); c2.close()
 
         # the FAQ
-        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/faq/'); pg.wait_for_timeout(200)
-        total = pg.evaluate("document.querySelectorAll('.faq details').length"); pg.fill('#faq-q', 'update'); pg.wait_for_timeout(150)
+        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/faq/'); settle(pg)
+        total = pg.evaluate("document.querySelectorAll('.faq details').length"); pg.fill('#faq-q', 'update'); until(lambda: pg.evaluate("[...document.querySelectorAll('.faq details')].filter(d => !d.hidden).length") < total, 3000)
         shown = pg.evaluate("[...document.querySelectorAll('.faq details')].filter(d => !d.hidden).length")
         check('W31 searching the questions for "update" narrows %d answers to %d' % (total, shown), 0 < shown < total and pg.inner_text('#faq-count').startswith('%d ' % shown), shown)
         pg.fill('#faq-q', ''); pg.click('.faq details:first-child summary'); check('W32 a question opens to show its answer', pg.evaluate("document.querySelector('.faq details').open") is True); c2.close()
 
         # the phone menu and the phone steps
-        c2 = ctx('dark', 390); pg = c2.new_page(); pg.goto(B + '/'); pg.wait_for_timeout(200)
+        c2 = ctx('dark', 390); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
         check('W33 on a phone the pill menu is replaced by a menu button', not pg.is_visible('.menu') and pg.is_visible('.mm summary'))
-        pg.click('.mm summary'); pg.wait_for_timeout(150); check('W34 the menu opens with the main pages', pg.is_visible('.mm nav a[href$="install/"]') and pg.is_visible('.mm nav a[href$="telegram/"]'))
-        pg.goto(B + '/phone/'); pg.wait_for_timeout(200); pg.click('#t-android'); pg.wait_for_timeout(100)
+        pg.click('.mm summary'); until(lambda: pg.is_visible('.mm nav a[href$="install/"]'), 3000); check('W34 the menu opens with the main pages', pg.is_visible('.mm nav a[href$="install/"]') and pg.is_visible('.mm nav a[href$="telegram/"]'))
+        pg.goto(B + '/phone/'); settle(pg); pg.click('#t-android'); until(lambda: pg.is_visible('#p-android'), 3000)
         check('W35 On your phone: choosing Android shows the Android steps only', pg.is_visible('#p-android') and not pg.is_visible('#p-ios') and 'Chrome' in pg.inner_text('#p-android')); c2.close()
 
         # moving between pages: the fade (where the browser has it) and the header that hides while scrolling down
-        c2 = ctx('dark', 1280); pg = c2.new_page(); pg.goto(B + '/'); pg.wait_for_timeout(300)
+        c2 = ctx('dark', 1280); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
         vt = pg.evaluate("CSS.supports('view-transition-name', 'a') ? getComputedStyle(document.querySelector('.top')).viewTransitionName : 'no fade in this browser'")
         check('W37 the header stays put while the page fades to the next one (browsers without the fade just change page)', vt in ('hh-top', 'no fade in this browser'), vt)
         pg.evaluate("document.documentElement.style.scrollBehavior = 'auto'"); pg.mouse.move(600, 500)
-        pg.evaluate("window.scrollTo(0, 400)"); pg.wait_for_timeout(80); pg.evaluate("window.scrollTo(0, 1200)"); pg.wait_for_timeout(450)
+        pg.evaluate("window.scrollTo(0, 400)"); pg.wait_for_timeout(80)   # on purpose: two scroll events, so the page sees the direction
+        pg.evaluate("window.scrollTo(0, 1200)"); until(lambda: pg.evaluate("document.querySelector('.top').getBoundingClientRect().bottom <= 1"), 3000)
         hid = pg.evaluate("document.querySelector('.top').getBoundingClientRect().bottom <= 1")
-        pg.evaluate("window.scrollTo(0, 1000)"); pg.wait_for_timeout(450)
+        pg.evaluate("window.scrollTo(0, 1000)"); until(lambda: pg.evaluate("Math.abs(document.querySelector('.top').getBoundingClientRect().top) < 1"), 3000)
         back = pg.evaluate("Math.abs(document.querySelector('.top').getBoundingClientRect().top) < 1")
         check('W38 the header slides away while scrolling down and comes back on a scroll up', hid and back, (hid, back)); c2.close()
 
         # axe, every page, both themes (this context bypasses the page policy, which would stop axe from running)
         for scheme in ('dark', 'light'):
-            c2 = b.new_context(color_scheme=scheme, bypass_csp=True, viewport={'width': 1280, 'height': 900}); found = []
+            c2 = b.new_context(color_scheme=scheme, bypass_csp=True, viewport={'width': 1280, 'height': 900}); c2.add_init_script(TRACK_REQUESTS); found = []
             def local(route):   # the 404 page names the real website address for its files: serve them from this build
                 f = os.path.join(SITE, route.request.url[len(BASE):].split('?')[0] or 'index.html')
                 if os.path.isdir(f): f = os.path.join(f, 'index.html')
                 route.fulfill(path=f) if os.path.isfile(f) else route.abort()
             c2.route(re.compile('^' + re.escape(BASE)), local); pg = c2.new_page()
             for u in URLS + ['/404.html']:
-                pg.goto(B + u); pg.wait_for_timeout(250); pg.evaluate(AXE); v = pg.evaluate(RUN)
+                pg.goto(B + u); settle(pg); pg.evaluate(AXE); v = pg.evaluate(RUN)
                 if v: found.append('%s: %s' % (u, '; '.join(v[:3])))
             check('W36 axe (WCAG 2.1 A and AA) finds nothing on any of %d pages in %s' % (len(URLS) + 1, scheme), not found, found[:4]); c2.close()
         b.close()
