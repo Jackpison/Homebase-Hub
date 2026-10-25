@@ -34,7 +34,12 @@ $all    = $site['bg']['photos'];
 $videos = array_values(array_filter($all, fn($i) => $i['type'] === 'video'));
 $images = array_values(array_filter($all, fn($i) => $i['type'] !== 'video'));
 $first = null;
-if ($site['uploads'] && ($rand() < $site['bg']['uploadChance'] || !$all)) $first = $pickFrom($site['uploads']);
+if ($site['bg']['theme'] === 'starter') {
+    // Starter: its backgrounds and your uploads take turns; a browser that has never been here starts with the first one (Black Hole)
+    $mine = array_merge($site['bg']['starter'], $site['uploads']);
+    $first = !$seen && $site['bg']['starter'] ? $site['bg']['starter'][0] : $pickFrom($mine);
+}
+if (!$first && $site['uploads'] && ($rand() < $site['bg']['uploadChance'] || !$all)) $first = $pickFrom($site['uploads']);
 if (!$first && $videos && ($rand() < $site['bg']['videoChance'] || !$images)) $first = $pickFrom($videos);
 if (!$first && $images) {
     // choose a source first, so a source with more saved photos isn't favoured
@@ -73,6 +78,9 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<?php if ($first && !empty($first['poster'])): ?>
+<link rel="preload" as="image" href="<?= $h($first['poster']) ?>">
+<?php endif; ?>
 <?php if ($first && ($first['type'] ?? 'image') === 'image'): ?>
 <?php if (!empty($first['p'])): ?>
 <link rel="preload" as="image" href="<?= $h(media_url(photo_portrait_name($first['url']))) ?>" media="(max-aspect-ratio: 3/4)" fetchpriority="low">
@@ -202,6 +210,11 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
   <div class="sheet-in">
     <header class="sh"><h2>Background</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
     <div class="sb">
+      <section>
+        <h3>Theme</h3>
+        <p class="hint">A theme is the set of backgrounds Home takes turns with. Your uploads join either one.</p>
+        <div class="themes" id="themeRows"></div>
+      </section>
       <section>
         <h3>Photo Sources</h3>
         <p class="hint">Photos and videos are saved on your server so they load fast. Up to <?= PHOTOS_PER_SOURCE ?> photos (<?= VIDEOS_PER_SOURCE ?> videos) per source are kept. Each is deleted after it's been shown <?= MAX_VIEWS ?> times and a new one is downloaded.</p>

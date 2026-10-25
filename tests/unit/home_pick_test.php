@@ -36,3 +36,16 @@ t('a new site says Welcome Home', default_site()['welcome'] === 'Welcome Home');
 t('a site saved before the setting existed also gets it', clean_site(['title' => 'Home'])['welcome'] === 'Welcome Home');
 t('empty means no welcome text', clean_site(['welcome' => ''])['welcome'] === '');
 t('the text is kept to 80 characters', mb_strlen(clean_site(['welcome' => str_repeat('a', 200)])['welcome']) === 80);
+
+// Starter theme
+$st = starter_list();
+t('Starter lists its backgrounds in order, Black Hole first, each video with its still picture',
+  array_column($st, 'url') === ['starter/black-hole.mp4', 'starter/luminous-fluid.mp4', 'starter/mountains.jpg', 'starter/abstract.webp', 'starter/forest-lake.jpg']
+  && $st[0]['type'] === 'video' && $st[0]['poster'] === 'starter/black-hole.jpg' && !isset($st[2]['poster']), json_encode(array_column($st, 'url')));
+@unlink($site . '/web/home/starter/black-hole.mp4');
+t('a video whose file is not there yet is left out (the still pictures come one release earlier)', array_column(starter_list(), 'url')[0] === 'starter/luminous-fluid.mp4');
+t('a new site starts with the Starter theme', default_site()['bg']['theme'] === 'starter' && default_site()['bg']['starterOff'] === false);
+t('a site saved before themes existed keeps Online Photos', clean_site(['bg' => ['dim' => 0.3]])['bg']['theme'] === 'online');
+t('Remove (starterOff) always means Online Photos', clean_site(['bg' => ['theme' => 'starter', 'starterOff' => true]])['bg']['theme'] === 'online');
+t('an unknown theme falls back to Online Photos', clean_site(['bg' => ['theme' => 'nope']])['bg']['theme'] === 'online');
+t('the first visit picks the first Starter background', strpos($index, "!\$seen && \$site['bg']['starter'] ? \$site['bg']['starter'][0]") !== false);

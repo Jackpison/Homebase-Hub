@@ -156,6 +156,8 @@ try:
         wp.wait_for_timeout(4600); gone = wp.evaluate("!document.querySelector('#welcome')")
         wp.reload(wait_until='domcontentloaded'); wp.wait_for_timeout(600); again = wp.evaluate("!!document.querySelector('#welcome.in')")
         check('P17 Home shows "Welcome Home" in the middle with the links hidden, it fades away, and not again on a reload', w1 and w1[0] == 'Welcome Home' and w1[1] and float(w1[2]) < 0.2 and gone and not again, (w1, gone, again))
+        bgnow = wp.evaluate("(() => { const n = document.querySelector('#bg .on'); return n ? (n.currentSrc || n.src) : '' })()")
+        check('P18 a new site shows the Starter theme (its own pictures, nothing downloaded from other sites)', '/web/home/starter/' in bgnow and not wp.evaluate("window.PUB.bg.photos.length") and wp.evaluate("window.PUB.bg.theme") == 'starter', bgnow)
         wctx.close()
         b.close()
 finally:

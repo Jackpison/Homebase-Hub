@@ -27,7 +27,7 @@ const UP_MAX_ZIP   = 134217728;   // 128 MB: the whole upload
 const UP_MAX_FILES = 3000;
 const UP_MAX_FILE  = 83886080;    // 80 MB: one file inside
 const UP_MAX_TOTAL = 419430400;   // 400 MB: everything once unpacked
-const UP_EXT = ['php', 'js', 'css', 'html', 'json', 'txt', 'md', 'htaccess', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'woff', 'woff2', 'ttf', 'otf', 'wasm', 'traineddata', 'onnx', 'map', 'mjs', 'xml', 'bcmap', 'pfb'];
+const UP_EXT = ['php', 'js', 'css', 'html', 'json', 'txt', 'md', 'htaccess', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'woff', 'woff2', 'ttf', 'otf', 'wasm', 'traineddata', 'onnx', 'map', 'mjs', 'xml', 'bcmap', 'pfb', 'mp4'];
 
 function up_root(): string { return rtrim(str_replace('\\', '/', HUB_PUBLIC), '/'); }
 function up_dir(): string { return hub_dir('updates'); }

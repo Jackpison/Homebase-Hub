@@ -143,6 +143,18 @@ const BG = {
 
   load(item){
     return new Promise((res, rej) => {
+      // a video with a still picture: the picture shows at once, and stays where the video can't play (AV1 on an older browser, data saver, Reduce Motion)
+      if (item.type === 'video' && item.poster){
+        const v = document.createElement('video');
+        const still = () => { const img = new Image(); img.alt = ''; img.onload = () => res(img); img.onerror = () => rej(new Error('load')); img.src = media(item.poster); };
+        if (navigator.connection?.saveData || REDUCED || (/\.mp4$/i.test(item.url) && !v.canPlayType('video/mp4; codecs="av01.0.08M.08"'))) return still();
+        Object.assign(v, { muted:true, loop:true, autoplay:true, playsInline:true, preload:'auto', poster:media(item.poster) });
+        v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
+        v.onerror = () => { v.remove(); const cur = this.el.lastElementChild; if (cur === v) this.show({ ...item, type:'image', url:item.poster }, { count:false }); };
+        const pre = new Image(); pre.onload = pre.onerror = () => res(v); pre.src = v.poster;   // ready as soon as its still picture is
+        v.src = media(item.url);
+        return;
+      }
       if (item.type === 'video'){
         const v = document.createElement('video');
         Object.assign(v, { muted:true, loop:true, autoplay:true, playsInline:true, preload:'auto' });
@@ -194,6 +206,10 @@ const BG = {
     const images = all.filter(i => i.type !== 'video');
     const ups = (PUB.uploads || []).filter(u => !(saveData && u.type === 'video'));
 
+    if (PUB.bg.theme === 'starter'){   // Starter: its own backgrounds and your uploads take turns
+      const mine = [...(PUB.bg.starter || []), ...ups].filter(i => !(saveData && i.type === 'video' && !i.poster));
+      return mine.length ? pick(fresh(mine)) : null;
+    }
     if (ups.length && (Math.random() < PUB.bg.uploadChance || (!images.length && !videos.length))) return pick(fresh(ups));
     if (videos.length && (Math.random() < PUB.bg.videoChance || !images.length)) return pick(fresh(videos));
     if (images.length){
@@ -282,6 +298,8 @@ const BG = {
     if (min > 0) this.timer = setInterval(() => { if (!document.hidden) this.next(); }, min * 60000);
   },
 };
+// videos pause while the tab is hidden, so they don't use battery in the background
+document.addEventListener('visibilitychange', () => document.querySelectorAll('#bg video').forEach(v => { if (document.hidden) v.pause(); else v.play().catch(() => {}); }));
 function motionOn(){ return (editing && ADMIN ? ADMIN.bg.motion : PUB.bg.motion) && !REDUCED; }
 const BG_REMEMBER = 30;   // the same as BG_REMEMBER in lib.php
 /** A short tag for a background's address (FNV-1a, 32 bits, hex); bg_tag() in lib.php gives the same. */
@@ -419,7 +437,7 @@ async function saveAll(msg = 'Saved'){
   return r;
 }
 function stripAdmin(a){
-  const { uploadsAdmin, sourceInfo, keyInfo, poolStats, limits, ...rest } = a;
+  const { uploadsAdmin, sourceInfo, keyInfo, poolStats, limits, starterInfo, ...rest } = a;
   return rest;
 }
 
@@ -682,7 +700,7 @@ function openBg(){
   bgDraft = structuredClone(ADMIN.bg);
   bgDraft.custom = bgDraft.custom || [];
   customDirty = false;
-  renderSources(); renderKeys(); renderCustom();
+  renderThemes(); renderSources(); renderKeys(); renderCustom();
   $('#bgQuery').value = bgDraft.query;
   $('#bgVideo').value = Math.round(bgDraft.videoChance * 100);
   $('#videoVal').textContent = $('#bgVideo').value + '%';
@@ -695,6 +713,30 @@ function openBg(){
   renderThumbs(ADMIN.uploadsAdmin || []);
   openSheet('bgSheet');
 }
+/* Theme cards: Starter (comes with the app; Remove hides it, Bring Back shows it again) and Online Photos (the sources below) */
+function renderThemes(){
+  const st = ADMIN.starterInfo || [], on = bgDraft.theme || 'online', off = !!bgDraft.starterOff;
+  const thumb = i => `<img src="${esc(media(i.poster || i.url))}" alt="" loading="lazy">`;
+  const vids = st.filter(i => i.type === 'video').length, pics = st.length - vids;
+  const what = [vids ? vids + (vids === 1 ? ' video' : ' videos') : '', pics ? pics + (pics === 1 ? ' photo' : ' photos') : ''].filter(Boolean).join(', ');
+  const card = (id, name, about, thumbs, acts) => `<div class="theme${on === id ? ' on' : ''}" data-theme="${id}"><div class="theme-mos">${thumbs}</div>
+    <div class="theme-b"><b>${name}${on === id ? ' <span class="pill">In Use</span>' : ''}</b><small>${about}</small><div class="theme-acts">${acts}</div></div></div>`;
+  $('#themeRows').innerHTML = (off
+      ? `<div class="theme off"><div class="theme-b"><b>Starter</b><small>Removed. It comes with the app, so you can bring it back.</small><div class="theme-acts"><button type="button" class="btn small" data-t="back">Bring Back Starter</button></div></div></div>`
+      : card('starter', 'Starter', esc(what || 'Comes with the app') + (st[0] ? ' · ' + esc(st[0].credit) + ' first' : ''), st.slice(0, 5).map(thumb).join(''),
+          (on === 'starter' ? '' : '<button type="button" class="btn small primary" data-t="use-starter">Use</button>') + '<button type="button" class="btn small danger" data-t="remove">Remove</button>'))
+    + card('online', 'Online Photos', 'The photo sources below. New photos arrive by themselves.', '<span class="theme-ph">Picsum · Bing · Wikimedia · Wallhaven</span>',
+        on === 'online' ? '' : '<button type="button" class="btn small primary" data-t="use-online">Use</button>');
+}
+$('#themeRows').addEventListener('click', e => {
+  const b = e.target.closest('[data-t]'); if (!b) return;
+  const t = b.dataset.t;
+  if (t === 'use-starter') bgDraft.theme = 'starter';
+  else if (t === 'use-online') bgDraft.theme = 'online';
+  else if (t === 'remove'){ bgDraft.starterOff = true; bgDraft.theme = 'online'; }
+  else if (t === 'back'){ bgDraft.starterOff = false; bgDraft.theme = 'starter'; }
+  renderThemes();
+});
 function renderSources(){
   const info = ADMIN.sourceInfo, stats = ADMIN.poolStats || {};
   $('#sourceRows').innerHTML = Object.entries(info).filter(([, s]) => !s.custom).map(([k, s]) => {

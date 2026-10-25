@@ -14,6 +14,10 @@ TREE = os.path.join(OUT, 'tree')
 SKIP_MANIFEST = ('web/core-data/config.php',)
 SKIP_PREFIX = ('web/core-data/data/',)
 KEEP_DIRS = []  # empty folders recreated from .gitkeep
+# File types just added to UP_EXT: installed sites check a zip with their *own* older list, so files of these types
+# stay out of the zip for one release (they wait in src/). Empty this set in the release after the one that added them.
+# mp4: added in 1.49.0 for the Starter theme's two videos (web/home/starter/*.mp4); ship them from 1.49.1 on.
+NOT_YET = {'mp4'}
 
 def version():
     t = open(os.path.join(ROOT, 'src/web/core-data/lib/boot.php'), encoding='utf-8').read()
@@ -35,6 +39,12 @@ def main():
             sys.exit('Refusing to build: %s exists in the source tree (it is private data and must never be shipped). Delete it.' % bad)
     shutil.rmtree(OUT, ignore_errors=True)
     shutil.copytree(os.path.join(ROOT, 'src'), TREE)
+    held = []
+    for dp, dn, fns in os.walk(TREE):
+        for fn in fns:
+            if '.' in fn and fn.rsplit('.', 1)[-1].lower() in NOT_YET:
+                os.remove(os.path.join(dp, fn)); held.append(fn)
+    if held: print('held back for the next release (installed sites do not accept them yet): ' + ', '.join(sorted(held)))
     # readable copy + minify (own files only)
     pages = ['core-data', 'home', 'links', 'info', 'cards', 'tasks', 'settings']
     for page in pages:

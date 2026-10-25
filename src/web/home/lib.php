@@ -52,6 +52,16 @@ const API_KEYS = [
 const ROTATE_CHOICES = [0, 1, 5, 15, 30];
 const BG_REMEMBER = 30;   // each browser remembers this many backgrounds it showed last, and shows them again only when nothing else is left
 const WELCOME_DEFAULT = 'Welcome Home';
+/* The Starter theme: backgrounds that come with the app (web/home/starter/), in the order a new site shows them (Black Hole first).
+   A video's poster is shown at once and wherever the video can't play (AV1 needs a fairly new browser; older Safari shows the poster). */
+const STARTER = [
+    ['file' => 'black-hole.mp4',     'type' => 'video', 'poster' => 'black-hole.jpg',     'credit' => 'Black Hole'],
+    ['file' => 'luminous-fluid.mp4', 'type' => 'video', 'poster' => 'luminous-fluid.jpg', 'credit' => 'Luminous Glowing Fluid'],
+    ['file' => 'mountains.jpg',      'type' => 'image', 'credit' => 'Photo from Unsplash'],
+    ['file' => 'abstract.webp',      'type' => 'image', 'credit' => 'Photo from Unsplash'],
+    ['file' => 'forest-lake.jpg',    'type' => 'image', 'credit' => 'Photo from Unsplash'],
+];
+const THEMES = ['starter', 'online'];
 
 /* ================= storage ================= */
 
@@ -104,6 +114,8 @@ function default_site(): array
             'motion'       => true,
             'rotate'       => 0,
             'custom'       => [],
+            'theme'        => 'starter',   // a new site starts with the Starter theme; sites from before 1.49 keep Online Photos
+            'starterOff'   => false,
         ],
         'panel' => ['opacity' => 0.40, 'blur' => 22],
         'welcome' => WELCOME_DEFAULT,
@@ -209,6 +221,8 @@ function clean_site(array $in): array
             'motion'       => (bool) ($b['motion'] ?? true),
             'rotate'       => in_array($rotate, ROTATE_CHOICES, true) ? $rotate : 0,
             'custom'       => $custom,
+            'starterOff'   => $starterOff = (bool) ($b['starterOff'] ?? false),
+            'theme'        => !$starterOff && in_array($b['theme'] ?? '', THEMES, true) ? $b['theme'] : 'online',
         ],
         'panel' => [
             'opacity' => max(0, min(1, (float) ($pn['opacity'] ?? $def['panel']['opacity']))),
@@ -321,6 +335,8 @@ function public_payload(): array
         if (count($mine) < source_target($src, $s) && (!$e || ($e['time'] ?? 0) < time() - 1800)) $need = true;
         foreach ($mine as $i) $photos[] = pool_public($i);
     }
+    $theme = $s['bg']['theme'] ?? 'online';
+    if ($theme === 'starter') { $photos = []; $need = false; }   // the Starter theme uses only its own backgrounds (and your uploads): nothing is downloaded
     return [
         'title'   => $s['title'],
         'icon'    => '',   // no separate start page icon: the site logo is used
@@ -333,6 +349,8 @@ function public_payload(): array
             'dim'          => $s['bg']['dim'],
             'motion'       => $s['bg']['motion'],
             'rotate'       => $s['bg']['rotate'],
+            'theme'        => $theme,
+            'starter'      => $theme === 'starter' ? starter_list() : [],
             'photos'       => $photos,
             'refill'       => $need,
         ],
@@ -342,6 +360,19 @@ function public_payload(): array
 }
 
 /* ================= which background next ================= */
+
+/** The Starter theme's backgrounds whose files are here (a video arrives one release after its still picture). */
+function starter_list(): array
+{
+    $out = [];
+    foreach (STARTER as $i) {
+        if (!is_file(__DIR__ . '/starter/' . $i['file'])) continue;
+        $o = ['url' => 'starter/' . $i['file'], 'type' => $i['type'], 'credit' => $i['credit'], 'link' => '', 'src' => 'starter'];
+        if (!empty($i['poster']) && is_file(__DIR__ . '/starter/' . $i['poster'])) $o['poster'] = 'starter/' . $i['poster'];
+        $out[] = $o;
+    }
+    return $out;
+}
 
 /** A short tag for a background's address (FNV-1a, 32 bits, hex). app.js has the same one (bgTag), so both remember the same pictures. */
 function bg_tag(string $url): string
