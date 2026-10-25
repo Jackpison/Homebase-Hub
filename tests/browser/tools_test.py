@@ -151,7 +151,7 @@ try:
         check('I11 Image Editor: more brightness makes a brighter photo', lum(img(open(d.value.path(), 'rb').read())) > lum(PI.open(FIX)) + 20)
 
         open_tool('img-watermark'); data, name = go('Add to All and Save', FIX)
-        check('I12 Watermark Images: same size, and the photo changed', img(data).size == (800, 600) and list(img(data).convert('RGB').getdata())[::997] != list(PI.open(FIX).convert('RGB').getdata())[::997], name)
+        check('I12 Watermark Images: same size, and the photo changed', img(data).size == (800, 600) and list(img(data).convert('RGB').get_flattened_data())[::997] != list(PI.open(FIX).convert('RGB').get_flattened_data())[::997], name)
 
         open_tool('img-colors'); pg.set_input_files('#root .dropwrap input[type=file]', HEIC); wait_js(pg, "document.querySelectorAll('#root .sw').length >= 4", 60000)
         hexes = pg.evaluate("[...document.querySelectorAll('#root .flist .out')].map(x => x.textContent)")

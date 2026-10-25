@@ -18,10 +18,16 @@ These run on your own computer. Nothing here is part of the update zip.
 `php tests/unit/run.php` runs every `tests/unit/*_test.php` on its own fresh copy of `src/`. Telegram is replaced by `telegram_stub.php`, a local stand-in, through `NT_TEST_API`, which only the tests define. It takes a few seconds and needs only PHP 8.3 with openssl and curl.
 
 - `snooze_test.php`: the Snooze buttons, `/snooze`, the daily digest and the Due Now card.
+- `telegram_test.php`: login alerts (off, on, paused logins, a restore), the bot's commands (`/help`, `/add`, `/today`, `/week`, `/done`, `/status`, `/backup`, a message from another chat), the backup file it sends, token checks and device names, and that a task or site name with `<` or `&` can never break a message (Telegram refuses stray HTML).
+- `home_pick_test.php`: Home's backgrounds (no repeats; the tags match `app.js`), Welcome Text, the Starter theme and your own themes.
 - `nav_settings_test.php`: the bar style is top, side or dock; a new site takes the setup browser's time zone and Follow Device, while existing sites keep theirs.
 - `logic_test.php`: `/add` parsing, money, repeat dates, completing tasks, the Favicon helpers, the PHP support notice, safe names in an update zip, backup encryption, and a check that no PHP file defines a test shortcut.
 
 Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen', $ok)`.
+
+## Visual changes
+
+`python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip previous.zip OUTDIR` installs both zips with the same demo data, photographs ten views (Home, Links, Info, Cards, Tasks, Tools, Settings, Look, and Cards and Links on a phone) in Chromium, and writes `OUTDIR/<view>-before.png`, `-after.png`, `-diff.png` (changed pixels in red) and `summary.md` (how much of each view changed). It is a report, not a test: it fails only when a view cannot be shown or is not logged in. CI runs it against the last release on every push (job "visual changes since the last release"): the table is in the job summary and the pictures in the `visual-changes` artifact. Look at it before a release, together with the screenshots the owner asked for.
 
 ## Static analysis
 

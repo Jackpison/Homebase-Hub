@@ -79,7 +79,7 @@ function nt_tg(string $token, string $method, array $params = []): array {
 /** Sends a file (multipart upload; bots may send up to 50 MB). */
 function nt_tg_file(string $token, string $chat, string $path, string $name, string $caption): array {
     if (!nt_token_ok($token)) return ['ok' => false, 'description' => 'The bot token is missing or not valid.'];
-    $url = 'https://api.telegram.org/bot' . $token . '/sendDocument';
+    $url = (defined('NT_TEST_API') ? NT_TEST_API : 'https://api.telegram.org') . '/bot' . $token . '/sendDocument';   // the same test stand-in as nt_tg()
     $fields = ['chat_id' => $chat, 'caption' => mb_substr($caption, 0, 1000), 'parse_mode' => 'HTML'];
     $raw = false; $err = '';
     if (function_exists('curl_init')) {

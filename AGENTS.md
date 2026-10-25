@@ -52,6 +52,7 @@ python3 tests/browser/pages_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/nav_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/a11y_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/website_test.py build/site            # after python3 tools/make-site.py --no-guide
+python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip <previous release zip> build/visual   # a report of what changed on screen
 sudo sh tests/server/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/server/apache_test.py
 ```
 

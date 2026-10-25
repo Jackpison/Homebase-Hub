@@ -18,6 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         php: ['8.3', '8.4', '8.5']
+    timeout-minutes: 15
     name: build (PHP ${{ matrix.php }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -49,10 +50,11 @@ jobs:
           unzip -l build/site-update-*.zip | grep -q 'web/docs/CHANGELOG.md'
           ! ls build/site-update-*.zip | grep -q '_'
 
-  tests:
-    # The update tests, the Tools and page tests in a real browser, and the accessibility check, on every push.
+  server:
+    # Updates, hostile zips and the core features: PHP and Python only, no browser to install. Runs beside the browser jobs.
     runs-on: ubuntu-latest
-    name: tests (updates, browser, accessibility)
+    timeout-minutes: 20
+    name: server (updates, hostile zips, core)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
@@ -65,9 +67,8 @@ jobs:
         run: |
           npm ci
           pip install -r tests/requirements.txt
-          python -m playwright install --with-deps chromium
-      - name: Build the zip and the website
-        run: python3 tools/build.py && python3 tools/make-site.py --no-guide
+      - name: Build the zip
+        run: python3 tools/build.py
       - name: Get the previous and an older release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -84,49 +85,134 @@ jobs:
           gh release download "$PREV" -p 'site-update-*.zip' -D rel-prev
           gh release download v1.37.0 -p 'site-update-*.zip' -D rel-old
       - name: Update tests
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/server/update_test.py build/site-update-*.zip rel-prev/site-update-*.zip rel-old/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "updates"
       - name: Hostile update zips
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/server/update_attack_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "hostile zips"
+      - name: Core features (backup, two-step login, Start Over, lockout, security token)
+        if: success() || failure()
+        run: |
+          set -o pipefail
+          python3 tests/server/core_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "core"
+
+  tests:
+    # Every page in a real browser (Chromium), the accessibility check and the website, on every push.
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    name: tests (browser, accessibility, website)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24', cache: npm }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
+      - name: Keep the downloaded browser between runs
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
+      - name: Tools for the tests
+        run: |
+          npm ci
+          pip install -r tests/requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Build the zip and the website
+        run: python3 tools/build.py && python3 tools/make-site.py --no-guide
       - name: Install on a phone (manifest, icons, head tags, Settings card, Chromium installability)
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/browser/app_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "app"
       - name: Settings and Home (Telegram backup button, GitHub link, upload limit, config.json clean-up)
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/browser/settings_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "settings"
       - name: Links Import Bookmarks
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/browser/import_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "import chromium"
-      - name: Core features (backup, two-step login, Start Over, lockout, security token)
-        run: |
-          set -o pipefail
-          python3 tests/server/core_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "core"
       - name: Tools in a browser
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/browser/tools_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "tools chromium"
       - name: Pages in a browser
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/browser/pages_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "pages chromium"
       - name: The bar in all three styles (computer and phone)
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/browser/nav_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "nav chromium"
       - name: Accessibility
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/browser/a11y_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "a11y chromium"
       - name: Website (links, security policy, interactions, phone layout, accessibility in dark and light)
+        if: success() || failure()
         run: |
           set -o pipefail
           python3 tests/browser/website_test.py build/site 2>&1 | python3 tests/lib/annotate.py "website chromium"
+
+  visual:
+    # What changed on screen since the last release: the same pages from both zips, photographed on this machine and compared.
+    # A report (job summary and the visual-changes artifact), not a gate: it fails only when a page cannot be shown.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    name: visual changes since the last release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24', cache: npm }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
+      - name: Keep the downloaded browser between runs
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
+      - name: Tools for the comparison
+        run: |
+          npm ci
+          pip install -r tests/requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Build the zip
+        run: python3 tools/build.py
+      - name: Get the previous and an older release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PREV=$(python3 - <<'PY'
+          import json, re, subprocess
+          cur = re.search(r"define\('HUB', '([^']+)'\)", open('src/web/core-data/lib/boot.php').read()).group(1)
+          v = lambda s: tuple(int(x) for x in s.split('.'))
+          tags = [t['tagName'] for t in json.loads(subprocess.check_output(['gh', 'release', 'list', '--limit', '100', '--json', 'tagName']))]
+          print(max((t for t in tags if re.match(r'^v\d+\.\d+\.\d+$', t) and v(t[1:]) < v(cur)), key=lambda t: v(t[1:])))
+          PY
+          )
+          echo "previous release: $PREV"
+          gh release download "$PREV" -p 'site-update-*.zip' -D rel-prev
+          gh release download v1.37.0 -p 'site-update-*.zip' -D rel-old
+      - name: Photograph and compare
+        run: python3 tests/browser/visual_compare.py build/site-update-*.zip rel-prev/site-update-*.zip build/visual
+      - name: Keep the pictures
+        if: success() || failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with: { name: visual-changes, path: build/visual, retention-days: 14, if-no-files-found: ignore }
 
   browsers:
     # The page and Tools tests (and accessibility on Firefox) in the other two engines, one job each so they run side by side
@@ -136,6 +222,7 @@ jobs:
       fail-fast: false
       matrix:
         browser: [firefox, webkit]
+    timeout-minutes: 25
     name: browser (${{ matrix.browser }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -145,6 +232,11 @@ jobs:
         with: { node-version: '24', cache: npm }
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
+      - name: Keep the downloaded browser between runs
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
       - name: Tools for the tests
         run: |
           npm ci
@@ -186,6 +278,7 @@ jobs:
   apache:
     # Installing Apache takes about five minutes on a fresh runner, so it runs beside the other tests instead of after them.
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     name: apache (the .htaccess files)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
