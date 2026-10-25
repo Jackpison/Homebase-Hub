@@ -9,7 +9,7 @@ from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, SEED
-from helpers import browser_name, launch, CSP_REPORTER
+from helpers import browser_name, launch, CSP_REPORTER, TRACK_REQUESTS, settle, until
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 AXE_PATH, d = None, ROOT   # npm puts it in the nearest node_modules: the repo's, or a parent folder's
@@ -48,23 +48,24 @@ try:
             ctx = b.new_context(bypass_csp=True, user_agent=UA, viewport={'width': 1280, 'height': 860})
             ctx.add_cookies([{'name': c.name, 'value': c.value, 'url': B + '/'} for c in cj])
             ctx.add_init_script("try{localStorage.setItem('ix-seen-ver','%s');localStorage.setItem('hub-theme','%s')}catch(e){}" % (ver, theme))
+            ctx.add_init_script(TRACK_REQUESTS)
             ctx.route('**/*', lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith(('data:', 'blob:')) else r.abort())
             pg = ctx.new_page()
             for name, url in pages:
-                pg.goto(B + url); pg.wait_for_timeout(1400); check('%s (%s)' % (name, theme), scan(pg))
+                pg.goto(B + url); settle(pg); check('%s (%s)' % (name, theme), scan(pg))
             # Links > Import Bookmarks, open with a preview
-            pg.goto(B + '/web/links/'); pg.wait_for_timeout(1400)
+            pg.goto(B + '/web/links/'); settle(pg)
             pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]', timeout=10000)
-            pg.set_input_files('#impFile', os.path.join(FIX, 'bookmarks', 'chrome.html')); pg.wait_for_timeout(600)
+            pg.set_input_files('#impFile', os.path.join(FIX, 'bookmarks', 'chrome.html')); until(lambda: pg.evaluate("document.querySelector('#impPrev').textContent.length > 0"), 10000); settle(pg)
             check('Links: Import Bookmarks dialog (%s)' % theme, scan(pg))
             # the bar in each style, on a computer and on a phone, with the phone panel (Sidebar) and sheet (Bottom Dock) open
             for nav in ('side', 'dock', 'top'):
-                pg.evaluate("window.__ixShell.api('settings', {settings: {nav: '%s'}})" % nav); pg.wait_for_timeout(300)
+                pg.evaluate("window.__ixShell.api('settings', {settings: {nav: '%s'}})" % nav)   # evaluate waits for the save to answer
                 for size, vp in (('computer', {'width': 1280, 'height': 860}), ('phone', {'width': 390, 'height': 844})):
-                    pg.set_viewport_size(vp); pg.goto(B + '/web/links/'); pg.wait_for_timeout(1200)
+                    pg.set_viewport_size(vp); pg.goto(B + '/web/links/'); settle(pg)
                     check('Bar: %s, %s (%s)' % (nav, size, theme), scan(pg))
                     if size == 'phone' and nav != 'top':
-                        pg.click('#ix-bar .ix-fab'); pg.wait_for_timeout(500)
+                        pg.click('#ix-bar .ix-fab'); settle(pg)
                         check('Bar: %s, phone, %s open (%s)' % (nav, 'panel' if nav == 'side' else 'sheet', theme), scan(pg))
                 pg.set_viewport_size({'width': 1280, 'height': 860})
             ctx.close()

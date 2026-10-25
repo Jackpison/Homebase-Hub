@@ -223,6 +223,29 @@ def browser_login(pg, base, pw=PW, timeout=15000):
     return said or 'not logged in'
 
 
+# Counts the page's own requests in flight (fetch and XMLHttpRequest). Add it with context.add_init_script(TRACK_REQUESTS)
+# before the pages load; settle() then knows when the data has arrived.
+TRACK_REQUESTS = """(() => { if (window.__inflightOn) return; window.__inflightOn = true; let n = 0;
+  const f = window.fetch; window.fetch = function () { n++; return f.apply(this, arguments).finally(() => { n--; }); };
+  const send = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.send = function () { n++; this.addEventListener('loadend', () => { n--; }); return send.apply(this, arguments); };
+  Object.defineProperty(window, '__inflight', { get: () => n }); })()"""
+SETTLED = ("document.readyState === 'complete' && (window.__inflight || 0) === 0 && document.fonts.status === 'loaded' && "
+           "document.getAnimations().every(a => a.playState !== 'running' || !isFinite(a.effect.getTiming().iterations))")
+
+
+def settle(pg, timeout=10000):
+    """Waits until the page has settled: loaded, no request of its own in flight (needs TRACK_REQUESTS), fonts loaded, and no
+    fade or slide still running (endless spinners do not count). True twice in a row, 150 ms apart. Returns False on timeout."""
+    end = time.time() + timeout / 1000; last = False
+    while time.time() < end:
+        try: ok = bool(pg.evaluate(SETTLED))
+        except Exception: ok = False
+        if ok and last: return True
+        last = ok; time.sleep(0.15)
+    return False
+
+
 def until(fn, timeout=10000, step=100):
     """Calls fn() until it returns something true (returned) or the time is up (returns the last result). For waits whose
     result a check reads next: a fixed pause either wastes time or is too short on a slow machine; this is neither."""
