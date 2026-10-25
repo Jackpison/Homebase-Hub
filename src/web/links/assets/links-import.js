@@ -43,7 +43,11 @@
     const head = text.slice(0, 4096), ctl = (head.match(/[\u0000-\u0008\u000e-\u001a]/g) || []).length;
     if (ctl > 8 || !/<dt[\s>]/i.test(text) || !/<a[\s>]/i.test(text) && !/<h3[\s>]/i.test(text))
       throw new Error('That file is not a bookmarks export. In your browser, open the bookmarks manager and choose Export Bookmarks (an .html file).');
-    const doc = new DOMParser().parseFromString(text, 'text/html');   // a parsed document never runs scripts or loads images
+    // Bookmark exports never hold pictures or event handlers. Take them out before parsing, so a hostile file cannot even make the
+    // browser try one (a parsed document never runs them, but newer Chromium still reports the blocked onerror of an <img> in it).
+    let safe = text.replace(/<\/?(img|image|picture|source|svg|video|audio|track|iframe|object|embed|link)\b[^>]*>/gi, '');
+    for (let i = 0; i < 20 && /<[^>]*\son[a-z]+\s*=/i.test(safe); i++) safe = safe.replace(/(<[^>]*?)\son([a-z]+)\s*=/gi, '$1 data-x-on$2=');
+    const doc = new DOMParser().parseFromString(safe, 'text/html');   // a parsed document never runs scripts or loads images
     // the top list: where the first entry sits (inside the outer <DL> in most exports; straight in the page in some Safari ones)
     const first = doc.querySelector('dt');
     let root = first && first.parentElement;
