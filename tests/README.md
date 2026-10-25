@@ -43,7 +43,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 
 - `python3 scripts/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
 - `zizmor --offline --persona=auditor .github/workflows/` (zizmor 1.30.1 from pip): Trail of Bits' checker for workflow files, at its strictest setting. Fix what it finds; never silence it.
-- `python3 tests/repo/ci_changes_test.py`: which changes count as docs only (`scripts/ci_changes.py`): then CI's slow jobs (server, tests, visual, browsers, apache) skip themselves and the `ci-ok` job still passes; any doubt runs everything.
+- `python3 tests/repo/ci_changes_test.py`: which changes count as docs only (`scripts/ci_changes.py`): then CI's slow jobs (server, visual, browsers, apache) skip themselves and the `ci-ok` job still passes; any doubt runs everything.
 - `python3 tests/repo/ci_status_test.py`: the release waits for CI on the tagged commit (`scripts/ci_status.py`, up to 20 minutes) and refuses to build unless every job passed; this tests that decision with made-up check runs.
 - `python3 tests/repo/workflows_test.py`: the workflow files keep their safety settings: every outside Action pinned to a full commit SHA, `persist-credentials: false` on every checkout, a time limit on every job, `npm ci --ignore-scripts` everywhere (also in `build-tools.py`), CI checks the committed Tools against a fresh build, the release checks CI before it builds, `ci-ok` needs every other job, and only the slow jobs skip on a docs-only change.
 - `python3 tests/repo/release_test.py`: tests `release.py` itself on a temporary copy of the repo (a bump, then each thing broken in turn must fail the check). Needs git.
@@ -127,7 +127,7 @@ Colours are CSS `light-dark()` values, so one set follows the device; `theme.js`
 
 ## Browser tests
 
-Need Playwright with Chromium (`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`). `pages_test.py`, `nav_test.py`, `tools_test.py` and `a11y_test.py` take `--browser chromium|firefox|webkit` (default Chromium; install the engine first with `python3 -m playwright install firefox webkit`). CI runs the page, bar and Tools tests on Firefox and WebKit, and the accessibility check on Firefox, in the jobs `browser (firefox)` and `browser (webkit)`.
+Need Playwright with Chromium (`pip install -r tests/requirements.txt`, then `python3 -m playwright install chromium`). `pages_test.py`, `nav_test.py`, `tools_test.py` and `a11y_test.py` take `--browser chromium|firefox|webkit` (default Chromium; install the engine first with `python3 -m playwright install firefox webkit`). CI runs the browser tests in six jobs side by side, `browser (<chromium|firefox|webkit>, <a|b>)`: part a has Import Bookmarks, pages and the bar (plus install and Settings in Chromium), part b has Tools, the website and accessibility (Chromium and Firefox).
 
 Checks skipped in an engine: none. A check that cannot work in an engine is skipped by name, with the reason written here.
 
