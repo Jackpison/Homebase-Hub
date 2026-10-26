@@ -228,6 +228,21 @@ try:
               v[0] is None and v[1] and not v[2] and v[3] <= 1 and 'Lakeside Weekend' not in html and not asked, (v, asked))
         check('P29 Home asks no other site for anything (logged in or not), with no page error', not outside and not herr, (outside[:3], herr[:2]))
         vctx.close()
+        # P30-P31: Links Settings > Icons from Google (1.51). Off at first: a link with no icon saved on the server shows its letter,
+        # and the browser asks Google nothing (also not for an old saved service address). On: the browser asks the service.
+        def links_data(web):
+            code = ("require '%s/web/hub/core/lib/boot.php'; hub_write_guarded(hub_dir('links') . '/bookmarks.php', ['settings' => %s, 'tabs' => [['id' => 'daily', 'title' => 'Daily', "
+                    "'categories' => [['id' => 'c1', 'title' => 'News', 'col' => 0, 'links' => [['title' => 'Example', 'url' => 'https://example.org/'], "
+                    "['title' => 'Old Icon', 'url' => 'https://example.net/', 'icon' => 'https://www.google.com/s2/favicons?domain=example.net&sz=64']]]]]]]);") % (D, "['webIcons' => true]" if web else '[]')
+            subprocess.run(['php', '-r', code], check=True)
+        lctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); lctx.route('**/*', handle); lctx.add_init_script(TRACK_REQUESTS)
+        lout = []; lctx.on('request', lambda r: lout.append(r.url) if not r.url.startswith((B, 'data:', 'blob:')) else None)
+        lp = lctx.new_page(); links_data(False); lp.goto(B + '/web/links/', wait_until='domcontentloaded'); lp.wait_for_selector('.ico', timeout=10000); settle(lp)
+        off = (lp.evaluate("[...document.querySelectorAll('.ico')].map(e => e.textContent + (e.querySelector('img') ? '+img' : ''))"), list(lout))
+        check('P30 Links: Icons from Google is off at first, so links without a saved icon show their letter and the browser asks Google nothing', off[0] == ['E', 'O'] and not off[1], off)
+        links_data(True); lout.clear(); lp.reload(wait_until='domcontentloaded'); lp.wait_for_selector('.ico', timeout=10000); settle(lp)
+        check('P31 ...turned on, the browser asks the favicon service for those icons', len([u for u in lout if u.startswith('https://www.google.com/s2/favicons')]) == 2, lout)
+        lctx.close()
         b.close()
 finally:
     php.terminate(); shutil.rmtree(D, ignore_errors=True)

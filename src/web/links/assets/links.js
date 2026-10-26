@@ -506,9 +506,13 @@ addEventListener('beforeunload', e => { if (inFlight) { e.preventDefault(); e.re
 
 /* ---------- icons ---------- */
 const DATA_ICON = /^data:image\/(png|jpeg|gif|webp|x-icon|svg\+xml);base64,[A-Za-z0-9+\/=]+$/;
+const isFallbackIcon = v => /^https:\/\/www\.google\.com\/s2\/favicons/.test(v || '');
+// Links Settings > Icons from Google (1.51, off at first): only then does the browser ask Google's favicon service for an icon.
+// Off, a link without an icon saved on your server shows its first letter, and Google never learns which sites are in your Links.
+const webIcons = () => !!(S.data && S.data.settings && S.data.settings.webIcons);
 function iconSrc(l, noWeb) {
-  if (l.icon) return DATA_ICON.test(l.icon) ? l.icon : mediaUrl(safeUrl(l.icon));
-  if (l.noIcon || noWeb) return '';   // noWeb: in an encrypted tab the browser doesn't ask a favicon service about your sites
+  if (l.icon && (webIcons() || !isFallbackIcon(l.icon))) return DATA_ICON.test(l.icon) ? l.icon : mediaUrl(safeUrl(l.icon));
+  if (l.noIcon || noWeb || !webIcons()) return '';   // noWeb: in an encrypted tab the browser doesn't ask a favicon service about your sites
   const d = isWeb(l.url) ? host(l.url) : '';
   return d ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=64` : '';
 }
@@ -528,11 +532,11 @@ function linkIcon(l, noWeb) {
 const fetchIcon = url => api('icon', { url: safeUrl(url) }).then(j => j.icon).catch(e => {
   if (e.status === 401 || e.status === 400) throw e;                                  // not logged in / not a fetchable address
   if (e.status === 404 && !(e.data && e.data.fallback)) throw e;                      // the server could reach the site and really found no icon
+  if (!webIcons()) throw e;                                                          // Icons from Google is off: no service address
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host(url))}&sz=64`;   // timeout, blocked or failing host: the service address still shows an icon
 });
 
 let bulkRunning = false, iconStop = false;
-const isFallbackIcon = v => /^https:\/\/www\.google\.com\/s2\/favicons/.test(v || '');
 const iconTargets = (mode, auto) => allLinks().filter(l => isWeb(l.url) && (mode === 'all' || !l.icon || isFallbackIcon(l.icon)) && !(auto && (l.noIcon || isFallbackIcon(l.icon))));
 // Fetches icons for the links picked by mode ("missing" or "all"). ui(done, total) reports progress. Returns the counts, or null if one run is already going.
 async function fetchIcons(mode, auto, ui) {
@@ -1205,6 +1209,7 @@ $('#textSave').onclick = e => {
 function readSettingsForm() {
   draft.title = $('#sTitle').value.trim();
   draft.private = $('#sPrivate').checked;
+  draft.webIcons = $('#sWebIcons').checked;
   applyLook(draft);
 }
 // Text Sizes lives inside Settings: close it, then open the sizes
@@ -1213,6 +1218,7 @@ $('#settingsBtn').onclick = () => {
   openDraft();
   $('#sTitle').value = draft.title || '';
   $('#sPrivate').checked = !!draft.private;
+  $('#sWebIcons').checked = !!draft.webIcons;
   readSettingsForm(); $('#setErr').textContent = '';
   $('#setDlg').showModal();
 };
@@ -1222,6 +1228,7 @@ $('#setSave').onclick = e => {
   if (!draft.title) delete draft.title;
   delete draft.favicon;   // no separate Links icon any more: the site logo is used
   if (!draft.private) delete draft.private;
+  if (!draft.webIcons) delete draft.webIcons;
   commitDraft($('#setDlg'), 'Settings saved');
 };
 
