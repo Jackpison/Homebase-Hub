@@ -32,6 +32,7 @@ const BM_BACKUP_EVERY = 600;    // seconds: at most one automatic backup per 10 
 const BM_GUARD        = "<?php http_response_code(404); exit; ?>\n";
 
 require __DIR__ . '/../hub/core/lib/boot.php';   // Hub: one login, private data folder
+require __DIR__ . '/lib.php';                     // visit counts (1.53)
 
 $dataDir    = hub_dir('links');
 $dataFile   = $dataDir . '/bookmarks.php';
@@ -524,7 +525,9 @@ switch ($action) {
 case 'get':
     $raw = current_raw();
     if ($AUTH) {
-        echo '{"auth":true,"setup":false,"rev":"' . md5($raw) . '","data":' . $raw . '}';
+        $vd = json_decode($raw, true);
+        $visits = json_encode((object)(is_array($vd) ? visits_for($vd) : []), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        echo '{"auth":true,"setup":false,"rev":"' . md5($raw) . '","data":' . $raw . ',"visits":' . $visits . '}';   // only you see the counts
         exit;
     }
     $d = json_decode($raw, true);
@@ -540,6 +543,14 @@ case 'get':
     if (is_array($d['settings'] ?? null)) unset($d['settings']['vault']);
     fix_objects($d);
     out(200, ['auth' => false, 'setup' => $setup, 'data' => $d]);
+
+case 'visit':   // a click on a link, from anyone who can see it: {url}. Counted once per browser per link every 30 minutes.
+    need_post();
+    $b = body(1);
+    $d = json_decode(current_raw(), true); $d = is_array($d) ? $d : [];
+    if (!$AUTH && !empty($d['settings']['private'])) out(200, ['ok' => true, 'counted' => false]);   // a private Links: visitors see nothing to click
+    [$counted, $n] = visits_add((string)($b['url'] ?? ''), hub_ip() . '|' . ($_SERVER['HTTP_USER_AGENT'] ?? ''), $d, !$AUTH);
+    out(200, $AUTH ? ['ok' => true, 'counted' => (bool)$counted, 'count' => $n] : ['ok' => true, 'counted' => (bool)$counted]);   // visitors never get the number
 
 case 'logout':
     need_post();

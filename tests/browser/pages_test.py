@@ -327,6 +327,28 @@ try:
         links_data(True); lout.clear(); lp.reload(wait_until='domcontentloaded'); lp.wait_for_selector('.ico', timeout=10000); settle(lp)
         check('P31 ...turned on, the browser asks the favicon service for those icons', len([u for u in lout if u.startswith('https://www.google.com/s2/favicons')]) == 2, lout)
         lctx.close()
+        # P46: visit counts (1.53). A visitor's click counts; only the logged-in owner sees the number; Show Visit Counts off
+        # hides it and the clicks still count; an encrypted tab's links are never sent.
+        links_data(False)
+        vctx2 = b.new_context(user_agent='Visitor/2.0', viewport={'width': 1280, 'height': 800}); vctx2.route('**/*', handle); vctx2.add_init_script(TRACK_REQUESTS)
+        vp2 = vctx2.new_page(); vp2.goto(B + '/web/links/', wait_until='domcontentloaded'); vp2.wait_for_selector('a.main[data-u]', timeout=10000); settle(vp2)
+        sent = []; vp2.on('request', lambda r: sent.append(r.post_data or '') if 'action=visit' in r.url else None)
+        vp2.evaluate("document.querySelector('a.main[data-u]').addEventListener('click', e => e.preventDefault(), { once: true })")   # stay on the page
+        vp2.click('a.main[data-u]'); until(lambda: sent, 5000); vp2.wait_for_timeout(300)
+        vis_badge = vp2.evaluate("document.querySelectorAll('.vc').length")
+        vctx2.close()
+        octx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); octx.add_cookies(cookies); octx.route('**/*', handle); octx.add_init_script(TRACK_REQUESTS)
+        op2 = octx.new_page(); op2.goto(B + '/web/links/', wait_until='domcontentloaded'); op2.wait_for_selector('a.main[data-u]', timeout=10000); settle(op2)
+        shown = op2.evaluate("[...document.querySelectorAll('a.main')].map(a => (a.querySelector('.vc') || {}).textContent || '')")
+        subprocess.run(['php', '-r', "require '%s/web/hub/core/lib/boot.php'; $f = hub_dir('links') . '/bookmarks.php'; $d = hub_read_guarded($f); $d['settings']['visitCounts'] = false; hub_write_guarded($f, $d);" % D], check=True)
+        op2.reload(wait_until='domcontentloaded'); op2.wait_for_selector('a.main[data-u]', timeout=10000); settle(op2)
+        op2.evaluate("document.querySelector('a.main[data-u]').addEventListener('click', e => e.preventDefault(), { once: true })")
+        with op2.expect_response(lambda r: 'action=visit' in r.url, timeout=5000) as rv: op2.click('a.main[data-u]')
+        after_off = rv.value.json()
+        hidden = op2.evaluate("document.querySelectorAll('.vc').length")
+        octx.close()
+        check('P46 Links visit counts: a visitor\'s click counts (no number shown to them); you see it; Show Visit Counts off hides the numbers and your clicks still count',
+              'example.org' in ''.join(sent) and vis_badge == 0 and shown[:1] == ['1'] and after_off.get('counted') is True and after_off.get('count') == 2 and hidden == 0, (sent[:1], vis_badge, shown, after_off, hidden))
         b.close()
 finally:
     php.terminate(); shutil.rmtree(D, ignore_errors=True)

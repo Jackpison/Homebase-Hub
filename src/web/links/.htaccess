@@ -2,7 +2,7 @@ DirectoryIndex index.html
 Options -Indexes
 
 # Never serve hidden files or leftovers from older versions
-<FilesMatch "(^\.|^config\.php$|\.tmp$)">
+<FilesMatch "(^\.|^(config|lib)\.php$|\.tmp$)">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>

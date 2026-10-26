@@ -23,7 +23,7 @@ for p in pages:
     st, h, _ = get(p)
     if st != 200 or 'speculation-rules.json' not in (h.get('Speculation-Rules') or '') or "script-src 'self'" not in (h.get('Content-Security-Policy') or ''): bad.append((p, st, h.get('Speculation-Rules'), (h.get('Content-Security-Policy') or '')[:40]))
 check('A1 every page answers 200 with its security policy and the pre-loading header', not bad, bad)
-private = ['/site-data/', '/site-data/core/', '/web/hub/docs/CHANGELOG.md', '/web/hub/docs/README.txt', '/web/hub/docs/src/', '/web/hub/core/config.php', '/web/hub/core/manifest.json', '/web/core-data/docs/CHANGELOG.md', '/web/hub/core/lib/boot.php']
+private = ['/site-data/', '/site-data/core/', '/web/hub/docs/CHANGELOG.md', '/web/hub/docs/README.txt', '/web/hub/docs/src/', '/web/hub/core/config.php', '/web/hub/core/manifest.json', '/web/core-data/docs/CHANGELOG.md', '/web/hub/core/lib/boot.php', '/web/links/lib.php', '/web/home/lib.php']
 open_ = [(p, get(p)[0]) for p in private if get(p)[0] not in (403, 404)]
 check('A2 private files and folders are refused', not open_, open_)
 st, h, body = get('/web/hub/core/assets/speculation-rules.json')

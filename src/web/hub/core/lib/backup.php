@@ -25,6 +25,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
 /* ---------- reading what's there ---------- */
 
 function bk_links_file(): string { return hub_dir('links') . '/bookmarks.php'; }
+function bk_links_visits_file(): string { return hub_dir('links') . '/visits.json'; }   // Links' visit counts (web/links/lib.php)
 function bk_links_data(): array { return hub_read_guarded(bk_links_file()) ?? ['settings' => [], 'tabs' => []]; }
 function bk_info_file(): string { return hub_dir('info') . '/info.json'; }
 function bk_info_data(): array { return hub_jread(bk_info_file()) ?? ['tabs' => []]; }
@@ -77,6 +78,8 @@ function bk_export(array $pick, bool $secrets = false): array {
         };
         foreach ($d['tabs'] ?? [] as $t) foreach ($t['categories'] ?? [] as $c) foreach ($c['links'] ?? [] as $x) if (!empty($x['icon'])) $add($x['icon']);
         $parts['links'] = ['format' => 'bookmarks-backup', 'version' => 2, 'created' => gmdate('c'), 'data' => $d, 'icons' => (object)$icons];
+        // visit counts (1.53), with the whole of Links only: address => number, nothing about who clicked
+        if ($pick['links'] === true) $parts['links']['visits'] = (object)(hub_jread(bk_links_visits_file())['counts'] ?? []);
     }
     if (!empty($pick['info'])) {
         $d = bk_info_data();
@@ -156,6 +159,11 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
         if (!isset($new['settings']) || !is_array($new['settings']) || !$new['settings']) $new['settings'] = new stdClass();
         bk_restore_link_icons($parts['links']['icons'] ?? []);
         if (!hub_write_guarded(bk_links_file(), $new)) throw new Exception('Could not save Links.');
+        if ($pick['links'] === true && $mode !== 'merge' && is_array($parts['links']['visits'] ?? null)) {   // a backup from 1.53 on carries the visit counts
+            $vc = [];
+            foreach ($parts['links']['visits'] as $u => $n) if (is_string($u) && $u !== '' && strlen($u) <= 2048 && is_numeric($n) && (int)$n > 0) $vc[$u] = min((int)$n, 100000000);
+            hub_jput(bk_links_visits_file(), json_encode(['counts' => $vc, 'seen' => []], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+        }
         $done[] = 'Links';
     }
     if (!empty($pick['info']) && isset($parts['info']['tabs']) && is_array($parts['info']['tabs'])) {

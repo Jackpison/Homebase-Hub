@@ -458,6 +458,7 @@ async function load() {
   }
   S.auth = !!j.auth; S.setup = !!j.setup; S.locked = !!j.locked; S.rev = j.rev || '';
   S.data = normalize(j.data, !S.auth);
+  S.visits = S.auth && j.visits && typeof j.visits === 'object' ? j.visits : {};   // visit counts: only you get them
   const enc = markEnc(), mine = S.data;
   try {
     if (!S.auth && !S.locked) localStorage.setItem('bm-cache', JSON.stringify(j.data));
@@ -751,9 +752,9 @@ function renderCategory(t, cat, q, multi) {
       continue;
     }
     ul.append(li = h('li', { class: 'row', 'data-i': i }, dragHandle(),
-      h('a', { class: 'main', href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url },
-        linkIcon(l, t.encrypted), h('span', { class: 't' }, l.title)),
-      (l.extra || []).map(x => h('a', { class: 'extra', href: safeUrl(x.url), target: '_blank', rel: 'noopener noreferrer', title: x.url }, x.title)),
+      h('a', { class: 'main', href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url, 'data-u': t.encrypted ? null : l.url },
+        linkIcon(l, t.encrypted), h('span', { class: 't' }, l.title), t.encrypted ? null : visitBadge(l.url)),
+      (l.extra || []).map(x => h('a', { class: 'extra', href: safeUrl(x.url), target: '_blank', rel: 'noopener noreferrer', title: x.url, 'data-u': t.encrypted ? null : x.url }, x.title)),
       h('div', { class: 'ctrl' },
         ib('up', 'Move up', () => move(cat.links, i, -1) && persist('Moved')),
         ib('down', 'Move Down', () => move(cat.links, i, 1) && persist('Moved')),
@@ -770,6 +771,28 @@ function renderCategory(t, cat, q, multi) {
   head.addEventListener('pointerdown', e => startDrag(e, t, cat, sec));
   return sec;
 }
+
+/* ---------- visit counts (1.53) ----------
+   Every click on a link counts on your server (also a visitor's, once per browser per link every 30 minutes); only you see
+   the numbers. Links Settings > Show Visit Counts (on at first) only hides them. Links in encrypted tabs are never counted. */
+const showVisits = () => S.auth && (S.data.settings || {}).visitCounts !== false;
+const fmtVisits = n => n >= 10000 ? Math.round(n / 1000) + 'k' : n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+function visitBadge(url) {
+  const n = (S.visits || {})[url] | 0;
+  if (!showVisits() || !n) return null;
+  return h('span', { class: 'vc', title: `Opened ${n} time${n === 1 ? '' : 's'}`, 'aria-label': `${n} visit${n === 1 ? '' : 's'}` }, fmtVisits(n));
+}
+function countVisit(a) {
+  const url = a.dataset.u; if (!url || S.editing) return;
+  HF(`${API}?action=visit`, { method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'bookmarks' }, body: JSON.stringify({ url }) })
+    .then(r => r.json()).then(j => {
+      if (!j || !j.counted || !S.auth || !j.count) return;
+      S.visits[url] = j.count;
+      document.querySelectorAll('a.main[data-u]').forEach(m => { if (m.dataset.u !== url) return; const old = m.querySelector('.vc'), b = visitBadge(url); if (old) old.remove(); if (b) m.append(b); });
+    }).catch(() => {});
+}
+document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('.links a[data-u]'); if (a) countVisit(a); });
+document.addEventListener('auxclick', e => { if (e.button !== 1) return; const a = e.target.closest && e.target.closest('.links a[data-u]'); if (a) countVisit(a); });   // the middle button opens a new tab
 
 function render() {
   if (drag && drag.started && !drag.allowRender) return; // redraw after the drop instead
@@ -1210,6 +1233,7 @@ function readSettingsForm() {
   draft.title = $('#sTitle').value.trim();
   draft.private = $('#sPrivate').checked;
   draft.webIcons = $('#sWebIcons').checked;
+  draft.visitCounts = $('#sVisits').checked;
   applyLook(draft);
 }
 // Text Sizes lives inside Settings: close it, then open the sizes
@@ -1219,6 +1243,7 @@ $('#settingsBtn').onclick = () => {
   $('#sTitle').value = draft.title || '';
   $('#sPrivate').checked = !!draft.private;
   $('#sWebIcons').checked = !!draft.webIcons;
+  $('#sVisits').checked = draft.visitCounts !== false;
   readSettingsForm(); $('#setErr').textContent = '';
   $('#setDlg').showModal();
 };
