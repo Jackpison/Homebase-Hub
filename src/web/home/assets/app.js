@@ -374,6 +374,7 @@ let settingsDraft = null;
 function openSheetFor(id){
   if (id === 'settingsSheet') return openSettings();
   if (id === 'widgetsSheet') return openWidgets();
+  if (id === 'castSheet') return openCast();
   if (id === 'bgSheet') return openBg();
   openSheet(id);
 }
@@ -1391,6 +1392,82 @@ function setWidgets(cfg){
 }
 
 /* ======================================================================
+   CHARACTERS (1.52): little 3D characters that live on Home. The engine is in web/hub/animation and loads only when
+   they are on. Home tells it where they can stand: the floor, the top of the clock, the dock, the widget cards.
+   ====================================================================== */
+const castHost = {
+  surfaces(){
+    const out = [];
+    const t = $('#time');
+    if (t && !$('#clock').hidden && !document.body.classList.contains('w-cover') && t.textContent){
+      const r = t.getBoundingClientRect();
+      if (r.width > 40) out.push({ id:'clock', x1:r.left + r.height * .12, x2:r.right - r.height * .12, y:r.top + digitTop(t, r.height) });
+    }
+    for (const [id, sel, inset] of [['dock', '#wDock', 16], ['cards', '#wCards', 14], ['chips', '#wChips', 10]]){
+      const el = $(sel); if (!el || el.hidden) continue;
+      const r = el.getBoundingClientRect(); if (r.width < 60 || r.height < 12) continue;
+      out.push({ id, x1:r.left + inset, x2:r.right - inset, y:r.top });
+    }
+    return out;
+  },
+  interactive:'a,button,input,textarea,select,label,dialog,[role=button],.wpanel,.wdock,.wcards,.chips,.toolbar,.corner',
+  shakeTargets:() => [$('#stage'), $('#wDock'), $('#wCards')],
+};
+/* how far below the top of the clock's line the digits begin, from the font's own measurements */
+const digitTopCache = {};
+function digitTop(el, lineH){
+  const cs = getComputedStyle(el), font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, key = font + lineH;
+  if (digitTopCache[key] == null){
+    const g = document.createElement('canvas').getContext('2d'); g.font = font;
+    const m = g.measureText('0123456789'), fa = m.fontBoundingBoxAscent, fd = m.fontBoundingBoxDescent;
+    digitTopCache[key] = fa != null ? (lineH - (fa + fd)) / 2 + (fa - m.actualBoundingBoxAscent) : lineH * .2;
+  }
+  return digitTopCache[key];
+}
+const CAST_FAMILY = { mini:'Mini', pets:'Cube Pet', blocky:'Blocky', pirates:'Pirate', swimmers:'Pirate', monsters:'Monster', blobs:'Blob', flyers:'Flyer' };
+const castDefault = () => ({ on:true, count:2, ids:[], pace:'lively', beam:true });
+function startCast(cfg, delay){
+  if (!window.HubCast || !cfg) return;
+  setTimeout(() => HubCast.start(cfg, castHost).catch(e => console.warn('Characters:', e)), delay || 0);
+}
+async function openCast(){
+  const c = Object.assign(castDefault(), ADMIN.cast || {});
+  $('#cOn').checked = c.on; seg($('#cCount'), c.count); seg($('#cPace'), c.pace); $('#cBeam').checked = c.beam;
+  $('#cPick').innerHTML = '<p class="hint">Loading the characters…</p>'; $('#cAct').innerHTML = ''; $('#cPlay').disabled = true;
+  openSheet('castSheet');
+  if (!window.HubCast){ $('#cPick').innerHTML = '<p class="hint">The characters could not be loaded. Reload the page.</p>'; return; }
+  try {
+    const cat = await HubCast.catalog();
+    const allowed = c.ids.length ? c.ids : cat.cast.map(d => d.id);
+    $('#cPick').innerHTML = cat.cast.map(d => `<label class="cchip"><input type="checkbox" value="${esc(d.id)}"${allowed.includes(d.id) ? ' checked' : ''}><span><b>${esc(d.name)}</b><small>${esc(CAST_FAMILY[d.family] || d.family)}</small></span></label>`).join('');
+    $('#cAct').innerHTML = cat.activities.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+    $('#cPlay').disabled = false;
+  } catch (e){ $('#cPick').innerHTML = `<p class="hint">The characters could not be loaded: ${esc(e.message)}</p>`; }
+}
+function castFromSheet(){
+  const boxes = $$('#cPick input'), ids = boxes.filter(b => b.checked).map(b => b.value);
+  return { on:$('#cOn').checked, count:Number($('#cCount [aria-checked="true"]')?.dataset.v || 2),
+    ids:boxes.length && ids.length < boxes.length ? ids : (ADMIN.cast && !boxes.length ? ADMIN.cast.ids : []),
+    pace:$('#cPace [aria-checked="true"]')?.dataset.v === 'calm' ? 'calm' : 'lively', beam:$('#cBeam').checked };
+}
+$('#saveCast').addEventListener('click', e => withBusy(e.currentTarget, async () => {
+  if ($$('#cPick input').length && !$$('#cPick input:checked').length){ toast('Pick at least one character.', true); return; }
+  const prev = ADMIN.cast;
+  ADMIN.cast = castFromSheet();
+  try {
+    await saveAll('Characters saved');
+    closeSheet('castSheet');
+    if (window.HubCast) (ADMIN.cast.on ? HubCast.start(ADMIN.cast, castHost) : HubCast.stop());
+  } catch (err){ ADMIN.cast = prev; toast(err.message, true); }
+}));
+$('#cPlay').addEventListener('click', async () => {
+  const id = $('#cAct').value; if (!id || !window.HubCast) return;
+  closeSheet('castSheet');
+  if (!HubCast.running()) await HubCast.start(Object.assign(castFromSheet(), { on:true }), castHost);
+  if (!await HubCast.play(id)) toast('The characters are busy or still arriving. Try again in a moment.');
+});
+
+/* ======================================================================
    WELCOME TEXT: once per visit, in the middle; the clock and widgets fade in as it slowly fades away (Settings > Page > Welcome Text)
    ====================================================================== */
 function welcome(){
@@ -1420,6 +1497,7 @@ document.addEventListener('visibilitychange', () => {
   if (wOn('today') || wOn('calendar')) loadTasks(); else renderWidgets();
 });
 welcome();
+if (PUB.cast && PUB.cast.on) startCast(PUB.cast, document.documentElement.classList.contains('hl-welcome') ? 1800 : 400);   // after the welcome text
 // ?bg=picsum | bing | wikimedia | wallhaven | artic | unsplash | pixabay | pixabay_video | upload  forces a source (handy for testing)
 BG.start();
 $('#nextBg').addEventListener('click', () => BG.next());

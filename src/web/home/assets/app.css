@@ -413,3 +413,13 @@ html.hl-welcome .stage,html.hl-welcome .wdock,html.hl-welcome .wcards{opacity:0}
 .sheet select:focus,.sheet input[type=date]:focus{outline:none;border-color:var(--accent)}
 .wzedit{display:flex;flex-direction:column;gap:8px}
 .wzedit .inline > input[data-zn]{flex:0 1 170px}
+
+/* Characters window: who can appear (1.52) */
+.cpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px;margin:2px 0 4px}
+.cchip{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:14px;background:var(--s-bg2);border:2px solid transparent;cursor:pointer;min-width:0}
+.cchip:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--s-bg2))}
+.cchip input{flex:none;accent-color:var(--accent);width:16px;height:16px;margin:0}
+.cchip span{display:flex;flex-direction:column;min-width:0}
+.cchip b{font-size:.88rem;font-weight:600;color:var(--s-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cchip small{font-size:.74rem;color:var(--s-mute)}
+#castSheet select{flex:1;min-width:160px}

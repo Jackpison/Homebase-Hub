@@ -208,6 +208,10 @@ web/hub/core/assets/shell.js     on every page: the bar, search, theme, login, p
 web/hub/core/assets/shell-admin.js  the Settings page: menu, Overview, tabs, General, Appearance, Security, Telegram, Backup, Updates, Health; loaded only on that page
 web/hub/core/assets/shell.css    the bar, dialogs and the Settings page, plus the PAGE CONTRACT rules
 web/<page>/assets/       each page's own <page>.css and <page>.js, loaded as ?v=<version> and cached for a year
+web/hub/animation/        the Home characters (1.52): cast.js (the small part Home always loads; it loads the rest only when they are on),
+                          engine.js (stage, characters, everyday life, the activity timer), fx.js (effects), props.js, activities.js
+                          (every activity; add one there), cast.json (the characters), models/ and props/ (glb models inside .json),
+                          vendor/three.min.js (three.js r147, MIT). Built from the free packs by scripts/cast_assets.py. CREDITS.txt.
 web/tasks/lib.php        Tasks data rules (shared with backup.php); web/tasks/api.php is its API
 Every page loads shell.css and shell.js first and keeps its own api.php.
 shell.css, shell.js, shell-admin.js and each page's assets are loaded as  ?v=<version>  and cached for a year: after changing one of them,

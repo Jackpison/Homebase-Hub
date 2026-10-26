@@ -110,6 +110,7 @@ function default_site(): array
         'panel' => ['opacity' => 0.40, 'blur' => 22, 'tint' => 'light'],
         'welcome' => WELCOME_DEFAULT,
         'widgets' => clean_widgets([]),
+        'cast'    => clean_cast([]),
     ];
 }
 function load_site(): array
@@ -225,6 +226,7 @@ function clean_site(array $in): array
         'welcome' => array_key_exists('welcome', $in) ? str_clip($in['welcome'], 80) : WELCOME_DEFAULT,
         'linksMoved' => max(0, (int) ($in['linksMoved'] ?? 0)),
         'widgets' => clean_widgets($in['widgets'] ?? []),
+        'cast'    => clean_cast($in['cast'] ?? []),
     ];
 }
 
@@ -280,6 +282,30 @@ function clean_widgets($in): array
         'note'      => ['tab' => $idOk($nt['tab'] ?? ''), 'box' => $idOk($nt['box'] ?? '')],
         'zones'     => $zones,
         'weather'   => ['town' => str_clip(preg_replace('/\s+/u', ' ', (string) ($we['town'] ?? '')) ?? '', 60), 'unit' => ($we['unit'] ?? '') === 'f' ? 'f' : 'c'],
+    ];
+}
+
+/* ================= characters (1.52) =================
+   Little 3D characters that live on Home (web/hub/animation). They are drawn by the browser from files of this site:
+   nothing is asked from another server. Everyone who opens Home sees them, like the background. */
+const CAST_MAX = 5;                 // at most this many on the screen at once
+const CAST_PACES = ['lively', 'calm'];   // an activity every 2 to 4 minutes, or every 5 to 9
+
+/** Home's character settings, cleaned: on or off, how many at once (1 to 5), which ones may appear (none listed = all),
+ *  how often they do an activity, and whether the Power Beam is one of them. */
+function clean_cast($in): array
+{
+    $in = is_array($in) ? $in : [];
+    $ids = [];
+    foreach (is_array($in['ids'] ?? null) ? $in['ids'] : [] as $id) {
+        if (is_string($id) && preg_match('/^[a-z0-9-]{1,30}$/', $id) && !in_array($id, $ids, true) && count($ids) < 60) $ids[] = $id;
+    }
+    return [
+        'on'    => (bool) ($in['on'] ?? true),
+        'count' => max(1, min(CAST_MAX, (int) ($in['count'] ?? 2))),
+        'ids'   => $ids,
+        'pace'  => in_array($in['pace'] ?? '', CAST_PACES, true) ? $in['pace'] : 'lively',
+        'beam'  => (bool) ($in['beam'] ?? true),
     ];
 }
 
@@ -531,6 +557,7 @@ function public_payload(): array
         'panel'   => $s['panel'],
         'welcome' => $s['welcome'] ?? WELCOME_DEFAULT,
         'clock'   => $s['widgets']['clock'],   // the big clock and greeting are for everyone; the widgets themselves are not
+        'cast'    => $s['cast'],               // the characters: everyone sees them, like the background
         'bg'      => [
             'uploadChance' => $s['bg']['uploadChance'],
             'videoChance'  => $s['bg']['videoChance'],

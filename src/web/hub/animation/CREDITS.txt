@@ -1,0 +1,10 @@
+Homebase Hub: the Home characters (web/hub/animation)
+
+Characters and props, all free to use (CC0 1.0, public domain, https://creativecommons.org/publicdomain/zero/1.0/):
+  Kenney (kenney.nl): Mini Characters, Cube Pets, Blocky Characters, Survival Kit, Food Kit, Furniture Kit,
+                      Holiday Kit, Mini Skate, Mini Arena, Nature Kit
+  Quaternius (quaternius.com): Pirate Kit, Ultimate Monsters
+Thank you both. The models were made smaller for the web (scripts/cast_assets.py); nothing else was changed.
+
+three.js r147 (threejs.org), MIT licence: vendor/three.LICENSE.txt
+The engine, effects and activities are part of Homebase Hub (GPL-3.0-only).

@@ -198,8 +198,8 @@ try:
         hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#toolbar:not([hidden])', timeout=10000)
         pill = hp.evaluate("[...document.querySelectorAll('#toolbar button')].filter(b => getComputedStyle(b).display !== 'none').map(b => b.getAttribute('aria-label'))")
         menu = hp.evaluate("[...document.querySelectorAll('[data-hub=item]')].map(e => e.dataset.hubLabel)")
-        check('P36 editing shows one pill of icons: Background, Widgets, Home Settings and Done (no Log Out); the site menu offers only Home Settings for this page',
-              pill == ['Background', 'Widgets', 'Home Settings', 'Done'] and menu == ['Home Settings'] and not hp.evaluate("!!document.getElementById('logoutBtn')"), (pill, menu))
+        check('P36 editing shows one pill of icons: Background, Widgets, Characters, Home Settings and Done (no Log Out); the site menu offers only Home Settings for this page',
+              pill == ['Background', 'Widgets', 'Characters', 'Home Settings', 'Done'] and menu == ['Home Settings'] and not hp.evaluate("!!document.getElementById('logoutBtn')"), (pill, menu))
         hp.click('#toolbar [data-open=settingsSheet]'); hp.wait_for_selector('#settingsSheet[open]', timeout=5000)
         hs = hp.evaluate("[!!document.querySelector('#settingsSheet #sHomeBar'), document.querySelector('#settingsSheet').textContent.includes('Show the Bar on the Home Page'), !document.querySelector('#settingsSheet #wStyle')]")
         check('P37 Home Settings has Show the Bar on the Home Page, and the widgets are no longer in it', hs == [True, True, True], hs)
@@ -288,6 +288,54 @@ try:
         light_reduce = glass('light', reduce=True); dark = glass('dark'); solid = glass('solid'); glass('light')
         check('P40 Glass Tint: Light stays see-through and blurred even when the computer asks to reduce transparency; Dark is a dark see-through tint; Solid is not see-through',
               light_reduce[0] == 255 and light_reduce[1] < 0.5 and light_reduce[2] and dark[0] < 60 and dark[1] < 0.5 and dark[2] and solid[1] > 0.85 and not solid[2], (light_reduce, dark, solid))
+        # P42-P45: the characters (1.52). Chromium draws WebGL in software here (SwiftShader), like a computer without a graphics card;
+        # a browser with no WebGL at all must show none and raise no error.
+        cb = p.chromium.launch(args=['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']) if BROWSER == 'chromium' else b
+        def cast_page(reduce=False):
+            cc = cb.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}, reduced_motion='reduce' if reduce else 'no-preference')
+            cc.add_cookies(cookies); cc.route('**/*', handle); cc.add_init_script(TRACK_REQUESTS); cc.add_init_script(CSP_REPORTER)
+            cc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+            req, err = [], []
+            cc.on('request', lambda r: req.append(r.url))
+            cp = cc.new_page(); cp.on('pageerror', lambda e: err.append(str(e)[:200])); cp.on('console', lambda m: err.append(m.text[:200]) if m.type == 'error' else None)
+            cp.goto(B + '/web/home/', wait_until='domcontentloaded')
+            gl = cp.evaluate("(() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })()")
+            if gl: until(lambda: cp.evaluate("!!(window.HubCast && HubCast.running() && HubCast.E && HubCast.E.actors.length === 2 && HubCast.E.actors.every(a => a.ready))"), 60000, 300)
+            else: cp.wait_for_timeout(1500)
+            return cc, cp, gl, req, err
+        cc, cp, gl, creq, cerr = cast_page()
+        st = cp.evaluate("[!!document.querySelector('.hc-canvas'), window.HubCast && HubCast.E ? HubCast.E.actors.length : 0]")
+        away = [u for u in creq if not u.startswith((B, 'data:', 'blob:'))]
+        check('P42 Home: two characters arrive (on at first), loaded only from this site, with no error' + ('' if gl else ' (this browser has no WebGL: none appear)'),
+              (st == [True, 2] if gl else not st[0]) and not away and not cerr, (gl, st, away[:3], cerr[:3]))
+        if gl:
+            # the Power Beam: it darkens the page and shakes the clock while it runs, and leaves nothing behind
+            started = cp.evaluate("HubCast.play('beam')")
+            dimmed = until(lambda: cp.evaluate("!!document.querySelector('.hc-dim')"), 15000, 200)
+            done = until(lambda: cp.evaluate("!HubCast.E.busy"), 60000, 500)
+            after = cp.evaluate("[document.querySelectorAll('.hc-dim, .hc-word, .hc-say').length, document.getElementById('stage').style.translate || '', HubCast.E.actors.length, HubCast.E.guests.length]")
+            check('P43 the Power Beam plays from start to end: the page darkens while it runs, then nothing is left over (no shade, no shake, no guest)',
+                  started and dimmed and done and after[0] == 0 and after[1] in ('', 'none') and after[2] == 2 and after[3] == 0 and not cerr, (started, dimmed, done, after, cerr[:3]))
+        # the Characters window: every character and activity listed; Show Characters off removes them and nothing more is loaded
+        cp.evaluate("document.getElementById('editBtn').click()"); cp.wait_for_selector('#toolbar:not([hidden])', timeout=10000)
+        cp.click('#toolbar [data-open=castSheet]'); cp.wait_for_selector('#castSheet[open]', timeout=5000)
+        until(lambda: cp.evaluate("document.querySelectorAll('#cPick .cchip').length") > 0, 30000, 200)
+        lists = cp.evaluate("[document.querySelectorAll('#cPick .cchip').length, document.querySelectorAll('#cPick input:checked').length, document.querySelectorAll('#cAct option').length]")
+        cp.uncheck('#cOn'); cp.click('#saveCast'); until(lambda: cp.evaluate("!document.getElementById('castSheet').open"), 10000)
+        gone = until(lambda: cp.evaluate("!document.querySelector('.hc-canvas') && !HubCast.running()"), 5000)
+        creq.clear(); cp.reload(wait_until='domcontentloaded'); settle(cp); cp.wait_for_timeout(1500)
+        loaded = [u.replace(B, '') for u in creq if '/hub/animation/' in u]
+        check('P44 Characters window: lists every character (all allowed at first) and every activity; Show Characters off removes them, and after a reload only the small cast.js is loaded',
+              lists[0] >= 20 and lists[1] == lists[0] and lists[2] >= 20 and gone and len(loaded) == 1 and '/cast.js' in loaded[0] and not cp.evaluate("!!document.querySelector('.hc-canvas')"), (lists, gone, loaded))
+        cc.close()
+        subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['cast'] = clean_cast([]); write_json(SITE_FILE, clean_site($s));" % D], check=True)
+        if gl:
+            # a device that asks for less motion: the characters stand still and no activity starts
+            rc, rp, _, _, rerr = cast_page(reduce=True)
+            r = rp.evaluate("HubCast.play('boxing')")
+            check('P45 when the device asks for less motion, the characters stand still: no activity starts', r is False and rp.evaluate("HubCast.E.actors.length") == 2 and not rerr, (r, rerr[:3]))
+            rc.close()
+        if cb is not b: cb.close()
         # P35: a phone, logged in, all nine widgets in the Glass Dock: every dock button fits on the screen, and an open widget
         # does not sit on top of the chips (on a short screen they make way)
         subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = 'dock'; write_json(SITE_FILE, clean_site($s));" % D], check=True)
