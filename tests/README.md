@@ -21,6 +21,7 @@ These run on your own computer. Nothing here is part of the update zip.
 
 - `snooze_test.php`: the Snooze buttons, `/snooze`, the daily digest and the Due Now card.
 - `telegram_test.php`: login alerts (off, on, paused logins, a restore), the bot's commands (`/help`, `/add`, `/today`, `/week`, `/done`, `/status`, `/backup`, a message from another chat), the backup file it sends, token checks and device names, and that a task or site name with `<` or `&` can never break a message (Telegram refuses stray HTML).
+- `links_visits_test.php`: Links' visit counts: once per browser per link every 30 minutes, only real links, never encrypted tabs or (for visitors) private ones; counts follow a moved link and reset on a new address; backups carry them.
 - `home_pick_test.php`: Home's backgrounds (no repeats; the tags match `app.js`), Welcome Text, the Starter theme and your own themes.
 - `nav_settings_test.php`: the bar style is top, side or dock; a new site takes the setup browser's time zone and Follow Device, while existing sites keep theirs.
 - `logic_test.php`: `/add` parsing, money, repeat dates, completing tasks, the Favicon helpers, the PHP support notice, safe names in an update zip, backup encryption, and a check that no PHP file defines a test shortcut.

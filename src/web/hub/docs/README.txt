@@ -209,6 +209,7 @@ web/hub/core/assets/shell-admin.js  the Settings page: menu, Overview, tabs, Gen
 web/hub/core/assets/shell.css    the bar, dialogs and the Settings page, plus the PAGE CONTRACT rules
 web/<page>/assets/       each page's own <page>.css and <page>.js, loaded as ?v=<version> and cached for a year
 web/tasks/lib.php        Tasks data rules (shared with backup.php); web/tasks/api.php is its API
+web/links/lib.php        Links' visit counts (site-data/links/visits.php); web/links/api.php is its API
 Every page loads shell.css and shell.js first and keeps its own api.php.
 shell.css, shell.js, shell-admin.js and each page's assets are loaded as  ?v=<version>  and cached for a year: after changing one of them,
 raise the version (HUB in web/hub/core/lib/boot.php and the ?v= in each page) so browsers fetch the new file. 

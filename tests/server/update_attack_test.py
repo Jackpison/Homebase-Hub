@@ -168,7 +168,7 @@ try:
         v.attack('L6 refused: a broken manifest.json (%s)' % label, build(it), 'file list|not on the list')
 
     # ----- contents and versions -----
-    it = dict(SMALL); it['web/links/api.php'] = it['web/links/api.php'][:len(it['web/links/api.php']) // 2]
+    it = dict(SMALL); api = it['web/links/api.php']; it['web/links/api.php'] = api[:api.index(b'switch ($action) {') + 40]   # cut inside the main block: never valid (the plain middle can land between two functions)
     v.attack('C1 refused: a PHP file with a syntax error (cut in half)', build(relisted(it)), 'PHP')
     it = dict(SMALL); del it['web/hub/core/lib/update.php']
     v.attack('C2 refused: the updater itself is missing', build(relisted(it)), 'update itself|cannot be used')

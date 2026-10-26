@@ -207,7 +207,7 @@ try:
         hp.click('#toolbar [data-open=widgetsSheet]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
         until(lambda: hp.evaluate("document.querySelectorAll('#wNote optgroup').length > 0"), 10000)
         hp.click('#wStyle [data-v=glance]'); hp.check('#wList [data-wl=pad]')
-        hp.fill('#wCdName', 'Lakeside Weekend'); hp.fill('#wCdDate', __import__('datetime').date.fromordinal(__import__('datetime').date.today().toordinal() + 12).isoformat())
+        hp.fill('#wCdName', 'Lakeside Weekend'); hp.fill('#wCdDate', hp.evaluate("(() => { const tz = (window.HUB && HUB.state && HUB.state().tz) || 'Asia/Kolkata'; const d = new Date(new Intl.DateTimeFormat('en-CA', { timeZone:tz }).format(new Date()) + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 12); return d.toISOString().slice(0, 10); })()"))   # 12 days from today in the site's time zone (not this computer's)
         note = hp.evaluate("(() => { const o = document.querySelector('#wNote optgroup option'); document.getElementById('wNote').value = o.value; return o.textContent })()")
         enc = hp.evaluate("[...document.querySelectorAll('#wNote optgroup')].map(g => g.label)")
         hp.click('#wList [data-wmove=\"5\"][data-by=\"-1\"]')   # Scratch Pad one up

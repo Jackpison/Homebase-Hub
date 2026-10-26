@@ -134,7 +134,7 @@ try:
             urllib.request.urlopen(s.base + '/web/home/').read()   # the first visit to Home moves its links
             moved = s.php("$d = hub_read_guarded(hub_dir('links') . '/bookmarks.php'); $u = []; foreach ($d['tabs'] ?? [] as $t) foreach ($t['categories'] ?? [] as $c) foreach ($c['links'] ?? [] as $l) $u[] = $l['url']; echo json_encode($u);")
             left = s.php("require_once 'web/home/lib.php'; echo json_encode(array_key_exists('columns', read_json(SITE_FILE) ?? []));")
-            check(f'C3b a {OLDV} site\'s Home links arrive in Links after updating straight to {CURV}, and Home keeps no copy', 'https://old-home.example' in moved and left == 'false', (moved[:200], left))
+            check(f'C3b a {OLDV} site\'s Home links arrive in Links after updating straight to {CURV}, and Home keeps no copy', 'https://old-home.example' in json.loads(moved or '[]') and left == 'false', (moved[:200], left))
         st = s.get('update_status'); check('C4 new GitHub card data is there, daily check off', st['gh']['auto'] is False and st['gh']['curl'], st.get('gh'))
         r = s.post('update_apply', {'password': PW, 'back': True}); time.sleep(0.5)
         check(f'C5 Go Back to {OLDV} works', r.get('ok') and s.version() == f'{OLDV}', r)

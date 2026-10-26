@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.53.0 | Links shows how often each link is opened; Home's refresh button no longer feels stuck; the characters are gone again |
 | 1.52.0 | Characters on Home: 22 little 3D characters that walk about, sit on the clock and do 20 activities and the Power Beam |
 | 1.51.3 | An open widget no longer lies on top of the cards in Glance and Expand |
 | 1.51.2 | Home's glass stays see-through when the computer reduces transparency, and a Tint choice: Light, Dark or Solid |
@@ -79,6 +80,24 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.53.0
+
+### Links
+
+- **Visit counts.** Every link shows how often it was opened, as a small number next to its name. Clicks by anyone who opens your Links count; only you see the numbers.
+- **Links Settings > Show Visit Counts** is on at first. Turned off, it only hides the numbers: the clicks are still counted, so they are all there when you turn it back on.
+- One browser counts once per link every 30 minutes, so nobody can push a number up by clicking again and again. Only your own links can be counted.
+- A link keeps its count when you move it; a link whose address you change starts again from 0. Links in encrypted tabs are never counted, and visitors never count the links of private tabs.
+- A backup of the whole of Links includes the counts.
+
+### Home
+
+- **The refresh button no longer feels stuck.** The next background (and a video's still picture) is fetched soon after one appears, so a press usually swaps at once. If the next one is still on its way, the press waits for it instead of starting a new download, and pressing again does not start over. The picture dims a little at once so you see the press took. If nothing arrives, it tries two others and the button is free again within about 18 seconds.
+- **The characters are gone again.** They did not fit the clean dashboard look. Their files are removed when you update; Go Back to 1.52 brings them back.
+- Home's old copy of its links (moved to Links in 1.51) is removed. A site that updates straight from 1.50 still gets its links moved to Links first.
 
 ---
 
