@@ -98,16 +98,15 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 <div id="scrim"></div>
 <p id="welcome" aria-hidden="true" hidden></p>
 
-<!-- Edit-mode toolbar -->
-<div class="toolbar" id="toolbar" hidden>
-  <p class="tb-hint">Choose your widgets and their look in Settings.</p>
-  <div class="tb-actions">
-    <button class="tb-btn" data-open="bgSheet" data-hub="item" data-hub-label="Background" data-hub-icon="image" data-hub-order="3">Background</button>
-    <button class="tb-btn" data-open="settingsSheet" data-hub="item" data-hub-label="Home Settings" data-hub-icon="gear" data-hub-order="8" data-hub-sep>Settings</button>
-    <button class="tb-btn" id="logoutBtn" data-hub="logout">Log Out</button>
-    <button class="tb-btn tb-done" id="doneBtn" data-hub="done">Done</button>
-  </div>
+<!-- While editing: one pill of icons (like the bar's dock). Home Settings is also in the site menu (the hidden item below). -->
+<div class="toolbar" id="toolbar" role="toolbar" aria-label="Edit Home" hidden>
+  <button type="button" class="tb-ib" data-open="bgSheet" aria-label="Background" title="Background"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></button>
+  <button type="button" class="tb-ib" data-open="widgetsSheet" aria-label="Widgets" title="Widgets"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg></button>
+  <button type="button" class="tb-ib" data-open="settingsSheet" aria-label="Home Settings" title="Home Settings"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  <span class="tb-sep" aria-hidden="true"></span>
+  <button type="button" class="tb-ib tb-done" id="doneBtn" data-hub="done" aria-label="Done" title="Done"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>
 </div>
+<button type="button" hidden data-open="settingsSheet" data-hub="item" data-hub-label="Home Settings" data-hub-icon="gear" data-hub-order="8"></button>
 
 <!-- The clock is for everyone. The widgets (1.51) appear only while you are logged in: their data never reaches a visitor. -->
 <main class="stage" id="stage">
@@ -152,8 +151,40 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
         </div>
       </section>
       <section>
-        <h3>Widgets</h3>
+        <h3>Bar</h3>
+        <div class="group">
+          <label class="g-row"><span class="g-label">Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu. The same setting as in Settings › Appearance.</small></span>
+            <input type="checkbox" class="switch" id="sHomeBar"></label>
+        </div>
+      </section>
+      <section>
+        <h3>Glass</h3>
+        <div class="group">
+          <div class="g-row stack"><span class="g-label">Opacity <b id="pOpVal"></b><small>How much the widgets tint the photo. 0% is fully see-through.</small></span>
+            <input type="range" id="pOpacity" min="0" max="100" step="5"></div>
+          <div class="g-row stack"><span class="g-label">Blur <b id="pBlurVal"></b><small>Frosted-glass effect behind the widgets.</small></span>
+            <input type="range" id="pBlur" min="0" max="40" step="2"></div>
+        </div>
+      </section>
+    </div>
+    <footer class="sf"><span></span><div class="sf-r">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="button" class="btn primary" id="saveSettings">Save Settings</button>
+    </div></footer>
+  </div>
+</dialog>
+
+<dialog class="sheet" id="widgetsSheet">
+  <div class="sheet-in">
+    <header class="sh"><h2>Widgets</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
+    <div class="sb">
+      <section>
         <p class="hint">Widgets show only while you are logged in. Visitors see the clock and your background, nothing else.</p>
+        <div class="group">
+          <label class="g-row"><span class="g-label">Show Widgets<small>Off: only the clock and your background, also for you.</small></span>
+            <input type="checkbox" class="switch" id="wShow"></label>
+        </div>
+        <h3>Style</h3>
         <div class="wstyles" id="wStyle" role="radiogroup" aria-label="Widget Style">
           <button type="button" role="radio" data-v="dock"><span class="wprev dock" aria-hidden="true"><i></i><i></i><i></i></span><b>Glass Dock</b><small>A few chips under the clock. A dock opens each widget.</small></button>
           <button type="button" role="radio" data-v="glance"><span class="wprev glance" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>Glance and Expand</b><small>Small widgets along the bottom. Click one to open it.</small></button>
@@ -162,7 +193,8 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
           <label class="g-row"><span class="g-label">Show the Clock<small>The time, the date and a greeting. Visitors see it too.</small></span>
             <input type="checkbox" class="switch" id="wClock"></label>
         </div>
-        <div class="field"><span>Widgets, in This Order</span>
+        <h3>Widgets, in This Order</h3>
+        <div class="field">
           <div class="group" id="wList"></div></div>
         <div class="group">
           <div class="g-row stack"><span class="g-label">Countdown<small>The days left until a date you choose.</small></span>
@@ -179,19 +211,10 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
         </div>
         <datalist id="tzList"></datalist>
       </section>
-      <section>
-        <h3>Glass</h3>
-        <div class="group">
-          <div class="g-row stack"><span class="g-label">Opacity <b id="pOpVal"></b><small>How much the widgets tint the photo. 0% is fully see-through.</small></span>
-            <input type="range" id="pOpacity" min="0" max="100" step="5"></div>
-          <div class="g-row stack"><span class="g-label">Blur <b id="pBlurVal"></b><small>Frosted-glass effect behind the widgets.</small></span>
-            <input type="range" id="pBlur" min="0" max="40" step="2"></div>
-        </div>
-      </section>
     </div>
     <footer class="sf"><span></span><div class="sf-r">
       <button type="button" class="btn" data-close>Cancel</button>
-      <button type="button" class="btn primary" id="saveSettings">Save Settings</button>
+      <button type="button" class="btn primary" id="saveWidgets">Save Widgets</button>
     </div></footer>
   </div>
 </dialog>

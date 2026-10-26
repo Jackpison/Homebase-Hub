@@ -351,10 +351,6 @@ function exitEdit(loggedOut = false){
   if (loggedOut){ CSRF = null; ADMIN = null; setWidgets(null); toast('You were logged out. Log in again to keep editing.', true); }
 }
 $('#doneBtn').addEventListener('click', () => exitEdit());
-$('#logoutBtn').addEventListener('click', async () => {
-  try { await api('logout', {}); } catch {}
-  CSRF = null; ADMIN = null; exitEdit(); setWidgets(null); toast('Logged out');
-});
 
 /** Save the whole site and refresh local copies. */
 async function saveAll(msg = 'Saved'){
@@ -376,16 +372,33 @@ function stripAdmin(a){
 let settingsDraft = null;
 function openSheetFor(id){
   if (id === 'settingsSheet') return openSettings();
+  if (id === 'widgetsSheet') return openWidgets();
   if (id === 'bgSheet') return openBg();
   openSheet(id);
 }
 function openSettings(){
-  settingsDraft = { title:ADMIN.title, icon:ADMIN.icon, panel:{ ...ADMIN.panel }, widgets:structuredClone(ADMIN.widgets) };
+  settingsDraft = { title:ADMIN.title, icon:ADMIN.icon, panel:{ ...ADMIN.panel } };
   $('#sTitle').value = settingsDraft.title;
   $('#sWelcome').value = ADMIN.welcome ?? 'Welcome Home';
+  $('#sHomeBar').checked = homeBarOn();
   $('#pOpacity').value = Math.round(settingsDraft.panel.opacity * 100); $('#pOpVal').textContent = $('#pOpacity').value + '%';
   $('#pBlur').value = settingsDraft.panel.blur; $('#pBlurVal').textContent = settingsDraft.panel.blur + 'px';
-  const w = settingsDraft.widgets;
+  openSheet('settingsSheet');
+}
+/* Show the Bar on the Home Page: the site-wide setting (Settings > Appearance), shown here too */
+const homeBarOn = () => !!(window.HUB && HUB.state && HUB.state().homeBar);
+async function saveHomeBar(on){
+  if (!window.HUB) throw new Error('Reload the page and try again.');
+  const r = await HUB.fetch('../hub/core/api.php?action=settings', { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/json', ...(CSRF ? { 'X-Hub-CSRF':CSRF } : {}) }, body:JSON.stringify({ settings:{ homeBar:on } }) });
+  let j = {}; try { j = await r.json(); } catch {}
+  if (!r.ok || !j.ok) throw new Error(j.error || 'Could not save the bar setting. Reload the page and try again.');
+}
+/* Widgets: their own window (the edit pill's Widgets button) */
+let widgetsDraft = null;
+function openWidgets(){
+  widgetsDraft = structuredClone(ADMIN.widgets);
+  const w = widgetsDraft;
+  $('#wShow').checked = w.show;
   seg($('#wStyle'), w.style);
   $('#wClock').checked = w.clock;
   $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date;
@@ -393,27 +406,27 @@ function openSettings(){
   fillNotePicker();
   drawZones();
   $('#wTown').value = w.weather.town; seg($('#wUnit'), w.weather.unit);
-  openSheet('settingsSheet');
+  openSheet('widgetsSheet');
 }
 /* Settings > Widgets: tick the ones to show, and move them up or down (the dock and the cards follow this order) */
 function drawWidgetList(){
-  const l = settingsDraft.widgets.list;
+  const l = widgetsDraft.list;
   $('#wList').innerHTML = l.map((w, i) => `<div class="g-row wl-row">
       <label class="wl-on"><input type="checkbox" class="switch" data-wl="${w.id}"${w.on ? ' checked' : ''}><span>${esc(W_META[w.id].name)}</span></label>
       <span class="wl-mv"><button type="button" class="btn small" data-wmove="${i}" data-by="-1" aria-label="Move ${esc(W_META[w.id].name)} Up"${i ? '' : ' disabled'}>↑</button><button type="button" class="btn small" data-wmove="${i}" data-by="1" aria-label="Move ${esc(W_META[w.id].name)} Down"${i < l.length - 1 ? '' : ' disabled'}>↓</button></span>
     </div>`).join('');
 }
-$('#wList').addEventListener('change', e => { const c = e.target.closest('[data-wl]'); if (c) settingsDraft.widgets.list.find(w => w.id === c.dataset.wl).on = c.checked; });
+$('#wList').addEventListener('change', e => { const c = e.target.closest('[data-wl]'); if (c) widgetsDraft.list.find(w => w.id === c.dataset.wl).on = c.checked; });
 $('#wList').addEventListener('click', e => {
   const b = e.target.closest('[data-wmove]'); if (!b) return;
-  const l = settingsDraft.widgets.list, i = +b.dataset.wmove, j = i + +b.dataset.by;
+  const l = widgetsDraft.list, i = +b.dataset.wmove, j = i + +b.dataset.by;
   [l[i], l[j]] = [l[j], l[i]]; drawWidgetList();
   $(`[data-wmove="${j}"][data-by="${b.dataset.by}"]`)?.focus() || $(`[data-wmove="${j}"]`)?.focus();
 });
-$('#wStyle').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; settingsDraft.widgets.style = b.dataset.v; seg($('#wStyle'), b.dataset.v); });
+$('#wStyle').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; widgetsDraft.style = b.dataset.v; seg($('#wStyle'), b.dataset.v); });
 /* World Clock: three rows of name and time zone; the browser offers its list of time zones */
 function drawZones(){
-  const z = settingsDraft.widgets.zones;
+  const z = widgetsDraft.zones;
   $('#wZones').innerHTML = [0, 1, 2].map(i => `<div class="inline"><input type="text" list="tzList" data-zt="${i}" value="${esc(z[i]?.tz || '')}" placeholder="${['Europe/London', 'America/New_York', 'Asia/Tokyo'][i]}" aria-label="Place ${i + 1} Time Zone" autocomplete="off" spellcheck="false"><input type="text" data-zn="${i}" value="${esc(z[i]?.name || '')}" maxlength="30" placeholder="Name (optional)" aria-label="Place ${i + 1} Name"></div>`).join('');
   const dl = $('#tzList');
   if (!dl.options.length && Intl.supportedValuesOf) dl.innerHTML = Intl.supportedValuesOf('timeZone').map(t => `<option value="${esc(t)}">`).join('');
@@ -421,7 +434,7 @@ function drawZones(){
 const tzOk = tz => { try { new Intl.DateTimeFormat('en', { timeZone:tz }); return /\//.test(tz) || tz === 'UTC'; } catch { return false; } };
 /* the Pinned Note list: the boxes of your Info tabs (an encrypted tab's boxes can't be read here, so they are left out) */
 async function fillNotePicker(){
-  const sel = $('#wNote'), cur = settingsDraft.widgets.note, val = cur.box ? cur.tab + '|' + cur.box : '';
+  const sel = $('#wNote'), cur = widgetsDraft.note, val = cur.box ? cur.tab + '|' + cur.box : '';
   sel.innerHTML = '<option value="">None</option>' + (val ? `<option value="${esc(val)}">Loading…</option>` : '');
   sel.value = val;
   try {
@@ -435,25 +448,35 @@ $('#pOpacity').addEventListener('input', e => { settingsDraft.panel.opacity = e.
 $('#pBlur').addEventListener('input', e => { settingsDraft.panel.blur = +e.target.value; $('#pBlurVal').textContent = e.target.value + 'px'; applyPanel(settingsDraft.panel); });
 $('#settingsSheet').addEventListener('close', () => { if (ADMIN) applyPanel(ADMIN.panel); });
 $('#saveSettings').addEventListener('click', e => withBusy(e.currentTarget, async () => {
-  const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel, welcome:ADMIN.welcome, widgets:ADMIN.widgets };
-  const w = settingsDraft.widgets, [tab, box] = ($('#wNote').value || '|').split('|');
+  const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel, welcome:ADMIN.welcome };
+  ADMIN.title = $('#sTitle').value.trim() || 'Home';
+  ADMIN.welcome = $('#sWelcome').value.trim();
+  ADMIN.icon = '';   // no separate start page icon any more: the site logo is used
+  ADMIN.panel = settingsDraft.panel;
+  const bar = $('#sHomeBar').checked, barChanged = bar !== homeBarOn();
+  try {
+    await saveAll(barChanged ? '' : 'Settings saved');
+    if (barChanged){ await saveHomeBar(bar); toast('Settings saved'); setTimeout(() => location.reload(), 600); return; }   // the bar comes or goes with a reload
+    closeSheet('settingsSheet');
+  } catch (err){ Object.assign(ADMIN, prev); toast(err.message, true); }
+}));
+$('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async () => {
+  const prev = ADMIN.widgets;
+  const w = widgetsDraft, [tab, box] = ($('#wNote').value || '|').split('|');
   const zones = [0, 1, 2].map(i => ({ tz:$(`[data-zt="${i}"]`).value.trim(), name:$(`[data-zn="${i}"]`).value.trim() })).filter(z => z.tz);
   const badZone = zones.find(z => !tzOk(z.tz));
   if (badZone){ toast(`“${badZone.tz}” is not a time zone. Pick one from the list, like Europe/London.`, true); $(`[data-zt]`)?.focus(); return; }
+  w.show = $('#wShow').checked;
   w.zones = zones;
   w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
   w.countdown = { name:$('#wCdName').value.trim(), date:$('#wCdDate').value };
   w.note = { tab:tab || '', box:box || '' };
-  ADMIN.title = $('#sTitle').value.trim() || 'Home';
-  ADMIN.welcome = $('#sWelcome').value.trim();
-  ADMIN.icon = '';   // no separate start page icon any more: the site logo is used
-  ADMIN.panel = settingsDraft.panel;
   ADMIN.widgets = w;
   try {
-    await saveAll('Settings saved');
-    closeSheet('settingsSheet');
-  } catch (err){ Object.assign(ADMIN, prev); toast(err.message, true); }
+    await saveAll('Widgets saved');
+    closeSheet('widgetsSheet');
+  } catch (err){ ADMIN.widgets = prev; toast(err.message, true); }
 }));
 
 /* ======================================================================
@@ -961,7 +984,7 @@ async function siteJSON(url, body, opts = {}){
   if (!r.ok || j.error) throw Object.assign(new Error(j.error || 'Request failed'), { status:r.status });
   return j;
 }
-const wOn = id => !!WCFG && WCFG.list.some(w => w.id === id && w.on);
+const wOn = id => !!WCFG && WCFG.show && WCFG.list.some(w => w.id === id && w.on);
 async function loadTasks(){
   try { const j = await siteJSON('../tasks/api.php'); WD.tasks = j.auth ? j.tasks : []; WD.set = j.settings || {}; WD.tasksErr = ''; }
   catch (e){ WD.tasksErr = e.message; }
@@ -1131,7 +1154,7 @@ function summary(id){
 function renderWidgets(quiet = false){
   renderClock();
   const a = document.activeElement, keep = a && a.dataset && a.dataset.w && !$('#wPanel').contains(a) ? [a.parentNode.id, a.dataset.w] : null;
-  const list = WCFG ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];
+  const list = WCFG && WCFG.show ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];   // Widgets > Show Widgets off: none
   const dock = WCFG && WCFG.style === 'dock';
   if (wOpen && !list.includes(wOpen)) wOpen = '';
   document.body.classList.toggle('has-widgets', list.length > 0);

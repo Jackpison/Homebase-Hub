@@ -127,7 +127,7 @@
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
-    ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Start Page', 'look', 'home corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
+    ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'look', 'home start page corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], ['Same Look on Every Page', 'look', 'unified'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
@@ -365,7 +365,7 @@
       seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
       '<h3>Navigation Style</h3><p>Applies to every page. Only the Top Bar hides itself while you scroll.</p>' +
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
-      '<label class="ix-tg"><span>Show the Bar on the Start Page<small>Off keeps the start page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
+      '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
       '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw">' + sw.map(function (c) { return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (draft.accent === c) + '"></button>'; }).join('') +
       '<label class="ix-swc" title="Your Own Color"><input type="color" id="ix-acc" value="' + esc(draft.accent) + '" aria-label="Your Own Color"></label><input type="text" class="ix-hex" id="ix-acch" maxlength="7" value="' + esc(draft.accent) + '" aria-label="Accent Color Hex" spellcheck="false"></div>' +
       '<label class="ix-tg"><span>Same Look on Every Page<small>Your colors and accent on every page. Turn off to let each page use its own colors.</small></span><input type="checkbox" id="ix-look"' + (draft.look ? ' checked' : '') + '></label>' +

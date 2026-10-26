@@ -149,8 +149,9 @@ story += chapter('4', 'Home', 'Your start page: the first thing you see when you
  P('The start page can be shown with the bar or without it. Without the bar, the gear button in the corner opens editing, the other pages and Settings once you are logged in.'),
  *sub('Clock and widgets'),
  P('Everyone sees the clock. While you are logged in, Home also shows widgets in frosted glass: %s (with Quick Add, and a tick to mark a task done), %s, %s (one box from Info), %s, %s, %s, %s, %s and %s. Visitors never receive your widgets or their data.' % (C('Today'), C('Countdown'), C('Pinned Note'), C('Recent Tools'), C('Month Calendar'), C('Scratch Pad'), C('Quote of the Day'), C('World Clock'), C('Weather'))),
- steps(['Open editing and choose %s.' % C('Settings'), 'Under %s, pick %s (chips under the clock and a dock) or %s (small cards along the bottom).' % (C('Widgets'), C('Glass Dock'), C('Glance and Expand')),
-        'Turn widgets on or off and move them up or down; set the countdown, the pinned note, the World Clock places and your town for Weather.', 'Press %s.' % C('Save Settings')]),
+ steps(['Open editing: a row of buttons appears at the bottom. Choose %s (the four squares).' % C('Widgets'), 'Pick %s (chips under the clock and a dock) or %s (small cards along the bottom).' % (C('Glass Dock'), C('Glance and Expand')),
+        'Turn widgets on or off and move them up or down; set the countdown, the pinned note, the World Clock places and your town for Weather. %s off hides them all.' % C('Show Widgets'), 'Press %s.' % C('Save Widgets')]),
+ P('%s (the gear in that row) has the page title, the welcome text, %s and the glass look.' % (C('Home Settings'), C('Show the Bar on the Home Page'))),
  Tip('Weather is off at first. Once you turn it on and type your town, your server asks Open-Meteo for the forecast, at most every 30 minutes. Nothing else on Home contacts another site.'),
  P('Up to version 1.50 Home had its own list of links. Version 1.51 copies them once into Links, in a category called %s.' % C('From Home')),
  shot('home-3', 'What a visitor sees: the clock on another photo from the rotation, and no widgets.'))

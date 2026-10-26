@@ -271,6 +271,7 @@ function clean_widgets($in): array
     $we = is_array($in['weather'] ?? null) ? $in['weather'] : [];
     return [
         'style'     => in_array($in['style'] ?? '', WIDGET_STYLES, true) ? $in['style'] : 'dock',
+        'show'      => (bool) ($in['show'] ?? true),   // Widgets > Show Widgets (1.51.1): off hides every widget; the clock has its own switch
         'clock'     => (bool) ($in['clock'] ?? true),
         'list'      => $list,
         'countdown' => ['name' => str_clip($cd['name'] ?? '', 40), 'date' => $okDate ? $date : ''],
