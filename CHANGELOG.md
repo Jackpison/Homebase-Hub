@@ -17,7 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
-| 1.52.0 | Characters on Home: 22 little 3D characters that walk about, sit on the clock and do 21 activities and the Power Beam |
+| 1.52.0 | Characters on Home: 22 little 3D characters that walk about, sit on the clock and do 20 activities and the Power Beam |
 | 1.51.3 | An open widget no longer lies on top of the cards in Glance and Expand |
 | 1.51.2 | Home's glass stays see-through when the computer reduces transparency, and a Tint choice: Light, Dark or Solid |
 | 1.51.1 | Lighter glass on Home, an icon pill for editing, Widgets in its own window with a Show Widgets switch, and the bar switch in Home Settings |
