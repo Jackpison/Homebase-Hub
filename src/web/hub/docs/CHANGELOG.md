@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.51.2 | Home's glass stays see-through when the computer reduces transparency, and a Tint choice: Light, Dark or Solid |
 | 1.51.1 | Lighter glass on Home, an icon pill for editing, Widgets in its own window with a Show Widgets switch, and the bar switch in Home Settings |
 | 1.51.0 | Home gets a clock and widgets in frosted glass; Home's links move to Links; Links stops asking Google for icons unless you turn it on |
 | 1.50.0 | A tidier folder layout: the engine, your pictures and the documents now live in `web/hub` |
@@ -76,6 +77,16 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.51.2
+
+### Home
+
+- **Fixed: dark widgets.** With Windows' Transparency effects turned off (or "reduce transparency" on a Mac or phone), every widget became a solid dark block and Opacity and Blur did nothing; only pointing at one showed the glass. Now the glass looks the same everywhere.
+- **Home Settings > Glass > Tint:** Light (see-through, the default), Dark, or Solid (not see-through, easiest to read on busy photos).
+- The glass brightens under the pointer with every tint, and the text has a soft shadow so it reads on bright photos.
 
 ---
 
