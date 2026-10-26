@@ -1135,6 +1135,7 @@ function renderWidgets(quiet = false){
   const dock = WCFG && WCFG.style === 'dock';
   if (wOpen && !list.includes(wOpen)) wOpen = '';
   document.body.classList.toggle('has-widgets', list.length > 0);
+  document.body.classList.toggle('w-open', !!wOpen);
   document.body.dataset.wstyle = WCFG ? WCFG.style : '';
 
   // Glass Dock: chips under the clock for Today and Countdown, and a dock with every widget

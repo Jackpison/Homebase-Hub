@@ -231,6 +231,17 @@ try:
         q1 = hp.evaluate("document.querySelector('#wBody blockquote').textContent"); hp.click('#wQuoteNext'); q2 = hp.evaluate("document.querySelector('#wBody blockquote').textContent")
         check('P34 Quote of the Day shows a quote, and Another Quote shows a different one', len(q1) > 5 and q2 != q1 and hp.evaluate("document.activeElement.id") == 'wQuoteNext', (q1, q2))
         hctx.close()
+        # P35: a phone, logged in, all nine widgets in the Glass Dock: every dock button fits on the screen, and an open widget
+        # does not sit on top of the chips (on a short screen they make way)
+        subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = 'dock'; write_json(SITE_FILE, clean_site($s));" % D], check=True)
+        mctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 700}); mctx.add_cookies(cookies); mctx.route('**/*', handle); mctx.add_init_script(TRACK_REQUESTS)
+        mctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+        mp = mctx.new_page(); mp.goto(B + '/web/home/', wait_until='domcontentloaded'); until(lambda: mp.evaluate("document.querySelectorAll('#wDock .wdb').length") == 9, 10000); settle(mp)
+        fit = mp.evaluate("(() => { const d = document.getElementById('wDock'); return [d.scrollWidth <= d.clientWidth + 1, [...d.children].every(b => { const r = b.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth }) ] })()")
+        mp.click('#wDock [data-w=today]'); mp.wait_for_selector('#wQa', timeout=5000)
+        chips = mp.evaluate("getComputedStyle(document.getElementById('wChips')).visibility")
+        check('P35 on a phone all nine dock buttons fit on the screen, and an open widget does not cover the chips (they make way)', fit == [True, True] and chips == 'hidden', (fit, chips))
+        mctx.close()
         # a visitor: the clock, no widgets, and nothing private in the page or asked of the server
         vctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 844}); vctx.route('**/*', handle); vctx.add_init_script(TRACK_REQUESTS)
         vctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")

@@ -38,6 +38,24 @@ tasks=[{'name':'Renew domain name','due':d(12),'repeat':{'n':1,'unit':'year'},'p
  {'name':'Cloud storage','due':d(16),'repeat':{'n':1,'unit':'month'},'price':75,'cur':'INR','cat':'Subscriptions','pay':'Card'}]
 print('tasks',post('/web/tasks/api.php',{'action':'save','tasks':tasks,'rev':0}).get('ok'))
 print(subprocess.run(['php',os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tests', 'lib', 'seed_demo.php'),D],capture_output=True,text=True).stdout.strip())
+# Home's widgets (1.51): a countdown, a pinned note, World Clock and Weather. The forecast is written as if the server had saved it,
+# so nothing asks Open-Meteo.
+HOME_SEED = r'''
+require $argv[1] . '/web/home/lib.php';
+$info = hub_read_guarded(hub_dir('info') . '/info.php'); $tab = $info['tabs'][0]; $box = $tab['boxes'][0];
+$d = fn($n) => date('Y-m-d', strtotime("$n days"));
+$s = load_site();
+$s['widgets'] = clean_widgets(['style' => $argv[2], 'clock' => true, 'list' => array_map(fn($id) => ['id' => $id, 'on' => true], ['today', 'countdown', 'weather', 'note', 'calendar', 'worldclock', 'quote', 'tools', 'pad']),
+  'countdown' => ['name' => 'Goa Trip', 'date' => $d(12)], 'note' => ['tab' => $tab['id'], 'box' => $box['id']],
+  'zones' => [['tz' => 'Europe/London', 'name' => 'London'], ['tz' => 'America/New_York', 'name' => 'New York']], 'weather' => ['town' => 'Bengaluru', 'unit' => 'c']]);
+write_json(SITE_FILE, clean_site($s));
+$days = [[$d(0), 29, 19, 'Partly cloudy', 'partly'], [$d(1), 27, 19, 'Rain', 'rain'], [$d(2), 28, 18, 'Mostly clear', 'sun']];
+write_json(weather_file(), ['key' => 'bengaluru|c', 'town' => 'bengaluru', 'place' => ['name' => 'Bengaluru, Karnataka', 'lat' => 12.97, 'lon' => 77.59], 'saved' => time() + 86400,
+  'data' => ['temp' => 27, 'text' => 'Partly cloudy', 'pic' => 'partly', 'day' => true, 'place' => 'Bengaluru, Karnataka', 'unit' => '°C', 'saved' => time() + 86400,
+             'days' => array_map(fn($x) => ['date' => $x[0], 'max' => $x[1], 'min' => $x[2], 'text' => $x[3], 'pic' => $x[4]], $days)]]);
+pad_write("Ask about the rent receipt.");
+'''
+def home_seed(style): subprocess.run(['php', '-r', HOME_SEED, '--', D, style], check=True)
 cookies=[{'name':c.name,'value':c.value,'domain':'127.0.0.1','path':'/'} for c in cj]
 def snap(pg,name,url=None,wait=1800,click=None,full=False):
     if url: pg.goto(B+url,wait_until='domcontentloaded'); pg.reload(wait_until='domcontentloaded')
@@ -49,7 +67,7 @@ def snap(pg,name,url=None,wait=1800,click=None,full=False):
 with sync_playwright() as p:
     b=p.chromium.launch(args=['--no-sandbox'])
     def ctx(w,h,theme):
-        c=b.new_context(user_agent=UA,viewport={'width':w,'height':h},device_scale_factor=1); c.add_cookies(cookies)
+        c=b.new_context(user_agent=UA,viewport={'width':w,'height':h},device_scale_factor=1,timezone_id='Asia/Kolkata'); c.add_cookies(cookies)
         c.add_init_script("try{localStorage.setItem('ix-seen-ver','%s');localStorage.setItem('hub-theme','%s')}catch(e){}" % (re.search(r'(\d+\.\d+\.\d+)',os.path.basename(ZIP)).group(1),theme))
         c.route('**/*',lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith('data:') else r.abort()); return c
     for theme in ('dark','light'):
@@ -69,7 +87,20 @@ with sync_playwright() as p:
                 snap(pg,'s-'+n,'/web/settings/#'+h)
         else:
             snap(pg,'s-overview-light','/web/settings/#overview'); snap(pg,'tools-light','/web/tools/')
+    # Home (1440 x 683, as on the website): the Glass Dock with Today open, Glance and Expand, and what a visitor sees
+    # Home shows the time: photograph it at a quarter to eight in the evening (India), not at whatever time this runs
+    EVENING=datetime.datetime.combine(today, datetime.time(19, 42), tzinfo=datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
+    def evening(c): c.clock.install(time=EVENING); return c
+    hc=ctx(1440,683,'dark'); hc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('tools.v3',JSON.stringify({recent:['pdf-merge','image-resize','qr-generator','pdf-sign']}))}catch(e){}")
+    hp=evening(hc).new_page(); home_seed('dock')
+    snap(hp,'home-1','/web/home/',click='#wChips [data-w=today]')
+    home_seed('glance'); snap(hp,'home-2','/web/home/')
+    vc=b.new_context(user_agent=UA,viewport={'width':1440,'height':683},device_scale_factor=1,timezone_id='Asia/Kolkata')
+    vc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');document.cookie='hl_seen=0;path=/'}catch(e){}"); vc.route('**/*',lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith('data:') else r.abort())
+    vp=evening(vc).new_page(); vp.goto(B+'/web/home/',wait_until='domcontentloaded'); vp.wait_for_timeout(800); vp.click('#nextBg'); snap(vp,'home-3',wait=2500)
+    home_seed('dock')
     m=ctx(390,844,'dark').new_page()
-    for n,u in [('m-links','/web/links/'),('m-tasks','/web/tasks/'),('m-info','/web/info/'),('m-settings','/web/settings/#overview'),('m-tools','/web/tools/')]: snap(m,n,u)
+    m.context.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}"); evening(m.context)
+    for n,u in [('m-home','/web/home/'),('m-links','/web/links/'),('m-tasks','/web/tasks/'),('m-info','/web/info/'),('m-settings','/web/settings/#overview'),('m-tools','/web/tools/')]: snap(m,n,u)
     b.close()
 php.terminate()

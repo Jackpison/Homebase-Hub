@@ -155,6 +155,9 @@ body[data-wstyle="glance"] .wpanel{top:clamp(250px,40vh,320px);width:min(520px,c
 .ww-t{opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ww-min{opacity:.7;text-align:right}
 
+/* a short screen: while a widget is open in the Glass Dock, the chips under the clock make way for it */
+@media (max-height:820px){ body[data-wstyle="dock"].w-open .chips{visibility:hidden} }
+
 /* the bar's Bottom Dock: Home's dock and cards sit above it */
 html[data-ix-bar][data-ix-nav="dock"] .wdock{bottom:calc(var(--ix-dock) + 36px)}
 html[data-ix-bar][data-ix-nav="dock"] .wcards{bottom:calc(var(--ix-dock) + 44px)}
@@ -197,7 +200,8 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
   .tb-btn{padding:8px 11px;font-size:.85rem}
   .stage{padding-top:clamp(56px,12vh,110px);gap:16px}
   .wdock{bottom:max(76px,calc(env(safe-area-inset-bottom) + 64px))}
-  .wdb{padding:0 12px}
+  .wdock{gap:0;padding:5px}
+  .wdb{padding:0 9px;min-height:42px}
   .wdb span{display:none}
   .wcards{bottom:max(76px,calc(env(safe-area-inset-bottom) + 64px));width:100%;gap:10px;flex-wrap:nowrap;justify-content:flex-start;
     overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 12px;padding:2px 12px 6px;scrollbar-width:none}
