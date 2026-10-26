@@ -579,6 +579,7 @@ case 'save':
     $map = organize_icons($data, $iconDir, ($auth['secret'] ?? ''));
     $rev = write_data($data, !empty($b['keep']));   // keep: a version first, so this save can be undone (Import Bookmarks)
     if ($newlyEnc) purge_readable_copies($newlyEnc, $iconDir, ($auth['secret'] ?? ''));
+    visits_prune($data);   // counts of links that are gone, or now encrypted, go too
     links_unlock($lk);
     out(200, ['ok' => true, 'rev' => $rev, 'iconMap' => (object)$map]);
 

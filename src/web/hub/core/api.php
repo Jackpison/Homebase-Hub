@@ -485,7 +485,9 @@ case 'changelog':   // Settings > Changelog: the history of every version (docs/
     need_admin(false);
     $cl = HUB_DOCS . '/CHANGELOG.md';
     if (!is_file($cl)) hub_json(200, ['ok' => false, 'error' => 'The changelog file is not on your server (web/hub/docs/CHANGELOG.md).']);
-    hub_json(200, ['ok' => true, 'version' => HUB, 'md' => (string)file_get_contents($cl, false, null, 0, 1500000), 'time' => (int)filemtime($cl)]);
+    $md = (string)file_get_contents($cl, false, null, 0, 1500000);
+    if (!empty($_GET['latest'])) $md = hub_changelog_latest($md);   // Overview's "What's New": the newest version only
+    hub_json(200, ['ok' => true, 'version' => HUB, 'md' => $md, 'time' => (int)filemtime($cl)]);
 
 case 'activity':   // Settings > Security > Devices: who is logged in, and the recent login history
     need_admin(false);

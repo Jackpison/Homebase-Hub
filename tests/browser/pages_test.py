@@ -288,6 +288,14 @@ try:
         light_reduce = glass('light', reduce=True); dark = glass('dark'); solid = glass('solid'); glass('light')
         check('P40 Glass Tint: Light stays see-through and blurred even when the computer asks to reduce transparency; Dark is a dark see-through tint; Solid is not see-through',
               light_reduce[0] == 255 and light_reduce[1] < 0.5 and light_reduce[2] and dark[0] < 60 and dark[1] < 0.5 and dark[2] and solid[1] > 0.85 and not solid[2], (light_reduce, dark, solid))
+        # P48: Settings > Overview after an update shows What's New from a small answer (the newest version only, 1.53.1)
+        wctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); wctx.add_cookies(cookies); wctx.route('**/*', handle); wctx.add_init_script(TRACK_REQUESTS)
+        wsz = []; wp = wctx.new_page(); wp.on('requestfinished', lambda r: wsz.append((r.url, len(r.response().body() or b''))) if 'action=changelog' in r.url else None)
+        wp.goto(B + '/web/settings/', wait_until='domcontentloaded'); until(lambda: wp.evaluate("!!document.querySelector('.ix-new')"), 15000, 200)
+        wn = wp.evaluate("(document.querySelector('.ix-new .ix-ec-t') || {}).textContent || ''")
+        wctx.close()
+        check("P48 Settings > Overview shows What's New for this version, loading only its notes (not the whole changelog)",
+              ver in wn and wsz and all('latest=1' in u and n < 20000 for u, n in wsz), (wn, [(u[-40:], n) for u, n in wsz]))
         # P47: Home's refresh button (1.53). The next background is ready, so a press swaps at once; three quick presses on a slow
         # network give one change (it never starts over); when nothing arrives it gives up within about 20 s and the button works again.
         rctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx.route('**/*', handle); rctx.add_init_script(TRACK_REQUESTS)

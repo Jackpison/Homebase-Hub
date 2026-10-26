@@ -988,3 +988,11 @@ if (!is_file(hub_dir('core') . '/after-update-' . HUB . '.done')) {
     @unlink(HUB_WEB . '/tools/config.json');
     @file_put_contents(hub_dir('core') . '/after-update-' . HUB . '.done', date('c'));
 }
+
+/** The newest version's part of the changelog (from its first "## x.y.z" heading to the next "---" or "## "), for Settings > Overview. */
+function hub_changelog_latest(string $md): string {
+    if (!preg_match('/^## \d+\.\d+\.\d+.*$/m', $md, $m, PREG_OFFSET_CAPTURE)) return '';
+    $rest = substr($md, $m[0][1]);
+    $end = preg_match('/\n(---|## )/', $rest, $e, PREG_OFFSET_CAPTURE, strlen($m[0][0])) ? $e[0][1] : strlen($rest);
+    return substr($rest, 0, $end) . "\n";
+}

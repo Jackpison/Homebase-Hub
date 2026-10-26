@@ -121,8 +121,11 @@
     if (h) go(h);
     else if (narrow) host.setAttribute('data-view', 'list');
     else { var last = ''; try { last = sessionStorage.getItem('ix-sec') || ''; } catch (e) {} go(SUB_OF[last] ? last : 'overview'); }
-    api('overview').then(function (j) { if (j.ok) { OV = j; decorateNav(); } }).catch(function () {});
+    ovGet().then(function (j) { if (j.ok) { OV = j; decorateNav(); } }).catch(function () {});
   }
+  /* Opening Settings asks for the overview twice at once (the menu badges and the Overview page): one request serves both. */
+  var ovP = null, ovAt = 0;
+  function ovGet() { if (!ovP || Date.now() - ovAt > 3000) { ovAt = Date.now(); ovP = api('overview'); } return ovP; }
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
@@ -1137,7 +1140,7 @@
 
   function pOverview(p) {
     p.innerHTML = '<p class="ix-ld">Checking how things stand…</p>';
-    api('overview').then(function (j) {
+    ovGet().then(function (j) {
       if (!j.ok) { p.innerHTML = '<p class="ix-err">' + esc(j.error || 'Could not load the overview.') + '</p>'; return; }
       OV = j; decorateNav();
       var pr = j.protect, tg = j.telegram, bk = j.backup, up = j.update, fl = j.files, now = Date.now() / 1000;
@@ -1181,7 +1184,8 @@
   /* After an update: once, on the Overview, what the new version changed (from the changelog), until you press Got It. */
   function whatsNew(p, ver) {
     if (lsGet('ix-seen-ver') === ver) return;
-    clLoad().then(function (cl) {
+    // only the newest version's notes (the whole changelog is over 100 KB; Changelog loads it when you open it)
+    (CL && CL.entries ? Promise.resolve(CL) : api('changelog&latest=1').then(function (j) { if (!j || !j.ok) throw new Error('no changelog'); return clParse(j.md); })).then(function (cl) {
       var e = cl.entries[0];
       if (!e || e.ver !== ver) { lsSet('ix-seen-ver', ver); return; }
       var box = document.createElement('section'); box.className = 'ix-ec ix-new';

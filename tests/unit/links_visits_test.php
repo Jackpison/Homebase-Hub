@@ -62,3 +62,10 @@ t('only a logged-in browser receives the counts; a visitor\'s click answer has n
 $js = (string) file_get_contents($site . '/web/links/assets/links.js');
 t('Show Visit Counts is on unless you turn it off, and off only hides the numbers', strpos($js, "visitCounts !== false") !== false && strpos($js, "function countVisit(") !== false && strpos($js, 'showVisits()') !== false);
 t('lib.php is closed to browsers', (bool) preg_match('/\(config\|lib\)\\\\\.php/', (string) file_get_contents($site . '/web/links/.htaccess')));
+
+/* a tab that becomes encrypted: its addresses leave the counts file at once (1.53.1) */
+visits_add('https://bank.example/', 'me2', $data, false, $now + 50000);
+$enc = $data; $enc['tabs'][1] = ['id' => 'mine', 'title' => 'Mine', 'enc' => 'v1.yyyy', 'categories' => []];
+visits_prune($enc);
+t('encrypting a tab removes its links\' addresses from the counts file right away (the others stay)', strpos(hub_jraw(visits_file()), 'bank.example') === false && visits_for($enc)['https://example.org/'] === 4);
+t('Links\' save runs it', strpos((string) file_get_contents($site . '/web/links/api.php'), 'visits_prune($data);') !== false);

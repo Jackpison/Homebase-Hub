@@ -67,3 +67,15 @@ function visits_add(string $url, string $who, array $data, bool $public, ?int $n
     if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
     return [$counted, (int)($v['counts'][$url] ?? 0)];
 }
+
+/** After a save: forget the counts of addresses that are no longer readable links (deleted, changed, or now in an encrypted
+ *  tab: an encrypted tab's addresses must not stay readable here). */
+function visits_prune(array $data): void
+{
+    $f = visits_file(); if (!is_file(hub_jpath($f)) && !is_file($f)) return;
+    $lk = @fopen($f . '.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
+    $v = visits_read(); $all = visits_urls($data, false); $n = count($v['counts']);
+    foreach ($v['counts'] as $u => $_) if (!isset($all[$u])) unset($v['counts'][$u]);
+    if (count($v['counts']) !== $n) hub_jput($f, json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+    if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
+}
