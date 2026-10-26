@@ -173,8 +173,8 @@ try:
         hp = hctx.new_page(); hp.on('pageerror', lambda e: herr.append(str(e)[:200]))
         hp.goto(B + '/web/home/', wait_until='domcontentloaded'); until(lambda: hp.evaluate("document.querySelectorAll('#wDock .wdb').length > 0"), 10000); settle(hp)
         dock = hp.evaluate("[...document.querySelectorAll('#wDock .wdb')].map(b => b.dataset.w)")
-        check('P20 logged in, Home shows the clock and the Glass Dock with the five widgets that are on at first (Scratch Pad is off)',
-              dock == ['today', 'countdown', 'note', 'tools', 'calendar'] and hp.evaluate("!document.getElementById('clock').hidden && /\\d/.test(document.getElementById('time').textContent) && !document.getElementById('wDock').hidden && document.getElementById('wCards').hidden"), dock)
+        check('P20 logged in, Home shows the clock and the Glass Dock with the six widgets that are on at first (Scratch Pad, World Clock and Weather are off)',
+              dock == ['today', 'countdown', 'note', 'tools', 'calendar', 'quote'] and hp.evaluate("!document.getElementById('clock').hidden && /\\d/.test(document.getElementById('time').textContent) && !document.getElementById('wDock').hidden && document.getElementById('wCards').hidden"), dock)
         glass = hp.evaluate("[...document.querySelectorAll('.corner button')].filter(b => getComputedStyle(b).display !== 'none').map(b => { const c = getComputedStyle(b); return [b.getAttribute('aria-label') || b.textContent, c.backgroundImage.includes('gradient') && (c.backdropFilter || c.webkitBackdropFilter || 'none') !== 'none'] })")
         check('P20b the corner buttons, the site menu (gear) included, are glass like the widgets (not a plain white button)', len(glass) >= 2 and all(g[1] for g in glass) and any(g[0] == 'Menu' for g in glass), glass)
         hp.click('#wDock [data-w=today]'); hp.wait_for_selector('#wQa', timeout=5000)
@@ -203,11 +203,17 @@ try:
         note = hp.evaluate("(() => { const o = document.querySelector('#wNote optgroup option'); document.getElementById('wNote').value = o.value; return o.textContent })()")
         enc = hp.evaluate("[...document.querySelectorAll('#wNote optgroup')].map(g => g.label)")
         hp.click('#wList [data-wmove=\"5\"][data-by=\"-1\"]')   # Scratch Pad one up
+        hp.check('#wList [data-wl=worldclock]'); hp.check('#wList [data-wl=weather]')
+        hp.fill('[data-zt=\"0\"]', 'Mars/Nowhere'); hp.click('#saveSettings'); until(lambda: 'not a time zone' in hp.evaluate("document.getElementById('toast').textContent"), 5000)
+        badzone = hp.evaluate("[document.getElementById('settingsSheet').open, document.getElementById('toast').textContent]")
+        hp.fill('[data-zt=\"0\"]', 'Asia/Tokyo'); hp.fill('[data-zn=\"0\"]', 'Aunt Mei'); hp.fill('#wTown', 'Bengaluru')
+        # a forecast already saved on the server, so the test asks Open-Meteo nothing (the server side is tested in home_widgets_test.php)
+        subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; write_json(weather_file(), ['key' => 'bengaluru|c', 'town' => 'bengaluru', 'place' => ['name' => 'Bengaluru, Karnataka', 'lat' => 12.97, 'lon' => 77.59], 'saved' => time(), 'data' => ['temp' => 27, 'text' => 'Partly cloudy', 'pic' => 'partly', 'day' => true, 'days' => [['date' => date('Y-m-d'), 'max' => 29, 'min' => 19, 'text' => 'Rain', 'pic' => 'rain']], 'place' => 'Bengaluru, Karnataka', 'unit' => '°C', 'saved' => time()]]);" % D], check=True)
         hp.click('#saveSettings'); until(lambda: not hp.evaluate("document.getElementById('settingsSheet').open"), 10000)
-        hp.click('#doneBtn'); until(lambda: hp.evaluate("document.querySelectorAll('#wCards .wcard').length") == 6, 10000); settle(hp)
+        hp.click('#doneBtn'); until(lambda: hp.evaluate("document.querySelectorAll('#wCards .wcard').length") == 9, 10000); settle(hp)
         cards = hp.evaluate("[...document.querySelectorAll('#wCards .wcard')].map(c => [c.dataset.w, c.querySelector('.wc-h span').textContent])")
         check('P25 Settings > Widgets switches to Glance and Expand, turns the Scratch Pad on, moves it, and sets the countdown and the note (no encrypted tab offered)',
-              [c[0] for c in cards] == ['today', 'countdown', 'note', 'tools', 'pad', 'calendar'] and cards[1][1] == 'Lakeside Weekend' and cards[2][1] == note and hp.evaluate("document.getElementById('wDock').hidden")
+              [c[0] for c in cards] == ['today', 'countdown', 'note', 'tools', 'pad', 'calendar', 'quote', 'worldclock', 'weather'] and cards[1][1] == 'Lakeside Weekend' and cards[2][1] == note and hp.evaluate("document.getElementById('wDock').hidden")
               and 'Trip Notes' in enc, (cards, note, enc))
         hp.click('#wCards [data-w=countdown]'); hp.wait_for_selector('#wBody .wcount', timeout=5000)
         check('P26 the countdown opens to the days left', hp.evaluate("document.querySelector('#wBody .wcount b').textContent") == '12', hp.evaluate("document.getElementById('wBody').textContent"))
@@ -216,6 +222,14 @@ try:
         hp.reload(wait_until='domcontentloaded'); until(lambda: hp.evaluate("document.querySelectorAll('#wCards .wcard').length") == 6, 10000); settle(hp)
         hp.click('#wCards [data-w=pad]'); hp.wait_for_selector('#wPad', timeout=5000)
         check('P27 the Scratch Pad saves by itself and keeps the text after a reload', hp.evaluate("document.getElementById('wPad').value") == 'Buy a spare key')
+        check('P32 World Clock: a name that is not a time zone is refused (Settings stays open), a real one shows with its name and time',
+              badzone[0] and 'not a time zone' in badzone[1] and hp.evaluate("(() => { const c = document.querySelector('#wCards [data-w=worldclock]'); return c.querySelector('.wc-h span').textContent === 'Aunt Mei' && /\\d:\\d\\d/.test(c.textContent) })()"), badzone)
+        hp.click('#wCards [data-w=weather]'); hp.wait_for_selector('#wBody .wwnow', timeout=5000)
+        check('P33 Weather, once turned on with a town, shows the forecast your server saved (27°C, Bengaluru) and credits Open-Meteo',
+              hp.evaluate("document.querySelector('#wBody .wwnow b').textContent") == '27°C' and 'Bengaluru, Karnataka' in hp.evaluate("document.getElementById('wBody').textContent") and hp.evaluate("!!document.querySelector('#wBody a[href=\"https://open-meteo.com/\"]')"))
+        hp.click('#wCards [data-w=quote]'); hp.wait_for_selector('#wQuoteNext', timeout=5000)
+        q1 = hp.evaluate("document.querySelector('#wBody blockquote').textContent"); hp.click('#wQuoteNext'); q2 = hp.evaluate("document.querySelector('#wBody blockquote').textContent")
+        check('P34 Quote of the Day shows a quote, and Another Quote shows a different one', len(q1) > 5 and q2 != q1 and hp.evaluate("document.activeElement.id") == 'wQuoteNext', (q1, q2))
         hctx.close()
         # a visitor: the clock, no widgets, and nothing private in the page or asked of the server
         vctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 844}); vctx.route('**/*', handle); vctx.add_init_script(TRACK_REQUESTS)

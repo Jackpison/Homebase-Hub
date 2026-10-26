@@ -83,7 +83,8 @@ body:not(.has-widgets) .stage{justify-content:center;padding-top:0;padding-botto
 
 /* ================= Glance and Expand: small cards ================= */
 .wcards{position:fixed;z-index:5;left:50%;bottom:max(84px,calc(env(safe-area-inset-bottom) + 60px));transform:translateX(-50%);
-  width:min(calc(100% - 32px),calc(var(--n,4) * 260px));display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:14px}
+  width:min(calc(100% - 32px),calc(var(--n,4) * 260px));display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.wcards > .wcard{flex:0 0 calc((100% - (var(--n,4) - 1) * 14px) / var(--n,4))}
 .wcard{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:118px;padding:16px 18px;border-radius:24px;text-align:left;cursor:pointer;font-size:13px;min-width:0}
 .wcard[aria-expanded="true"]{border:2px solid rgba(255,255,255,.95)}
 .wc-h{display:flex;justify-content:space-between;gap:8px;width:100%;font-weight:700}
@@ -131,6 +132,29 @@ body[data-wstyle="glance"] .wpanel{top:clamp(250px,40vh,320px);width:min(520px,c
 .wcal-d.busy{font-weight:800;color:#ffd45c}
 .wcal-d.now{background:#fff;color:#141414;font-weight:800}
 
+.wchip svg{width:18px;height:18px;stroke-width:1.8}
+.wquote{margin:0;display:flex;flex-direction:column;gap:8px}
+.wquote blockquote{margin:0;font-size:20px;line-height:1.4;font-weight:600}
+.wquote figcaption{font-size:14px;opacity:.85}
+.wquote figcaption::before{content:"— "}
+.wbtn{align-self:flex-start;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+.wbtn:hover{background:rgba(255,255,255,.22)}
+.wzones{display:flex;flex-direction:column;gap:6px}
+.wzone{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.10)}
+.wz-n{display:flex;flex-direction:column;font-size:15px;font-weight:700;min-width:0}
+.wz-n small{font-size:12px;font-weight:500;opacity:.85}
+.wzone b{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wwnow{display:flex;align-items:center;gap:14px}
+.wwnow svg{width:46px;height:46px;stroke-width:1.5}
+.wwnow b{font-size:48px;font-weight:800;line-height:1}
+.wwnow span{display:flex;flex-direction:column;font-size:15px;font-weight:600}
+.wwnow small{font-size:12.5px;font-weight:500;opacity:.85}
+.wwdays{display:flex;flex-direction:column;gap:4px}
+.wwday{display:grid;grid-template-columns:7em 22px 1fr auto 2.6em;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.08);font-size:14px}
+.wwday svg{width:20px;height:20px}
+.ww-t{opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ww-min{opacity:.7;text-align:right}
+
 /* the bar's Bottom Dock: Home's dock and cards sit above it */
 html[data-ix-bar][data-ix-nav="dock"] .wdock{bottom:calc(var(--ix-dock) + 36px)}
 html[data-ix-bar][data-ix-nav="dock"] .wcards{bottom:calc(var(--ix-dock) + 44px)}
@@ -175,14 +199,16 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
   .wdock{bottom:max(76px,calc(env(safe-area-inset-bottom) + 64px))}
   .wdb{padding:0 12px}
   .wdb span{display:none}
-  .wcards{grid-template-columns:repeat(2,minmax(0,1fr));bottom:max(76px,calc(env(safe-area-inset-bottom) + 64px));width:calc(100% - 24px);gap:10px}
+  .wcards{bottom:max(76px,calc(env(safe-area-inset-bottom) + 64px));width:100%;gap:10px;flex-wrap:nowrap;justify-content:flex-start;
+    overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 12px;padding:2px 12px 6px;scrollbar-width:none}
+  .wcards > .wcard{flex:0 0 calc(50% - 17px);scroll-snap-align:start}
   .wcard{min-height:96px;padding:12px 14px;border-radius:20px}
   .wc-big{font-size:22px}
   body[data-wstyle="dock"] .wpanel{bottom:calc(max(76px,calc(env(safe-area-inset-bottom) + 64px)) + 68px)}
   body[data-wstyle="glance"] .wpanel{top:auto;bottom:max(12px,env(safe-area-inset-bottom))}
   .wcount b{font-size:48px}
 }
-@media (max-width:640px) and (max-height:700px){ .time{font-size:64px} .wcards .wcard:nth-child(n+5){display:none} }
+@media (max-width:640px) and (max-height:700px){ .time{font-size:64px} }
 
 /* ================= sheets ================= */
 .sheet{border:0;padding:0;margin:auto;width:min(480px,calc(100% - 24px));max-height:min(86vh,820px);border-radius:var(--r-sheet);
@@ -372,3 +398,5 @@ html.hl-welcome .stage,html.hl-welcome .wdock,html.hl-welcome .wcards{opacity:0}
 .sheet select,.sheet input[type=date]{width:100%;background:var(--s-bg);border:1.5px solid var(--s-line);border-radius:var(--r-ctl);padding:10px 12px;color:var(--s-ink);font:inherit}
 .sheet .inline > input[type=date]{flex:0 1 170px;min-width:140px}
 .sheet select:focus,.sheet input[type=date]:focus{outline:none;border-color:var(--accent)}
+.wzedit{display:flex;flex-direction:column;gap:8px}
+.wzedit .inline > input[data-zn]{flex:0 1 170px}

@@ -8,8 +8,9 @@ require_once $site . '/web/tasks/lib.php';
 
 /* ---------- widget settings ---------- */
 $w = clean_widgets([]);
-t('a site with no widget settings gets the default: Glass Dock, the clock, six widgets in order, Scratch Pad off',
-  $w['style'] === 'dock' && $w['clock'] === true && array_column($w['list'], 'id') === WIDGET_IDS && array_column($w['list'], 'on') === [true, true, true, true, true, false], json_encode($w));
+t('a site with no widget settings gets the default: Glass Dock, the clock, every widget in order; Scratch Pad, World Clock and Weather off',
+  $w['style'] === 'dock' && $w['clock'] === true && array_column($w['list'], 'id') === WIDGET_IDS && array_column($w['list'], 'on') === [true, true, true, true, true, false, true, false, false]
+  && $w['zones'] === [] && $w['weather'] === ['town' => '', 'unit' => 'c'], json_encode($w));
 $w = clean_widgets(['style' => 'glance', 'clock' => false, 'list' => [['id' => 'pad', 'on' => true], ['id' => 'nope', 'on' => true], ['id' => 'today', 'on' => false], ['id' => 'pad', 'on' => false], 'x']]);
 t('your order is kept, an unknown widget and a second copy are dropped, missing ones come after (in their default state)',
   $w['style'] === 'glance' && $w['clock'] === false && array_slice(array_column($w['list'], 'id'), 0, 2) === ['pad', 'today'] && $w['list'][0]['on'] && !$w['list'][1]['on'] && count($w['list']) === count(WIDGET_IDS), json_encode($w['list']));
@@ -19,6 +20,11 @@ t('the countdown keeps a real date and a name of up to 40 characters', $c('2026-
 t('...and drops a date that does not exist or is not a date', $c('2026-02-30')['date'] === '' && $c('next week')['date'] === '' && $c('2026-11-7')['date'] === '');
 $n = clean_widgets(['note' => ['tab' => 'abc_1', 'box' => '../../x']])['note'];
 t('the pinned note keeps a plain Info tab and box id, nothing else', $n['tab'] === 'abc_1' && $n['box'] === '', json_encode($n));
+$z = clean_widgets(['zones' => [['tz' => 'Europe/London', 'name' => 'Mum'], ['tz' => '+05:30'], ['tz' => '../etc'], ['tz' => 'Asia/Tokyo', 'name' => str_repeat('x', 50)], ['tz' => 'America/New_York'], ['tz' => 'Europe/Paris']]])['zones'];
+t('World Clock keeps up to 3 real time zones with a short name; anything that is not a time zone name is dropped',
+  array_column($z, 'tz') === ['Europe/London', 'Asia/Tokyo', 'America/New_York'] && $z[0]['name'] === 'Mum' && mb_strlen($z[1]['name']) <= 30, json_encode($z));
+$we = clean_widgets(['weather' => ['town' => "  Bengaluru\n ", 'unit' => 'f']])['weather'];
+t('Weather keeps the town (on one line) and °C or °F', $we === ['town' => 'Bengaluru', 'unit' => 'f'] && clean_widgets(['weather' => ['unit' => 'k']])['weather']['unit'] === 'c', json_encode($we));
 t('a saved site keeps its widgets through clean_site', clean_site(['widgets' => ['style' => 'glance']])['widgets']['style'] === 'glance');
 
 /* ---------- visitors never see the widget settings ---------- */
@@ -86,3 +92,26 @@ t('Done on a monthly task moves it to its next date and keeps the payment', strp
 $res2 = '';
 tasks_modify(function (&$d) use ($t2, &$res2) { $res2 = tasks_complete($d, $t2['id'], $t2['due'], 'paid'); return false; });
 t('...and the same date cannot be marked done twice', $res2 === 'already');
+
+/* ---------- Weather: asks Open-Meteo only with a town, keeps the answer 30 minutes ---------- */
+$asked = [];
+$geo = '{"results":[{"name":"Bengaluru","latitude":12.97194,"longitude":77.59369,"country":"India","admin1":"Karnataka"}]}';
+$fc = '{"current":{"temperature_2m":26.6,"weather_code":2,"is_day":1},"daily":{"time":["2026-10-26","2026-10-27","2026-10-28"],"weather_code":[2,61,95],"temperature_2m_max":[29.2,27,25.5],"temperature_2m_min":[19.4,19,18.6]}}';
+$fake = function (string $url) use (&$asked, $geo, $fc) { $asked[] = $url; return str_contains($url, 'geocoding') ? $geo : $fc; };
+t('no town: Open-Meteo is not asked', isset(weather_get(['town' => '', 'unit' => 'c'], $fake)['error']) && !$asked);
+@unlink(hub_jpath(weather_file()));
+$r = weather_get(['town' => 'Bengaluru', 'unit' => 'c'], $fake);
+t('with a town: the place, the temperature now and three days in plain words', $r['place'] === 'Bengaluru, Karnataka' && $r['temp'] === 27 && $r['text'] === 'Partly cloudy' && $r['unit'] === '°C'
+  && array_column($r['days'], 'text') === ['Partly cloudy', 'Rain', 'Thunderstorm'] && $r['days'][0]['max'] === 29 && count($asked) === 2 && str_contains($asked[1], 'latitude=12.972&longitude=77.594'), json_encode([$r, $asked]));
+t('...the town goes to Open-Meteo safely encoded, and nothing else about you', str_contains($asked[0], 'name=Bengaluru') && !preg_grep('/key=|token=/', $asked));
+weather_get(['town' => 'bengaluru', 'unit' => 'c'], $fake);
+t('within 30 minutes the saved answer is used: Open-Meteo is not asked again', count($asked) === 2);
+weather_get(['town' => 'Bengaluru', 'unit' => 'f'], $fake);
+t('°F asks again for the forecast in Fahrenheit, but the town is not looked up again', count($asked) === 3 && str_contains($asked[2], 'temperature_unit=fahrenheit'));
+$c = read_json(weather_file()); $c['saved'] = time() - 4000; write_json(weather_file(), $c);
+$down = fn($u) => null;
+$st = weather_get(['town' => 'Bengaluru', 'unit' => 'f'], $down);
+t('Open-Meteo can\'t be reached: the last answer is shown, marked as old', ($st['stale'] ?? false) === true && $st['place'] === 'Bengaluru, Karnataka', json_encode($st));
+t('...and a town never looked up gets a clear message', str_contains(weather_get(['town' => 'Mysuru', 'unit' => 'c'], $down)['error'] ?? '', 'reach Open-Meteo'));
+t('a town Open-Meteo does not know gets a clear message', str_contains(weather_get(['town' => 'Nowhereville', 'unit' => 'c'], fn($u) => str_contains($u, 'geocoding') ? '{"generationtime_ms":0.5}' : $fc)['error'] ?? '', 'doesn\'t know the town'));
+t('the weather is kept as a guarded file in site-data', strncmp((string) file_get_contents(hub_jpath(weather_file())), '<?php', 5) === 0);

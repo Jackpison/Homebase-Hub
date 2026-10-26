@@ -129,6 +129,14 @@ switch ($action) {
         require_admin(false);
         out(pad_read());
 
+    /* ---------- Weather (a widget; logged in only, and only once you turned it on) ---------- */
+
+    case 'weather':
+        require_admin(false);
+        $w = load_site()['widgets'];
+        if (!array_filter($w['list'], fn($x) => $x['id'] === 'weather' && $x['on'])) out(['error' => 'Weather is off. Turn it on in Edit › Settings › Widgets.'], 400);
+        out(weather_get($w['weather']));
+
     /* ---------- backgrounds ---------- */
 
     case 'refill':

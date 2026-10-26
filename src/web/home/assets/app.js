@@ -391,6 +391,8 @@ function openSettings(){
   $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date;
   drawWidgetList();
   fillNotePicker();
+  drawZones();
+  $('#wTown').value = w.weather.town; seg($('#wUnit'), w.weather.unit);
   openSheet('settingsSheet');
 }
 /* Settings > Widgets: tick the ones to show, and move them up or down (the dock and the cards follow this order) */
@@ -409,6 +411,14 @@ $('#wList').addEventListener('click', e => {
   $(`[data-wmove="${j}"][data-by="${b.dataset.by}"]`)?.focus() || $(`[data-wmove="${j}"]`)?.focus();
 });
 $('#wStyle').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; settingsDraft.widgets.style = b.dataset.v; seg($('#wStyle'), b.dataset.v); });
+/* World Clock: three rows of name and time zone; the browser offers its list of time zones */
+function drawZones(){
+  const z = settingsDraft.widgets.zones;
+  $('#wZones').innerHTML = [0, 1, 2].map(i => `<div class="inline"><input type="text" list="tzList" data-zt="${i}" value="${esc(z[i]?.tz || '')}" placeholder="${['Europe/London', 'America/New_York', 'Asia/Tokyo'][i]}" aria-label="Place ${i + 1} Time Zone" autocomplete="off" spellcheck="false"><input type="text" data-zn="${i}" value="${esc(z[i]?.name || '')}" maxlength="30" placeholder="Name (optional)" aria-label="Place ${i + 1} Name"></div>`).join('');
+  const dl = $('#tzList');
+  if (!dl.options.length && Intl.supportedValuesOf) dl.innerHTML = Intl.supportedValuesOf('timeZone').map(t => `<option value="${esc(t)}">`).join('');
+}
+const tzOk = tz => { try { new Intl.DateTimeFormat('en', { timeZone:tz }); return /\//.test(tz) || tz === 'UTC'; } catch { return false; } };
 /* the Pinned Note list: the boxes of your Info tabs (an encrypted tab's boxes can't be read here, so they are left out) */
 async function fillNotePicker(){
   const sel = $('#wNote'), cur = settingsDraft.widgets.note, val = cur.box ? cur.tab + '|' + cur.box : '';
@@ -427,6 +437,11 @@ $('#settingsSheet').addEventListener('close', () => { if (ADMIN) applyPanel(ADMI
 $('#saveSettings').addEventListener('click', e => withBusy(e.currentTarget, async () => {
   const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel, welcome:ADMIN.welcome, widgets:ADMIN.widgets };
   const w = settingsDraft.widgets, [tab, box] = ($('#wNote').value || '|').split('|');
+  const zones = [0, 1, 2].map(i => ({ tz:$(`[data-zt="${i}"]`).value.trim(), name:$(`[data-zn="${i}"]`).value.trim() })).filter(z => z.tz);
+  const badZone = zones.find(z => !tzOk(z.tz));
+  if (badZone){ toast(`“${badZone.tz}” is not a time zone. Pick one from the list, like Europe/London.`, true); $(`[data-zt]`)?.focus(); return; }
+  w.zones = zones;
+  w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
   w.countdown = { name:$('#wCdName').value.trim(), date:$('#wCdDate').value };
   w.note = { tab:tab || '', box:box || '' };
@@ -897,9 +912,12 @@ const W_META = {
   tools:     { name:'Recent Tools',   short:'Tools',     icon:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>' },
   calendar:  { name:'Month Calendar', short:'Calendar',  icon:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
   pad:       { name:'Scratch Pad',    short:'Pad',       icon:'<path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/>' },
+  quote:     { name:'Quote of the Day', short:'Quote',    icon:'<path d="M7 7h4v4c0 3-2 5-4 6M14 7h4v4c0 3-2 5-4 6"/>' },
+  worldclock:{ name:'World Clock',    short:'World',     icon:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/>' },
+  weather:   { name:'Weather',        short:'Weather',   icon:'<path d="M8 3v1.5M3.5 8H2M4.8 4.8l1 1M12 6.5A4 4 0 0 0 5 9"/><path d="M8 20h9a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.6 1.6A2.8 2.8 0 0 0 8 20z"/>' },
 };
 let WCFG = PUB.widgets || null;   // null: a visitor, or logged out
-const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'' };
+const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'' };
 let wOpen = '', calMonth = '';
 
 /* dates: Tasks uses the site's time zone (Settings > General), so "today" here is the same day as on the Tasks page */
@@ -929,7 +947,7 @@ function renderClock(){
   $('#greet').textContent = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night';
   $('#time').textContent = now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
   $('#date').textContent = now.toLocaleDateString([], { weekday:'long', day:'numeric', month:'long' });
-  clockT = setTimeout(renderClock, 60500 - now.getSeconds() * 1000 - now.getMilliseconds());
+  clockT = setTimeout(() => (WCFG ? renderWidgets(true) : renderClock()), 60500 - now.getSeconds() * 1000 - now.getMilliseconds());
 }
 
 /* ---------- reading this site's data ---------- */
@@ -970,8 +988,13 @@ async function loadPad(){
   try { WD.pad = await api('pad'); WD.padErr = ''; } catch (e){ WD.padErr = e.message; }
   renderWidgets();
 }
+async function loadWeather(){
+  try { WD.weather = await api('weather'); WD.weatherErr = ''; } catch (e){ WD.weatherErr = e.message; }
+  renderWidgets();
+}
 function loadWidgets(){
   if (!WCFG) return;
+  if (wOn('weather')) loadWeather();
   if (wOn('today') || wOn('calendar')) loadTasks();
   if (wOn('note') && WCFG.note.box) loadInfo();
   if (wOn('tools')) loadTools();
@@ -996,6 +1019,63 @@ function countdown(){
   return { name, days, when: days > 1 ? plural(days, 'day', 'days') : days === 1 ? 'Tomorrow' : days === 0 ? 'Today' : plural(-days, 'day', 'days') + ' ago',
            chip: days > 1 ? `${name} in ${days} days` : days === 1 ? `${name} is tomorrow` : days === 0 ? `${name} is today` : `${name} was ${plural(-days, 'day', 'days')} ago` };
 }
+/* Quote of the Day: short sayings, all long out of copyright, kept here (nothing is fetched). One a day; Another Quote shows the next. */
+const QUOTES = [
+  ['The journey of a thousand miles begins with a single step.', 'Lao Tzu'],
+  ['Waste no more time arguing what a good man should be. Be one.', 'Marcus Aurelius'],
+  ['Very little is needed to make a happy life.', 'Marcus Aurelius'],
+  ['It is not that we have a short time to live, but that we waste a lot of it.', 'Seneca'],
+  ['While we are postponing, life speeds by.', 'Seneca'],
+  ['Begin at once to live, and count each separate day as a separate life.', 'Seneca'],
+  ['Men are disturbed not by things, but by the views which they take of things.', 'Epictetus'],
+  ['First say to yourself what you would be; and then do what you have to do.', 'Epictetus'],
+  ['No man is free who is not master of himself.', 'Epictetus'],
+  ['Well done is better than well said.', 'Benjamin Franklin'],
+  ['Lost time is never found again.', 'Benjamin Franklin'],
+  ['Little strokes fell great oaks.', 'Benjamin Franklin'],
+  ['Write it on your heart that every day is the best day in the year.', 'Ralph Waldo Emerson'],
+  ['Nothing great was ever achieved without enthusiasm.', 'Ralph Waldo Emerson'],
+  ['Our life is frittered away by detail. Simplify, simplify.', 'Henry David Thoreau'],
+  ['Heaven is under our feet as well as over our heads.', 'Henry David Thoreau'],
+  ['It is not enough to be busy. The question is: what are we busy about?', 'Henry David Thoreau'],
+  ['The best way out is always through.', 'Robert Frost'],
+  ['Rest is not idleness.', 'John Lubbock'],
+  ['There is nothing either good or bad, but thinking makes it so.', 'William Shakespeare'],
+  ['The fault, dear Brutus, is not in our stars, but in ourselves.', 'William Shakespeare'],
+  ['Hope is the thing with feathers that perches in the soul.', 'Emily Dickinson'],
+  ['Forever is composed of nows.', 'Emily Dickinson'],
+  ['If you shed tears when you miss the sun, you also miss the stars.', 'Rabindranath Tagore'],
+  ['To know what you know and to know what you do not know, that is true knowledge.', 'Confucius'],
+  ['Slow and steady wins the race.', 'Aesop'],
+  ['Know thyself.', 'Inscription at Delphi'],
+  ['Nothing in excess.', 'Inscription at Delphi'],
+  ['Many hands make light work.', 'Proverb'],
+  ['Measure twice, cut once.', 'Proverb'],
+  ['Rome was not built in a day.', 'Proverb'],
+];
+let quoteMore = 0;
+function quoteNow(){ const day = Math.floor(dParse(siteToday()) / 86400000); return QUOTES[((day + quoteMore) % QUOTES.length + QUOTES.length) % QUOTES.length]; }
+/* World Clock: the time in up to three places you choose, and how far ahead or behind you they are */
+function tzOffset(tz, d){
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone:tz, hourCycle:'h23', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }).formatToParts(d).map(x => [x.type, x.value]));
+  return Math.round((Date.UTC(+p.year, p.month - 1, +p.day, +p.hour, +p.minute) - d.getTime()) / 60000);
+}
+const zoneName = z => z.name || z.tz.split('/').pop().replace(/_/g, ' ');
+function zoneNow(z){
+  const d = new Date();
+  try {
+    const diff = tzOffset(z.tz, d) + d.getTimezoneOffset(), a = Math.abs(diff);
+    return { name:zoneName(z), time:d.toLocaleTimeString([], { timeZone:z.tz, hour:'numeric', minute:'2-digit' }), day:d.toLocaleDateString([], { timeZone:z.tz, weekday:'short' }),
+             off: diff === 0 ? 'Same time as you' : `${Math.floor(a / 60)}h${a % 60 ? ' ' + (a % 60) + 'm' : ''} ${diff > 0 ? 'ahead' : 'behind'}` };
+  } catch { return { name:zoneName(z), time:'—', day:'', off:'Unknown time zone' }; }
+}
+const W_PIC = {
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  partly:W_META.weather.icon, cloud:'<path d="M7 19h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 2A3 3 0 0 0 7 19z"/>', fog:'<path d="M4 9h16M3 13h18M5 17h14"/>',
+  rain:'<path d="M7 15h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 2A3 3 0 0 0 7 15z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/>',
+  snow:'<path d="M7 15h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 2A3 3 0 0 0 7 15z"/><path d="M8 19h.01M12 21h.01M16 19h.01"/>',
+  storm:'<path d="M7 15h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 2A3 3 0 0 0 7 15z"/><path d="M13 14l-2 3.5h3L12 21"/>',
+};
 /** A short summary for the Glance card (and the chips). */
 function summary(id){
   if (id === 'today'){
@@ -1026,6 +1106,19 @@ function summary(id){
     const t = siteToday();
     return { big: dParse(t).toLocaleDateString(undefined, { month:'long' }), small: dLong(t) };
   }
+  if (id === 'quote'){ const q = quoteNow(); return { small:'“' + q[0] + '” ' + q[1] }; }
+  if (id === 'worldclock'){
+    if (!WCFG.zones.length) return { small:'Choose up to three places in Edit › Settings' };
+    const z = WCFG.zones.map(zoneNow);
+    return { title:z[0].name, big:z[0].time, small: z.length > 1 ? z.slice(1).map(x => x.name + ' ' + x.time).join(' · ') : [z[0].day, z[0].off].filter(Boolean).join(' · ') };
+  }
+  if (id === 'weather'){
+    if (!WCFG.weather.town) return { small:'Type your town in Edit › Settings' };
+    if (WD.weatherErr) return { small:WD.weatherErr };
+    if (!WD.weather) return { small:'…' };
+    const w = WD.weather;
+    return { big:w.temp + '°', small:w.text + ' · ' + w.place.split(',')[0], chip:w.temp + '° ' + w.place.split(',')[0], pic:w.pic };
+  }
   if (id === 'pad'){
     if (WD.padErr) return { small:'Couldn\'t load the pad' };
     if (!WD.pad) return { small:'…' };
@@ -1035,8 +1128,9 @@ function summary(id){
 }
 
 /* ---------- drawing ---------- */
-function renderWidgets(){
+function renderWidgets(quiet = false){
   renderClock();
+  const a = document.activeElement, keep = a && a.dataset && a.dataset.w && !$('#wPanel').contains(a) ? [a.parentNode.id, a.dataset.w] : null;
   const list = WCFG ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];
   const dock = WCFG && WCFG.style === 'dock';
   if (wOpen && !list.includes(wOpen)) wOpen = '';
@@ -1044,22 +1138,23 @@ function renderWidgets(){
   document.body.dataset.wstyle = WCFG ? WCFG.style : '';
 
   // Glass Dock: chips under the clock for Today and Countdown, and a dock with every widget
-  const chips = dock ? ['today', 'countdown'].filter(id => list.includes(id)).map(id => ({ id, s:summary(id) })).filter(c => c.s.chip) : [];
+  const chips = dock ? ['today', 'countdown', 'weather'].filter(id => list.includes(id)).map(id => ({ id, s:summary(id) })).filter(c => c.s.chip) : [];
   $('#wChips').hidden = !chips.length;
-  $('#wChips').innerHTML = chips.map(c => `<button type="button" class="lg wchip" data-w="${c.id}" aria-controls="wPanel" aria-expanded="${wOpen === c.id}">${c.s.hot ? '<i class="dot"></i>' : ''}${esc(c.s.chip)}</button>`).join('');
+  $('#wChips').innerHTML = chips.map(c => `<button type="button" class="lg wchip" data-w="${c.id}" aria-controls="wPanel" aria-expanded="${wOpen === c.id}">${c.s.hot ? '<i class="dot"></i>' : ''}${c.s.pic ? svgI(W_PIC[c.s.pic] || '') : ''}${esc(c.s.chip)}</button>`).join('');
   $('#wDock').hidden = !dock || !list.length;
   $('#wDock').innerHTML = dock ? list.map(id => `<button type="button" class="wdb" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}" aria-label="${esc(W_META[id].name)}">${svgI(W_META[id].icon)}<span>${esc(W_META[id].short)}</span></button>`).join('') : '';
 
   // Glance and Expand: one small glass card per widget
   $('#wCards').hidden = dock || !list.length;
-  $('#wCards').style.setProperty('--n', Math.min(list.length, 6));
+  $('#wCards').style.setProperty('--n', list.length <= 6 ? list.length : Math.ceil(list.length / 2));   // one row, or two even rows
   $('#wCards').innerHTML = !dock ? list.map(id => {
     const s = summary(id);
     return `<button type="button" class="lg wcard" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}">
       <span class="wc-h"><span>${esc(s.title || W_META[id].name)}</span>${s.alert ? `<em>${esc(s.alert)}</em>` : ''}</span>
       ${s.big ? `<b class="wc-big">${esc(s.big)}</b>` : ''}<span class="wc-s">${esc(s.small || '')}</span></button>`;
   }).join('') : '';
-  renderPanel();
+  if (!quiet || wOpen === 'worldclock') renderPanel();   // each minute: only World Clock's open panel changes (never one you type in)
+  if (keep) $(`#${keep[0]} [data-w="${keep[1]}"]`)?.focus();
 }
 
 function renderPanel(){
@@ -1109,6 +1204,25 @@ function panelHTML(id){
     return `<div class="wtools">${WD.tools.map(t => `<a href="../tools/#/tool/${encodeURIComponent(t.id)}">${esc(t.name)}</a>`).join('')}</div>${more('../tools/', 'Open Tools')}`;
   }
   if (id === 'calendar') return calendarHTML();
+  if (id === 'quote'){
+    const q = quoteNow();
+    return `<figure class="wquote"><blockquote>“${esc(q[0])}”</blockquote><figcaption>${esc(q[1])}</figcaption></figure><button type="button" class="wbtn" id="wQuoteNext">Another Quote</button>`;
+  }
+  if (id === 'worldclock'){
+    if (!WCFG.zones.length) return '<p class="wmsg">Choose up to three places in Edit › Settings › Widgets.</p>';
+    return `<div class="wzones">${WCFG.zones.map(zoneNow).map(z => `<div class="wzone"><span class="wz-n">${esc(z.name)}<small>${esc([z.day, z.off].filter(Boolean).join(' · '))}</small></span><b>${esc(z.time)}</b></div>`).join('')}</div>`;
+  }
+  if (id === 'weather'){
+    if (!WCFG.weather.town) return '<p class="wmsg">Type your town in Edit › Settings › Widgets.</p>';
+    if (WD.weatherErr) return `<p class="wmsg">${esc(WD.weatherErr)}</p>`;
+    if (!WD.weather) return '<p class="wmsg">Loading…</p>';
+    const w = WD.weather, t = siteToday();
+    const day = s => s === t ? 'Today' : dDiff(s, t) === 1 ? 'Tomorrow' : dParse(s).toLocaleDateString(undefined, { weekday:'long' });
+    return `<div class="wwnow">${svgI(W_PIC[w.pic] || '')}<b>${w.temp}${esc(w.unit)}</b><span>${esc(w.text)}<small>${esc(w.place)}</small></span></div>
+      <div class="wwdays">${w.days.map(d => `<div class="wwday"><span>${esc(day(d.date))}</span>${svgI(W_PIC[d.pic] || '')}<span class="ww-t">${esc(d.text)}</span><b>${d.max}°</b><span class="ww-min">${d.min}°</span></div>`).join('')}</div>
+      ${w.stale ? '<p class="wmsg small">Open-Meteo can\'t be reached just now, so this is the last forecast your server got.</p>' : ''}
+      <a class="wmore" href="https://open-meteo.com/" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a>`;
+  }
   if (id === 'pad'){
     if (WD.padErr) return `<p class="wmsg">${esc(WD.padErr)}</p>`;
     if (!WD.pad) return '<p class="wmsg">Loading…</p>';
@@ -1176,6 +1290,7 @@ document.addEventListener('click', e => {
   }
 });
 $('#wClose').addEventListener('click', closeWidget);
+$('#wBody').addEventListener('click', e => { if (e.target.closest('#wQuoteNext')){ quoteMore++; renderWidgets(); $('#wQuoteNext')?.focus(); } });
 addEventListener('keydown', e => { if (e.key === 'Escape' && wOpen && !$$('dialog[open]').length) closeWidget(); });
 
 // Today: tick a task to mark it done (a repeating task moves to its next date), or type one into Quick Add
@@ -1227,7 +1342,7 @@ addEventListener('pagehide', () => savePad(true));
 /* logged in or out after the page loaded (Edit, Log Out, or another tab) */
 function setWidgets(cfg){
   WCFG = cfg || null;
-  if (!WCFG){ Object.assign(WD, { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'' }); wOpen = ''; }
+  if (!WCFG){ Object.assign(WD, { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'' }); wOpen = ''; }
   renderWidgets();
   loadWidgets();
 }
@@ -1258,6 +1373,7 @@ let wSeen = Date.now();
 document.addEventListener('visibilitychange', () => {
   if (document.hidden || !WCFG || Date.now() - wSeen < 30000) return;
   wSeen = Date.now();
+  if (wOn('weather') && (!WD.weather || WD.weather.saved < Date.now() / 1000 - 1800)) loadWeather();
   if (wOn('today') || wOn('calendar')) loadTasks(); else renderWidgets();
 });
 welcome();

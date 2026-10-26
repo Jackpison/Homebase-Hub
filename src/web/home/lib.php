@@ -237,8 +237,11 @@ function site_from_page(array $in, array $cur): array
 /* ================= widgets (1.51) ================= */
 
 /** The widgets Home can show, in their default order. Private ones load their data only for a logged-in browser. */
-const WIDGET_IDS = ['today', 'countdown', 'note', 'tools', 'calendar', 'pad'];
-const WIDGET_ON  = ['today' => true, 'countdown' => true, 'note' => true, 'tools' => true, 'calendar' => true, 'pad' => false];
+const WIDGET_IDS = ['today', 'countdown', 'note', 'tools', 'calendar', 'pad', 'quote', 'worldclock', 'weather'];
+// Weather stays off until you turn it on and type your town: only then does your server ask Open-Meteo for the forecast.
+const WIDGET_ON  = ['today' => true, 'countdown' => true, 'note' => true, 'tools' => true, 'calendar' => true, 'pad' => false,
+                    'quote' => true, 'worldclock' => false, 'weather' => false];
+const WORLD_CLOCKS = 3;                     // places in World Clock
 const WIDGET_STYLES = ['dock', 'glance'];   // Glass Dock, or Glance and Expand
 const PAD_MAX = 20000;                      // characters kept in the Scratch Pad
 
@@ -259,13 +262,92 @@ function clean_widgets($in): array
     $okDate = preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]);
     $nt = is_array($in['note'] ?? null) ? $in['note'] : [];
     $idOk = fn($v) => is_string($v) && preg_match('/^[A-Za-z0-9_-]{1,40}$/', $v) ? $v : '';
+    $zones = [];
+    foreach (is_array($in['zones'] ?? null) ? $in['zones'] : [] as $z) {
+        $tz = is_array($z) ? (string) ($z['tz'] ?? '') : '';
+        if (count($zones) < WORLD_CLOCKS && preg_match('~^(UTC|[A-Z][A-Za-z_]+(/[A-Za-z0-9_+-]+){1,2})$~', $tz))
+            $zones[] = ['tz' => $tz, 'name' => str_clip($z['name'] ?? '', 30)];
+    }
+    $we = is_array($in['weather'] ?? null) ? $in['weather'] : [];
     return [
         'style'     => in_array($in['style'] ?? '', WIDGET_STYLES, true) ? $in['style'] : 'dock',
         'clock'     => (bool) ($in['clock'] ?? true),
         'list'      => $list,
         'countdown' => ['name' => str_clip($cd['name'] ?? '', 40), 'date' => $okDate ? $date : ''],
         'note'      => ['tab' => $idOk($nt['tab'] ?? ''), 'box' => $idOk($nt['box'] ?? '')],
+        'zones'     => $zones,
+        'weather'   => ['town' => str_clip(preg_replace('/\s+/u', ' ', (string) ($we['town'] ?? '')) ?? '', 60), 'unit' => ($we['unit'] ?? '') === 'f' ? 'f' : 'c'],
     ];
+}
+
+/* ---------- Weather (off until you turn it on) ----------
+   Your server, not the browser, asks Open-Meteo (free, no key): once to find the town, then for the forecast at most every
+   30 minutes. Nothing is asked while Weather is off or has no town. The answer is kept in site-data/home/weather.php. */
+const WEATHER_TTL = 1800;
+function weather_file(): string { return DATA_DIR . '/weather.json'; }
+/** WMO weather codes (Open-Meteo) in plain words, and which picture: sun, partly, cloud, fog, rain, snow, storm. */
+function weather_text(int $c): array
+{
+    return match (true) {
+        $c === 0 => ['Clear', 'sun'], $c === 1 => ['Mostly clear', 'sun'], $c === 2 => ['Partly cloudy', 'partly'], $c === 3 => ['Cloudy', 'cloud'],
+        $c === 45 || $c === 48 => ['Fog', 'fog'],
+        $c >= 51 && $c <= 57 => ['Drizzle', 'rain'], $c >= 61 && $c <= 67 => ['Rain', 'rain'], $c >= 80 && $c <= 82 => ['Showers', 'rain'],
+        $c >= 71 && $c <= 77 || $c === 85 || $c === 86 => ['Snow', 'snow'],
+        $c >= 95 => ['Thunderstorm', 'storm'],
+        default => ['Unknown', 'cloud'],
+    };
+}
+/** The place from Open-Meteo's geocoding answer: ['name', 'lat', 'lon'], or null when the town was not found. */
+function weather_parse_place(string $json): ?array
+{
+    $r = json_decode($json, true)['results'][0] ?? null;
+    if (!is_array($r) || !is_numeric($r['latitude'] ?? null) || !is_numeric($r['longitude'] ?? null)) return null;
+    $name = implode(', ', array_filter([str_clip($r['name'] ?? '', 60), str_clip($r['admin1'] ?? '', 60) ?: str_clip($r['country'] ?? '', 60)]));
+    return ['name' => $name, 'lat' => round((float) $r['latitude'], 3), 'lon' => round((float) $r['longitude'], 3)];
+}
+/** Now and the next three days from Open-Meteo's forecast answer, or null when it is not a forecast. */
+function weather_parse_forecast(string $json): ?array
+{
+    $j = json_decode($json, true);
+    $cur = $j['current'] ?? null; $d = $j['daily'] ?? null;
+    if (!is_array($cur) || !is_numeric($cur['temperature_2m'] ?? null) || !is_array($d) || !is_array($d['time'] ?? null)) return null;
+    $days = [];
+    foreach (array_slice($d['time'], 0, 3) as $i => $t) {
+        if (!is_string($t) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $t)) continue;
+        [$text, $pic] = weather_text((int) ($d['weather_code'][$i] ?? -1));
+        $days[] = ['date' => $t, 'max' => (int) round((float) ($d['temperature_2m_max'][$i] ?? 0)), 'min' => (int) round((float) ($d['temperature_2m_min'][$i] ?? 0)), 'text' => $text, 'pic' => $pic];
+    }
+    [$text, $pic] = weather_text((int) ($cur['weather_code'] ?? -1));
+    return ['temp' => (int) round((float) $cur['temperature_2m']), 'text' => $text, 'pic' => $pic, 'day' => !empty($cur['is_day']), 'days' => $days];
+}
+/**
+ * The weather for Home's widget. $w is the widget setting {town, unit}; $fetch(url) returns the body or null (tests pass their own).
+ * A fresh saved answer is used as it is; when Open-Meteo can't be reached, an older one is shown with 'stale'.
+ */
+function weather_get(array $w, ?callable $fetch = null): array
+{
+    $town = (string) ($w['town'] ?? ''); $unit = ($w['unit'] ?? 'c') === 'f' ? 'f' : 'c';
+    if ($town === '') return ['error' => 'Type your town in Edit › Settings › Widgets.'];
+    $key = mb_strtolower($town) . '|' . $unit;
+    $cache = read_json(weather_file()) ?? [];
+    if (($cache['key'] ?? '') === $key && is_array($cache['data'] ?? null) && (int) ($cache['saved'] ?? 0) > time() - WEATHER_TTL) return $cache['data'];
+    $fetch ??= function (string $url): ?string { $r = http_get($url, ['Accept: application/json'], 300_000, 10); return isset($r['error']) || $r['status'] !== 200 ? null : $r['body']; };
+    $old = fn(string $why) => ($cache['key'] ?? '') === $key && is_array($cache['data'] ?? null) ? $cache['data'] + ['stale' => true] : ['error' => $why];
+    $place = ($cache['town'] ?? '') === mb_strtolower($town) && is_array($cache['place'] ?? null) ? $cache['place'] : null;
+    if (!$place) {
+        $body = $fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name=' . rawurlencode($town));
+        if ($body === null) return $old('Couldn\'t reach Open-Meteo. Try again later.');
+        $place = weather_parse_place($body);
+        if (!$place) return ['error' => 'Open-Meteo doesn\'t know the town "' . $town . '". Check the spelling in Edit › Settings › Widgets.'];
+    }
+    $body = $fetch('https://api.open-meteo.com/v1/forecast?latitude=' . $place['lat'] . '&longitude=' . $place['lon']
+        . '&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=3'
+        . ($unit === 'f' ? '&temperature_unit=fahrenheit' : ''));
+    $fc = $body === null ? null : weather_parse_forecast($body);
+    if (!$fc) return $old('Couldn\'t get the forecast from Open-Meteo. Try again later.');
+    $data = $fc + ['place' => $place['name'], 'unit' => $unit === 'f' ? '°F' : '°C', 'saved' => time()];
+    write_json(weather_file(), ['key' => $key, 'town' => mb_strtolower($town), 'place' => $place, 'saved' => time(), 'data' => $data]);
+    return $data;
 }
 
 /** The Scratch Pad: one text, saved by itself while you type (logged in only; stored in site-data/home/pad.php). */

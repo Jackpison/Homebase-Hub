@@ -170,6 +170,14 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
           <label class="g-row stack"><span class="g-label">Pinned Note<small>One box from Info. Boxes in encrypted tabs can't be shown here.</small></span>
             <select id="wNote"><option value="">None</option></select></label>
         </div>
+        <div class="group">
+          <div class="g-row stack"><span class="g-label">World Clock<small>Up to three places. Type a city's time zone, like Europe/London, and a name if you like.</small></span>
+            <div class="wzedit" id="wZones"></div></div>
+          <div class="g-row stack"><span class="g-label">Weather<small>Weather asks Open-Meteo for your town's forecast, so it stays off until you turn it on above and type the town. Your server asks, at most every 30 minutes. Nothing else on Home contacts another site.</small></span>
+            <div class="inline"><input type="text" id="wTown" maxlength="60" placeholder="Bengaluru" aria-label="Town for Weather" autocomplete="off">
+              <div class="seg" id="wUnit" role="radiogroup" aria-label="Temperature"><button type="button" role="radio" data-v="c">°C</button><button type="button" role="radio" data-v="f">°F</button></div></div></div>
+        </div>
+        <datalist id="tzList"></datalist>
       </section>
       <section>
         <h3>Glass</h3>
