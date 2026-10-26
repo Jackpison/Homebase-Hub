@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.51.3 | An open widget no longer lies on top of the cards in Glance and Expand |
 | 1.51.2 | Home's glass stays see-through when the computer reduces transparency, and a Tint choice: Light, Dark or Solid |
 | 1.51.1 | Lighter glass on Home, an icon pill for editing, Widgets in its own window with a Show Widgets switch, and the bar switch in Home Settings |
 | 1.51.0 | Home gets a clock and widgets in frosted glass; Home's links move to Links; Links stops asking Google for icons unless you turn it on |
@@ -77,6 +78,15 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.51.3
+
+### Home
+
+- **Fixed:** in Glance and Expand, an open widget (Quote of the Day, Weather and others) lay on top of the cards, and neither could be read. It now opens just above the cards, or above the dock, and scrolls inside when space is short. The clock steps aside when there is not room for both.
+- The open widget is frosted more than the cards, so nothing behind it shows through its text.
 
 ---
 
