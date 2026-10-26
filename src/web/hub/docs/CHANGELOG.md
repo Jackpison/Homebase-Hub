@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.52.0 | Characters on Home: 22 little 3D characters that walk about, sit on the clock and do 21 activities and the Power Beam |
 | 1.51.3 | An open widget no longer lies on top of the cards in Glance and Expand |
 | 1.51.2 | Home's glass stays see-through when the computer reduces transparency, and a Tint choice: Light, Dark or Solid |
 | 1.51.1 | Lighter glass on Home, an icon pill for editing, Widgets in its own window with a Show Widgets switch, and the bar switch in Home Settings |
@@ -78,6 +79,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.52.0
+
+### Home: Characters
+
+- **Little 3D characters live on Home.** 22 of them, from the free Kenney and Quaternius packs: people, pets, pirates, monsters, blobs and a flyer. 1 to 5 are on the screen at once (2 at first), a new mix each time Home opens.
+- **Everyday life:** they walk about, climb onto the clock and the dock and sit there, nap, wave at each other, have a snack, peek off the edge of the screen and look at your mouse. Click one and it reacts.
+- **Activities every few minutes:** Boxing Match, Basketball, Marathon, Pool Day, Sauna, Dance Party, Picnic, Sword Duel, Yoga, Weightlifting, Skateboarding, Rock Concert, Football, Tug of War, Campfire, Snowball Fight, Fishing, Karate, Birthday Party and Treasure Hunt, with props, comic words and anime effects. Characters who are not on the screen walk in as guests when an activity needs more players.
+- **Power Beam:** the page darkens, two characters rise with flaming auras, and their beams meet in the middle of the screen in a big clash. It can be turned off.
+- **Home Settings > Characters** (the person icon while editing): Show Characters, How Many at Once, Lively or Calm (an activity every 2 to 4 or every 5 to 9 minutes), Power Beam, who can appear, and Play Now to try any activity.
+- Everyone who opens Home sees them, like the background. Your browser draws them from files on your own server; nothing is asked from another site. Turned off, nothing extra is loaded.
+- If the device asks for less motion, they stand still. In a browser without 3D support, there are none.
+- The update is about 3 MB bigger (three.js and the models).
 
 ---
 
