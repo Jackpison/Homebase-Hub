@@ -257,6 +257,20 @@ try:
         bar_on = home_bar(True); bar_off = home_bar(False)
         check('P39 Home Settings > Show the Bar on the Home Page turns the bar on and off (the same setting as in Settings)', bar_on == [True, True] and bar_off == [False, False], (bar_on, bar_off))
         hctx.close()
+        # P40: the glass. The computer's "reduce transparency" (Windows: Transparency effects off) no longer turns it into a dark block;
+        # Home Settings > Glass > Tint decides: Light (see-through, the default), Dark, or Solid.
+        def glass(tint=None, reduce=False):
+            if tint: subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['panel']['tint'] = '%s'; write_json(SITE_FILE, clean_site($s));" % (D, tint)], check=True)
+            gc = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); gc.add_cookies(cookies); gc.route('**/*', handle); gc.add_init_script(TRACK_REQUESTS)
+            gc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}"); gp = gc.new_page()
+            if reduce: gc.new_cdp_session(gp).send('Emulation.setEmulatedMedia', {'features': [{'name': 'prefers-reduced-transparency', 'value': 'reduce'}]}) if BROWSER == 'chromium' else None
+            gp.goto(B + '/web/home/', wait_until='domcontentloaded'); until(lambda: gp.evaluate("document.querySelectorAll('.wcard, .wdb').length > 0"), 10000); settle(gp)
+            el = '.wcard' if gp.evaluate("!!document.querySelector('.wcard')") else '#wDock'
+            r = gp.evaluate("(() => { const c = getComputedStyle(document.querySelector('%s')); const m = c.backgroundColor.match(/rgba?\\(([^)]+)\\)/)[1].split(',').map(Number); return [m[0], m[3] === undefined ? 1 : m[3], (c.backdropFilter || c.webkitBackdropFilter || 'none') !== 'none'] })()" % el)
+            gc.close(); return r
+        light_reduce = glass('light', reduce=True); dark = glass('dark'); solid = glass('solid'); glass('light')
+        check('P40 Glass Tint: Light stays see-through and blurred even when the computer asks to reduce transparency; Dark is a dark see-through tint; Solid is not see-through',
+              light_reduce[0] == 255 and light_reduce[1] < 0.5 and light_reduce[2] and dark[0] < 60 and dark[1] < 0.5 and dark[2] and solid[1] > 0.85 and not solid[2], (light_reduce, dark, solid))
         # P35: a phone, logged in, all nine widgets in the Glass Dock: every dock button fits on the screen, and an open widget
         # does not sit on top of the chips (on a short screen they make way)
         subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = 'dock'; write_json(SITE_FILE, clean_site($s));" % D], check=True)

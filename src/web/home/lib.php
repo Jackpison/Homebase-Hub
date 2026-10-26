@@ -107,7 +107,7 @@ function default_site(): array
             'starterOff'   => false,
             'themes'       => [],          // your own themes: [{id, name, items: ['uploads/…']}]
         ],
-        'panel' => ['opacity' => 0.40, 'blur' => 22],
+        'panel' => ['opacity' => 0.40, 'blur' => 22, 'tint' => 'light'],
         'welcome' => WELCOME_DEFAULT,
         'widgets' => clean_widgets([]),
     ];
@@ -219,6 +219,7 @@ function clean_site(array $in): array
         'panel' => [
             'opacity' => max(0, min(1, (float) ($pn['opacity'] ?? $def['panel']['opacity']))),
             'blur'    => max(0, min(40, (int) ($pn['blur'] ?? $def['panel']['blur']))),
+            'tint'    => in_array($pn['tint'] ?? '', GLASS_TINTS, true) ? $pn['tint'] : 'light',   // 1.51.2: Light (see-through), Dark or Solid
         ],
         // the words that fade in the middle when Home opens; empty = none (a site saved before 1.49 gets the default)
         'welcome' => array_key_exists('welcome', $in) ? str_clip($in['welcome'], 80) : WELCOME_DEFAULT,
@@ -242,7 +243,8 @@ const WIDGET_IDS = ['today', 'countdown', 'note', 'tools', 'calendar', 'pad', 'q
 const WIDGET_ON  = ['today' => true, 'countdown' => true, 'note' => true, 'tools' => true, 'calendar' => true, 'pad' => false,
                     'quote' => true, 'worldclock' => false, 'weather' => false];
 const WORLD_CLOCKS = 3;                     // places in World Clock
-const WIDGET_STYLES = ['dock', 'glance'];   // Glass Dock, or Glance and Expand
+const WIDGET_STYLES = ['dock', 'glance'];
+const GLASS_TINTS = ['light', 'dark', 'solid'];   // Home Settings > Glass > Tint   // Glass Dock, or Glance and Expand
 const PAD_MAX = 20000;                      // characters kept in the Scratch Pad
 
 /** Home's widget settings, cleaned: a style, the clock on or off, every known widget once (in your order, unknown ones dropped,

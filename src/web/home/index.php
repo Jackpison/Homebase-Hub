@@ -61,7 +61,7 @@ $iconType = ['ico' => 'image/x-icon', 'png' => 'image/png', 'jpg' => 'image/jpeg
 $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0) : "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='26' fill='%23111827'/><circle cx='50' cy='50' r='20' fill='%23A8D8FF'/></svg>";
 
 ?><!doctype html>
-<html lang="en">
+<html lang="en" data-glass="<?= $h($site['panel']['tint']) ?>">
 <head>
 <meta charset="utf-8">
 <?php if (defined('HOME_BASE')): ?><base href="<?= $h(HOME_BASE) ?>"><?php endif; ?>
@@ -160,6 +160,8 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
       <section>
         <h3>Glass</h3>
         <div class="group">
+          <div class="g-row stack"><span class="g-label">Tint<small>Light and Dark are see-through glass. Solid is not see-through: easiest to read on busy photos.</small></span>
+            <div class="seg" id="pTint" role="radiogroup" aria-label="Tint"><button type="button" role="radio" data-v="light">Light</button><button type="button" role="radio" data-v="dark">Dark</button><button type="button" role="radio" data-v="solid">Solid</button></div></div>
           <div class="g-row stack"><span class="g-label">Opacity <b id="pOpVal"></b><small>How much the widgets tint the photo. 0% is fully see-through.</small></span>
             <input type="range" id="pOpacity" min="0" max="100" step="5"></div>
           <div class="g-row stack"><span class="g-label">Blur <b id="pBlurVal"></b><small>Frosted-glass effect behind the widgets.</small></span>

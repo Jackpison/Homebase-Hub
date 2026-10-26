@@ -15,6 +15,8 @@ $w = clean_widgets(['style' => 'glance', 'clock' => false, 'list' => [['id' => '
 t('your order is kept, an unknown widget and a second copy are dropped, missing ones come after (in their default state)',
   $w['style'] === 'glance' && $w['clock'] === false && array_slice(array_column($w['list'], 'id'), 0, 2) === ['pad', 'today'] && $w['list'][0]['on'] && !$w['list'][1]['on'] && count($w['list']) === count(WIDGET_IDS), json_encode($w['list']));
 t('Show Widgets is on at first, and can be turned off', clean_widgets([])['show'] === true && clean_widgets(['show' => false])['show'] === false);
+t('Glass Tint is Light at first, keeps Dark or Solid, and anything else falls back to Light',
+  clean_site([])['panel']['tint'] === 'light' && clean_site(['panel' => ['tint' => 'solid']])['panel']['tint'] === 'solid' && clean_site(['panel' => ['tint' => 'pink']])['panel']['tint'] === 'light');
 t('an unknown style falls back to Glass Dock', clean_widgets(['style' => '<b>'])['style'] === 'dock');
 $c = fn($d) => clean_widgets(['countdown' => ['name' => str_repeat('Goa trip ', 10), 'date' => $d]])['countdown'];
 t('the countdown keeps a real date and a name of up to 40 characters', $c('2026-11-07')['date'] === '2026-11-07' && mb_strlen($c('2026-11-07')['name']) <= 40);
