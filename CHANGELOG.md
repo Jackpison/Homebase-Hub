@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.51.1 | Lighter glass on Home, an icon pill for editing, Widgets in its own window with a Show Widgets switch, and the bar switch in Home Settings |
 | 1.51.0 | Home gets a clock and widgets in frosted glass; Home's links move to Links; Links stops asking Google for icons unless you turn it on |
 | 1.50.0 | A tidier folder layout: the engine, your pictures and the documents now live in `web/hub` |
 | 1.49.0 | Gets your site ready for the new folder layout of 1.50, plus small fixes |
@@ -75,6 +76,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.51.1
+
+### Home
+
+- **Lighter glass.** The widgets are lighter, closer to how they were shown before 1.51. They now brighten under the pointer instead of darkening. An open card and the Quick Add box show a soft white edge when selected.
+- **Editing Home** shows one row of icons at the bottom, like the bar's dock: Background, Widgets, Home Settings and Done. Log Out is in the site menu.
+- **Widgets have their own window** (the four squares while editing), with a new **Show Widgets** switch that hides them all.
+- **Home Settings** now has **Show the Bar on the Home Page**, the same setting as in Settings > Appearance, which now uses this name too.
+- The corner menu offers Edit This Page and Home Settings for Home; Background and Widgets are in the row of icons while editing.
 
 ---
 
