@@ -297,7 +297,7 @@ try:
             cc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
             req, err = [], []
             cc.on('request', lambda r: req.append(r.url))
-            cp = cc.new_page(); cp.on('pageerror', lambda e: err.append(str(e)[:200])); cp.on('console', lambda m: err.append(m.text[:200]) if m.type == 'error' else None)
+            cp = cc.new_page(); cp.on('pageerror', lambda e: err.append(str(e)[:200])); cp.on('console', lambda m: err.append(m.text[:200]) if m.type == 'error' and 'speculation rules' not in m.text.lower() else None)   # WebKit: PHP's test server sends the rules file as plain JSON (Apache sends the right type)
             cp.goto(B + '/web/home/', wait_until='domcontentloaded')
             gl = cp.evaluate("(() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })()")
             if gl: until(lambda: cp.evaluate("!!(window.HubCast && HubCast.running() && HubCast.E && HubCast.E.actors.length === 2 && HubCast.E.actors.every(a => a.ready))"), 60000, 300)
