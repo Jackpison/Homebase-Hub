@@ -61,18 +61,6 @@ def main():
             shutil.copyfile(p, os.path.join(sd, f'{m.group(1)}.src.{m.group(2)}'))
             subprocess.run(['npx', 'esbuild', p, '--minify', '--keep-names', '--target=es2017',
                             '--allow-overwrite', f'--outfile={p}', '--log-level=error'], check=True)
-    # the Home characters' own scripts (not vendor/, not the models): readable copy + minify, like the pages
-    cdir = os.path.join(TREE, 'web/hub/animation')
-    for fn in sorted(os.listdir(cdir)) if os.path.isdir(cdir) else []:
-        m = re.match(r'(.+)\.(js|css)$', fn)
-        if not m: continue
-        p = os.path.join(cdir, fn)
-        sd = os.path.join(TREE, 'web/hub/docs/src/hub/animation'); os.makedirs(sd, exist_ok=True)
-        shutil.copyfile(p, os.path.join(sd, f'{m.group(1)}.src.{m.group(2)}'))
-        # --format=iife: each file keeps esbuild's little helpers to itself (these scripts share one page, and two files'
-        # top-level helpers with the same short name would overwrite each other). es2019 keeps the generators as they are.
-        subprocess.run(['npx', 'esbuild', p, '--minify', '--keep-names', '--target=es2019', '--format=iife',
-                        '--allow-overwrite', f'--outfile={p}', '--log-level=error'], check=True)
     # empty folders from .gitkeep
     for dp, dn, fn in os.walk(TREE):
         if '.gitkeep' in fn:

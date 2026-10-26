@@ -6,8 +6,7 @@
 1. pdf.js (Tools, from tools-app/package-lock.json) must be 6.2.108 or newer, opened with eval switched off: older versions have two advisories where a crafted PDF can run script
    (GHSA-wgrm-67xf-hhpq before 4.2.67, GHSA-hq66-cqwq-w95j from 5.6.83 to 6.2.107). No older copy may be left behind.
 2. SheetJS is no longer used (its last npm version has advisories and gets no fixes): Cards writes Excel files itself.
-   No code may load it again.
-3. three.js (the Home characters, web/hub/animation/vendor): one copy, its licence and its glTF loader; --audit checks its version."""
+   No code may load it again."""
 import glob, json, os, re, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 W = os.path.join(ROOT, 'src', 'web')
@@ -35,26 +34,15 @@ for f in glob.glob(os.path.join(W, '**', '*'), recursive=True):
         if re.search(r'XLSX\.|xlsx\.full', open(f, encoding='utf-8', errors='replace').read()): bad.append('SheetJS is referenced in ' + os.path.relpath(f, W))
 print('SheetJS: not used')
 
-# 3. three.js (the Home characters): one copy, with its licence, and the loader from the same release
-TV = os.path.join(W, 'hub', 'animation', 'vendor')
-tm = re.search(r'"use strict";const \w+="(\d+)"', open(os.path.join(TV, 'three.min.js'), encoding='utf-8').read()) if os.path.isfile(os.path.join(TV, 'three.min.js')) else None   # REVISION, the first constant
-three = tm.group(1) if tm else '?'
-print('three.js: r' + three)
-if not tm: bad.append('three.js is missing from web/hub/animation/vendor')
-if not os.path.isfile(os.path.join(TV, 'three.LICENSE.txt')): bad.append('three.js has no licence file next to it')
-if not os.path.isfile(os.path.join(TV, 'GLTFLoader.js')): bad.append('the glTF loader is missing from web/hub/animation/vendor')
-copies = [f for f in glob.glob(os.path.join(W, '**', 'three*.js'), recursive=True) if os.sep + 'animation' + os.sep + 'vendor' + os.sep not in f]
-if copies: bad.append('another copy of three.js: ' + ', '.join(os.path.relpath(f, W) for f in copies))
-
 if '--audit' in sys.argv:
     import tempfile
     found = {}
     # Tools: npm audit on its own lock file (the exact versions the page is built with)
     r = subprocess.run(['npm', 'audit', '--json', '--omit=dev'], cwd=os.path.join(ROOT, 'tools-app'), capture_output=True, text=True)
     found.update(json.loads(r.stdout or '{}').get('vulnerabilities', {}))
-    # the rest of the site: jsPDF (hub/core/assets/vendor) and three.js (hub/animation/vendor, the Home characters)
+    # the rest of the site: jsPDF, copied into hub/core/assets/vendor
     d = tempfile.mkdtemp()
-    json.dump({'name': 'audit', 'version': '1.0.0', 'dependencies': {'jspdf': '4.2.1', 'three': '0.%s.0' % three}}, open(d + '/package.json', 'w'))
+    json.dump({'name': 'audit', 'version': '1.0.0', 'dependencies': {'jspdf': '4.2.1'}}, open(d + '/package.json', 'w'))
     subprocess.run(['npm', 'install', '--package-lock-only', '--ignore-scripts'], cwd=d, capture_output=True)
     r = subprocess.run(['npm', 'audit', '--json'], cwd=d, capture_output=True, text=True)
     found.update(json.loads(r.stdout or '{}').get('vulnerabilities', {}))

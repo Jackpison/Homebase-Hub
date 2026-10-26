@@ -28,6 +28,7 @@ t('World Clock keeps up to 3 real time zones with a short name; anything that is
   array_column($z, 'tz') === ['Europe/London', 'Asia/Tokyo', 'America/New_York'] && $z[0]['name'] === 'Mum' && mb_strlen($z[1]['name']) <= 30, json_encode($z));
 $we = clean_widgets(['weather' => ['town' => "  Bengaluru\n ", 'unit' => 'f']])['weather'];
 t('Weather keeps the town (on one line) and °C or °F', $we === ['town' => 'Bengaluru', 'unit' => 'f'] && clean_widgets(['weather' => ['unit' => 'k']])['weather']['unit'] === 'c', json_encode($we));
+t('a site saved by 1.52 (with the Home characters setting) loses that setting cleanly (1.53 took the characters out)', !array_key_exists('cast', clean_site(['cast' => ['on' => true, 'count' => 3]])) && !array_key_exists('cast', default_site()));
 t('a saved site keeps its widgets through clean_site', clean_site(['widgets' => ['style' => 'glance']])['widgets']['style'] === 'glance');
 
 /* ---------- visitors never see the widget settings ---------- */

@@ -3,8 +3,7 @@
 const globals = require('globals');
 
 // The pages are classic scripts. shell.js (loaded first on every page) puts HUB on window; the pages read it.
-// hub/animation/cast.js (the characters, loaded before Home's own script) puts HubCast on window.
-const site = { ...globals.browser, HUB: 'readonly', HubCast: 'readonly' };
+const site = { ...globals.browser, HUB: 'readonly' };
 
 // cards.js, info.js and tasks.js declare their own top-level status(), find() and when() helpers. That is allowed in a
 // classic script (window.status, window.find and window.when are writable and none of the pages use the browser ones),

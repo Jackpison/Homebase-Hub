@@ -147,6 +147,10 @@ try:
     check('D3 file check afterwards: 0 changed, 0 missing, 0 extra', s.clean()[:3] == (0, 0, 0), s.clean())
     had_old = 'web/core-data/docs/CHANGELOG.md' in zipfile.ZipFile(REL38).namelist()
     check('D3b the old second copy of the changelog (web/core-data/docs) is gone after the update', not os.path.exists(s.dir + '/web/core-data/docs/CHANGELOG.md'), 'previous zip had it: %s' % had_old)
+    had_cast = any(n.startswith('web/hub/animation/') for n in zipfile.ZipFile(REL38).namelist())
+    has_cast = any(n.startswith('web/hub/animation/') for n in zipfile.ZipFile(CUR).namelist())
+    if had_cast and not has_cast:   # 1.53: the Home characters (1.52) were taken out again
+        check('D3c the Home characters of %s are gone after the update (folder and all)' % PREVV, not os.path.exists(s.dir + '/web/hub/animation'), os.listdir(s.dir + '/web/hub'))
     check('D4 docs are now in web/hub/docs; the old readable source is gone', os.path.isfile(s.dir + '/web/hub/docs/CHANGELOG.md') and os.path.isfile(s.dir + '/web/hub/docs/.htaccess') and not os.path.isdir(s.dir + '/web/core-data/docs/src'), os.listdir(s.dir + '/web/hub/core') )
     if moving:
         s.get('state')   # the first request after the update moves your files
@@ -163,6 +167,8 @@ try:
     r = s.post('update_apply', {'password': PW, 'back': True}); time.sleep(0.5)
     check(f'D7 Go Back to {PREVV} works', r.get('ok') and s.version() == f'{PREVV}', r)
     check(f'D8 after going back, {PREVV} is whole again', s.clean()[:3] == (0, 0, 0), s.clean())
+    if had_cast and not has_cast:
+        check(f'D8a ...and Go Back brings {PREVV}\'s characters back', os.path.isfile(s.dir + '/web/hub/animation/cast.js'), '')
     if moving:
         s.get('state')
         check(f'D8b after going back, your pictures are where {PREVV} looks for them', os.path.isfile(s.dir + '/web/core-data/media/brand/' + LOGO) and s.php("echo hub_settings()['logo'];") == 'web/core-data/media/brand/' + LOGO and os.path.isfile(s.dir + '/web/core-data/media/home/photos/mine.jpg') and not os.path.exists(s.dir + '/web/hub/media/home/photos/mine.jpg'), '')

@@ -102,7 +102,6 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 <div class="toolbar" id="toolbar" role="toolbar" aria-label="Edit Home" hidden>
   <button type="button" class="tb-ib" data-open="bgSheet" aria-label="Background" title="Background"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></button>
   <button type="button" class="tb-ib" data-open="widgetsSheet" aria-label="Widgets" title="Widgets"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg></button>
-  <button type="button" class="tb-ib" data-open="castSheet" aria-label="Characters" title="Characters"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4"/><path d="M5 21c.6-4.2 3.3-6.5 7-6.5s6.4 2.3 7 6.5"/><path d="M10.4 7.2h.01M13.6 7.2h.01" stroke-width="2.6"/></svg></button>
   <button type="button" class="tb-ib" data-open="settingsSheet" aria-label="Home Settings" title="Home Settings"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   <span class="tb-sep" aria-hidden="true"></span>
   <button type="button" class="tb-ib tb-done" id="doneBtn" data-hub="done" aria-label="Done" title="Done"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>
@@ -218,37 +217,6 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
     <footer class="sf"><span></span><div class="sf-r">
       <button type="button" class="btn" data-close>Cancel</button>
       <button type="button" class="btn primary" id="saveWidgets">Save Widgets</button>
-    </div></footer>
-  </div>
-</dialog>
-
-<dialog class="sheet" id="castSheet">
-  <div class="sheet-in">
-    <header class="sh"><h2>Characters</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
-    <div class="sb">
-      <section>
-        <p class="hint">Little 3D characters live on Home. They walk about, sit on the clock and nap, and every few minutes some of them do something together. Everyone who opens Home sees them. Your browser draws them from files on your own server; nothing is asked from another site.</p>
-        <div class="group">
-          <label class="g-row"><span class="g-label">Show Characters<small>Off: none, and nothing extra is loaded.</small></span>
-            <input type="checkbox" class="switch" id="cOn"></label>
-          <div class="g-row"><span class="g-label">How Many at Once</span>
-            <div class="seg" id="cCount" role="radiogroup" aria-label="How Many at Once"><button type="button" role="radio" data-v="1">1</button><button type="button" role="radio" data-v="2">2</button><button type="button" role="radio" data-v="3">3</button><button type="button" role="radio" data-v="4">4</button><button type="button" role="radio" data-v="5">5</button></div></div>
-          <div class="g-row"><span class="g-label">Activities<small>Lively: every 2 to 4 min. Calm: 5 to 9.</small></span>
-            <div class="seg" id="cPace" role="radiogroup" aria-label="Activities"><button type="button" role="radio" data-v="lively">Lively</button><button type="button" role="radio" data-v="calm">Calm</button></div></div>
-          <label class="g-row"><span class="g-label">Power Beam<small>The big one: the page darkens, two beams meet in the middle of the screen and it shakes.</small></span>
-            <input type="checkbox" class="switch" id="cBeam"></label>
-        </div>
-        <h3>Who Can Appear</h3>
-        <p class="hint">A new mix is picked each time Home opens. The others drop in as guests when an activity needs more players.</p>
-        <div class="cpick" id="cPick"></div>
-        <h3>Try an Activity</h3>
-        <div class="inline"><select id="cAct" aria-label="Activity"></select><button type="button" class="btn" id="cPlay">Play Now</button></div>
-        <p class="hint">If your device asks for less motion, the characters stand still. Models by Kenney and Quaternius (free to use, CC0).</p>
-      </section>
-    </div>
-    <footer class="sf"><span></span><div class="sf-r">
-      <button type="button" class="btn" data-close>Cancel</button>
-      <button type="button" class="btn primary" id="saveCast">Save Characters</button>
     </div></footer>
   </div>
 </dialog>
@@ -402,9 +370,6 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 
 <script nonce="<?= $nonce ?>">window.LOGO_FAVICON = <?= json_encode($logoOk ? $favicon : '', JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
 <script nonce="<?= $nonce ?>">window.PUB = <?= json_encode($site, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
-<?php $castJs = __DIR__ . '/../hub/animation/cast.js'; ?>
-<!-- the characters: this small file loads the rest only when they are on. ?v carries the site version, so every update brings fresh models -->
-<script src="../hub/animation/cast.js?v=<?= $h(HUB . '-' . (is_file($castJs) ? filemtime($castJs) : 0)) ?>"></script>
 <script src="<?= $v('assets/app.js') ?>"></script>
 </body>
 </html>
