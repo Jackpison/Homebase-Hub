@@ -144,7 +144,7 @@ story += chapter('3', 'First steps', 'Guided Setup walks you through protecting 
  Tip('On a computer, Settings can also show an %s button when the browser offers it.' % C('Install')))
 
 story += chapter('4', 'Home', 'Your start page: the first thing you see when you open your site.',
- shot('home-1', 'Home, with a photo and its credit in the top corner, next to the buttons for the next photo and for settings.'),
+ shot('home-1', 'Home while you are logged in: the clock, the Glass Dock along the bottom, and Today open with Quick Add. The photo\'s credit is in the top corner, next to the buttons for the next photo and the menu.'),
  P('Background photos change on their own, and the photo\'s credit is shown in the corner. Each new photo also gets a phone-sized copy, so the page loads quickly on a phone. Your own photos and uploads are kept in <font name="M-Bold">web/hub/media/home</font>, which updates never replace.'),
  P('The start page can be shown with the bar or without it. Without the bar, the gear button in the corner opens editing, the other pages and Settings once you are logged in.'),
  *sub('Clock and widgets'),
@@ -153,7 +153,7 @@ story += chapter('4', 'Home', 'Your start page: the first thing you see when you
         'Turn widgets on or off and move them up or down; set the countdown, the pinned note, the World Clock places and your town for Weather.', 'Press %s.' % C('Save Settings')]),
  Tip('Weather is off at first. Once you turn it on and type your town, your server asks Open-Meteo for the forecast, at most every 30 minutes. Nothing else on Home contacts another site.'),
  P('Up to version 1.50 Home had its own list of links. Version 1.51 copies them once into Links, in a category called %s.' % C('From Home')),
- shot('home-3', 'Another photo from the start page\'s rotation.'))
+ shot('home-3', 'What a visitor sees: the clock on another photo from the rotation, and no widgets.'))
 
 story += chapter('5', 'Links', 'Bookmarks in tabs, each with categories of links.',
  shot('links-crop', 'Links with six categories. Each link shows its saved icon.'),

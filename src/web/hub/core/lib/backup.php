@@ -35,6 +35,7 @@ function bk_tasks_file(): string { return hub_dir('tasks') . '/tasks.json'; }
 function bk_tasks_data(): array { return hub_jread(bk_tasks_file()) ?? ['tasks' => [], 'settings' => []]; }
 function bk_home_file(): string { return hub_dir('home') . '/site.json'; }
 function bk_home_data(): ?array { return hub_jread(bk_home_file()); }
+function bk_home_pad_file(): string { return hub_dir('home') . '/pad.json'; }   // Home's Scratch Pad (1.51)
 
 /** What the Backup panel shows: each part, its size, and the tabs you can pick. */
 function bk_overview(): array {
@@ -47,7 +48,7 @@ function bk_overview(): array {
                     'summary' => count($i['tabs'] ?? []) . ' tabs', 'size' => @filesize(hub_jpath(bk_info_file())) ?: 0],
         'cards' => ['summary' => count($c['cards'] ?? []) . ' cards, ' . count($c['people'] ?? []) . ' holders', 'size' => @filesize(hub_jpath(bk_cards_file())) ?: 0],
         'tasks' => ['summary' => count($tk['tasks'] ?? []) . ' tasks', 'size' => @filesize(hub_jpath(bk_tasks_file())) ?: 0],
-        'home'  => ['summary' => $h ? count($h['links'] ?? []) . ' links, settings, background sources' : 'not set up yet', 'size' => @filesize(hub_jpath(bk_home_file())) ?: 0],
+        'home'  => ['summary' => $h ? 'widgets, Scratch Pad, settings, background sources' : 'not set up yet', 'size' => @filesize(hub_jpath(bk_home_file())) ?: 0],
         'settings' => ['summary' => 'site name, logo, look and colors, navigation, pages, Tools branding'],
         'telegram' => (function () { require_once __DIR__ . '/notify.php'; $n = nt_load();
             return ['summary' => $n['token'] === '' ? 'not set up' : 'bot, chat, messages, schedule and backup settings (the bot token only in encrypted backups)']; })(),
@@ -90,7 +91,7 @@ function bk_export(array $pick, bool $secrets = false): array {
             $b = basename($f);
             if (preg_match('/^[A-Za-z0-9._-]+\.(png|ico|jpe?g|gif|webp)$/', $b) && filesize($f) < 600000) $icons[$b] = base64_encode((string)file_get_contents($f));
         }
-        $parts['home'] = ['site' => $h, 'icons' => (object)$icons];
+        $parts['home'] = ['site' => $h, 'icons' => (object)$icons, 'pad' => (string)(hub_jread(bk_home_pad_file())['text'] ?? '')];
     }
     if (!empty($pick['telegram'])) {   // Settings > Telegram: everything you chose there
         require_once __DIR__ . '/notify.php'; $n = nt_load(); $t = [];
@@ -217,6 +218,8 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
             if ($bin !== false && bk_is_image($bin)) hub_write(HUB_MEDIA . '/home/icons/' . $name, $bin);
         }
         if (!hub_jput(bk_home_file(), json_encode($parts['home']['site'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new Exception('Could not save the start page.');
+        if (is_string($parts['home']['pad'] ?? null))   // a backup from 1.51 on carries the Scratch Pad; an older one leaves the pad as it is
+            hub_jput(bk_home_pad_file(), json_encode(['text' => mb_substr(str_replace("\r\n", "\n", $parts['home']['pad']), 0, 20000), 'saved' => time()], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
         $done[] = 'Home';
     }
     if (!empty($pick['settings']) && isset($parts['settings']) && is_array($parts['settings'])) {

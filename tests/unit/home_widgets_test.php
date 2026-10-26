@@ -115,3 +115,15 @@ t('Open-Meteo can\'t be reached: the last answer is shown, marked as old', ($st[
 t('...and a town never looked up gets a clear message', str_contains(weather_get(['town' => 'Mysuru', 'unit' => 'c'], $down)['error'] ?? '', 'reach Open-Meteo'));
 t('a town Open-Meteo does not know gets a clear message', str_contains(weather_get(['town' => 'Nowhereville', 'unit' => 'c'], fn($u) => str_contains($u, 'geocoding') ? '{"generationtime_ms":0.5}' : $fc)['error'] ?? '', 'doesn\'t know the town'));
 t('the weather is kept as a guarded file in site-data', strncmp((string) file_get_contents(hub_jpath(weather_file())), '<?php', 5) === 0);
+
+/* ---------- Backup carries the Scratch Pad ---------- */
+require_once HUB_CORE . '/lib/backup.php';
+write_json(SITE_FILE, clean_site([])); pad_write('Spare key is with Asha');
+$bk = json_decode(json_encode(bk_export(['home' => true])), true)['parts'];   // as it is saved in the backup file
+t('a backup of Home carries the Scratch Pad, and Backup no longer counts Home links', ($bk['home']['pad'] ?? null) === 'Spare key is with Asha' && strpos(bk_overview()['home']['summary'] ?? '', 'links') === false, json_encode([$bk['home']['pad'] ?? null, bk_overview()['home'] ?? null]));
+pad_write('changed later');
+bk_import(['home' => $bk['home']], ['home' => true]);
+t('...and restoring it brings the pad back', pad_read()['text'] === 'Spare key is with Asha');
+$old = $bk['home']; unset($old['pad']); pad_write('kept');
+bk_import(['home' => $old], ['home' => true]);
+t('a backup from before 1.51 (no pad) leaves the pad as it is', pad_read()['text'] === 'kept');

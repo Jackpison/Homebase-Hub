@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.51.0 | Home gets a clock and widgets in frosted glass; Home's links move to Links; Links stops asking Google for icons unless you turn it on |
 | 1.50.0 | A tidier folder layout: the engine, your pictures and the documents now live in `web/hub` |
 | 1.49.0 | Gets your site ready for the new folder layout of 1.50, plus small fixes |
 | 1.48.9 | Home themes (a Starter theme and your own, with export and import), a welcome text, and no background repeats until the others had their turn |
@@ -74,6 +75,41 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.51.0
+
+### Home: a Clock and Widgets
+
+- **Everyone sees a clock** with the date and a greeting (Home Settings > Widgets > Show the Clock).
+- **While you are logged in, Home shows widgets** in frosted glass: Today (with Quick Add, and a tick to mark a task done), Countdown, Pinned Note (one box from Info), Recent Tools, Month Calendar, Scratch Pad, Quote of the Day, World Clock and Weather.
+- **Two styles** in Home Settings > Widgets: Glass Dock (chips under the clock and a dock that opens each widget) or Glance and Expand (small cards along the bottom). Choose which widgets show and their order there, along with the countdown, the note, the World Clock places and your town.
+- **Visitors see the clock only.** Your widgets and their data are never sent to them.
+- **Weather is off at first.** Once you turn it on and type your town, your server asks Open-Meteo for the forecast, at most every 30 minutes. Nothing else on Home contacts another site.
+- The Glass slider (opacity and blur) in Home Settings now sets the look of the widgets.
+
+### Home's Links Moved to Links
+
+- **Home no longer has its own list of links.** The first time Home opens after the update, its links are copied into Links, in a category called **From Home** at the top of your first tab that is not encrypted. Links keeps an earlier version first, and a link already in that tab is not added twice.
+- Home keeps its old list for one more version, in case you go back.
+- **Backup** now includes the Scratch Pad with Home, and its summary of Home no longer shows a link count (it always said 0).
+
+### Privacy
+
+- **Links: Icons from Google** is a new setting in Links Settings, off at first. Before, your browser asked Google's favicon service for the icon of every link without a saved icon, so Google saw which sites are in your Links. Now those links show their first letter until you turn the setting on, or use **Fetch Icons** to save the icons on your server.
+- Home no longer loads any picture from another site.
+
+### Fixed
+
+- **Tools** now really ships fflate 0.8.3 (1.49 and 1.50 still carried 0.7.5), plus pdf.js's character maps and standard fonts, so PDFs in Chinese, Japanese and Korean, and PDFs that name a font without carrying it, open correctly.
+
+### For developers
+
+- Tasks has two small actions for Home: `quick_add` (plain words, read like Telegram's /add, which now uses the same code) and `done`.
+- Tools' build writes `assets/tools-list.json` (tool ids and names) for Home's Recent Tools.
+- CI: one browser job per engine, a single `ci-ok` check, the release waits for CI, docs-only pushes skip the slow jobs, zizmor checks the workflows, and `build-tools.py --check` proves Tools matches its source. The browser tests wait for results instead of fixed pauses.
+- `scripts/screenshots.py` also takes Home's pictures.
 
 ---
 
