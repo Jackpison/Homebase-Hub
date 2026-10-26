@@ -71,7 +71,8 @@ try:
         pg.fill('#root input[placeholder^="Paste a hash"]', 'BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD'); until(lambda: 'Match:' in pg.inner_text('#root'), 3000)
         check('N10 ...and recognises a pasted hash, in capitals too', 'Match: this is the SHA-256' in pg.inner_text('#root'))
 
-        pg.goto(U + '#/tool/generators'); wait_js(pg, "document.querySelectorAll('#root .flist .out').length > 0")
+        # wait for the passwords themselves: the Hash Generator before it uses the same kind of list, so "any list" could still be its (seen once on WebKit)
+        pg.goto(U + '#/tool/generators'); wait_js(pg, "(() => { const o = [...document.querySelectorAll('#root .flist .out')]; return o.length === 5 && o.every(x => x.textContent.length === 20) })()")
         pw = pg.evaluate("[...document.querySelectorAll('#root .flist .out')].map(x => x.textContent)")
         import re as _re
         check('N11 Password generator makes 5 passwords of 20 characters with every kind of character', len(pw) == 5 and all(len(x) == 20 and _re.search('[A-Z]', x) and _re.search('[a-z]', x) and _re.search('[0-9]', x) and _re.search(r'[^A-Za-z0-9]', x) for x in pw) and len(set(pw)) == 5, pw)
