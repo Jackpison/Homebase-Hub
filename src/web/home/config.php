@@ -21,9 +21,6 @@ const MAX_UPLOAD_MB = 128;
 // Largest link/site icon upload, in kilobytes.
 const MAX_ICON_KB = 500;
 
-// Links per column (two columns).
-const LINKS_PER_COLUMN = 5;
-
 // Photos and videos are downloaded to your server so they load fast.
 // How many to keep per source:
 const PHOTOS_PER_SOURCE = 20;

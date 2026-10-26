@@ -67,10 +67,13 @@ t('...the encrypted tab and the Links settings are left as they were', $d['tabs'
 t('...an uploaded icon is copied to Links\' icons and used', ($cat['links'][0]['icon'] ?? '') === 'icons/0123456789abcdef.png' && is_file(HUB_MEDIA . '/links/icons/0123456789abcdef.png') && !isset($cat['links'][1]['icon']));
 t('...Links kept an earlier version first', count(glob(hub_dir('links') . '/backups/bookmarks-*.php') ?: []) === 1);
 $raw = read_json(SITE_FILE);
-t('...Home marks the move and keeps its own copy of the links until the next version', ($raw['linksMoved'] ?? 0) >= time() - 5 && count($raw['columns'][0]) === 2);
+t('...Home marks the move and removes its own copy of the links (1.53)', ($raw['linksMoved'] ?? 0) >= time() - 5 && !array_key_exists('columns', $raw));
 t('a second load copies nothing again', home_move_links() === 0 && count(hub_read_guarded($lf)['tabs'][1]['categories']) === 2);
-$fromPage = site_from_page(['linksMoved' => 0, 'columns' => [[], []], 'title' => 'Mine'], load_site());
-t('a later save from the page cannot undo the mark or change the old links (the server keeps both)', $fromPage['linksMoved'] === $raw['linksMoved'] && count($fromPage['columns'][0]) === 2 && $fromPage['title'] === 'Mine');
+$fromPage = site_from_page(['linksMoved' => 0, 'columns' => [[['name' => 'x', 'url' => 'https://x.example']], []], 'title' => 'Mine'], load_site());
+t('a later save from the page cannot undo the mark or bring old links back', $fromPage['linksMoved'] === $raw['linksMoved'] && !array_key_exists('columns', $fromPage) && $fromPage['title'] === 'Mine');
+// a site that moved its links with 1.51 or 1.52 still has Home's copy: it goes on the next load
+write_json(SITE_FILE, ['columns' => $cols, 'linksMoved' => 1700000000]);
+t('a site moved by 1.51 or 1.52 loses Home\'s old copy on its next load, and nothing is copied again', home_move_links() === 0 && !array_key_exists('columns', read_json(SITE_FILE)) && read_json(SITE_FILE)['linksMoved'] === 1700000000);
 
 // no Links file yet: one is made with a "From Home" tab
 @unlink($lf); write_json(SITE_FILE, ['columns' => $cols]);
@@ -82,6 +85,7 @@ t('a Links file that cannot be read is never written over, and the move is tried
 // no links on Home at all: just marked
 write_json(SITE_FILE, ['columns' => [[], []]]);
 t('a Home with no links is only marked, Links is not touched', home_move_links() === 0 && !empty(read_json(SITE_FILE)['linksMoved']) && file_get_contents($lf) === "<?php exit; ?>\n{not json");
+t('Home\'s settings no longer carry a list of links', !array_key_exists('columns', clean_site(['columns' => $cols])) && !array_key_exists('columns', default_site()));
 
 /* ---------- Tasks: Quick Add and Done (Home's Today widget) ---------- */
 $t1 = tasks_add_text('Call the bank tomorrow 11am', 'Home');

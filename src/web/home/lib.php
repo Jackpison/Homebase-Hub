@@ -91,8 +91,7 @@ function default_site(): array
     return [
         'title'   => 'Home',
         'icon'    => '',
-        'columns' => [[], []],   // Home's own links (up to 1.50); since 1.51 they live in Links, and this is only read to copy them there once
-        'linksMoved' => 0,
+        'linksMoved' => 0,   // when Home's old links (up to 1.50) were copied to Links; 1.53 removed Home's own copy
         'bg' => [
             'sources'      => ['picsum' => true, 'bing' => true, 'wikimedia' => true, 'wallhaven' => true, 'unsplash' => false, 'pixabay' => false, 'pixabay_video' => false],
             'keys'         => ['unsplash' => '', 'pixabay' => ''],
@@ -153,6 +152,7 @@ function keywords(string $q): array
 
 /* ================= sanitizing the whole site ================= */
 
+/** One of Home's old links (up to 1.50), made safe: only read to copy it to Links once (home_move_links). */
 function clean_link($l): ?array
 {
     if (!is_array($l)) return null;
@@ -174,14 +174,6 @@ function clean_link($l): ?array
 function clean_site(array $in): array
 {
     $def = default_site();
-    $cols = [[], []];
-    $src = is_array($in['columns'] ?? null) ? $in['columns'] : [];
-    for ($c = 0; $c < 2; $c++) {
-        foreach (is_array($src[$c] ?? null) ? $src[$c] : [] as $l) {
-            if (count($cols[$c]) >= LINKS_PER_COLUMN) break;
-            if ($cl = clean_link($l)) $cols[$c][] = $cl;
-        }
-    }
     $b = is_array($in['bg'] ?? null) ? $in['bg'] : [];
     $sources = [];
     foreach (SOURCES as $k => $_) $sources[$k] = (bool) ($b['sources'][$k] ?? $def['bg']['sources'][$k]);
@@ -201,7 +193,6 @@ function clean_site(array $in): array
     return [
         'title'   => str_clip($in['title'] ?? $def['title'], 80) ?: 'Home',
         'icon'    => is_icon_path($in['icon'] ?? '') ? $in['icon'] : '',
-        'columns' => $cols,
         'bg'      => [
             'sources'      => $sources,
             'keys'         => $keys,
@@ -228,10 +219,10 @@ function clean_site(array $in): array
     ];
 }
 
-/** What the page sends when you save, made safe: Home's old links and their "moved" mark always stay as saved on the server. */
+/** What the page sends when you save, made safe: the "moved" mark of Home's old links always stays as saved on the server. */
 function site_from_page(array $in, array $cur): array
 {
-    $in['columns'] = $cur['columns']; $in['linksMoved'] = $cur['linksMoved'];
+    $in['linksMoved'] = $cur['linksMoved'];
     return clean_site($in);
 }
 
@@ -371,17 +362,24 @@ function pad_write(string $text): array
 /**
  * Home's links move to Links (1.51): the first time Home loads after the update, every link of Home's two columns is copied once
  * into a "From Home" category at the top of the first tab of Links that is not encrypted (a new tab "From Home" when there is
- * none). Links keeps an earlier version first; uploaded icons are copied to Links' icons; Home's own copy stays in site.json
- * (marked linksMoved) until the version after. Nothing is lost if anything goes wrong: then nothing is written and it tries again.
+ * none). Links keeps an earlier version first; uploaded icons are copied to Links' icons; then Home's own copy is removed from
+ * site.json (since 1.53; 1.51 and 1.52 kept it, and a site that moved them then loses that copy here, once) and the move is marked
+ * (linksMoved). Nothing is lost if anything goes wrong: then nothing is written and it tries again. A 1.50 site that updates
+ * straight to 1.53 or later still gets its links moved.
  * Returns how many links were copied (0 when there was nothing to do).
  */
 function home_move_links(): int
 {
     $raw = read_json(SITE_FILE);
-    if (!$raw || !empty($raw['linksMoved'])) return 0;
-    $site = clean_site($raw);
-    $links = array_merge(...array_map(fn($c) => is_array($c) ? $c : [], $site['columns']));
-    if (!$links) { $raw['linksMoved'] = time(); write_json(SITE_FILE, $raw); return 0; }
+    if (!$raw) return 0;
+    if (!empty($raw['linksMoved'])) {   // moved by 1.51 or 1.52: their copy goes now
+        if (array_key_exists('columns', $raw)) { unset($raw['columns']); write_json(SITE_FILE, $raw); }
+        return 0;
+    }
+    $links = [];
+    foreach (is_array($raw['columns'] ?? null) ? $raw['columns'] : [] as $col)
+        foreach (is_array($col) ? $col : [] as $l) if (count($links) < 50 && ($cl = clean_link($l))) $links[] = $cl;
+    if (!$links) { $raw['linksMoved'] = time(); unset($raw['columns']); write_json(SITE_FILE, $raw); return 0; }
 
     $dir = hub_dir('links'); $file = $dir . '/bookmarks.php';
     $lk = @fopen($dir . '/links.lock', 'c'); if (!$lk) return 0;
@@ -414,7 +412,7 @@ function home_move_links(): int
             if (!hub_write_guarded($file, $data)) return 0;
         }
     } finally { flock($lk, LOCK_UN); fclose($lk); }
-    $raw['linksMoved'] = time();
+    $raw['linksMoved'] = time(); unset($raw['columns']);
     write_json(SITE_FILE, $raw);
     return count($out);
 }
@@ -680,8 +678,8 @@ function list_uploads(): array
 function prune_icons(array $site): void
 {
     if (!is_dir(ICON_DIR)) return;
+    if (empty((read_json(SITE_FILE) ?? [])['linksMoved'])) return;   // Home's old links are not in Links yet: their icons are still needed
     $used = [$site['icon']];
-    foreach ($site['columns'] as $col) foreach ($col as $l) if ($l['icon']['type'] === 'image') $used[] = $l['icon']['value'];
     foreach (scandir(ICON_DIR) as $f) {
         if (!preg_match('/^[a-f0-9]{16}\.[a-z]+$/', $f)) continue;
         if (!in_array('icons/' . $f, $used, true) && filemtime(ICON_DIR . '/' . $f) < time() - 3600) @unlink(ICON_DIR . '/' . $f);

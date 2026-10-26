@@ -46,13 +46,12 @@ function require_admin(bool $post = true): void
 function admin_payload(): array
 {
     $s = load_site();
-    unset($s['columns']);   // Home's old links: only kept to copy them to Links once (home_move_links)
     $s['uploadsAdmin'] = list_uploads();
     $s['sourceInfo'] = all_sources($s);
     $s['keyInfo'] = API_KEYS;
     $s['poolStats'] = pool_stats($s);
     $s['starterInfo'] = starter_list();   // for the Theme cards, also while Online Photos is in use
-    $s['limits'] = ['perColumn' => LINKS_PER_COLUMN, 'maxKeywords' => MAX_KEYWORDS, 'maxViews' => MAX_VIEWS, 'maxCustom' => MAX_CUSTOM_SOURCES,
+    $s['limits'] = ['maxKeywords' => MAX_KEYWORDS, 'maxViews' => MAX_VIEWS, 'maxCustom' => MAX_CUSTOM_SOURCES,
                     'maxUploadMB' => MAX_UPLOAD_MB, 'piece' => upload_piece_bytes()];
     return $s;
 }
@@ -60,7 +59,9 @@ function save_site(array $in): array
 {
     $site = site_from_page($in, load_site());
     home_snapshot();
-    write_json(SITE_FILE, $site);
+    $raw = read_json(SITE_FILE) ?? [];
+    // Home's old links (a 1.50 site whose links were not moved to Links yet) stay in the file until they are
+    write_json(SITE_FILE, empty($raw['linksMoved']) && isset($raw['columns']) ? $site + ['columns' => $raw['columns']] : $site);
     prune_icons($site);
     // drop saved photos that no longer match (keywords changed)
     pool_update(function (&$p) use ($site) { pool_cleanup($p, $site); });
