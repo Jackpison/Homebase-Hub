@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.53.1 | A check-up: security, dead code, speed and small fixes; nothing new to learn |
 | 1.53.0 | Links shows how often each link is opened; Home's refresh button no longer feels stuck; the characters are gone again |
 | 1.52.0 | Characters on Home: 22 little 3D characters that walk about, sit on the clock and do 20 activities and the Power Beam |
 | 1.51.3 | An open widget no longer lies on top of the cards in Glance and Expand |
@@ -80,6 +81,30 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.53.1
+
+### Fixed
+
+- **Home:** with no site logo, the icon you get when adding Home to an iPhone's home screen was the small 64 px tab icon. It is the sharp 180 px icon again.
+- **Settings:** "webwebsite password" now reads "website password" (three places).
+- **Links:** when you encrypt a tab, its links' visit counts are removed at once, so their addresses never stay readable on the server.
+
+### Faster
+
+- **Settings opens lighter.** After an update, What's New on the Overview now loads only the new version's notes (about 1.5 KB instead of 150 KB); the full Changelog loads when you open it. Opening Settings also asked for the Overview twice at once; now once.
+
+### Safer
+
+- **Home:** the background's "it was shown" call accepts only the page's own request, so another website cannot send it from a visitor's browser.
+- Checked: every action that changes anything needs your login and the security token; pages escape everything they show; the login cookie is protected; no known problem in any bundled library.
+
+### Under the hood
+
+- Unused code removed from Cards, Home, Info, Links, Settings, the bar and three Tools.
+- Stricter automatic checks, so dead code and some mistakes are caught before a release.
 
 ---
 
