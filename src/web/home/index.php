@@ -128,10 +128,10 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 
 <div class="corner">
   <a class="credit-text" id="creditText" target="_blank" rel="noopener"></a>
-  <button class="chip lg round" id="nextBg" aria-label="Show a Different Background" title="Different Background">
+  <button class="chip round" id="nextBg" aria-label="Show a Different Background" title="Different Background">
     <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
   </button>
-  <button class="chip lg" id="editBtn" data-hub="toggle">Edit</button>
+  <button class="chip" id="editBtn" data-hub="toggle">Edit</button>
 </div>
 
 <!-- ============ SHEETS ============ -->

@@ -175,6 +175,8 @@ try:
         dock = hp.evaluate("[...document.querySelectorAll('#wDock .wdb')].map(b => b.dataset.w)")
         check('P20 logged in, Home shows the clock and the Glass Dock with the five widgets that are on at first (Scratch Pad is off)',
               dock == ['today', 'countdown', 'note', 'tools', 'calendar'] and hp.evaluate("!document.getElementById('clock').hidden && /\\d/.test(document.getElementById('time').textContent) && !document.getElementById('wDock').hidden && document.getElementById('wCards').hidden"), dock)
+        glass = hp.evaluate("[...document.querySelectorAll('.corner button')].filter(b => getComputedStyle(b).display !== 'none').map(b => { const c = getComputedStyle(b); return [b.getAttribute('aria-label') || b.textContent, c.backgroundImage.includes('gradient') && (c.backdropFilter || c.webkitBackdropFilter || 'none') !== 'none'] })")
+        check('P20b the corner buttons, the site menu (gear) included, are glass like the widgets (not a plain white button)', len(glass) >= 2 and all(g[1] for g in glass) and any(g[0] == 'Menu' for g in glass), glass)
         hp.click('#wDock [data-w=today]'); hp.wait_for_selector('#wQa', timeout=5000)
         hp.fill('#wQa', 'Pay the gardener today'); hp.press('#wQa', 'Enter')
         rows = lambda: hp.evaluate("[...document.querySelectorAll('#wBody .wrow .wr-n')].map(e => e.textContent)")
