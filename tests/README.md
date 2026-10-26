@@ -34,7 +34,7 @@ Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen'
 
 ## Static analysis
 
-`tests/repo/phpstan.neon` (level 1) is run by CI with a pinned PHPStan, and CI checks the download's SHA-256 before it runs it. See AGENTS.md for the command. To raise the PHPStan version, change the version and the checksum in both `.github/workflows/ci.yml` and `AGENTS.md` (get the new checksum with `sha256sum phpstan.phar`). The checksum is pinned when you first download a version, so it guards against the file changing later, not against a bad first download. `tests/lib/phpstan-bootstrap.php` only tells it the folder constants that `boot.php` defines at run time.
+`tests/repo/phpstan.neon` (level 3) is run by CI with a pinned PHPStan, and CI checks the download's SHA-256 before it runs it. See AGENTS.md for the command. To raise the PHPStan version, change the version and the checksum in both `.github/workflows/ci.yml` and `AGENTS.md` (get the new checksum with `sha256sum phpstan.phar`). The checksum is pinned when you first download a version, so it guards against the file changing later, not against a bad first download. `tests/lib/phpstan-bootstrap.php` only tells it the folder constants that `boot.php` defines at run time.
 
 ## Python packages
 

@@ -58,7 +58,7 @@ $brand = 'web/hub/core/assets/brand/favicon-64.png';   // Homebase Hub's own log
 $iconPath = '../../' . ($logoOk ? $siteLogo : $brand);   // one logo for the whole site (no separate start page icon)
 $iconFile = HUB_PUBLIC . '/' . ($logoOk ? $siteLogo : $brand);
 $iconType = ['ico' => 'image/x-icon', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp'][pathinfo($iconPath, PATHINFO_EXTENSION)] ?? 'image/svg+xml';
-$favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0) : "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='26' fill='%23111827'/><circle cx='50' cy='50' r='20' fill='%23A8D8FF'/></svg>";
+$favicon = $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0);   // the site logo, or Homebase Hub's own
 
 ?><!doctype html>
 <html lang="en" data-glass="<?= $h($site['panel']['tint']) ?>">
@@ -71,7 +71,7 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 <link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.53.0">
 <script src="../hub/core/assets/shell.js?v=1.53.0" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
-<?php if ($iconPath): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png"><?php endif; ?>
+<?php if ($logoOk): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png"><?php endif; ?>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <meta name="theme-color" content="#1a1a1a">

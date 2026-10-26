@@ -50,6 +50,8 @@ def site_checks(s, label):
             if not v: missing.append((pg or '/', k))
         if need['manifest'] and manifest_url_ok(s, urljoin(base, need['manifest'].group(1))) is False: missing.append((pg or '/', 'manifest address'))
         if need['apple-touch-icon'] and s.raw(urljoin(base, need['apple-touch-icon'].group(1)))[0] != 200: missing.append((pg or '/', 'apple-touch-icon file'))
+        # with no site logo, the iPhone icon is the 180 px one, never the 64 px tab icon (Home got this wrong until 1.53.1)
+        if need['apple-touch-icon'] and not s.php("echo hub_settings()['logo'] ?? '';").strip() and 'favicon-64' in need['apple-touch-icon'].group(1): missing.append((pg or '/', 'iPhone icon is the small tab icon'))
         if '<script>' in html.replace('<script>window', ''): missing.append((pg or '/', 'inline script'))
     check('%s: every page (top, Home, Links, Info, Cards, Tasks, Tools, Settings) has the manifest, theme colour and iPhone tags, and they resolve' % label, not missing, missing)
     return m

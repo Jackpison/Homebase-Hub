@@ -1,6 +1,6 @@
 # Static analysis of the site's PHP (see AGENTS.md). Run from the repo folder:  php phpstan.phar analyse -c tests/repo/phpstan.neon
 parameters:
-    level: 1
+    level: 3   # 1.53.1: raised from 1 (no finding at 3)
     paths:
         - ../../src
     bootstrapFiles:

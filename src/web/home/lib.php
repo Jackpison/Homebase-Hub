@@ -51,9 +51,9 @@ const WELCOME_DEFAULT = 'Welcome Home';
 /* The Starter theme: backgrounds that come with the app (web/home/starter/), in the order a new site shows them.
    An entry may be a video with a 'poster' (its still picture); the owner chose photos only, to keep updates small (25 Oct 2026). */
 const STARTER = [
-    ['file' => 'mountains.jpg',      'type' => 'image', 'credit' => 'Photo from Unsplash'],
-    ['file' => 'abstract.webp',      'type' => 'image', 'credit' => 'Photo from Unsplash'],
-    ['file' => 'forest-lake.jpg',    'type' => 'image', 'credit' => 'Photo from Unsplash'],
+    ['file' => 'mountains.jpg',      'type' => 'image', 'credit' => 'Photo from Unsplash', 'poster' => ''],
+    ['file' => 'abstract.webp',      'type' => 'image', 'credit' => 'Photo from Unsplash', 'poster' => ''],
+    ['file' => 'forest-lake.jpg',    'type' => 'image', 'credit' => 'Photo from Unsplash', 'poster' => ''],
 ];
 const THEMES = ['starter', 'online'];   // and "t:<id>" for a theme you made from your uploads
 const MAX_THEMES = 8;
@@ -590,7 +590,7 @@ function starter_list(): array
     foreach (STARTER as $i) {
         if (!is_file(__DIR__ . '/starter/' . $i['file'])) continue;
         $o = ['url' => 'starter/' . $i['file'], 'type' => $i['type'], 'credit' => $i['credit'], 'link' => '', 'src' => 'starter'];
-        if (!empty($i['poster']) && is_file(__DIR__ . '/starter/' . $i['poster'])) $o['poster'] = 'starter/' . $i['poster'];
+        if ($i['poster'] !== '' && is_file(__DIR__ . '/starter/' . $i['poster'])) $o['poster'] = 'starter/' . $i['poster'];
         $out[] = $o;
     }
     return $out;
