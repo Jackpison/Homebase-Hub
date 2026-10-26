@@ -151,6 +151,8 @@ switch ($action) {
     case 'seen':
         // A background was shown. After MAX_VIEWS it's deleted and replaced.
         require_post();
+        // only this page's own request (JSON): another website cannot send that from a visitor's browser without asking first
+        if (stripos((string) ($_SERVER['CONTENT_TYPE'] ?? ''), 'application/json') !== 0) out(['error' => 'Send JSON.'], 415);
         $r = pool_seen((string) (body()['url'] ?? ''));
         out(['removed' => $r['removed']]);
 

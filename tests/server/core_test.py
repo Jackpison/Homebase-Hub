@@ -272,6 +272,12 @@ try:
     out = [n for n, post in acts if (anon.req(s.api + '?action=' + n, data=b'{}', method='POST', hdr={'Content-Type': 'application/json'}) if post else anon.get(n)).get('_status') not in (401, 403)]
     check('E3 none of them works for a visitor who is not logged in', not out, out)
     check('E4 the site still works after all that (state, overview)', s.get('state').get('admin') is True and s.get('overview').get('ok') is not False)
+    # E5 (1.53.1): Home's public "a background was shown" call takes only the page's own JSON request, which another website
+    # cannot send from a visitor's browser without asking first (a plain form or text post is refused)
+    home = s.site_base + '/web/home/api.php?action=seen'
+    plain = anon.req(home, data=b'{"url":"photos/x.jpg"}', method='POST', hdr={'Content-Type': 'text/plain'})
+    js = anon.req(home, data=b'{"url":"photos/x.jpg"}', method='POST', hdr={'Content-Type': 'application/json'})
+    check('E5 Home\'s "seen" call refuses a text or form post and takes the page\'s JSON', plain.get('_status') == 415 and js.get('_status') in (None, 200) and 'removed' in js, (plain, js))
 finally:
     stop_all()
 sys.exit(check.done())

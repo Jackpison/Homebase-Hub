@@ -2,7 +2,7 @@
 import { h, field, input, select, range, seg, button, dropzone, panel, busy, note, toast } from '../ui.js';
 import { ACCEPT, decode, encode, canvas, scaled, results } from '../lib/image.js';
 
-const grid = (n, x, y, w, ht, cols, g) => { cols = Math.max(1, Math.min(cols, n)); const rows = Math.ceil(n / cols), cw = (w - g * (cols - 1)) / cols, ch = (ht - g * (rows - 1)) / rows;
+const grid = (n, x, y, w, ht, cols, g) => { cols = Math.max(1, Math.min(cols, n)); const rows = Math.ceil(n / cols), ch = (ht - g * (rows - 1)) / rows;
   return Array.from({ length: n }, (_, i) => { const r = Math.floor(i / cols), c = i % cols, inRow = r === rows - 1 ? n - r * cols : cols, cw2 = (w - g * (inRow - 1)) / inRow; return { x: x + c * (cw2 + g), y: y + r * (ch + g), w: cw2, h: ch }; }); };
 const autoCols = (n, w, ht) => Math.max(1, Math.round(Math.sqrt(n * w / ht)));
 function masonry(ars, x, y, w, ht, cols, g) {

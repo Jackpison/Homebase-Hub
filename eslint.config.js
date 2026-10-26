@@ -16,6 +16,11 @@ const rules = {
   'no-dupe-keys': 'error',
   'no-unreachable': 'error',
   'no-const-assign': 'error',
+  // dead code: a variable or function nobody uses is an error (1.53.1). Leaving out fields on purpose ({ a, ...rest }) is fine.
+  'no-unused-vars': ['error', { args: 'none', caughtErrors: 'none', ignoreRestSiblings: true }],
+  'no-self-assign': 'error',
+  'no-dupe-else-if': 'error',
+  'no-duplicate-case': 'error',
 };
 
 module.exports = [

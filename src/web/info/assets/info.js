@@ -7,7 +7,7 @@
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 const MAXTAB=20;
-let TABS=[],REV=0,PAGE={title:"",icon:""},TIMER={every:7*86400,last:0},active="",locked=false,server=false,tok="",lastAuth=0,pendingFn=null,pending=null,
+let TABS=[],REV=0,PAGE={title:"",icon:""},TIMER={every:7*86400,last:0},active="",locked=false,server=false,tok="",
     authed=false,EDIT=false,CLOSED=false,WAIT=false; // WAIT: logged in, waiting for the server to send private content // logged in? editing mode? whole page private and not logged in?
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -50,12 +50,6 @@ async function kek(pass,salt,iter){
   return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
 }
 // Wraps a raw key with a passphrase. Returns the vault object stored on the server.
-async function wrapKey(raw,pass){
-  const salt=rnd(16),iter=600000,iv=rnd(12),k=await kek(pass,salt,iter);
-  const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},k,raw));
-  const w=new Uint8Array(12+ct.length);w.set(iv);w.set(ct,12);
-  return{v:1,salt:b64(salt),iter,wrap:b64(w)};
-}
 // Returns the raw key if the passphrase is right, otherwise null.
 const normRec=s=>String(s).replace(/[\s-]/g,"").toUpperCase(); // a recovery code may be typed with dashes, spaces or small letters
 async function unwrapOne(x,pass){
@@ -687,7 +681,7 @@ async function save(b,force){
     const j=await r.json();
     busy.delete(b.key);
     intake(b,j.box,tabOfBox(b).enc);
-    dSet(b,null);keepLocal();lastAuth=Date.now();renderBox(b);status(savedMsg());
+    dSet(b,null);keepLocal();renderBox(b);status(savedMsg());
   }catch(err){
     back("Couldn't reach the server. Your text is kept in this browser; try Save again.");
     status("Not saved to the server.");
@@ -1155,7 +1149,7 @@ async function saveColors(){
     if(r.status===403){dropAuth();status(savedMsg());guard(saveColors);return}
     if(r.status===429){$("kmsg").textContent="Too many wrong password tries. Wait a few minutes, then try again.";return}
     if(!r.ok)throw 0;
-    const j=await r.json();PAGE.colors=normColors(j.page.colors);keepLocal();lastAuth=Date.now();
+    const j=await r.json();PAGE.colors=normColors(j.page.colors);keepLocal();
     kSaved=true;applyColors(PAGE.colors);kdlg.close();status(savedMsg());
   }catch(e){$("kmsg").textContent="Couldn't reach the server, so the colors weren't saved."}
   finally{$("ksave").disabled=false}
@@ -1324,7 +1318,7 @@ async function exportPdf(all){
   if(!tabs.length){status("There is nothing to export.");return}
   status("Making the PDF…");
   let jsPDF;try{jsPDF=await loadPdfLib()}catch(e){status("Couldn't load the PDF maker. Try Text instead.");return}
-  const doc=new jsPDF({unit:"mm",format:"a4"}),W=210,M=16,maxY=281;let y=M,odd=false;
+  const doc=new jsPDF({unit:"mm",format:"a4"}),W=210,M=16,maxY=281;let y=M;
   const room=h=>{if(y+h>maxY){doc.addPage();y=M}};
   const para=(txt,size,style,gap,color)=>{doc.setFont("helvetica",style);doc.setFontSize(size);doc.setTextColor(color||20);
     const lines=doc.splitTextToSize(pdfSafe(txt),W-2*M),lh=size*0.42;

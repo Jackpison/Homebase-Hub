@@ -27,7 +27,7 @@
 (function (K) {
   'use strict';
   if (!K || K.impl) return;
-  var S = K.S, esc = K.esc, toast = K.toast, api = K.api, ICON = K.ICON, svg = K.svg, drawBar = K.drawBar, remember = K.remember, applySizes = K.applySizes, APP = K.APP, openDlg = K.openDlg, closeDlg = K.closeDlg, login = K.login, ROOT = K.ROOT, applyFont = K.applyFont, applyColors = K.applyColors, applyAttrs = K.applyAttrs, PG_APPS = K.PG_APPS, CORE = K.CORE, ASSETS = K.ASSETS, COLOR_DEFAULT = K.COLOR_DEFAULT, setTheme = K.setTheme, pageList = K.pageList, applyFavicon = K.applyFavicon, SIZE_SPEC = K.SIZE_SPEC, PAGE_DEF = K.PAGE_DEF, FONTS = K.FONTS, COLOR_KEYS = K.COLOR_KEYS, when = K.when, redraw = K.redraw;
+  var S = K.S, esc = K.esc, toast = K.toast, api = K.api, ICON = K.ICON, svg = K.svg, remember = K.remember, applySizes = K.applySizes, APP = K.APP, openDlg = K.openDlg, closeDlg = K.closeDlg, login = K.login, ROOT = K.ROOT, applyFont = K.applyFont, applyColors = K.applyColors, applyAttrs = K.applyAttrs, PG_APPS = K.PG_APPS, CORE = K.CORE, ASSETS = K.ASSETS, COLOR_DEFAULT = K.COLOR_DEFAULT, pageList = K.pageList, applyFavicon = K.applyFavicon, SIZE_SPEC = K.SIZE_SPEC, PAGE_DEF = K.PAGE_DEF, FONTS = K.FONTS, COLOR_KEYS = K.COLOR_KEYS, when = K.when, redraw = K.redraw;
   function D() { return document.getElementById('ix-dlg'); }
   /* element lookup: inside an open small dialog (Text Sizes) first, otherwise inside the Settings page */
   function $(sel) { var ov = document.getElementById('ix-dlg'), h = ov && ov.classList.contains('open') ? ov : (PAGE || ov); return h ? h.querySelector(sel) : null; }
@@ -62,14 +62,13 @@
   var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
   var SUB_OF = {};   // sub-tab -> its section (nav -> general, colors -> look)
   SECTIONS.forEach(function (x) { (x[4] || [[x[0]]]).forEach(function (t) { SUB_OF[t[0]] = x[0]; }); });
-  var DRAFTED = ['general', 'look'];
   var PAGE = null;                       // the page's own element when Settings runs as a page (web/settings/)
   function P() { return PAGE || D(); }
   var OV = null;                         // what the Overview last learned: the little status labels in the menu come from it
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
   var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Status' };   // sections whose accordions become tabs, and the name of their first tab
   var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
-  var draft, discardArmed = false, curSec = '';
+  var draft;
   /* what Save Settings would send, written the same way every time (empty color sets and their order don't count) */
   function canonColors(c) {
     c = c || {}; var out = {};
@@ -99,7 +98,7 @@
       host.querySelector('#ix-lg').onclick = function () { K.login().then(function () { location.reload(); }, function () {}); };
       return;
     }
-    draft = JSON.parse(JSON.stringify(S)); discardArmed = false; colorMode = '';
+    draft = JSON.parse(JSON.stringify(S)); colorMode = '';
     var gl = null;
     host.innerHTML = '<aside class="ix-snav" aria-label="Settings Sections"><div class="ix-snh">Settings</div><div class="ix-ssearch"><input type="search" id="ix-ss" placeholder="Search Settings" aria-label="Search settings" autocomplete="off" spellcheck="false"><div class="ix-sres" id="ix-sres" hidden></div></div>' + SECTIONS.map(function (x) {
         var head = x[5] !== gl ? (gl = x[5], x[5] ? '<div class="ix-sgl">' + x[5] + '</div>' : '') : '';
@@ -180,7 +179,7 @@
     var subs = s[4] || [[sec, s[1]]], sub = subs.some(function (t) { return t[0] === id; }) ? id : subs[0][0];
     var tabs = subTabs(subs, sub);
     P().querySelectorAll('[data-sec]').forEach(function (b) { if (b.dataset.sec === sec) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-    curSec = sec; curSub = sub; P().setAttribute('data-view', 'detail');
+    curSub = sub; P().setAttribute('data-view', 'detail');
     try { sessionStorage.setItem('ix-sec', sub); if (location.hash !== '#' + sub) history.replaceState(null, '', '#' + sub); } catch (e) {}
     var box = $('#ix-pane'); box.scrollTop = 0; window.scrollTo(0, 0);
     box.innerHTML = '<div class="ix-ph"><button type="button" class="ix-back" aria-label="Back to All Settings">‹ Settings</button><h2>' + s[1] + '</h2><p>' + s[3] + '</p>' +
@@ -679,7 +678,6 @@
         '<input type="text" class="ix-hex" maxlength="7" placeholder="' + shown + '" value="' + (val || '') + '" spellcheck="false" aria-label="' + esc(label) + ', hex code">' +
         '<button type="button" class="ix-ib ix-crx" title="Back to the Default"' + (val ? '' : ' hidden') + ' aria-label="Reset ' + esc(label) + '">↺</button></div>';
     };
-    var same = function (a, b) { return JSON.stringify(Object.keys(a).sort().map(function (k) { return [k, a[k]]; })) === JSON.stringify(Object.keys(b).sort().map(function (k) { return [k, b[k]]; })); };
     p.innerHTML = (draft.look === false ? '<p class="ix-err">"Same Look on Every Page" is off (Appearance tab), so these colors aren\'t used.</p>' : '') +
       '<div class="ix-row" style="justify-content:space-between">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
       '<button type="button" class="ix-btn" id="ix-cres">Reset ' + (m === 'dark' ? 'Dark' : 'Light') + ' Mode</button></div>' +
@@ -752,7 +750,7 @@
     p.querySelector('#ix-cres').onclick = function () { cur[m] = {}; PG_APPS.forEach(function (a) { delete cur.pg[a[0]][m]; }); preview(); pThemes(p); };
     /* My Presets */
     var mpe = p.querySelector('#ix-mpe'), keepScroll = function (fn) { var y = p.closest('.ix-pane').scrollTop; fn(); p.closest('.ix-pane').scrollTop = y; };
-    var again = function () { var op = p.querySelector('#ix-mypre'); keepScroll(function () { pThemes(p); }); var n = p.querySelector('#ix-mypre'); if (n) n.open = true; };
+    var again = function () { keepScroll(function () { pThemes(p); }); var n = p.querySelector('#ix-mypre'); if (n) n.open = true; };
     p.querySelector('#ix-mps').onclick = function () {
       var name = p.querySelector('#ix-mpn').value.trim(); if (!name) { mpe.textContent = 'Give this look a name first.'; return; }
       var mine = (S.myPresets || []).filter(function (x) { return x.n !== name; });
@@ -902,7 +900,7 @@
             seg('nbk', [[0, 'Off'], [1, 'Daily'], [3, 'Every 3 Days'], [7, 'Weekly'], [14, 'Every 2 Weeks'], [30, 'Monthly']], n.bkEvery || 0) +
             '<p class="ix-note">Last backup sent: ' + (n.bkLast ? when(n.bkLast) : 'none yet') + '.' + (n.bkError ? ' <span class="ix-err">Last problem: ' + esc(n.bkError) + '</span>' : '') + '</p>') +
           ecCard(n.encReady ? 'good' : '', ICON.lock, n.encReady ? 'Backup Files Are Encrypted' : 'Backup Files Are Not Encrypted',
-            n.encReady ? 'Files open with your ' + (n.encMode === 'login' ? 'webwebsite password' : 'encryption passphrase') + '. Anyone who gets into your Telegram still cannot read them.' :
+            n.encReady ? 'Files open with your ' + (n.encMode === 'login' ? 'website password' : 'encryption passphrase') + '. Anyone who gets into your Telegram still cannot read them.' :
             'Anyone who gets into your Telegram could open them. <a href="#" id="nt-encgo">Set an encryption passphrase in Settings › Security</a>.', '') +
           ecCard('', ICON.send, 'Send One Now', 'Sends a backup file to your chat right away, without waiting for the schedule.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="nt-bknow"' + (ready ? '' : ' disabled') + '>Send Backup Now</button></div>')) +
 
@@ -1408,7 +1406,6 @@
         ? '<p>Version <b>' + esc(prev.version) + '</b> was saved ' + esc(ago(prev.at)) + ' (' + size(prev.bytes) + '). Going back does not change your data.</p><div class="ix-apl"><label for="ix-bpw">Website Password</label><div class="ix-row"><input type="password" id="ix-bpw" autocomplete="current-password" style="max-width:340px"><button type="button" class="ix-btn" id="ix-ubk">Go Back to ' + esc(prev.version) + '</button></div></div><p class="ix-err" id="ix-be"></p>'
         : '<p>Nothing is saved yet. The first update saves the version you have now, so you can come back to it in one click.</p>') + '</section>';
     if (!staged) ghWire(p, st);
-    var fail = function (m) { var e = p.querySelector('#ix-ue') || p.querySelector('#ix-upm'); if (e) { e.className = 'ix-err'; e.textContent = m; } };
     var dz = p.querySelector('#ix-udz');
     if (dz) {
       var up = function (file) {
@@ -1556,7 +1553,7 @@
       p.querySelector('#ix-sov').innerHTML =
         '<div class="ix-ring ' + (todo ? '' : 'ok') + '" style="--p:' + pct + '"><b>' + count + '</b><small>of ' + total + '</small></div>' +
         '<div class="ix-hero-t"><div class="ix-hero-h">' + (todo ? (count / total < 0.5 ? 'Your Site Needs More Protection' : 'A Good Start, With Room to Grow') : 'Everything Recommended Is On') + '</div>' +
-          '<p>' + (todo ? '<b>Next best step:</b> ' + esc(todo[2]) : 'Your webwebsite password and every extra protection are on. Nothing to do here.') + '</p>' +
+          '<p>' + (todo ? '<b>Next best step:</b> ' + esc(todo[2]) : 'Your website password and every extra protection are on. Nothing to do here.') + '</p>' +
           '<div class="ix-chips" style="margin-top:12px"><span class="ix-chip on"><b>Password</b>on</span>' + have.map(function (x) { return '<span class="ix-chip' + (x[1] ? ' on' : '') + '"><b>' + x[0].replace(/^./, function (c) { return c.toUpperCase(); }) + '</b>' + (x[1] ? 'on' : 'off') + '</span>'; }).join('') + '</div></div>';
       var trN = (a.trusted || []).length;
       p.querySelector('#ix-stiles').innerHTML =
@@ -1635,7 +1632,6 @@
     function drawEnc() {
       var b = body('enc'), bk = st.bk, on = encOn();
       if (!bk.ok) { b.innerHTML = spinRow(); return; }
-      var line = function (k, v) { return '<span><b>' + k + '</b>' + v + '</span>'; };
       var cnt = function (n, has, hint) { return has ? n + ' ' + (n === 1 ? 'tab' : 'tabs') + ' encrypted' : hint; };
       var card = ecCard, chip = ecChip;
       var fd = function (id, label, auto, hint, wrapId) { return ecField(id, label, 'password', auto, hint, wrapId); };
@@ -2010,7 +2006,6 @@
       var code = newCode(), plain = code.replace(/-/g, '');
       return checkSite(o.site).then(state).then(function (d) {
         if (!d.iv && !d.lv) fail('Set the passphrase first.');
-        var opened = {};
         var open = function (v) {
           if (!v) return Promise.resolve(null);
           return VK.unwrap({ salt: v.salt, iter: v.iter, wrap: v.wrap }, o.pp).then(function (raw) { if (!raw) fail('That isn\'t the passphrase.'); return raw; });   // the passphrase only: never the recovery key itself
@@ -2040,7 +2035,7 @@
     if (S.twoStep) {
       box.innerHTML = head + ecCard('good', ICON.shield, 'Two-Step Login Is On', 'Logins ask for your app\'s 6-digit code (not on trusted browsers). Lost your phone? Use a recovery code.',
           '<div class="ix-chips" style="margin-top:0">' + ecChip('Recovery Codes Left', String(S.recoveryLeft), S.recoveryLeft > 2) + '</div>' + (S.recoveryLeft <= 2 ? '<p class="ix-note">Running low. Make new recovery codes below and keep them somewhere safe.</p>' : '')) +
-        ecCard('', ICON.key, 'Manage', 'Your webwebsite password is needed to change these settings.',
+        ecCard('', ICON.key, 'Manage', 'Your website password is needed to change these settings.',
           ecField('ix-2p', 'Website Password', 'password', 'current-password') +
           '<p class="ix-err" id="ix-2e"></p><div class="ix-row"><button type="button" class="ix-btn" id="ix-rc">New Recovery Codes</button><button type="button" class="ix-btn danger" id="ix-off">Turn Off</button></div>') + '<div id="ix-rcs"></div>';
       box.querySelector('#ix-off').onclick = function () { api('twostep_disable', { password: box.querySelector('#ix-2p').value }).then(function (j) {

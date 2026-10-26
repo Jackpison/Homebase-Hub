@@ -1,5 +1,5 @@
 // Meme and Text on Image: bold captions or any text, with fonts, outline and shadow; drag the text to place it.
-import { h, field, input, select, range, check, button, dropzone, panel, busy } from '../ui.js';
+import { h, field, select, range, check, button, dropzone, panel, busy } from '../ui.js';
 import { ACCEPT, decode, encode, canvas, outName, results, scaled } from '../lib/image.js';
 
 const FONTS = [['Impact, "Arial Black", sans-serif', 'Impact'], ['"Arial Black", Arial, sans-serif', 'Arial Black'], ['Georgia, serif', 'Georgia'], ['"Courier New", monospace', 'Courier'], ['"Comic Sans MS", "Comic Neue", cursive', 'Comic'], ['system-ui, sans-serif', 'System']];

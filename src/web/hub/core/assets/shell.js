@@ -1024,7 +1024,6 @@
     location.href = ROOT + 'web/settings/' + (sec ? '#' + sec : '');
   }
   function openBackup() { settings('backup'); }
-  function health() { settings('health'); }
   document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-hub-action="sizes"]')) adminJs().then(function (m) { m.textSizes(); }, function () {}); });
   /* Settings previews a draft: the bar and colors are drawn from it for a moment, then the saved state is put back. */
   function previewWith(st) { var keep = S; S = st; applyAttrs(); applyColors(); applyFont(); lastBar = ''; drawBar(); S = keep; }

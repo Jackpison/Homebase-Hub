@@ -1082,7 +1082,7 @@ function openLink(cat, i) {
   S.data.tabs.forEach(t => sel.append(h('optgroup', { label: t.title },
     t.categories.map(c => h('option', { value: c.id, selected: c === cat }, c.title)))));
   $('#linkErr').textContent = '';
-  nameAuto = null; titleSeq++; titleUrl = '';
+  titleSeq++; titleUrl = '';
   $('#lTitleFetch').disabled = false; $('#lTitleFetch').textContent = 'Get Title';
   $('#lTitle').placeholder = 'Filled in from the page title';
   $('#linkDlg').showModal(); (i >= 0 ? $('#lTitle') : $('#lUrl')).focus();
@@ -1091,7 +1091,7 @@ $('#lIcon').addEventListener('change', showIconPreview);
 // Name from the address (instant guess), then the real page title from the server
 const nameGuess = url => { const d = host(url).replace(/^www\./, ''); return d ? d.split('.')[0].replace(/^./, c => c.toUpperCase()) : ''; };
 const fetchTitle = url => api('title', { url: safeUrl(url) }).then(j => j.title);
-let nameAuto = null, titleSeq = 0, titleUrl = ''; // the box stays empty while loading, so your typing is never mixed in
+let titleSeq = 0, titleUrl = ''; // the box stays empty while loading, so your typing is never mixed in
 function autoTitle(force) {
   const url = $('#lUrl').value.trim(), name = $('#lTitle');
   if (!url || !isWeb(safeUrl(url))) return;
@@ -1101,11 +1101,11 @@ function autoTitle(force) {
   name.placeholder = 'Getting the page title…'; btn.disabled = true; btn.textContent = 'Getting…';
   fetchTitle(url).then(t => {
     if (seq !== titleSeq || !$('#linkDlg').open) return;
-    if (force || !name.value.trim()) { name.value = nameAuto = t; if (document.activeElement === name) name.select(); }
+    if (force || !name.value.trim()) { name.value = t; if (document.activeElement === name) name.select(); }
   }).catch(err => {
     if (seq !== titleSeq || !$('#linkDlg').open) return;
     if (force) $('#linkErr').textContent = err.message;
-    else if (!name.value.trim()) name.value = nameAuto = nameGuess(url); // the site hid its title: use the domain
+    else if (!name.value.trim()) name.value = nameGuess(url); // the site hid its title: use the domain
   }).finally(() => {
     if (seq !== titleSeq) return;
     titleUrl = ''; btn.disabled = false; btn.textContent = 'Get Title'; name.placeholder = 'Filled in from the page title';

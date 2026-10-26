@@ -6,10 +6,9 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
-const mk=(owner,bank,name,network,variant,type,limit,fee)=>({owner,bank,name,network,variant,type,limit,fee,remark:""});
 const SEED=[]; // no built-in cards: data only comes from the server after login
 
-let sort={k:null,d:1},B={},locked=false,pw="",lastAuth=0,pendingFn=null,D=[],P=[],NOTES="",active="All",editing=null,armed=false,server=false,pt,pending=null,hmode="add",hArmed=false;
+let sort={k:null,d:1},B={},pw="",D=[],P=[],NOTES="",active="All",editing=null,armed=false,server=false,pt,pending=null,hmode="add",hArmed=false;
 const $=id=>document.getElementById(id),dlg=$("dlg"),hdlg=$("hdlg"),idlg=$("idlg");
 const inr=n=>"₹"+Number(n).toLocaleString("en-IN");
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -42,7 +41,7 @@ function persist(){
       const r=await api({...snap(),pw});
       if(r.status===403){status("You were logged out. Log in again; this change is kept on this device.");if(window.HUB)HUB.login("You were logged out. Log in to save your change.").then(()=>persist(),()=>{});return}
       if(!r.ok)throw 0;
-      lastAuth=Date.now();status(savedMsg());
+      status(savedMsg());
     }catch(e){status("Server save failed. Kept in this browser.")}
   },300);
 }
@@ -71,7 +70,7 @@ async function load(){
     if(!r.ok)throw 0;
     const j=await r.json();
     if(!j||typeof j!=="object")throw 0;
-    server=true;locked=!!j.locked;
+    server=true;
     if(j.private&&!j.auth){privateScreen(j);return}     // visitors: no card data is ever sent
     if(Array.isArray(j.cards)&&Array.isArray(j.people)){apply(j);status(savedMsg())}
     else{apply({cards:[],people:[],notes:""});status(savedMsg())}

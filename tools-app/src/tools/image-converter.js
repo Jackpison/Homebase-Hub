@@ -1,5 +1,5 @@
 // Image Converter: HEIC, PNG, WebP, TIFF, BMP, GIF or AVIF to JPG, PNG, WebP or AVIF, one or many.
-import { h, seg, range, check, button, dropzone, panel, busy, field } from '../ui.js';
+import { h, seg, range, button, dropzone, panel, busy, field } from '../ui.js';
 import { ACCEPT, FORMATS, decode, encode, outName, results, each } from '../lib/image.js';
 
 export default function (root) {
