@@ -288,6 +288,43 @@ try:
         light_reduce = glass('light', reduce=True); dark = glass('dark'); solid = glass('solid'); glass('light')
         check('P40 Glass Tint: Light stays see-through and blurred even when the computer asks to reduce transparency; Dark is a dark see-through tint; Solid is not see-through',
               light_reduce[0] == 255 and light_reduce[1] < 0.5 and light_reduce[2] and dark[0] < 60 and dark[1] < 0.5 and dark[2] and solid[1] > 0.85 and not solid[2], (light_reduce, dark, solid))
+        # P47: Home's refresh button (1.53). The next background is ready, so a press swaps at once; three quick presses on a slow
+        # network give one change (it never starts over); when nothing arrives it gives up within about 20 s and the button works again.
+        rctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx.route('**/*', handle); rctx.add_init_script(TRACK_REQUESTS)
+        rctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+        net = {'delay': 0, 'hang': False}
+        def bg_route(r):
+            if r.request.resource_type in ('image', 'media') and '/hub/media/' not in r.request.url and ('starter' in r.request.url or '/photos/' in r.request.url or '/uploads/' in r.request.url):
+                if net['hang']: return   # never answered
+                if net['delay']: time.sleep(net['delay'])
+            r.fallback()
+        rp = rctx.new_page(); rp.route('**/*', bg_route)
+        rp.goto(B + '/web/home/', wait_until='domcontentloaded')
+        cur = lambda: rp.evaluate("(() => { const n = document.querySelector('#bg > .on'); return n ? (n.currentSrc || n.src || n.poster || '') : '' })()")
+        until(cur, 15000); rp.wait_for_timeout(2500)   # the next one is fetched about 0.6 s after the first appears
+        first = cur(); t0 = time.time(); rp.click('#nextBg'); until(lambda: cur() != first, 5000); quick = time.time() - t0
+        rp.wait_for_timeout(300)
+        net['delay'] = 2.5; second = cur(); t0 = time.time()
+        rp.evaluate("document.getElementById('nextBg').click()")
+        changes = []; rp.wait_for_timeout(150)
+        dimmed = rp.evaluate("document.getElementById('bg').classList.contains('wait') || document.querySelector('#bg > .on') !== null && getComputedStyle(document.querySelector('#bg > .on')).filter !== 'none'")
+        rp.evaluate("document.getElementById('nextBg').click(); document.getElementById('nextBg').click()")
+        end = time.time() + 9
+        while time.time() < end:
+            c = cur()
+            if c != second and (not changes or changes[-1] != c): changes.append(c)
+            if changes and time.time() - t0 > 6: break
+            rp.wait_for_timeout(100)
+        slow = time.time() - t0
+        net['delay'] = 0; net['hang'] = True
+        rp.wait_for_timeout(1500); rp.evaluate("document.getElementById('nextBg').click()")   # uses up the one that was ready...
+        until(lambda: not rp.evaluate("document.getElementById('nextBg').classList.contains('spin')"), 20000, 250); rp.wait_for_timeout(1500)   # ...and the next one's download hangs
+        rp.evaluate("document.getElementById('nextBg').click()"); t0 = time.time()
+        freed = until(lambda: not rp.evaluate("document.getElementById('bg').classList.contains('wait') || document.getElementById('nextBg').classList.contains('spin')"), 25000, 250)
+        gave_up = time.time() - t0
+        net['hang'] = False; rctx.close()
+        check('P47 Home refresh: a ready background swaps at once; on a slow network the picture dims at once and three quick presses give one change; when nothing arrives the button frees itself within about 20 s',
+              first and quick < 1.2 and len(changes) == 1 and dimmed and freed and gave_up < 22 and cur is not None, (first[-30:], round(quick, 2), [c[-25:] for c in changes], round(slow, 1), dimmed, freed, round(gave_up, 1)))
         # P35: a phone, logged in, all nine widgets in the Glass Dock: every dock button fits on the screen, and an open widget
         # does not sit on top of the chips (on a short screen they make way)
         subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = 'dock'; write_json(SITE_FILE, clean_site($s));" % D], check=True)

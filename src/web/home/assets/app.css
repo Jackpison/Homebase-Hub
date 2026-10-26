@@ -35,8 +35,9 @@ svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 /* ================= background ================= */
 #bg{position:fixed;inset:0;z-index:0;overflow:hidden;
   background:radial-gradient(120% 90% at 20% 10%, #1b2440 0%, #0a0d18 55%, #05060B 100%)}
-#bg > *{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.6s ease}
+#bg > *{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.6s ease,filter .25s ease}
 #bg > .on{opacity:1}
+#bg.wait > .on{filter:brightness(.8) saturate(.92)}   /* the refresh button was pressed: the next one is on its way */
 #bg > .kb{animation:kenburns 60s ease-in-out infinite alternate}
 @keyframes kenburns{
   0%{transform:scale(1.03) translate3d(0,0,0)}

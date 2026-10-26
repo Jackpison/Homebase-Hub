@@ -63,6 +63,9 @@ const BG = {
   token: 0,
   timer: 0,
   nextUp: null,          // { item, node } preloaded and ready
+  preloading: null,      // { item, promise } the next one, still on its way
+  stepping: false,       // the refresh button is working: another press does not start over
+  cur: '',               // the address on screen
 
   credit(text, link){
     const a = $('#creditText');
@@ -70,8 +73,10 @@ const BG = {
     if (link) a.href = link; else a.removeAttribute('href');
   },
   busy(on){ $('#nextBg').classList.toggle('spin', on); },
+  /* the refresh button reacts at once: the picture on screen dims a little while the next one arrives */
+  wait(on){ this.busy(on); this.el.classList.toggle('wait', on); },
 
-  load(item){
+  load(item, wait = 20000){
     return new Promise((res, rej) => {
       // a video with a still picture: the picture shows at once, and stays where the video can't play (AV1 on an older browser, data saver, Reduce Motion)
       if (item.type === 'video' && item.poster){
@@ -89,7 +94,7 @@ const BG = {
         const v = document.createElement('video');
         Object.assign(v, { muted:true, loop:true, autoplay:true, playsInline:true, preload:'auto' });
         v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
-        const t = setTimeout(() => rej(new Error('timeout')), 20000);
+        const t = setTimeout(() => rej(new Error('timeout')), wait);
         v.oncanplay = () => { clearTimeout(t); v.oncanplay = null; res(v); };
         v.onerror = () => { clearTimeout(t); rej(new Error('load')); };
         v.src = media(item.url);
@@ -98,7 +103,7 @@ const BG = {
       const img = new Image();
       img.alt = ''; img.decoding = 'async';
       if (item.p){ img.dataset.u = item.url; img.dataset.p = '1'; }
-      const t = setTimeout(() => rej(new Error('timeout')), 20000);
+      const t = setTimeout(() => rej(new Error('timeout')), wait);
       img.onload = () => { clearTimeout(t); (img.decode ? img.decode().catch(() => {}) : Promise.resolve()).then(() => res(img)); };
       img.onerror = () => { clearTimeout(t); rej(new Error('load')); };
       img.src = bgSrc(item);
@@ -116,6 +121,7 @@ const BG = {
       setTimeout(() => old.forEach(n => n.remove()), 1800);
     }));
     this.credit(item.credit, item.link);
+    this.cur = item.url;
     remember(item.url);
   },
 
@@ -150,18 +156,18 @@ const BG = {
     return ups.length ? pick(fresh(ups)) : null;
   },
 
-  async show(item, { count = true } = {}){
+  async show(item, { count = true, wait = 20000 } = {}){
     if (!item) return false;
     const my = ++this.token;
     let node;
     if (this.nextUp && this.nextUp.item.url === item.url){ node = this.nextUp.node; this.nextUp = null; }
     else {
-      this.busy(true);
-      try { node = await this.load(item); }
-      catch { this.busy(false); return false; }
+      if (!this.stepping) this.busy(true);
+      try { node = await this.load(item, wait); }
+      catch { if (!this.stepping) this.busy(false); return false; }
     }
     if (my !== this.token) return false;
-    this.busy(false);
+    if (!this.stepping) this.busy(false);
     this.swap(node, item);
     if (count) this.seen(item);
     this.preloadNext(item);
@@ -180,21 +186,44 @@ const BG = {
       }).catch(() => {});
   },
 
+  /* The next background is fetched soon after one appears (a video: its still picture first), so the refresh button
+     usually swaps at once. */
   preloadNext(current){
-    if (navigator.connection?.saveData){ this.nextUp = null; return; }   // data saver: the next photo is fetched only when asked for
+    this.nextUp = null; this.preloading = null;
+    if (navigator.connection?.saveData) return;   // data saver: the next photo is fetched only when asked for
     const item = this.pick([current.url]);
-    if (!item || item.url === current.url || item.type === 'video'){ this.nextUp = null; return; }
-    const want = item.url;
-    this.nextUp = null;
-    const go = () => this.load(item).then(node => { if (this.el.lastElementChild?.src !== want) this.nextUp = { item, node }; }).catch(() => {});
-    ('requestIdleCallback' in window) ? requestIdleCallback(go, { timeout:3000 }) : setTimeout(go, 1500);
+    if (!item || item.url === current.url) return;
+    setTimeout(() => {
+      if (this.cur !== current.url) return;   // something else is on screen by now
+      const p = this.load(item);
+      this.preloading = { item, promise:p };
+      p.then(node => { if (this.preloading?.promise !== p) return; this.preloading = null; if (this.cur !== item.url) this.nextUp = { item, node }; })
+       .catch(() => { if (this.preloading?.promise === p) this.preloading = null; });
+    }, 600);
   },
 
+  /* The refresh button (and the timer): the ready one at once; the one on its way if it arrives within 6 seconds; otherwise
+     two other backgrounds, 6 seconds each. Pressing again while it works does nothing (it never starts over). */
   async next(){
-    const item = this.nextUp?.item || this.pick();
-    if (await this.show(item)) return;
-    // that one failed: try a couple of others
-    for (let i = 0; i < 3; i++) if (await this.show(this.pick([item?.url]))) return;
+    if (this.stepping) return;
+    this.stepping = true; this.wait(true);
+    try {
+      if (this.nextUp){ const { item } = this.nextUp; if (await this.show(item)) return; }
+      if (this.preloading){
+        const { item, promise } = this.preloading;
+        const node = await Promise.race([promise, new Promise(r => setTimeout(() => r(null), 6000))]).catch(() => null);
+        if (node && node.isConnected === false){
+          this.token++; this.nextUp = null; this.preloading = null;
+          this.swap(node, item); this.seen(item); this.preloadNext(item);
+          return;
+        }
+      }
+      const tried = [this.cur];
+      for (let i = 0; i < 2; i++){   // at most 6 + 2 x 6 = 18 seconds before the button is free again
+        const item = this.pick(tried); if (!item) break; tried.push(item.url);
+        if (await this.show(item, { wait:6000 })) return;
+      }
+    } finally { this.stepping = false; this.wait(false); }
   },
 
   /** Ask the server to download more photos in the background. Visitors never wait for this. */
