@@ -784,7 +784,9 @@ function visitBadge(url) {
 }
 function countVisit(a) {
   const url = a.dataset.u; if (!url || S.editing) return;
-  HF(`${API}?action=visit`, { method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'bookmarks' }, body: JSON.stringify({ url }) })
+  // a plain request (the link opens in a new tab, so this page stays): Firefox leaves the login cookie off keep-alive requests,
+  // and the site's own fetch would retry, which counts as a second click
+  fetch(`${API}?action=visit`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'bookmarks' }, body: JSON.stringify({ url }) })
     .then(r => r.json()).then(j => {
       if (!j || !j.counted || !S.auth || !j.count) return;
       S.visits[url] = j.count;

@@ -233,6 +233,7 @@
 #ix-page .ix-pill{font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid var(--ix-line2);color:var(--ix-mu);white-space:nowrap}
 #ix-page .ix-pill.good{color:var(--ix-good);border-color:color-mix(in srgb,var(--ix-good) 45%,transparent)}
 #ix-page .ix-pill.warn{color:var(--ix-accent-tx);border-color:var(--ix-dim)}
+html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix-accent) 34%,#000)}   /* 12px text: a little darker than other accent text so it reads at 4.5:1 on every engine */
 #ix-page .ix-chk small{color:var(--ix-mu2);font-size:12.5px}
 #ix-page .ix-accb>p:first-child{margin-top:4px}
 #ix-page .ix-tsf{margin-bottom:12px}
