@@ -158,11 +158,76 @@ try:
         until(lambda: wp.evaluate("!document.querySelector('#welcome')"), 8000); gone = wp.evaluate("!document.querySelector('#welcome')")   # it fades away by itself after about 4.5 s
         wp.reload(wait_until='domcontentloaded'); wp.wait_for_timeout(600)   # on purpose: P17 checks the welcome does NOT come back, so give it the time it took the first time
         again = wp.evaluate("!!document.querySelector('#welcome.in')")
-        check('P17 Home shows "Welcome Home" in the middle with the links hidden, it fades away, and not again on a reload', w1 and w1[0] == 'Welcome Home' and w1[1] and float(w1[2]) < 0.2 and gone and not again, (w1, gone, again))
+        check('P17 Home shows "Welcome Home" in the middle with the clock hidden, it fades away, and not again on a reload', w1 and w1[0] == 'Welcome Home' and w1[1] and float(w1[2]) < 0.2 and gone and not again, (w1, gone, again))
         bgnow = wp.evaluate("(() => { const n = document.querySelector('#bg .on'); return n ? (n.currentSrc || n.src) : '' })()")
         check('P18 a new site shows the Starter theme (its own pictures, nothing downloaded from other sites)', '/web/home/starter/' in bgnow and not wp.evaluate("window.PUB.bg.photos.length") and wp.evaluate("window.PUB.bg.theme") == 'starter', bgnow)
         check('P19 Home names its own settings Home Settings (pencil menu and window), and has the theme editor and Import', wp.evaluate("!!document.querySelector('[data-hub=item][data-hub-label=\"Home Settings\"]') && document.querySelector('#settingsSheet h2').textContent === 'Home Settings' && !!document.getElementById('themeSheet') && !!document.getElementById('themeFile')"))
         wctx.close()
+        # P20-P28: Home's widgets (1.51). Logged in: the Glass Dock, Quick Add, Done, Settings > Widgets, the Scratch Pad, Recent Tools,
+        # the calendar. A visitor gets the clock only, and none of the widgets' data. Home never asks another site for anything.
+        hctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); hctx.add_cookies(cookies); hctx.route('**/*', handle)
+        hctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('tools.v3',JSON.stringify({recent:['pdf-merge','qr-generator','gone-tool']}))}catch(e){}")
+        hctx.add_init_script(TRACK_REQUESTS)
+        outside = []; herr = []
+        hctx.on('request', lambda r: outside.append(r.url) if not r.url.startswith((B, 'data:', 'blob:')) else None)
+        hp = hctx.new_page(); hp.on('pageerror', lambda e: herr.append(str(e)[:200]))
+        hp.goto(B + '/web/home/', wait_until='domcontentloaded'); until(lambda: hp.evaluate("document.querySelectorAll('#wDock .wdb').length > 0"), 10000); settle(hp)
+        dock = hp.evaluate("[...document.querySelectorAll('#wDock .wdb')].map(b => b.dataset.w)")
+        check('P20 logged in, Home shows the clock and the Glass Dock with the five widgets that are on at first (Scratch Pad is off)',
+              dock == ['today', 'countdown', 'note', 'tools', 'calendar'] and hp.evaluate("!document.getElementById('clock').hidden && /\\d/.test(document.getElementById('time').textContent) && !document.getElementById('wDock').hidden && document.getElementById('wCards').hidden"), dock)
+        hp.click('#wDock [data-w=today]'); hp.wait_for_selector('#wQa', timeout=5000)
+        hp.fill('#wQa', 'Pay the gardener today'); hp.press('#wQa', 'Enter')
+        rows = lambda: hp.evaluate("[...document.querySelectorAll('#wBody .wrow .wr-n')].map(e => e.textContent)")
+        until(lambda: 'Pay the gardener' in rows(), 10000); settle(hp)
+        tasks = lambda: hp.evaluate("fetch('../tasks/api.php', {credentials: 'same-origin'}).then(r => r.json()).then(j => j.tasks.map(t => [t.name, t.status]))")
+        check('P21 Quick Add in Today adds the task (read like Telegram\'s /add) and it shows in the list', ['Pay the gardener', 'active'] in tasks() and hp.evaluate("document.getElementById('wQa').value") == '', rows())
+        hp.click('#wBody .wrow:has-text("Pay the gardener") input'); until(lambda: 'Pay the gardener' not in rows(), 10000); settle(hp)
+        check('P22 ticking it in Today marks it done in Tasks', ['Pay the gardener', 'done'] in tasks(), tasks())
+        hp.click('#wDock [data-w=calendar]'); hp.wait_for_selector('#wBody .wcal', timeout=5000)
+        cal = hp.evaluate("(() => { const d = new Date(), n = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); return [document.querySelectorAll('#wBody .wcal-d').length === n, document.querySelectorAll('#wBody .wcal-d.now').length] })()")
+        hp.click('#wBody [data-cal=\"1\"]'); nxt = hp.evaluate("document.querySelectorAll('#wBody .wcal-d.now').length")
+        check('P23 Month Calendar shows every day of the month with today marked, and moves to the next month', cal == [True, 1] and nxt == 0, (cal, nxt))
+        hp.click('#wDock [data-w=tools]'); hp.wait_for_selector('#wBody .wtools a, #wBody .wmsg', timeout=5000); settle(hp)
+        tl = hp.evaluate("[...document.querySelectorAll('#wBody .wtools a')].map(a => [a.textContent, a.getAttribute('href')])")
+        check('P24 Recent Tools lists the tools used in this browser by name (a tool that no longer exists is left out), each opening in Tools',
+              tl == [['Merge PDF', '../tools/#/tool/pdf-merge'], ['QR Code Generator', '../tools/#/tool/qr-generator']], tl)
+        hp.keyboard.press('Escape'); until(lambda: hp.evaluate("document.getElementById('wPanel').hidden"), 3000)
+        # Settings > Widgets: Glance and Expand, the Scratch Pad on, a countdown and a pinned note from Info
+        hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#toolbar:not([hidden])', timeout=10000)
+        hp.click('[data-open=settingsSheet]'); hp.wait_for_selector('#settingsSheet[open]', timeout=5000)
+        until(lambda: hp.evaluate("document.querySelectorAll('#wNote optgroup').length > 0"), 10000)
+        hp.click('#wStyle [data-v=glance]'); hp.check('#wList [data-wl=pad]')
+        hp.fill('#wCdName', 'Lakeside Weekend'); hp.fill('#wCdDate', __import__('datetime').date.fromordinal(__import__('datetime').date.today().toordinal() + 12).isoformat())
+        note = hp.evaluate("(() => { const o = document.querySelector('#wNote optgroup option'); document.getElementById('wNote').value = o.value; return o.textContent })()")
+        enc = hp.evaluate("[...document.querySelectorAll('#wNote optgroup')].map(g => g.label)")
+        hp.click('#wList [data-wmove=\"5\"][data-by=\"-1\"]')   # Scratch Pad one up
+        hp.click('#saveSettings'); until(lambda: not hp.evaluate("document.getElementById('settingsSheet').open"), 10000)
+        hp.click('#doneBtn'); until(lambda: hp.evaluate("document.querySelectorAll('#wCards .wcard').length") == 6, 10000); settle(hp)
+        cards = hp.evaluate("[...document.querySelectorAll('#wCards .wcard')].map(c => [c.dataset.w, c.querySelector('.wc-h span').textContent])")
+        check('P25 Settings > Widgets switches to Glance and Expand, turns the Scratch Pad on, moves it, and sets the countdown and the note (no encrypted tab offered)',
+              [c[0] for c in cards] == ['today', 'countdown', 'note', 'tools', 'pad', 'calendar'] and cards[1][1] == 'Lakeside Weekend' and cards[2][1] == note and hp.evaluate("document.getElementById('wDock').hidden")
+              and 'Trip Notes' in enc, (cards, note, enc))
+        hp.click('#wCards [data-w=countdown]'); hp.wait_for_selector('#wBody .wcount', timeout=5000)
+        check('P26 the countdown opens to the days left', hp.evaluate("document.querySelector('#wBody .wcount b').textContent") == '12', hp.evaluate("document.getElementById('wBody').textContent"))
+        hp.click('#wCards [data-w=pad]'); hp.wait_for_selector('#wPad', timeout=5000)
+        hp.fill('#wPad', 'Buy a spare key'); until(lambda: hp.evaluate("document.getElementById('wPadState').textContent") == 'Saved', 10000)
+        hp.reload(wait_until='domcontentloaded'); until(lambda: hp.evaluate("document.querySelectorAll('#wCards .wcard').length") == 6, 10000); settle(hp)
+        hp.click('#wCards [data-w=pad]'); hp.wait_for_selector('#wPad', timeout=5000)
+        check('P27 the Scratch Pad saves by itself and keeps the text after a reload', hp.evaluate("document.getElementById('wPad').value") == 'Buy a spare key')
+        hctx.close()
+        # a visitor: the clock, no widgets, and nothing private in the page or asked of the server
+        vctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 844}); vctx.route('**/*', handle); vctx.add_init_script(TRACK_REQUESTS)
+        vctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+        vreq = []; vctx.on('request', lambda r: vreq.append(r.url.replace(B, '')))
+        vctx.on('request', lambda r: outside.append(r.url) if not r.url.startswith((B, 'data:', 'blob:')) else None)
+        vp = vctx.new_page(); vp.on('pageerror', lambda e: herr.append(str(e)[:200])); vp.goto(B + '/web/home/', wait_until='domcontentloaded'); settle(vp)
+        html = vp.content()
+        v = vp.evaluate("[window.PUB.widgets, !document.getElementById('clock').hidden, document.body.classList.contains('has-widgets'), document.documentElement.scrollWidth - innerWidth]")
+        asked = [u for u in vreq if any(k in u for k in ('/tasks/api.php', '/info/api.php', 'action=pad', 'tools-list.json'))]
+        check('P28 a visitor (on a phone) sees the clock and no widgets: no widget settings in the page, no Tasks, Info or Scratch Pad request, nothing scrolls sideways',
+              v[0] is None and v[1] and not v[2] and v[3] <= 1 and 'Lakeside Weekend' not in html and not asked, (v, asked))
+        check('P29 Home asks no other site for anything (logged in or not), with no page error', not outside and not herr, (outside[:3], herr[:2]))
+        vctx.close()
         b.close()
 finally:
     php.terminate(); shutil.rmtree(D, ignore_errors=True)

@@ -588,12 +588,9 @@ function nt_parse_add(string $s): ?array {
 }
 function nt_bot_add(string $arg): string {
     require_once HUB_WEB . '/tasks/lib.php';
-    $p = nt_parse_add($arg);
-    if (!$p) return 'Tell me what to add, for example:' . "\n/add Netflix 649 monthly 5 Nov\n/add Car insurance 18500 yearly 10 Oct 2027\n/add Call bank tomorrow 11am";
-    $now = time();
-    $task = $p + ['cat' => '', 'remind' => -1, 'url' => '', 'notes' => 'Added from Telegram.', 'status' => 'active', 'created' => $now, 'updated' => $now, 'day' => (int)substr($p['due'], 8, 2)];
-    $ok = tasks_modify(function (&$data) use ($task) { $data['tasks'][] = $task; return true; });
-    if (!$ok) return '⚠️ The task could not be saved (the tasks file could not be read). Open Tasks on the site.';
+    $p = tasks_add_text($arg, 'Telegram');
+    if ($p === null) return 'Tell me what to add, for example:' . "\n/add Netflix 649 monthly 5 Nov\n/add Car insurance 18500 yearly 10 Oct 2027\n/add Call bank tomorrow 11am";
+    if ($p === false) return '⚠️ The task could not be saved (the tasks file could not be read). Open Tasks on the site.';
     $def = (string)(tasks_read()['settings']['currency'] ?? 'INR');
     $lbl = tasks_repeat_label($p['repeat']);
     return '➕ <b>Added: ' . nt_h($p['name']) . '</b>' . "\n📅 " . nt_h(date('D, j M Y', strtotime($p['due'])) . ($p['time'] !== '' ? ', ' . nt_time($p['time']) : '')) .

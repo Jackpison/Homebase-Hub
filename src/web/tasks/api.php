@@ -12,6 +12,8 @@
  *
  *  GET                                      { auth, rev, tasks, log, settings }   (visitors: { private: true, auth: false })
  *  POST { action: "save", rev, tasks, log, settings }   replaces the list; rev must match, or 409 with the current data
+ *  POST { action: "quick_add", text }                   one task from plain words (Home's Quick Add), like Telegram's /add
+ *  POST { action: "done", id, due }                     marks that date of the task done (Home's Today), like the Done button
  *
  * Every POST passes the same-site checks and the site's security check; saves are atomic and keep earlier versions.
  */
@@ -40,6 +42,22 @@ if (!is_array($b)) out(400, ['ok' => false, 'error' => 'Bad data.']);
 if (!$admin) out(401, ['ok' => false, 'error' => 'You are logged out. Log in again.']);
 if (!hub_csrf_ok()) out(403, ['ok' => false, 'error' => 'Security check failed. Reload the page.']);
 
+// Home's widgets (1.51): add one task from plain words, or mark one date of a task done, without sending the whole list
+if (($b['action'] ?? '') === 'quick_add') {
+    $t = tasks_add_text(mb_substr(trim((string)($b['text'] ?? '')), 0, 300), 'Home');
+    if ($t === null) out(400, ['ok' => false, 'error' => 'Type what to add, for example: Call the bank tomorrow 11am']);
+    if ($t === false) out(500, ['ok' => false, 'error' => 'The saved tasks could not be read, so nothing was changed. Open Tasks.']);
+    out(200, ['ok' => true, 'task' => $t]);
+}
+if (($b['action'] ?? '') === 'done') {
+    $id = (string)($b['id'] ?? ''); $due = (string)($b['due'] ?? '');
+    $res = '';
+    $ok = tasks_modify(function (&$data) use ($id, $due, &$res) { $res = tasks_complete($data, $id, $due, 'paid'); return $res !== '' && $res !== 'already'; });
+    if ($res === '') out(404, ['ok' => false, 'error' => 'That task no longer exists.']);
+    if ($res === 'already') out(409, ['ok' => false, 'error' => 'That task was already handled.']);
+    if (!$ok) out(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
+    out(200, ['ok' => true, 'result' => $res]);
+}
 if (($b['action'] ?? '') !== 'save' || !is_array($b['tasks'] ?? null)) out(400, ['ok' => false, 'error' => 'Unknown action.']);
 
 $lk = @fopen(hub_dir('tasks') . '/tasks.lock', 'c');

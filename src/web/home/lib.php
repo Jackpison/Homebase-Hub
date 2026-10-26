@@ -30,10 +30,6 @@ const BG_TYPES = [
     'video/mp4'  => 'mp4', 'video/webm' => 'webm',
 ];
 const PHOTO_TYPES = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-const ICON_TYPES = [
-    'image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif', 'image/webp' => 'webp',
-    'image/x-icon' => 'ico', 'image/vnd.microsoft.icon' => 'ico',
-];
 
 /* Background sources. kw = uses your keywords, key = which API key it needs, video = clips instead of photos. */
 const SOURCES = [
@@ -95,15 +91,8 @@ function default_site(): array
     return [
         'title'   => 'Home',
         'icon'    => '',
-        'columns' => [
-            [
-                ['id' => new_id(), 'name' => 'My Blog',   'url' => 'https://example.com', 'icon' => ['type' => 'auto', 'value' => '']],
-                ['id' => new_id(), 'name' => 'Portfolio', 'url' => 'https://example.org', 'icon' => ['type' => 'auto', 'value' => '']],
-            ],
-            [
-                ['id' => new_id(), 'name' => 'Side project', 'url' => 'https://example.net', 'icon' => ['type' => 'emoji', 'value' => '🛠️']],
-            ],
-        ],
+        'columns' => [[], []],   // Home's own links (up to 1.50); since 1.51 they live in Links, and this is only read to copy them there once
+        'linksMoved' => 0,
         'bg' => [
             'sources'      => ['picsum' => true, 'bing' => true, 'wikimedia' => true, 'wallhaven' => true, 'unsplash' => false, 'pixabay' => false, 'pixabay_video' => false],
             'keys'         => ['unsplash' => '', 'pixabay' => ''],
@@ -120,6 +109,7 @@ function default_site(): array
         ],
         'panel' => ['opacity' => 0.40, 'blur' => 22],
         'welcome' => WELCOME_DEFAULT,
+        'widgets' => clean_widgets([]),
     ];
 }
 function load_site(): array
@@ -232,7 +222,116 @@ function clean_site(array $in): array
         ],
         // the words that fade in the middle when Home opens; empty = none (a site saved before 1.49 gets the default)
         'welcome' => array_key_exists('welcome', $in) ? str_clip($in['welcome'], 80) : WELCOME_DEFAULT,
+        'linksMoved' => max(0, (int) ($in['linksMoved'] ?? 0)),
+        'widgets' => clean_widgets($in['widgets'] ?? []),
     ];
+}
+
+/** What the page sends when you save, made safe: Home's old links and their "moved" mark always stay as saved on the server. */
+function site_from_page(array $in, array $cur): array
+{
+    $in['columns'] = $cur['columns']; $in['linksMoved'] = $cur['linksMoved'];
+    return clean_site($in);
+}
+
+/* ================= widgets (1.51) ================= */
+
+/** The widgets Home can show, in their default order. Private ones load their data only for a logged-in browser. */
+const WIDGET_IDS = ['today', 'countdown', 'note', 'tools', 'calendar', 'pad'];
+const WIDGET_ON  = ['today' => true, 'countdown' => true, 'note' => true, 'tools' => true, 'calendar' => true, 'pad' => false];
+const WIDGET_STYLES = ['dock', 'glance'];   // Glass Dock, or Glance and Expand
+const PAD_MAX = 20000;                      // characters kept in the Scratch Pad
+
+/** Home's widget settings, cleaned: a style, the clock on or off, every known widget once (in your order, unknown ones dropped,
+ *  missing ones added at the end), the countdown (a name and a date) and the pinned note (an Info tab and box). */
+function clean_widgets($in): array
+{
+    $in = is_array($in) ? $in : [];
+    $list = []; $seen = [];
+    foreach (is_array($in['list'] ?? null) ? $in['list'] : [] as $w) {
+        $id = is_array($w) ? (string) ($w['id'] ?? '') : '';
+        if (!in_array($id, WIDGET_IDS, true) || isset($seen[$id])) continue;
+        $seen[$id] = true; $list[] = ['id' => $id, 'on' => (bool) ($w['on'] ?? false)];
+    }
+    foreach (WIDGET_IDS as $id) if (!isset($seen[$id])) $list[] = ['id' => $id, 'on' => WIDGET_ON[$id]];
+    $cd = is_array($in['countdown'] ?? null) ? $in['countdown'] : [];
+    $date = (string) ($cd['date'] ?? '');
+    $okDate = preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]);
+    $nt = is_array($in['note'] ?? null) ? $in['note'] : [];
+    $idOk = fn($v) => is_string($v) && preg_match('/^[A-Za-z0-9_-]{1,40}$/', $v) ? $v : '';
+    return [
+        'style'     => in_array($in['style'] ?? '', WIDGET_STYLES, true) ? $in['style'] : 'dock',
+        'clock'     => (bool) ($in['clock'] ?? true),
+        'list'      => $list,
+        'countdown' => ['name' => str_clip($cd['name'] ?? '', 40), 'date' => $okDate ? $date : ''],
+        'note'      => ['tab' => $idOk($nt['tab'] ?? ''), 'box' => $idOk($nt['box'] ?? '')],
+    ];
+}
+
+/** The Scratch Pad: one text, saved by itself while you type (logged in only; stored in site-data/home/pad.php). */
+function pad_file(): string { return DATA_DIR . '/pad.json'; }
+function pad_read(): array
+{
+    $p = hub_jread(pad_file()) ?? [];
+    return ['text' => is_string($p['text'] ?? null) ? $p['text'] : '', 'saved' => (int) ($p['saved'] ?? 0)];
+}
+function pad_write(string $text): array
+{
+    $text = function_exists('mb_substr') ? mb_substr($text, 0, PAD_MAX) : substr($text, 0, PAD_MAX);
+    $p = ['text' => str_replace("\r\n", "\n", $text), 'saved' => time()];
+    if (!hub_jput(pad_file(), json_encode($p, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new RuntimeException('Could not save the Scratch Pad (check the folder permissions).');
+    return $p;
+}
+
+/**
+ * Home's links move to Links (1.51): the first time Home loads after the update, every link of Home's two columns is copied once
+ * into a "From Home" category at the top of the first tab of Links that is not encrypted (a new tab "From Home" when there is
+ * none). Links keeps an earlier version first; uploaded icons are copied to Links' icons; Home's own copy stays in site.json
+ * (marked linksMoved) until the version after. Nothing is lost if anything goes wrong: then nothing is written and it tries again.
+ * Returns how many links were copied (0 when there was nothing to do).
+ */
+function home_move_links(): int
+{
+    $raw = read_json(SITE_FILE);
+    if (!$raw || !empty($raw['linksMoved'])) return 0;
+    $site = clean_site($raw);
+    $links = array_merge(...array_map(fn($c) => is_array($c) ? $c : [], $site['columns']));
+    if (!$links) { $raw['linksMoved'] = time(); write_json(SITE_FILE, $raw); return 0; }
+
+    $dir = hub_dir('links'); $file = $dir . '/bookmarks.php';
+    $lk = @fopen($dir . '/links.lock', 'c'); if (!$lk) return 0;
+    flock($lk, LOCK_EX);
+    try {
+        $data = is_file($file) ? hub_read_guarded($file) : ['settings' => new stdClass(), 'tabs' => []];
+        if (!is_array($data) || !is_array($data['tabs'] ?? null)) return 0;   // unreadable: never write over it
+        $out = [];
+        foreach ($links as $l) {
+            $one = ['title' => $l['name'], 'url' => $l['url']];
+            if ($l['icon']['type'] === 'image' && is_icon_path($l['icon']['value'])) {
+                $name = basename($l['icon']['value']); $to = HUB_MEDIA . '/links/icons';
+                if (!is_dir($to)) @mkdir($to, 0755, true);
+                if (is_file(ICON_DIR . '/' . $name) && (is_file($to . '/' . $name) || @copy(ICON_DIR . '/' . $name, $to . '/' . $name))) $one['icon'] = 'icons/' . $name;
+            }
+            $out[] = $one;
+        }
+        $t = null;
+        foreach ($data['tabs'] as $i => $tab) if (is_array($tab) && empty($tab['enc']) && is_array($tab['categories'] ?? null)) { $t = $i; break; }
+        if ($t === null) { $data['tabs'][] = ['id' => 'fromhome', 'title' => 'From Home', 'categories' => []]; $t = count($data['tabs']) - 1; }
+        $have = [];
+        foreach ($data['tabs'][$t]['categories'] as $c) foreach (is_array($c['links'] ?? null) ? $c['links'] : [] as $x) $have[(string) ($x['url'] ?? '')] = true;
+        $out = array_values(array_filter($out, fn($x) => !isset($have[$x['url']])));   // already in that tab: not twice
+        if ($out) {
+            if (is_file($file)) {   // an earlier version first, like every save of Links
+                $bd = $dir . '/backups'; if (!is_dir($bd)) @mkdir($bd, 0700, true);
+                if (!@copy($file, hub_version_path($bd, 'bookmarks-'))) return 0;
+            }
+            array_unshift($data['tabs'][$t]['categories'], ['id' => 'fromhome' . substr(new_id(), 0, 4), 'title' => 'From Home', 'col' => 0, 'links' => $out]);
+            if (!hub_write_guarded($file, $data)) return 0;
+        }
+    } finally { flock($lk, LOCK_UN); fclose($lk); }
+    $raw['linksMoved'] = time();
+    write_json(SITE_FILE, $raw);
+    return count($out);
 }
 
 /* ================= custom sources ================= */
@@ -344,9 +443,9 @@ function public_payload(): array
     return [
         'title'   => $s['title'],
         'icon'    => '',   // no separate start page icon: the site logo is used
-        'columns' => $s['columns'],
         'panel'   => $s['panel'],
         'welcome' => $s['welcome'] ?? WELCOME_DEFAULT,
+        'clock'   => $s['widgets']['clock'],   // the big clock and greeting are for everyone; the widgets themselves are not
         'bg'      => [
             'uploadChance' => $s['bg']['uploadChance'],
             'videoChance'  => $s['bg']['videoChance'],
@@ -360,6 +459,7 @@ function public_payload(): array
         ],
         'uploads'     => $uploads,
         'hasPassword' => hub_auth() !== null,
+        'widgets'     => hub_admin() ? $s['widgets'] : null,   // which widgets, and their countdown and note: only for a logged-in browser
     ];
 }
 
@@ -492,19 +592,6 @@ function list_uploads(): array
     return $out;
 }
 
-function store_icon(string $bytes): ?string
-{
-    if ($bytes === '' || strlen($bytes) > MAX_ICON_KB * 1024) return null;
-    $tmp = tempnam(sys_get_temp_dir(), 'ico');
-    file_put_contents($tmp, $bytes);
-    $mime = detect_mime($tmp);
-    unlink($tmp);
-    if (!isset(ICON_TYPES[$mime])) return null;
-    ensure_dir(ICON_DIR);
-    $name = substr(hash('sha256', $bytes), 0, 16) . '.' . ICON_TYPES[$mime];
-    if (!is_file(ICON_DIR . '/' . $name)) file_put_contents(ICON_DIR . '/' . $name, $bytes);
-    return 'icons/' . $name;
-}
 function prune_icons(array $site): void
 {
     if (!is_dir(ICON_DIR)) return;

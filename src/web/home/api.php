@@ -46,6 +46,7 @@ function require_admin(bool $post = true): void
 function admin_payload(): array
 {
     $s = load_site();
+    unset($s['columns']);   // Home's old links: only kept to copy them to Links once (home_move_links)
     $s['uploadsAdmin'] = list_uploads();
     $s['sourceInfo'] = all_sources($s);
     $s['keyInfo'] = API_KEYS;
@@ -57,7 +58,7 @@ function admin_payload(): array
 }
 function save_site(array $in): array
 {
-    $site = clean_site($in);
+    $site = site_from_page($in, load_site());
     home_snapshot();
     write_json(SITE_FILE, $site);
     prune_icons($site);
@@ -116,64 +117,17 @@ switch ($action) {
         save_site(body());
         out(['ok' => true, 'site' => admin_payload(), 'public' => public_payload()]);
 
-    /* ---------- link helpers ---------- */
+    /* ---------- Scratch Pad (a widget; logged in only) ---------- */
 
-    case 'get_title':
-        require_admin();
-        $url = clean_url(body()['url'] ?? '');
-        if (!$url) out(['error' => 'Enter a valid web address first.'], 400);
-        $r = http_get($url, ['Accept: text/html'], 600_000);
-        if (isset($r['error']) || $r['status'] >= 400) out(['error' => 'Couldn\'t reach that site.'], 502);
-        $html = $r['body'];
-        $title = '';
-        foreach (['~<meta[^>]+property=["\']og:site_name["\'][^>]*content=["\']([^"\']+)~i', '~<meta[^>]+content=["\']([^"\']+)["\'][^>]*property=["\']og:site_name~i', '~<title[^>]*>(.*?)</title>~is'] as $re) {
-            if (preg_match($re, $html, $m)) { $title = $m[1]; break; }
+    case 'pad':
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            require_admin();
+            $b = body();
+            if (!is_string($b['text'] ?? null)) out(['error' => 'Nothing to save.'], 400);
+            try { out(['ok' => true] + pad_write($b['text'])); } catch (RuntimeException $e) { out(['error' => $e->getMessage()], 500); }
         }
-        $title = str_clip(html_entity_decode(strip_tags($title), ENT_QUOTES | ENT_HTML5, 'UTF-8'), 60);
-        if ($title === '') out(['error' => 'That page has no title.'], 404);
-        out(['title' => $title]);
-
-    case 'fetch_icon':
-        require_admin();
-        $url = clean_url(body()['url'] ?? '');
-        if (!$url) out(['error' => 'Enter a valid web address first.'], 400);
-        $candidates = [];
-        $r = http_get($url, ['Accept: text/html'], 600_000);
-        if (!isset($r['error']) && $r['status'] < 400) {
-            $base = $r['url'];
-            if (preg_match('~<base[^>]+href=["\']([^"\']+)~i', $r['body'], $bm)) $base = resolve_url($base, $bm[1]);
-            preg_match_all('~<link\b[^>]*>~i', $r['body'], $tags);
-            $scored = [];
-            foreach ($tags[0] as $tag) {
-                if (!preg_match('~rel=["\']([^"\']+)~i', $tag, $rel) || !preg_match('~href=["\']([^"\']+)~i', $tag, $href)) continue;
-                $rel = strtolower($rel[1]);
-                if (!str_contains($rel, 'icon')) continue;
-                if (preg_match('~\.svg(\?|$)~i', $href[1]) || stripos($tag, 'image/svg') !== false) continue; // SVG not allowed
-                $size = preg_match('~sizes=["\'](\d+)x~i', $tag, $sz) ? (int) $sz[1] : (str_contains($rel, 'apple') ? 180 : 32);
-                // Prefer regular icons (transparent) over apple-touch icons (solid square backgrounds)
-                $score = (str_contains($rel, 'apple') || str_contains($rel, 'mask')) ? 100 + min($size, 99) : 1000 + min($size, 256);
-                $scored[resolve_url($base, $href[1])] = $score;
-            }
-            arsort($scored);
-            $candidates = array_keys($scored);
-            $p = parse_url($base);
-            $candidates[] = ($p['scheme'] ?? 'https') . '://' . ($p['host'] ?? '') . '/favicon.ico';
-        }
-        $host = (string) parse_url($url, PHP_URL_HOST);
-        $candidates[] = 'https://www.google.com/s2/favicons?sz=128&domain=' . urlencode($host);
-        foreach (array_slice(array_unique($candidates), 0, 6) as $c) {
-            $ir = http_get($c, ['Accept: image/*'], MAX_ICON_KB * 1024);
-            if (isset($ir['error']) || $ir['status'] !== 200) continue;
-            if ($path = store_icon($ir['body'])) out(['path' => $path]);
-        }
-        out(['error' => 'Couldn\'t find an icon for that site. Upload one instead.'], 404);
-
-    case 'upload_icon':
-        require_admin();
-        $f = received_file('file', MAX_ICON_KB * 1024);
-        $path = store_icon((string) file_get_contents($f['tmp_name']));
-        if (!$path) out(['error' => 'Use a PNG, JPG, WebP, GIF or ICO image.'], 415);
-        out(['path' => $path]);
+        require_admin(false);
+        out(pad_read());
 
     /* ---------- backgrounds ---------- */
 

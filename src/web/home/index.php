@@ -12,15 +12,16 @@ require __DIR__ . '/lib.php';
 header('Cache-Control: no-cache, must-revalidate');
 $nonce = rtrim(strtr(base64_encode(random_bytes(16)), '+/', '-_'), '=');   // lets our own two data scripts run; any other inline script is blocked
 // Same protection as the other pages: only this site's scripts, no plugins, no framing from elsewhere, no sending data out.
-// Images may come from https (link icons are loaded from the sites and favicon services); backgrounds are local.
+// Images come only from this site (since 1.51 Home has no link icons from other sites); backgrounds are saved on your server.
 header('Speculation-Rules: "' . (defined('HOME_BASE') ? '' : '../../') . 'web/hub/core/assets/speculation-rules.json"');   // pre-load a page when you hover over its link in the bar
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$nonce'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$nonce'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'");
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
 header('Cross-Origin-Opener-Policy: same-origin');
 header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()');
 header('X-Robots-Tag: noindex, nofollow');
 if (hub_https()) header('Strict-Transport-Security: max-age=31536000');
+home_move_links();   // 1.51: Home's links move to Links, once (see lib.php)
 $site = public_payload();
 
 // Choose the first background on the server so the browser can start loading it immediately.
@@ -99,7 +100,7 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
 
 <!-- Edit-mode toolbar -->
 <div class="toolbar" id="toolbar" hidden>
-  <p class="tb-hint">Drag links to reorder, or move them between columns.</p>
+  <p class="tb-hint">Choose your widgets and their look in Settings.</p>
   <div class="tb-actions">
     <button class="tb-btn" data-open="bgSheet" data-hub="item" data-hub-label="Background" data-hub-icon="image" data-hub-order="3">Background</button>
     <button class="tb-btn" data-open="settingsSheet" data-hub="item" data-hub-label="Home Settings" data-hub-icon="gear" data-hub-order="8" data-hub-sep>Settings</button>
@@ -108,72 +109,34 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
   </div>
 </div>
 
-<main class="stage">
-  <nav class="board" id="board" aria-label="My Websites">
-    <ul class="col" data-col="0"></ul>
-    <ul class="col" data-col="1"></ul>
-  </nav>
+<!-- The clock is for everyone. The widgets (1.51) appear only while you are logged in: their data never reaches a visitor. -->
+<main class="stage" id="stage">
+  <div class="clock" id="clock"<?= $site['clock'] ? '' : ' hidden' ?>>
+    <p class="greet" id="greet"></p>
+    <p class="time" id="time"></p>
+    <p class="date" id="date"></p>
+  </div>
+  <div class="chips" id="wChips" hidden></div>
 </main>
+
+<section class="lg wpanel" id="wPanel" aria-labelledby="wPanelTitle" hidden>
+  <header class="wph"><h2 id="wPanelTitle"></h2><button type="button" class="wx" id="wClose" aria-label="Close">✕</button></header>
+  <div class="wbody" id="wBody"></div>
+</section>
+<div class="lg wdock" id="wDock" role="toolbar" aria-label="Widgets" hidden></div>
+<div class="wcards" id="wCards" role="group" aria-label="Widgets" hidden></div>
 
 <div class="corner">
   <a class="credit-text" id="creditText" target="_blank" rel="noopener"></a>
-  <button class="chip round" id="nextBg" aria-label="Show a Different Background" title="Different Background">
+  <button class="chip lg round" id="nextBg" aria-label="Show a Different Background" title="Different Background">
     <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
   </button>
-  <button class="chip" id="editBtn" data-hub="toggle">Edit</button>
+  <button class="chip lg" id="editBtn" data-hub="toggle">Edit</button>
 </div>
 
 <!-- ============ SHEETS ============ -->
 
 
-
-<dialog class="sheet" id="linkSheet">
-  <form method="dialog" class="sheet-in" id="linkForm">
-    <header class="sh"><h2 id="linkSheetTitle">Add Link</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
-    <div class="sb">
-      <label class="field"><span>Web Address</span><input type="text" id="lUrl" inputmode="url" placeholder="https://yoursite.com" required autocomplete="off"></label>
-      <div class="field"><span>Name</span>
-        <div class="inline">
-          <input type="text" id="lName" maxlength="60" placeholder="My Blog" autocomplete="off">
-          <button type="button" class="btn" id="lGetTitle">Get Title</button>
-        </div>
-      </div>
-      <div class="field"><span>Icon</span>
-        <div class="icon-edit">
-          <div class="icon-preview" id="lIconPreview"></div>
-          <div class="icon-controls">
-            <div class="seg" id="lIconType" role="radiogroup">
-              <button type="button" data-v="auto">Automatic</button>
-              <button type="button" data-v="emoji">Emoji</button>
-              <button type="button" data-v="image">Image</button>
-            </div>
-            <div data-pane="auto"><p class="hint">Uses the website's own favicon.</p></div>
-            <div data-pane="emoji" hidden><input type="text" id="lEmoji" maxlength="8" placeholder="Type or paste an emoji" class="emoji-in"></div>
-            <div data-pane="image" hidden class="inline">
-              <button type="button" class="btn" id="lFetchIcon">Fetch from Site</button>
-              <button type="button" class="btn" id="lUploadIcon">Upload</button>
-              <input type="file" id="lIconFile" accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon,.ico" hidden>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="field"><span>Column</span>
-        <div class="seg" id="lCol" role="radiogroup">
-          <button type="button" data-v="0">Left</button>
-          <button type="button" data-v="1">Right</button>
-        </div>
-      </div>
-      <p class="err" id="linkErr"></p>
-    </div>
-    <footer class="sf">
-      <button type="button" class="btn danger" id="lDelete">Delete Link</button>
-      <div class="sf-r">
-        <button type="button" class="btn" data-close>Cancel</button>
-        <button type="submit" class="btn primary">Save Link</button>
-      </div>
-    </footer>
-  </form>
-</dialog>
 
 <dialog class="sheet" id="settingsSheet">
   <div class="sheet-in">
@@ -189,11 +152,31 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
         </div>
       </section>
       <section>
-        <h3>Links Panel</h3>
+        <h3>Widgets</h3>
+        <p class="hint">Widgets show only while you are logged in. Visitors see the clock and your background, nothing else.</p>
+        <div class="wstyles" id="wStyle" role="radiogroup" aria-label="Widget Style">
+          <button type="button" role="radio" data-v="dock"><span class="wprev dock" aria-hidden="true"><i></i><i></i><i></i></span><b>Glass Dock</b><small>A few chips under the clock. A dock opens each widget.</small></button>
+          <button type="button" role="radio" data-v="glance"><span class="wprev glance" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>Glance and Expand</b><small>Small widgets along the bottom. Click one to open it.</small></button>
+        </div>
         <div class="group">
-          <div class="g-row stack"><span class="g-label">Opacity <b id="pOpVal"></b><small>0% is fully see-through.</small></span>
+          <label class="g-row"><span class="g-label">Show the Clock<small>The time, the date and a greeting. Visitors see it too.</small></span>
+            <input type="checkbox" class="switch" id="wClock"></label>
+        </div>
+        <div class="field"><span>Widgets, in This Order</span>
+          <div class="group" id="wList"></div></div>
+        <div class="group">
+          <div class="g-row stack"><span class="g-label">Countdown<small>The days left until a date you choose.</small></span>
+            <div class="inline"><input type="text" id="wCdName" maxlength="40" placeholder="Goa Trip" aria-label="Countdown Name"><input type="date" id="wCdDate" aria-label="Countdown Date"></div></div>
+          <label class="g-row stack"><span class="g-label">Pinned Note<small>One box from Info. Boxes in encrypted tabs can't be shown here.</small></span>
+            <select id="wNote"><option value="">None</option></select></label>
+        </div>
+      </section>
+      <section>
+        <h3>Glass</h3>
+        <div class="group">
+          <div class="g-row stack"><span class="g-label">Opacity <b id="pOpVal"></b><small>How much the widgets tint the photo. 0% is fully see-through.</small></span>
             <input type="range" id="pOpacity" min="0" max="100" step="5"></div>
-          <div class="g-row stack"><span class="g-label">Blur <b id="pBlurVal"></b><small>Frosted-glass effect behind the links.</small></span>
+          <div class="g-row stack"><span class="g-label">Blur <b id="pBlurVal"></b><small>Frosted-glass effect behind the widgets.</small></span>
             <input type="range" id="pBlur" min="0" max="40" step="2"></div>
         </div>
       </section>
@@ -253,7 +236,7 @@ $favicon = $iconPath ? $iconPath . '?v=' . (is_file($iconFile) ? filemtime($icon
         <div class="group">
           <label class="g-row"><span class="g-label">Slow Zoom<small>Gently moves the photo.</small></span>
             <input type="checkbox" class="switch" id="bgMotion"></label>
-          <div class="g-row stack"><span class="g-label">Darken <b id="dimVal"></b><small>Keeps your links readable on bright photos.</small></span>
+          <div class="g-row stack"><span class="g-label">Darken <b id="dimVal"></b><small>Keeps the clock and widgets readable on bright photos.</small></span>
             <input type="range" id="bgDim" min="0" max="80" step="5"></div>
           <div class="g-row stack"><span class="g-label">Change Background</span>
             <div class="seg" id="bgRotate">

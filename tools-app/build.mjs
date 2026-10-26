@@ -39,6 +39,10 @@ for (const f of ['tesseract.js/dist/worker.min.js', 'tesseract.js-core/tesseract
 for (const w of ['@jsquash/avif/codec/enc/avif_enc.wasm', 'onnxruntime-web/dist/ort-wasm-simd-threaded.wasm']) fs.copyFileSync(path.join(HERE, 'node_modules', w), path.join(A, path.basename(w)));
 for (const d of fs.readdirSync(path.join(HERE, 'static'))) if (d !== 'sw.js' && fs.statSync(path.join(HERE, 'static', d)).isDirectory()) fs.cpSync(path.join(HERE, 'static', d), path.join(A, d), { recursive: true });
 
+// the tool names for Home's Recent Tools widget (Home reads which tools you used from this browser, and their names from here)
+const LIST = JSON.parse(fs.readFileSync(path.join(HERE, 'src', 'tools.json'), 'utf8'));
+fs.writeFileSync(path.join(A, 'tools-list.json'), JSON.stringify({ tools: LIST.tools.map((t) => ({ id: t.id, name: t.name })) }) + '\n');
+
 // fingerprint of every file in assets/
 const files = []; (function walk(d) { for (const f of fs.readdirSync(d).sort()) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) walk(p); else files.push(p); } })(A);
 const hsh = createHash('sha256'); for (const f of files) { hsh.update(path.relative(A, f)); hsh.update(fs.readFileSync(f)); }

@@ -15,83 +15,12 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const ICONS = {
-  grip:  '<svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg>',
-  edit:  '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
-  trash: '<svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
-  plus:  '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
-};
-
 let PUB = window.PUB;      // what visitors see
 let ADMIN = null;          // full data while logged in
 let CSRF = null;
 let editing = false;
-const PER_COL = 5;
-
-/* ======================================================================
-   ICONS & BOARD
-   ====================================================================== */
 /* Saved pictures are stored as "photos/…", "uploads/…" and "icons/…" and live in web/hub/media/home (before 1.29.3: next to this page). Only the address shown changes. */
 const media = u => /^(photos|uploads|icons)\//.test(u || '') ? '../hub/media/home/' + u : u;
-function hostOf(u){ try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } }
-
-function iconHTML(l){
-  const ic = l.icon || {};
-  if (ic.type === 'emoji' && ic.value) return `<span>${esc(ic.value)}</span>`;
-  if (ic.type === 'image' && ic.value) return `<img class="own" src="${esc(media(ic.value))}" alt="">`;
-  const host = hostOf(l.url);
-  if (!host) return `<span class="letter">${esc((l.name || '?')[0].toUpperCase())}</span>`;
-  return `<img src="${esc(ICON_SOURCES[0](host))}" alt="" data-host="${esc(host)}" data-step="0" data-letter="${esc((l.name || host || '?')[0].toUpperCase())}">`;
-}
-/* "Automatic" icons are loaded by the visitor's browser. If one service has nothing, try the next, then show the first letter. */
-const ICON_SOURCES = [
-  h => `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=64`,
-  h => `https://icons.duckduckgo.com/ip3/${encodeURIComponent(h)}.ico`,
-  h => `https://${h}/favicon.ico`,
-];
-function wireIconFallbacks(root){
-  $$('img[data-letter]', root).forEach(img => {
-    const next = () => {
-      const step = +img.dataset.step + 1;
-      if (step < ICON_SOURCES.length){ img.dataset.step = step; img.src = ICON_SOURCES[step](img.dataset.host); return; }
-      if (img.parentNode) img.replaceWith(Object.assign(document.createElement('span'), { className:'letter', textContent:img.dataset.letter }));
-    };
-    img.addEventListener('error', next);
-    img.addEventListener('load', () => { if (img.naturalWidth < 2) next(); });   // some services answer with an empty image
-  });
-}
-
-function columns(){ return (editing && ADMIN ? ADMIN : PUB).columns; }
-
-function renderBoard(){
-  const cols = columns();
-  const board = $('#board');
-  const counts = cols.map(c => c.length);
-  board.classList.toggle('single', !editing && (counts[0] === 0 || counts[1] === 0));
-  board.classList.toggle('none', !editing && counts[0] + counts[1] === 0);
-
-  $$('.col', board).forEach((ul, ci) => {
-    ul.innerHTML = cols[ci].map(l => editing
-      ? `<li class="lk" data-id="${esc(l.id)}">
-           <span class="grip">${ICONS.grip}</span>
-           <span class="ic">${iconHTML(l)}</span>
-           <span class="nm">${esc(l.name)}</span>
-           <span class="lk-tools">
-             <button type="button" data-act="edit" aria-label="Edit ${esc(l.name)}">${ICONS.edit}</button>
-             <button type="button" data-act="del" aria-label="Delete ${esc(l.name)}">${ICONS.trash}</button>
-           </span>
-         </li>`
-      : `<li><a class="lk" href="${esc(l.url)}" rel="noopener">
-           <span class="ic">${iconHTML(l)}</span>
-           <span class="nm">${esc(l.name)}</span>
-         </a></li>`
-    ).join('');
-    if (editing && cols[ci].length < PER_COL){
-      ul.insertAdjacentHTML('beforeend', `<li class="add-li"><button type="button" class="add-slot" data-add="${ci}">${ICONS.plus} Add link</button></li>`);
-    }
-  });
-  wireIconFallbacks(board);
-}
 
 const DEFAULT_FAVICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='26' fill='%23111827'/><circle cx='50' cy='50' r='20' fill='%23A8D8FF'/></svg>";
 let lastIcon = PUB.icon;
@@ -327,8 +256,8 @@ function toast(msg, err = false){
 /* ======================================================================
    API
    ====================================================================== */
-async function api(action, body, form = false){
-  const o = { method: body !== undefined ? 'POST' : 'GET', credentials:'same-origin', headers:{} };
+async function api(action, body, form = false, keepalive = false){
+  const o = { method: body !== undefined ? 'POST' : 'GET', credentials:'same-origin', headers:{}, keepalive };
   if (CSRF) o.headers['X-CSRF-Token'] = CSRF;
   if (body !== undefined){
     if (form) o.body = body;
@@ -411,7 +340,7 @@ async function enterEdit(){
     editing = true;
     document.body.classList.add('editing');
     $('#toolbar').hidden = false;
-    renderBoard();
+    if (JSON.stringify(ADMIN.widgets) !== JSON.stringify(WCFG)) setWidgets(ADMIN.widgets);   // just logged in: the widgets appear
   } catch (e){ toast(e.message, true); }
 }
 function exitEdit(loggedOut = false){
@@ -419,20 +348,20 @@ function exitEdit(loggedOut = false){
   document.body.classList.remove('editing');
   $('#toolbar').hidden = true;
   $$('dialog[open]').forEach(d => d.close());
-  if (loggedOut){ CSRF = null; ADMIN = null; toast('You were logged out. Log in again to keep editing.', true); }
-  renderBoard();
+  if (loggedOut){ CSRF = null; ADMIN = null; setWidgets(null); toast('You were logged out. Log in again to keep editing.', true); }
 }
 $('#doneBtn').addEventListener('click', () => exitEdit());
 $('#logoutBtn').addEventListener('click', async () => {
   try { await api('logout', {}); } catch {}
-  CSRF = null; ADMIN = null; exitEdit(); toast('Logged out');
+  CSRF = null; ADMIN = null; exitEdit(); setWidgets(null); toast('Logged out');
 });
 
 /** Save the whole site and refresh local copies. */
 async function saveAll(msg = 'Saved'){
   const r = await api('save', stripAdmin(ADMIN));
   ADMIN = r.site; PUB = { ...r.public, first:null };
-  renderBoard(); applyPageMeta(ADMIN);
+  applyPageMeta(ADMIN);
+  if (JSON.stringify(ADMIN.widgets) !== JSON.stringify(WCFG)) setWidgets(ADMIN.widgets);
   if (msg) toast(msg);
   return r;
 }
@@ -440,225 +369,6 @@ function stripAdmin(a){
   const { uploadsAdmin, sourceInfo, keyInfo, poolStats, limits, starterInfo, ...rest } = a;
   return rest;
 }
-
-/* ======================================================================
-   BOARD INTERACTIONS (edit mode)
-   ====================================================================== */
-function findLink(id){
-  for (let c = 0; c < 2; c++){
-    const i = ADMIN.columns[c].findIndex(l => l.id === id);
-    if (i > -1) return { c, i, link:ADMIN.columns[c][i] };
-  }
-  return null;
-}
-
-$('#board').addEventListener('click', async e => {
-  if (!editing) return;
-  const add = e.target.closest('[data-add]');
-  if (add) return openLinkSheet(null, +add.dataset.add);
-  const li = e.target.closest('.lk[data-id]');
-  if (!li || li.dataset.justDragged) return;
-  const act = e.target.closest('[data-act]')?.dataset.act;
-  const f = findLink(li.dataset.id);
-  if (!f) return;
-  if (act === 'del'){
-    if (!(await confirmBox('Delete link?', `“${f.link.name}” will be removed from your page.`))) return;
-    ADMIN.columns[f.c].splice(f.i, 1);
-    try { await saveAll('Link deleted'); } catch (err){ toast(err.message, true); }
-    return;
-  }
-  openLinkSheet(f.link.id);
-});
-
-/* --- pointer-based drag and drop (mouse + touch) --- */
-let drag = null;
-$('#board').addEventListener('pointerdown', e => {
-  if (!editing || e.button > 0) return;
-  const li = e.target.closest('.lk[data-id]');
-  if (!li || e.target.closest('.lk-tools')) return;
-  drag = { li, startX:e.clientX, startY:e.clientY, active:false, pid:e.pointerId };
-});
-addEventListener('pointermove', e => {
-  if (!drag || e.pointerId !== drag.pid) return;
-  if (!drag.active){
-    if (Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) < 6) return;
-    startDrag(e);
-  }
-  moveDrag(e);
-});
-addEventListener('pointerup', e => { if (drag && e.pointerId === drag.pid) endDrag(); });
-addEventListener('pointercancel', () => { if (drag) endDrag(true); });
-
-function startDrag(e){
-  const li = drag.li, r = li.getBoundingClientRect();
-  drag.active = true;
-  drag.dx = e.clientX - r.left; drag.dy = e.clientY - r.top;
-  drag.fromCol = li.parentElement;
-  drag.ph = document.createElement('li');
-  drag.ph.className = 'drop-ph';
-  drag.ph.style.height = r.height + 'px';
-  li.after(drag.ph);
-  li.classList.add('drag-ghost');
-  Object.assign(li.style, { width:r.width + 'px', left:r.left + 'px', top:r.top + 'px' });
-  document.body.appendChild(li);
-  try { li.setPointerCapture?.(drag.pid); } catch {}
-}
-function moveDrag(e){
-  const li = drag.li;
-  li.style.left = (e.clientX - drag.dx) + 'px';
-  li.style.top  = (e.clientY - drag.dy) + 'px';
-
-  // which column is the pointer over? (closest by x if between)
-  const cols = $$('#board .col');
-  let col = cols.find(c => { const r = c.getBoundingClientRect(); return e.clientX >= r.left - 12 && e.clientX <= r.right + 12; });
-  if (!col){
-    col = cols.reduce((best, c) => {
-      const r = c.getBoundingClientRect(), d = Math.abs(e.clientX - (r.left + r.right) / 2);
-      return !best || d < best.d ? { c, d } : best;
-    }, null).c;
-  }
-  // on phones columns stack vertically: choose by y
-  if (getComputedStyle($('#board')).gridTemplateColumns.split(' ').length === 1){
-    col = cols.find(c => { const r = c.getBoundingClientRect(); return e.clientY <= r.bottom + 10; }) || cols[cols.length - 1];
-  }
-
-  const items = $$(':scope > .lk[data-id]', col);
-  const count = items.length + (drag.ph.parentElement === col ? 0 : 0);
-  if (col !== drag.ph.parentElement && count >= PER_COL){
-    if (!col.classList.contains('full-warn')){ col.classList.add('full-warn'); setTimeout(() => col.classList.remove('full-warn'), 350); }
-    return;
-  }
-  const before = items.find(it => { const r = it.getBoundingClientRect(); return e.clientY < r.top + r.height / 2; });
-  if (before) col.insertBefore(drag.ph, before);
-  else {
-    const addLi = $(':scope > .add-li', col);
-    addLi ? col.insertBefore(drag.ph, addLi) : col.appendChild(drag.ph);
-  }
-}
-async function endDrag(cancel = false){
-  const d = drag; drag = null;
-  if (!d.active) return;
-  const li = d.li;
-  li.classList.remove('drag-ghost'); li.removeAttribute('style');
-  d.ph.replaceWith(li);
-  li.dataset.justDragged = '1'; setTimeout(() => delete li.dataset.justDragged, 50);
-  if (cancel){ renderBoard(); return; }
-
-  // Read the new order from the DOM
-  const byId = {};
-  ADMIN.columns.flat().forEach(l => byId[l.id] = l);
-  const next = $$('#board .col').map(c => $$(':scope > .lk[data-id]', c).map(x => byId[x.dataset.id]).filter(Boolean));
-  if (JSON.stringify(next.map(c => c.map(l => l.id))) === JSON.stringify(ADMIN.columns.map(c => c.map(l => l.id)))) return;
-  ADMIN.columns = next;
-  renderBoard();
-  try { await saveAll('Order saved'); } catch (err){ toast(err.message, true); }
-}
-
-/* ======================================================================
-   LINK SHEET
-   ====================================================================== */
-let linkDraft = null;
-function openLinkSheet(id, col = 0){
-  const f = id ? findLink(id) : null;
-  linkDraft = f
-    ? { id:f.link.id, name:f.link.name, url:f.link.url, icon:{ ...f.link.icon }, col:f.c, origCol:f.c }
-    : { id:null, name:'', url:'', icon:{ type:'auto', value:'' }, col, origCol:null };
-
-  $('#linkSheetTitle').textContent = id ? 'Edit link' : 'Add link';
-  $('#lDelete').hidden = !id;
-  $('#lUrl').value = linkDraft.url;
-  $('#lName').value = linkDraft.name;
-  $('#lEmoji').value = linkDraft.icon.type === 'emoji' ? linkDraft.icon.value : '';
-  $('#linkErr').textContent = '';
-  // disable a full column (unless the link is already in it)
-  $$('#lCol button').forEach(b => {
-    const c = +b.dataset.v;
-    b.disabled = ADMIN.columns[c].length >= PER_COL && linkDraft.origCol !== c;
-  });
-  if ($(`#lCol button[data-v="${linkDraft.col}"]`).disabled) linkDraft.col = linkDraft.col ? 0 : 1;
-  seg($('#lCol'), linkDraft.col);
-  setIconType(linkDraft.icon.type);
-  openSheet('linkSheet');
-  (id ? $('#lName') : $('#lUrl')).focus();
-}
-function setIconType(t){
-  linkDraft.icon.type = t;
-  seg($('#lIconType'), t);
-  $$('#linkSheet [data-pane]').forEach(p => p.hidden = p.dataset.pane !== t);
-  refreshLinkPreview();
-}
-function refreshLinkPreview(){
-  const l = { name:$('#lName').value, url:$('#lUrl').value.trim(), icon:{ ...linkDraft.icon } };
-  if (l.icon.type === 'emoji') l.icon.value = $('#lEmoji').value.trim();
-  if (l.url && !/^https?:\/\//i.test(l.url)) l.url = 'https://' + l.url;
-  const box = $('#lIconPreview');
-  box.innerHTML = (l.icon.type !== 'auto' && !l.icon.value) || (!l.url && l.icon.type === 'auto') ? '' : iconHTML(l);
-  wireIconFallbacks(box);
-}
-$('#lIconType').addEventListener('change', e => setIconType(e.detail));
-$('#lCol').addEventListener('change', e => linkDraft.col = +e.detail);
-$('#lEmoji').addEventListener('input', refreshLinkPreview);
-let previewT;
-$('#lUrl').addEventListener('input', () => { clearTimeout(previewT); previewT = setTimeout(refreshLinkPreview, 400); });
-$('#lName').addEventListener('input', refreshLinkPreview);
-
-$('#lGetTitle').addEventListener('click', e => withBusy(e.currentTarget, async () => {
-  $('#linkErr').textContent = '';
-  try { const r = await api('get_title', { url:$('#lUrl').value }); $('#lName').value = r.title; refreshLinkPreview(); }
-  catch (err){ $('#linkErr').textContent = err.message; }
-}));
-$('#lFetchIcon').addEventListener('click', e => withBusy(e.currentTarget, async () => {
-  $('#linkErr').textContent = '';
-  try { const r = await api('fetch_icon', { url:$('#lUrl').value }); linkDraft.icon = { type:'image', value:r.path }; refreshLinkPreview(); }
-  catch (err){ $('#linkErr').textContent = err.message; }
-}));
-$('#lUploadIcon').addEventListener('click', () => $('#lIconFile').click());
-$('#lIconFile').addEventListener('change', async e => {
-  const f = e.target.files[0]; e.target.value = '';
-  if (!f) return;
-  $('#linkErr').textContent = '';
-  try {
-    const fd = new FormData(); fd.append('file', f);
-    const r = await api('upload_icon', fd, true);
-    linkDraft.icon = { type:'image', value:r.path }; refreshLinkPreview();
-  } catch (err){ $('#linkErr').textContent = err.message; }
-});
-
-$('#linkForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const url = $('#lUrl').value.trim();
-  if (!url){ $('#linkErr').textContent = 'Enter the web address.'; return; }
-  const icon = { ...linkDraft.icon };
-  if (icon.type === 'emoji') icon.value = $('#lEmoji').value.trim();
-  if (icon.type !== 'auto' && !icon.value){
-    $('#linkErr').textContent = icon.type === 'emoji' ? 'Type an emoji, or choose Automatic.' : 'Fetch or upload an image, or choose Automatic.';
-    return;
-  }
-  const link = { id:linkDraft.id || undefined, name:$('#lName').value.trim(), url, icon };
-  const before = JSON.stringify(ADMIN.columns);
-
-  if (linkDraft.id){
-    const f = findLink(linkDraft.id);
-    if (f.c === linkDraft.col) ADMIN.columns[f.c][f.i] = link;
-    else { ADMIN.columns[f.c].splice(f.i, 1); ADMIN.columns[linkDraft.col].push(link); }
-  } else {
-    ADMIN.columns[linkDraft.col].push(link);
-  }
-  try {
-    await withBusy(e.submitter, () => saveAll(linkDraft.id ? 'Link saved' : 'Link added'));
-    closeSheet('linkSheet');
-  } catch (err){
-    ADMIN.columns = JSON.parse(before);
-    $('#linkErr').textContent = err.message;
-  }
-});
-$('#lDelete').addEventListener('click', async () => {
-  const f = findLink(linkDraft.id); if (!f) return;
-  closeSheet('linkSheet');
-  if (!(await confirmBox('Delete link?', `“${f.link.name}” will be removed from your page.`))){ openSheet('linkSheet'); return; }
-  ADMIN.columns[f.c].splice(f.i, 1);
-  try { await saveAll('Link deleted'); } catch (err){ toast(err.message, true); }
-});
 
 /* ======================================================================
    SETTINGS SHEET
@@ -670,22 +380,61 @@ function openSheetFor(id){
   openSheet(id);
 }
 function openSettings(){
-  settingsDraft = { title:ADMIN.title, icon:ADMIN.icon, panel:{ ...ADMIN.panel } };
+  settingsDraft = { title:ADMIN.title, icon:ADMIN.icon, panel:{ ...ADMIN.panel }, widgets:structuredClone(ADMIN.widgets) };
   $('#sTitle').value = settingsDraft.title;
   $('#sWelcome').value = ADMIN.welcome ?? 'Welcome Home';
   $('#pOpacity').value = Math.round(settingsDraft.panel.opacity * 100); $('#pOpVal').textContent = $('#pOpacity').value + '%';
   $('#pBlur').value = settingsDraft.panel.blur; $('#pBlurVal').textContent = settingsDraft.panel.blur + 'px';
+  const w = settingsDraft.widgets;
+  seg($('#wStyle'), w.style);
+  $('#wClock').checked = w.clock;
+  $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date;
+  drawWidgetList();
+  fillNotePicker();
   openSheet('settingsSheet');
+}
+/* Settings > Widgets: tick the ones to show, and move them up or down (the dock and the cards follow this order) */
+function drawWidgetList(){
+  const l = settingsDraft.widgets.list;
+  $('#wList').innerHTML = l.map((w, i) => `<div class="g-row wl-row">
+      <label class="wl-on"><input type="checkbox" class="switch" data-wl="${w.id}"${w.on ? ' checked' : ''}><span>${esc(W_META[w.id].name)}</span></label>
+      <span class="wl-mv"><button type="button" class="btn small" data-wmove="${i}" data-by="-1" aria-label="Move ${esc(W_META[w.id].name)} Up"${i ? '' : ' disabled'}>↑</button><button type="button" class="btn small" data-wmove="${i}" data-by="1" aria-label="Move ${esc(W_META[w.id].name)} Down"${i < l.length - 1 ? '' : ' disabled'}>↓</button></span>
+    </div>`).join('');
+}
+$('#wList').addEventListener('change', e => { const c = e.target.closest('[data-wl]'); if (c) settingsDraft.widgets.list.find(w => w.id === c.dataset.wl).on = c.checked; });
+$('#wList').addEventListener('click', e => {
+  const b = e.target.closest('[data-wmove]'); if (!b) return;
+  const l = settingsDraft.widgets.list, i = +b.dataset.wmove, j = i + +b.dataset.by;
+  [l[i], l[j]] = [l[j], l[i]]; drawWidgetList();
+  $(`[data-wmove="${j}"][data-by="${b.dataset.by}"]`)?.focus() || $(`[data-wmove="${j}"]`)?.focus();
+});
+$('#wStyle').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; settingsDraft.widgets.style = b.dataset.v; seg($('#wStyle'), b.dataset.v); });
+/* the Pinned Note list: the boxes of your Info tabs (an encrypted tab's boxes can't be read here, so they are left out) */
+async function fillNotePicker(){
+  const sel = $('#wNote'), cur = settingsDraft.widgets.note, val = cur.box ? cur.tab + '|' + cur.box : '';
+  sel.innerHTML = '<option value="">None</option>' + (val ? `<option value="${esc(val)}">Loading…</option>` : '');
+  sel.value = val;
+  try {
+    const info = await siteJSON('../info/api.php');
+    const groups = (info.tabs || []).filter(t => !t.enc && (t.boxes || []).length).map(t => `<optgroup label="${esc(t.name)}">${t.boxes.map(b => `<option value="${esc(t.id + '|' + b.id)}">${esc(b.title)}</option>`).join('')}</optgroup>`).join('');
+    sel.innerHTML = '<option value="">None</option>' + groups;
+    sel.value = [...sel.options].some(o => o.value === val) ? val : '';
+  } catch { sel.innerHTML = '<option value="">None</option>' + (val ? `<option value="${esc(val)}">The note you chose</option>` : ''); sel.value = val; }
 }
 $('#pOpacity').addEventListener('input', e => { settingsDraft.panel.opacity = e.target.value / 100; $('#pOpVal').textContent = e.target.value + '%'; applyPanel(settingsDraft.panel); });
 $('#pBlur').addEventListener('input', e => { settingsDraft.panel.blur = +e.target.value; $('#pBlurVal').textContent = e.target.value + 'px'; applyPanel(settingsDraft.panel); });
 $('#settingsSheet').addEventListener('close', () => { if (ADMIN) applyPanel(ADMIN.panel); });
 $('#saveSettings').addEventListener('click', e => withBusy(e.currentTarget, async () => {
-  const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel, welcome:ADMIN.welcome };
+  const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel, welcome:ADMIN.welcome, widgets:ADMIN.widgets };
+  const w = settingsDraft.widgets, [tab, box] = ($('#wNote').value || '|').split('|');
+  w.clock = $('#wClock').checked;
+  w.countdown = { name:$('#wCdName').value.trim(), date:$('#wCdDate').value };
+  w.note = { tab:tab || '', box:box || '' };
   ADMIN.title = $('#sTitle').value.trim() || 'Home';
   ADMIN.welcome = $('#sWelcome').value.trim();
   ADMIN.icon = '';   // no separate start page icon any more: the site logo is used
   ADMIN.panel = settingsDraft.panel;
+  ADMIN.widgets = w;
   try {
     await saveAll('Settings saved');
     closeSheet('settingsSheet');
@@ -1134,14 +883,364 @@ $('#bgFile').addEventListener('change', e => { handleFiles([...e.target.files]);
 drop.addEventListener('drop', e => handleFiles([...e.dataTransfer.files]));
 
 /* ======================================================================
-   WELCOME TEXT: once per visit, in the middle; the links fade in as it slowly fades away (Settings > Page > Welcome Text)
+   CLOCK AND WIDGETS (1.51)
+   The clock is for everyone. The widgets appear only while you are logged in, and read their data from this site only:
+   Tasks, Info, Tools and the Scratch Pad. Nothing here contacts another site.
+   Settings > Widgets chooses the style: Glass Dock (chips under the clock, a dock that opens each widget)
+   or Glance and Expand (small widgets along the bottom; click one to open it).
+   ====================================================================== */
+const svgI = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const W_META = {
+  today:     { name:'Today',          short:'Today',     icon:'<path d="M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M8.5 15.5l2.2 2.2 4.8-4.8"/>' },
+  countdown: { name:'Countdown',      short:'Countdown', icon:'<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9s10 4 10 9"/>' },
+  note:      { name:'Pinned Note',    short:'Note',      icon:'<path d="M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h5"/>' },
+  tools:     { name:'Recent Tools',   short:'Tools',     icon:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>' },
+  calendar:  { name:'Month Calendar', short:'Calendar',  icon:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
+  pad:       { name:'Scratch Pad',    short:'Pad',       icon:'<path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/>' },
+};
+let WCFG = PUB.widgets || null;   // null: a visitor, or logged out
+const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'' };
+let wOpen = '', calMonth = '';
+
+/* dates: Tasks uses the site's time zone (Settings > General), so "today" here is the same day as on the Tasks page */
+const pad2 = n => String(n).padStart(2, '0');
+const SITE_TZ = () => (window.HUB && HUB.tz && HUB.tz()) || 'Asia/Kolkata';
+function siteToday(){
+  try {
+    const p = new Intl.DateTimeFormat('en-CA', { timeZone:SITE_TZ(), year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
+    const g = t => p.find(x => x.type === t).value;
+    return g('year') + '-' + g('month') + '-' + g('day');
+  } catch { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+}
+const dParse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const dStr = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+const dDiff = (a, b) => Math.round((dParse(a) - dParse(b)) / 86400000);   // days from b to a
+const dLong = s => dParse(s).toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long' });
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+
+/* ---------- the clock ---------- */
+let clockT = 0;
+function renderClock(){
+  clearTimeout(clockT);
+  const on = !!(WCFG ? WCFG.clock : PUB.clock);
+  $('#clock').hidden = !on;
+  if (!on) return;
+  const now = new Date(), h = now.getHours();
+  $('#greet').textContent = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night';
+  $('#time').textContent = now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+  $('#date').textContent = now.toLocaleDateString([], { weekday:'long', day:'numeric', month:'long' });
+  clockT = setTimeout(renderClock, 60500 - now.getSeconds() * 1000 - now.getMilliseconds());
+}
+
+/* ---------- reading this site's data ---------- */
+async function siteJSON(url, body, opts = {}){
+  const o = { method: body ? 'POST' : 'GET', credentials:'same-origin', headers:{}, ...opts };
+  if (body){ o.headers['Content-Type'] = 'application/json'; if (CSRF) o.headers['X-Hub-CSRF'] = CSRF; o.body = JSON.stringify(body); }
+  let r;
+  try { r = await (window.HUB ? HUB.fetch(url, o) : fetch(url, o)); }
+  catch { throw new Error('Couldn\'t reach your server. Check your connection and try again.'); }
+  let j; try { j = await r.json(); } catch { j = { error:`The server sent an unexpected reply (${r.status}).` }; }
+  if (!r.ok || j.error) throw Object.assign(new Error(j.error || 'Request failed'), { status:r.status });
+  return j;
+}
+const wOn = id => !!WCFG && WCFG.list.some(w => w.id === id && w.on);
+async function loadTasks(){
+  try { const j = await siteJSON('../tasks/api.php'); WD.tasks = j.auth ? j.tasks : []; WD.set = j.settings || {}; WD.tasksErr = ''; }
+  catch (e){ WD.tasksErr = e.message; }
+  renderWidgets();
+}
+async function loadInfo(){
+  try { WD.info = await siteJSON('../info/api.php'); WD.infoErr = ''; } catch (e){ WD.infoErr = e.message; }
+  renderWidgets();
+}
+/* Tools keeps its recently used tools in this browser (the same site, so Home can read them); the names come from Tools' own list. */
+async function loadTools(){
+  let ids = [];
+  try { ids = (JSON.parse(localStorage.getItem('tools.v3') || 'null') || {}).recent || []; } catch {}
+  ids = ids.filter(x => typeof x === 'string').slice(0, 6);
+  if (!ids.length){ WD.tools = []; renderWidgets(); return; }
+  try {
+    const list = await siteJSON('../tools/assets/tools-list.json');
+    const by = Object.fromEntries((list.tools || []).map(t => [t.id, t.name]));
+    WD.tools = ids.filter(id => by[id]).map(id => ({ id, name:by[id] }));
+  } catch { WD.tools = []; }
+  renderWidgets();
+}
+async function loadPad(){
+  try { WD.pad = await api('pad'); WD.padErr = ''; } catch (e){ WD.padErr = e.message; }
+  renderWidgets();
+}
+function loadWidgets(){
+  if (!WCFG) return;
+  if (wOn('today') || wOn('calendar')) loadTasks();
+  if (wOn('note') && WCFG.note.box) loadInfo();
+  if (wOn('tools')) loadTools();
+  if (wOn('pad')) loadPad();
+}
+
+/* ---------- what each widget says ---------- */
+function dueNow(){
+  const t = siteToday();
+  return (WD.tasks || []).filter(x => x.status === 'active' && x.due <= t)
+    .sort((a, b) => a.due.localeCompare(b.due) || (a.time || '99').localeCompare(b.time || '99') || a.name.localeCompare(b.name));
+}
+function pinnedBox(){
+  const n = WCFG.note, tab = (WD.info?.tabs || []).find(t => t.id === n.tab);
+  const box = tab?.boxes?.find(b => b.id === n.box);
+  return { tab, box };
+}
+function countdown(){
+  const c = WCFG.countdown;
+  if (!c.date) return null;
+  const days = dDiff(c.date, siteToday()), name = c.name || 'Countdown';
+  return { name, days, when: days > 1 ? plural(days, 'day', 'days') : days === 1 ? 'Tomorrow' : days === 0 ? 'Today' : plural(-days, 'day', 'days') + ' ago',
+           chip: days > 1 ? `${name} in ${days} days` : days === 1 ? `${name} is tomorrow` : days === 0 ? `${name} is today` : `${name} was ${plural(-days, 'day', 'days')} ago` };
+}
+/** A short summary for the Glance card (and the chips). */
+function summary(id){
+  if (id === 'today'){
+    if (WD.tasksErr) return { big:'—', small:'Couldn\'t load your tasks' };
+    if (!WD.tasks) return { big:'…', small:'' };
+    const l = dueNow(), over = l.filter(x => x.due < siteToday()).length, next = l.find(x => x.due === siteToday()) || l[0];
+    return { big: l.length ? plural(l.length, 'task', 'tasks') : 'All clear', small: next ? 'Next: ' + next.name + (next.time ? ', ' + next.time : '') : 'Nothing due today',
+             alert: over ? over + ' overdue' : '', chip: l.length ? plural(l.length - over, 'task', 'tasks') + ' today' + (over ? ' · ' + over + ' overdue' : '') : 'Nothing due today', hot: !!over };
+  }
+  if (id === 'countdown'){
+    const c = countdown();
+    return c ? { title:c.name, big:c.when, small:dLong(WCFG.countdown.date), chip:c.chip } : { big:'Not set', small:'Choose a date in Edit › Settings' };
+  }
+  if (id === 'note'){
+    if (!WCFG.note.box) return { small:'Choose a note in Edit › Settings' };
+    if (WD.infoErr) return { small:'Couldn\'t load Info' };
+    if (!WD.info) return { small:'…' };
+    const { tab, box } = pinnedBox();
+    if (!box) return { small:'That note is gone. Choose another in Edit › Settings.' };
+    if (tab.enc) return { title:'Pinned Note', small:'This note is encrypted. Open it in Info.' };
+    return { title:box.title, small:box.notes.slice(0, 120) || 'Empty' };
+  }
+  if (id === 'tools'){
+    if (!WD.tools) return { small:'…' };
+    return { small: WD.tools.length ? WD.tools.map(t => t.name).join(' · ') : 'Tools you open show up here' };
+  }
+  if (id === 'calendar'){
+    const t = siteToday();
+    return { big: dParse(t).toLocaleDateString(undefined, { month:'long' }), small: dLong(t) };
+  }
+  if (id === 'pad'){
+    if (WD.padErr) return { small:'Couldn\'t load the pad' };
+    if (!WD.pad) return { small:'…' };
+    return { small: WD.pad.text.slice(0, 120) || 'Empty. Click to write a quick note.' };
+  }
+  return {};
+}
+
+/* ---------- drawing ---------- */
+function renderWidgets(){
+  renderClock();
+  const list = WCFG ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];
+  const dock = WCFG && WCFG.style === 'dock';
+  if (wOpen && !list.includes(wOpen)) wOpen = '';
+  document.body.classList.toggle('has-widgets', list.length > 0);
+  document.body.dataset.wstyle = WCFG ? WCFG.style : '';
+
+  // Glass Dock: chips under the clock for Today and Countdown, and a dock with every widget
+  const chips = dock ? ['today', 'countdown'].filter(id => list.includes(id)).map(id => ({ id, s:summary(id) })).filter(c => c.s.chip) : [];
+  $('#wChips').hidden = !chips.length;
+  $('#wChips').innerHTML = chips.map(c => `<button type="button" class="lg wchip" data-w="${c.id}" aria-controls="wPanel" aria-expanded="${wOpen === c.id}">${c.s.hot ? '<i class="dot"></i>' : ''}${esc(c.s.chip)}</button>`).join('');
+  $('#wDock').hidden = !dock || !list.length;
+  $('#wDock').innerHTML = dock ? list.map(id => `<button type="button" class="wdb" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}" aria-label="${esc(W_META[id].name)}">${svgI(W_META[id].icon)}<span>${esc(W_META[id].short)}</span></button>`).join('') : '';
+
+  // Glance and Expand: one small glass card per widget
+  $('#wCards').hidden = dock || !list.length;
+  $('#wCards').style.setProperty('--n', Math.min(list.length, 6));
+  $('#wCards').innerHTML = !dock ? list.map(id => {
+    const s = summary(id);
+    return `<button type="button" class="lg wcard" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}">
+      <span class="wc-h"><span>${esc(s.title || W_META[id].name)}</span>${s.alert ? `<em>${esc(s.alert)}</em>` : ''}</span>
+      ${s.big ? `<b class="wc-big">${esc(s.big)}</b>` : ''}<span class="wc-s">${esc(s.small || '')}</span></button>`;
+  }).join('') : '';
+  renderPanel();
+}
+
+function renderPanel(){
+  const p = $('#wPanel');
+  if (!wOpen){ if (!p.hidden){ p.hidden = true; } return; }
+  const keep = document.activeElement && p.contains(document.activeElement) ? document.activeElement.id : '';
+  if (wOpen === 'pad' && !p.hidden && $('#wPad')) return;   // never redraw the pad while you type
+  p.hidden = false;
+  p.dataset.shown = wOpen;
+  $('#wPanelTitle').textContent = wOpen === 'note' && WD.info && pinnedBox().box && !pinnedBox().tab.enc ? pinnedBox().box.title : W_META[wOpen].name;
+  $('#wBody').innerHTML = panelHTML(wOpen);
+  if (keep && document.getElementById(keep)) document.getElementById(keep).focus();
+}
+
+function panelHTML(id){
+  const more = (href, text) => `<a class="wmore" href="${href}">${text}</a>`;
+  if (id === 'today'){
+    if (WD.tasksErr) return `<p class="wmsg">${esc(WD.tasksErr)}</p>`;
+    if (!WD.tasks) return '<p class="wmsg">Loading…</p>';
+    const t = siteToday(), l = dueNow();
+    const rows = l.map(x => {
+      const late = dDiff(t, x.due), when = late === 1 ? 'yesterday' : late > 1 ? late + ' days ago' : x.time;
+      return `<label class="wrow${late > 0 ? ' late' : ''}"><input type="checkbox" data-done="${esc(x.id)}" data-due="${esc(x.due)}"><span class="wr-n">${esc(x.name)}</span>${when ? `<span class="wr-t">${esc(when)}</span>` : ''}</label>`;
+    }).join('');
+    return `<div class="wlist">${rows || '<p class="wmsg">Nothing due today.</p>'}</div>
+      <form class="wqa" id="wQaForm"><input type="text" id="wQa" maxlength="300" autocomplete="off" placeholder="+ Add a task, press Enter" aria-label="Quick Add" aria-describedby="wQaHint"></form>
+      <p class="wmsg small" id="wQaHint">For example: Pay rent 5 Nov, or Netflix 649 monthly</p>${more('../tasks/', 'Open Tasks')}`;
+  }
+  if (id === 'countdown'){
+    const c = countdown();
+    if (!c) return '<p class="wmsg">Choose a name and a date in Edit › Settings › Widgets.</p>';
+    const n = Math.abs(c.days);
+    return `<p class="wcount"><b>${c.days > 1 || c.days < -1 ? n : esc(c.when)}</b><span>${c.days > 1 ? 'days to ' + esc(c.name) : c.days < -1 ? 'days since ' + esc(c.name) : esc(c.name)} · ${esc(dLong(WCFG.countdown.date))}</span></p>`;
+  }
+  if (id === 'note'){
+    if (!WCFG.note.box) return '<p class="wmsg">Choose a box from Info in Edit › Settings › Widgets.</p>';
+    if (WD.infoErr) return `<p class="wmsg">${esc(WD.infoErr)}</p>`;
+    if (!WD.info) return '<p class="wmsg">Loading…</p>';
+    const { tab, box } = pinnedBox();
+    if (!box) return '<p class="wmsg">That box is no longer in Info. Choose another in Edit › Settings.</p>' + more('../info/', 'Open Info');
+    if (tab.enc) return '<p class="wmsg">This box is in an encrypted tab, so it can only be read in Info.</p>' + more('../info/', 'Open Info');
+    return `<p class="wnote">${esc(box.notes) || '<i>Empty</i>'}</p>${more('../info/', 'Open in Info')}`;
+  }
+  if (id === 'tools'){
+    if (!WD.tools) return '<p class="wmsg">Loading…</p>';
+    if (!WD.tools.length) return '<p class="wmsg">The tools you open in Tools show up here.</p>' + more('../tools/', 'Open Tools');
+    return `<div class="wtools">${WD.tools.map(t => `<a href="../tools/#/tool/${encodeURIComponent(t.id)}">${esc(t.name)}</a>`).join('')}</div>${more('../tools/', 'Open Tools')}`;
+  }
+  if (id === 'calendar') return calendarHTML();
+  if (id === 'pad'){
+    if (WD.padErr) return `<p class="wmsg">${esc(WD.padErr)}</p>`;
+    if (!WD.pad) return '<p class="wmsg">Loading…</p>';
+    return `<textarea id="wPad" rows="6" maxlength="20000" aria-label="Scratch Pad" placeholder="Type anything. It saves by itself.">${esc(WD.pad.text)}</textarea><p class="wmsg small" id="wPadState" aria-live="polite">Saves by itself</p>`;
+  }
+  return '';
+}
+
+/* the month calendar: today, and the days that have a task (repeating tasks included) */
+function stepDue(t, s){
+  const n = t.repeat?.n || 1, u = t.repeat?.unit;
+  const d = dParse(s);
+  if (u === 'day') d.setDate(d.getDate() + n);
+  else if (u === 'week') d.setDate(d.getDate() + 7 * n);
+  else if (u === 'month' || u === 'year'){
+    const m = d.getMonth() + (u === 'month' ? n : 12 * n), y = d.getFullYear() + Math.floor(m / 12), mm = ((m % 12) + 12) % 12;
+    const last = new Date(y, mm + 1, 0).getDate();
+    return y + '-' + pad2(mm + 1) + '-' + pad2(Math.min(t.day || d.getDate(), last));
+  } else return '';
+  return dStr(d);
+}
+function calendarHTML(){
+  const t = siteToday(), m = calMonth || t.slice(0, 7);
+  const first = dParse(m + '-01'), days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  const mon = WD.set.week === 'mon', lead = (first.getDay() - (mon ? 1 : 0) + 7) % 7;
+  const busy = {};
+  for (const x of WD.tasks || []){
+    if (x.status !== 'active') continue;
+    for (let s = x.due, i = 0; s && s <= m + '-31' && i < 400; s = stepDue(x, s), i++) if (s.startsWith(m)) (busy[s] = busy[s] || []).push(x.name);
+  }
+  const names = mon ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  let cells = names.map(n => `<span class="wcal-h" aria-hidden="true">${n}</span>`).join('') + '<span></span>'.repeat(lead);
+  for (let d = 1; d <= days; d++){
+    const s = m + '-' + pad2(d), b = busy[s];
+    const label = dParse(s).toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long' }) + (b ? ': ' + b.join(', ') : '');
+    cells += `<span class="wcal-d${s === t ? ' now' : ''}${b ? ' busy' : ''}" role="gridcell" aria-label="${esc(label)}"${b ? ` title="${esc(b.join(', '))}"` : ''}>${d}</span>`;
+  }
+  const title = first.toLocaleDateString(undefined, { month:'long', year:'numeric' });
+  return `<div class="wcal-nav"><button type="button" class="wx" data-cal="-1" aria-label="Previous Month">‹</button><b>${esc(title)}</b><button type="button" class="wx" data-cal="1" aria-label="Next Month">›</button></div>
+    <div class="wcal" role="grid" aria-label="${esc(title)}">${cells}</div>${WD.tasksErr ? `<p class="wmsg small">${esc(WD.tasksErr)}</p>` : ''}<a class="wmore" href="../tasks/">Open Tasks</a>`;
+}
+
+/* ---------- opening, closing and acting ---------- */
+function openWidget(id){
+  wOpen = wOpen === id ? '' : id;
+  if (wOpen === 'calendar') calMonth = '';
+  if (wOpen === 'pad' && !WD.pad) loadPad();
+  if (wOpen === 'note' && !WD.info && WCFG.note.box) loadInfo();
+  if (wOpen === 'tools') loadTools();   // a tool you opened since Home loaded
+  renderWidgets();
+  if (wOpen) ($('#wQa') || $('#wPad') || $('#wClose')).focus();
+}
+function closeWidget(){
+  if (!wOpen) return;
+  const was = wOpen; wOpen = ''; renderWidgets();
+  $(`[data-w="${was}"]`)?.focus();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-w]');
+  if (b && !b.closest('#wPanel')) return openWidget(b.dataset.w);
+  const c = e.target.closest('[data-cal]');
+  if (c){
+    const d = dParse((calMonth || siteToday().slice(0, 7)) + '-01'); d.setMonth(d.getMonth() + +c.dataset.cal);
+    calMonth = dStr(d).slice(0, 7); renderPanel(); $(`[data-cal="${c.dataset.cal}"]`)?.focus();
+  }
+});
+$('#wClose').addEventListener('click', closeWidget);
+addEventListener('keydown', e => { if (e.key === 'Escape' && wOpen && !$$('dialog[open]').length) closeWidget(); });
+
+// Today: tick a task to mark it done (a repeating task moves to its next date), or type one into Quick Add
+$('#wBody').addEventListener('change', async e => {
+  const cb = e.target.closest('[data-done]'); if (!cb) return;
+  cb.disabled = true;
+  try {
+    const r = await siteJSON('../tasks/api.php', { action:'done', id:cb.dataset.done, due:cb.dataset.due });
+    const name = (WD.tasks || []).find(x => x.id === cb.dataset.done)?.name || 'Task';
+    toast(String(r.result || '').startsWith('next:') ? `Done. ${name} comes back on ${dLong(r.result.slice(5))}.` : `Done: ${name}`);
+  } catch (err){ toast(err.message, true); }
+  loadTasks();
+});
+$('#wBody').addEventListener('submit', async e => {
+  if (e.target.id !== 'wQaForm') return;
+  e.preventDefault();
+  const inp = $('#wQa'), text = inp.value.trim();
+  if (!text) return;
+  inp.disabled = true;
+  try {
+    const r = await siteJSON('../tasks/api.php', { action:'quick_add', text });
+    toast(`Added: ${r.task.name}, ${r.task.due === siteToday() ? 'today' : dLong(r.task.due)}`);
+    inp.value = '';
+    await loadTasks();
+  } catch (err){ toast(err.message, true); }
+  const again = $('#wQa'); if (again){ again.disabled = false; again.focus(); }
+});
+
+// Scratch Pad: saves a moment after you stop typing, and when you leave the page
+let padT = 0, padDirty = false;
+async function savePad(keepalive = false){
+  const el = $('#wPad'); if (!el || !padDirty) return;
+  padDirty = false; clearTimeout(padT);
+  const st = $('#wPadState');
+  try {
+    const r = await api('pad', { text:el.value }, false, keepalive);
+    WD.pad = { text:el.value, saved:r.saved };
+    if (st) st.textContent = 'Saved';
+  } catch (err){ padDirty = true; if (st) st.textContent = 'Not saved: ' + err.message; }
+}
+$('#wBody').addEventListener('input', e => {
+  if (e.target.id !== 'wPad') return;
+  padDirty = true; $('#wPadState').textContent = 'Saving…';
+  clearTimeout(padT); padT = setTimeout(savePad, 800);
+});
+$('#wBody').addEventListener('focusout', e => { if (e.target.id === 'wPad') savePad(); });
+addEventListener('pagehide', () => savePad(true));
+
+/* logged in or out after the page loaded (Edit, Log Out, or another tab) */
+function setWidgets(cfg){
+  WCFG = cfg || null;
+  if (!WCFG){ Object.assign(WD, { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'' }); wOpen = ''; }
+  renderWidgets();
+  loadWidgets();
+}
+
+/* ======================================================================
+   WELCOME TEXT: once per visit, in the middle; the clock and widgets fade in as it slowly fades away (Settings > Page > Welcome Text)
    ====================================================================== */
 function welcome(){
   const el = $('#welcome'), text = String(PUB.welcome ?? '').trim();
   if (!el || !text) return;
   try { if (sessionStorage.getItem('hl-welcomed')) return; sessionStorage.setItem('hl-welcomed', '1'); } catch (x) {}
   el.textContent = text; el.hidden = false;
-  const st = $('.stage'); if (st) st.style.transition = 'none';   // hide the links at once, then let them fade in
+  const st = $('.stage'); if (st) st.style.transition = 'none';   // hide the clock at once, then let it fade in
   document.documentElement.classList.add('hl-welcome');
   if (st) { void st.offsetWidth; st.style.transition = ''; }
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
@@ -1152,7 +1251,15 @@ function welcome(){
 /* ======================================================================
    START
    ====================================================================== */
-renderBoard();
+renderWidgets();
+if (WCFG) api('state').then(st => { CSRF = st.csrf || CSRF; }).catch(() => {}).finally(loadWidgets);   // the pad needs the login's security token
+// coming back to Home later (another tab, or the phone woke up): the tasks may have changed, and the date too
+let wSeen = Date.now();
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !WCFG || Date.now() - wSeen < 30000) return;
+  wSeen = Date.now();
+  if (wOn('today') || wOn('calendar')) loadTasks(); else renderWidgets();
+});
 welcome();
 // ?bg=picsum | bing | wikimedia | wallhaven | artic | unsplash | pixabay | pixabay_video | upload  forces a source (handy for testing)
 BG.start();

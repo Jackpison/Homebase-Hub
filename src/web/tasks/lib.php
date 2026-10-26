@@ -216,3 +216,19 @@ function tasks_complete(array &$data, string $id, string $due, string $kind = 'p
     return '';
 }
 
+/**
+ * Adds one task written in plain words ("Netflix 649 monthly 5 Nov 9pm"), read the same way as Telegram's /add
+ * (nt_parse_add). $from goes in the notes ("Added from Home."). Returns the new task, null when the text names nothing,
+ * or false when the tasks file could not be read (then nothing is written).
+ */
+function tasks_add_text(string $text, string $from) {
+    require_once HUB_CORE . '/lib/notify.php';
+    $p = nt_parse_add($text);
+    if (!$p) return null;
+    $now = time();
+    $task = ['id' => bin2hex(random_bytes(5))] + $p + ['cat' => '', 'remind' => -1, 'url' => '', 'notes' => 'Added from ' . $from . '.', 'status' => 'active', 'created' => $now, 'updated' => $now, 'day' => (int)substr($p['due'], 8, 2)];
+    if (!tasks_modify(function (&$data) use ($task) { $data['tasks'][] = $task; return true; })) return false;
+    foreach (tasks_read()['tasks'] as $t) if ($t['id'] === $task['id']) return $t;   // as saved (cleaned)
+    return tasks_clean_one($task);
+}
+

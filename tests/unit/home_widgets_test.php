@@ -1,0 +1,88 @@
+<?php
+// Home 1.51: the widget settings, the Scratch Pad, Home's links moving to Links once, and the two Tasks actions Home uses
+// (Quick Add and Done). Runs on its own copy of src/ (run.php).
+[$self, $site] = $argv + [1 => ''];
+require __DIR__ . '/lib.php';
+require $site . '/web/home/lib.php';
+require_once $site . '/web/tasks/lib.php';
+
+/* ---------- widget settings ---------- */
+$w = clean_widgets([]);
+t('a site with no widget settings gets the default: Glass Dock, the clock, six widgets in order, Scratch Pad off',
+  $w['style'] === 'dock' && $w['clock'] === true && array_column($w['list'], 'id') === WIDGET_IDS && array_column($w['list'], 'on') === [true, true, true, true, true, false], json_encode($w));
+$w = clean_widgets(['style' => 'glance', 'clock' => false, 'list' => [['id' => 'pad', 'on' => true], ['id' => 'nope', 'on' => true], ['id' => 'today', 'on' => false], ['id' => 'pad', 'on' => false], 'x']]);
+t('your order is kept, an unknown widget and a second copy are dropped, missing ones come after (in their default state)',
+  $w['style'] === 'glance' && $w['clock'] === false && array_slice(array_column($w['list'], 'id'), 0, 2) === ['pad', 'today'] && $w['list'][0]['on'] && !$w['list'][1]['on'] && count($w['list']) === count(WIDGET_IDS), json_encode($w['list']));
+t('an unknown style falls back to Glass Dock', clean_widgets(['style' => '<b>'])['style'] === 'dock');
+$c = fn($d) => clean_widgets(['countdown' => ['name' => str_repeat('Goa trip ', 10), 'date' => $d]])['countdown'];
+t('the countdown keeps a real date and a name of up to 40 characters', $c('2026-11-07')['date'] === '2026-11-07' && mb_strlen($c('2026-11-07')['name']) <= 40);
+t('...and drops a date that does not exist or is not a date', $c('2026-02-30')['date'] === '' && $c('next week')['date'] === '' && $c('2026-11-7')['date'] === '');
+$n = clean_widgets(['note' => ['tab' => 'abc_1', 'box' => '../../x']])['note'];
+t('the pinned note keeps a plain Info tab and box id, nothing else', $n['tab'] === 'abc_1' && $n['box'] === '', json_encode($n));
+t('a saved site keeps its widgets through clean_site', clean_site(['widgets' => ['style' => 'glance']])['widgets']['style'] === 'glance');
+
+/* ---------- visitors never see the widget settings ---------- */
+write_json(SITE_FILE, clean_site(['widgets' => ['countdown' => ['name' => 'Secret trip', 'date' => '2026-12-01']]]));
+$pub = public_payload();
+t('a visitor (not logged in) gets no widget settings, so the countdown name is not in the page', $pub['widgets'] === null && strpos(json_encode($pub), 'Secret trip') === false);
+t('...and no list of Home links any more', !array_key_exists('columns', $pub));
+write_json(SITE_FILE, clean_site(['widgets' => ['clock' => false]]));
+t('a visitor does get whether the clock is shown (the clock is for everyone)', public_payload()['clock'] === false && clean_site([])['widgets']['clock'] === true);
+
+/* ---------- Scratch Pad ---------- */
+t('the Scratch Pad starts empty', pad_read()['text'] === '');
+pad_write("line one\r\nline two");
+t('it keeps what you typed (line breaks made plain)', pad_read()['text'] === "line one\nline two" && pad_read()['saved'] >= time() - 5);
+pad_write(str_repeat('é', PAD_MAX + 50));
+t('it keeps at most ' . PAD_MAX . ' characters', mb_strlen(pad_read()['text']) === PAD_MAX);
+t('it is stored as a guarded file in site-data (never readable from the web)', is_file(hub_jpath(pad_file())) && strncmp((string)file_get_contents(hub_jpath(pad_file())), '<?php', 5) === 0);
+
+/* ---------- Home's links move to Links, once ---------- */
+$lf = hub_dir('links') . '/bookmarks.php';
+@mkdir(ICON_DIR, 0755, true); file_put_contents(ICON_DIR . '/0123456789abcdef.png', 'png-bytes');
+$cols = [[['id' => 'a1', 'name' => 'My Blog', 'url' => 'https://blog.example.com', 'icon' => ['type' => 'image', 'value' => 'icons/0123456789abcdef.png']],
+          ['id' => 'a2', 'name' => 'Mail', 'url' => 'https://mail.example.com', 'icon' => ['type' => 'emoji', 'value' => '📮']]],
+         [['id' => 'a3', 'name' => 'Already', 'url' => 'https://already.example.com', 'icon' => ['type' => 'auto', 'value' => '']]]];
+write_json(SITE_FILE, ['columns' => $cols]);
+hub_write_guarded($lf, ['settings' => ['x' => 1], 'tabs' => [
+    ['id' => 'vault', 'title' => 'Vault', 'enc' => 'enc1:' . base64_encode(random_bytes(40))],
+    ['id' => 'daily', 'title' => 'Daily', 'categories' => [['id' => 'c1', 'title' => 'News', 'col' => 0, 'links' => [['title' => 'Already', 'url' => 'https://already.example.com']]]]]]]);
+$n1 = home_move_links();
+$d = hub_read_guarded($lf);
+$cat = $d['tabs'][1]['categories'][0] ?? [];
+t('the links are copied to a "From Home" category at the top of the first tab that is not encrypted',
+  $n1 === 2 && ($cat['title'] ?? '') === 'From Home' && array_column($cat['links'], 'url') === ['https://blog.example.com', 'https://mail.example.com'] && array_column($cat['links'], 'title') === ['My Blog', 'Mail'], json_encode($cat));
+t('...a link already in that tab is not added twice, and the tab keeps its own category', $d['tabs'][1]['categories'][1]['title'] === 'News');
+t('...the encrypted tab and the Links settings are left as they were', $d['tabs'][0]['enc'] !== '' && !isset($d['tabs'][0]['categories']) && $d['settings']['x'] === 1);
+t('...an uploaded icon is copied to Links\' icons and used', ($cat['links'][0]['icon'] ?? '') === 'icons/0123456789abcdef.png' && is_file(HUB_MEDIA . '/links/icons/0123456789abcdef.png') && !isset($cat['links'][1]['icon']));
+t('...Links kept an earlier version first', count(glob(hub_dir('links') . '/backups/bookmarks-*.php') ?: []) === 1);
+$raw = read_json(SITE_FILE);
+t('...Home marks the move and keeps its own copy of the links until the next version', ($raw['linksMoved'] ?? 0) >= time() - 5 && count($raw['columns'][0]) === 2);
+t('a second load copies nothing again', home_move_links() === 0 && count(hub_read_guarded($lf)['tabs'][1]['categories']) === 2);
+$fromPage = site_from_page(['linksMoved' => 0, 'columns' => [[], []], 'title' => 'Mine'], load_site());
+t('a later save from the page cannot undo the mark or change the old links (the server keeps both)', $fromPage['linksMoved'] === $raw['linksMoved'] && count($fromPage['columns'][0]) === 2 && $fromPage['title'] === 'Mine');
+
+// no Links file yet: one is made with a "From Home" tab
+@unlink($lf); write_json(SITE_FILE, ['columns' => $cols]);
+$n2 = home_move_links(); $d = hub_read_guarded($lf);
+t('with no Links data yet, the links go into a new tab "From Home"', $n2 === 3 && ($d['tabs'][0]['title'] ?? '') === 'From Home' && count($d['tabs'][0]['categories'][0]['links']) === 3, json_encode($d));
+// a Links file that cannot be read: nothing is written and Home tries again next time
+file_put_contents($lf, "<?php exit; ?>\n{not json"); write_json(SITE_FILE, ['columns' => $cols]);
+t('a Links file that cannot be read is never written over, and the move is tried again later', home_move_links() === 0 && file_get_contents($lf) === "<?php exit; ?>\n{not json" && empty(read_json(SITE_FILE)['linksMoved']));
+// no links on Home at all: just marked
+write_json(SITE_FILE, ['columns' => [[], []]]);
+t('a Home with no links is only marked, Links is not touched', home_move_links() === 0 && !empty(read_json(SITE_FILE)['linksMoved']) && file_get_contents($lf) === "<?php exit; ?>\n{not json");
+
+/* ---------- Tasks: Quick Add and Done (Home's Today widget) ---------- */
+$t1 = tasks_add_text('Call the bank tomorrow 11am', 'Home');
+t('Quick Add reads plain words like Telegram\'s /add: name, date and time', is_array($t1) && $t1['name'] === 'Call the bank' && $t1['due'] === date('Y-m-d', strtotime('tomorrow')) && $t1['time'] === '11:00' && $t1['notes'] === 'Added from Home.', json_encode($t1));
+t('...and the task is saved', count(array_filter(tasks_read()['tasks'], fn($t) => $t['name'] === 'Call the bank')) === 1);
+t('empty words add nothing', tasks_add_text('   ', 'Home') === null);
+$t2 = tasks_add_text('Netflix 649 monthly ' . date('j M', strtotime('+3 days')), 'Home');
+$res = '';
+tasks_modify(function (&$d) use ($t2, &$res) { $res = tasks_complete($d, $t2['id'], $t2['due'], 'paid'); return $res !== '' && $res !== 'already'; });
+$after = array_values(array_filter(tasks_read()['tasks'], fn($t) => $t['id'] === $t2['id']))[0];
+t('Done on a monthly task moves it to its next date and keeps the payment', strpos($res, 'next:') === 0 && $after['due'] > $t2['due'] && $after['status'] === 'active' && count($after['history']) === 1, $res);
+$res2 = '';
+tasks_modify(function (&$d) use ($t2, &$res2) { $res2 = tasks_complete($d, $t2['id'], $t2['due'], 'paid'); return false; });
+t('...and the same date cannot be marked done twice', $res2 === 'already');
