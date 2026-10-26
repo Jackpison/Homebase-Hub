@@ -1184,15 +1184,31 @@ function renderWidgets(quiet = false){
   if (keep) $(`#${keep[0]} [data-w="${keep[1]}"]`)?.focus();
 }
 
+/* The open widget sits just above the dock or the cards, never on top of them, and scrolls inside when space is short.
+   If it would reach the clock or the chips, they step aside while it is open (body.w-cover). */
+function placePanel(){
+  const p = $('#wPanel');
+  if (p.hidden){ document.body.classList.remove('w-cover'); return; }
+  const anchor = document.body.dataset.wstyle === 'glance' ? $('#wCards') : $('#wDock');
+  if (!anchor || anchor.hidden) return;
+  const top = anchor.getBoundingClientRect().top, gap = 14;
+  p.style.top = 'auto';
+  p.style.bottom = Math.round(innerHeight - top + gap) + 'px';
+  p.style.maxHeight = Math.max(160, Math.min(560, Math.round(top - gap - 12))) + 'px';
+  const pt = p.getBoundingClientRect().top;
+  document.body.classList.toggle('w-cover', [$('#clock'), $('#wChips')].some(el => !el.hidden && el.getBoundingClientRect().bottom > pt - 8));
+}
+addEventListener('resize', () => placePanel());
 function renderPanel(){
   const p = $('#wPanel');
-  if (!wOpen){ if (!p.hidden){ p.hidden = true; } return; }
+  if (!wOpen){ if (!p.hidden){ p.hidden = true; } placePanel(); return; }
   const keep = document.activeElement && p.contains(document.activeElement) ? document.activeElement.id : '';
   if (wOpen === 'pad' && !p.hidden && $('#wPad')) return;   // never redraw the pad while you type
   p.hidden = false;
   p.dataset.shown = wOpen;
   $('#wPanelTitle').textContent = wOpen === 'note' && WD.info && pinnedBox().box && !pinnedBox().tab.enc ? pinnedBox().box.title : W_META[wOpen].name;
   $('#wBody').innerHTML = panelHTML(wOpen);
+  placePanel();
   if (keep && document.getElementById(keep)) document.getElementById(keep).focus();
 }
 

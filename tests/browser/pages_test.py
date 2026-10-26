@@ -257,6 +257,23 @@ try:
         bar_on = home_bar(True); bar_off = home_bar(False)
         check('P39 Home Settings > Show the Bar on the Home Page turns the bar on and off (the same setting as in Settings)', bar_on == [True, True] and bar_off == [False, False], (bar_on, bar_off))
         hctx.close()
+        # P41: an open widget never sits on top of the cards (Glance and Expand, nine cards in two rows) or the dock, and the clock
+        # steps aside when there is no room for both (seen on the owner's screen: the panel lay over the cards, unreadable)
+        def placed(style, w, h, wid):
+            subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = '%s'; write_json(SITE_FILE, clean_site($s));" % (D, style)], check=True)
+            pc = b.new_context(user_agent=UA, viewport={'width': w, 'height': h}); pc.add_cookies(cookies); pc.route('**/*', handle); pc.add_init_script(TRACK_REQUESTS)
+            pc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}"); pp = pc.new_page(); pp.goto(B + '/web/home/', wait_until='domcontentloaded')
+            sel = '#wCards' if style == 'glance' else '#wDock'
+            until(lambda: pp.evaluate("document.querySelectorAll('%s [data-w]').length") == 9, 10000); settle(pp)
+            out = []
+            for x in wid:
+                pp.click('%s [data-w=%s]' % (sel, x)); pp.wait_for_selector('#wPanel:not([hidden])', timeout=5000); settle(pp)
+                out.append(pp.evaluate("(() => { const p = document.getElementById('wPanel').getBoundingClientRect(), a = document.querySelector('%s').getBoundingClientRect(), c = document.getElementById('clock'); "
+                                       "return (p.bottom <= a.top + 1 ? 1 : 0) + (p.top >= 0 ? 1 : 0) + (getComputedStyle(c).visibility === 'hidden' || c.getBoundingClientRect().bottom <= p.top + 8 ? 1 : 0) })()" % sel))
+                pp.click('#wClose')
+            pc.close(); return out
+        g = placed('glance', 1280, 800, ['quote', 'weather', 'today']); d = placed('dock', 1280, 700, ['weather', 'today'])
+        check('P41 an open widget sits above the cards or the dock (never on them), stays on screen, and the clock makes way when there is no room', g == [3, 3, 3] and d == [3, 3], (g, d))
         # P40: the glass. The computer's "reduce transparency" (Windows: Transparency effects off) no longer turns it into a dark block;
         # Home Settings > Glass > Tint decides: Light (see-through, the default), Dark, or Solid.
         def glass(tint=None, reduce=False):

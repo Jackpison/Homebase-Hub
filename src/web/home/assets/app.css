@@ -161,6 +161,12 @@ body[data-wstyle="glance"] .wpanel{top:clamp(250px,40vh,320px);width:min(520px,c
 
 /* a short screen: while a widget is open in the Glass Dock, the chips under the clock make way for it */
 @media (max-height:820px){ body[data-wstyle="dock"].w-open .chips{visibility:hidden} }
+/* an open widget that would reach the clock or the chips: they step aside while it is open */
+body.w-cover .clock,body.w-cover .chips{visibility:hidden}
+/* the open widget is frosted harder than the cards, so nothing behind it shows through its text */
+.wpanel{backdrop-filter:blur(calc(var(--panel-blur) + 24px)) saturate(150%);-webkit-backdrop-filter:blur(calc(var(--panel-blur) + 24px)) saturate(150%);
+  background:linear-gradient(140deg,rgba(255,255,255,.22),rgba(255,255,255,.08) 55%,rgba(255,255,255,.12)),linear-gradient(var(--g-tint),var(--g-tint)),rgba(12,14,20,.28)}
+html[data-glass="solid"] .wpanel{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--g-tint)}
 
 /* the bar's Bottom Dock: Home's dock and cards sit above it */
 html[data-ix-bar][data-ix-nav="dock"] .wdock{bottom:calc(var(--ix-dock) + 36px)}
