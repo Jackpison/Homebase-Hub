@@ -17,12 +17,7 @@ header('Cache-Control: no-store');
 hub_headers();
 hub_same_origin();
 
-function out(array $d, int $code = 200): void
-{
-    http_response_code($code);
-    echo json_encode($d, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
-    exit;
-}
+function out(array $d, int $code = 200): never { hub_json($code, $d); }   // the site's one JSON answer (core), arguments the other way round
 function body(): array
 {
     $raw = (string) file_get_contents('php://input', false, null, 0, 2097153);   // settings and link data: never more than 2 MB

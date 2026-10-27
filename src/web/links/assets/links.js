@@ -86,11 +86,7 @@ document.addEventListener('mouseout', e => { if (tipFor && !tipFor.contains(e.re
 addEventListener('scroll', hideTip, { passive: true });
 document.addEventListener('pointerdown', hideTip);
 
-let toastT;
-function toast(msg, bad, sticky) {
-  const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (bad ? ' bad' : '');
-  clearTimeout(toastT); if (!sticky) toastT = setTimeout(() => t.className = 'toast', bad ? 4500 : 1900);
-}
+const toast = (msg, bad, sticky) => { if (window.HUB) HUB.toast(msg, bad, sticky); };   // the site's one message box (shell.js)
 const RIBBON = '<path d="M3 0h14a2 2 0 0 1 2 2v19.2a.6.6 0 0 1-.95.49L10 16.5l-8.05 5.19A.6.6 0 0 1 1 21.2V2a2 2 0 0 1 2-2z"/>';
 const ribbon = outline => h('span', { 'aria-hidden': 'true', html:
   `<svg viewBox="0 0 20 22" ${outline ? 'fill="none" stroke="currentColor" stroke-width="2"' : 'fill="currentColor"'}>${RIBBON}</svg>` }).firstChild;

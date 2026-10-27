@@ -132,8 +132,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .gh{padding:11px 12px;gap:2px 12px}
   .gh .gn{flex-basis:100%}
 }
-dialog{background:var(--panel);color:var(--fg);border:1px solid var(--border2);border-radius:18px;padding:22px;width:min(460px,calc(100% - 28px))}
-dialog::backdrop{background:rgba(0,0,0,.75)}
+dialog{background:var(--panel);color:var(--fg);border:1px solid var(--border2);border-radius:var(--ix-win-radius);box-shadow:var(--ix-win-shadow);padding:22px;width:min(460px,calc(100% - 28px))}
+dialog::backdrop{background:var(--ix-win-dim)}
 dialog h2{margin:0 0 14px;font-size:20px}
 dialog p{color:var(--mute);margin:0 0 6px}
 .f{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -177,15 +177,8 @@ dialog p{color:var(--mute);margin:0 0 6px}
 #tdlg h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:20px 0 8px}
 #tdlg h2+h3{margin-top:4px}
 #tdlg .f label{font-size:13px}
-#tdlg .f input,#tdlg .srow select{background:color-mix(in srgb,var(--fg) 5%,var(--panel));border-color:color-mix(in srgb,var(--fg) 14%,var(--panel))}
-#tdlg .f input:focus,#tdlg .srow select:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 55%,var(--panel))}
-.srow{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;font-size:15px;line-height:1.4;color:var(--fg)}
-.srow>span,.srow>label{flex:1;min-width:0}
-.srow small{display:block;margin-top:2px;font-size:13px;color:var(--mute)}
-.srow button{flex:none;font:inherit;font-size:14px;font-weight:700;border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--fg)}
-.srow button:hover{background:var(--hover)}
-.srow select{flex:none;color:var(--fg);border:1px solid var(--border2);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px}
-@media (max-width:480px){.srow{flex-wrap:wrap}.srow select{width:100%}}
+#tdlg .f input{background:color-mix(in srgb,var(--fg) 5%,var(--panel));border-color:color-mix(in srgb,var(--fg) 14%,var(--panel))}
+#tdlg .f input:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 55%,var(--panel))}
 /* Banks (1.53.8): a name and a link per bank, like Holders */
 #bdlg{width:min(600px,calc(100% - 28px))}
 .blist{display:flex;flex-direction:column;gap:8px;margin:14px 0 0;max-height:52vh;overflow:auto;padding:2px}

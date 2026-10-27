@@ -50,17 +50,12 @@ if (extension_loaded('zlib') && !ini_get('zlib.output_compression')) { @ob_start
 
 /* ======================= small helpers ======================= */
 
-function out($code, $arr) {
-    http_response_code($code);
-    echo json_encode($arr, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
-    exit;
-}
 function body($maxMB = 3) {
     $raw = (string)file_get_contents('php://input', false, null, 0, $maxMB * 1024 * 1024 + 1);   // never read more than allowed
     if ($raw === '' && !empty($_SERVER['CONTENT_LENGTH'])) {
-        out(413, ['error' => 'The upload is larger than this server allows (post_max_size in PHP settings).']);
+        hub_json(413, ['error' => 'The upload is larger than this server allows (post_max_size in PHP settings).']);
     }
-    if (strlen($raw) > $maxMB * 1024 * 1024) out(413, ['error' => "Data is too large ($maxMB MB max)."]);
+    if (strlen($raw) > $maxMB * 1024 * 1024) hub_json(413, ['error' => "Data is too large ($maxMB MB max)."]);
     $j = json_decode($raw, true);
     return is_array($j) ? $j : [];
 }
@@ -92,7 +87,7 @@ function links_lock() {
 }
 function links_unlock($fh) { if ($fh) { flock($fh, LOCK_UN); fclose($fh); } }
 function need_dir($d) {
-    if (!is_dir($d) && !@mkdir($d, 0755, true)) out(500, ['error' => "Could not create the folder $d. Check permissions (755)."]);
+    if (!is_dir($d) && !@mkdir($d, 0755, true)) hub_json(500, ['error' => "Could not create the folder $d. Check permissions (755)."]);
 }
 
 /* ======================= data ======================= */
@@ -140,7 +135,7 @@ function write_data($data, $forceBackup = false) {
     fix_objects($data);
     $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_HEX_TAG);
     if ($json === false || !write_guarded($dataFile, $json)) {
-        out(500, ['error' => 'Could not save to the data folder. Check its permissions (755).']);
+        hub_json(500, ['error' => 'Could not save to the data folder. Check its permissions (755).']);
     }
     return md5($json);
 }
@@ -462,13 +457,13 @@ $setup = $auth === null;
 $AUTH  = hub_admin();
 
 if ($method === 'POST') {
-    if (($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') !== 'bookmarks') out(403, ['error' => 'Missing request header.']);
+    if (($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') !== 'bookmarks') hub_json(403, ['error' => 'Missing request header.']);
 }
-function need_post() { global $method; if ($method !== 'POST') out(405, ['error' => 'Use POST.']); }
+function need_post() { global $method; if ($method !== 'POST') hub_json(405, ['error' => 'Use POST.']); }
 function need_auth() {
     global $AUTH, $method;
-    if (!$AUTH) out(401, ['error' => 'Log in first.']);
-    if ($method === 'POST' && !hub_csrf_ok()) out(403, ['error' => 'Security check failed. Reload the page.']);
+    if (!$AUTH) hub_json(401, ['error' => 'Log in first.']);
+    if ($method === 'POST' && !hub_csrf_ok()) hub_json(403, ['error' => 'Security check failed. Reload the page.']);
 }
 
 /* ======================= routes ======================= */
@@ -490,35 +485,35 @@ case 'get':
         // private site: only send what's needed to draw the login screen
         $look = ['settings' => array_intersect_key($s, array_flip(['title', 'dark', 'light', 'font', 'fontCustom', 'fontSize', 'sizes'])), 'tabs' => []];
         fix_objects($look);
-        out(200, ['auth' => false, 'setup' => $setup, 'locked' => true, 'data' => $look]);
+        hub_json(200, ['auth' => false, 'setup' => $setup, 'locked' => true, 'data' => $look]);
     }
     $d['tabs'] = array_values(array_filter($d['tabs'] ?? [], function ($t) { return empty($t['private']) && empty($t['enc']); }));
     if (is_array($d['settings'] ?? null)) unset($d['settings']['vault']);
     fix_objects($d);
-    out(200, ['auth' => false, 'setup' => $setup, 'data' => $d]);
+    hub_json(200, ['auth' => false, 'setup' => $setup, 'data' => $d]);
 
 case 'visit':   // a click on a link, from anyone who can see it: {url}. Counted once per browser per link every 30 seconds.
     need_post();
     $b = body(1);
     $d = json_decode(current_raw(), true); $d = is_array($d) ? $d : [];
-    if (!$AUTH && !empty($d['settings']['private'])) out(200, ['ok' => true, 'counted' => false]);   // a private Links: visitors see nothing to click
+    if (!$AUTH && !empty($d['settings']['private'])) hub_json(200, ['ok' => true, 'counted' => false]);   // a private Links: visitors see nothing to click
     [$counted, $n] = visits_add((string)($b['url'] ?? ''), hub_ip() . '|' . ($_SERVER['HTTP_USER_AGENT'] ?? ''), $d, !$AUTH);
-    out(200, $AUTH ? ['ok' => true, 'counted' => (bool)$counted, 'count' => $n] : ['ok' => true, 'counted' => (bool)$counted]);   // visitors never get the number
+    hub_json(200, $AUTH ? ['ok' => true, 'counted' => (bool)$counted, 'count' => $n] : ['ok' => true, 'counted' => (bool)$counted]);   // visitors never get the number
 
 case 'logout':
     need_post();
     hub_end_session();
-    out(200, ['ok' => true]);
+    hub_json(200, ['ok' => true]);
 
 case 'save':
     need_post(); need_auth();
     $b = body();
     $data = $b['data'] ?? null;
-    if ($err = data_error($data)) out(400, ['error' => $err]);
-    $lk = links_lock();   // released when the request ends (out() exits)
+    if ($err = data_error($data)) hub_json(400, ['error' => $err]);
+    $lk = links_lock();   // released when the request ends (hub_json() exits)
     if (!empty($b['rev']) && $b['rev'] !== md5(current_raw())) {
         links_unlock($lk);
-        out(409, ['error' => 'Bookmarks were changed in another window. Reload the page to continue.']);
+        hub_json(409, ['error' => 'Bookmarks were changed in another window. Reload the page to continue.']);
     }
     // The key of the encrypted tabs only changes through save_vault (which checks your password), never through a plain save.
     $cur = json_decode(current_raw(), true); $cur = is_array($cur) ? $cur : [];
@@ -534,7 +529,7 @@ case 'save':
     if ($newlyEnc) purge_readable_copies($newlyEnc, $iconDir, ($auth['secret'] ?? ''));
     visits_prune($data);   // counts of links that are gone, or now encrypted, go too
     links_unlock($lk);
-    out(200, ['ok' => true, 'rev' => $rev, 'iconMap' => (object)$map]);
+    hub_json(200, ['ok' => true, 'rev' => $rev, 'iconMap' => (object)$map]);
 
 case 'backup':
     need_auth();
@@ -544,21 +539,21 @@ case 'backup':
         if (is_file($f) && preg_match('~^([a-z0-9-]+/)?[A-Za-z0-9._-]+\.(png|ico|gif|jpg|webp|svg)$~', $n)) $icons[$n] = base64_encode(file_get_contents($f));
     }
     header('Content-Disposition: attachment; filename="bookmarks-backup-' . date('Y-m-d') . '.json"');
-    out(200, ['format' => 'bookmarks-backup', 'version' => 2, 'created' => date('c'),
+    hub_json(200, ['format' => 'bookmarks-backup', 'version' => 2, 'created' => date('c'),
         'data' => json_decode(current_raw(), true), 'icons' => $icons]);
 
 case 'restore':
     need_post(); need_auth();
     @set_time_limit(120);
     $bk = body(40)['backup'] ?? null;
-    if (!is_array($bk)) out(400, ['error' => 'That file is not a bookmarks backup.']);
+    if (!is_array($bk)) hub_json(400, ['error' => 'That file is not a bookmarks backup.']);
     $icons = [];
     if (($bk['format'] ?? '') === 'bookmarks-backup') { $data = $bk['data'] ?? null; $icons = is_array($bk['icons'] ?? null) ? $bk['icons'] : []; }
     else $data = $bk;
     if (is_array($data) && !isset($data['tabs']) && isset($data['categories']) && is_array($data['categories'])) {
         $data = ['tabs' => [['id' => 'main', 'title' => 'Bookmarks', 'categories' => $data['categories']]]];
     }
-    if ($err = data_error($data)) out(400, ['error' => 'That file is not a usable backup. ' . $err]);
+    if ($err = data_error($data)) hub_json(400, ['error' => 'That file is not a usable backup. ' . $err]);
     need_dir($iconDir);
     $saved = 0; $skipped = 0;
     foreach ($icons as $name => $b64) {
@@ -567,7 +562,7 @@ case 'restore':
         $bytes = base64_decode((string)$b64, true);
         if ($bytes === false || strlen($bytes) > 500 * 1024 || sniff_image($bytes) !== $m[2]) { $skipped++; continue; }
         if (strpos($name, '/') !== false) need_dir($iconDir . '/' . dirname($name));
-        if (@file_put_contents($iconDir . '/' . $name, $bytes) === false) out(500, ['error' => 'Could not write to the icons folder. Check its permissions (755).']);
+        if (@file_put_contents($iconDir . '/' . $name, $bytes) === false) hub_json(500, ['error' => 'Could not write to the icons folder. Check its permissions (755).']);
         $saved++;
     }
     $lk = links_lock();
@@ -575,7 +570,7 @@ case 'restore':
     organize_icons($data, $iconDir, ($auth['secret'] ?? ''));
     $rev = write_data($data, true);
     links_unlock($lk);
-    out(200, ['ok' => true, 'rev' => $rev, 'icons' => $saved, 'skipped' => $skipped]);
+    hub_json(200, ['ok' => true, 'rev' => $rev, 'icons' => $saved, 'skipped' => $skipped]);
 
 case 'backups':
     need_auth();
@@ -584,15 +579,15 @@ case 'backups':
         $d = json_decode(strip_guard((string)@file_get_contents($f)), true);
         $list[] = ['name' => basename($f), 'time' => filemtime($f), 'tabs' => is_array($d) ? count($d['tabs'] ?? []) : 0, 'links' => is_array($d) ? count_links($d) : 0];
     }
-    out(200, ['backups' => $list]);
+    hub_json(200, ['backups' => $list]);
 
 case 'rollback':
     need_post(); need_auth();
     $name = (string)(body()['name'] ?? '');
-    if (!preg_match('~^bookmarks-[0-9A-Za-z-]+\.php$~', $name) || !is_file($backupDir . '/' . $name)) out(404, ['error' => 'That backup no longer exists.']);
+    if (!preg_match('~^bookmarks-[0-9A-Za-z-]+\.php$~', $name) || !is_file($backupDir . '/' . $name)) hub_json(404, ['error' => 'That backup no longer exists.']);
     $data = json_decode(strip_guard((string)file_get_contents($backupDir . '/' . $name)), true);
     if (is_array($data) && !isset($data['tabs']) && isset($data['categories'])) $data = ['tabs' => [['id' => 'main', 'title' => 'Bookmarks', 'categories' => $data['categories']]]];
-    if ($err = data_error($data)) out(400, ['error' => 'That backup cannot be used. ' . $err]);
+    if ($err = data_error($data)) hub_json(400, ['error' => 'That backup cannot be used. ' . $err]);
     $lk = links_lock();
     // an earlier version of this site: the key is the one this site uses now (it never changes, it is only re-wrapped)
     $cur = json_decode(current_raw(), true); $curV = hub_norm_vault(is_array($cur) ? ($cur['settings']['vault'] ?? null) : null);
@@ -601,63 +596,63 @@ case 'rollback':
     organize_icons($data, $iconDir, ($auth['secret'] ?? ''));
     $rev = write_data($data, true);
     links_unlock($lk);
-    out(200, ['ok' => true, 'rev' => $rev]);
+    hub_json(200, ['ok' => true, 'rev' => $rev]);
 
 case 'save_vault':   // set or change the wrapped key of the encrypted tabs: {vault, prev, pw}; needs the current website password
     need_post(); need_auth();
     $b = body();
     $v = hub_norm_vault($b['vault'] ?? null);
-    if (!$v) out(400, ['error' => 'The key could not be prepared.']);
-    if (($w = hub_rate_wait()) > 0) out(429, ['error' => 'Too many wrong tries. Try again in ' . max(1, (int)ceil($w / 60)) . ' minutes.']);
+    if (!$v) hub_json(400, ['error' => 'The key could not be prepared.']);
+    if (($w = hub_rate_wait()) > 0) hub_json(429, ['error' => 'Too many wrong tries. Try again in ' . max(1, (int)ceil($w / 60)) . ' minutes.']);
     $pw = (string)($b['pw'] ?? '');
-    if ($pw === '' || !password_verify($pw, $auth['hash'])) { usleep(random_int(300000, 700000)); hub_rate_fail(); out(401, ['error' => 'That is not your current website password.']); }
+    if ($pw === '' || !password_verify($pw, $auth['hash'])) { usleep(random_int(300000, 700000)); hub_rate_fail(); hub_json(401, ['error' => 'That is not your current website password.']); }
     $prev = (string)($b['prev'] ?? '');
     $lk = links_lock();
     $cur = json_decode(current_raw(), true);
-    if (!is_array($cur) || !isset($cur['tabs'])) { links_unlock($lk); out(500, ['error' => 'The bookmarks could not be read, so nothing was changed.']); }
+    if (!is_array($cur) || !isset($cur['tabs'])) { links_unlock($lk); hub_json(500, ['error' => 'The bookmarks could not be read, so nothing was changed.']); }
     $curV = hub_norm_vault($cur['settings']['vault'] ?? null);
     // "prev" must be the wrap that is stored now, so a page that is out of date can never replace a key the tabs depend on
-    if (!hash_equals($curV ? $curV['wrap'] : '', $prev)) { links_unlock($lk); out(409, ['error' => 'The encryption key was changed in another window. Reload the page.', 'vault' => $curV]); }
+    if (!hash_equals($curV ? $curV['wrap'] : '', $prev)) { links_unlock($lk); hub_json(409, ['error' => 'The encryption key was changed in another window. Reload the page.', 'vault' => $curV]); }
     if (!isset($cur['settings']) || !is_array($cur['settings'])) $cur['settings'] = [];
     $cur['settings']['vault'] = $v;
     $rev = write_data($cur);
     links_unlock($lk);
-    out(200, ['ok' => true, 'vault' => $v, 'rev' => $rev]);
+    hub_json(200, ['ok' => true, 'vault' => $v, 'rev' => $rev]);
 
 case 'remove_vault':   // the passphrase is being removed: {pw, prev, tabs: {tabId: {enc, categories}}}. The browser opened every encrypted tab; they become normal private tabs.
     need_post(); need_auth();
     $b = body();
-    if (($w = hub_rate_wait()) > 0) out(429, ['error' => 'Too many wrong tries. Try again in ' . max(1, (int)ceil($w / 60)) . ' minutes.']);
+    if (($w = hub_rate_wait()) > 0) hub_json(429, ['error' => 'Too many wrong tries. Try again in ' . max(1, (int)ceil($w / 60)) . ' minutes.']);
     $pw = (string)($b['pw'] ?? '');
-    if ($pw === '' || !password_verify($pw, $auth['hash'])) { usleep(random_int(300000, 700000)); hub_rate_fail(); out(401, ['error' => 'That is not your current website password.']); }
+    if ($pw === '' || !password_verify($pw, $auth['hash'])) { usleep(random_int(300000, 700000)); hub_rate_fail(); hub_json(401, ['error' => 'That is not your current website password.']); }
     $plain = is_array($b['tabs'] ?? null) ? $b['tabs'] : [];
     $lk = links_lock();
     $cur = json_decode(current_raw(), true);
-    if (!is_array($cur) || !isset($cur['tabs'])) { links_unlock($lk); out(500, ['error' => 'The bookmarks could not be read, so nothing was changed.']); }
+    if (!is_array($cur) || !isset($cur['tabs'])) { links_unlock($lk); hub_json(500, ['error' => 'The bookmarks could not be read, so nothing was changed.']); }
     $curV = hub_norm_vault($cur['settings']['vault'] ?? null);
-    if (!$curV || !hash_equals($curV['wrap'], (string)($b['prev'] ?? ''))) { links_unlock($lk); out(409, ['error' => 'The encryption key was changed in another window. Reload the page.']); }
+    if (!$curV || !hash_equals($curV['wrap'], (string)($b['prev'] ?? ''))) { links_unlock($lk); hub_json(409, ['error' => 'The encryption key was changed in another window. Reload the page.']); }
     foreach ($cur['tabs'] as $i => $t) {
         if (!is_array($t) || !hub_enc_ok($t['enc'] ?? null)) continue;
         $p = $plain[(string)($t['id'] ?? '')] ?? null;
         // every encrypted tab must come back, exactly as the browser opened it (a tab changed meanwhile is never overwritten)
-        if (!is_array($p) || !is_array($p['categories'] ?? null) || !hash_equals($t['enc'], (string)($p['enc'] ?? ''))) { links_unlock($lk); out(409, ['error' => 'A tab changed in the meantime or could not be opened. Nothing was changed.']); }
+        if (!is_array($p) || !is_array($p['categories'] ?? null) || !hash_equals($t['enc'], (string)($p['enc'] ?? ''))) { links_unlock($lk); hub_json(409, ['error' => 'A tab changed in the meantime or could not be opened. Nothing was changed.']); }
         $cur['tabs'][$i]['categories'] = array_values($p['categories']); $cur['tabs'][$i]['private'] = true; unset($cur['tabs'][$i]['enc']);
     }
-    if ($err = data_error($cur)) { links_unlock($lk); out(400, ['error' => $err]); }
+    if ($err = data_error($cur)) { links_unlock($lk); hub_json(400, ['error' => $err]); }
     unset($cur['settings']['vault']);
     $rev = write_data($cur, true);   // the version before is kept, so this can be undone
     links_unlock($lk);
-    out(200, ['ok' => true, 'rev' => $rev]);
+    hub_json(200, ['ok' => true, 'rev' => $rev]);
 
 case 'icon':
     need_post(); need_auth();
     @set_time_limit(40);
     $url = trim((string)(body()['url'] ?? ''));
-    if (!preg_match('~^https?://~i', $url)) out(400, ['error' => 'Icons can only be fetched for http(s) links.']);
+    if (!preg_match('~^https?://~i', $url)) hub_json(400, ['error' => 'Icons can only be fetched for http(s) links.']);
     $p = parse_url($url);
     $host = strtolower($p['host'] ?? '');
-    if (!$host) out(400, ['error' => 'That URL has no domain.']);
-    if (!host_ok($host)) out(400, ['error' => 'That address is on a private network, so its icon cannot be fetched.']);
+    if (!$host) hub_json(400, ['error' => 'That URL has no domain.']);
+    if (!host_ok($host)) hub_json(400, ['error' => 'That address is on a private network, so its icon cannot be fetched.']);
     $origin = strtolower($p['scheme']) . '://' . $host . (isset($p['port']) ? ':' . $p['port'] : '');
     $cands = [];
     foreach (array_unique([$url, $origin . '/']) as $pg) {
@@ -679,24 +674,24 @@ case 'icon':
         if (!$img) continue;
         [$bytes, $ext] = $img;
         foreach (glob($iconDir . '/' . $safe . '.*') ?: [] as $old) @unlink($old);
-        if (@file_put_contents($iconDir . '/' . $safe . '.' . $ext, $bytes) === false) out(500, ['error' => 'Could not write to the icons folder. Check its permissions (755).']);
-        out(200, ['icon' => 'icons/' . $safe . '.' . $ext . '?v=' . time()]);
+        if (@file_put_contents($iconDir . '/' . $safe . '.' . $ext, $bytes) === false) hub_json(500, ['error' => 'Could not write to the icons folder. Check its permissions (755).']);
+        hub_json(200, ['icon' => 'icons/' . $safe . '.' . $ext . '?v=' . time()]);
     }
-    out(404, ['error' => 'No icon found for ' . $host . '.' . (!empty($GLOBALS['fetch_err']) ? ' The server could not reach it (' . $GLOBALS['fetch_err'] . '). See Settings > Server check.' : ''), 'fallback' => !empty($GLOBALS['fetch_err']) ? 'https://www.google.com/s2/favicons?domain=' . rawurlencode($host) . '&sz=64' : '']);
+    hub_json(404, ['error' => 'No icon found for ' . $host . '.' . (!empty($GLOBALS['fetch_err']) ? ' The server could not reach it (' . $GLOBALS['fetch_err'] . '). See Settings > Server check.' : ''), 'fallback' => !empty($GLOBALS['fetch_err']) ? 'https://www.google.com/s2/favicons?domain=' . rawurlencode($host) . '&sz=64' : '']);
 
 case 'title':
     need_post(); need_auth();
     @set_time_limit(30);
     $url = trim((string)(body()['url'] ?? ''));
-    if (!preg_match('~^https?://~i', $url)) out(400, ['error' => 'Titles can only be read from http(s) links.']);
+    if (!preg_match('~^https?://~i', $url)) hub_json(400, ['error' => 'Titles can only be read from http(s) links.']);
     $host = strtolower((string)parse_url($url, PHP_URL_HOST));
-    if (!$host) out(400, ['error' => 'That URL has no domain.']);
-    if (!host_ok($host)) out(400, ['error' => 'That address is on a private network, so its title cannot be read.']);
+    if (!$host) hub_json(400, ['error' => 'That URL has no domain.']);
+    if (!host_ok($host)) hub_json(400, ['error' => 'That address is on a private network, so its title cannot be read.']);
     $title = special_title($url, $host);
     if (is_array($title)) { // a redirect link: use its destination
         $url = $title['redirect'];
         $host = strtolower((string)parse_url($url, PHP_URL_HOST));
-        if (!$host || !host_ok($host)) out(400, ['error' => 'That link leads to an address whose title cannot be read.']);
+        if (!$host || !host_ok($host)) hub_json(400, ['error' => 'That link leads to an address whose title cannot be read.']);
         $title = special_title($url, $host);
         if (is_array($title)) $title = null;
     }
@@ -711,9 +706,9 @@ case 'title':
             }
         }
     }
-    if ($title === '') out(404, ['error' => 'This site did not share its page title with the server. Type the name yourself.']);
-    out(200, ['title' => $title]);
+    if ($title === '') hub_json(404, ['error' => 'This site did not share its page title with the server. Type the name yourself.']);
+    hub_json(200, ['title' => $title]);
 
 default:
-    out(404, ['error' => 'Unknown action.']);
+    hub_json(404, ['error' => 'Unknown action.']);
 }

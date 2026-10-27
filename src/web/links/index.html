@@ -86,8 +86,8 @@
   <label class="check" style="margin-bottom:12px"><input type="checkbox" id="sVisits"><span>Show Visit Counts<small>Each link shows how often it was opened, by you or anyone visiting. Only you see the numbers. Off hides them; the clicks are still counted. Links in encrypted tabs are never counted.</small></span></label>
 
   <h4>Look</h4>
-  <div class="srow"><span>Text Sizes<small>Make the tabs, headings and links bigger or smaller.</small></span><button class="btn" type="button" id="sTextBtn">Change</button></div>
-  <div class="srow"><label for="sEditBar">Edit Bar<small>The bar at the bottom while you edit. Icons Only shows each name when you point at it; phones always show icons.</small></label>
+  <div class="ix-srow"><span>Text Sizes<small>Make the tabs, headings and links bigger or smaller.</small></span><button type="button" id="sTextBtn">Change</button></div>
+  <div class="ix-srow"><label for="sEditBar">Edit Bar<small>The bar at the bottom while you edit. Icons Only shows each name when you point at it; phones always show icons.</small></label>
     <select id="sEditBar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></div>
 
   <div class="split" data-hub="hide">
@@ -171,7 +171,6 @@
   <div class="actions"><button class="btn primary" id="keyGo">Unlock</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
 </form></dialog>
 
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/links.js?v=1.53.8"></script>
 </body>

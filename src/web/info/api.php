@@ -38,7 +38,6 @@ const KEEP_VERSIONS = 40;
 const VERSION_EVERY = 600;      // seconds between automatic earlier-version copies
 
 function hub_strip($s) { if (strncmp($s, '<?php', 5) === 0) { $n = strpos($s, "\n"); return $n === false ? '' : substr($s, $n + 1); } return $s; }
-function out($code, $arr) { http_response_code($code); echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE); exit; }
 function rid() { return bin2hex(random_bytes(4)); }
 function cut($s, $n) {
     $s = trim((string)$s);
@@ -204,7 +203,7 @@ function snapshot($dir, $raw, $force) {
 /** One lock for every change, kept in its own file so the data file itself can be swapped in one step. */
 function info_lock($file) {
     $fh = @fopen(dirname($file) . '/info.lock', 'c');
-    if (!$fh) out(500, ['ok' => false, 'error' => 'write failed']);
+    if (!$fh) hub_json(500, ['ok' => false, 'error' => 'write failed']);
     flock($fh, LOCK_EX);
     return $fh;
 }
@@ -215,16 +214,16 @@ function locked_update($file, $fn) {
     $before = is_file($file) ? (string)@file_get_contents($file) : '';
     $cur = json_decode(hub_strip($before), true);
     // A file that exists but can't be read must never be "repaired" by saving an empty page over it.
-    if ($before !== '' && !is_array($cur)) { info_unlock($lk); out(500, ['ok' => false, 'error' => 'The saved notes could not be read, so nothing was changed. Restore an earlier version in Backup.']); }
+    if ($before !== '' && !is_array($cur)) { info_unlock($lk); hub_json(500, ['ok' => false, 'error' => 'The saved notes could not be read, so nothing was changed. Restore an earlier version in Backup.']); }
     $all = norm_data($cur);
     $res = $fn($all);
     if (!empty($res[2])) {
         snapshot(dirname($file), $before, !empty($res[3]));
         $json = json_encode($all, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
-        if ($json === false || !hub_write($file, HUB_GUARD . str_replace('<', '\u003C', $json))) { info_unlock($lk); out(500, ['ok' => false, 'error' => 'write failed']); }
+        if ($json === false || !hub_write($file, HUB_GUARD . str_replace('<', '\u003C', $json))) { info_unlock($lk); hub_json(500, ['ok' => false, 'error' => 'write failed']); }
     }
     info_unlock($lk);
-    out($res[0], $res[1]);
+    hub_json($res[0], $res[1]);
 }
 
 // Makes sure the file exists in the current format, so tab ids stay the same from one request to the next.
@@ -284,33 +283,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     send_view($file, true, hub_admin(), isset($_GET['ih']) ? (string)$_GET['ih'] : '');
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') out(405, ['ok' => false]);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') hub_json(405, ['ok' => false]);
 
 $raw = file_get_contents('php://input', false, null, 0, 2097153);
-if ($raw === false || strlen($raw) > 2097152) out(413, ['ok' => false, 'error' => 'too large']);
+if ($raw === false || strlen($raw) > 2097152) hub_json(413, ['ok' => false, 'error' => 'too large']);
 $d = json_decode($raw, true);
-if (!is_array($d)) out(400, ['ok' => false, 'error' => 'bad data']);
+if (!is_array($d)) hub_json(400, ['ok' => false, 'error' => 'bad data']);
 $action = isset($d['action']) && is_string($d['action']) ? $d['action'] : 'save';
 
-// Logged-in page load: {token, ih}
-if ($action === 'load') {
-    $in = hub_admin();
-    send_view($file, true, $in, isset($d['ih']) && is_string($d['ih']) ? $d['ih'] : '');
-}
 
 if ($action === 'logout') {   // "Log Out" / "Lock Now": ends the site login on this device
     hub_end_session();
-    out(200, ['ok' => true]);
+    hub_json(200, ['ok' => true]);
 }
 
-if (!in_array($action, ['save', 'save_boxes', 'save_tabs', 'save_page', 'save_colors', 'save_vault', 'remove_vault', 'clear_versions'], true)) out(400, ['ok' => false, 'error' => 'unknown action']);
-if (!authed()) out(403, ['ok' => false, 'error' => hub_admin() ? 'Security check failed. Reload the page.' : 'password']);
+if (!in_array($action, ['save', 'save_boxes', 'save_tabs', 'save_page', 'save_colors', 'save_vault', 'remove_vault', 'clear_versions'], true)) hub_json(400, ['ok' => false, 'error' => 'unknown action']);
+if (!authed()) hub_json(403, ['ok' => false, 'error' => hub_admin() ? 'Security check failed. Reload the page.' : 'password']);
 
 // Save one box: {tab, box (its id), title, notes, rev, force}
 if ($action === 'save') {
     $tabId = isset($d['tab']) && is_string($d['tab']) ? $d['tab'] : '';
     $bid   = isset($d['box']) && (is_string($d['box']) || is_int($d['box'])) ? (string)$d['box'] : '';
-    if (!box_id_ok($bid) || !isset($d['notes']) || !is_string($d['notes'])) out(400, ['ok' => false, 'error' => 'bad data']);
+    if (!box_id_ok($bid) || !isset($d['notes']) || !is_string($d['notes'])) hub_json(400, ['ok' => false, 'error' => 'bad data']);
     locked_update($file, function (&$all) use ($d, $tabId, $bid) {
         foreach ($all['tabs'] as &$t) {
             if ($t['id'] !== $tabId) continue;
@@ -333,7 +327,7 @@ if ($action === 'save') {
 if ($action === 'save_boxes') {
     $tabId = isset($d['tab']) && is_string($d['tab']) ? $d['tab'] : '';
     $list  = isset($d['boxes']) && is_array($d['boxes']) ? array_values($d['boxes']) : [];
-    if (count($list) < 1 || count($list) > MAXBOX) out(400, ['ok' => false, 'error' => 'box count']);
+    if (count($list) < 1 || count($list) > MAXBOX) hub_json(400, ['ok' => false, 'error' => 'box count']);
     locked_update($file, function (&$all) use ($d, $tabId, $list) {
         if ((isset($d['rev']) ? (int)$d['rev'] : -1) !== $all['rev']) return [409, ['ok' => false, 'error' => 'conflict', 'data' => $all], false];
         foreach ($all['tabs'] as &$t) {
@@ -360,7 +354,7 @@ if ($action === 'save_boxes') {
 // Tabs left out are removed together with their text; entries without a known id are new tabs.
 if ($action === 'save_tabs') {
     $list = isset($d['tabs']) && is_array($d['tabs']) ? array_values($d['tabs']) : [];
-    if (count($list) < 1 || count($list) > MAXTAB) out(400, ['ok' => false, 'error' => 'tab count']);
+    if (count($list) < 1 || count($list) > MAXTAB) hub_json(400, ['ok' => false, 'error' => 'tab count']);
     locked_update($file, function (&$all) use ($d, $list) {
         if ((isset($d['rev']) ? (int)$d['rev'] : -1) !== $all['rev']) {
             return [409, ['ok' => false, 'error' => 'conflict', 'data' => $all], false];
@@ -388,7 +382,7 @@ if ($action === 'save_tabs') {
 
 // Page settings: {title, icon, private}. An empty title or icon means the default one.
 if ($action === 'save_page') {
-    if (isset($d['icon']) && $d['icon'] !== '' && !icon_ok($d['icon'])) out(400, ['ok' => false, 'error' => 'bad icon']);
+    if (isset($d['icon']) && $d['icon'] !== '' && !icon_ok($d['icon'])) hub_json(400, ['ok' => false, 'error' => 'bad icon']);
     locked_update($file, function (&$all) use ($d) {
         $np = norm_page($d);
         $all['page']['title'] = $np['title'];
@@ -407,21 +401,16 @@ if ($action === 'save_colors') {
 }
 
 
-
-// "Log Out Other Devices": cancel every token except the one making this request.
-
-
-
 // Set or change the wrapped encryption key: {vault, prev, pw}. prev must be the current wrap ("" if none), so a stale
 // page can never replace a key that encrypted tabs depend on. A key wrapped with the website password (vault.login) needs
 // that password in pw, checked like a login, so a typo can never lock the tabs with a password nobody knows.
 if ($action === 'save_vault') {
     $v = norm_vault(isset($d['vault']) ? $d['vault'] : null);
-    if (!$v) out(400, ['ok' => false, 'error' => 'bad vault']);
+    if (!$v) hub_json(400, ['ok' => false, 'error' => 'bad vault']);
     if (!empty($v['login'])) {
-        if (($w = hub_rate_wait()) > 0) out(429, ['ok' => false, 'error' => 'wait']);
+        if (($w = hub_rate_wait()) > 0) hub_json(429, ['ok' => false, 'error' => 'wait']);
         $pw = isset($d['pw']) && is_string($d['pw']) ? $d['pw'] : '';
-        if ($pw === '' || !password_verify($pw, hub_auth()['hash'])) { usleep(random_int(300000, 700000)); hub_rate_fail(); out(401, ['ok' => false, 'error' => 'sitepw']); }
+        if ($pw === '' || !password_verify($pw, hub_auth()['hash'])) { usleep(random_int(300000, 700000)); hub_rate_fail(); hub_json(401, ['ok' => false, 'error' => 'sitepw']); }
     }
     $prev = isset($d['prev']) && is_string($d['prev']) ? $d['prev'] : '';
     locked_update($file, function (&$all) use ($v, $prev) {
@@ -437,9 +426,9 @@ if ($action === 'save_vault') {
 // private tabs and deletes the key, all in one write. Every encrypted tab must be there with the revisions the browser
 // saw, so a box changed elsewhere in the meantime is never overwritten. Needs the website password, checked like a login.
 if ($action === 'remove_vault') {
-    if (($w = hub_rate_wait()) > 0) out(429, ['ok' => false, 'error' => 'wait']);
+    if (($w = hub_rate_wait()) > 0) hub_json(429, ['ok' => false, 'error' => 'wait']);
     $pw = isset($d['pw']) && is_string($d['pw']) ? $d['pw'] : '';
-    if ($pw === '' || !password_verify($pw, hub_auth()['hash'])) { usleep(random_int(300000, 700000)); hub_rate_fail(); out(401, ['ok' => false, 'error' => 'sitepw']); }
+    if ($pw === '' || !password_verify($pw, hub_auth()['hash'])) { usleep(random_int(300000, 700000)); hub_rate_fail(); hub_json(401, ['ok' => false, 'error' => 'sitepw']); }
     $prev = isset($d['prev']) && is_string($d['prev']) ? $d['prev'] : '';
     $plain = isset($d['tabs']) && is_array($d['tabs']) ? $d['tabs'] : [];
     locked_update($file, function (&$all) use ($prev, $plain) {
@@ -470,5 +459,5 @@ if ($action === 'remove_vault') {
 if ($action === 'clear_versions') {
     $n = 0;
     foreach (glob($dir . '/versions/*.php') ?: [] as $f) { if (@unlink($f)) $n++; }
-    out(200, ['ok' => true, 'removed' => $n]);
+    hub_json(200, ['ok' => true, 'removed' => $n]);
 }

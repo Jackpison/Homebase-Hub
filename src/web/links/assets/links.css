@@ -142,9 +142,9 @@ body.editing .cat-add{display:flex}
 /* the edit bar is the shared one (shell.js, 1.53.5); .editbar only holds its buttons */
 
 /* Dialogs */
-dialog{font-size:15px;background:var(--panel);color:var(--text);border:1px solid var(--line2);border-radius:12px;padding:0;width:min(480px,calc(100vw - 24px));box-shadow:0 20px 60px var(--shadow)}
+dialog{font-size:15px;background:var(--panel);color:var(--text);border:1px solid var(--line2);border-radius:var(--ix-win-radius);padding:0;width:min(480px,calc(100vw - 24px));box-shadow:var(--ix-win-shadow)}
 dialog.wide{width:min(860px,calc(100vw - 24px))}
-dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog::backdrop{background:var(--ix-win-dim)}
 dialog form{padding:22px}
 dialog h3{margin:0 0 16px;font-size:17px;font-weight:600}
 dialog h4{margin:20px 0 10px;font-size:14px;font-weight:600;color:var(--muted)}
@@ -223,9 +223,6 @@ body.is-locked .search{display:none}
 .actions .left{margin-right:auto}
 .err{color:var(--danger);font-size:13.5px;min-height:1em;margin:0 0 8px}
 
-.toast{position:fixed;top:18px;left:50%;transform:translate(-50%,-12px);opacity:0;pointer-events:none;background:var(--panel);border:1px solid var(--line2);padding:9px 15px;border-radius:9px;font-size:14px;z-index:70;transition:opacity .18s,transform .18s;width:max-content;max-width:calc(100vw - 24px);box-shadow:0 8px 24px var(--shadow)}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-.toast.bad{border-color:var(--danger);color:var(--danger)}
 .tip{position:fixed;z-index:65;left:0;top:0;max-width:min(440px,calc(100vw - 24px));padding:7px 10px;border-radius:7px;background:var(--panel);
   border:1px solid var(--line2);box-shadow:0 8px 24px var(--shadow);color:var(--text);font-size:13.5px;line-height:1.4;pointer-events:none;
   opacity:0;transition:opacity .12s;overflow-wrap:anywhere}
@@ -249,7 +246,7 @@ body.is-locked .search{display:none}
   .col{gap:28px}
   .colors,.colors.four{grid-template-columns:1fr 1fr}
 }
-@media (prefers-reduced-motion:reduce){.toast,.tab,.tip{transition:none}.ghost{transform:none}}
+@media (prefers-reduced-motion:reduce){.tab,.tip{transition:none}.ghost{transform:none}}
 
 /* Import Bookmarks (links-import.js) */
 #impDlg .imp-prev:empty{display:none}
@@ -262,14 +259,6 @@ body.is-locked .search{display:none}
 #impDlg .imp-done{margin:6px 0 10px;font-size:14px}
 #impDlg .imp-done p{margin:0 0 6px}
 #impDlg .check small{display:block;color:var(--muted);font-size:12.5px}
-/* Links Settings > Look (1.53.6): a name and a line of help on the left, its button or choice on the right */
-.srow{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;font-size:14px;line-height:1.4}
-.srow>span,.srow>label{flex:1;min-width:0}
-.srow small{display:block;color:var(--faint);font-size:12.5px}
-.srow .btn,.srow select{flex:none}
-.srow select{background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:8px 10px;outline:none}
-.srow select:focus{border-color:var(--accent)}
-@media (max-width:480px){.srow{flex-wrap:wrap}.srow select{width:100%}}
 
 /* the visit count sits at the end of the row (1.53.8); the edit buttons then follow it */
 .row .vc~.ctrl{margin-left:0}

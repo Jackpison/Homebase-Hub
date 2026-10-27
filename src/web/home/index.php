@@ -366,7 +366,6 @@ $favicon = $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0); 
   </form>
 </dialog>
 
-<div id="toast" role="status" aria-live="polite"></div>
 
 <script nonce="<?= $nonce ?>">window.LOGO_FAVICON = <?= json_encode($logoOk ? $favicon : '', JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
 <script nonce="<?= $nonce ?>">window.PUB = <?= json_encode($site, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>

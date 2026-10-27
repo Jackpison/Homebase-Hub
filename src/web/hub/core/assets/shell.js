@@ -267,13 +267,15 @@
     });
   }
   var toastT;
-  function toast(msg) {
+  /* The one message box of every page (1.59: Home and Links use it too). bad: a problem (red, stays longer); sticky: stays until the next message. */
+  function toast(msg, bad, sticky) {
     var t = document.getElementById('ix-toast');
-    if (!t) { t = document.createElement('div'); t.id = 'ix-toast'; t.setAttribute('role', 'status'); }
+    if (!t) { t = document.createElement('div'); t.id = 'ix-toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); }
     // a page's open modal <dialog> is drawn above everything: the message goes inside it so it can be seen
     var host = [].slice.call(document.querySelectorAll('dialog[open]')).pop() || document.body;
     if (t.parentNode !== host) host.appendChild(t);
-    t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove('on'); }, 3200);
+    t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.add('on'); clearTimeout(toastT);
+    if (!sticky) toastT = setTimeout(function () { t.classList.remove('on'); }, bad ? 6000 : 3200);
   }
   function remember(st) {
     var keep = {}; ['siteName', 'logo', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'editBar', 'colors', 'font', 'fontCustom', 'sizes', 'pages', 'backupEvery', 'backupLast', 'tz'].forEach(function (k) { if (k in st) keep[k] = st[k]; });

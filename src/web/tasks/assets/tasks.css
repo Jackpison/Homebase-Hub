@@ -412,8 +412,8 @@ html[data-ix-bar][data-ix-nav="top"] .side{top:calc(var(--ix-top-now,52px) + 14p
 .pop button:hover,.pop button:focus-visible{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc-tx);outline:none}
 .pop button.danger{color:var(--late)}
 .pop hr{border:0;border-top:1px solid var(--line);margin:5px 4px}
-dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--fg);padding:0;width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 24px)}
-dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog{border:1px solid var(--line);border-radius:var(--ix-win-radius);box-shadow:var(--ix-win-shadow);background:var(--panel);color:var(--fg);padding:0;width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 24px)}
+dialog::backdrop{background:var(--ix-win-dim)}
 .dh{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 6px}
 .dh h2{margin:0;font-size:18px}
 .db{padding:6px 18px 4px;overflow:auto;max-height:calc(100dvh - 170px)}

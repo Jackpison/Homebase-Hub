@@ -331,10 +331,6 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .test-out.bad{color:var(--danger)}
 @media (prefers-color-scheme:dark){ .test-out.ok{color:#4ADE80} }
 
-#toast{position:fixed;left:50%;bottom:84px;transform:translate(-50%,16px);opacity:0;z-index:100;background:#F6F5F1;color:#0E1018;
-  padding:10px 16px;border-radius:12px;font-size:.9rem;font-weight:500;transition:.25s;pointer-events:none;max-width:90vw;box-shadow:0 10px 30px rgba(0,0,0,.3)}
-#toast.show{opacity:1;transform:translate(-50%,0)}
-#toast.err{background:var(--danger);color:#fff}
 
 @media (max-width:560px){
   .sheet,.sheet.narrow,.sheet.wide{width:100%;max-width:100%;margin:auto 0 0;border-radius:var(--r-sheet) var(--r-sheet) 0 0;max-height:92vh}

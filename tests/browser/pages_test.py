@@ -212,8 +212,8 @@ try:
         enc = hp.evaluate("[...document.querySelectorAll('#wNote optgroup')].map(g => g.label)")
         hp.click('#wList [data-wmove=\"5\"][data-by=\"-1\"]')   # Scratch Pad one up
         hp.check('#wList [data-wl=worldclock]'); hp.check('#wList [data-wl=weather]')
-        hp.fill('[data-zt=\"0\"]', 'Mars/Nowhere'); hp.click('#saveWidgets'); until(lambda: 'not a time zone' in hp.evaluate("document.getElementById('toast').textContent"), 5000)
-        badzone = hp.evaluate("[document.getElementById('widgetsSheet').open, document.getElementById('toast').textContent]")
+        hp.fill('[data-zt=\"0\"]', 'Mars/Nowhere'); hp.click('#saveWidgets'); until(lambda: 'not a time zone' in hp.evaluate("document.getElementById('ix-toast').textContent"), 5000)
+        badzone = hp.evaluate("[document.getElementById('widgetsSheet').open, document.getElementById('ix-toast').textContent]")
         hp.fill('[data-zt=\"0\"]', 'Asia/Tokyo'); hp.fill('[data-zn=\"0\"]', 'Aunt Mei'); hp.fill('#wTown', 'Bengaluru')
         # a forecast already saved on the server, so the test asks Open-Meteo nothing (the server side is tested in home_widgets_test.php)
         subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; write_json(weather_file(), ['key' => 'bengaluru|c', 'town' => 'bengaluru', 'place' => ['name' => 'Bengaluru, Karnataka', 'lat' => 12.97, 'lon' => 77.59], 'saved' => time(), 'data' => ['temp' => 27, 'text' => 'Partly cloudy', 'pic' => 'partly', 'day' => true, 'days' => [['date' => date('Y-m-d'), 'max' => 29, 'min' => 19, 'text' => 'Rain', 'pic' => 'rain']], 'place' => 'Bengaluru, Karnataka', 'unit' => '°C', 'saved' => time()]]);" % D], check=True)
@@ -427,7 +427,7 @@ try:
             hp2.click('#ix-editb'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000); hp2.click('#ix-pop button:nth-child(2)')
             until(lambda: hp2.evaluate("document.getElementById('%s').open" % dlg), 8000); settle(hp2)
             return hp2.evaluate("""(() => { const d = document.getElementById('%s');
-              return [[...d.querySelectorAll('h3, h4')].map(h => h.textContent.trim()), [...d.querySelectorAll('.srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName, r.lastElementChild.textContent.trim().slice(0, 12), r.getBoundingClientRect().width > 0 ? Math.round(r.lastElementChild.getBoundingClientRect().width) : 0])] })()""" % dlg)
+              return [[...d.querySelectorAll('h3, h4')].map(h => h.textContent.trim()), [...d.querySelectorAll('.ix-srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName, r.lastElementChild.textContent.trim().slice(0, 12), r.getBoundingClientRect().width > 0 ? Math.round(r.lastElementChild.getBoundingClientRect().width) : 0])] })()""" % dlg)
         ls_, is_ = sdlg('links', 'setDlg'), sdlg('info', 'setdlg')
         ts_ = sdlg('tasks', 'sdlg'); tl = hp2.evaluate("[...document.querySelectorAll('#sdlg .sh3')].map(h => h.textContent.trim()); ")
         lookhas = hp2.evaluate("(() => { const h = [...document.querySelectorAll('#sdlg .sh3')].pop(); let n = h.nextElementSibling; return !!n.querySelector('#s-editbar') && !!n.querySelector('#s-week') })()")
@@ -454,7 +454,7 @@ try:
         icons = cp.evaluate("[...document.querySelectorAll('#ix-ebar .ix-eb')].map(b => [b.getAttribute('aria-label'), b.querySelector('path').getAttribute('d')])")
         idict = dict(icons)
         cp.click('#ix-ebar [data-tip="Cards Settings"]'); until(lambda: cp.evaluate("document.getElementById('tdlg').open"), 5000)
-        cs = cp.evaluate("[[...document.querySelectorAll('#tdlg h3')].map(h => h.textContent), [...document.querySelectorAll('#tdlg .srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName])]")
+        cs = cp.evaluate("[[...document.querySelectorAll('#tdlg h3')].map(h => h.textContent), [...document.querySelectorAll('#tdlg .ix-srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName])]")
         cp.evaluate("document.getElementById('tdlg').close()")
         banks_of = lambda: cp.evaluate("[...new Set([...document.querySelectorAll('#list .row.item')].map(r => r.textContent))].join('|')")
         cp.click('#ix-ebar [data-tip="Banks"]'); until(lambda: cp.evaluate("document.getElementById('bdlg').open"), 5000)

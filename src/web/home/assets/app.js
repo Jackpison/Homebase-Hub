@@ -273,14 +273,7 @@ function lastBg(){ const m = document.cookie.match(/(?:^|; )hl_last=([^;]*)/); r
 /* ======================================================================
    TOAST
    ====================================================================== */
-function toast(msg, err = false){
-  const t = $('#toast');
-  // An open settings sheet is a modal <dialog>, drawn above everything else: the message has to sit inside it to be seen.
-  const open = [...document.querySelectorAll('dialog[open]')].pop() || document.body;
-  if (t.parentNode !== open) open.appendChild(t);
-  t.textContent = msg; t.classList.toggle('err', err); t.classList.add('show');
-  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), err ? 6000 : 2800);
-}
+function toast(msg, err = false){ if (window.HUB) HUB.toast(msg, err); }   // the site's one message box (shell.js)
 
 /* ======================================================================
    API

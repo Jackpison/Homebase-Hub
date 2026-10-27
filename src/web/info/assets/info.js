@@ -7,7 +7,7 @@
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 const MAXTAB=20;
-let TABS=[],REV=0,PAGE={title:"",icon:""},TIMER={every:7*86400,last:0},active="",locked=false,server=false,tok="",
+let TABS=[],REV=0,PAGE={title:"",icon:""},TIMER={every:7*86400,last:0},active="",locked=false,server=false,
     authed=false,EDIT=false,CLOSED=false,WAIT=false; // WAIT: logged in, waiting for the server to send private content // logged in? editing mode? whole page private and not logged in?
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -30,7 +30,6 @@ const HF=(u,o)=>window.HUB?HUB.fetch(u,o):fetch(u,o);   // the site's fetch: lon
 const api=body=>HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
 const when=t=>t?new Date(t*1000).toLocaleString(undefined,{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"";
 const savedMsg=()=>"Saved to your server"+(locked&&authed?". You're logged in.":".");
-const TOKK="info3-tok"; // the login token, kept so this device stays logged in
 const rid=()=>Array.from(crypto.getRandomValues(new Uint8Array(4)),x=>x.toString(16).padStart(2,"0")).join("");
 
 /* encrypted tabs. The box titles and text of an encrypted tab are encrypted here in the browser with AES-256-GCM
@@ -122,7 +121,7 @@ async function repairLayers(list){
     if(b.editing||busy.has(b.key))continue;
     try{
       busy.add(b.key);
-      const r=await api({action:"save",tab:b.tabId,box:b.id,title:await seal(b.title),notes:await seal(b.notes),rev:b.rev,token:tok});
+      const r=await api({action:"save",tab:b.tabId,box:b.id,title:await seal(b.title),notes:await seal(b.notes),rev:b.rev});
       if(r.ok){intake(b,(await r.json()).box,true);done++}
     }catch(e){}finally{busy.delete(b.key)}
   }
@@ -494,7 +493,7 @@ async function tick(b,ln){
   busy.add(b.key);renderBox(b);
   try{
     const enc=tabOfBox(b).enc;if(enc&&!KEY)throw 0;
-    const r=await api({action:"save",tab:b.tabId,box:b.id,title:enc?(b.ct||await seal(b.title)):b.title,notes:enc?await seal(notes):notes,rev:b.rev,token:tok});
+    const r=await api({action:"save",tab:b.tabId,box:b.id,title:enc?(b.ct||await seal(b.title)):b.title,notes:enc?await seal(notes):notes,rev:b.rev});
     if(r.status===409){const j=await r.json();intake(b,j.box,enc);status("This box was changed elsewhere, so the newer version is shown. Check the item off again if needed.")}
     else if(r.status===403){b.notes=prev;dropAuth();status("Log in to check off items.")}
     else if(!r.ok)throw 0;
@@ -520,7 +519,7 @@ document.addEventListener("visibilitychange",async()=>{
   if(document.hidden||!loaded||!server)return;
   if(Date.now()-lastFetch<60000||openEdits()||document.querySelector("dialog[open]")||drag)return;
   lastFetch=Date.now();
-  try{const had=!!tok;takeData(await fetchData());if(had&&!tok){setEdit(false);status("You were logged out on this device.")}}catch(e){}
+  try{const had=authed;takeData(await fetchData());if(had&&!authed){setEdit(false);status("You were logged out on this device.")}}catch(e){}
 }); // true once the server has answered (or is known to be unreachable)
 const sig=d=>JSON.stringify([d.rev|0,!!d.closed,d.tabs.map(t=>[t.id,t.name,t.color||"",t.hc||"",t.layout||"",!!t.private,t.boxes.map(b=>[b.id||"",b.w||"",b.h||"",b.title,b.notes,b.rev|0,b.saved|0])]),
   d.page&&[d.page.title,d.page.icon,d.page.colors,!!d.page.private],d.timer]);
@@ -536,8 +535,7 @@ function applyData(d){
 async function fetchData(){
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000),ih=PAGE.iconHash||"";
   try{
-    const r=tok?await HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"load",token:tok,ih}),cache:"no-store",signal:ctl.signal})
-                           :await HF("api.php"+(ih?"?ih="+encodeURIComponent(ih):""),{cache:"no-store",signal:ctl.signal});
+    const r=await HF("api.php"+(ih?"?ih="+encodeURIComponent(ih):""),{cache:"no-store",signal:ctl.signal});
     if(!r.ok)throw 0;
     const j=await r.json();
     if(!j||!Array.isArray(j.tabs))throw 0;
@@ -548,7 +546,6 @@ async function fetchData(){
 // Takes server data in: replaces the page if nothing is being edited, otherwise merges it in around open editors.
 function takeData(j){
   server=true;locked=!!j.locked;authed=!!j.auth;
-  if(tok&&!j.auth){tok="";lsSet(TOKK,null)} // the login expired or was cancelled on another device
   const ih=(j.page&&j.page.iconHash)||"";
   if(sig(j)!==sig({tabs:plainTabs(),rev:REV,page:PAGE,timer:TIMER,closed:CLOSED})){
     if(openEdits()&&!j.closed&&!CLOSED){mergeTabs(j);PAGE=normPage(j.page);TIMER=normTimer(j.timer);renderPage();applyColors(PAGE.colors);}
@@ -559,21 +556,20 @@ function takeData(j){
 }
 async function load(){
   renderPage(); // default title and icon right away, even on a first visit
-  tok=lsGet(TOKK)||"";
+  lsSet("info3-tok",null);   // an old per-page login token (before the one site login): no longer used (1.59)
   let local=null;
   try{
     const l=JSON.parse(lsGet(LS)||"null");
     if(l&&Array.isArray(l.tabs)){local=l;if(local.page&&!local.page.icon)local.page.icon=savedIcon=lsGet(ICONK)||""}
   }catch(e){}
   // 1. Show the copy saved in this browser straight away, so the page appears instantly.
-  WAIT=!!tok;
-  if(local&&(local.tabs.length||local.closed)&&!(tok&&local.closed)){applyData(local);status("Checking for updates…")}
+  if(local&&(local.tabs.length||local.closed)){applyData(local);status("Checking for updates…")}
   else if(local&&local.page){PAGE=normPage(local.page);renderPage();applyColors(PAGE.colors);status("Loading…")}
   // 2. Ask the server for the latest version.
   try{
-    const hadTok=!!tok,j=await fetchData();
+    const j=await fetchData();
     WAIT=false;takeData(j);renderTabs();lastFetch=Date.now();
-    status(hadTok&&!tok?"You were logged out on this device.":savedMsg());
+    status(savedMsg());
   }catch(e){
     server=false;WAIT=false;
     if(!local||!local.tabs.length)applyData({tabs:[{name:"Information & Notes",boxes:[{title:"Information"},{title:"Notes"}]}],rev:0});
@@ -633,7 +629,7 @@ async function save(b,force){
   try{
     const enc=tabOfBox(b).enc;
     if(enc&&!KEY){back("This tab is locked. Unlock it, then save again.");status("Not saved yet.");return}
-    const r=await api({action:"save",tab:b.tabId,box:b.id,title:enc?await seal(title):title,notes:enc?await seal(text):text,rev:b.rev,force,token:tok});
+    const r=await api({action:"save",tab:b.tabId,box:b.id,title:enc?await seal(title):title,notes:enc?await seal(text):text,rev:b.rev,force});
     if(r.status===403){dropAuth();back("");status(savedMsg());guard(()=>save(b,force));return}
     if(r.status===429){back("Too many wrong password tries. Wait a few minutes, then save again.");status(savedMsg());return}
     if(r.status===409){const j=await r.json();back("");b.theirs=await openTheirs(b,j.box);e.conflict.hidden=false;status("Not saved yet. Choose which version to keep.");return}
@@ -818,7 +814,7 @@ async function saveTabsList(list,say,done){
     showNew();if(done)done();return;
   }
   try{
-    const r=await api({action:"save_tabs",tabs:list,rev:REV,token:tok});
+    const r=await api({action:"save_tabs",tabs:list,rev:REV});
     if(r.status===403){dropAuth();status(savedMsg());renderTabs();guard(()=>saveTabsList(list,say,done));return}
     if(r.status===429){say("Too many wrong password tries. Wait a few minutes, then try again.");return}
     if(r.status===409){const j=await r.json();mergeTabs(j.data);say("The tabs were changed on another device. The latest tabs are shown now, so please make your change again.");return}
@@ -841,7 +837,7 @@ async function saveBoxList(t,list,say,done){
     mergeTabs({rev:REV+1,tabs:pt});if(done)done(before);return;
   }
   try{
-    const r=await api({action:"save_boxes",tab:t.id,boxes:list,rev:REV,token:tok});
+    const r=await api({action:"save_boxes",tab:t.id,boxes:list,rev:REV});
     if(r.status===403){dropAuth();status(savedMsg());renderTabs();guard(()=>saveBoxList(t,list,say,done));return}
     if(r.status===409){const j=await r.json();if(j.data)mergeTabs(j.data);say("This tab was changed on another device. The latest version is shown now, so please make your change again.");return}
     if(!r.ok)throw 0;
@@ -973,7 +969,7 @@ $("etform").addEventListener("submit",async e=>{
   saveTabsList(etList(false),say,async()=>{
     etdlg.close();renderGates();
     if(want&&!was&&t){ // remove earlier versions that still hold this tab's unencrypted text
-      try{await api({action:"clear_versions",token:tok})}catch(err){}
+      try{await api({action:"clear_versions"})}catch(err){}
       status("Tab encrypted. Earlier versions were deleted so no unencrypted copy stays on the server.");
     }else if(!want&&was)status("Tab decrypted. It's still a private tab.");
   });
@@ -985,7 +981,7 @@ async function convertTab(t,encrypt,say){
     if(b.bad){say("A box in this tab couldn't be decrypted, so it can't be converted.");return false}
     try{
       const title=encrypt?await seal(b.title):b.title,notes=encrypt?await seal(b.notes):b.notes;
-      const r=await api({action:"save",tab:t.id,box:b.id,title,notes,rev:b.rev,token:tok});
+      const r=await api({action:"save",tab:t.id,box:b.id,title,notes,rev:b.rev});
       if(r.status===409){say("This tab was changed on another device. Close this dialog and try again.");return false}
       if(r.status===403){dropAuth();say("Log in again, then try again.");return false}
       if(!r.ok)throw 0;
@@ -1051,7 +1047,6 @@ $("ebar").addEventListener("click",e=>{
 });
 async function logout(){
   if(openEdits()){status("Save or cancel the box you're editing first.");return}
-  if(tok)api({action:"logout",token:tok}).catch(()=>{});
   // Private tabs, their unsaved drafts, search results and export leftovers leave this device.
   TABS.filter(t=>t.private||PAGE.private).forEach(t=>t.boxes.forEach(b=>dSet(b,null)));
   try{sessionStorage.clear()}catch(e){}
@@ -1106,7 +1101,7 @@ async function saveColors(){
   if(!server){PAGE.colors=normColors(colors);keepLocal();kSaved=true;kdlg.close();return}
   $("ksave").disabled=true;
   try{
-    const r=await api({action:"save_colors",colors,token:tok});
+    const r=await api({action:"save_colors",colors});
     if(r.status===403){dropAuth();status(savedMsg());guard(saveColors);return}
     if(r.status===429){$("kmsg").textContent="Too many wrong password tries. Wait a few minutes, then try again.";return}
     if(!r.ok)throw 0;
@@ -1227,7 +1222,7 @@ async function saveSettings(){
   if(!server){Object.assign(PAGE,p);keepLocal();renderPage();setdlg.close();return}
   $("setsave").disabled=true;
   try{
-    const r=await api({action:"save_page",...p,token:tok});
+    const r=await api({action:"save_page",...p});
     if(r.status===403){dropAuth();status(savedMsg());guard(saveSettings);return}
     if(r.status===429){m.textContent="Too many wrong password tries. Wait a few minutes, then try again.";return}
     if(r.status===400){m.textContent="That icon couldn't be saved. Try a different image.";return}
@@ -1306,7 +1301,7 @@ bkdlg.addEventListener("click",e=>{
   else if(k==="txt-all"||k==="txt-cur")exportText(k==="txt-all");
 });
 /* login: the site's one login box (same password and two-step code everywhere); the page then reloads */
-function dropAuth(){tok="";authed=false;lsSet(TOKK,null);if(typeof renderAuth==="function")renderAuth()}
+function dropAuth(){authed=false;if(typeof renderAuth==="function")renderAuth()}
 // Runs fn now if editing is allowed; otherwise asks to log in first, then runs it.
 function guard(fn){
   if(!loaded){status("Still loading. Try again in a moment.");return}

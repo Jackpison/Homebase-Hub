@@ -65,21 +65,14 @@ function ensure_dir(string $dir): void
 {
     if (!is_dir($dir)) mkdir($dir, 0755, true);
 }
-function read_json(string $file): ?array
-{
-    $j = json_decode(hub_jraw($file), true);   // data files are guarded .php files (old plain .json is still read)
-    return is_array($j) ? $j : null;
-}
+/** Home's data files, through the core's one way of storing data (1.59): guarded JSON, written whole or not at all. */
+function read_json(string $file): ?array { return hub_jread($file); }
 function write_json(string $file, array $data): void
 {
     ensure_dir(dirname($file));
-    if (substr($file, 0, strlen(DATA_DIR)) === DATA_DIR && substr($file, -5) === '.json' && strpos($file, '/cache/') === false) {
-        hub_jput($file, json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
-        return;
-    }
-    $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
-    file_put_contents($tmp, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE), LOCK_EX);
-    rename($tmp, $file);
+    $json = (string) json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    if (substr($file, 0, strlen(DATA_DIR)) === DATA_DIR && substr($file, -5) === '.json' && strpos($file, '/cache/') === false) { hub_jput($file, $json); return; }
+    hub_write($file, $json);   // caches: plain JSON, still written safely (a temporary file, then renamed)
 }
 function new_id(): string
 {

@@ -6,12 +6,11 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
-/* apply saved theme + colors before anything paints (no flash) */
+/* apply Links' own colors and text sizes before anything paints (no flash); the light or dark theme is set by shell.js, which runs first */
 (function () {
   var r = document.documentElement;
   try {
-    var m = localStorage.getItem('bm-theme') === 'light' ? 'light' : 'dark';
-    r.setAttribute('data-theme', m);
+    var m = r.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
     var look = JSON.parse(localStorage.getItem('bm-look') || 'null');
     if (look) {
       var c = look[m] || {};

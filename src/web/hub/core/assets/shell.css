@@ -260,6 +260,7 @@ html.ix-fade,html.ix-fade *,html.ix-fade *::before,html.ix-fade *::after{transit
 #ix-dlg .ix-ver .ix-btn{height:32px;font-size:13px;margin-left:auto}
 #ix-toast{position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-14px);opacity:0;z-index:2147483003;background:var(--ix-s1);color:var(--ix-tx);border:1px solid var(--ix-line2);border-left:3px solid var(--ix-accent);padding:11px 16px;border-radius:10px;font:14px var(--ix-font);box-shadow:0 10px 30px rgba(0,0,0,.5);transition:.2s;pointer-events:none;max-width:calc(100vw - 32px)}
 #ix-toast.on{opacity:1;transform:translateX(-50%)}
+#ix-toast.bad{border-left-color:var(--ix-err);color:var(--ix-err)}
 /* messages appear at the top of the page,just under the bar,so they never cover the editing bars at the bottom */
 html[data-ix-bar][data-ix-nav="top"] #ix-toast,html[data-ix-bar][data-ix-nav="top"] .toast{top:calc(var(--ix-top-now) + 14px)!important}
 html:has(dialog[open],#ix-dlg.open) #ix-toast,html:has(dialog[open],#ix-dlg.open) .toast{top:auto!important;bottom:24px}
@@ -427,3 +428,21 @@ body.boxedit #ix-ebar{display:none}
 #ix-dlg .ix-btn.ix-quiet{width:100%;justify-content:center;margin-top:6px;border-color:transparent;background:none;color:var(--ix-mu)}
 #ix-dlg .ix-btn.ix-quiet:hover{color:var(--ix-tx);border-color:transparent}
 @media (max-width:700px){#ix-dlg .ix-box.ix-login{width:100%}}
+
+/* ---------- a settings row inside a page's Settings window (1.59: one copy for Links, Info and Cards) ----------
+   The name and a line of help on the left, its button or choice on the right. Colours follow the page's own text, so it fits
+   every page and both themes. */
+.ix-srow{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;font-size:15px;line-height:1.4}
+.ix-srow>span,.ix-srow>label{flex:1;min-width:0;margin:0;font-size:inherit;color:inherit}
+.ix-srow small{display:block;margin-top:2px;font-size:13px;font-weight:400;opacity:.68}
+.ix-srow>button{flex:none;font:inherit;font-size:14px;font-weight:700;border-radius:10px;padding:9px 16px;cursor:pointer;color:inherit;background:transparent;border:1px solid color-mix(in srgb,currentColor 22%,transparent)}
+.ix-srow>button:hover{background:color-mix(in srgb,currentColor 8%,transparent)}
+.ix-srow>select{flex:none;width:auto;font:inherit;font-size:14px;color:inherit;border-radius:10px;padding:9px 10px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 18%,transparent)}
+.ix-srow>select:focus{outline:none;border-color:color-mix(in srgb,currentColor 55%,transparent)}
+@media (max-width:480px){.ix-srow{flex-wrap:wrap}.ix-srow>select{width:100%}}
+
+/* ---------- the pages' own windows (dialogs): one look, set here (1.59) ----------
+   Links, Info, Cards and Tasks use these for their windows' corners, shadow and the dimmed page behind. Change them here
+   and every window follows (Home's frosted sheets have their own glass look). */
+:root{--ix-win-radius:16px;--ix-win-shadow:0 24px 70px rgba(0,0,0,.5);--ix-win-dim:rgba(0,0,0,.62)}
+:root[data-theme="light"]{--ix-win-shadow:0 24px 70px rgba(0,0,0,.18);--ix-win-dim:rgba(20,20,20,.42)}
