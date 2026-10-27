@@ -707,8 +707,9 @@ function renderCategory(t, cat, q, multi) {
     }
     ul.append(li = h('li', { class: 'row', 'data-i': i }, dragHandle(),
       h('a', { class: 'main', href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url, 'data-u': t.encrypted ? null : l.url },
-        linkIcon(l, t.encrypted), h('span', { class: 't' }, l.title), t.encrypted ? null : visitBadge(l.url)),
+        linkIcon(l, t.encrypted), h('span', { class: 't' }, l.title)),
       (l.extra || []).map(x => h('a', { class: 'extra', href: safeUrl(x.url), target: '_blank', rel: 'noopener noreferrer', title: x.url, 'data-u': t.encrypted ? null : x.url }, x.title)),
+      t.encrypted ? null : visitBadge(l.url),   // at the end of the row, so the numbers line up (1.53.8)
       h('div', { class: 'ctrl' },
         ib('up', 'Move up', () => move(cat.links, i, -1) && persist('Moved')),
         ib('down', 'Move Down', () => move(cat.links, i, 1) && persist('Moved')),
@@ -734,7 +735,7 @@ const fmtVisits = n => n >= 10000 ? Math.round(n / 1000) + 'k' : n >= 1000 ? (n 
 function visitBadge(url) {
   const n = (S.visits || {})[url] | 0;
   if (!showVisits() || !n) return null;
-  return h('span', { class: 'vc', title: `Opened ${n} time${n === 1 ? '' : 's'}`, 'aria-label': `${n} visit${n === 1 ? '' : 's'}` }, fmtVisits(n));
+  return h('span', { class: 'vc', 'data-vu': url, title: `Opened ${n} time${n === 1 ? '' : 's'}`, 'aria-label': `${n} visit${n === 1 ? '' : 's'}` }, fmtVisits(n));
 }
 function countVisit(a) {
   const url = a.dataset.u; if (!url || S.editing) return;
@@ -744,7 +745,11 @@ function countVisit(a) {
     .then(r => r.json()).then(j => {
       if (!j || !j.counted || !S.auth || !j.count) return;
       S.visits[url] = j.count;
-      document.querySelectorAll('a.main[data-u]').forEach(m => { if (m.dataset.u !== url) return; const old = m.querySelector('.vc'), b = visitBadge(url); if (old) old.remove(); if (b) m.append(b); });
+      document.querySelectorAll('a.main[data-u]').forEach(m => {
+        if (m.dataset.u !== url) return;
+        const row = m.closest('.row'), old = row.querySelector('.vc'), b = visitBadge(url);
+        if (old) old.remove(); if (b) { const c = row.querySelector('.ctrl'); c ? row.insertBefore(b, c) : row.append(b); }
+      });
     }).catch(() => {});
 }
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('.links a[data-u]'); if (a) countVisit(a); });

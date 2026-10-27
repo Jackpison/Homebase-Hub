@@ -104,8 +104,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .orow button{background:none;border:1px solid var(--border2);color:var(--fg);border-radius:8px;width:34px;height:30px;cursor:pointer;margin-left:6px}
 .orow button:disabled{opacity:.3;cursor:default}
 #odlg{max-height:90vh;overflow:auto}
-.f.tb{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
-.f.tb button{font:inherit;border-radius:10px;padding:9px 14px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--fg)}
 .msort{display:none;margin-bottom:12px;color:var(--mute);font-size:13px}
 .msort select{background:var(--panel);color:var(--fg);border:1px solid var(--border2);border-radius:10px;padding:8px;font:inherit;margin-left:6px}
 .empty{padding:28px;text-align:center;color:var(--mute)}
@@ -174,3 +172,27 @@ dialog p{color:var(--mute);margin:0 0 6px}
 .hadd{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 .hnone{margin:4px 0 0!important}
 #hmsg{min-height:1em;margin-top:10px;color:var(--c-exp)}
+/* Cards Settings (1.53.8): the same as Links and Info Settings. Sections, then a name and a line of help on the left, its button or choice on the right */
+#tdlg{width:min(520px,calc(100% - 28px))}
+#tdlg h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:20px 0 8px}
+#tdlg h2+h3{margin-top:4px}
+#tdlg .f label{font-size:13px}
+#tdlg .f input,#tdlg .srow select{background:color-mix(in srgb,var(--fg) 5%,var(--panel));border-color:color-mix(in srgb,var(--fg) 14%,var(--panel))}
+#tdlg .f input:focus,#tdlg .srow select:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 55%,var(--panel))}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;font-size:15px;line-height:1.4;color:var(--fg)}
+.srow>span,.srow>label{flex:1;min-width:0}
+.srow small{display:block;margin-top:2px;font-size:13px;color:var(--mute)}
+.srow button{flex:none;font:inherit;font-size:14px;font-weight:700;border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--fg)}
+.srow button:hover{background:var(--hover)}
+.srow select{flex:none;color:var(--fg);border:1px solid var(--border2);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px}
+@media (max-width:480px){.srow{flex-wrap:wrap}.srow select{width:100%}}
+/* Banks (1.53.8): a name and a link per bank, like Holders */
+#bdlg{width:min(600px,calc(100% - 28px))}
+.blist{display:flex;flex-direction:column;gap:8px;margin:14px 0 0;max-height:52vh;overflow:auto;padding:2px}
+.brow{display:grid;grid-template-columns:1fr 1.4fr auto;gap:10px;align-items:center}
+.brow input{min-width:0;background:var(--bg);color:var(--fg);border:1px solid var(--border2);border-radius:10px;padding:10px;font:inherit;font-size:15px}
+#bmsg{min-height:1em;margin-top:10px;color:var(--c-exp)}
+@media (max-width:520px){.brow{grid-template-columns:1fr auto}.brow input[data-bf=url]{grid-column:1/-1;grid-row:2}}
+/* Holders and Banks: a clean border on the field you are typing in (the list's edge cut the outline off) */
+.hlist{padding:2px}
+.hrow input:focus-visible,.hadd input:focus-visible,.brow input:focus-visible,.hrow input:focus,.hadd input:focus,.brow input:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 60%,var(--panel));box-shadow:0 0 0 3px color-mix(in srgb,var(--fg) 12%,transparent)}

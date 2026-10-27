@@ -191,7 +191,7 @@ story += chapter('7', 'Cards', 'Your cards in one table, or grouped by holder, w
  table(['Column', 'What it shows'], [['Card', 'The card\'s name, with its bank and your remark under it. Both are linked to their pages where known.'], ['Holder', 'Whose card it is (in Table).'],
    ['Limit', 'The credit limit.'], ['Charges', 'The yearly fee, or Free. A fee is amber.'], ['Expiry', 'Month and year. Amber when it expires within 3 months, red once it has expired.'], ['Details', 'Network and variant, the base (LTF, FD or Paid), and Debit for a debit card.']]),
  P('%s (the default) shows every card together. %s gives each person a section with their totals; click a heading to fold it. Use the search box, the holder buttons, or %s for bank, network and type. Click a row to edit the card.' % (C('Table'), C('By Holder'), C('More Filters'))),
- P('Press the pencil and choose Edit This Page: the bar at the bottom has %s, %s (add, rename or delete the people the cards belong to), %s, %s and %s. %s (for Excel and PDF) is inside Cards Settings.' % (C('Add Card'), C('Holders'), C('Edit Banks'), C('Export'), C('Cards Settings'), C('Column Order'))),
+ P('Press the pencil and choose Edit This Page: the bar at the bottom has %s, %s (add, rename or delete the people the cards belong to), %s (rename a bank or set the link it opens), %s and %s. %s (for Excel and PDF) is inside Cards Settings.' % (C('Add Card'), C('Holders'), C('Banks'), C('Export'), C('Cards Settings'), C('Column Order'))),
  Note('No card data is sent to a browser until you are logged in. Deleting cards always keeps an earlier version first, so a delete can be undone from Backup and Restore.'))
 
 story += chapter('8', 'Tasks', 'Bills, renewals and chores: anything with a due date.',

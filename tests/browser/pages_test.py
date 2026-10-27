@@ -118,7 +118,7 @@ try:
             return pg.evaluate("[...document.querySelectorAll('[data-hub=item]')].map((e, i) => [+(e.dataset.hubOrder || 0), i, e.dataset.hubLabel]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(x => x[2])")
         want = {'links': ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings'], 'info': ['Export', 'Info Settings'],
                 'tasks': ['Add Task', 'Spreadsheet (CSV)', 'Calendar File (.ics)', 'Print or PDF', 'Tasks Settings'],
-                'cards': ['Add Card', 'Holders', 'Edit Banks', 'PDF (print)', 'Excel Spreadsheet', 'Cards Settings']}
+                'cards': ['Add Card', 'Holders', 'Banks', 'PDF (print)', 'Excel Spreadsheet', 'Cards Settings']}
         got = {k: items(k) for k in want}
         check('P10 the pencil menus: Links (Colors, Fetch Icons, Import Bookmarks, Links Settings), Info, Tasks and Cards name their own settings', got == want, got)
         pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.evaluate("localStorage.removeItem('cards-view'); localStorage.removeItem('cards-fold')")
@@ -340,7 +340,7 @@ try:
             return ep.evaluate("[...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)")
         def ebar(): return ep.evaluate("(() => { const e = document.getElementById('ix-ebar'); return e && !e.hidden ? [...e.querySelectorAll('.ix-eb')].map(b => b.getAttribute('aria-label')) : null })()")
         want = {'links': ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings', 'Done'], 'info': ['Export', 'Info Settings', 'Done'],
-                'cards': ['Add Card', 'Holders', 'Edit Banks', 'Export', 'Cards Settings', 'Done'], 'tasks': ['Add Task', 'Export', 'Tasks Settings', 'Done']}
+                'cards': ['Add Card', 'Holders', 'Banks', 'Export', 'Cards Settings', 'Done'], 'tasks': ['Add Task', 'Export', 'Tasks Settings', 'Done']}
         menus, bars, old, done = {}, {}, {}, {}
         for app in want:
             menus[app] = emenu(app)
@@ -435,6 +435,48 @@ try:
         rows_ok = lambda r: [x[:2] for x in r[1]] == [['Text Sizes', 'BUTTON'], ['Edit Bar', 'SELECT']] and r[1][0][2] == 'Change' and r[1][0][3] < 200
         check('P58 Links and Info Settings: a Look section with Text Sizes (a small Change button) and Edit Bar side by side with their help; Tasks Settings: General, When the Page Opens and Look, with Edit Bar in Look',
               rows_ok(ls_) and rows_ok(is_) and 'Look' in ls_[0] and 'Look' in is_[0] and tl == ['General', 'When the Page Opens', 'Look'] and lookhas, (ls_, is_, tl, lookhas))
+        # P60-P62 (1.53.8): the login window; Cards Settings like Links and Info; the Banks window and its own icon
+        lctx2 = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); lctx2.route('**/*', handle)
+        lp2 = lctx2.new_page(); lp2.goto(B + '/web/links/', wait_until='domcontentloaded'); until(lambda: lp2.evaluate("!!(window.HUB && HUB.state().admin === false)"), 15000)
+        lp2.evaluate("setTimeout(() => HUB.login(), 0); 0"); lp2.wait_for_selector('#ix-dlg.open #ix-pw', timeout=5000)
+        lw = lp2.evaluate("""(() => { const d = document.getElementById('ix-dlg'); return [!!d.querySelector('.ix-llogo'), d.querySelector('h2').textContent, !/Welcome!/.test(d.textContent),
+          !document.getElementById('ix-ltrust').checked, document.getElementById('ix-lg').offsetWidth >= document.getElementById('ix-pw').offsetWidth - 2] })()""")
+        lp2.fill('#ix-pw', 'not the password'); lp2.click('#ix-eye'); shownpw = lp2.evaluate("[document.getElementById('ix-pw').type, document.getElementById('ix-eye').getAttribute('aria-pressed')]")
+        lp2.click('#ix-eye'); hiddenpw = lp2.evaluate("document.getElementById('ix-pw').type")
+        lp2.click('#ix-lg'); until(lambda: lp2.evaluate("document.getElementById('ix-le').textContent.length > 0"), 8000)
+        lerr = lp2.evaluate("(() => { const e = document.getElementById('ix-le'), f = document.getElementById('ix-pw'); return [e.textContent, e.getBoundingClientRect().top > f.getBoundingClientRect().bottom, e.getBoundingClientRect().top < document.getElementById('ix-lg').getBoundingClientRect().top] })()")
+        lctx2.close()
+        check('P60 the login window shows the site logo and "Log In to <site name>", a password you can show and hide, a wide Log In button, a wrong password\'s message right under the field, and Trust This Browser not ticked',
+              lw[0] and lw[1].startswith('Log In to ') and lw[2] and lw[3] and lw[4] and shownpw == ['text', 'true'] and hiddenpw == 'password' and lerr[0] and lerr[1] and lerr[2], (lw, shownpw, hiddenpw, lerr))
+        cctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); cctx.add_cookies(cookies); cctx.route('**/*', handle); cp = cctx.new_page(); cerr = []; cp.on('pageerror', lambda e: cerr.append(str(e)[:200]))
+        cp.goto(B + '/web/cards/', wait_until='domcontentloaded'); cp.wait_for_selector('#list .row.item', timeout=15000); settle(cp)
+        cp.click('#ix-editb'); until(lambda: cp.evaluate("!!document.querySelector('#ix-pop')"), 3000); cp.click('#ix-pop button'); until(lambda: cp.evaluate("!!document.getElementById('ix-ebar') && !document.getElementById('ix-ebar').hidden"), 5000)
+        icons = cp.evaluate("[...document.querySelectorAll('#ix-ebar .ix-eb')].map(b => [b.getAttribute('aria-label'), b.querySelector('path').getAttribute('d')])")
+        idict = dict(icons)
+        cp.click('#ix-ebar [data-tip="Cards Settings"]'); until(lambda: cp.evaluate("document.getElementById('tdlg').open"), 5000)
+        cs = cp.evaluate("[[...document.querySelectorAll('#tdlg h3')].map(h => h.textContent), [...document.querySelectorAll('#tdlg .srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName])]")
+        cp.evaluate("document.getElementById('tdlg').close()")
+        banks_of = lambda: cp.evaluate("[...new Set([...document.querySelectorAll('#list .row.item')].map(r => r.textContent))].join('|')")
+        cp.click('#ix-ebar [data-tip="Banks"]'); until(lambda: cp.evaluate("document.getElementById('bdlg').open"), 5000)
+        brows = cp.evaluate("[...document.querySelectorAll('#blist .brow')].map(r => [r.querySelector('[data-bf=name]').value, r.querySelector('.hn').textContent])")
+        cp.fill('#blist .brow:first-child [data-bf=name]', 'Lakeside Bank'); cp.click('#bcancel'); cp.wait_for_timeout(300)
+        kept = 'Lakeside Bank' not in banks_of()
+        cp.click('#ix-ebar [data-tip="Banks"]'); until(lambda: cp.evaluate("document.getElementById('bdlg').open"), 5000)
+        old = brows[0][0]
+        cp.fill('#blist .brow:first-child [data-bf=name]', 'Lakeside Bank'); cp.fill('#blist .brow:first-child [data-bf=url]', 'not a link'); cp.click('#bsave'); cp.wait_for_timeout(300)
+        badlink = cp.evaluate("[document.getElementById('bdlg').open, document.getElementById('bmsg').textContent]")
+        cp.fill('#blist .brow:first-child [data-bf=url]', 'https://lakeside.example/'); cp.click('#bsave'); until(lambda: not cp.evaluate("document.getElementById('bdlg').open"), 5000); settle(cp)
+        renamed = banks_of(); link = cp.evaluate("[...document.querySelectorAll('#list a[href]')].some(a => a.href === 'https://lakeside.example/')")
+        cp.click('#ix-ebar [data-tip="Banks"]'); until(lambda: cp.evaluate("document.getElementById('bdlg').open"), 5000)
+        cp.fill('#blist .brow:first-child [data-bf=name]', old); cp.fill('#blist .brow:first-child [data-bf=url]', ''); cp.click('#bsave'); until(lambda: not cp.evaluate("document.getElementById('bdlg').open"), 5000)
+        cp.click('#ix-ebar [data-tip="Holders"]'); until(lambda: cp.evaluate("document.getElementById('hdlg').open"), 5000); cp.focus('#hlist input')
+        ring = cp.evaluate("(() => { const s = getComputedStyle(document.querySelector('#hlist input')); return [s.outlineStyle, s.borderColor] })()"); cp.click('#hcancel')
+        cctx.close()
+        check('P61 Cards Settings looks like Links and Info: Page, then Look with Text Sizes, Edit Bar and Column Order rows',
+              cs == [['Page', 'Look'], [['Text Sizes', 'BUTTON'], ['Edit Bar', 'SELECT'], ['Column Order', 'BUTTON']]], cs)
+        check('P62 Cards: Banks has its own icon (not Add Card\'s) and one window like Holders: every bank with its cards, a rename moves the cards, a link is kept, a wrong link is refused, Cancel changes nothing; a holder\'s name box gets a clean border, not a cut-off outline',
+              idict.get('Banks') and idict.get('Banks') != idict.get('Add Card') and brows and all(x[1].endswith('card') or x[1].endswith('cards') for x in brows) and kept
+              and badlink[0] and 'https://' in badlink[1] and 'Lakeside Bank' in renamed and old not in renamed and link and ring[0] == 'none' and not cerr, (icons, brows, kept, badlink, link, ring, cerr))
         # P47: Home's refresh button (1.53). The next background is ready, so a press swaps at once; three quick presses on a slow
         # network give one change (it never starts over); when nothing arrives it gives up within about 20 s and the button works again.
         rctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx.route('**/*', handle); rctx.add_init_script(TRACK_REQUESTS)
@@ -523,7 +565,8 @@ try:
         vctx2.close()
         octx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); octx.add_cookies(cookies); octx.route('**/*', handle); octx.add_init_script(TRACK_REQUESTS)
         op2 = octx.new_page(); op2.goto(B + '/web/links/', wait_until='domcontentloaded'); op2.wait_for_selector('a.main[data-u]', timeout=10000); settle(op2)
-        shown = op2.evaluate("[...document.querySelectorAll('a.main')].map(a => (a.querySelector('.vc') || {}).textContent || '')")
+        shown = op2.evaluate("[...document.querySelectorAll('a.main')].map(a => (a.closest('.row').querySelector('.vc') || {}).textContent || '')")
+        vpos = op2.evaluate("[...document.querySelectorAll('.row .vc')].map(v => { const r = v.closest('.row').getBoundingClientRect(), b = v.getBoundingClientRect(); return [v.parentElement.classList.contains('row'), !v.closest('a'), Math.round(r.right - b.right)] })")
         subprocess.run(['php', '-r', "require '%s/web/hub/core/lib/boot.php'; $f = hub_dir('links') . '/bookmarks.php'; $d = hub_read_guarded($f); $d['settings']['visitCounts'] = false; hub_write_guarded($f, $d);" % D], check=True)
         op2.reload(wait_until='domcontentloaded'); op2.wait_for_selector('a.main[data-u]', timeout=10000); settle(op2)
         op2.evaluate("document.querySelector('a.main[data-u]').addEventListener('click', e => e.preventDefault(), { once: true })")
@@ -531,6 +574,8 @@ try:
         after_off = rv.value.json()
         hidden = op2.evaluate("document.querySelectorAll('.vc').length")
         octx.close()
+        check('P59 a visit count sits at the end of its row (not inside the link, beside the name), lined up with the others (1.53.8)',
+              vpos and all(x[0] and x[1] and 0 <= x[2] <= 16 for x in vpos), vpos)
         check('P46 Links visit counts: a visitor\'s click counts (no number shown to them); you see it; Show Visit Counts off hides the numbers and your clicks still count',
               'example.org' in ''.join(sent) and vis_badge == 0 and shown[:1] == ['1'] and after_off.get('counted') is True and after_off.get('count') == 2 and hidden == 0, (sent[:1], vis_badge, shown, after_off, hidden))
         b.close()

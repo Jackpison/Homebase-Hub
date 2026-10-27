@@ -58,6 +58,8 @@
     copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
     down: 'M12 5v14M6 13l6 6 6-6',
     eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+    eyeoff: 'M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6',
+    bank: 'M3 10l9-6 9 6M5 10v8M10 10v8M14 10v8M19 10v8M3 21h18',
     pages: 'M4 5h7v7H4zM13 5h7v4h-7zM13 11h7v8h-7zM4 14h7v5H4z',
     edit: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
     check: 'M5 12l5 5L20 7',
@@ -936,12 +938,22 @@
       if (loginWait) loginWait.reject();
       loginWait = { resolve: res, reject: rej };
       if (S.setup) return setupForm();
-      openDlg('<div class="ix-ico">' + svg(ICON.lock) + '</div><h2>Welcome!</h2>' +
-        (reason ? '<p>' + esc(reason) + '</p>' : '') +
-        '<form id="ix-lf"><label for="ix-pw">Password</label><input type="password" id="ix-pw" autocomplete="current-password" autofocus>' +
+      /* 1.53.8: the site's logo and name, a password that can be shown, one wide Log In button. Trust This Browser starts off. */
+      openDlg('<div class="ix-lhead"><img class="ix-llogo" alt="" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '">' +
+        '<h2>Log In to ' + esc(S.siteName || 'Homebase Hub') + '</h2><p>' + esc(reason || 'Your website password opens editing and your private pages.') + '</p></div>' +
+        '<form id="ix-lf"><label for="ix-pw">Password</label><div class="ix-pwrap"><input type="password" id="ix-pw" autocomplete="current-password" autofocus>' +
+          '<button type="button" class="ix-eye" id="ix-eye" aria-label="Show Password" aria-pressed="false" title="Show Password">' + svg(ICON.eye) + '</button></div>' +
         '<div id="ix-2s" hidden><label for="ix-code">Code from Your Authenticator App</label><input type="text" id="ix-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456 or a recovery code">' +
-          '<label class="ix-chk"><input type="checkbox" id="ix-ltrust" checked> Trust this browser for 30 days (no code here next time)</label></div>' +
-        '<p class="ix-err" id="ix-le"></p><div class="ix-acts"><button type="button" class="ix-btn" data-ix="close">Cancel</button><button class="ix-btn pri" id="ix-lg">Log In</button></div></form>');
+          '<label class="ix-chk"><input type="checkbox" id="ix-ltrust"> Trust this browser for 30 days (no code here next time)</label></div>' +
+        '<p class="ix-err" id="ix-le" role="alert"></p><button class="ix-btn pri ix-wide" id="ix-lg">Log In</button>' +
+        '<button type="button" class="ix-btn ix-quiet" data-ix="close">Cancel</button></form>');
+      dlg.querySelector('.ix-box').classList.add('ix-login');
+      $('#ix-eye').onclick = function () {
+        var on = $('#ix-pw').type === 'password';
+        $('#ix-pw').type = on ? 'text' : 'password'; this.innerHTML = svg(on ? ICON.eyeoff : ICON.eye);
+        this.setAttribute('aria-pressed', String(on)); this.setAttribute('aria-label', on ? 'Hide Password' : 'Show Password'); this.title = this.getAttribute('aria-label');
+        $('#ix-pw').focus();
+      };
       $('#ix-lf').onsubmit = function (e) {
         e.preventDefault();
         var b = $('#ix-lg'); b.disabled = true; $('#ix-le').textContent = '';
@@ -949,7 +961,7 @@
         api('login', { password: pw, code: $('#ix-code').value, trust: twoStep && $('#ix-ltrust').checked }).then(function (j) {
           b.disabled = false;
           if (j.ok) return loggedIn(pw);
-          if (j.approval) return approvalWait(j.approval, pw, !twoStep || $('#ix-ltrust').checked, j.recovery);
+          if (j.approval) return approvalWait(j.approval, pw, twoStep && $('#ix-ltrust').checked, j.recovery);
           if (j.setup) { S.setup = true; return setupForm(); }
           if (j.need2fa) { $('#ix-2s').hidden = false; $('#ix-code').focus(); }
           $('#ix-le').textContent = j.error || 'Could not log in.';
@@ -992,7 +1004,7 @@
     openDlg('<div class="ix-ico">' + svg(ICON.lock) + '</div><h2>Approve in Telegram</h2>' +
       '<p>Your bot sent a message. Tap <b>Approve</b> there and this page logs in by itself.</p>' +
       '<div class="ix-apw"><span class="ix-spin" aria-hidden="true"></span><span id="ix-apt" aria-live="polite">Waiting… 5:00</span></div>' +
-      '<label class="ix-chk"><input type="checkbox" id="ix-trust"' + (trust === false ? '' : ' checked') + '> Trust this browser for 30 days (no code or tap here next time)</label>' +
+      '<label class="ix-chk"><input type="checkbox" id="ix-trust"' + (trust === true ? ' checked' : '') + '> Trust this browser for 30 days (no code or tap here next time)</label>' +
       (rc ? '<details class="ix-apc"><summary>No phone? Use a recovery code instead</summary>' +
         '<form id="ix-apf"><label for="ix-apcode">One of your two-step recovery codes</label>' +
         '<input type="text" id="ix-apcode" autocomplete="one-time-code" spellcheck="false" placeholder="ABCDE-FGHJK"><button class="ix-btn" id="ix-apgo">Use Code</button></form></details>' : '') +

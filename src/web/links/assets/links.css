@@ -93,7 +93,7 @@ body.editing:not(.searching) .row a.main{cursor:grab}
 .row:hover{background:var(--hover)}
 .row>a.main{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:10px;padding:5px 8px}
 .row .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .vc{flex:none;font-size:.7em;font-weight:600;line-height:1;padding:3px 6px;border-radius:999px;color:var(--muted);background:color-mix(in srgb,var(--muted) 16%,transparent);font-variant-numeric:tabular-nums}
+.row .vc{flex:none;margin:0 8px 0 auto;font-size:.7em;font-weight:600;line-height:1;padding:3px 6px;border-radius:999px;color:var(--muted);background:color-mix(in srgb,var(--muted) 16%,transparent);font-variant-numeric:tabular-nums}
 .row a.main:hover .t{color:var(--strong)}
 .ico{width:16px;height:16px;flex:none;border-radius:3px;display:grid;place-items:center;font-size:10px;font-weight:600;background:var(--line);color:var(--muted);overflow:hidden}
 .ico.has{background:none}
@@ -270,3 +270,6 @@ body.is-locked .search{display:none}
 .srow select{background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:8px 10px;outline:none}
 .srow select:focus{border-color:var(--accent)}
 @media (max-width:480px){.srow{flex-wrap:wrap}.srow select{width:100%}}
+
+/* the visit count sits at the end of the row (1.53.8); the edit buttons then follow it */
+.row .vc~.ctrl{margin-left:0}

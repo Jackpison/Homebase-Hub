@@ -409,3 +409,21 @@ html[data-ix-ebar] [data-hub-ebar]{display:none!important}
 body.boxedit #ix-ebar{display:none}
 @media (max-width:640px){#ix-ebar.ix-ebar-text .ix-ebl{display:none}#ix-ebar.ix-ebar-text .ix-eb:not(.ix-ebdone){padding:0}}
 @media (prefers-reduced-motion:reduce){#ix-ebar{animation:none}}
+
+/* ---------- the login window (1.53.8): the site's logo and name, a password you can show, one wide Log In button ---------- */
+#ix-dlg .ix-box.ix-login{width:min(400px,100%);padding:30px 28px 22px}
+#ix-dlg .ix-lhead{text-align:center;margin-bottom:6px}
+#ix-dlg .ix-llogo{display:block;width:64px;height:64px;border-radius:16px;object-fit:cover;margin:0 auto 14px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+#ix-dlg .ix-lhead h2{font-size:21px;margin:0 0 6px}
+#ix-dlg .ix-lhead p{margin:0 auto 4px;max-width:30ch}
+#ix-dlg .ix-pwrap{position:relative}
+#ix-dlg .ix-pwrap input{padding-right:48px}
+#ix-dlg .ix-eye{position:absolute;top:4px;right:4px;width:36px;height:36px;border:0;border-radius:8px;background:none;color:var(--ix-mu);display:grid;place-items:center;cursor:pointer}
+#ix-dlg .ix-eye:hover{color:var(--ix-tx);background:var(--ix-s2)}
+#ix-dlg .ix-eye svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ix-dlg .ix-login .ix-err{margin:8px 0 4px}
+#ix-dlg .ix-login .ix-err:empty{min-height:4px}
+#ix-dlg .ix-btn.ix-wide{width:100%;height:46px;justify-content:center;font-size:15.5px;margin-top:8px}
+#ix-dlg .ix-btn.ix-quiet{width:100%;justify-content:center;margin-top:6px;border-color:transparent;background:none;color:var(--ix-mu)}
+#ix-dlg .ix-btn.ix-quiet:hover{color:var(--ix-tx);border-color:transparent}
+@media (max-width:700px){#ix-dlg .ix-box.ix-login{width:100%}}

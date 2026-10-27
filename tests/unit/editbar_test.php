@@ -23,3 +23,6 @@ foreach (['home/index.php', 'links/index.html', 'info/index.html', 'cards/index.
     t("$f: its Settings has the Edit Bar choice, saved with its Save button, and its Settings item stays in the pencil menu",
       substr_count($h, 'data-ix-editbar') === 1 && substr_count($h, 'data-ix-save') === 1 && substr_count($h, 'data-hub-main') === 1);
 }
+// 1.53.8: Trust This Browser starts unticked, also on the "Approve in Telegram" step (the browser test sees only the code step)
+t('Trust This Browser is never ticked by itself (code step and Approve in Telegram)', strpos($js, '<input type="checkbox" id="ix-ltrust">') !== false
+  && strpos($js, "(trust === true ? ' checked' : '')") !== false && strpos($js, 'approvalWait(j.approval, pw, twoStep && $(\'#ix-ltrust\').checked') !== false);

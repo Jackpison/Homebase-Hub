@@ -49,7 +49,7 @@
           <button data-a="holders" data-hub="item" data-hub-label="Holders" data-hub-icon="user" data-hub-order="2">Holders</button>
           <hr>
           <span class="ph">Change</span>
-          <button data-a="editbank" data-hub="item" data-hub-label="Edit Banks" data-hub-icon="card" data-hub-order="11">Edit Banks</button>
+          <button data-a="editbank" data-hub="item" data-hub-label="Banks" data-hub-icon="bank" data-hub-order="11">Banks</button>
           <hr>
           <button data-a="title" data-hub="item" data-hub-main data-hub-label="Cards Settings" data-hub-icon="gear" data-hub-order="50" data-hub-sep>Cards Settings</button>
           <hr>
@@ -141,24 +141,26 @@
 
 <dialog id="tdlg">
   <h2>Cards Settings</h2>
+  <h3>Page</h3>
   <div class="f">
     <label class="w">Page Title<input id="ttl" maxlength="60"></label>
-    <label class="w">Edit Bar<select id="teditbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></label>
   </div>
-  <p>Edit Bar: the bar at the bottom while you edit this page. Icons Only shows each name when you point at it. Phones always show icons.</p>
-  <div class="f tb"><button type="button" id="tsizes" data-hub-action="sizes">Change Text Sizes</button><button type="button" id="tcols">Column Order for Excel and PDF</button></div>
+  <h3>Look</h3>
+  <div class="srow"><span>Text Sizes<small>Make the card titles, boxes and text bigger or smaller.</small></span><button type="button" id="tsizes" data-hub-action="sizes">Change</button></div>
+  <div class="srow"><label for="teditbar">Edit Bar<small>The bar at the bottom while you edit. Icons Only shows each name when you point at it; phones always show icons.</small></label>
+    <select id="teditbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></div>
+  <div class="srow"><span>Column Order<small>Which columns the Excel and PDF exports have, and in what order.</small></span><button type="button" id="tcols">Change</button></div>
   <div class="act"><button type="button" id="tcancel">Cancel</button><button type="button" class="pri" id="tsave" data-ix-save>Save</button></div>
 </dialog>
 
 <dialog id="bdlg">
-  <h2>Edit Bank</h2>
-  <div class="f">
-    <label class="w">Bank<select id="bsel"></select></label>
-    <label class="w">Bank Name<input id="bname"></label>
-    <label class="w">Website Link<input id="burl" inputmode="url" placeholder="https://…"></label>
-  </div>
-  <p id="bmsg">Leave the link blank to use the default one.</p>
-  <div class="act"><button type="button" id="bcancel">Cancel</button><button type="button" class="pri" id="bsave">Save Changes</button></div>
+  <form method="dialog" id="bform">
+    <h2>Banks</h2>
+    <p>Every bank your cards use. Rename one here (its cards follow), or give it the link its name opens. Leave a link empty for the usual one.</p>
+    <div class="blist" id="blist"></div>
+    <p id="bmsg" role="status"></p>
+    <div class="act"><button type="button" id="bcancel">Cancel</button><button type="submit" class="pri" id="bsave">Save</button></div>
+  </form>
 </dialog>
 
 <script src="assets/cards.js?v=1.53.6"></script>

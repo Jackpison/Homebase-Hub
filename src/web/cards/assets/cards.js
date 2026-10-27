@@ -421,31 +421,34 @@ function exportPdf(){
   window.print();
 }
 
-/* edit bank */
-const bdlg=$("bdlg");
-function fillBank(){
-  const n=$("bsel").value,k=nk(n);
-  $("bname").value=n;$("burl").value=B[k]||"";$("burl").placeholder=BANK_URL[k]||"https://…";
-  $("bmsg").textContent="Leave the link blank to use the default one.";
+/* Banks (1.53.8: one window, like Holders). Banks come from the cards; changes are made on a copy and kept only with Save. */
+const bdlg=$("bdlg");let BD=[];   // [{was, name, url}]
+function drawBanks(){
+  $("blist").innerHTML=BD.map((b,i)=>{const n=D.filter(c=>c.bank===b.was).length;
+    return `<div class="brow"><input data-bi="${i}" data-bf="name" value="${esc(b.name)}" maxlength="60" aria-label="Bank name">`+
+      `<input data-bi="${i}" data-bf="url" value="${esc(b.url)}" inputmode="url" placeholder="${esc(BANK_URL[nk(b.was)]||"https://…")}" aria-label="Website link for ${esc(b.name)}">`+
+      `<span class="hn">${n===1?"1 card":n+" cards"}</span></div>`}).join("");
 }
 function openBank(){
-  const banks=[...new Set(D.map(c=>c.bank))].sort((a,b)=>a.localeCompare(b));
-  if(!banks.length)return;
-  $("bsel").innerHTML=banks.map(b=>`<option>${esc(b)}</option>`).join("");
-  fillBank();bdlg.showModal();
+  const banks=[...new Set(D.map(c=>c.bank).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  if(!banks.length){(window.HUB?HUB.toast:status)("Banks come from your cards. Add a card first.");return}
+  BD=banks.map(b=>({was:b,name:b,url:B[nk(b)]||""}));drawBanks();$("bmsg").textContent="";bdlg.showModal();
 }
-$("bsel").onchange=fillBank;
+$("blist").addEventListener("input",e=>{const x=e.target.closest("[data-bi]");if(x){BD[+x.dataset.bi][x.dataset.bf]=x.value;$("bmsg").textContent=""}});
 $("bcancel").onclick=()=>bdlg.close();
-$("bsave").onclick=()=>{
-  const old=$("bsel").value,nn=$("bname").value.trim(),raw=$("burl").value.trim();
-  if(!nn){$("bmsg").textContent="Enter a bank name.";return}
-  const u=raw?safeUrl(raw):"";
-  if(raw&&!u){$("bmsg").textContent="Enter a full link starting with https://";return}
-  if(nn!==old)D.forEach(c=>{if(c.bank===old)c.bank=nn});
-  delete B[nk(old)];
-  if(u)B[nk(nn)]=u;
-  persist();render();bdlg.close();
-};
+$("bform").addEventListener("submit",e=>{
+  const names=BD.map(b=>b.name.trim()),low=names.map(n=>n.toLowerCase());
+  const bad=names.findIndex(n=>!n),dup=low.findIndex((n,i)=>low.indexOf(n)!==i);
+  if(bad>=0||dup>=0){e.preventDefault();$("bmsg").textContent=bad>=0?"A bank needs a name.":`${names[dup]} is there twice.`;return}
+  const urls=BD.map(b=>b.url.trim()),wrong=urls.findIndex(u=>u&&!safeUrl(u));
+  if(wrong>=0){e.preventDefault();$("bmsg").textContent=`${names[wrong]}: enter a full link starting with https://`;return}
+  BD.forEach((b,i)=>{
+    if(names[i]!==b.was)D.forEach(c=>{if(c.bank===b.was)c.bank=names[i]});
+    delete B[nk(b.was)];
+    if(urls[i])B[nk(names[i])]=safeUrl(urls[i]);
+  });
+  persist();render();
+});
 
 /* reorder columns */
 const odlg=$("odlg");let wo=[];
