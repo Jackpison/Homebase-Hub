@@ -477,7 +477,7 @@ try:
         check('P62 Cards: Banks has its own icon (not Add Card\'s) and one window like Holders: every bank with its cards, a rename moves the cards, a link is kept, a wrong link is refused, Cancel changes nothing; a holder\'s name box gets a clean border, not a cut-off outline',
               idict.get('Banks') and idict.get('Banks') != idict.get('Add Card') and brows and all(x[1].endswith('card') or x[1].endswith('cards') for x in brows) and kept
               and badlink[0] and 'https://' in badlink[1] and 'Lakeside Bank' in renamed and old not in renamed and link and ring[0] == 'none' and not cerr, (icons, brows, kept, badlink, link, ring, cerr))
-        # P63-P65 (1.59): swipe gestures on a phone. Real fingers cannot be driven here, so the test sends the same touch events
+        # P63-P65 (1.59, 1.59.1): swipe gestures on a phone. Real fingers cannot be driven here, so the test sends the same touch events
         # a finger sends (Chromium; Firefox and WebKit have no Touch constructor on the desktop, so they skip these three).
         if BROWSER == 'chromium':
             subprocess.run(['php', '-r', "require '%s/web/hub/core/lib/boot.php'; hub_write_guarded(hub_dir('links') . '/bookmarks.php', ['settings' => [], 'tabs' => ["
@@ -493,22 +493,20 @@ try:
             ready = lambda: until(lambda: gp.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000)
             gp.goto(B + '/web/links/', wait_until='domcontentloaded'); ready(); gp.wait_for_selector('#tabs [role=tab]', timeout=10000); settle(gp)
             sel = lambda: gp.evaluate("(document.querySelector('#tabs [role=tab][aria-selected=true]') || {}).textContent || ''")
-            first = sel(); gp.evaluate(SWIPE, [330, 500, 120, 510]); gp.wait_for_timeout(400); second = sel()
-            gp.evaluate(SWIPE, [120, 500, 330, 505]); gp.wait_for_timeout(400); back = sel()
+            first = sel()
             gp.evaluate("document.querySelector('[data-hub=toggle]').click()"); until(lambda: gp.evaluate("document.body.classList.contains('editing')"), 5000)
-            gp.evaluate(SWIPE, [330, 500, 120, 510]); gp.wait_for_timeout(400); while_edit = [sel(), gp.url.endswith('/web/links/') or '/web/links/#' in gp.url]
+            gp.evaluate(SWIPE, [330, 500, 120, 510]); gp.wait_for_timeout(500); while_edit = [sel(), '/web/links/' in gp.url]
             gp.evaluate("document.querySelector('#ix-ebar [data-ix-done]').click()"); gp.wait_for_timeout(300)
-            check('P63 on a phone, swiping left on Links shows the next tab and swiping right the one before; nothing happens while editing',
-                  first.strip().endswith('One') and second.strip().endswith('Two') and back.strip().endswith('One') and while_edit[0].strip().endswith('One') and while_edit[1], (first, second, back, while_edit))
-            gp.evaluate(SWIPE, [330, 500, 120, 510]); gp.wait_for_timeout(300)
-            with gp.expect_navigation(timeout=10000): gp.evaluate(SWIPE, [330, 500, 120, 510])   # past the last tab: the next page
+            with gp.expect_navigation(timeout=10000): gp.evaluate(SWIPE, [330, 500, 120, 510])   # Links has two tabs: the swipe still goes to the next page (1.59.1)
             on_info = '/web/info/' in gp.url; ready(); settle(gp)
+            check('P63 on a phone, swiping left on Links goes straight to the next page (Info), not to its next tab (1.59.1); nothing happens while editing',
+                  first.strip().endswith('One') and while_edit[0].strip().endswith('One') and while_edit[1] and on_info, (first, while_edit, on_info))
             order = gp.evaluate("window.__hubSwipe.pages()")
-            gp.evaluate("(() => { const t = document.querySelector('#tabs [role=tab]'); if (t) t.click() })()"); gp.wait_for_timeout(300)   # Info's first tab
+            gp.evaluate("(() => { const t = [...document.querySelectorAll('#tabs [role=tab]')].pop(); if (t) t.click() })()"); gp.wait_for_timeout(300)   # on Info's last tab, not its first
             with gp.expect_navigation(timeout=10000): gp.evaluate(SWIPE, [60, 520, 330, 515])
             back_links = '/web/links/' in gp.url
-            check('P64 past the last tab a swipe goes to the next page in the bar\'s order (Links to Info), and from Info\'s first tab back to Links; the order leaves Tools and Settings out',
-                  on_info and back_links and order == ['home', 'links', 'info', 'cards', 'tasks'], (on_info, back_links, order))
+            check('P64 swiping right goes to the previous page in the bar\'s order (Info to Links), whichever tab is open; the order leaves Tools and Settings out',
+                  back_links and order == ['home', 'links', 'info', 'cards', 'tasks'], (back_links, order))
             gp.goto(B + '/web/home/', wait_until='domcontentloaded'); ready(); gp.wait_for_selector('#nextBg', timeout=10000); settle(gp)
             gp.evaluate("window.__pulled = 0; document.getElementById('nextBg').addEventListener('click', () => window.__pulled++)")
             gp.evaluate(SWIPE, [195, 200, 200, 420]); gp.wait_for_timeout(300); pulled = gp.evaluate("window.__pulled")
@@ -521,6 +519,22 @@ try:
             desk = [dp.evaluate("(document.querySelector('#tabs [role=tab][aria-selected=true]') || {}).textContent || ''").strip(), '/web/links/' in dp.url]; dctx.close()
             check('P65 Home: pulling down from the top asks for the next background (a short pull does not, and the browser\'s own pull-to-reload is off there); a computer with a mouse has no swipes; no page error',
                   pulled == 1 and small == 1 and overs == 'none' and desk[0].endswith('One') and desk[1] and not gerr, (pulled, small, overs, desk, gerr))
+        # P66 (1.59.1): on an iPhone app the status bar (clock, battery) sits over the page. Chromium can pretend to have one
+        # (a 59 px notch); the bar's buttons must sit below it and stay reachable, and a strip covers it while the bar is slid away.
+        if BROWSER == 'chromium':
+            nctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True); nctx.add_cookies(cookies); nctx.route('**/*', handle)
+            np_ = nctx.new_page(); nctx.new_cdp_session(np_).send('Emulation.setSafeAreaInsetsOverride', {'insets': {'top': 59, 'topMax': 59, 'bottom': 34, 'bottomMax': 34, 'left': 0, 'right': 0}})
+            notch = {}
+            for app in ('settings', 'links', 'tasks'):
+                np_.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); until(lambda: np_.evaluate("!!document.getElementById('ix-bar') && document.readyState === 'complete'"), 15000); settle(np_)
+                notch[app] = np_.evaluate("""(() => { const b = document.getElementById('ix-bar'), btn = [...b.querySelectorAll('button, a')].filter(e => e.offsetParent !== null);
+                  const tops = btn.map(e => e.getBoundingClientRect().top); document.documentElement.classList.add('ix-hide');
+                  const strip = getComputedStyle(document.documentElement, '::before').height; document.documentElement.classList.remove('ix-hide');
+                  return [Math.round(Math.min(...tops)), btn.length, Math.round(parseFloat(getComputedStyle(document.body).paddingTop)), strip] })()""")
+            np_.click('#ix-bar [data-ix="menu"], #ix-bar .ix-menu'); until(lambda: np_.evaluate("!!document.querySelector('#ix-drawer.open, #ix-sheet.open')"), 5000)
+            menu_ok = np_.evaluate("!!document.querySelector('#ix-drawer.open a[href], #ix-sheet.open button')"); nctx.close()
+            check('P66 iPhone app: the bar\'s buttons sit below the status bar (the clock), the page starts below the bar, the menu opens to the other pages, and a strip stays behind the clock while the bar is slid away (1.59.1)',
+                  all(v[0] >= 59 and v[1] >= 3 and v[2] >= 59 + 52 and v[3] == '59px' for v in notch.values()) and menu_ok, (notch, menu_ok))
         # P47: Home's refresh button (1.53). The next background is ready, so a press swaps at once; three quick presses on a slow
         # network give one change (it never starts over); when nothing arrives it gives up within about 20 s and the button works again.
         rctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx.route('**/*', handle); rctx.add_init_script(TRACK_REQUESTS)

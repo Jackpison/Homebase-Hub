@@ -19,7 +19,8 @@
   --ix-dim:color-mix(in srgb,var(--ix-accent) 55%,#000);
   --ix-font:"Trebuchet MS","Lucida Grande","Lucida Sans Unicode",Tahoma,system-ui,sans-serif;
   --ix-field:#1c1c1c;   /* search box: a little lighter than the page surfaces */
-  --ix-top:52px; --ix-side:80px; --ix-dock:58px;
+  --ix-safe-top:env(safe-area-inset-top,0px);   /* an iPhone's status bar and notch, when the site runs as an app (1.59.1) */
+  --ix-top:calc(52px + var(--ix-safe-top)); --ix-side:80px; --ix-dock:58px;
 }
 html[data-theme="light"]{
   --ix-accent-tx:color-mix(in srgb,var(--ix-accent) 45%,#000);
@@ -31,7 +32,7 @@ html[data-theme="light"]{
 }
 /* ---------- room for the bar ---------- */
 html{--ix-top-now:var(--ix-top)}
-html.ix-hide{--ix-top-now:0px}
+html.ix-hide{--ix-top-now:var(--ix-safe-top)}
 html[data-ix-bar][data-ix-nav="top"] body{padding-top:var(--ix-top)!important}
 html[data-ix-bar][data-ix-nav="side"] body{padding-left:var(--ix-side)!important}
 html[data-ix-bar][data-ix-nav="dock"] body{padding-bottom:calc(var(--ix-dock) + 28px)!important}
@@ -79,14 +80,18 @@ html.ix-vt #ix-bar .ix-links a{view-transition-name:none}
 #ix-bar .ix-fbtn svg,#ix-spot .ix-fbtn svg{width:16px;height:16px}
 #ix-bar :focus-visible,#ix-dlg :focus-visible,#ix-pop :focus-visible,#ix-drawer :focus-visible,#ix-sheet :focus-visible{outline:2px solid var(--ix-accent);outline-offset:2px}
 /* ---------- Top Bar: slides away while you scroll down ---------- */
-html[data-ix-nav="top"] #ix-bar{top:0;left:0;right:0;height:var(--ix-top);display:flex;align-items:center;gap:16px;padding:0 16px;
+html[data-ix-nav="top"] #ix-bar{top:0;left:0;right:0;height:var(--ix-top);box-sizing:border-box;display:flex;align-items:center;gap:16px;
+  padding:var(--ix-safe-top) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));   /* the bar's own colour fills the status bar area; its buttons sit below it */
   background:color-mix(in srgb,var(--ix-barbg,var(--ix-bg)) 90%,transparent);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--ix-line);
   transition:transform .26s cubic-bezier(.2,.8,.2,1),box-shadow .26s}
 html.ix-hide[data-ix-nav="top"] #ix-bar{transform:translateY(calc(-100% - 2px))}
+/* On an iPhone app (status bar over the page) a strip in the bar's colour stays behind the clock, also while the bar is slid away,
+   so the page never scrolls under the clock. It is 0 px tall everywhere else. */
+html[data-ix-bar][data-ix-nav="top"]:not([data-ix-app="home"])::before{content:"";position:fixed;z-index:2147482999;top:0;left:0;right:0;height:var(--ix-safe-top);background:var(--ix-barbg,var(--ix-bg));pointer-events:none}
 html[data-ix-nav="top"] .ix-tools{margin-left:0}
 html[data-ix-app="home"][data-ix-nav="top"] #ix-bar{background:color-mix(in srgb,var(--ix-barbg,#000) 55%,transparent);border-color:rgba(255,255,255,.08);color:#f2f2f2}
 /* ---------- Sidebar: a slim rail ---------- */
-html[data-ix-nav="side"] #ix-bar{top:0;bottom:0;left:0;width:var(--ix-side);display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 0 12px;
+html[data-ix-nav="side"] #ix-bar{top:0;bottom:0;left:0;width:var(--ix-side);display:flex;flex-direction:column;align-items:center;gap:4px;padding:max(14px,var(--ix-safe-top)) 0 12px;
   background:var(--ix-barbg,var(--ix-bg));border-right:1px solid var(--ix-line)}
 html[data-ix-nav="side"] #ix-bar .ix-brand{padding:0 0 8px}
 html[data-ix-nav="side"] #ix-bar .ix-logo{width:34px;height:34px;border-radius:9px}
@@ -122,7 +127,7 @@ html[data-ix-app="home"][data-ix-nav="dock"] .ix-pill{background:color-mix(in sr
   background:color-mix(in srgb,var(--ix-barbg,var(--ix-s1)) 95%,transparent)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--ix-line2)!important;box-shadow:0 12px 40px rgba(0,0,0,.5);transition:transform .18s}
 #ix-bar .ix-fab svg{width:21px;height:21px}
 @media (max-width:760px){
-  html[data-ix-nav="top"] #ix-bar{padding:0 6px;gap:2px}
+  html[data-ix-nav="top"] #ix-bar{padding:var(--ix-safe-top) max(6px,env(safe-area-inset-right,0px)) 0 max(6px,env(safe-area-inset-left,0px));gap:2px}
   html[data-ix-nav="top"] .ix-links,html[data-ix-nav="top"] #ix-bar .ix-search,html[data-ix-nav="top"] #ix-bar [data-ix="theme"]{display:none}
   html[data-ix-nav="top"] .ix-menu,html[data-ix-nav="top"] #ix-bar .ix-sbtn{display:grid}
   html[data-ix-nav="top"] .ix-ib{width:44px;height:44px}

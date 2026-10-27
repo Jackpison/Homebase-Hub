@@ -1211,22 +1211,11 @@
   }
   /* ---------- 15. swipe gestures on a phone (1.59) ----------
      - swipe left or right: the next or previous page, in the order of the bar (Home, Links, Info, Cards, Tasks; Tools and
-       Settings are left out: their own screens use sideways moves);
-     - on a page that marks its tab list with data-hub-swipe-tabs (Links, Info): the next or previous tab first, and past the
-       last tab, the next page;
+       Settings are left out: their own screens use sideways moves). 1.59.1: a swipe no longer changes Links' or Info's tabs;
      - Home: pull down from the top for the next background.
      Never while editing, in a window or menu, in a text field, on something that scrolls sideways, or with two fingers. */
   var SWIPE_APPS = ['home', 'links', 'info', 'cards', 'tasks'];
   function swipePages() { return pages().filter(function (p) { return SWIPE_APPS.indexOf(p[0]) >= 0 && (!p[4] || p[0] === APP); }); }
-  function swipeTab(dir) {
-    var list = document.querySelector('[data-hub-swipe-tabs]'); if (!list) return false;
-    var tabs = [].slice.call(list.querySelectorAll('[role="tab"]')).filter(function (t) { return t.offsetParent !== null; });
-    var at = tabs.findIndex(function (t) { return t.getAttribute('aria-selected') === 'true'; });
-    var to = tabs[at + dir];
-    if (at < 0 || !to) return false;
-    to.click(); if (to.scrollIntoView) to.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-    return true;
-  }
   function swipePage(dir) {
     var list = swipePages(), at = list.findIndex(function (p) { return p[0] === APP; }), to = list[at + dir];
     if (at < 0 || !to) return false;
@@ -1258,14 +1247,14 @@
       if (dt > 700 || (window.getSelection && String(window.getSelection()).length)) return;
       if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) {
         var dir = dx < 0 ? 1 : -1;   // a finger moving left brings the next one
-        if (!swipeTab(dir)) swipePage(dir);
+        swipePage(dir);
       } else if (APP === 'home' && top0 && dy > 90 && dy > Math.abs(dx) * 2) {
         var nb = document.getElementById('nextBg'); if (nb && nb.offsetParent !== null) nb.click();
       }
     }, { passive: true });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', swipes); else swipes();
-  window.__hubSwipe = { tab: swipeTab, page: swipePage, pages: function () { return swipePages().map(function (p) { return p[0]; }); }, blocked: swipeBlocked };   // for the tests
+  window.__hubSwipe = { page: swipePage, pages: function () { return swipePages().map(function (p) { return p[0]; }); }, blocked: swipeBlocked };   // for the tests
 
   whenBody(function () { drawBar(); });                 // the bar is there on the very first paint
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
