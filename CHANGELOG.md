@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.53.2 | Tidier inside: one copy of the encryption and of the code that reaches other websites; nothing new to learn |
 | 1.53.1 | A check-up: security, dead code, speed and small fixes; nothing new to learn |
 | 1.53.0 | Links shows how often each link is opened; Home's refresh button no longer feels stuck; the characters are gone again |
 | 1.52.0 | Characters on Home: 22 little 3D characters that walk about, sit on the clock and do 20 activities and the Power Beam |
@@ -81,6 +82,19 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.53.2
+
+### Tidier
+
+- **Encrypted tabs:** Links, Info and Settings each carried their own copy of the encryption code. They now share one. Tabs you encrypted before open exactly as they did; a new test opens tabs made by the old code to prove it.
+- **Reaching other websites:** Home (background pictures) and Links (icons and titles) each had their own code for this. They now share one, with the same checks: public internet only, every redirect checked, size limits kept.
+
+### Safer
+
+- **Links:** when a website's https certificate cannot be checked, an icon or title is fetched once more without checking it (some hosts ship no certificate list). That second try is now never made for an address that carries a key or token.
 
 ---
 
