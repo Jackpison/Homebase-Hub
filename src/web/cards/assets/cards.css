@@ -163,3 +163,14 @@ dialog p{color:var(--mute);margin:0 0 6px}
   #printArea tr.tot td{font-weight:700;border-top:2px solid #000}
   #printArea .pinfo{white-space:pre-wrap;word-break:break-word;font-size:11px}
 }
+/* Holders (1.53.6): the list, each name editable, and the Add row */
+.hlist{display:flex;flex-direction:column;gap:8px;margin:14px 0 0;max-height:46vh;overflow:auto}
+.hrow{display:flex;align-items:center;gap:10px}
+.hrow input,.hadd input{flex:1;min-width:0;background:var(--bg);color:var(--fg);border:1px solid var(--border2);border-radius:10px;padding:10px;font:inherit;font-size:15px}
+.hn{flex:none;min-width:58px;text-align:right;font-size:12.5px;color:var(--mute);white-space:nowrap}
+.hdel,.hadd button{flex:none;font:inherit;font-weight:700;font-size:14px;border-radius:10px;padding:9px 14px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--fg)}
+.hdel{color:var(--c-exp);border-color:#6b3030}
+.hdel:disabled{opacity:.35;cursor:not-allowed}
+.hadd{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.hnone{margin:4px 0 0!important}
+#hmsg{min-height:1em;margin-top:10px;color:var(--c-exp)}

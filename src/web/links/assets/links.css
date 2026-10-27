@@ -262,3 +262,11 @@ body.is-locked .search{display:none}
 #impDlg .imp-done{margin:6px 0 10px;font-size:14px}
 #impDlg .imp-done p{margin:0 0 6px}
 #impDlg .check small{display:block;color:var(--muted);font-size:12.5px}
+/* Links Settings > Look (1.53.6): a name and a line of help on the left, its button or choice on the right */
+.srow{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;font-size:14px;line-height:1.4}
+.srow>span,.srow>label{flex:1;min-width:0}
+.srow small{display:block;color:var(--faint);font-size:12.5px}
+.srow .btn,.srow select{flex:none}
+.srow select{background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:8px 10px;outline:none}
+.srow select:focus{border-color:var(--accent)}
+@media (max-width:480px){.srow{flex-wrap:wrap}.srow select{width:100%}}

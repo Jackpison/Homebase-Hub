@@ -303,7 +303,7 @@
     var out = [], groups = {};
     hubItems().filter(function (it) { return !mainOnly || it.main; }).forEach(function (it) {
       var run = function () { if (t && !editing()) startEdit(it.label); else it.el.click(); };
-      if (it.sep) out.push({ sep: true });
+      if (it.sep && !mainOnly) out.push({ sep: true });   // the two-item pencil menu has no lines
       if (!it.group) { out.push({ label: it.label, icon: it.icon, run: run }); return; }
       var g = groups[it.group];
       if (!g) {
@@ -325,6 +325,7 @@
   var canEdit = function () { return !!q1('toggle') || ownEdit(); };
   function doneEdit() { var d = q1('done'); if (d) d.click(); else document.body.classList.remove('editing'); }
   function startEdit(thenLabel) {
+    if (S.admin === undefined) return whenKnown(function () { if (S.admin !== undefined) startEdit(thenLabel); });
     var t = q1('toggle'); if (!canEdit()) return;
     if (!S.admin) { login().then(function () { afterLogin(thenLabel); }, function () {}); return; }
     if (!editing()) { if (t) t.click(); else document.body.classList.add('editing'); }
@@ -495,7 +496,7 @@
     c.appendChild(b);
   }
   function cornerMenu(b) {
-    if (S.admin === undefined) { refresh().then(function () { cornerMenu(b); }); return; }
+    if (S.admin === undefined) return whenKnown(function () { if (S.admin !== undefined) cornerMenu(b); });
     if (!S.admin) { login().then(function () { location.reload(); }, function () {}); return; }
     var t = q1('toggle'), items = [];
     if (canEdit()) items.push(editing() ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit } : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
@@ -927,6 +928,10 @@
   var loginWait = null;
   function login(reason) {
     if (S.admin) return Promise.resolve();
+    if (S.admin === undefined) return refresh().then(function () { return S.admin ? undefined : S.admin === undefined ? loginBox(reason) : login(reason); });   // not known yet: ask the server first
+    return loginBox(reason);
+  }
+  function loginBox(reason) {
     return new Promise(function (res, rej) {
       if (loginWait) loginWait.reject();
       loginWait = { resolve: res, reject: rej };
@@ -1105,6 +1110,7 @@
   }
 /* Settings is a page of its own (web/settings/). From any other page these just go there; on that page they switch section. */
   function settings(sec) {
+    if (S.admin === undefined) return whenKnown(function () { if (S.admin !== undefined) settings(sec); else login().then(function () { settings(sec); }, function () {}); });
     if (!S.admin) return login().then(function () { settings(sec); }, function () {});
     if (APP === 'settings') return adminJs().then(function (m) { m.settings(sec); }, function () {});
     location.href = ROOT + 'web/settings/' + (sec ? '#' + sec : '');
@@ -1128,7 +1134,7 @@
     if (k === 'filters') return toggleFilters(b);
     if (k === 'backup') { closePanels(); backupSeen(); return openBackup(); }
     if (k === 'corner') return cornerMenu(b);
-    if (k === 'edit') { if (!S.admin && canEdit()) { closePanels(); return startEdit(); } return editMenu(b); }
+    if (k === 'edit') return whenKnown(function () { if (!S.admin && canEdit()) { closePanels(); return startEdit(); } editMenu(b); });
     if (k === 'account') { closePanels(); return settings(); }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !popEl) closePanels(); });
@@ -1142,7 +1148,18 @@
     previewTheme: previewTheme, restoreTheme: restoreTheme, storeTheme: storeTheme, resolveTheme: resolveTheme };
 
   /* ---------- 13. start ---------- */
+  /* One request at a time: a second caller gets the answer already on its way. */
+  var refreshing = null;
   function refresh() {
+    if (refreshing) return refreshing;
+    refreshing = refreshNow().then(function () { refreshing = null; });
+    return refreshing;
+  }
+  /* Runs fn once the server has said whether you are logged in. Right after a page opens (above all one the browser prepared
+     in the background) that answer may still be on its way; deciding before it came showed the login box to someone already
+     logged in (1.53.6). */
+  function whenKnown(fn) { if (S.admin !== undefined) fn(); else refresh().then(fn); }
+  function refreshNow() {
     return api('state').then(function (st) {
       if (!st || !('admin' in st)) return;
       var changed = st.nav !== S.nav || st.look !== S.look || st.accent !== S.accent || st.homeBar !== S.homeBar || st.font !== S.font || st.fontCustom !== S.fontCustom || JSON.stringify(st.colors) !== JSON.stringify(S.colors);

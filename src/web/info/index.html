@@ -88,11 +88,10 @@
     <h3>Privacy</h3>
     <div class="f"><label class="chk"><input type="checkbox" id="spriv"> Private Page</label></div>
     <p class="hint" id="sprivnote"></p>
-    <h3>Text Sizes</h3>
-    <div class="f"><button type="button" id="setsizes" data-hub-action="sizes">Change Text Sizes</button></div>
-    <h3>Edit Bar</h3>
-    <div class="f"><select id="seditbar" data-ix-editbar aria-label="Edit Bar"><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></div>
-    <p class="hint">The bar at the bottom while you edit this page. Icons Only shows each name when you point at it. Phones always show icons.</p>
+    <h3>Look</h3>
+    <div class="srow"><span>Text Sizes<small>Make the tabs, box titles and text bigger or smaller.</small></span><button type="button" id="setsizes" data-hub-action="sizes">Change</button></div>
+    <div class="srow"><label for="seditbar">Edit Bar<small>The bar at the bottom while you edit. Icons Only shows each name when you point at it; phones always show icons.</small></label>
+      <select id="seditbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></div>
     <p id="setmsg"></p>
     <div class="act"><button type="button" id="setcancel">Cancel</button><button type="submit" class="pri" id="setsave" data-ix-save>Save Settings</button></div>
   </form>

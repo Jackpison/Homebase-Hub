@@ -118,7 +118,7 @@ try:
             return pg.evaluate("[...document.querySelectorAll('[data-hub=item]')].map((e, i) => [+(e.dataset.hubOrder || 0), i, e.dataset.hubLabel]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(x => x[2])")
         want = {'links': ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings'], 'info': ['Export', 'Info Settings'],
                 'tasks': ['Add Task', 'Spreadsheet (CSV)', 'Calendar File (.ics)', 'Print or PDF', 'Tasks Settings'],
-                'cards': ['Add Card', 'Add Holder', 'Edit Holders', 'Edit Banks', 'PDF (print)', 'Excel Spreadsheet', 'Cards Settings']}
+                'cards': ['Add Card', 'Holders', 'Edit Banks', 'PDF (print)', 'Excel Spreadsheet', 'Cards Settings']}
         got = {k: items(k) for k in want}
         check('P10 the pencil menus: Links (Colors, Fetch Icons, Import Bookmarks, Links Settings), Info, Tasks and Cards name their own settings', got == want, got)
         pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.evaluate("localStorage.removeItem('cards-view'); localStorage.removeItem('cards-fold')")
@@ -340,7 +340,7 @@ try:
             return ep.evaluate("[...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)")
         def ebar(): return ep.evaluate("(() => { const e = document.getElementById('ix-ebar'); return e && !e.hidden ? [...e.querySelectorAll('.ix-eb')].map(b => b.getAttribute('aria-label')) : null })()")
         want = {'links': ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings', 'Done'], 'info': ['Export', 'Info Settings', 'Done'],
-                'cards': ['Add Card', 'Add Holder', 'Edit Holders', 'Edit Banks', 'Export', 'Cards Settings', 'Done'], 'tasks': ['Add Task', 'Export', 'Tasks Settings', 'Done']}
+                'cards': ['Add Card', 'Holders', 'Edit Banks', 'Export', 'Cards Settings', 'Done'], 'tasks': ['Add Task', 'Export', 'Tasks Settings', 'Done']}
         menus, bars, old, done = {}, {}, {}, {}
         for app in want:
             menus[app] = emenu(app)
@@ -388,6 +388,53 @@ try:
         ph = mp2.evaluate("(() => { const e = document.getElementById('ix-ebar'), r = e.getBoundingClientRect(); return [r.left >= 0 && r.right <= innerWidth, [...e.querySelectorAll('.ix-ebl')].every(l => l.offsetWidth === 0), e.querySelectorAll('.ix-eb').length] })()")
         mctx2.close()
         check('P54 on a phone the edit bar fits the screen and shows icons only (even with Icons and Text chosen), with no page error', ph == [True, True, 5] and not eerr, (ph, eerr))
+        # P55-P58 (1.53.6): no login box for someone logged in who presses the pencil at once; the two-item menu has no line;
+        # Cards' one Holders window; the tidied Settings windows of Links, Info and Tasks
+        rctx2 = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx2.add_cookies(cookies); rctx2.route('**/*', handle)
+        rctx2.add_init_script("(() => { const f = window.fetch; window.fetch = function (u, o) { if (String(u).includes('action=state')) return new Promise(r => setTimeout(r, 2500)).then(() => f(u, o)); return f(u, o) } })()")
+        rp2 = rctx2.new_page(); rp2.goto(B + '/web/info/', wait_until='domcontentloaded'); rp2.wait_for_selector('#ix-editb', timeout=10000)
+        early = rp2.evaluate("HUB.state().admin === undefined"); rp2.click('#ix-editb')
+        until(lambda: rp2.evaluate("!!document.querySelector('#ix-pop') || !!document.querySelector('#ix-dlg.open')"), 8000)
+        race = rp2.evaluate("[!!document.querySelector('#ix-dlg.open'), [...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)]"); rctx2.close()
+        check('P55 logged in, pressing the pencil before the page has heard from the server waits for it: the menu opens, no login box', early and race == [False, ['Edit This Page', 'Info Settings']], (early, race))
+        hctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); hctx.add_cookies(cookies); hctx.route('**/*', handle); hp2 = hctx.new_page(); herr2 = []; hp2.on('pageerror', lambda e: herr2.append(str(e)[:200]))
+        hp2.goto(B + '/web/cards/', wait_until='domcontentloaded'); until(lambda: hp2.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(hp2)
+        hp2.click('#ix-editb'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000)
+        lines = hp2.evaluate("document.querySelectorAll('#ix-pop hr').length")
+        check('P56 the pencil menu (Edit This Page, Cards Settings) has no dividing line', lines == 0, lines)
+        hp2.click('#ix-pop button'); until(lambda: hp2.evaluate("!!document.getElementById('ix-ebar') && !document.getElementById('ix-ebar').hidden"), 5000)
+        hrows = lambda: hp2.evaluate("[...document.querySelectorAll('#hlist .hrow')].map(r => [r.querySelector('input').value, r.querySelector('.hn').textContent, r.querySelector('.hdel').disabled])")
+        hp2.click('#ix-ebar [data-tip="Holders"]'); until(lambda: hp2.evaluate("document.getElementById('hdlg').open"), 5000)
+        first = hrows()
+        hp2.fill('#hname', 'Riya'); hp2.click('#hadd'); hp2.click('#hcancel'); hp2.wait_for_timeout(300)
+        hp2.click('#ix-ebar [data-tip="Holders"]'); until(lambda: hp2.evaluate("document.getElementById('hdlg').open"), 5000)
+        cancelled = [r[0] for r in hrows()]
+        who = first[0][0]
+        hp2.fill('#hlist input[data-hi="0"]', who + ' K'); hp2.fill('#hname', 'Riya'); hp2.keyboard.press('Enter'); hp2.fill('#hname', 'riya'); hp2.click('#hadd')
+        dupmsg = hp2.evaluate("document.getElementById('hmsg').textContent")
+        hp2.click('#hok'); until(lambda: not hp2.evaluate("document.getElementById('hdlg').open"), 5000); settle(hp2)
+        hp2.click('#ix-ebar [data-tip="Holders"]'); until(lambda: hp2.evaluate("document.getElementById('hdlg').open"), 5000)
+        after = hrows()
+        hp2.click('#hlist .hrow:last-child .hdel'); hp2.fill('#hlist input[data-hi="0"]', who); hp2.click('#hok'); until(lambda: not hp2.evaluate("document.getElementById('hdlg').open"), 5000); settle(hp2)
+        hp2.click('#ix-ebar [data-tip="Holders"]'); until(lambda: hp2.evaluate("document.getElementById('hdlg').open"), 5000)
+        back = [r[0] for r in hrows()]; hp2.click('#hcancel')
+        check('P57 Cards: one Holders window lists every holder with their cards (a holder with cards cannot be deleted); renaming moves the cards with it, Add Holder adds one (not twice), Delete removes an empty one, Cancel keeps everything as it was',
+              all(r[1].endswith('cards') or r[1] == '1 card' for r in first) and any(r[2] for r in first) and cancelled == [r[0] for r in first]
+              and after[0][0] == who + ' K' and after[0][1] == first[0][1] and after[-1] == ['Riya', '0 cards', False] and 'already' in dupmsg
+              and back == [r[0] for r in first] and not herr2, (first, cancelled, after, dupmsg, back, herr2))
+        def sdlg(app, dlg):
+            hp2.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); until(lambda: hp2.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(hp2)
+            hp2.click('#ix-editb'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000); hp2.click('#ix-pop button:nth-child(2)')
+            until(lambda: hp2.evaluate("document.getElementById('%s').open" % dlg), 8000); settle(hp2)
+            return hp2.evaluate("""(() => { const d = document.getElementById('%s');
+              return [[...d.querySelectorAll('h3, h4')].map(h => h.textContent.trim()), [...d.querySelectorAll('.srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName, r.lastElementChild.textContent.trim().slice(0, 12), r.getBoundingClientRect().width > 0 ? Math.round(r.lastElementChild.getBoundingClientRect().width) : 0])] })()""" % dlg)
+        ls_, is_ = sdlg('links', 'setDlg'), sdlg('info', 'setdlg')
+        ts_ = sdlg('tasks', 'sdlg'); tl = hp2.evaluate("[...document.querySelectorAll('#sdlg .sh3')].map(h => h.textContent.trim()); ")
+        lookhas = hp2.evaluate("(() => { const h = [...document.querySelectorAll('#sdlg .sh3')].pop(); let n = h.nextElementSibling; return !!n.querySelector('#s-editbar') && !!n.querySelector('#s-week') })()")
+        hctx.close()
+        rows_ok = lambda r: [x[:2] for x in r[1]] == [['Text Sizes', 'BUTTON'], ['Edit Bar', 'SELECT']] and r[1][0][2] == 'Change' and r[1][0][3] < 200
+        check('P58 Links and Info Settings: a Look section with Text Sizes (a small Change button) and Edit Bar side by side with their help; Tasks Settings: General, When the Page Opens and Look, with Edit Bar in Look',
+              rows_ok(ls_) and rows_ok(is_) and 'Look' in ls_[0] and 'Look' in is_[0] and tl == ['General', 'When the Page Opens', 'Look'] and lookhas, (ls_, is_, tl, lookhas))
         # P47: Home's refresh button (1.53). The next background is ready, so a press swaps at once; three quick presses on a slow
         # network give one change (it never starts over); when nothing arrives it gives up within about 20 s and the button works again.
         rctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx.route('**/*', handle); rctx.add_init_script(TRACK_REQUESTS)

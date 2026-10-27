@@ -295,3 +295,15 @@ dialog p{color:var(--mute);margin:0 0 6px}
 .opt.on{border-color:var(--ix-accent,#ffc21a);box-shadow:0 0 0 2px color-mix(in srgb,var(--ix-accent,#ffc21a) 38%,transparent)}
 #bxdlg .act{flex-wrap:wrap}
 #bxdlg .crow{margin-top:14px}
+/* Info Settings > Look (1.53.6): a name and a line of help on the left, its button or choice on the right */
+.srow{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;font-size:15px;line-height:1.4;color:var(--fg)}
+.srow>span,.srow>label{flex:1;min-width:0}
+.srow small{display:block;margin-top:2px;font-size:13px;color:var(--mute)}
+.srow button{flex:none;font:inherit;font-size:14px;font-weight:700;border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--fg)}
+.srow button:hover{background:var(--hover)}
+.srow select{flex:none;background:var(--field);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px}
+@media (max-width:480px){.srow{flex-wrap:wrap}.srow select{width:100%}}
+/* Info Settings fields a shade lighter than the window, with a quiet focus line (1.53.6) */
+#setdlg .f input,#setdlg .srow select{background:color-mix(in srgb,var(--fg) 5%,var(--panel));border-color:color-mix(in srgb,var(--fg) 14%,var(--panel))}
+#setdlg .f input:focus,#setdlg .srow select:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 55%,var(--panel));box-shadow:none}
+#setdlg .f label:not(.chk){font-size:13px}

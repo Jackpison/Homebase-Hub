@@ -8,7 +8,7 @@
  */
 const SEED=[]; // no built-in cards: data only comes from the server after login
 
-let sort={k:null,d:1},B={},pw="",D=[],P=[],NOTES="",active="All",editing=null,armed=false,server=false,pt,pending=null,hmode="add",hArmed=false;
+let sort={k:null,d:1},B={},pw="",D=[],P=[],NOTES="",active="All",editing=null,armed=false,server=false,pt,pending=null;
 const $=id=>document.getElementById(id),dlg=$("dlg"),hdlg=$("hdlg"),idlg=$("idlg");
 const inr=n=>"₹"+Number(n).toLocaleString("en-IN");
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -246,19 +246,25 @@ function openCard(c){
   armed=false;$("del").textContent="Delete";$("del").hidden=!c;
   dlg.showModal();
 }
-function openHolder(mode){
-  if(mode==="edit"&&!P.length)return;
-  hmode=mode;hArmed=false;
-  $("ht").textContent=mode==="add"?"Add holder":"Edit holder";
-  $("hselw").hidden=mode==="add";$("hdel").hidden=mode==="add";
-  $("hlabel").textContent=mode==="add"?"Name":"New name";
-  $("hok").textContent=mode==="add"?"Add holder":"Save name";
-  $("hdel").textContent="Delete holder";$("hmsg").textContent="";
-  if(mode==="edit"){
-    $("hsel").innerHTML=P.map(p=>`<option>${esc(p)}</option>`).join("");
-    $("hsel").value=active!=="All"?active:P[0];$("hname").value=$("hsel").value;
-  }else $("hname").value="";
+/* Holders (1.53.6: adding and editing in one window). Changes are made on a copy and kept only with Save. */
+let HD=[];   // [{was: old name or null for a new one, name}]
+const cardsOf=n=>D.filter(c=>c.owner===n).length;
+function drawHolders(){
+  $("hlist").innerHTML=HD.length?HD.map((h,i)=>{const n=h.was===null?0:cardsOf(h.was);
+    return `<div class="hrow"><input data-hi="${i}" value="${esc(h.name)}" maxlength="60" aria-label="Holder name"><span class="hn">${n===1?"1 card":n+" cards"}</span>`+
+      `<button type="button" class="hdel" data-hd="${i}"${n?` disabled title="Move or delete this holder's cards first"`:""} aria-label="Delete ${esc(h.name)}">Delete</button></div>`}).join("")
+    :`<p class="hnone">No holders yet. Add the first one below.</p>`;
+}
+function openHolders(){
+  HD=P.map(p=>({was:p,name:p}));drawHolders();
+  $("hname").value="";$("hmsg").textContent="";
   hdlg.showModal();
+  if(!P.length)$("hname").focus();
+}
+function addHolderRow(){
+  const n=$("hname").value.trim();if(!n)return;
+  if(HD.some(h=>h.name.trim().toLowerCase()===n.toLowerCase())){$("hmsg").textContent=`${n} is already a holder.`;return}
+  HD.push({was:null,name:n});$("hname").value="";$("hmsg").textContent="";drawHolders();$("hname").focus();
 }
 
 /* menu */
@@ -272,9 +278,8 @@ const onPop=e=>{
   const a=e.target.closest("button");if(!a)return;
   closeMenu();
   const k=a.dataset.a;
-  if(k==="card")guard(()=>{P.length?openCard(null):openHolder("add")});
-  else if(k==="holder")guard(()=>openHolder("add"));
-  else if(k==="editholder")guard(()=>openHolder("edit"));
+  if(k==="card")guard(()=>{P.length?openCard(null):openHolders()});
+  else if(k==="holders")guard(openHolders);
   else if(k==="editbank")guard(()=>openBank());
   else if(k==="reorder")guard(openOrder);
   else if(k==="title")guard(openTitle);
@@ -325,25 +330,23 @@ $("del").onclick=()=>{
   D=D.filter(c=>c!==editing);armed=false;persist();dlg.close();render();
 };
 
-$("hsel").onchange=()=>{$("hname").value=$("hsel").value;hArmed=false;$("hdel").textContent="Delete holder";$("hmsg").textContent=""};
-$("hform").addEventListener("submit",()=>{
-  const n=$("hname").value.trim();if(!n)return;
-  const same=p=>p.toLowerCase()===n.toLowerCase();
-  if(hmode==="add"){const f=P.find(same);if(!f)P.push(n);active=f||n}
-  else{
-    const old=$("hsel").value;
-    if(n!==old&&!P.some(p=>same(p)&&p!==old)){
-      P=P.map(p=>p===old?n:p);D.forEach(c=>{if(c.owner===old)c.owner=n});if(active===old)active=n;
-    }
-  }
+$("hlist").addEventListener("input",e=>{const x=e.target.closest("[data-hi]");if(x){HD[+x.dataset.hi].name=x.value;$("hmsg").textContent=""}});
+$("hlist").addEventListener("click",e=>{const x=e.target.closest("[data-hd]");if(!x||x.disabled)return;HD.splice(+x.dataset.hd,1);drawHolders()});
+$("hadd").onclick=addHolderRow;
+$("hname").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addHolderRow()}});
+$("hform").addEventListener("submit",e=>{
+  if($("hname").value.trim())addHolderRow();   // a name typed but not added yet is added too
+  const names=HD.map(h=>h.name.trim()),low=names.map(n=>n.toLowerCase());
+  const bad=names.findIndex(n=>!n),dup=low.findIndex((n,i)=>low.indexOf(n)!==i);
+  if(bad>=0||dup>=0){e.preventDefault();$("hmsg").textContent=bad>=0?"A holder needs a name.":`${names[dup]} is there twice.`;return}
+  const keep=new Set(HD.filter(h=>h.was!==null).map(h=>h.was));
+  if(P.some(p=>!keep.has(p)&&cardsOf(p))){e.preventDefault();$("hmsg").textContent="A holder with cards cannot be deleted.";return}
+  HD.forEach((h,i)=>{if(h.was!==null&&h.was!==names[i]){D.forEach(c=>{if(c.owner===h.was)c.owner=names[i]});if(active===h.was)active=names[i]}});
+  if(active!=="All"&&!names.includes(active))active="All";
+  const added=HD.length>P.length||HD.some(h=>h.was===null);
+  P=names;if(added&&P.length===1)active=P[0];
   persist();render();
 });
-$("hdel").onclick=()=>{
-  const p=$("hsel").value;
-  if(D.some(c=>c.owner===p)){$("hmsg").textContent=`${p} still has cards. Delete or move them first.`;return}
-  if(!hArmed){hArmed=true;$("hdel").textContent="Tap again to confirm";return}
-  P=P.filter(x=>x!==p);if(active===p)active="All";persist();hdlg.close();render();
-};
 
 /* readable exports */
 const curList=()=>view();

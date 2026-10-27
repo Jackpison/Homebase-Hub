@@ -85,11 +85,10 @@
   <h4>Visits</h4>
   <label class="check" style="margin-bottom:12px"><input type="checkbox" id="sVisits"><span>Show Visit Counts<small>Each link shows how often it was opened, by you or anyone visiting. Only you see the numbers. Off hides them; the clicks are still counted. Links in encrypted tabs are never counted.</small></span></label>
 
-  <h4>Text Sizes</h4>
-  <button class="btn" type="button" id="sTextBtn" style="margin-bottom:12px">Change Text Sizes</button>
-
-  <h4>Edit Bar</h4>
-  <div class="field"><select id="sEditBar" data-ix-editbar aria-label="Edit Bar"><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select><span class="hint">The bar at the bottom while you edit this page. Icons Only shows each name when you point at it. Phones always show icons.</span></div>
+  <h4>Look</h4>
+  <div class="srow"><span>Text Sizes<small>Make the tabs, headings and links bigger or smaller.</small></span><button class="btn" type="button" id="sTextBtn">Change</button></div>
+  <div class="srow"><label for="sEditBar">Edit Bar<small>The bar at the bottom while you edit. Icons Only shows each name when you point at it; phones always show icons.</small></label>
+    <select id="sEditBar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></div>
 
   <div class="split" data-hub="hide">
     <button class="btn" type="button" id="versionsBtn">Restore Earlier Version</button>

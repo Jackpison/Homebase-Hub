@@ -46,10 +46,9 @@
         <div class="pop" id="pop" hidden>
           <span class="ph">Add</span>
           <button data-a="card" data-hub="item" data-hub-label="Add Card" data-hub-icon="card" data-hub-order="1">Add Card</button>
-          <button data-a="holder" data-hub="item" data-hub-label="Add Holder" data-hub-icon="user" data-hub-order="2">Add Holder</button>
+          <button data-a="holders" data-hub="item" data-hub-label="Holders" data-hub-icon="user" data-hub-order="2">Holders</button>
           <hr>
           <span class="ph">Change</span>
-          <button data-a="editholder" data-hub="item" data-hub-label="Edit Holders" data-hub-icon="user" data-hub-order="10" data-hub-sep>Edit Holders</button>
           <button data-a="editbank" data-hub="item" data-hub-label="Edit Banks" data-hub-icon="card" data-hub-order="11">Edit Banks</button>
           <hr>
           <button data-a="title" data-hub="item" data-hub-main data-hub-label="Cards Settings" data-hub-icon="gear" data-hub-order="50" data-hub-sep>Cards Settings</button>
@@ -116,13 +115,12 @@
 
 <dialog id="hdlg">
   <form method="dialog" id="hform">
-    <h2 id="ht">Add Holder</h2>
-    <div class="f">
-      <label class="w" id="hselw">Holder<select id="hsel"></select></label>
-      <label class="w"><span id="hlabel">Name</span><input id="hname" required></label>
-    </div>
-    <p id="hmsg"></p>
-    <div class="act"><button type="button" id="hdel" class="danger">Delete Holder</button><button type="button" id="hcancel">Cancel</button><button type="submit" class="pri" id="hok">Add Holder</button></div>
+    <h2>Holders</h2>
+    <p>The people the cards belong to. Rename one here; a holder with no cards can be deleted.</p>
+    <div class="hlist" id="hlist"></div>
+    <div class="hadd"><input id="hname" maxlength="60" placeholder="New holder's name" aria-label="New holder's name"><button type="button" id="hadd">Add Holder</button></div>
+    <p id="hmsg" role="status"></p>
+    <div class="act"><button type="button" id="hcancel">Cancel</button><button type="submit" class="pri" id="hok">Save</button></div>
   </form>
 </dialog>
 

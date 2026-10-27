@@ -162,12 +162,13 @@
   <form method="dialog" id="sform">
     <div class="dh"><h2 id="sdlgt">Tasks Settings</h2><button type="button" class="ib" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="db">
-      <label class="fl">Default Currency<select id="s-cur"></select></label>
-      <p class="hint">Used for tasks that don't pick their own currency.</p>
-      <label class="fl">Show a Task as Due Soon<select id="s-soon">
-        <option value="0">Only on the Day</option><option value="1">1 Day Before</option><option value="3">3 Days Before</option><option value="7">1 Week Before</option>
-        <option value="14">2 Weeks Before</option><option value="30">1 Month Before</option></select></label>
-      <p class="hint">A task's own "Remind Me" overrides this. Telegram reminders use the same window.</p>
+      <h3 class="sh3 first">General</h3>
+      <div class="c2">
+        <label class="fl">Default Currency<select id="s-cur"></select><small>For tasks that don't pick their own.</small></label>
+        <label class="fl">Show a Task as Due Soon<select id="s-soon">
+          <option value="0">Only on the Day</option><option value="1">1 Day Before</option><option value="3">3 Days Before</option><option value="7">1 Week Before</option>
+          <option value="14">2 Weeks Before</option><option value="30">1 Month Before</option></select><small>A task's own Remind Me comes first. Telegram reminders use the same window.</small></label>
+      </div>
       <h3 class="sh3">When the Page Opens</h3>
       <div class="c2">
         <label class="fl">Open On<select id="s-start"><option value="">Where I Left Off</option><option value="list">Tasks</option><option value="cal">Calendar</option><option value="an">Analytics</option><option value="done">Completed</option></select></label>
@@ -175,15 +176,15 @@
         <label class="fl">Sort By<select id="s-sort"><option value="">Where I Left Off</option><option value="due">Due Date</option><option value="due-">Latest First</option><option value="price-">Price, High to Low</option><option value="price">Price, Low to High</option><option value="name">Name, A to Z</option><option value="cat">Category</option></select></label>
         <label class="fl">Week Strip Above the List<select id="s-cal"><option value="">Where I Left Off</option><option value="on">Shown</option><option value="off">Hidden</option></select></label>
       </div>
+      <p class="hint">"Where I Left Off" keeps what this browser used last.</p>
       <h3 class="sh3">Look</h3>
       <div class="c2">
         <label class="fl">Week Starts On<select id="s-week"><option value="sun">Sunday</option><option value="mon">Monday</option></select></label>
         <label class="fl">Dates<select id="s-dates"><option value="in">16 Oct 2026</option><option value="us">Oct 16, 2026</option></select></label>
+        <label class="fl">Edit Bar<select id="s-editbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select><small>The bar at the bottom while you edit. Phones always show icons.</small></label>
       </div>
-      <label class="fl">Edit Bar<select id="s-editbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></label>
-      <p class="hint">The bar at the bottom while you edit this page. Icons Only shows each name when you point at it. Phones always show icons.</p>
       <label class="chk"><input type="checkbox" id="s-stats"> Show amounts in the side panel (totals and the spending card)</label>
-      <p class="hint">These apply on every device. "Where I Left Off" keeps what this browser used last.</p>
+      <p class="hint">These settings apply on every device.</p>
     </div>
     <div class="df"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn pri" data-ix-save>Save Settings</button></div>
   </form>
