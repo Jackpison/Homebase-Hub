@@ -62,7 +62,7 @@ jobs:
         run: python3 tests/repo/check_libraries.py
       - name: Workflow files keep their safety settings (pinned Actions, no kept token, time limits)
         if: matrix.php == '8.3'
-        run: python3 tests/repo/workflows_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py && python3 tests/repo/releases_test.py && python3 tests/repo/maintain_test.py
+        run: python3 tests/repo/workflows_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py && python3 tests/repo/releases_test.py && python3 tests/repo/maintain_test.py && python3 tests/repo/presets_test.py
       - name: Workflow check (zizmor, strictest setting)
         if: matrix.php == '8.3'
         run: python3 -m venv /tmp/zz && /tmp/zz/bin/pip install -q zizmor==1.30.1 && /tmp/zz/bin/zizmor --offline --persona=auditor .github/workflows/
