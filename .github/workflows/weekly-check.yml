@@ -1,7 +1,8 @@
 name: Weekly security check
-# Every Monday: asks npm whether the bundled libraries (pdf.js, JSZip, ONNX, libheif, React, jsPDF, pdf-lib)
+# Every Monday: (1) asks npm whether the bundled libraries (pdf.js, JSZip, ONNX, libheif, React, jsPDF, pdf-lib)
 # and the build tools (esbuild, axe-core) have a known security problem.
 # On a failure it opens one issue labelled "security", or adds a comment to the one already open.
+# (2) since 1.59 also tries the next PHP version (job next-php, its own "php" issue).
 on:
   schedule:
     - cron: '17 6 * * 1'
@@ -60,3 +61,45 @@ jobs:
           else
             gh issue create --title "$TITLE" --label security --body-file body.md
           fi
+  next-php:
+    # The next PHP version, early (1.59): PHP's newest development build checks every file and runs the unit tests.
+    # Hosts move to a new PHP about once a year; a break shows up here months before any site meets it.
+    # On a failure it opens one issue labelled "php" (or comments on the open one). The site's own CI is not affected.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    name: next PHP version (development build)
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: 'nightly', extensions: 'curl, zip, mbstring, gd' }
+      - name: Every PHP file, then the unit tests
+        run: |
+          set -o pipefail
+          php -v | head -1 | tee php.log
+          find src -name '*.php' -not -path '*/tools/*' -print0 | xargs -0 -n1 php -l 2>&1 | grep -v '^No syntax errors' | tee -a php.log || true
+          php tests/unit/run.php 2>&1 | tee -a php.log
+          ! grep -q '^PHP Parse error\|^Parse error\|^FAIL' php.log
+      - name: Open or update the issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create php --repo "$REPO" --color 5319E7 --description "PHP versions" 2>/dev/null || true
+          {
+            echo "The next PHP version (development build) finds a problem, on $(date -u +%Y-%m-%d). Sites are not affected yet: hosts will offer this PHP later."
+            echo
+            echo "Run: $RUN_URL"
+            echo
+            echo '```'
+            tail -n 60 php.log 2>/dev/null || echo "(no log)"
+            echo '```'
+          } > "$RUNNER_TEMP/php.md"
+          TITLE="Next PHP version: something breaks"
+          NUM=$(gh issue list --repo "$REPO" --state open --label php --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
+          if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/php.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label php --body-file "$RUNNER_TEMP/php.md"; fi

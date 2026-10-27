@@ -1,0 +1,92 @@
+name: Monthly maintenance
+# Once a month (and on demand: Actions > Monthly maintenance > Run workflow) this keeps the libraries inside Tools current,
+# so the project keeps going with a few clicks and no programmer (see MAINTAINING.md):
+#   1. scripts/maintain.py plan asks npm for newer versions, within the same major version only (a new major is only listed);
+#   2. if there is something to update: rebuild Tools, raise the version by one patch, write the changelog, check it all;
+#   3. push the result to a branch maintenance/YYYY-MM (never to main) and open a pull request;
+#   4. start CI on that branch (a pull request opened by this workflow does not start CI by itself).
+# A person then merges the pull request once CI is green, and publishes the release on GitHub as usual.
+# When a step fails, nothing reaches main: an issue labelled "maintenance" says what broke.
+on:
+  schedule:
+    - cron: '23 5 3 * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: maintenance
+  cancel-in-progress: false
+jobs:
+  maintain:
+    name: update the Tools libraries
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write        # push the maintenance/ branch (never main)
+      pull-requests: write   # open the pull request
+      actions: write         # start CI on that branch
+      issues: write          # report a failure
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24' }
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - name: Which libraries have a newer version (same major only)
+        id: plan
+        run: python3 scripts/maintain.py plan | tee "$RUNNER_TEMP/plan.log"
+      - name: Nothing to do this month
+        if: steps.plan.outputs.changed != 'true'
+        run: echo "Every Tools library is current (within its major version). Nothing to change."
+      - name: Update, rebuild Tools, raise the version, write the changelog
+        if: steps.plan.outputs.changed == 'true'
+        id: build
+        run: |
+          set -e
+          git config user.name "homebase-maintenance[bot]"
+          git config user.email "maintenance@users.noreply.github.com"
+          npm ci --ignore-scripts
+          python3 scripts/maintain.py apply
+          python3 scripts/build-tools.py --install
+          python3 tests/repo/check_libraries.py
+          git add -A tools-app src
+          git commit -m "Update the Tools libraries (monthly maintenance)"
+          NEXT=$(python3 scripts/maintain.py next)
+          python3 scripts/release.py "$NEXT"
+          python3 scripts/maintain.py notes
+          python3 scripts/release.py --check
+          git add -A src CHANGELOG.md
+          git commit -m "Release $NEXT: monthly maintenance"
+          echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+      - name: Push the branch and open the pull request
+        if: steps.plan.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NEXT: ${{ steps.build.outputs.next }}
+        run: |
+          set -e
+          BRANCH="maintenance/$(date -u +%Y-%m)"
+          case "$BRANCH" in maintenance/*) ;; *) echo "refusing to push to $BRANCH"; exit 1;; esac
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "HEAD:refs/heads/${BRANCH}" --force
+          {
+            echo "Monthly maintenance: version $NEXT."
+            echo
+            cat "$RUNNER_TEMP/plan.log"
+            echo
+            echo "**What to do:** wait until CI is green on this pull request, then press **Merge**."
+            echo "Then publish the release: Releases > Draft a new release > tag \`v$NEXT\` (create on publish, target main) > Publish."
+            echo "If CI is red: do not merge; open MAINTAINING.md, section \"When something fails\"."
+          } > "$RUNNER_TEMP/pr.md"
+          gh pr create --repo "$REPO" --base main --head "$BRANCH" --title "Monthly maintenance: $NEXT" --body-file "$RUNNER_TEMP/pr.md" || gh pr edit "$BRANCH" --repo "$REPO" --body-file "$RUNNER_TEMP/pr.md"
+          gh workflow run ci.yml --repo "$REPO" --ref "$BRANCH"
+      - name: Report a failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create maintenance --repo "$REPO" --color 0E8A16 --description "Monthly maintenance" 2>/dev/null || true
+          printf 'The monthly maintenance could not finish on %s. Nothing was changed on main.\n\nRun: %s\n\nSee MAINTAINING.md, section "When something fails".\n' "$(date -u +%Y-%m-%d)" "$RUN_URL" > "$RUNNER_TEMP/body.md"
+          gh issue create --repo "$REPO" --title "Monthly maintenance failed" --label maintenance --body-file "$RUNNER_TEMP/body.md"

@@ -42,7 +42,7 @@ b = ['--browser', BROWSER] if BROWSER else []
 run('ESLint', ['npx', 'eslint', 'src', 'tools-app'])
 run('Unit tests', ['php', 'tests/unit/run.php'])
 run('Version agrees everywhere', [PY, 'scripts/release.py', '--check'])
-for t in ('release_test', 'workflows_test', 'ci_status_test', 'ci_changes_test', 'releases_test'):
+for t in ('release_test', 'workflows_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test'):
     run('repo/' + t, [PY, 'tests/repo/%s.py' % t])
 run('Library check', [PY, 'tests/repo/check_libraries.py'])
 if os.path.isfile(os.path.join(ROOT, 'phpstan.phar')):

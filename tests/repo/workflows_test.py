@@ -23,7 +23,7 @@ def jobs(text):
         elif cur: out[cur].append(line)
     return out
 
-check('W0 the workflow folder has the five workflows', {os.path.basename(f) for f in FILES} >= {'ci.yml', 'pages.yml', 'release.yml', 'weekly-check.yml', 'php-eol-reminder.yml'}, [os.path.basename(f) for f in FILES])
+check('W0 the workflow folder has the six workflows', {os.path.basename(f) for f in FILES} >= {'ci.yml', 'pages.yml', 'release.yml', 'weekly-check.yml', 'php-eol-reminder.yml', 'maintenance.yml'}, [os.path.basename(f) for f in FILES])
 unpinned, nocred, notime, scripts = [], [], [], []
 for f in FILES:
     name = os.path.basename(f); lines = open(f, encoding='utf-8').read().split('\n')
@@ -59,5 +59,13 @@ check('W8 ci-ok needs every other CI job and runs even when one failed (if: alwa
 gated = [j for j in others if "if: needs.changes.outputs.code == 'true'" in '\n'.join(cij[j])]
 check('W9 on a docs-only change only the slow jobs skip; changes and build always run', sorted(gated) == ['apache', 'browsers', 'server'] and "if: needs.changes.outputs.app == 'true'" in '\n'.join(cij['visual']), gated)
 check('W10 browsers install in named steps, the Ubuntu packages with a time limit and retries (no --with-deps in one step)', '--with-deps' not in ci and ci.count('playwright install-deps') == 3 and ci.count('for i in 1 2 3') == 3)
+mt = open(os.path.join(ROOT, '.github', 'workflows', 'maintenance.yml'), encoding='utf-8').read()
+trig = mt[mt.index('\non:'):mt.index('\npermissions:')]
+pushes = [l for l in mt.split('\n') if 'git push' in l]
+check('W11 the monthly maintenance runs only on its schedule or by hand, and pushes only a maintenance/ branch (never main)',
+      'schedule:' in trig and 'workflow_dispatch:' in trig and not any(x in trig for x in ('push:', 'pull_request', 'workflow_run', 'issue')) and 'permissions: {}' in mt
+      and len(pushes) == 1 and 'refs/heads/${BRANCH}' in pushes[0] and 'BRANCH="maintenance/' in mt and 'case "$BRANCH" in maintenance/*)' in mt and 'main' not in pushes[0], pushes)
+wk = open(os.path.join(ROOT, '.github', 'workflows', 'weekly-check.yml'), encoding='utf-8').read()
+check('W12 the weekly check also tries the next PHP version (development build) and reports a break in its own issue', 'next-php:' in wk and "php-version: 'nightly'" in wk and 'tests/unit/run.php' in wk and '--label php' in wk)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)
