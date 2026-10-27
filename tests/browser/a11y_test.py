@@ -9,7 +9,7 @@ from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, SEED
-from helpers import browser_name, launch, CSP_REPORTER, TRACK_REQUESTS, settle, until
+from helpers import browser_name, launch, CSP_REPORTER, TRACK_REQUESTS, WATCH_DOM, settle, until
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 AXE_PATH, d = None, ROOT   # npm puts it in the nearest node_modules: the repo's, or a parent folder's
@@ -29,6 +29,10 @@ def check(name, viol):
     print(('PASS ' if not viol else 'FAIL ') + name + ('' if not viol else '  -> ' + '; '.join('%s x%d (%s)' % (v['id'], v['n'], v['ex']) for v in viol)[:400]))
 RUN = "async()=>{const r=await axe.run(document,{resultTypes:['violations'],runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return r.violations.map(v=>({id:v.id,n:v.nodes.length,ex:v.nodes[0].target.join(' ')}))}"
 def scan(pg):
+    # Colours are measured once the page is still: no change for 400 ms and no fade running. settle() alone could let a page
+    # that draws a second time (Settings' Overview, with its fade-in) be measured mid-fade, a contrast failure that is not real.
+    pg.evaluate(WATCH_DOM)
+    until(lambda: pg.evaluate("performance.now() - window.__lastMut > 400 && document.getAnimations().every(a => a.playState !== 'running' || !isFinite(a.effect.getTiming().iterations))"), 8000, 100)
     pg.add_script_tag(content=AXE); return pg.evaluate(RUN)
 try:
     cj = http.cookiejar.CookieJar(); op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))

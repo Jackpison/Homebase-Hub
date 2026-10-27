@@ -69,8 +69,8 @@ jobs:
     timeout-minutes: 20
     name: next PHP version (development build)
     permissions:
-      contents: read
-      issues: write
+      contents: read   # check out the repo
+      issues: write    # open or comment on the "php" issue
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
