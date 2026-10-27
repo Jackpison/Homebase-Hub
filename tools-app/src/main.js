@@ -72,9 +72,9 @@ function drawNav(route, cur) {
   const item = (href, ic, label, on, cls, n, open) => h('a', { href, class: 'ni ' + cls + (open ? ' open' : ''), 'aria-current': on ? 'page' : null, title: label },
     h('span', { class: 'nt' }, icon(ic)), h('span', { class: 'nl', text: label }), n != null ? h('span', { class: 'nb', text: String(n) }) : null);
   const sections = CATS.flatMap((c) => {
-    const here = cur && cur.cat === c.id, out = [item('#/s/' + c.id, c.icon, c.name, route === '#/s/' + c.id, 'c-' + c.id, count(c.id), here)];
-    if (here && side && !S.compact) out.push(h('ul', { class: 'nsub c-' + c.id }, visible(st.ordered(c.id, TOOLS.filter((t) => t.cat === c.id))).map((t) => h('li', {}, h('a', { href: '#/tool/' + t.id, class: 'nsi', 'aria-current': cur.id === t.id ? 'page' : null }, icon(t.icon), h('span', { text: t.name }))))));
-    return out;
+    // 1.60: a section is one line; its tools are on the page itself (the menu no longer unfolds a list under it)
+    const here = cur && cur.cat === c.id;
+    return [item('#/s/' + c.id, c.icon, c.name, route === '#/s/' + c.id, 'c-' + c.id, count(c.id), here)];
   });
   const collapse = side ? h('button', { type: 'button', class: 'ncollapse', 'aria-label': S.compact ? 'Expand the menu to show names' : 'Collapse the menu to icons', title: S.compact ? 'Expand the menu' : 'Collapse the menu', onClick: () => { st.setCompact(!S.compact); layout(); drawNav(route, cur); } }, icon('panel')) : null;
   nav.replaceChildren(...[
