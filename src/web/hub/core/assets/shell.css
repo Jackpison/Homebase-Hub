@@ -379,3 +379,33 @@ html[data-ix-app="settings"] .wrap{max-width:1240px;margin:0 auto;padding:18px 1
 html[data-ix-app="settings"]{color-scheme:dark}
 html[data-ix-app="settings"][data-theme="light"]{color-scheme:light}
 html[data-ix-app="settings"] body{margin:0;background:var(--ix-bg);color:var(--ix-tx);font-family:var(--ix-font)}
+
+/* ---------- the edit bar (1.53.5): one pill at the bottom while a page is being edited, the same on every page ----------
+   Home's look. Icons Only shows each name on hover; Icons and Text (the page's Settings > Edit Bar) writes it beside the icon.
+   Phones always show icons. A page's old bar (data-hub-ebar) is hidden. */
+html[data-ix-ebar] [data-hub-ebar]{display:none!important}
+#ix-ebar{position:fixed;z-index:2147483000;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:2px;
+  padding:6px;border-radius:999px;background:rgba(14,16,22,.82);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 10px 30px rgba(0,0,0,.35);width:max-content;max-width:calc(100% - 16px);overflow-x:auto;scrollbar-width:none;font:500 13.5px var(--ix-font,system-ui,sans-serif);
+  animation:ix-ebar .35s cubic-bezier(.2,.9,.3,1.2)}
+#ix-ebar[hidden]{display:none}
+#ix-ebar::-webkit-scrollbar{display:none}
+@keyframes ix-ebar{from{opacity:0;transform:translate(-50%,14px)}}
+#ix-ebar .ix-eb{position:relative;flex:none;height:44px;min-width:44px;border:0;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0;
+  background:none;color:rgba(242,242,242,.85);font:inherit;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
+#ix-ebar svg{width:21px;height:21px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ix-ebar .ix-eb:hover{color:#fff;background:rgba(255,255,255,.12)}
+#ix-ebar .ix-eb:active{transform:scale(.94)}
+#ix-ebar .ix-eb:focus-visible{outline:2px solid var(--ix-accent,#ffc21a);outline-offset:1px}
+#ix-ebar .ix-ebl{display:none}
+#ix-ebar.ix-ebar-text .ix-eb:not(.ix-ebdone){padding:0 14px 0 12px}
+#ix-ebar.ix-ebar-text .ix-ebl{display:inline}
+#ix-ebar .ix-ebsep{flex:none;width:1px;height:24px;margin:0 6px;background:rgba(255,255,255,.18)}
+#ix-ebar .ix-ebdone{width:44px;background:#F6F5F1;color:#0E1018}
+#ix-ebar .ix-ebdone:hover{background:#fff;color:#0E1018}
+/* the name on hover (icons only): drawn above the bar */
+#ix-ebtip{position:fixed;z-index:2147483001;padding:5px 10px;border-radius:8px;background:#1d1f24;color:#f2f2f2;font:500 12.5px var(--ix-font,system-ui,sans-serif);
+  box-shadow:0 6px 18px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
+body.boxedit #ix-ebar{display:none}
+@media (max-width:640px){#ix-ebar.ix-ebar-text .ix-ebl{display:none}#ix-ebar.ix-ebar-text .ix-eb:not(.ix-ebdone){padding:0}}
+@media (prefers-reduced-motion:reduce){#ix-ebar{animation:none}}

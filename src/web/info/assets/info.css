@@ -122,26 +122,9 @@ body.editing .tabi .tab{padding-right:38px;cursor:grab;touch-action:pan-x;user-s
 body.dragtabs,body.dragtabs *{cursor:grabbing!important}
 .tabi.dragging{z-index:5;will-change:transform}
 .tabi.dragging .tab{transform:scale(1.06);box-shadow:0 12px 28px rgba(0,0,0,.4)}
-.ebar{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;
-  max-width:calc(100% - 24px);padding:8px 8px 8px 18px;border-radius:999px;border:1px solid var(--border);
-  background:color-mix(in srgb,var(--panel) 86%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);
-  box-shadow:0 14px 40px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.25);animation:barIn .24s cubic-bezier(.2,.8,.2,1)}
-@keyframes barIn{from{opacity:0;transform:translate(-50%,16px)}}
-.ebar{transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .2s}
-body.boxedit .ebar{transform:translate(-50%,calc(100% + 30px));opacity:0;pointer-events:none}
-.ebar p{margin:0 6px 0 0;display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;white-space:nowrap;cursor:help}
-.ebar p i{width:8px;height:8px;border-radius:50%;background:#1f9d55;box-shadow:0 0 0 3px rgba(31,157,85,.25)}
-.eacts{display:flex;flex-wrap:wrap;gap:6px}
-.eacts button{white-space:nowrap;font:inherit;font-size:14px;font-weight:700;border-radius:999px;padding:8px 15px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--fg);transition:border-color .15s,background .15s}
-.eacts button:hover{border-color:var(--fg);background:var(--hover)}
-.eacts .pri{background:var(--inv);color:var(--inv-fg);border-color:var(--inv)}
-.eacts .pri:hover{background:var(--inv);opacity:.9}
+/* the edit bar is the shared one (shell.js, 1.53.5); #ebar only holds its buttons */
 body.editing .wrap{padding-bottom:110px}
-@media(max-width:640px){.ebar{padding:6px;gap:0}.ebar p{display:none}.eacts{flex-wrap:nowrap;gap:4px}.eacts button{padding:8px 10px;font-size:13px}}
-@media(max-width:385px){.eacts button{padding:7px 8px;font-size:12.5px}.eacts{gap:3px}}
-@media(max-width:340px){.ebar{border-radius:20px}.eacts{flex-wrap:wrap;justify-content:center}}
 @media(max-width:640px){body.editing .wrap{padding-bottom:84px}}
-@media (prefers-reduced-motion:reduce){.ebar{animation:none}}
 .gate,.encbar{grid-column:1/-1}
 .gate{display:none;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:56px 20px;background:var(--box);border:1px solid var(--line);border-radius:14px;min-height:calc(100vh - 300px);justify-content:center}
 .boxes.lockd .gate{display:flex}.boxes.lockd .box,.boxes.lockd .addbox{display:none}

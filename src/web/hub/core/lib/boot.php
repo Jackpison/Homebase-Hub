@@ -881,6 +881,7 @@ function hub_settings_default(): array {
         'sizes'    => [],           // text sizes per page, in px: {info: {tab, head, text}, cards: {title, box, text}}
         'look'     => true,         // true = unified AMOLED + gold on every page; false = each page uses its own colours
         'homeBar'  => false,        // show the shared bar on the start page
+        'editBar'  => [],           // the edit bar per page: {links: 'text'} = icons and text; missing = icons only (1.53.5)
         'font'     => 'default',    // site-wide font: default | trebuchet | system | verdana | tahoma | segoe | arial | georgia | palatino | mono | custom
         'fontCustom' => '',         // a font installed on the visitor's device, used when font = custom
         'backupEvery' => 7,         // days between backup reminders, 0 = off
@@ -933,6 +934,8 @@ function hub_clean_settings(array $in): array {
     }
     $o['look']     = (bool)($in['look'] ?? true);
     $o['homeBar']  = (bool)($in['homeBar'] ?? false);
+    $o['editBar']  = [];
+    foreach (['home', 'links', 'info', 'cards', 'tasks'] as $app) if (($in['editBar'][$app] ?? '') === 'text') $o['editBar'][$app] = 'text';
     $o['font']     = in_array($in['font'] ?? '', ['default', 'trebuchet', 'system', 'verdana', 'tahoma', 'segoe', 'arial', 'georgia', 'palatino', 'mono', 'custom'], true) ? $in['font'] : 'default';
     $o['fontCustom'] = mb_substr(trim(preg_replace('/[^\p{L}\p{N} \-]/u', '', (string)($in['fontCustom'] ?? ''))), 0, 40);
     $o['backupEvery'] = max(0, min(365, (int)($in['backupEvery'] ?? 7)));
@@ -989,7 +992,7 @@ function hub_public_state(): array {
     $s = hub_settings(); $admin = hub_admin();
     $o = ['v' => HUB, 'admin' => $admin, 'setup' => hub_auth() === null,
           'tz' => $s['tz'] ?? 'Asia/Kolkata', 'siteName' => $s['siteName'], 'logo' => $s['logo'], 'nav' => $s['nav'], 'theme' => $s['theme'], 'accent' => $s['accent'], 'accentPg' => (object)$s['accentPg'],
-          'look' => $s['look'], 'homeBar' => $s['homeBar'], 'font' => $s['font'], 'fontCustom' => $s['fontCustom'], 'colors' => ['dark' => (object)$s['colors']['dark'], 'light' => (object)$s['colors']['light'], 'pg' => (object)array_map(function ($a) { return (object)$a; }, $s['colors']['pg'])],
+          'look' => $s['look'], 'homeBar' => $s['homeBar'], 'editBar' => (object)$s['editBar'], 'font' => $s['font'], 'fontCustom' => $s['fontCustom'], 'colors' => ['dark' => (object)$s['colors']['dark'], 'light' => (object)$s['colors']['light'], 'pg' => (object)array_map(function ($a) { return (object)$a; }, $s['colors']['pg'])],
           'sizes' => (object)array_map(function ($a) { return (object)$a; }, $s['sizes']), 'pages' => $s['pages']];
     if ($o['setup']) {   // brand-new site: make sure the one-time code file exists, and say where it is
         hub_setup_code();

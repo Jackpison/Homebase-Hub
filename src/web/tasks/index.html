@@ -47,13 +47,13 @@
       <button type="button" data-v="cal" aria-pressed="false" title="Calendar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v15H4zM4 10h16M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></button>
     </div>
     <button type="button" class="btn pri" id="add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Add Task</span></button>
-    <!-- pencil menu (the bar): add, exports, page settings -->
+    <!-- the pencil menu (Tasks Settings) and the edit bar (Add Task, Export) take these over -->
     <span hidden>
       <button type="button" id="addh" data-hub="item" data-hub-label="Add Task" data-hub-icon="plus" data-hub-order="1"></button>
       <button type="button" id="xcsv" data-hub="item" data-hub-label="Spreadsheet (CSV)" data-hub-group="Export" data-hub-icon="file" data-hub-order="20" data-hub-sep></button>
       <button type="button" id="xics" data-hub="item" data-hub-label="Calendar File (.ics)" data-hub-group="Export" data-hub-icon="file" data-hub-order="21"></button>
       <button type="button" id="xprint" data-hub="item" data-hub-label="Print or PDF" data-hub-group="Export" data-hub-icon="file" data-hub-order="22"></button>
-      <button type="button" id="psets" data-hub="item" data-hub-label="Tasks Settings" data-hub-icon="gear" data-hub-order="40"></button>
+      <button type="button" id="psets" data-hub="item" data-hub-main data-hub-label="Tasks Settings" data-hub-icon="gear" data-hub-order="40"></button>
     </span>
   </div>
 
@@ -180,10 +180,12 @@
         <label class="fl">Week Starts On<select id="s-week"><option value="sun">Sunday</option><option value="mon">Monday</option></select></label>
         <label class="fl">Dates<select id="s-dates"><option value="in">16 Oct 2026</option><option value="us">Oct 16, 2026</option></select></label>
       </div>
+      <label class="fl">Edit Bar<select id="s-editbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></label>
+      <p class="hint">The bar at the bottom while you edit this page. Icons Only shows each name when you point at it. Phones always show icons.</p>
       <label class="chk"><input type="checkbox" id="s-stats"> Show amounts in the side panel (totals and the spending card)</label>
       <p class="hint">These apply on every device. "Where I Left Off" keeps what this browser used last.</p>
     </div>
-    <div class="df"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn pri">Save Settings</button></div>
+    <div class="df"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn pri" data-ix-save>Save Settings</button></div>
   </form>
 </dialog>
 

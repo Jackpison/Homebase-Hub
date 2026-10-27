@@ -176,21 +176,8 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
 /* while you edit, the toolbar takes the bottom of the screen */
 .editing .wdock,.editing .wcards,.editing .wpanel,.editing .chips{display:none!important}
 
-/* ================= toolbar ================= */
-/* while editing: one pill of icons, like the bar's dock (Background, Widgets, Home Settings | Done) */
-.toolbar{position:fixed;z-index:20;bottom:max(16px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
-  display:flex;align-items:center;gap:2px;padding:6px;border-radius:999px;
-  background:rgba(14,16,22,.78);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  box-shadow:0 10px 30px rgba(0,0,0,.35);width:max-content;max-width:calc(100% - 24px);animation:drop .35s cubic-bezier(.2,.9,.3,1.2)}
-@keyframes drop{from{opacity:0;transform:translate(-50%,14px)}}
-.tb-ib{width:44px;height:44px;border:0;border-radius:999px;display:grid;place-items:center;background:none;color:rgba(242,242,242,.82);cursor:pointer;
-  transition:color .18s,background-color .18s,transform .18s}
-.tb-ib svg{width:21px;height:21px;stroke-width:1.8}
-.tb-ib:hover{color:#fff;background:rgba(255,255,255,.12)}
-.tb-ib:active{transform:scale(.94)}
-.tb-sep{width:1px;height:24px;margin:0 6px;background:rgba(255,255,255,.18)}
-.tb-done{background:#F6F5F1;color:#0E1018}
-.tb-done:hover{background:#fff;color:#0E1018}
+/* the edit bar is the shared one (shell.js, 1.53.5); #toolbar only holds its buttons */
+#toolbar{display:none}
 
 /* ================= top-right corner ================= */
 .corner{position:fixed;z-index:3;top:max(14px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));
@@ -392,7 +379,7 @@ html.hl-welcome .stage,html.hl-welcome .wdock,html.hl-welcome .wcards{opacity:0}
 @media (prefers-reduced-motion:reduce){
   #welcome,#welcome.out{transform:none;transition:opacity 1s linear}
   #bg > .kb{animation:none}
-  .sheet[open],.toolbar,.wpanel{animation:none}
+  .sheet[open],.wpanel{animation:none}
 }
 
 /* Settings > Widgets */

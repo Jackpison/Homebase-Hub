@@ -70,7 +70,8 @@
     file: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
     user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
     card: 'M3 6h18v13H3zM3 10h18M7 15h4',
-    back: 'M15 6l-6 6 6 6'
+    back: 'M15 6l-6 6 6 6',
+    grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z'
   };
   /* the theme button shows what it switches to: a sun in dark mode, a moon in light mode; its tooltip says the same */
   function themeIcon() { return svg(themeNow() === 'light' ? ICON.moon : ICON.sun); }
@@ -273,7 +274,7 @@
     t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove('on'); }, 3200);
   }
   function remember(st) {
-    var keep = {}; ['siteName', 'logo', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'colors', 'font', 'fontCustom', 'sizes', 'pages', 'backupEvery', 'backupLast', 'tz'].forEach(function (k) { if (k in st) keep[k] = st[k]; });
+    var keep = {}; ['siteName', 'logo', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'editBar', 'colors', 'font', 'fontCustom', 'sizes', 'pages', 'backupEvery', 'backupLast', 'tz'].forEach(function (k) { if (k in st) keep[k] = st[k]; });
     keep.adm = !!st.admin;   // only a hint so the bar draws the right icons straight away; the server decides what is allowed
     ls.set('hub-state', JSON.stringify(keep));
   }
@@ -287,20 +288,20 @@
   /* ---------- 3. page contract: the pencil menu is built from what each page marks ----------
      A page marks its own controls with data-hub="toggle | item | done | logout | hide" (see shell.css and README),
      so adding an option to a page never means touching this file. */
-  var HAS_EDIT = true;
+  var HAS_EDIT = APP !== 'settings';   // Settings has nothing to edit: no pencil there (1.53.5)
   /* options a page has no buttons for (Tools is a separate app): [label, icon, action] */
   var EXTRA = { tools: [{ label: 'Tools Settings', icon: ICON.gear, run: function () { location.hash = '#/settings'; } }] }[APP] || [];
   var q1 = function (kind) { return document.querySelector('[data-hub="' + kind + '"]'); };
   function hubItems() {
     return [].slice.call(document.querySelectorAll('[data-hub="item"]')).map(function (el, i) {
       return { el: el, label: el.getAttribute('data-hub-label') || el.textContent.trim(), group: el.getAttribute('data-hub-group') || '', order: +(el.getAttribute('data-hub-order') || 0), i: i,
-               icon: ICON[el.getAttribute('data-hub-icon')] || '', sep: el.hasAttribute('data-hub-sep') };
+               icon: ICON[el.getAttribute('data-hub-icon')] || '', sep: el.hasAttribute('data-hub-sep'), main: el.hasAttribute('data-hub-main') };
     }).sort(function (a, b) { return a.order - b.order || a.i - b.i; });
   }
   /* Menu entries for the page's items. Items sharing a data-hub-group fold into one entry ("Edit...", "Export...") that opens a short list. */
-  function itemEntries(anchor, t) {
+  function itemEntries(anchor, t, mainOnly) {
     var out = [], groups = {};
-    hubItems().forEach(function (it) {
+    hubItems().filter(function (it) { return !mainOnly || it.main; }).forEach(function (it) {
       var run = function () { if (t && !editing()) startEdit(it.label); else it.el.click(); };
       if (it.sep) out.push({ sep: true });
       if (!it.group) { out.push({ label: it.label, icon: it.icon, run: run }); return; }
@@ -319,23 +320,108 @@
     try { sessionStorage.setItem('hub-after', 'edit'); if (thenLabel) sessionStorage.setItem('hub-then', thenLabel); } catch (x) {}
     location.reload();
   }
+  /* Cards and Tasks have no edit mode of their own: there, editing only shows the edit bar */
+  var ownEdit = function () { return !q1('toggle') && hubItems().some(function (it) { return !it.main; }); };
+  var canEdit = function () { return !!q1('toggle') || ownEdit(); };
+  function doneEdit() { var d = q1('done'); if (d) d.click(); else document.body.classList.remove('editing'); }
   function startEdit(thenLabel) {
-    var t = q1('toggle'); if (!t) return;
+    var t = q1('toggle'); if (!canEdit()) return;
     if (!S.admin) { login().then(function () { afterLogin(thenLabel); }, function () {}); return; }
-    if (!editing()) t.click();
+    if (!editing()) { if (t) t.click(); else document.body.classList.add('editing'); }
     if (thenLabel) setTimeout(function () { runItem(thenLabel); }, 450);
   }
   function runItem(label) { hubItems().some(function (it) { if (it.label === label) { it.el.click(); return true; } }); }
+  /* The pencil menu: Edit This Page and the page's own Settings (data-hub-main). Everything else is on the edit bar (3b). */
   function editMenu(anchor) {
     var items = [], t = q1('toggle');
-    if (t) items.push(editing()
-      ? { label: 'Done Editing', icon: ICON.check, accent: true, run: function () { var d = q1('done'); if (d) d.click(); } }
+    if (canEdit()) items.push(editing()
+      ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit }
       : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
-    itemEntries(anchor, t).forEach(function (x) { items.push(x); });
+    itemEntries(anchor, t, true).forEach(function (x) { items.push(x); });
     EXTRA.forEach(function (x) { items.push(x); });
     if (!items.length) { toast('There is nothing to edit on this page.'); return; }
     popMenu(anchor, items);
   }
+
+
+  /* ---------- 3b. the edit bar (1.53.5): while a page is being edited, its tools sit in one pill at the bottom, the same on
+     every page (Home's look). The page's own items in order, its Settings last, then Done. A page's old bar is marked
+     data-hub-ebar and hidden (html[data-ix-ebar] in shell.css); its data-hub-hint is said once per visit when editing starts.
+     Each page's Settings chooses Icons Only or Icons and Text: a select marked data-ix-editbar, saved with that dialog's
+     data-ix-save button into the site setting editBar ({links: 'text'}; icons is the default). Phones always show icons. */
+  H.setAttribute('data-ix-ebar', '');
+  var editBarMode = function () { return S.editBar && S.editBar[APP] === 'text' ? 'text' : 'icons'; };
+  var ebarKey = '', ebarEnts = [], ebarWas = false;
+  function barEntries() {
+    var all = hubItems(), out = [], groups = {};
+    all.filter(function (it) { return !it.main; }).concat(all.filter(function (it) { return it.main; })).forEach(function (it) {
+      var run = function () { it.el.click(); };
+      if (!it.group) { out.push({ label: it.label, icon: it.icon, run: run }); return; }
+      var g = groups[it.group];
+      if (!g) { g = groups[it.group] = { label: it.group, icon: it.icon, sub: [] }; g.run = function (btn) { popMenu(btn, g.sub); }; out.push(g); }
+      g.sub.push({ label: it.label, icon: it.icon, run: run });
+    });
+    return out;
+  }
+  function drawEditBar() {
+    var el = document.getElementById('ix-ebar'), on = editing() && HAS_EDIT;
+    if (on && !ebarWas) {   // editing just started: the page's hint, once per visit
+      var hn = document.querySelector('[data-hub-hint]'), hk = 'hub-hint-' + APP;
+      try { if (hn && !sessionStorage.getItem(hk)) { sessionStorage.setItem(hk, '1'); toast(hn.getAttribute('data-hub-hint')); } } catch (e) {}
+    }
+    ebarWas = on;
+    if (!on) { if (el) el.hidden = true; var tp = document.getElementById('ix-ebtip'); if (tp) tp.remove(); return; }
+    if (!el) {
+      el = document.createElement('div'); el.id = 'ix-ebar'; el.setAttribute('role', 'toolbar'); el.setAttribute('aria-label', 'Edit Tools');
+      el.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.hasAttribute('data-ix-done')) { closePop(); return doneEdit(); }
+        var it = ebarEnts[+b.getAttribute('data-i')]; if (it) it.run(b);
+      });
+      var tip = function (e) {   // the name above a button (Icons Only; with text, only where the text is hidden)
+        var t = document.getElementById('ix-ebtip'), bt = e.type === 'mouseout' || e.type === 'focusout' ? null : e.target.closest('.ix-eb');
+        var lb = bt && bt.querySelector('.ix-ebl');
+        if (!bt || (lb && lb.offsetWidth)) { if (t) t.remove(); return; }
+        if (!t) { t = document.createElement('div'); t.id = 'ix-ebtip'; t.setAttribute('aria-hidden', 'true'); document.body.appendChild(t); }
+        t.textContent = bt.getAttribute('data-tip');
+        var r = bt.getBoundingClientRect();
+        t.style.top = (r.top - t.offsetHeight - 10) + 'px';
+        t.style.left = Math.max(8, Math.min(innerWidth - t.offsetWidth - 8, r.left + r.width / 2 - t.offsetWidth / 2)) + 'px';
+      };
+      ['mouseover', 'mouseout', 'focusin', 'focusout'].forEach(function (k) { el.addEventListener(k, tip); });
+      document.body.appendChild(el);
+    }
+    ebarEnts = barEntries();
+    var mode = editBarMode(), key = mode + '|' + ebarEnts.map(function (x) { return x.label; }).join('|');
+    if (key !== ebarKey) {
+      ebarKey = key; el.className = mode === 'text' ? 'ix-ebar-text' : '';
+      el.innerHTML = ebarEnts.map(function (x, i) {
+        return '<button type="button" class="ix-eb" data-i="' + i + '" aria-label="' + esc(x.label) + '" data-tip="' + esc(x.label) + '">' + svg(x.icon || ICON.edit) +
+          '<span class="ix-ebl">' + esc(x.label) + '</span></button>';
+      }).join('') + (ebarEnts.length ? '<span class="ix-ebsep" aria-hidden="true"></span>' : '') +
+        '<button type="button" class="ix-eb ix-ebdone" data-ix-done aria-label="Done" data-tip="Done">' + svg(ICON.check) + '</button>';
+    }
+    el.hidden = false;
+  }
+  /* the Edit Bar choice in the page's Settings: shown when the dialog opens, saved with its Save button */
+  function editBarPick() { [].forEach.call(document.querySelectorAll('[data-ix-editbar]'), function (s) { s.value = editBarMode(); }); }
+  function watchEditBarPick() {
+    [].forEach.call(document.querySelectorAll('[data-ix-editbar]'), function (s) {
+      var d = s.closest('dialog'); if (!d || d._ixEb) return; d._ixEb = true;
+      new MutationObserver(function () { if (d.open) editBarPick(); }).observe(d, { attributes: true, attributeFilter: ['open'] });
+    });
+    editBarPick();
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-ix-save]'), d = b && b.closest('dialog'), sel = d && d.querySelector('[data-ix-editbar]');
+    if (!sel || !S.admin || sel.value === editBarMode()) return;
+    var eb = {}; Object.keys(S.editBar || {}).forEach(function (k) { eb[k] = S.editBar[k]; });
+    if (sel.value === 'text') eb[APP] = 'text'; else delete eb[APP];
+    api('settings', { settings: { editBar: eb } }).then(function (j) {
+      if (!j.ok || !j.state) { toast(j.error || 'The Edit Bar choice could not be saved.'); return; }
+      S.editBar = j.state.editBar; remember(S); ebarKey = ''; drawEditBar();
+    }).catch(function () { toast('The Edit Bar choice could not be saved.'); });
+  }, true);
 
   /* ---------- 4. the bar: three styles, each with its own layout ----------
      top:  logo, pages, search box, theme, pencil, Backup, gear. It slides away while you scroll down (4b).
@@ -412,14 +498,14 @@
     if (S.admin === undefined) { refresh().then(function () { cornerMenu(b); }); return; }
     if (!S.admin) { login().then(function () { location.reload(); }, function () {}); return; }
     var t = q1('toggle'), items = [];
-    if (t) items.push(editing() ? { label: 'Done Editing', icon: ICON.check, accent: true, run: function () { var d = q1('done'); if (d) d.click(); } } : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
-    itemEntries(b, t).forEach(function (x) { items.push(x); });
+    if (canEdit()) items.push(editing() ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit } : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
+    itemEntries(b, t, true).forEach(function (x) { items.push(x); });
     items.push({ sep: true });
     pages().filter(function (p) { return p[0] !== APP; }).forEach(function (p) { items.push({ label: p[1], icon: p[3], run: function () { location.href = p[2]; } }); });
     items.push({ sep: true }, { label: 'Settings', icon: ICON.gear, run: function () { settings(); } }, { label: 'Log Out', icon: ICON.out, danger: true, run: logout });
     popMenu(b, items, { corner: true });
   }
-  function markEditing() { var b = document.getElementById('ix-editb'); if (b) b.classList.toggle('on', editing()); }
+  function markEditing() { var b = document.getElementById('ix-editb'); if (b) b.classList.toggle('on', editing()); drawEditBar(); }
   /* The Backup icon is green, and red while a backup is due (Backup > Remind me every). Clicking it turns it green again
      for a day; exporting a full backup starts the countdown over. */
   function backupDue() {
@@ -967,8 +1053,8 @@
   function afterLoad() {
     var a = null, then = null;
     try { a = sessionStorage.getItem('hub-after'); then = sessionStorage.getItem('hub-then'); sessionStorage.removeItem('hub-after'); sessionStorage.removeItem('hub-then'); } catch (e) {}
-    if (a === 'edit') waitFor(function () { var b = q1('toggle'); return b && !b.disabled && document.readyState === 'complete'; },
-      function () { setTimeout(function () { var t = q1('toggle'); if (t && !editing()) t.click(); if (then) setTimeout(function () { runItem(then); }, 450); }, 250); });
+    if (a === 'edit') waitFor(function () { var b = q1('toggle'); return (b ? !b.disabled : ownEdit()) && document.readyState === 'complete'; },
+      function () { setTimeout(function () { var t = q1('toggle'); if (!editing()) { if (t) t.click(); else document.body.classList.add('editing'); } if (then) setTimeout(function () { runItem(then); }, 450); }, 250); });
     if (/[#&]hub=settings/.test(location.hash) && S.admin) { history.replaceState(null, '', location.pathname + location.search); settings(); }
   }
   function waitFor(test, go) { var n = 0, t = setInterval(function () { if (test()) { clearInterval(t); go(); } else if (++n > 60) clearInterval(t); }, 100); }
@@ -1042,7 +1128,7 @@
     if (k === 'filters') return toggleFilters(b);
     if (k === 'backup') { closePanels(); backupSeen(); return openBackup(); }
     if (k === 'corner') return cornerMenu(b);
-    if (k === 'edit') { if (!S.admin && q1('toggle')) { closePanels(); return startEdit(); } return editMenu(b); }
+    if (k === 'edit') { if (!S.admin && canEdit()) { closePanels(); return startEdit(); } return editMenu(b); }
     if (k === 'account') { closePanels(); return settings(); }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !popEl) closePanels(); });
@@ -1066,11 +1152,11 @@
       Object.keys(S).forEach(function (k) { delete S[k]; }); Object.assign(S, st); remember(st);
       if (changed) applyAttrs();
       applyColors(); applyFont(); applySizes();
-      drawBar(); applyFavicon();
+      drawBar(); applyFavicon(); ebarKey = ''; drawEditBar(); editBarPick();
     }).catch(function () {});
   }
   function start() {
-    drawBar(); watchFavicon();
+    drawBar(); watchFavicon(); watchEditBarPick();
     var go = function () { refresh().then(function () { afterLoad(); openFromHash(); backupReminder(); }); };
     if (document.prerendering) document.addEventListener('prerenderingchange', go, { once: true }); else go();   // a page prepared in the background waits until you open it
     window.addEventListener('hashchange', openFromHash);

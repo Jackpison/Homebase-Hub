@@ -116,7 +116,7 @@ and Tools (rename, reorder or hide them in Settings > General > Tabs).
 - Settings > Appearance > Colors: one mode at a time (Dark or Light), in groups: Menu Bar (bar background, tabs and icons), Page
   (background, boxes, menus, borders) and Text. Presets (166 looks, a search box, a Surprise Me button, and your own saved looks that can be exported and imported) fill a whole mode in one click; Colors also holds a separate accent for each page; the arrow next to a color puts it
   back to the default. Page Backgrounds gives one page its own background. Tab colors in Links and Info are set on each tab.
-- Text sizes: Links, Info and Cards each have "Change Text Sizes" inside their own Page Settings (pencil menu > Page Settings).
+- Text sizes: Links, Info and Cards each have "Change Text Sizes" inside their own Page Settings (pencil > the page's Settings).
 - Install on Your Phone (Settings > General > Basics): add the site to the home screen of a phone or computer and it opens
   like an app (its own icon, no browser bars). The steps are under "How?". iPhone: Safari, Share, Add to Home Screen. Android: Chrome menu, Install App.
   Computer: the install icon in Chrome's or Edge's address bar. The site describes itself to the phone through
@@ -216,10 +216,15 @@ raise the version (HUB in web/hub/core/lib/boot.php and the ?v= in each page) so
 
 PAGE CONTRACT: a page tells the bar what to take over by marking its own controls; no bar code changes needed.
   data-hub="toggle"   the page's Edit button (the pencil starts and finishes editing through it)
-  data-hub="item"     one entry in the pencil menu: data-hub-label="Colors", optional data-hub-order="9" (higher = lower),
-                      data-hub-icon="palette" (an icon name from shell.js), data-hub-sep (a line above it) and
-                      data-hub-group="Export" (items sharing a group fold into one "Export..." entry)
-  data-hub="done"     the page's Done button (stays visible)
+  data-hub="item"     one button on the edit bar (the pill at the bottom while editing): data-hub-label="Colors", optional
+                      data-hub-order="9" (higher = later), data-hub-icon="palette" (an icon name from shell.js) and
+                      data-hub-group="Export" (items sharing a group fold into one "Export" button with a short list).
+                      data-hub-main marks the page's Settings: it is also in the pencil menu (Edit This Page and Settings)
+  data-hub="done"     the page's Done button (the edit bar's Done presses it; a page without one, like Cards, just stops editing)
+  data-hub-ebar       the page's own old edit bar: hidden (its buttons stay, for the edit bar to press); data-hub-hint="..."
+                      on it is said once per visit when editing starts
+  data-ix-editbar     a select (icons | text) in the page's Settings for Icons Only or Icons and Text; data-ix-save marks
+                      that dialog's Save button, which also saves this choice (site setting editBar)
   data-hub="logout"   the page's own Log out button (runs the site log out)
   data-hub="hide"     anything the bar already does (theme, search, timers...), hidden while the bar is on
 A page that recolors itself listens for the hub:theme event (detail = "light" or "dark").

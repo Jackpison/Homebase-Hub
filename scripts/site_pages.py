@@ -328,7 +328,7 @@ FAQ = [
     ('Do I need a database?', 'No. Everything is kept as files in site-data, which is closed to browsers.'),
     ('What kind of hosting do I need?', 'Any hosting with PHP 8.3 or newer and a file manager (or FTP). HTTPS is recommended. Settings tells you when your PHP is about to stop getting security fixes.'),
     ('Can I put it in a sub-folder?', 'Yes. Upload it to a folder such as /hub/ and it works the same, including installing it on a phone.'),
-    ('Can I bring my bookmarks from my browser?', 'Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari, then choose Import Bookmarks in the Links pencil menu. You see a preview first, and a copy of Links is kept so you can undo.'),
+    ('Can I bring my bookmarks from my browser?', 'Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari, then press the pencil on Links, choose Edit This Page and press Import Bookmarks on the bar at the bottom. You see a preview first, and a copy of Links is kept so you can undo.'),
     ('Does it work offline?', 'No, on purpose. Your data is private, so it always comes from your server. Added to a home screen, the site opens like an app, but nothing is kept on the phone.'),
     ('What if an update goes wrong?', 'A copy of the current version is kept before every update, and the site checks itself afterwards. If it cannot answer, the saved version comes back by itself. Go Back in Settings, Updates does the same on request. Your data in site-data is never touched by an update.'),
     ('Is my data encrypted?', 'You choose. Encrypted tabs in Links and Info, and encrypted backup files, use one passphrase, and the keys are made in your browser. A lost passphrase and a lost recovery key mean lost data.'),

@@ -52,7 +52,7 @@
           <button data-a="editholder" data-hub="item" data-hub-label="Edit Holders" data-hub-icon="user" data-hub-order="10" data-hub-sep>Edit Holders</button>
           <button data-a="editbank" data-hub="item" data-hub-label="Edit Banks" data-hub-icon="card" data-hub-order="11">Edit Banks</button>
           <hr>
-          <button data-a="title" data-hub="item" data-hub-label="Cards Settings" data-hub-icon="gear" data-hub-order="50" data-hub-sep>Cards Settings</button>
+          <button data-a="title" data-hub="item" data-hub-main data-hub-label="Cards Settings" data-hub-icon="gear" data-hub-order="50" data-hub-sep>Cards Settings</button>
           <hr>
           <button data-a="password" id="mPw">Password &amp; Security</button>
           <button data-a="lock" id="mLock">Log Out</button>
@@ -145,9 +145,11 @@
   <h2>Cards Settings</h2>
   <div class="f">
     <label class="w">Page Title<input id="ttl" maxlength="60"></label>
+    <label class="w">Edit Bar<select id="teditbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></label>
   </div>
+  <p>Edit Bar: the bar at the bottom while you edit this page. Icons Only shows each name when you point at it. Phones always show icons.</p>
   <div class="f tb"><button type="button" id="tsizes" data-hub-action="sizes">Change Text Sizes</button><button type="button" id="tcols">Column Order for Excel and PDF</button></div>
-  <div class="act"><button type="button" id="tcancel">Cancel</button><button type="button" class="pri" id="tsave">Save</button></div>
+  <div class="act"><button type="button" id="tcancel">Cancel</button><button type="button" class="pri" id="tsave" data-ix-save>Save</button></div>
 </dialog>
 
 <dialog id="bdlg">

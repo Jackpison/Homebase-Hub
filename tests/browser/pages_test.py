@@ -195,16 +195,16 @@ try:
               tl == [['Merge PDF', '../tools/#/tool/pdf-merge'], ['QR Code Generator', '../tools/#/tool/qr-generator']], tl)
         hp.keyboard.press('Escape'); until(lambda: hp.evaluate("document.getElementById('wPanel').hidden"), 3000)
         # Settings > Widgets: Glance and Expand, the Scratch Pad on, a countdown and a pinned note from Info
-        hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#toolbar:not([hidden])', timeout=10000)
-        pill = hp.evaluate("[...document.querySelectorAll('#toolbar button')].filter(b => getComputedStyle(b).display !== 'none').map(b => b.getAttribute('aria-label'))")
-        menu = hp.evaluate("[...document.querySelectorAll('[data-hub=item]')].map(e => e.dataset.hubLabel)")
-        check('P36 editing shows one pill of icons: Background, Widgets, Home Settings and Done (no Log Out); the site menu offers only Home Settings for this page',
+        hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#ix-ebar:not([hidden])', timeout=10000)
+        pill = hp.evaluate("[...document.querySelectorAll('#ix-ebar .ix-eb')].map(b => b.getAttribute('aria-label'))")
+        menu = hp.evaluate("[...document.querySelectorAll('[data-hub=item][data-hub-main]')].map(e => e.dataset.hubLabel)")
+        check('P36 editing shows the shared edit bar: Background, Widgets, Home Settings and Done (no Log Out); the menu offers only Home Settings for this page',
               pill == ['Background', 'Widgets', 'Home Settings', 'Done'] and menu == ['Home Settings'] and not hp.evaluate("!!document.getElementById('logoutBtn')"), (pill, menu))
-        hp.click('#toolbar [data-open=settingsSheet]'); hp.wait_for_selector('#settingsSheet[open]', timeout=5000)
+        hp.click('#ix-ebar [data-tip="Home Settings"]'); hp.wait_for_selector('#settingsSheet[open]', timeout=5000)
         hs = hp.evaluate("[!!document.querySelector('#settingsSheet #sHomeBar'), document.querySelector('#settingsSheet').textContent.includes('Show the Bar on the Home Page'), !document.querySelector('#settingsSheet #wStyle')]")
         check('P37 Home Settings has Show the Bar on the Home Page, and the widgets are no longer in it', hs == [True, True, True], hs)
         hp.evaluate("document.getElementById('settingsSheet').close()")
-        hp.click('#toolbar [data-open=widgetsSheet]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
+        hp.click('#ix-ebar [data-tip="Widgets"]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
         until(lambda: hp.evaluate("document.querySelectorAll('#wNote optgroup').length > 0"), 10000)
         hp.click('#wStyle [data-v=glance]'); hp.check('#wList [data-wl=pad]')
         hp.fill('#wCdName', 'Lakeside Weekend'); hp.fill('#wCdDate', hp.evaluate("(() => { const tz = (window.HUB && HUB.state && HUB.state().tz) || 'Asia/Kolkata'; const d = new Date(new Intl.DateTimeFormat('en-CA', { timeZone:tz }).format(new Date()) + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 12); return d.toISOString().slice(0, 10); })()"))   # 12 days from today in the site's time zone (not this computer's)
@@ -218,7 +218,7 @@ try:
         # a forecast already saved on the server, so the test asks Open-Meteo nothing (the server side is tested in home_widgets_test.php)
         subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; write_json(weather_file(), ['key' => 'bengaluru|c', 'town' => 'bengaluru', 'place' => ['name' => 'Bengaluru, Karnataka', 'lat' => 12.97, 'lon' => 77.59], 'saved' => time(), 'data' => ['temp' => 27, 'text' => 'Partly cloudy', 'pic' => 'partly', 'day' => true, 'days' => [['date' => date('Y-m-d'), 'max' => 29, 'min' => 19, 'text' => 'Rain', 'pic' => 'rain']], 'place' => 'Bengaluru, Karnataka', 'unit' => '°C', 'saved' => time()]]);" % D], check=True)
         hp.click('#saveWidgets'); until(lambda: not hp.evaluate("document.getElementById('widgetsSheet').open"), 10000)
-        hp.click('#doneBtn'); until(lambda: hp.evaluate("document.querySelectorAll('#wCards .wcard').length") == 9, 10000); settle(hp)
+        hp.click('#ix-ebar [data-ix-done]'); until(lambda: hp.evaluate("document.querySelectorAll('#wCards .wcard').length") == 9, 10000); settle(hp)
         cards = hp.evaluate("[...document.querySelectorAll('#wCards .wcard')].map(c => [c.dataset.w, c.querySelector('.wc-h span').textContent])")
         check('P25 Settings > Widgets switches to Glance and Expand, turns the Scratch Pad on, moves it, and sets the countdown and the note (no encrypted tab offered)',
               [c[0] for c in cards] == ['today', 'countdown', 'note', 'tools', 'pad', 'calendar', 'quote', 'worldclock', 'weather'] and cards[1][1] == 'Lakeside Weekend' and cards[2][1] == note and hp.evaluate("document.getElementById('wDock').hidden")
@@ -238,18 +238,18 @@ try:
         hp.click('#wCards [data-w=quote]'); hp.wait_for_selector('#wQuoteNext', timeout=5000)
         q1 = hp.evaluate("document.querySelector('#wBody blockquote').textContent"); hp.click('#wQuoteNext'); q2 = hp.evaluate("document.querySelector('#wBody blockquote').textContent")
         check('P34 Quote of the Day shows a quote, and Another Quote shows a different one', len(q1) > 5 and q2 != q1 and hp.evaluate("document.activeElement.id") == 'wQuoteNext', (q1, q2))
-        hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#toolbar:not([hidden])', timeout=10000)
-        hp.click('#toolbar [data-open=widgetsSheet]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
+        hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#ix-ebar:not([hidden])', timeout=10000)
+        hp.click('#ix-ebar [data-tip="Widgets"]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
         hp.uncheck('#wShow'); hp.click('#saveWidgets'); until(lambda: not hp.evaluate("document.getElementById('widgetsSheet').open"), 10000)
-        hp.click('#doneBtn'); settle(hp)
+        hp.click('#ix-ebar [data-ix-done]'); settle(hp)
         off = hp.evaluate("[document.querySelectorAll('#wCards .wcard, #wDock .wdb').length, document.body.classList.contains('has-widgets'), !document.getElementById('clock').hidden]")
         check('P38 Widgets > Show Widgets off hides every widget (the clock stays)', off == [0, False, True], off)
-        hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#toolbar:not([hidden])', timeout=10000)
-        hp.click('#toolbar [data-open=widgetsSheet]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000); hp.check('#wShow'); hp.click('#saveWidgets')
-        until(lambda: not hp.evaluate("document.getElementById('widgetsSheet').open"), 10000); hp.click('#doneBtn')
+        hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#ix-ebar:not([hidden])', timeout=10000)
+        hp.click('#ix-ebar [data-tip="Widgets"]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000); hp.check('#wShow'); hp.click('#saveWidgets')
+        until(lambda: not hp.evaluate("document.getElementById('widgetsSheet').open"), 10000); hp.click('#ix-ebar [data-ix-done]')
         def home_bar(on):
-            hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#toolbar:not([hidden])', timeout=10000)
-            hp.click('#toolbar [data-open=settingsSheet]'); hp.wait_for_selector('#settingsSheet[open]', timeout=5000)
+            hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#ix-ebar:not([hidden])', timeout=10000)
+            hp.click('#ix-ebar [data-tip="Home Settings"]'); hp.wait_for_selector('#settingsSheet[open]', timeout=5000)
             (hp.check if on else hp.uncheck)('#sHomeBar')
             with hp.expect_navigation(timeout=15000): hp.click('#saveSettings')   # the bar comes or goes with a reload
             until(lambda: hp.evaluate("!!(window.HUB && HUB.state && 'homeBar' in HUB.state())"), 10000); settle(hp)
@@ -329,6 +329,65 @@ try:
         xctx.close()
         check('P49 the shared encryption opens tabs made before 1.53.2 (passphrase, recovery key typed loosely, text encrypted twice), refuses a wrong key, and what it makes opens with plain WebCrypto',
               vr and all(vr.values()), vr)
+        # P50-P54: the edit bar (1.53.5). The pencil menu has only Edit This Page and the page's Settings; while editing, the page's
+        # tools sit in one shared pill at the bottom (Home's look), each page's Settings picks Icons Only or Icons and Text, and
+        # Settings has no pencil at all.
+        ectx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); ectx.add_cookies(cookies); ectx.route('**/*', handle); ectx.add_init_script(TRACK_REQUESTS)
+        ep = ectx.new_page(); eerr = []; ep.on('pageerror', lambda e: eerr.append(str(e)[:200]))
+        def emenu(app):
+            ep.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); until(lambda: ep.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(ep)
+            ep.click('#ix-editb'); until(lambda: ep.evaluate("!!document.querySelector('#ix-pop')"), 3000)
+            return ep.evaluate("[...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)")
+        def ebar(): return ep.evaluate("(() => { const e = document.getElementById('ix-ebar'); return e && !e.hidden ? [...e.querySelectorAll('.ix-eb')].map(b => b.getAttribute('aria-label')) : null })()")
+        want = {'links': ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings', 'Done'], 'info': ['Export', 'Info Settings', 'Done'],
+                'cards': ['Add Card', 'Add Holder', 'Edit Holders', 'Edit Banks', 'Export', 'Cards Settings', 'Done'], 'tasks': ['Add Task', 'Export', 'Tasks Settings', 'Done']}
+        menus, bars, old, done = {}, {}, {}, {}
+        for app in want:
+            menus[app] = emenu(app)
+            ep.click('#ix-pop button'); until(lambda: ebar() is not None, 5000)
+            bars[app] = ebar()
+            old[app] = ep.evaluate("[...document.querySelectorAll('[data-hub-ebar]')].every(e => getComputedStyle(e).display === 'none')")
+            ep.click('#ix-ebar [data-ix-done]'); until(lambda: ebar() is None, 5000)
+            done[app] = not ep.evaluate("document.body.classList.contains('editing')")
+        check('P50 the pencil menu offers only Edit This Page and the page\'s own Settings (Links, Info, Cards, Tasks)',
+              all(menus[a] == ['Edit This Page', a.title() + ' Settings'] for a in want), menus)
+        check('P51 Edit This Page shows the shared edit bar with the page\'s tools, its Settings and Done, the old bar is hidden, and Done ends editing (also on Cards and Tasks, which have no edit mode of their own)',
+              bars == want and all(old.values()) and all(done.values()), (bars, old, done))
+        # the bar's buttons do what the old ones did
+        emenu('links'); ep.click('#ix-pop button'); until(lambda: ebar() is not None, 5000)
+        ep.hover('#ix-ebar [data-tip="Colors"]'); until(lambda: ep.evaluate("!!document.getElementById('ix-ebtip')"), 3000)
+        tipname = ep.evaluate("document.getElementById('ix-ebtip').textContent")
+        ep.click('#ix-ebar [data-tip="Colors"]'); until(lambda: ep.evaluate("document.getElementById('colorDlg').open"), 5000)
+        ep.evaluate("document.getElementById('colorDlg').close()")
+        ep.click('#ix-ebar [data-tip="Links Settings"]'); until(lambda: ep.evaluate("document.getElementById('setDlg').open"), 5000)
+        before = ep.evaluate("document.getElementById('sEditBar').value")
+        ep.select_option('#sEditBar', 'text'); ep.click('#setDlg button[value=cancel]'); ep.wait_for_timeout(600)
+        cancelled = ep.evaluate("[document.getElementById('ix-ebar').className, (HUB.state().editBar || {}).links || '']")
+        ep.click('#ix-ebar [data-tip="Links Settings"]'); until(lambda: ep.evaluate("document.getElementById('setDlg').open"), 5000)
+        reopened = ep.evaluate("document.getElementById('sEditBar').value")
+        ep.select_option('#sEditBar', 'text'); ep.click('#setSave'); until(lambda: ep.evaluate("document.getElementById('ix-ebar').classList.contains('ix-ebar-text')"), 8000)
+        labels = ep.evaluate("[...document.querySelectorAll('#ix-ebar .ix-ebl')].filter(l => l.offsetWidth > 0).map(l => l.textContent)")
+        check('P52 Icons Only (the default) shows a button\'s name when you point at it; Links Settings > Edit Bar > Icons and Text writes the names on the bar once saved (Cancel keeps it as it was)',
+              tipname == 'Colors' and before == 'icons' and cancelled == ['', ''] and reopened == 'icons' and labels == ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings'], (tipname, before, cancelled, reopened, labels))
+        ep.click('#ix-ebar [data-ix-done]')
+        emenu('links'); ep.click('#ix-pop button'); until(lambda: ebar() is not None, 5000)
+        kept = ep.evaluate("document.getElementById('ix-ebar').classList.contains('ix-ebar-text')"); ep.click('#ix-ebar [data-ix-done]')
+        emenu('tasks'); ep.click('#ix-pop button'); until(lambda: ebar() is not None, 5000)
+        other = ep.evaluate("document.getElementById('ix-ebar').className"); ep.click('#ix-ebar [data-ix-done]')
+        emenu('cards'); ep.click('#ix-pop button'); until(lambda: ebar() is not None, 5000)
+        ep.click('#ix-ebar [data-tip="Export"]'); until(lambda: ep.evaluate("!!document.querySelector('#ix-pop')"), 3000)
+        exp = ep.evaluate("[...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)"); ep.keyboard.press('Escape'); ep.click('#ix-ebar [data-ix-done]')
+        ep.goto(B + '/web/settings/', wait_until='domcontentloaded'); until(lambda: ep.evaluate("!!(window.HUB && HUB.state().admin)"), 15000); settle(ep)
+        nopen = ep.evaluate("!document.getElementById('ix-editb') && !document.querySelector('[data-ix=edit]')")
+        check('P53 the choice is kept on the server (Links still shows names after a reload) and is per page (Tasks keeps icons); Cards\' Export opens its two exports; Settings has no pencil',
+              kept and other == '' and exp == ['PDF (print)', 'Excel Spreadsheet'] and nopen, (kept, other, exp, nopen))
+        ectx.close()
+        mctx2 = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 780}); mctx2.add_cookies(cookies); mctx2.route('**/*', handle); mctx2.add_init_script(TRACK_REQUESTS)
+        mp2 = mctx2.new_page(); mp2.goto(B + '/web/links/', wait_until='domcontentloaded'); until(lambda: mp2.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(mp2)
+        mp2.evaluate("document.querySelector('[data-hub=toggle]').click()"); until(lambda: mp2.evaluate("!!document.getElementById('ix-ebar') && !document.getElementById('ix-ebar').hidden"), 5000); settle(mp2)
+        ph = mp2.evaluate("(() => { const e = document.getElementById('ix-ebar'), r = e.getBoundingClientRect(); return [r.left >= 0 && r.right <= innerWidth, [...e.querySelectorAll('.ix-ebl')].every(l => l.offsetWidth === 0), e.querySelectorAll('.ix-eb').length] })()")
+        mctx2.close()
+        check('P54 on a phone the edit bar fits the screen and shows icons only (even with Icons and Text chosen), with no page error', ph == [True, True, 5] and not eerr, (ph, eerr))
         # P47: Home's refresh button (1.53). The next background is ready, so a press swaps at once; three quick presses on a slow
         # network give one change (it never starts over); when nothing arrives it gives up within about 20 s and the button works again.
         rctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx.route('**/*', handle); rctx.add_init_script(TRACK_REQUESTS)

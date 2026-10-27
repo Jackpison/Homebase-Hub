@@ -221,7 +221,7 @@ function render(){
   const g=grouped();
   $("list").classList.toggle("grouped",g);
   const head=`<div class="row head">`+HEADS.map(([k,l,c])=>`<span class="h-${k||"d"}${c?" "+c:""}">${k?`<button class="sh" data-k="${k}" data-on="${sort.k===k?1:0}" aria-label="Sort by ${l}">${l}${sort.k===k?(sort.d===1?" ▲":" ▼"):""}</button>`:l}</span>`).join("")+`<span></span></div>`;
-  if(!list.length){$("list").innerHTML=`<div class="empty">${hasF()?"No cards match these filters. Press Clear to show them all.":"No cards here yet. Open the pencil menu in the bar and choose Add Card."}</div>`;return}
+  if(!list.length){$("list").innerHTML=`<div class="empty">${hasF()?"No cards match these filters. Press Clear to show them all.":"No cards here yet. Press the pencil in the bar, choose Edit This Page, then Add Card."}</div>`;return}
   if(!g){$("list").innerHTML=head+list.map(rowHtml).join("");return}
   const owners=[...P,...uniq(list.map(c=>c.owner)).filter(o=>!P.includes(o))];
   $("list").innerHTML=head+owners.map(o=>{

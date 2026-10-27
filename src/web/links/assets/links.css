@@ -139,11 +139,7 @@ body.editing .divider-row .divider{flex:1;background:none;border-top:1px dashed 
 .cat-add{display:none;gap:6px;padding:8px 8px 0}
 body.editing .cat-add{display:flex}
 .cat-add button{font-size:.87em;padding:5px 10px}
-.editbar{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;width:max-content;
-  background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:8px 8px 8px 16px;box-shadow:0 12px 40px var(--shadow);z-index:30;max-width:calc(100vw - 24px)}
-body.editing .editbar{display:flex}
-.editbar .note{color:var(--muted);font-size:13.5px;margin-right:6px}
-.editbar .note b{color:var(--text);font-weight:500}
+/* the edit bar is the shared one (shell.js, 1.53.5); .editbar only holds its buttons */
 
 /* Dialogs */
 dialog{font-size:15px;background:var(--panel);color:var(--text);border:1px solid var(--line2);border-radius:12px;padding:0;width:min(480px,calc(100vw - 24px));box-shadow:0 20px 60px var(--shadow)}
@@ -251,7 +247,6 @@ body.is-locked .search{display:none}
   .search kbd{display:none}
   main{padding:10px 12px 140px}
   .col{gap:28px}
-  .editbar .note{display:none}
   .colors,.colors.four{grid-template-columns:1fr 1fr}
 }
 @media (prefers-reduced-motion:reduce){.toast,.tab,.tip{transition:none}.ghost{transform:none}}

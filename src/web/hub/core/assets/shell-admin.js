@@ -371,7 +371,7 @@
       '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw">' + sw.map(function (c) { return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (draft.accent === c) + '"></button>'; }).join('') +
       '<label class="ix-swc" title="Your Own Color"><input type="color" id="ix-acc" value="' + esc(draft.accent) + '" aria-label="Your Own Color"></label><input type="text" class="ix-hex" id="ix-acch" maxlength="7" value="' + esc(draft.accent) + '" aria-label="Accent Color Hex" spellcheck="false"></div>' +
       '<label class="ix-tg"><span>Same Look on Every Page<small>Your colors and accent on every page. Turn off to let each page use its own colors.</small></span><input type="checkbox" id="ix-look"' + (draft.look ? ' checked' : '') + '></label>' +
-      '<p class="ix-note">For the colors of the bar, pages and text, open the Colors tab; for ready-made looks, the Presets tab. Each page\'s own options are under its pencil icon.</p>';
+      '<p class="ix-note">For the colors of the bar, pages and text, open the Colors tab; for ready-made looks, the Presets tab. Each page\'s own options are under its pencil icon: Edit This Page and its Settings.</p>';
     bindSeg(p, function (k, v) { draft[k] = v; if (k === 'theme') K.previewTheme(v); });
     p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { setAcc(b.dataset.c); }; });
     p.querySelector('#ix-acc').oninput = function (e) { setAcc(e.target.value); };

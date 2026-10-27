@@ -35,13 +35,12 @@
 
 <main id="grid"><div class="skel" role="status" aria-label="Loading"><i></i><i></i><i></i><i></i><i></i><i></i></div></main>
 
-<div class="editbar" role="toolbar" aria-label="Edit Tools">
-  <span class="note"><b>Editing.</b> Drag categories and links, even onto another tab.</span>
+<div class="editbar" data-hub-ebar data-hub-hint="Editing: drag categories and links, even onto another tab.">
   <button class="btn" id="colorsBtn" data-hub="item" data-hub-label="Colors" data-hub-icon="palette" data-hub-order="4">Colors</button>
   <button class="btn" id="textBtn" data-hub="hide">Text Sizes</button>
   <button class="btn" id="iconsBtn" data-hub="item" data-hub-label="Fetch Icons" data-hub-icon="image" data-hub-order="5">Fetch Icons</button>
   <button class="btn" id="importBmBtn" data-hub="item" data-hub-label="Import Bookmarks" data-hub-icon="up" data-hub-order="6" data-hub-sep>Import Bookmarks</button>
-  <button class="btn" id="settingsBtn" data-hub="item" data-hub-label="Links Settings" data-hub-icon="gear" data-hub-order="8">Settings</button>
+  <button class="btn" id="settingsBtn" data-hub="item" data-hub-main data-hub-label="Links Settings" data-hub-icon="gear" data-hub-order="8">Settings</button>
   <button class="btn" id="logoutBtn" data-hub="logout">Log Out</button>
   <button class="btn primary" id="doneBtn" data-hub="done">Done</button>
 </div>
@@ -89,6 +88,9 @@
   <h4>Text Sizes</h4>
   <button class="btn" type="button" id="sTextBtn" style="margin-bottom:12px">Change Text Sizes</button>
 
+  <h4>Edit Bar</h4>
+  <div class="field"><select id="sEditBar" data-ix-editbar aria-label="Edit Bar"><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select><span class="hint">The bar at the bottom while you edit this page. Icons Only shows each name when you point at it. Phones always show icons.</span></div>
+
   <div class="split" data-hub="hide">
     <button class="btn" type="button" id="versionsBtn">Restore Earlier Version</button>
   </div>
@@ -100,7 +102,7 @@
   <p class="hint" style="font-size:12.5px;color:var(--faint);margin:8px 0 0">Backup, import and earlier versions: use the Backup icon in the bar.</p>
 
   <p class="err" id="setErr" style="margin-top:14px"></p>
-  <div class="actions"><button class="btn primary" id="setSave">Save Settings</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
+  <div class="actions"><button class="btn primary" id="setSave" data-ix-save>Save Settings</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
 </form></dialog>
 
 <dialog id="colorDlg"><form method="dialog">
