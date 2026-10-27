@@ -1,6 +1,7 @@
 // Image Resizer: by pixels or percentage with the aspect ratio locked, social media sizes, and an optional size cap.
 import { h, seg, range, input, select, check, button, dropzone, panel, busy, field } from '../ui.js';
 import { ACCEPT, FORMATS, decode, encode, toTarget, canvas, resized, sameFormat, outName, results, each } from '../lib/image.js';
+import { presetBar, controls } from '../lib/presets.js';
 
 const PRESETS = [['ig-sq', 'Instagram post, square (1080 × 1080)', 1080, 1080], ['ig-pt', 'Instagram post, portrait (1080 × 1350)', 1080, 1350], ['story', 'Story or Reel (1080 × 1920)', 1080, 1920],
   ['x', 'X post (1600 × 900)', 1600, 900], ['fb', 'Facebook cover (1640 × 624)', 1640, 624], ['yt', 'YouTube thumbnail (1280 × 720)', 1280, 720], ['li', 'LinkedIn banner (1584 × 396)', 1584, 396], ['wa', 'WhatsApp profile (500 × 500)', 500, 500]];
@@ -36,5 +37,5 @@ export default function (root) {
   }));
   box();
   root.append(dropzone({ accept: ACCEPT, multiple: true, label: 'Choose images', onFiles: (fs) => { files = fs; list.textContent = fs.length + (fs.length === 1 ? ' image chosen.' : ' images chosen.'); out.replaceChildren(); } }),
-    panel(list, mode.el, b, h('div', { class: 'row' }, capOn.el, cap, h('span', { class: 'hint', text: 'KB' })), field('Save as', fmt), go, prog, out));
+    panel(list, presetBar('resize', controls({ mode, w, ht, lock, pct, preset, fit, capOn, cap, fmt })), mode.el, b, h('div', { class: 'row' }, capOn.el, cap, h('span', { class: 'hint', text: 'KB' })), field('Save as', fmt), go, prog, out));
 }

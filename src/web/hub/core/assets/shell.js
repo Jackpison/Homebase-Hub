@@ -1262,6 +1262,7 @@
   window.HUB = {
     app: APP, state: function () { return S; }, login: login, logout: logout, settings: settings, toast: toast, theme: themeNow, setTheme: setTheme,
     isAdmin: function () { return !!S.admin; }, ready: function () { return refresh(); }, fetch: hubFetch,
+    api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
     tz: function () { return S.tz || 'Asia/Kolkata'; }   // the site's time zone (Settings > General)
   };

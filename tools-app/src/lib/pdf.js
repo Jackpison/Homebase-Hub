@@ -29,7 +29,7 @@ export async function renderPage(doc, n, width) {
   await page.render({ canvasContext: x, viewport }).promise;
   return { canvas: c, viewport, page };
 }
-export const lib = () => import('pdf-lib');
+export const lib = () => import('@cantoo/pdf-lib');
 /** Opens a PDF with pdf-lib (to change it). */
 export async function loadLib(file) {
   const { PDFDocument } = await lib(), name = file.name || 'This PDF';

@@ -36,13 +36,14 @@ Options -Indexes
   </FilesMatch>
 
   # Security: only this site's own code may run; images/lookups only from Google's favicon service.
+  # The camera, microphone and screen sharing are allowed for this page only (1.60: the QR scanner and the recorder ask first).
   # Pre-load a page when you hover over its link in the bar (the rules are in hub/core/assets/speculation-rules.json).
   Header set Speculation-Rules "\"../hub/core/assets/speculation-rules.json\""
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.google.com https://*.gstatic.com; connect-src 'self' data: blob: https://www.google.com https://*.gstatic.com; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.google.com https://*.gstatic.com; connect-src 'self' data: blob: https://www.google.com https://*.gstatic.com; worker-src 'self' blob:; media-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set Permissions-Policy "camera=(self), microphone=(self), display-capture=(self), geolocation=(), payment=(), usb=()"
   Header always set Cross-Origin-Opener-Policy "same-origin"
   Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
 </IfModule>

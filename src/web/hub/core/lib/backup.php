@@ -18,6 +18,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  *   tasks    = { tasks, log, settings }
  *   home     = { site, icons }          (background photos are not included: they are downloaded again)
  *   settings = Site settings (never the password)
+ *   tools    = { kinds }               (Tools' saved presets, 1.60)
  *
  * Import also accepts the old single-site backups from Links, Info and Cards.
  */
@@ -31,7 +32,7 @@ function bk_info_file(): string { return hub_dir('info') . '/info.json'; }
 function bk_info_data(): array { return hub_jread(bk_info_file()) ?? ['tabs' => []]; }
 function bk_cards_file(): string { return hub_dir('cards') . '/cards.json'; }
 function bk_cards_data(): array { return hub_jread(bk_cards_file()) ?? []; }
-const BK_PARTS = ['links', 'info', 'cards', 'tasks', 'home', 'settings', 'telegram', 'watch'];   // every part of a full backup
+const BK_PARTS = ['links', 'info', 'cards', 'tasks', 'home', 'settings', 'telegram', 'watch', 'tools'];   // every part of a full backup (tools: Tools' saved presets, 1.60)
 function bk_tasks_file(): string { return hub_dir('tasks') . '/tasks.json'; }
 function bk_tasks_data(): array { return hub_jread(bk_tasks_file()) ?? ['tasks' => [], 'settings' => []]; }
 function bk_home_file(): string { return hub_dir('home') . '/site.json'; }
@@ -54,6 +55,8 @@ function bk_overview(): array {
         'telegram' => (function () { require_once __DIR__ . '/notify.php'; $n = nt_load();
             return ['summary' => $n['token'] === '' ? 'not set up' : 'bot, chat, messages, schedule and backup settings (the bot token only in encrypted backups)']; })(),
         'watch'    => (function () { require_once __DIR__ . '/watch.php'; $w = wt_load(); return ['summary' => count($w['sites']) . ' watched ' . (count($w['sites']) === 1 ? 'site' : 'sites')]; })(),
+        'tools'    => (function () { require_once __DIR__ . '/presets.php'; $n = array_sum(array_map('count', pr_load()['kinds']));
+            return ['summary' => $n . ' saved ' . ($n === 1 ? 'preset' : 'presets'), 'size' => @filesize(hub_jpath(pr_file())) ?: 0]; })(),
     ];
 }
 
@@ -103,6 +106,7 @@ function bk_export(array $pick, bool $secrets = false): array {
         $parts['telegram'] = $t;
     }
     if (!empty($pick['watch'])) { require_once __DIR__ . '/watch.php'; $w = wt_load(); $parts['watch'] = ['sites' => $w['sites'], 'tasks' => $w['tasks'], 'updateUrl' => $w['updateUrl']]; }
+    if (!empty($pick['tools'])) { require_once __DIR__ . '/presets.php'; $parts['tools'] = pr_view(pr_load()); }
     if (!empty($pick['settings'])) {
         $parts['settings'] = hub_settings();
         $lf = HUB_PUBLIC . '/' . $parts['settings']['logo'];
@@ -265,6 +269,20 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
         });
         $done[] = 'Domain watch';
     }
+    if (!empty($pick['tools']) && isset($parts['tools']['kinds']) && is_array($parts['tools']['kinds'])) {   // Tools' saved presets (1.60)
+        require_once __DIR__ . '/presets.php'; $in = pr_clean($parts['tools']);
+        if ($mode === 'merge') {
+            $cur = pr_load();
+            foreach ($in['kinds'] as $k => $list) {
+                $names = array_map(function ($p) { return mb_strtolower($p['name']); }, $list);
+                $keep = array_values(array_filter($cur['kinds'][$k] ?? [], function ($p) use ($names) { return !in_array(mb_strtolower($p['name']), $names, true); }));
+                $cur['kinds'][$k] = array_merge($keep, $list);
+            }
+            $in = $cur;
+        }
+        if (!pr_save($in)) throw new Exception('Tools presets could not be saved (check the folder permissions, or the presets are too large).');
+        $done[] = 'Tools presets';
+    }
     return $done;
 }
 
@@ -275,7 +293,7 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
  */
 function bk_reset_all(): array {
     $sd = hub_data_root(); $core = hub_dir('core'); $done = [];
-    foreach (['links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'home' => 'Start Page'] as $app => $name) {
+    foreach (['links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'home' => 'Start Page', 'tools' => 'Tools presets'] as $app => $name) {
         if (is_dir("$sd/$app")) { hub_rm_tree("$sd/$app"); $done[] = $name; }
     }
     foreach (['home/photos', 'home/uploads', 'home/icons', 'links/icons', 'brand'] as $m)

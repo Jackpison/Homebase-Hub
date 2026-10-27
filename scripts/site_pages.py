@@ -42,6 +42,7 @@ def looks_row():
 # ---------------------------------------------------------------- the six app pages
 # Each: what it is, the facts worth a glance, the everyday problems it solves, the details we are proud of, and the
 # numbered points on its screenshot (tour = text, hot = where on the picture, in percent).
+NT = len(json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))['tools'])   # the number of tools, from the one list
 FEATURES = [
     dict(id='home', name='Home', ac='a-home', icon='home', url='yourdomain.com',
          h1='A start page that feels like *yours*.',
@@ -113,18 +114,18 @@ FEATURES = [
                ('Dates, repeats, prices', 'Bills and renewals that come back by themselves.'), ('Add in plain words', 'Type Netflix 649 monthly and it understands.')],
          hot=[(12, 42), (52, 25), (60, 58), (42, 12)], everyday=('Forgotten bills and renewals', 'Due dates, repeats, and a nudge on Telegram')),
     dict(id='tools', name='Tools', ac='a-tools', icon='tools', url='yourdomain.com/web/tools',
-         h1='36 tools, *right in your browser*.',
-         lead='Resize and convert images, merge and sign PDFs, read text from photos, make QR codes and more. Search, star your favourites and get on with your day.',
+         h1='%d tools, *right in your browser*.' % NT,
+         lead='Resize and convert images, merge and sign PDFs, work out loans and savings, make invoices, scan QR codes and more. Search, star your favourites and get on with your day.',
          pic=('shot-tools.webp', 1440, 709, 'Tools page with search and recently used tools'),
-         chips=[('tools', '36 tools', 'Images, Photos, PDF, Utilities'), ('star', 'Favourites', 'Star and arrange your own')],
-         facts=[('36', 'tools'), ('4', 'sections: Images, Photos, PDF, Utilities'), ('Browser', 'does the work'), ('Yours', 'star favourites, arrange sections')],
+         chips=[('tools', '%d tools' % NT, 'Images, Photos, PDF, Calculators, Documents, Utilities'), ('star', 'Favourites', 'Star and arrange your own')],
+         facts=[(str(NT), 'tools'), ('6', 'sections: Images, Photos, PDF, Calculators, Documents, Utilities'), ('Browser', 'does the work'), ('Yours', 'star favourites, arrange sections')],
          problems=[('Sketchy free PDF websites', 'Merge, compress, sign and protect PDFs in your browser', 'tools'),
                    ('One-off apps for one-off jobs', 'Resize, crop, convert and compress images in one place', 'image'),
                    ('Hunting for the tool you used last week', 'Recent and Favourites sections, and a search box', 'star')],
          details=[('tools', 'Heavy engines load on demand', 'OCR, background removal and PDF encryption load only when a tool needs them.'), ('star', 'Favourites and your own order', 'Star favourites, drag tools to reorder them or move them between sections, and hide the ones you never use.'),
                   ('table', 'Side menu or tabs', 'Show the sections as a side menu, or as tabs on top. Phones always get tabs.'), ('search', 'Search them all', 'Find a tool by name or by what it does.')],
-         tour=[('Search first', 'Type what you want to do and the right tool appears.'), ('Recently used', 'Your recent tools are one click away.'), ('Sections', 'Images, Photos, PDF and Utilities, plus Favourites.')],
-         hot=[(55, 38), (30, 70), (9, 40)], everyday=('Sketchy free PDF websites', '36 tools that run in your own browser')),
+         tour=[('Search first', 'Type what you want to do and the right tool appears.'), ('Recently used', 'Your recent tools are one click away.'), ('Sections', 'Images, Photos, PDF, Calculators, Documents and Utilities, plus Favourites.')],
+         hot=[(55, 38), (30, 70), (9, 40)], everyday=('Sketchy free PDF websites', '%d tools that run in your own browser' % NT)),
 ]
 BY = {f['id']: f for f in FEATURES}
 for _f in FEATURES: assert len(_f['tour']) == len(_f['hot']), _f['id']
@@ -200,14 +201,14 @@ def home():
         ('a-tools', '12:10', 'Sort out a PDF', 'Merge, compress or sign it in your browser with the PDF tools.', 'Tools'),
         ('a-tasks', '21:00', 'The bill is due', 'A Telegram message arrives with Done, Skip and Snooze. One tap and it is handled.', 'Tasks and Telegram')])
     stats = ''.join('<div class="stat %s"><b>%s</b><span>%s</span></div>' % (ac, n, e(t)) for ac, n, t in [
-        ('a-home', '6', 'pages, one login'), ('a-tools', '36', 'tools in your browser'), ('a-links', '166', 'ready-made looks'), ('a-cards', '0', 'databases to run'), ('a-tasks', '3', 'browser engines tested')])
+        ('a-home', '6', 'pages, one login'), ('a-tools', str(NT), 'tools in your browser'), ('a-links', '166', 'ready-made looks'), ('a-cards', '0', 'databases to run'), ('a-tasks', '3', 'browser engines tested')])
     more = ''.join('<a class="card hv %s" href="%s"><h3>%s</h3><p>%s</p><span class="more">Open%s</span></a>' % (ac, href, e(t), e(p), I('arrow')) for ac, href, t, p in [
         ('a-home', 'guide.html', 'The guide', 'Every page and every setting, step by step (PDF).'), ('a-info', 'faq/', 'Questions and answers', 'Hosting, updates, privacy and more.'),
         ('a-tasks', 'changelog.html', 'Changelog', 'What changed in every version.'), ('a-links', REPO, 'Source code', 'Read it, build it, report an issue.')])
     body = f'''<section class="hero"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span><span class="blob b3" aria-hidden="true"></span>
 <div class="in hgrid"><div class="hcopy"><span class="pill"><i class="dot"></i>Free and open source. No database.</span>
 <h1>Your whole day, in one <span class="grad">private place.</span></h1>
-<p class="lead">Start page, bookmarks, notes, cards, tasks and 36 tools that run in your browser. One login, one look, on your own hosting.</p>
+<p class="lead">Start page, bookmarks, notes, cards, tasks and {NT} tools that run in your browser. One login, one look, on your own hosting.</p>
 <div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Download {{{{VER}}}}</a><a class="btn lg" href="#features">Take the tour{I('arrow')}</a></div>
 <ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Accessibility-checked</li></ul>{looks_row()}</div>
 <div class="hart">{frame('shot-links.webp', 1440, 709, 'Links page with bookmarks in tabs and categories', 'yourdomain.com/web/links', True)}
@@ -222,7 +223,7 @@ def home():
 <section class="s" id="telegram"><div class="in tg"><div class="a-tg"><span class="eyebrow">Telegram</span><h2>Reminders where you already are.</h2>
 <p class="intro">Connect your own Telegram bot and the site tells you what needs you. It only answers your own chat. Tap a command to see the kind of reply you get.</p><div class="cmds">{buttons}</div>
 <div class="btns"><a class="btn ac" href="telegram/">Everything Telegram does{I('arrow')}</a></div></div>{chat}</div></section>
-<section class="s" id="tools"><div class="in"><span class="eyebrow">Tools</span><h2>36 tools. Zero extra apps.</h2><p class="intro">Small tools that run in your browser: crop, resize and convert images, merge and sign PDFs, read text from photos, remove backgrounds, make QR codes and more.</p>
+<section class="s" id="tools"><div class="in"><span class="eyebrow">Tools</span><h2>{NT} tools. Zero extra apps.</h2><p class="intro">Small tools that run in your browser: crop, resize and convert images, merge and sign PDFs, read text from photos, remove backgrounds, work out loans and savings, make invoices, scan QR codes and more.</p>
 <div class="cards c4">{toolcards}</div><div class="btns"><a class="btn ac a-tools" href="tools/">Find a tool{I('search')}</a></div></div></section>
 <section class="s" id="private"><div class="in"><span class="eyebrow">Security</span><h2>Private, and tested like it matters.</h2>
 <p class="intro">Your data lives in one folder on your own hosting, closed to browsers. Nothing is sent anywhere unless you set it up. Updates are tried against 65 checks with damaged and hostile files, and the site is checked in three browser engines.</p>
@@ -230,14 +231,14 @@ def home():
 {band()}
 <section class="s" id="more"><div class="in"><span class="eyebrow">Keep reading</span><h2>Learn more.</h2><div class="cards c4">{more}</div></div></section>'''
     return dict(slug='index', title='Homebase Hub: a self-hosted start page, bookmarks, notes and tasks', cls='',
-                desc='Homebase Hub is a self-hosted start page with bookmarks, notes, cards, tasks and 36 browser tools. One login, private, on your own server. Free and open source.', body=body)
+                desc='Homebase Hub is a self-hosted start page with bookmarks, notes, cards, tasks and %d browser tools. One login, private, on your own server. Free and open source.' % NT, body=body)
 
 
 def features_hub():
     cards = ''.join('<a class="card hv %s" href="features/%s/"><div class="ico">%s</div><h3>%s</h3><p>%s</p><ul class="mini">%s</ul><span class="more">See %s%s</span></a>' % (
         f['ac'], f['id'], I(f['icon']), e(f['name']), e(f['lead']), ''.join('<li>%s</li>' % e(d[1]) for d in f['details'][:3]), e(f['name']), I('arrow')) for f in FEATURES)
     extra = ''.join('<a class="card hv %s" href="%s"><div class="ico">%s</div><h3>%s</h3><p>%s</p><span class="more">Open%s</span></a>' % (ac, href, I(ic), e(t), e(p), I('arrow')) for ac, href, ic, t, p in [
-        ('a-tools', 'tools/', 'search', 'Tool finder', 'Search all 36 tools by name or by what they do.'), ('a-tg', 'telegram/', 'send', 'Telegram', 'Digest, Due Now buttons, commands and backups.'),
+        ('a-tools', 'tools/', 'search', 'Tool finder', 'Search all %d tools by name or by what they do.' % NT), ('a-tg', 'telegram/', 'send', 'Telegram', 'Digest, Due Now buttons, commands and backups.'),
         ('a-home', 'phone/', 'phone', 'On your phone', 'Install the site like an app, on iPhone, Android or a computer.'), ('a-info', 'security.html', 'shield', 'Security', 'What protects your data, and what does not.')])
     body = f'''<section class="hero"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
 <div class="in"><div class="crumb"><b>Features</b></div><h1>Six pages. <span class="grad">One home.</span></h1><p class="lead">Each page does one job and has its own colour. They share the same bar, login, backup and Settings. Pick one to see what it does.</p></div></section>

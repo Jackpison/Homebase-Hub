@@ -22,7 +22,7 @@
    "id": "utilities",
    "name": "Utilities",
    "icon": "wrench",
-   "desc": "QR codes, JSON, text, passwords, hashes and ZIP files."
+   "desc": "QR codes and barcodes, time zones, timers, recording, passwords and more."
   },
   {
    "id": "calculators",
@@ -920,6 +920,348 @@
    ],
    "icon": "archive",
    "popular": 0
+  },
+  {
+   "id": "loan-emi",
+   "name": "EMI Calculator",
+   "cat": "calculators",
+   "desc": "Monthly payment, total interest and the full repayment schedule of a home, car or personal loan.",
+   "kw": [
+    "emi",
+    "loan",
+    "home loan",
+    "car loan",
+    "interest",
+    "repayment",
+    "mortgage",
+    "amortization",
+    "schedule"
+   ],
+   "icon": "bank",
+   "popular": 0,
+   "out": [
+    "csv"
+   ]
+  },
+  {
+   "id": "sip-calculator",
+   "name": "SIP and Lumpsum Calculator",
+   "cat": "calculators",
+   "desc": "What a monthly SIP, with an optional yearly step-up, or a one-time investment may grow to.",
+   "kw": [
+    "sip",
+    "mutual fund",
+    "lumpsum",
+    "investment",
+    "returns",
+    "step up",
+    "compound",
+    "wealth"
+   ],
+   "icon": "trend",
+   "popular": 0
+  },
+  {
+   "id": "fd-rd-calculator",
+   "name": "FD and RD Calculator",
+   "cat": "calculators",
+   "desc": "Maturity value and interest of a fixed deposit or a recurring deposit.",
+   "kw": [
+    "fd",
+    "rd",
+    "fixed deposit",
+    "recurring deposit",
+    "bank",
+    "interest",
+    "maturity",
+    "compound"
+   ],
+   "icon": "calc",
+   "popular": 0
+  },
+  {
+   "id": "percentage-calculator",
+   "name": "Percentage and Discount Calculator",
+   "cat": "calculators",
+   "desc": "Percent of a number, percent change, discounts, and adding or removing a percentage.",
+   "kw": [
+    "percent",
+    "percentage",
+    "discount",
+    "sale",
+    "change",
+    "increase",
+    "decrease",
+    "markup",
+    "tax"
+   ],
+   "icon": "percent",
+   "popular": 0
+  },
+  {
+   "id": "age-date-calculator",
+   "name": "Age and Date Calculator",
+   "cat": "calculators",
+   "desc": "Exact age, days between two dates with working days, and a date plus or minus some days.",
+   "kw": [
+    "age",
+    "birthday",
+    "date",
+    "days between",
+    "working days",
+    "add days",
+    "calendar",
+    "difference"
+   ],
+   "icon": "cake",
+   "popular": 0
+  },
+  {
+   "id": "unit-converter",
+   "name": "Unit Converter",
+   "cat": "calculators",
+   "desc": "Length, weight, area with Indian land units, volume, temperature, speed, data and more.",
+   "kw": [
+    "unit",
+    "convert",
+    "length",
+    "weight",
+    "area",
+    "acre",
+    "gaj",
+    "temperature",
+    "celsius",
+    "kg",
+    "feet",
+    "metre"
+   ],
+   "icon": "ruler",
+   "popular": 0
+  },
+  {
+   "id": "number-to-words",
+   "name": "Number to Words",
+   "cat": "calculators",
+   "desc": "Any amount in words, the Indian way (lakh, crore) or the international way, for cheques and invoices.",
+   "kw": [
+    "words",
+    "amount in words",
+    "cheque",
+    "lakh",
+    "crore",
+    "million",
+    "spell number",
+    "rupees"
+   ],
+   "icon": "words",
+   "popular": 0
+  },
+  {
+   "id": "invoice-generator",
+   "name": "Invoice Generator",
+   "cat": "documents",
+   "desc": "Make a clean PDF invoice with your logo, items, a tax line (or two halves) and the total in words.",
+   "kw": [
+    "invoice",
+    "bill",
+    "receipt",
+    "gst",
+    "tax",
+    "quotation",
+    "estimate",
+    "pdf"
+   ],
+   "icon": "receipt",
+   "popular": 0,
+   "out": [
+    "pdf"
+   ]
+  },
+  {
+   "id": "text-compare",
+   "name": "Text Compare",
+   "cat": "documents",
+   "desc": "See what changed between two texts, line by line or word by word.",
+   "kw": [
+    "diff",
+    "compare",
+    "difference",
+    "changes",
+    "text",
+    "versions",
+    "merge"
+   ],
+   "icon": "diff",
+   "popular": 0
+  },
+  {
+   "id": "markdown-editor",
+   "name": "Markdown Editor",
+   "cat": "documents",
+   "desc": "Write Markdown with a live preview, then save it as .md or .html, or print it as a PDF.",
+   "kw": [
+    "markdown",
+    "md",
+    "editor",
+    "notes",
+    "readme",
+    "preview",
+    "html"
+   ],
+   "icon": "markdown",
+   "popular": 0,
+   "in": [
+    "md"
+   ],
+   "out": [
+    "md",
+    "html"
+   ]
+  },
+  {
+   "id": "csv-json-converter",
+   "name": "CSV, JSON and Excel Converter",
+   "cat": "documents",
+   "desc": "Turn CSV, TSV, JSON and Excel (.xlsx) files into each other, with a preview.",
+   "kw": [
+    "csv",
+    "json",
+    "excel",
+    "xlsx",
+    "tsv",
+    "spreadsheet",
+    "convert",
+    "table"
+   ],
+   "icon": "table",
+   "popular": 0,
+   "in": [
+    "csv",
+    "json",
+    "xlsx"
+   ],
+   "out": [
+    "csv",
+    "json",
+    "xlsx"
+   ]
+  },
+  {
+   "id": "qr-scanner",
+   "name": "QR and Barcode Scanner",
+   "cat": "utilities",
+   "desc": "Read QR codes and barcodes from a photo, a screenshot or the camera.",
+   "kw": [
+    "scan",
+    "qr",
+    "barcode",
+    "reader",
+    "camera",
+    "decode",
+    "upi"
+   ],
+   "icon": "scan",
+   "popular": 0,
+   "in": [
+    "jpg",
+    "png"
+   ]
+  },
+  {
+   "id": "barcode-generator",
+   "name": "Barcode Generator",
+   "cat": "utilities",
+   "desc": "Make Code 128, EAN-13, UPC and other barcodes, saved as PNG or SVG.",
+   "kw": [
+    "barcode",
+    "ean",
+    "upc",
+    "code 128",
+    "code 39",
+    "label",
+    "product",
+    "sku"
+   ],
+   "icon": "barcode",
+   "popular": 0,
+   "out": [
+    "png",
+    "svg"
+   ]
+  },
+  {
+   "id": "timezone-converter",
+   "name": "Time Zone Converter",
+   "cat": "utilities",
+   "desc": "A date and time in one place, shown in every time zone you pick.",
+   "kw": [
+    "time zone",
+    "timezone",
+    "world clock",
+    "utc",
+    "ist",
+    "convert time",
+    "meeting"
+   ],
+   "icon": "globe",
+   "popular": 0
+  },
+  {
+   "id": "stopwatch-timer",
+   "name": "Stopwatch and Timer",
+   "cat": "utilities",
+   "desc": "A stopwatch with laps and a countdown timer that rings at the end.",
+   "kw": [
+    "stopwatch",
+    "timer",
+    "countdown",
+    "lap",
+    "alarm",
+    "pomodoro",
+    "clock"
+   ],
+   "icon": "timer",
+   "popular": 0
+  },
+  {
+   "id": "random-picker",
+   "name": "Random Picker",
+   "cat": "utilities",
+   "desc": "Pick names from a list, shuffle, pick numbers, toss a coin or roll dice. Fair every time.",
+   "kw": [
+    "random",
+    "picker",
+    "draw",
+    "lucky",
+    "shuffle",
+    "dice",
+    "coin",
+    "raffle",
+    "winner"
+   ],
+   "icon": "dice",
+   "popular": 0
+  },
+  {
+   "id": "recorder",
+   "name": "Screen and Voice Recorder",
+   "cat": "utilities",
+   "desc": "Record your screen with sound on a computer, or your voice on any device, and save it.",
+   "kw": [
+    "record",
+    "screen recorder",
+    "voice",
+    "audio",
+    "microphone",
+    "capture",
+    "video"
+   ],
+   "icon": "record",
+   "popular": 0,
+   "out": [
+    "mp4",
+    "webm"
+   ]
   }
  ]
 }

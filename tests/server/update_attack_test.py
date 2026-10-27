@@ -178,6 +178,11 @@ try:
     v.attack('C4 refused: an older version', build(relisted(SMALL, '1.0.0')), 'cannot be used')
     it = relisted(SMALL); man = json.loads(it['web/hub/core/manifest.json']); man['minPhp'] = '99.0'; it['web/hub/core/manifest.json'] = json.dumps(man).encode()
     v.attack('C5 refused: needs a newer PHP (minPhp 99.0)', build(it), 'PHP 99.0')
+    # 1.60 (old-site support removed): a zip laid out like the versions before 1.50 (engine in web/core-data) is refused as such
+    old = {('web/core-data/' + k[len('web/hub/core/'):] if k.startswith('web/hub/core/') else k): d for k, d in SMALL.items()}
+    om = json.loads(old.pop('web/core-data/manifest.json')); om['version'] = NEXTV
+    om['files'] = {k: hashlib.sha256(d).hexdigest() for k, d in old.items() if not k.endswith('/')}; old['web/core-data/manifest.json'] = json.dumps(om).encode()
+    v.attack('C8 refused: a zip from before 1.50 (the old web/core-data layout)', build(old), 'cannot be used')
     r = v.s.chunks(None, 'same.zip', raw=build(relisted(SMALL, CURV)))
     check('C6 the same version is offered only as a repair of the installed files, marked "same"', r.get('ok') and r.get('relation') == 'same', json.dumps(r)[:300])
     v.s.post('update_cancel'); check('C7 ...and cancelling it changes nothing', v.unchanged())

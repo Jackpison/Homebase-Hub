@@ -41,7 +41,7 @@ When there is no maintenance pull request, everything was already current. Nothi
 The maintenance pull request lists them under "Waiting for a person to decide":
 
 - **A new major version of a library** (for example pdf.js 6 → 7). It can change how the library works, so someone must try it and run all the tests. Follow `AGENTS.md`: change `tools-app/package.json`, run `python3 scripts/build-tools.py --install`, run every check, commit.
-- **pdf-lib** (Tools' PDF writer) is no longer updated by its makers. It works today. If it ever breaks, the maintained copy `@cantoo/pdf-lib` is the replacement.
+- **PDF writer:** since 1.60 Tools uses `@cantoo/pdf-lib`, the maintained copy of pdf-lib (the original is no longer updated). The monthly maintenance updates it like the other libraries.
 - **PHP versions:** when a PHP version stops getting security fixes (the dates are in `hub_php_eol()` in `src/web/hub/core/lib/boot.php`), raise `HUB_MIN_PHP` and the CI versions together.
 
 ## Handing the project over

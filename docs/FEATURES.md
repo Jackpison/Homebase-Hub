@@ -1,6 +1,6 @@
 # Features Since the Last Website Refresh
 
-The website, the PDF guide and their screenshots were last refreshed for **1.51**. This page lists everything that changed since then, up to **1.59.1**: what it is, where to find it in the site, what a screenshot should show, and which website and guide pages need new words.
+The website, the PDF guide and their screenshots were last refreshed for **1.51**. This page lists everything that changed since then, up to **1.60.0**: what it is, where to find it in the site, what a screenshot should show, and which website and guide pages need new words.
 
 Use it for the next website and screenshot refresh (`scripts/screenshots.py`, `scripts/site_pages.py`, `scripts/make-guide.py`, `website/content/`). When a feature is on the website and in the guide, tick it here (`[x]`). Add every new feature to this list as it ships.
 
@@ -97,6 +97,30 @@ Not for the website's feature pages, but worth one line on the **About** or **Se
 - [ ] **No surprise login box** (1.53.6): pressing the pencil right after a page opens waits for the server instead of asking for the password again.
 - [ ] Safer fetching from other websites: one checked way for Home's photos and Links' icons (1.53.2).
 
+## 11. Tools: 17 new tools, saved presets, a tidier menu (1.60)
+
+- [ ] **Two new sections**, each with its own colour: **Calculators** (orange) and **Documents** (sky blue). Tools now has **53 tools** in six sections.
+- [ ] **Calculators:** **EMI Calculator** (monthly payment, interest, a donut chart, the schedule by year or month, Download CSV); **SIP and Lumpsum Calculator** (yearly step-up, a bar chart by year); **FD and RD Calculator** (quarterly compounding as Indian banks count it); **Percentage and Discount Calculator** (eight everyday sums on one page); **Age and Date Calculator** (exact age and next birthday, days and working days between dates, add or subtract days, weeks, months, years); **Unit Converter** (ten kinds, with Gaj, Cent and Guntha); **Number to Words** (lakh and crore, or million and billion; as money for cheques).
+  - *Screenshots:* EMI Calculator with its chart and schedule; SIP with the bar chart.
+- [ ] **Documents:** **Invoice Generator** (your logo and details, items, one tax line or two halves such as CGST and SGST, discount, the total in words, an A4 PDF with the ₹ sign); **Text Compare** (line by line or word by word); **Markdown Editor** (live preview, save .md or .html, Print or PDF; pictures show as links so nothing loads from other websites); **CSV, JSON and Excel Converter** (.xlsx in and out, sheets, a preview).
+  - *Screenshots:* an invoice PDF next to the form; Text Compare with changes marked.
+- [ ] **New in Utilities:** **QR and Barcode Scanner** (a photo, a screenshot or the camera; the reader ships with the site), **Barcode Generator** (Code 128, EAN-13, UPC and more, PNG or SVG), **Time Zone Converter**, **Stopwatch and Timer** (laps; the timer rings), **Random Picker** (names, numbers, a coin, dice; fair), **Screen and Voice Recorder** (screen on a computer, voice anywhere).
+  - *Screenshot:* the scanner with a found code; the Time Zone Converter.
+- [ ] **Saved presets:** while logged in, **Save as Preset** in Sign PDF (your signature), Watermark Images, Watermark and Page Numbers, QR Code Generator (colours and size), Image Resizer (sizes) and Invoice Generator (your business and logo). Kept on your server, listed in **Tools Settings > Presets** (rename, delete) and in the site backup (**Tools Presets**).
+  - *Screenshots:* the preset row in Sign PDF; Tools Settings with the Presets panel.
+- [ ] **The side menu:** clicking a section's icon opens that section only (no list of every tool below it); the page you are on has a soft tint in its colour and a filled icon.
+- [ ] **Tabs on Top:** one tidy row of rounded tabs, Organise and Settings at the right; no big empty space under it.
+  - *Screenshot:* Tools with Tabs on Top.
+- [ ] Camera, microphone and screen sharing are allowed on the Tools page only, and the browser still asks first.
+- *Website:* the Tools feature page and the home page count the tools from the list (53). The tool finder lists the new tools by itself.
+- *Guide:* chapter 9 lists the six sections and explains presets (updated in 1.60).
+
+## 12. For the people who keep it running (1.60)
+
+- [ ] **Adding a tool** takes one command (`python3 scripts/new-tool.py`) and one test: the list of tools is built from `tools.json`.
+- [ ] Tools' PDF writer is now `@cantoo/pdf-lib`, the maintained copy of pdf-lib.
+- [ ] The updater no longer installs, or goes back to, versions from before 1.50 (they had another folder layout). Sites on 1.49 or older update with their own updater first.
+
 ---
 
 ## Screenshot checklist for the refresh
@@ -115,3 +139,5 @@ Take these with `python3 scripts/screenshots.py build/site-update-X.Y.Z.zip OUT`
 | `m-links`, `m-home` | phone screenshots as an installed app (status bar on top) | On Your Phone page |
 | `app-icon` *(new, by hand)* | the app icon on a phone's home screen | On Your Phone page |
 | `home-1`, `home-2`, `home-3` | Home (no characters) | Home page |
+| `tools-emi`, `tools-invoice`, `tools-compare` *(new)* | EMI Calculator, Invoice Generator with its PDF, Text Compare | Tools page, guide chapter 9 |
+| `tools-tabs`, `tools-presets` *(new)* | Tabs on Top; Tools Settings with Presets | Tools page |

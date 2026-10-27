@@ -56,7 +56,7 @@ export function render(imgs, o) {
   return c;
 }
 async function pdfOf(c, sizeKey) {
-  const { PDFDocument } = await import('pdf-lib');
+  const { PDFDocument } = await import('@cantoo/pdf-lib');
   const jpg = new Uint8Array(await (await encode(c, 'jpg', 0.92)).arrayBuffer()), doc = await PDFDocument.create(), img = await doc.embedJpg(jpg);
   const [pw, ph] = sizeKey === 'a4p' ? [595.28, 841.89] : sizeKey === 'a4l' ? [841.89, 595.28] : [c.width * 72 / 300, c.height * 72 / 300];
   doc.addPage([pw, ph]).drawImage(img, { x: 0, y: 0, width: pw, height: ph });

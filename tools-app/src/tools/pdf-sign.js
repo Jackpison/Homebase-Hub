@@ -3,6 +3,7 @@ import { h, field, input, select, seg, range, check, button, dropzone, panel, bu
 import { decode, encode, canvas, results } from '../lib/image.js';
 import { openDoc, loadLib, pdfBlob, pdfName } from '../lib/pdf.js';
 import { placer } from '../lib/placer.js';
+import { presetBar, picture } from '../lib/presets.js';
 
 const FONTS = [['"Segoe Script","Brush Script MT","Snell Roundhand","Apple Chancery",cursive', 'Handwritten'], ['"Lucida Handwriting","Bradley Hand",cursive', 'Flowing'], ['Georgia,"Times New Roman",serif', 'Formal']];
 /** The signature cut to its own size (see-through around it). */
@@ -60,6 +61,9 @@ export default function (root) {
   }));
   show();
   root.append(dropzone({ accept: '.pdf,application/pdf', label: 'Choose a PDF', onFiles: async ([f]) => { file = f; out.replaceChildren(); doc = await openDoc(f); pl = placer(doc, { onPlace: place, draw }); pageBox.replaceChildren(pl.el); } }),
-    h('div', { class: 'cols pl sign' }, panel(pageBox), panel(kind.el, area, h('h2', { text: 'Your signature' }), prev, size.el, all, go, out,
+    h('div', { class: 'cols pl sign' }, panel(pageBox), panel(kind.el, area, h('h2', { text: 'Your signature' }), presetBar('sign', {
+      get: () => (sigUrl ? { img: sigUrl, size: size.value } : null),
+      set: async (v) => { const i = await picture(v.img), c = canvas(i.width, i.height); c.getContext('2d').drawImage(i, 0, 0); set(c); if (v.size) size.value = v.size; },
+    }), prev, size.el, all, go, out,
       note('Click on the page to place it; drag to move it; select it and press Delete to remove it. This is a picture of your signature, not a digital certificate.'))));
 }

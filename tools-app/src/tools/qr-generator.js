@@ -1,6 +1,7 @@
 // QR Code Generator: links, text, Wi-Fi, email and phone, in your colours, as PNG or SVG.
 import qrcode from 'qrcode-generator';
 import { h, field, input, textarea, select, seg, range, button, download, panel, note } from '../ui.js';
+import { presetBar, controls } from '../lib/presets.js';
 qrcode.stringToBytes = (s) => Array.from(new TextEncoder().encode(s));   // UTF-8, so any language and emoji work
 
 const wesc = (s) => s.replace(/([\\;,:"])/g, '\\$1');
@@ -58,7 +59,7 @@ export default function (root) {
   for (const el of [...Object.values(F), fg, bg, ec]) el.addEventListener('input', draw);
   layout();
   root.append(h('div', { class: 'cols' },
-    panel(kind.el, fields, h('div', { class: 'row' }, field('Code colour', fg), field('Background', bg)), field('Error correction', ec, 'Higher correction still reads when part of the code is covered, but makes it denser.'), size.el, margin.el),
+    panel(kind.el, fields, presetBar('qr', controls({ fg, bg, ec, size, margin })), h('div', { class: 'row' }, field('Code colour', fg), field('Background', bg)), field('Error correction', ec, 'Higher correction still reads when part of the code is covered, but makes it denser.'), size.el, margin.el),
     panel(h('div', { class: 'preview' }, canvas), msg, h('div', { class: 'row' },
       button('Download PNG', { primary: true, icon: 'download', onClick: () => { if (!svgText) return; canvas.toBlob((b) => download(b, 'qr-code.png'), 'image/png'); } }),
       button('Download SVG', { icon: 'download', onClick: () => { if (svgText) download(new Blob([svgText], { type: 'image/svg+xml' }), 'qr-code.svg'); } })))));

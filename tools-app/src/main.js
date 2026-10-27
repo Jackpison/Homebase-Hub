@@ -1,6 +1,7 @@
 // Tools: the page around the tools. Sections, search, favourites, recently used, your own order, settings.
 // Every tool lives in src/tools/<id>.js and is loaded only when it is opened. The list of tools is src/tools.json, the one list the
 // app, the website's tool finder and the tests all read.
+import { presetsPanel } from './lib/presets.js';
 import LOAD from './load.gen.js';
 import DATA from './tools.json';
 import { icon } from './icons.js';
@@ -133,12 +134,13 @@ function pageSettings() {
   const S = st.state();
   const lay = seg('Layout', [['side', 'Side Menu'], ['tabs', 'Tabs on Top']], S.layout, (v) => { st.setLayout(v); layout(); route(); });
   const comp = check('Show icons only in the side menu', S.compact, (v) => { st.setCompact(v); layout(); drawNav(location.hash || '#/'); });
-  view.replaceChildren(heading('Tools Settings', 'These choices are kept in this browser. Light and dark follow the site.'),
+  view.replaceChildren(heading('Tools Settings', 'Layout and your data are kept in this browser; presets on your server. Light and dark follow the site.'),
     h('section', { class: 'panel' }, h('h2', { text: 'Layout' }), lay.el, comp.el, h('p', { class: 'hint', text: 'Phones always show the sections as tabs.' })),
     h('section', { class: 'panel' }, h('h2', { text: 'Your Data' }),
       h('div', { class: 'row' }, button('Clear Recently Used', { icon: 'clock', onClick: () => { st.clearRecent(); toast('Recently used is empty'); } }),
         button('Reset Tools', { icon: 'refresh', onClick: () => { if (confirm('Reset favourites, your order, hidden tools and the layout?')) { st.resetAll(); layout(); route(); toast('Tools reset'); } } })),
-      h('p', { class: 'hint', text: 'Files you open in a tool stay in your browser. Tools does not keep them.' })));
+      h('p', { class: 'hint', text: 'Files you open in a tool stay in your browser. Tools does not keep them.' })),
+    presetsPanel());
 }
 
 async function pageTool(id) {

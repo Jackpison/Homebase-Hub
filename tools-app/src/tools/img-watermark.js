@@ -1,6 +1,7 @@
 // Watermark Images: your text or logo on many photos at once, in a corner, in the middle or tiled across.
 import { h, field, input, select, seg, range, check, button, dropzone, panel, busy, toast } from '../ui.js';
 import { ACCEPT, decode, encode, canvas, sameFormat, outName, results, each, preview } from '../lib/image.js';
+import { presetBar, controls, picture } from '../lib/presets.js';
 
 const POS = [['tl', 'Top left'], ['tc', 'Top centre'], ['tr', 'Top right'], ['ml', 'Middle left'], ['mc', 'Centre'], ['mr', 'Middle right'], ['bl', 'Bottom left'], ['bc', 'Bottom centre'], ['br', 'Bottom right']];
 
@@ -32,6 +33,9 @@ export function stamp(src, o) {
   x.globalAlpha = 1; return c;
 }
 
+/** A logo as a PNG address for a preset, made smaller when it is big (a preset holds at most about 600 KB). */
+export function logoUrl(src, max = 600) { const k = Math.min(1, max / Math.max(src.width, src.height)), c = canvas(src.width * k, src.height * k); c.getContext('2d').drawImage(src, 0, 0, c.width, c.height); return c.toDataURL('image/png'); }
+
 export default function (root) {
   let files = [], first = null, logo = null;
   const mode = seg('Watermark', [['text', 'Text'], ['logo', 'Logo']], 'text', () => { modeBox(); draw(); });
@@ -49,7 +53,12 @@ export default function (root) {
     if (!files.length) return; if (mode.value === 'logo' && !logo) { toast('Choose your logo first.', true); return; }
     results(out, await each(files, prog, async (f) => { const fmt = sameFormat(f); return { name: outName(f.name, fmt, 'watermarked'), blob: await encode(stamp(await decode(f), opts()), fmt, 0.92), before: f.size }; }), 'watermarked.zip');
   }));
+  const ctl = controls({ mode, text, color, bold, size, opacity, pos, margin, tile, angle });
+  const bar = presetBar('img-watermark', {
+    get: () => ({ ...ctl.get(), logo: logo ? logoUrl(logo) : '' }),
+    set: async (v) => { ctl.set(v); if (v.logo) { const i = await picture(v.logo), c = canvas(i.width, i.height); c.getContext('2d').drawImage(i, 0, 0); logo = c; } draw(); },
+  });
   modeBox();
   root.append(dropzone({ accept: ACCEPT, multiple: true, label: 'Choose photos', onFiles: async (fs) => { files = fs; out.replaceChildren(); first = await decode(fs[0]); draw(); } }),
-    h('div', { class: 'cols' }, panel(mode.el, box, size.el, opacity.el, field('Position', pos), margin.el, tile.el, angle.el, go, prog, out), panel(view)));
+    h('div', { class: 'cols' }, panel(bar, mode.el, box, size.el, opacity.el, field('Position', pos), margin.el, tile.el, angle.el, go, prog, out), panel(view)));
 }

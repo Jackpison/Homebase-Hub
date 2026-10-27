@@ -2,6 +2,9 @@
 import { h, field, input, select, range, check, button, dropzone, panel, busy, note, toast } from '../ui.js';
 import { decode, encode, results } from '../lib/image.js';
 import { loadLib, lib, pdfBlob, pdfName, ranges } from '../lib/pdf.js';
+import { canvas } from '../lib/image.js';
+import { presetBar, controls, picture } from '../lib/presets.js';
+import { logoUrl } from './img-watermark.js';
 
 const POS = [['bc', 'Bottom centre'], ['br', 'Bottom right'], ['bl', 'Bottom left'], ['tc', 'Top centre'], ['tr', 'Top right'], ['tl', 'Top left']];
 const STYLES = [['n', '1'], ['page', 'Page 1'], ['of', 'Page 1 of 9'], ['slash', '1 / 9'], ['dash', '- 1 -']];
@@ -37,7 +40,12 @@ export default function (root) {
     } catch (e) { if (/WinAnsi|cannot encode/i.test(e.message)) throw new Error('Text stamps can use Latin letters only. For other scripts, use a logo image.'); throw e; }
     results(out, [{ name: pdfName(file.name, 'stamped'), blob: pdfBlob(await d.save()) }]);
   }));
-  root.append(dropzone({ accept: '.pdf,application/pdf', label: 'Choose a PDF', onFiles: ([f]) => { file = f; info.textContent = f.name + ' chosen.'; out.replaceChildren(); } }), info,
+  const ctl = controls({ wm, text, wsize, op, angle, wcol, lsize, nums, style, pos, start, nsize, skip });
+  const bar = presetBar('pdf-stamp', {
+    get: () => ({ ...ctl.get(), logo: logo ? logoUrl(logo) : '' }),
+    set: async (v) => { ctl.set(v); logo = null; if (v.logo) { const i = await picture(v.logo), c = canvas(i.width, i.height); c.getContext('2d').drawImage(i, 0, 0); logo = c; } },
+  });
+  root.append(bar, dropzone({ accept: '.pdf,application/pdf', label: 'Choose a PDF', onFiles: ([f]) => { file = f; info.textContent = f.name + ' chosen.'; out.replaceChildren(); } }), info,
     h('div', { class: 'cols' }, panel(wm.el, field('Watermark text', text), wsize.el, field('Colour', wcol), angle.el, op.el, logoZone, lsize.el),
       panel(nums.el, field('Style', style), field('Place', pos), field('First number', start), nsize.el, skip.el, field('Pages', rg), go, out, note('Stamps are drawn onto the pages: anyone can still see them, they are not a security feature.'))));
 }

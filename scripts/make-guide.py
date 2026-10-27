@@ -209,9 +209,13 @@ story += chapter('8', 'Tasks', 'Bills, renewals and chores: anything with a due 
 story += chapter('9', 'Tools', 'Small tools that run in your browser.',
  shot('tools-crop', 'Tools, grouped into sections.'),
  table(['Kind', 'Tools'], [['Images', 'Crop, circle crop, resize, compress, convert, rotate, adjust, watermark, redact, collage, meme, ID photo, colours, Base64, SVG to PNG, favicon, metadata'],
-   ['PDF', 'Merge, compress, organise, annotate, sign, protect, extract text, PDF to images, images to PDF'], ['Other', 'Text from images (OCR), background removal, QR codes, hashes, JSON formatter, text tool, zip files']]),
+   ['PDF', 'Merge, compress, organise, annotate, sign, protect, extract text, PDF to images, images to PDF'],
+   ['Calculators', 'EMI, SIP and lumpsum, FD and RD, percentage and discount, age and dates, units, number to words'],
+   ['Documents', 'Invoice generator (PDF), text compare, Markdown editor, CSV, JSON and Excel converter'],
+   ['Utilities', 'QR codes and barcodes (make and scan), time zones, stopwatch and timer, random picker, screen and voice recorder, text from images (OCR), background removal, hashes, JSON formatter, text tool, zip files']]),
  P('%s (Get from a Website) shows a website\'s icon in 16, 32, 64, 128, 256 and 512 pixels. Press %s under a size and the file is saved right away. Google\'s icon service gives at most 256 pixels, so the 512 picture is enlarged from that.' % (C('Favicon'), C('PNG'))),
  P('Tools has its own sections: Tools, Recent, Favourites, one per category, Organise and Settings. In %s you star favourites, drag tools to reorder them or move them to another section, and hide the ones you do not use.' % C('Organise')),
+ P('While you are logged in, Sign PDF, both watermark tools, the QR Code Generator, the Image Resizer and the Invoice Generator have %s: your signature, a watermark, a QR style, sizes or your business details are kept on your server under a name, and come back from the list next to it. %s lists them to rename or delete. They are part of the site backup.' % (C('Save as Preset'), C('Tools Settings > Presets'))),
  Tip('Heavy engines, such as OCR and background removal, only load when a tool needs them.'))
 
 story += chapter('10', 'Settings', 'Everything about the site, in one page.',

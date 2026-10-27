@@ -61,7 +61,7 @@ export function seg(label, options, value, onChange) {
   let cur = value;
   const btns = options.map(([v, l]) => h('button', { type: 'button', 'aria-pressed': String(v === cur), text: l, onClick: () => { cur = v; btns.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i][0] === cur))); onChange && onChange(v); } }));
   g.append(...btns);
-  return { el: label ? h('div', { class: 'field' }, h('span', { class: 'lbl', text: label }), g) : g, get value() { return cur; } };
+  return { el: label ? h('div', { class: 'field' }, h('span', { class: 'lbl', text: label }), g) : g, get value() { return cur; }, set value(v) { const i = options.findIndex((o) => o[0] === v); if (i >= 0 && v !== cur) btns[i].click(); } };
 }
 
 /** A place to drop, pick or paste files. onFiles(File[]) */

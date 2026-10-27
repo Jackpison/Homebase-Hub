@@ -1,33 +1,35 @@
 <?php
-// The two layouts (up to 1.49: web/core-data, web/docs; from 1.50: web/hub/core, web/hub/media, web/hub/docs).
-// The updater reads both, so a site can move either way (an update, or Go Back); the first request afterwards moves your pictures,
-// config.php and the old fallback data folder to where the running version looks for them. Works on either layout's copy of src/.
+// The layout of 1.50 and later (web/hub/core, web/hub/media, web/hub/docs) and the one before (web/core-data, web/docs).
+// Since 1.60 the updater knows only the new one: a zip or a saved version from before 1.50 is refused (option a, 1.60), but your files
+// where the old layout kept them stay protected, and the first request after a move still puts them where this version looks.
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
-$core = is_dir($site . '/web/hub/core') ? 'web/hub/core' : 'web/core-data';
-require $site . '/' . $core . '/lib/boot.php';
-require_once $site . '/' . $core . '/lib/update.php';
+require $site . '/web/hub/core/lib/boot.php';
+require_once $site . '/web/hub/core/lib/update.php';
 
 // names inside an update zip: both layouts' engine files are accepted, your own files never
-foreach (['web/core-data/api.php', 'web/core-data/lib/boot.php', 'web/hub/core/api.php', 'web/hub/core/cron.php', 'web/hub/core/lib/update.php', 'web/links/api.php', 'index.php',
-          'web/hub/core/assets/shell.js', 'web/hub/docs/CHANGELOG.md', 'web/hub/media/.htaccess', 'web/core-data/media/.htaccess'] as $n)
+foreach (['web/hub/core/api.php', 'web/hub/core/cron.php', 'web/hub/core/lib/update.php', 'web/links/api.php', 'index.php',
+          'web/hub/core/assets/shell.js', 'web/hub/docs/CHANGELOG.md', 'web/hub/media/.htaccess'] as $n)
     t("an update may carry $n", up_name_problem($n, false) === '', up_name_problem($n, false));
 foreach (['web/hub/media/brand/logo-1.png' => 'pictures', 'web/core-data/media/home/photos/a.jpg' => 'pictures', 'web/hub/core/config.php' => 'configuration',
-          'web/core-data/config.php' => 'configuration', 'web/hub/core/assets/x.php' => 'PHP', 'web/hub/x/y/z.php' => 'PHP', 'web/hub/media/x.php' => 'pictures'] as $n => $why)
+          'web/core-data/config.php' => 'configuration', 'web/hub/core/assets/x.php' => 'PHP', 'web/hub/x/y/z.php' => 'PHP', 'web/hub/media/x.php' => 'pictures',
+          'web/core-data/lib/boot.php' => 'PHP'] as $n => $why)
     t("an update may not carry $n ($why)", stripos(up_name_problem($n, false), $why) !== false, up_name_problem($n, false));
 foreach (['web/hub/media/home/photos/a.jpg', 'web/core-data/media/brand/logo-1.png', 'web/hub/core/config.php', 'web/core-data/config.php', 'web/hub/core/data/x.php', 'web/core-data/data/x.php'] as $p)
     t("$p is never written, listed or removed", up_protected($p));
 t('the shipped .htaccess in either media folder is the site\'s own', !up_protected('web/hub/media/.htaccess') && !up_protected('web/core-data/media/.htaccess'));
-t('both file lists are recognised', up_is_manifest('web/core-data/manifest.json') && up_is_manifest('web/hub/core/manifest.json') && !up_is_manifest('web/hub/manifest.json'));
+t('only the file list of 1.50 and later is the site\'s own (an old web/core-data/manifest.json is a leftover)', up_is_manifest('web/hub/core/manifest.json') && !up_is_manifest('web/core-data/manifest.json') && !up_is_manifest('web/hub/manifest.json'));
 
-// which layout a folder has
+// 1.60: a saved copy or a site folder from before 1.50 has no file list this updater reads, so Go Back to it is not offered
 $t = sys_get_temp_dir() . '/hub-layout-' . bin2hex(random_bytes(3)); @mkdir("$t/a/web/core-data", 0755, true); @mkdir("$t/b/web/hub/core", 0755, true);
 file_put_contents("$t/a/web/core-data/manifest.json", json_encode(['version' => '1.49.0', 'files' => []]));
 file_put_contents("$t/b/web/hub/core/manifest.json", json_encode(['version' => '1.50.0', 'files' => []]));
-t('a folder with web/core-data/manifest.json has the old layout', up_core_of("$t/a") === 'web/core-data' && (up_manifest("$t/a")['version'] ?? '') === '1.49.0');
-t('a folder with web/hub/core/manifest.json has the new layout', up_core_of("$t/b") === 'web/hub/core' && (up_manifest("$t/b")['version'] ?? '') === '1.50.0');
+t('a copy from before 1.50 (web/core-data/manifest.json) is not read as a version', up_manifest("$t/a") === null);
+t('a copy of 1.50 or later is', (up_manifest("$t/b")['version'] ?? '') === '1.50.0');
 @mkdir("$t/b/web/core-data", 0755, true); file_put_contents("$t/b/web/core-data/manifest.json", json_encode(['version' => '1.49.0', 'files' => []]));
-t('while both lists are there (half-way through a move), the new one is read', up_core_of("$t/b") === 'web/hub/core');
+t('an old list left next to the new one changes nothing', (up_manifest("$t/b")['version'] ?? '') === '1.50.0');
+$src = (string)file_get_contents($site . '/web/hub/core/lib/update.php');
+t('no code for installing or going back to the old layout is left (up_core_of, UP_CORES)', strpos($src, 'up_core_of') === false && strpos($src, 'UP_CORES') === false);
 
 // the site's address from a script's address, in either layout
 t('the site path from /x/web/core-data/api.php is /x', hub_site_path('/x/web/core-data/api.php') === '/x');

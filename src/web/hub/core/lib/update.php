@@ -14,15 +14,15 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  *   Update  You upload the update zip. It is checked completely before anything on the site is touched; then, after you confirm with your
  *           password, the site saves the version it has now, replaces its own files one by one, removes the files the old version had and
  *           the new one does not, and looks at itself afterwards. If it cannot answer, the saved version comes back by itself.
- *   Files   Every release carries web/hub/core/manifest.json (up to 1.49: web/core-data/), every file with its fingerprint. Comparing it with what is on the server shows files
+ *   Files   Every release carries web/hub/core/manifest.json, every file with its fingerprint. Comparing it with what is on the server shows files
  *           that are not part of this version (leftovers, copies, a planted script) and files that were changed by hand.
  *
  * Never touched, by an update or by the clean-up: site-data (all your data), your pictures and logo (media), config.php and the old fallback
- * data folder, in either layout.
+ * data folder, also where versions before 1.50 kept them (web/core-data), in case a moved site still has some there.
  *
- * Two layouts: up to 1.49 the engine is web/core-data (pictures in web/core-data/media, docs in web/docs); from 1.50 it is web/hub/core
- * (pictures in web/hub/media, docs in web/hub/docs). The updater reads both, so a site can move from one to the other, and back with Go Back.
- * The first request after such a move puts your pictures and config where the running version expects them (hub_settle_layout in boot.php).
+ * Since 1.60 the updater knows only the layout of 1.50 and later (the engine in web/hub/core, pictures in web/hub/media, docs in
+ * web/hub/docs). A zip from before 1.50 is refused, and Go Back to a version from before 1.50 is not offered. A site still on 1.49 or
+ * older updates with that version's own updater, and the first request afterwards moves its pictures and config (hub_settle_layout in boot.php).
  * The zip is read here in plain PHP (gzinflate), so no zip extension is needed.
  */
 require_once __DIR__ . '/boot.php';
@@ -34,11 +34,10 @@ const UP_MAX_TOTAL = 419430400;   // 400 MB: everything once unpacked
 const UP_EXT = ['php', 'js', 'css', 'html', 'json', 'txt', 'md', 'htaccess', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'woff', 'woff2', 'ttf', 'otf', 'wasm', 'traineddata', 'onnx', 'map', 'mjs', 'xml', 'bcmap', 'pfb', 'mp4'];
 
 function up_root(): string { return rtrim(str_replace('\\', '/', HUB_PUBLIC), '/'); }
-const UP_CORES = ['web/core-data', 'web/hub/core'];             // the engine folder of the old and the new layout
-const UP_MEDIA = ['web/core-data/media/', 'web/hub/media/'];    // your pictures, in either layout
-/** The engine folder of a site folder (or of a stored copy): the new layout when its file list is there, else the old one. */
-function up_core_of(string $root): string { return is_file($root . '/web/hub/core/manifest.json') ? 'web/hub/core' : 'web/core-data'; }
-function up_is_manifest(string $p): bool { return $p === 'web/core-data/manifest.json' || $p === 'web/hub/core/manifest.json'; }
+const UP_CORE  = 'web/hub/core';                               // the engine folder (1.50 and later)
+const UP_OLD   = 'web/core-data';                              // where versions before 1.50 kept it: your files there stay protected
+const UP_MEDIA = ['web/hub/media/', 'web/core-data/media/'];    // your pictures (and where versions before 1.50 kept them)
+function up_is_manifest(string $p): bool { return $p === UP_CORE . '/manifest.json'; }
 function up_in_media(string $p): bool { foreach (UP_MEDIA as $m) if (strpos($p, $m) === 0) return true; return false; }
 function up_dir(): string { return hub_dir('updates'); }
 function up_state(): array { return hub_jread(up_dir() . '/state.json') ?? []; }   // guarded like every data file (state.php; an old plain state.json is read once and replaced)
@@ -46,7 +45,7 @@ function up_state_save(array $s): void { hub_jput(up_dir() . '/state.json', json
 
 /** Paths no update and no clean-up may write, list or delete (your pictures and logo keep only their own .htaccess in the release). */
 function up_protected(string $rel): bool {
-    foreach (UP_CORES as $c) if ($rel === $c . '/config.php' || strpos($rel, $c . '/data/') === 0) return true;
+    foreach ([UP_CORE, UP_OLD] as $c) if ($rel === $c . '/config.php' || strpos($rel, $c . '/data/') === 0) return true;
     return up_in_media($rel) && basename($rel) !== '.htaccess';
 }
 function up_hash(string $file): string { return (string)@hash_file('sha256', $file); }
@@ -70,7 +69,7 @@ function up_size(int $n): string { return $n >= 1048576 ? round($n / 1048576, 1)
 /** The file list (manifest.json in the engine folder) of a site folder (default: this one): ['version' => '1.31.0', 'files' => [path => sha256]], or null. */
 function up_manifest(?string $root = null): ?array {
     $root = $root ?? up_root();
-    $j = json_decode((string)@file_get_contents($root . '/' . up_core_of($root) . '/manifest.json'), true);
+    $j = json_decode((string)@file_get_contents($root . '/' . UP_CORE . '/manifest.json'), true);
     if (!is_array($j) || !isset($j['version'], $j['files']) || !is_array($j['files']) || !preg_match('/^\d+\.\d+\.\d+$/', (string)$j['version'])) return null;
     foreach ($j['files'] as $p => $h) if (!is_string($p) || !is_string($h) || !preg_match('/^[a-f0-9]{64}$/', $h)) return null;
     return $j;
@@ -141,7 +140,7 @@ function up_name_problem(string $n, bool $dir): string {
     $base = end($segs); $ext = $base === '.htaccess' ? 'htaccess' : strtolower(pathinfo($base, PATHINFO_EXTENSION));
     if (!in_array($ext, UP_EXT, true)) return 'a file type a site update never has (.' . $ext . ')';
     if (up_in_media($n) && $base !== '.htaccess') return 'a file inside your pictures folder';
-    if ($ext === 'php' && !preg_match('~^(index\.php|web/(core-data|hub/core)/lib/[A-Za-z0-9_-]+\.php|web/hub/core/[A-Za-z0-9_-]+\.php|web/[A-Za-z0-9_-]+/[A-Za-z0-9_-]+\.php)$~', $n)) return 'a PHP file in a place where none belongs';
+    if ($ext === 'php' && !preg_match('~^(index\.php|web/hub/core/lib/[A-Za-z0-9_-]+\.php|web/hub/core/[A-Za-z0-9_-]+\.php|web/[A-Za-z0-9_-]+/[A-Za-z0-9_-]+\.php)$~', $n)) return 'a PHP file in a place where none belongs';
     if (in_array($n, ['web/core-data/config.php', 'web/hub/core/config.php'], true)) return 'your own configuration file';
     return '';
 }
@@ -151,7 +150,7 @@ function up_name_problem(string $n, bool $dir): string {
 /** Can the site replace its own files? Returns the folders it cannot write in (empty = it can). */
 function up_unwritable(): array {
     $bad = []; $root = up_root();
-    foreach (['', 'web/core-data', 'web/core-data/lib', 'web/core-data/assets', 'web/hub', 'web/hub/core', 'web/hub/core/lib', 'web/hub/core/assets', 'web', 'web/tools', 'web/links', 'web/info', 'web/cards', 'web/tasks', 'web/home'] as $d) {
+    foreach (['', 'web/hub', 'web/hub/core', 'web/hub/core/lib', 'web/hub/core/assets', 'web', 'web/tools', 'web/links', 'web/info', 'web/cards', 'web/tasks', 'web/home'] as $d) {
         $dir = $root . ($d === '' ? '' : '/' . $d); if (!is_dir($dir)) continue;
         $t = $dir . '/.upd-test-' . bin2hex(random_bytes(4));
         if (@file_put_contents($t, 'x') === false) { $bad[] = $d === '' ? '(site folder)' : $d; continue; }
@@ -227,8 +226,8 @@ function up_check(string $name): array {
     $add(!$bad, 'Every file name is safe.', $bad ? 'Refused: ' . implode('; ', array_slice($bad, 0, 5)) . (count($bad) > 5 ? ' and ' . (count($bad) - 5) . ' more.' : '.') : 'No tricks with folders, no scripts hidden in your picture folders, no private files.');
     if ($total > UP_MAX_TOTAL) $add(false, 'The update is not too large to unpack.', 'It would unpack to ' . up_size($total) . '.');
     if ($block) return $fail('This zip cannot be used. ' . $block[0]);
-    if (isset($files['web/core-data/manifest.json'], $files['web/hub/core/manifest.json'])) return $fail('This zip cannot be used: it holds two file lists.');
-    $zc = isset($files['web/hub/core/manifest.json']) ? 'web/hub/core' : 'web/core-data';   // the zip's layout
+    if (isset($files[UP_OLD . '/manifest.json'])) return $fail('This zip cannot be used: it is a version from before 1.50, which this site cannot go back to.');
+    $zc = UP_CORE;
     $add(isset($files[$zc . '/lib/boot.php'], $files[$zc . '/api.php'], $files['index.php'], $files[$zc . '/manifest.json']), 'It is a site update.', 'It holds the site\'s own files: the web folder and index.php, with its file list.');
     if (!isset($files[$zc . '/manifest.json'])) return $fail('This zip cannot be used: it is not a site update (it has no file list).');
     $free = (int)@disk_free_space(up_dir()); $need = $total * 2 + 8388608;
@@ -267,9 +266,7 @@ function up_check(string $name): array {
              'updated' => count($upd), 'new' => count($new), 'removed' => count($rem)];
     // what the new version says about itself: its own section of the changelog inside the zip (shown before you apply it)
     $notes = '';
-    $clf = up_sp($stage, 'web/hub/docs/CHANGELOG.md');   // from 1.50
-    if (!is_file($clf)) $clf = up_sp($stage, 'web/docs/CHANGELOG.md');
-    if (!is_file($clf)) $clf = up_sp($stage, 'web/core-data/docs/CHANGELOG.md');   // zips before 1.39.0
+    $clf = up_sp($stage, 'web/hub/docs/CHANGELOG.md');
     if (is_file($clf) && preg_match('/^## ' . preg_quote($man['version'], '/') . '\\b[^\\n]*\\n(.*?)(?=^---\\s*$|^## )/ms', (string)file_get_contents($clf, false, null, 0, 1500000), $nm)) $notes = substr(trim($nm[1]), 0, 24000);
     $s = up_state(); $s['staged'] = $info; $s['plan'] = ['updated' => $upd, 'new' => $new, 'removed' => $rem]; $s['notes'] = $notes; up_state_save($s);
     return ['ok' => true, 'staged' => $info, 'notes' => $notes, 'installed' => HUB, 'relation' => $rel > 0 ? 'newer' : ($rel === 0 ? 'same' : 'older'), 'checks' => $checks,
@@ -282,7 +279,7 @@ function up_check(string $name): array {
 function up_snapshot(): array {
     $root = up_root(); $dir = up_dir() . '/previous'; if (is_dir($dir)) hub_rm_tree($dir);
     $man = up_manifest(); $list = [];
-    if ($man) { foreach ($man['files'] as $p => $_) if (is_file($root . '/' . $p)) $list[] = $p; $list[] = up_core_of($root) . '/manifest.json'; }
+    if ($man) { foreach ($man['files'] as $p => $_) if (is_file($root . '/' . $p)) $list[] = $p; $list[] = UP_CORE . '/manifest.json'; }
     else { foreach (up_walk($root) as $p) if (!up_protected($p)) $list[] = $p; }   // a site from before file lists: everything in web
     $list = array_values(array_unique($list)); $bytes = 0;
     foreach ($list as $p) {
@@ -330,14 +327,12 @@ function up_rollback(array $written, array $removed): bool {
     return $ok;
 }
 
-/** Puts every file of $srcDir (the manifest.json in its engine folder lists them) in place, then removes what $oldList had and the new release does not.
- *  When the layout changes (web/core-data and web/hub/core), the old file list goes too, so the site reads the new one. */
+/** Puts every file of $srcDir (the manifest.json in its engine folder lists them) in place, then removes what $oldList had and the new release does not. */
 function up_install(string $srcDir, array $oldList): array {
     $root = up_root(); $man = up_manifest($srcDir); if (!$man) throw new RuntimeException('The new file list cannot be read.');
-    $newCore = up_core_of($srcDir); $oldCore = up_core_of($root);
     $done = []; $written = []; $order = array_keys($man['files']);
-    usort($order, function ($a, $b) { $w = function ($p) { foreach (UP_CORES as $c) { if ($p === $c . '/lib/boot.php') return 2; if (strpos($p, $c . '/lib/') === 0 || $p === $c . '/api.php') return 1; } return $p === 'index.php' ? 3 : 0; }; return $w($a) <=> $w($b) ?: strcmp($a, $b); });
-    $order[] = $newCore . '/manifest.json';
+    usort($order, function ($a, $b) { $w = function ($p) { if ($p === UP_CORE . '/lib/boot.php') return 2; if (strpos($p, UP_CORE . '/lib/') === 0 || $p === UP_CORE . '/api.php') return 1; return $p === 'index.php' ? 3 : 0; }; return $w($a) <=> $w($b) ?: strcmp($a, $b); });
+    $order[] = UP_CORE . '/manifest.json';
     try {
         foreach ($order as $p) {
             if (!up_is_manifest($p) && up_name_problem($p, false) !== '') throw new RuntimeException('Refused an unsafe path: ' . $p . '.');
@@ -351,17 +346,15 @@ function up_install(string $srcDir, array $oldList): array {
         if (isset($man['files'][$p]) || up_is_manifest($p) || up_protected($p)) continue;
         $f = $root . '/' . $p; if (is_file($f) && !is_link($f) && @unlink($f)) { $removed[] = $p; $d = dirname($f); while ($d !== $root && @rmdir($d)) $d = dirname($d); }
     }
-    if ($newCore !== $oldCore && is_file($root . '/' . $oldCore . '/manifest.json') && @unlink($root . '/' . $oldCore . '/manifest.json')) $removed[] = $oldCore . '/manifest.json';   // Go Back puts it back
     return ['ok' => true, 'written' => $written, 'removed' => $removed];
 }
 
 function up_opcache_reset(): void { if (function_exists('opcache_reset')) @opcache_reset(); }
 
-/** Does the site answer after the swap? true / false / null (could not look: no curl). $core: the engine folder of the version now in place. */
-function up_self_check(string $expect, string $core = 'web/core-data'): ?bool {
+/** Does the site answer after the swap? true / false / null (could not look: no curl). */
+function up_self_check(string $expect): ?bool {
     if (!function_exists('curl_init')) return null;
-    $dir = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/web/core-data/api.php'))), '/');
-    foreach (UP_CORES as $c) if (substr($dir, -strlen('/' . $c)) === '/' . $c) { $dir = substr($dir, 0, -strlen('/' . $c)) . '/' . $core; break; }   // the site's address, then the engine of the new version
+    $dir = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/' . UP_CORE . '/api.php'))), '/');
     $url = (hub_https() ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $dir . '/api.php?action=state';
     $ch = curl_init($url);
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 12, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_FOLLOWLOCATION => false, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_SSL_VERIFYHOST => 0, CURLOPT_USERAGENT => 'site-self-check']);
@@ -376,7 +369,7 @@ function up_apply(bool $fromPrevious, bool $autoUndo): array {
     $lk = fopen(up_dir() . '/apply.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['ok' => false, 'code' => 409, 'error' => 'An update is already running. Wait a minute and look again.'];
     try {
         up_neutralise_saved();
-        $root = up_root(); $s = up_state();
+        $s = up_state();
         if ($fromPrevious) {
             if (!up_manifest(up_dir() . '/previous')) return ['ok' => false, 'code' => 409, 'error' => 'There is no saved version to go back to.'];
             $src = up_dir() . '/previous'; $target = (up_manifest($src) ?? ['version' => '?'])['version'];
@@ -400,7 +393,7 @@ function up_apply(bool $fromPrevious, bool $autoUndo): array {
         }
         up_opcache_reset();
         // 3. look at the site again
-        $alive = up_self_check($target, up_core_of($root));   // the engine folder the site has now
+        $alive = up_self_check($target);
         if ($alive === false && $autoUndo) {
             $okb = up_rollback($r['written'], $r['removed']); up_opcache_reset();
             return ['ok' => false, 'error' => 'The site did not answer after the update, so the version you had is back.', 'rolledBack' => $okb];
@@ -464,7 +457,7 @@ function up_delete(array $paths): array {
         $p = (string)$p;
         if (!isset($ok[$p])) { $skip[] = $p; continue; }
         $f = $root . '/' . $p;
-        if (is_file($f) && !is_link($f) && @unlink($f)) { $del[] = $p; $d = dirname($f); while ($d !== $root && $d !== $root . '/web/core-data' && $d !== $root . '/web/hub/core' && $d !== $root . '/web/hub' && $d !== $root . '/web' && @rmdir($d)) $d = dirname($d); }
+        if (is_file($f) && !is_link($f) && @unlink($f)) { $del[] = $p; $d = dirname($f); while ($d !== $root && $d !== $root . '/' . UP_OLD && $d !== $root . '/' . UP_CORE && $d !== $root . '/web/hub' && $d !== $root . '/web' && @rmdir($d)) $d = dirname($d); }
         else $skip[] = $p;
     }
     up_scan();   // refreshes the numbers shown on the Overview

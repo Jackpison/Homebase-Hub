@@ -336,6 +336,13 @@ case 'favicon':   // Tools > Favicon: the icon of a website, fetched here becaus
     header('Content-Type: image/png'); header('Content-Length: ' . strlen($png)); header('Cache-Control: public, max-age=86400'); header('X-Content-Type-Options: nosniff');
     echo $png; exit;
 
+case 'presets':   // Tools' saved presets (1.60). GET: all of them; POST {op: add | rename | delete, kind, ...}: one change
+    require_once __DIR__ . '/lib/presets.php';
+    if ($method === 'GET') { need_admin(false); hub_json(200, ['ok' => true] + pr_view(pr_load())); }
+    need_post(); need_admin();
+    [$code, $res] = pr_change(body(1));
+    hub_json($code, $res);
+
 case 'diag':   // Settings > Server check
     need_admin(false);
     @set_time_limit(40);
