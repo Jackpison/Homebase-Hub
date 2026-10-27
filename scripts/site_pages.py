@@ -181,9 +181,9 @@ def home():
     chat, buttons = chat_html()
     cats, tools = load_tools()
     count = {c['id']: sum(1 for t in tools if t['cat'] == c['id']) for c in cats}
-    cat_ac = {'images': 'a-cards', 'photos': 'a-home', 'pdf': 'a-tasks', 'utilities': 'a-tools'}
+    cat_ac = {'images': 'a-cards', 'photos': 'a-home', 'pdf': 'a-tasks', 'utilities': 'a-tools', 'calculators': 'a-gold', 'documents': 'a-links'}
     toolcards = ''.join('<a class="card hv %s" href="tools/"><div class="ico">%s</div><h3>%s</h3><p>%s</p><span class="more">%d tools%s</span></a>' % (
-        cat_ac[c['id']], I({'images': 'image', 'photos': 'image', 'pdf': 'note', 'utilities': 'tools'}[c['id']]), e(c['name']),
+        cat_ac[c['id']], I({'images': 'image', 'photos': 'image', 'pdf': 'note', 'utilities': 'tools', 'calculators': 'chart', 'documents': 'table'}[c['id']]), e(c['name']),
         e(', '.join(t['name'] for t in tools if t['cat'] == c['id'])[:70].rsplit(',', 1)[0] + ' and more'), count[c['id']], I('arrow')) for c in cats)
     around = ''.join('<a class="card hv %s" href="%s"><div class="ico">%s</div><h3>%s</h3><p>%s</p><span class="more">%s%s</span></a>' % (ac, href, I(ic), e(t), e(p), e(m), I('arrow')) for ac, href, ic, t, p, m in [
         ('a-tg', 'telegram/', 'send', 'Telegram', 'A daily digest, Due Now messages with Done, Skip and Snooze, and backups sent to your chat.', 'See Telegram'),
@@ -309,7 +309,7 @@ def phone():
 
 def tools_page():
     cats, tools = load_tools()
-    cat_ac = {'images': 'a-cards', 'photos': 'a-home', 'pdf': 'a-tasks', 'utilities': 'a-tools'}
+    cat_ac = {'images': 'a-cards', 'photos': 'a-home', 'pdf': 'a-tasks', 'utilities': 'a-tools', 'calculators': 'a-gold', 'documents': 'a-links'}
     chips = '<button class="chipbtn" type="button" data-cat="all" aria-pressed="true">All %d</button>' % len(tools) + ''.join(
         '<button class="chipbtn" type="button" data-cat="%s" aria-pressed="false">%s %d</button>' % (c['id'], e(c['name']), sum(1 for t in tools if t['cat'] == c['id'])) for c in cats)
     names = {c['id']: c['name'] for c in cats}

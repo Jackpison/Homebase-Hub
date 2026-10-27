@@ -1,51 +1,16 @@
 // Tools: the page around the tools. Sections, search, favourites, recently used, your own order, settings.
 // Every tool lives in src/tools/<id>.js and is loaded only when it is opened. The list of tools is src/tools.json, the one list the
 // app, the website's tool finder and the tests all read.
+import LOAD from './load.gen.js';
 import DATA from './tools.json';
 import { icon } from './icons.js';
 import { h, button, seg, check, toast } from './ui.js';
 import * as st from './state.js';
 import './styles.css';
 
-// The tools that are built. Every id in tools.json gets a line here.
-const LOAD = {
-  'qr-generator': () => import('./tools/qr-generator.js'),
-  'favicon': () => import('./tools/favicon.js'),
-  'json-formatter': () => import('./tools/json-formatter.js'),
-  'text-tools': () => import('./tools/text-tools.js'),
-  'generators': () => import('./tools/generators.js'),
-  'hash-generator': () => import('./tools/hash-generator.js'),
-  'zip-creator': () => import('./tools/zip-creator.js'),
-  'img-rotate': () => import('./tools/img-rotate.js'),
-  'img-adjust': () => import('./tools/img-adjust.js'),
-  'img-watermark': () => import('./tools/img-watermark.js'),
-  'img-colors': () => import('./tools/img-colors.js'),
-  'img-beautify': () => import('./tools/img-beautify.js'),
-  'svg-png': () => import('./tools/svg-png.js'),
-  'img-base64': () => import('./tools/img-base64.js'),
-  'image-converter': () => import('./tools/image-converter.js'),
-  'image-compress': () => import('./tools/image-compress.js'),
-  'image-resize': () => import('./tools/image-resize.js'),
-  'bg-remove': () => import('./tools/bg-remove.js'),
-  'img-redact': () => import('./tools/img-redact.js'),
-  'id-photo': () => import('./tools/id-photo.js'),
-  'meme': () => import('./tools/meme.js'),
-  'image-crop': () => import('./tools/image-crop.js'),
-  'circle-crop': () => import('./tools/circle-crop.js'),
-  'collage': () => import('./tools/collage.js'),
-  'image-metadata': () => import('./tools/image-metadata.js'),
-  'pdf-split': () => import('./tools/pdf-split.js'),
-  'pdf-organize': () => import('./tools/pdf-organize.js'),
-  'pdf-sign': () => import('./tools/pdf-sign.js'),
-  'pdf-annotate': () => import('./tools/pdf-annotate.js'),
-  'pdf-protect': () => import('./tools/pdf-protect.js'),
-  'pdf-stamp': () => import('./tools/pdf-stamp.js'),
-  'pdf-text': () => import('./tools/pdf-text.js'),
-  'pdf-compress': () => import('./tools/pdf-compress.js'),
-  'pdf-merge': () => import('./tools/pdf-merge.js'),
-  'images-to-pdf': () => import('./tools/images-to-pdf.js'),
-  'pdf-to-images': () => import('./tools/pdf-to-images.js'),
-};
+// LOAD (each tool's module, loaded when it is opened) is written from tools.json by build.mjs into load.gen.js (1.60): adding a tool
+// is its line in tools.json and its file in tools/ (scripts/new-tool.py does both).
+
 
 const TOOLS = DATA.tools, CATS = DATA.categories;
 const BY = Object.fromEntries(TOOLS.map((t) => [t.id, t]));

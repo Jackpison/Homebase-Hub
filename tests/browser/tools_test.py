@@ -317,6 +317,13 @@ try:
         missing = [t['id'] for t in DATA['tools']]
         pg.goto(U + '#/tool/nothing-like-this'); until(lambda: 'Tool not found' in pg.inner_text('#root'), 5000)
         check('N23 an unknown tool address says so and offers the list', 'Tool not found' in pg.inner_text('#root'))
+        # N26 (1.60): every tool in tools.json opens: its heading shows and nothing fails (a tool added with scripts/new-tool.py is covered at once)
+        broken = []
+        for t in DATA['tools']:
+            pg.goto(U + '#/tool/' + t['id'])
+            ok = until(lambda: pg.evaluate("(() => { const h = document.querySelector('#root .th h1'), b = document.querySelector('#root .th ~ *'); return !!h && h.textContent.trim() === %r && !document.querySelector('#root [aria-busy=true]') })()" % t['name']), 20000, 150)
+            if not ok or pg.evaluate("!!document.querySelector('#root .note.bad[role=alert]')"): broken.append(t['id'])
+        check('N26 every tool (%d) opens with its heading and without an error' % len(DATA['tools']), not broken, broken)
         check('N24 no page error anywhere', not errs, errs)
         for scheme in ('dark', 'light'):
             pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme)

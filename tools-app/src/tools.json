@@ -23,6 +23,18 @@
    "name": "Utilities",
    "icon": "wrench",
    "desc": "QR codes, JSON, text, passwords, hashes and ZIP files."
+  },
+  {
+   "id": "calculators",
+   "name": "Calculators",
+   "icon": "calc",
+   "desc": "Loans, savings, percentages, dates, units and amounts in words."
+  },
+  {
+   "id": "documents",
+   "name": "Documents",
+   "icon": "receipt",
+   "desc": "Invoices, text compare, Markdown and spreadsheet data."
   }
  ],
  "tools": [

@@ -10,8 +10,8 @@ python3 scripts/build-tools.py              # or: a staging copy in build/tools-
 
 - `src/tools.json`: the one list of tools (id, name, section, description, search words, icon, popular order). The app, the website's
   tool finder and the tests read it. A tool's id is its address (`#/tool/<id>`) and is kept in favourites, so do not rename ids.
-- `src/main.js`: the page around the tools (sections, search, favourites, recent, Organise, Settings) and the `LOAD` table that maps
-  each id to its module. `src/state.js`: what is remembered in the browser (`tools.v3`; the first visit carries over favourites and
+- `src/main.js`: the page around the tools (sections, search, favourites, recent, Organise, Settings). The table that maps each id to
+  its module (`src/load.gen.js`, not kept in git) is written by `build.mjs` from `tools.json` (1.60). `src/state.js`: what is remembered in the browser (`tools.v3`; the first visit carries over favourites and
   recent tools from the old app). `src/ui.js`: shared pieces (fields, drop zones, downloads, notices). `src/icons.js`, `src/styles.css`.
 - `src/tools/<id>.js`: one file per tool, `export default function (root, ctx)`, loaded only when the tool is opened.
 - `src/lib/image.js`: opening every image format (HEIC through libheif, TIFF through UTIF, the rest through the browser), saving as JPG, PNG, WebP or AVIF (the AVIF encoder's `avif_enc.wasm` is copied into `assets/` by `build.mjs`), shrinking to a target size, and the results list with Download All (ZIP).
@@ -20,6 +20,16 @@ python3 scripts/build-tools.py              # or: a staging copy in build/tools-
 - Libraries come from npm, pinned to versions at least two weeks old (`package.json`, `package-lock.json`); Dependabot proposes updates.
 - Text from users and files is only set with `textContent` or as a value. The page's security policy (`src/web/tools/.htaccess`) allows
   only this site's own scripts and WebAssembly.
+
+## Adding a tool (1.60)
+
+```
+python3 scripts/new-tool.py loan-emi "EMI Calculator" calculators calc "Monthly payment, interest and a schedule." emi loan
+```
+
+It writes the tool's line in `tools.json` and a working starter `src/tools/<id>.js`. Write the tool, add its checks to
+`tests/browser/tools_test.py` (`tests/repo/tools_list_test.py` fails until its id is named there), then `python3 scripts/build-tools.py --install`.
+A new section needs its line in `tools.json` `categories`, its colours `--c-<id>` (dark and light) and `.c-<id>` / `.view[data-cat=<id>]` in `styles.css`.
 
 ## Status of the rebuild
 

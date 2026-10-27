@@ -20,3 +20,4 @@ src/web/core-data/config.php
 src/web/core-data/data/
 src/web/core-data/media/
 phpstan.phar
+tools-app/src/load.gen.js

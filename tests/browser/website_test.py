@@ -116,7 +116,7 @@ for m in re.finditer(r'https://jackpison\.github\.io/Homebase-Hub/([^\s)"\'<>]*)
 check('W8 every link from the README to this website still works (pages and #anchors)', not rb, rb[:5])
 data = json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))
 ids = {t['id'] for t in data['tools']}
-loads = set(re.findall(r"^  '([a-z0-9-]+)': \(\) => import\(", open(os.path.join(ROOT, 'tools-app', 'src', 'main.js'), encoding='utf-8').read(), re.M))
+loads = {f[:-3] for f in os.listdir(os.path.join(ROOT, 'tools-app', 'src', 'tools')) if f.endswith('.js')}   # 1.60: Tools builds its list of modules from tools.json, one file per tool
 listed = set(re.findall(r'data-cat="[a-z]+" data-text', open(os.path.join(SITE, 'tools', 'index.html'), encoding='utf-8').read()))
 check('W9 the website lists the %d tools of tools-app/src/tools.json, and every one of them is built into the Tools page' % len(ids), len(ids) >= 30 and ids == loads and open(os.path.join(SITE, 'tools', 'index.html'), encoding='utf-8').read().count('class="tool ') == len(ids), sorted(ids ^ loads)[:5])
 

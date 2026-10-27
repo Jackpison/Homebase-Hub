@@ -14,6 +14,13 @@ const OUT = path.resolve(arg('--out', path.join(ROOT, 'build', 'tools-new')));
 const A = path.join(OUT, 'assets');
 fs.rmSync(A, { recursive: true, force: true }); fs.mkdirSync(A, { recursive: true });
 
+// The table of tool modules, from tools.json (1.60): one dynamic import per tool, so each tool stays its own file.
+{
+  const L = JSON.parse(fs.readFileSync(path.join(HERE, 'src', 'tools.json'), 'utf8')).tools, miss = L.filter((t) => !fs.existsSync(path.join(HERE, 'src', 'tools', t.id + '.js')));
+  if (miss.length) { console.error('build.mjs: no file src/tools/<id>.js for: ' + miss.map((t) => t.id).join(', ')); process.exit(1); }
+  fs.writeFileSync(path.join(HERE, 'src', 'load.gen.js'), '// Written by build.mjs from tools.json. Do not edit.\nexport default {\n' +
+    L.map((t) => `  '${t.id}': () => import('./tools/${t.id}.js'),`).join('\n') + '\n};\n');
+}
 const r = await build({
   entryPoints: [path.join(HERE, 'src', 'main.js')], bundle: true, splitting: true, format: 'esm', minify: true, target: ['es2021'],
   outdir: A, entryNames: 'app-[hash]', chunkNames: 't-[name]-[hash]', assetNames: '[name]-[hash]', legalComments: 'eof', metafile: true, logLevel: 'warning',
