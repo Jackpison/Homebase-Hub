@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.59.0 | Swipe gestures on phones; vivid presets; the project keeps itself current (monthly maintenance); repeated code merged |
 | 1.53.8 | A new login window; visit counts at the end of the row, every 30 seconds; one Banks window in Cards; a full app icon |
 | 1.53.6 | No more surprise login box; one Holders window in Cards; tidier Settings windows |
 | 1.53.5 | One edit bar at the bottom on every page; the pencil keeps Edit This Page and Settings |
@@ -85,6 +86,32 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.59.0
+
+### New
+
+- **Swipe on your phone.** Swipe left or right to go to the next or previous page, in the order of your bar (Home, Links, Info, Cards, Tasks). On Links and Info a swipe first moves between tabs; past the last tab it goes to the next page. On Home, pull down from the top for the next background. Swipes are off while you edit, in a window, in a text field, and on a computer with a mouse.
+- **New vivid presets** in Settings › Appearance › Presets: Ultraviolet, Cyber Lime, Magma, Tropic Night, Royal Blue, Berry Blast, Jungle Neon, Cobalt Flame (dark) and Sunburst, Flamingo, Aqua Pop, Lime Soda, Grape Soda, Tangerine (light). All easy to read.
+
+### Changed
+
+- **Fewer look-alike presets.** 39 presets that looked almost the same as another were removed, so each one left is a real choice. The default look, the high-contrast presets and the well-known editor themes stay. Colours you already chose are not changed.
+- **Windows on every page** (Links, Info, Cards, Tasks) share one look for their corners, shadow and the dimmed page behind.
+- **Messages** on Home and Links now appear in the same place and style as on the other pages.
+
+### Keeping the project alive
+
+- **Monthly maintenance on GitHub.** Once a month GitHub updates the libraries inside Tools (only to versions that promise not to break anything), rebuilds Tools, prepares the next version and its changelog, and opens a pull request. The owner merges it when the tests are green and publishes the release. Nothing changes on any site until you update it in Settings › Updates.
+- **The next PHP version is tested early,** every week, so a break shows up months before hosts offer it.
+- **MAINTAINING.md** explains, click by click, how to keep the project current without a programmer, and how to hand it over.
+- **Tools:** the background-removal engine (onnxruntime) updated to 1.31.1.
+
+### Tidier inside
+
+- Code that existed in several copies now lives once: the settings rows, the message box, the server's answers, the early light or dark theme, the windows' look, and Home's way of saving files. Info's old per-page login token, no longer used since the one site login, is gone.
 
 ---
 
