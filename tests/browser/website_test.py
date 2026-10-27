@@ -228,6 +228,58 @@ try:
         back = pg.evaluate("Math.abs(document.querySelector('.top').getBoundingClientRect().top) < 1")
         check('W38 the header slides away while scrolling down and comes back on a scroll up', hid and back, (hid, back)); c2.close()
 
+        # the Screenshots page: every picture is there, tabs switch, a picture opens full size, Dark and Light swap
+        sys.path.insert(0, os.path.join(ROOT, 'scripts')); import site_pages
+        missing = [f for f in site_pages.gallery_pics() if not os.path.isfile(os.path.join(ROOT, 'website', 'img', f))]
+        check('W39 every picture on the Screenshots page (%d, with light copies) is in website/img' % len(site_pages.gallery_pics()), not missing, missing[:4])
+        c2 = ctx('dark', 1280); pg = c2.new_page(); pg.goto(B + '/screenshots/'); settle(pg)
+        pg.click('#t-tasks'); until(lambda: pg.is_visible('#p-tasks'), 3000)
+        check('W40 Screenshots: choosing Tasks shows the Tasks pictures only, with Highlights and Settings', pg.is_visible('#p-tasks') and not pg.is_visible('#p-home') and 'Settings' in pg.inner_text('#p-tasks'))
+        pg.click('#p-tasks .zoom >> nth=0'); until(lambda: pg.evaluate("document.getElementById('lb').open"), 3000)
+        first = pg.evaluate("document.querySelector('#lb img').getAttribute('src')")
+        pg.keyboard.press('ArrowRight'); until(lambda: pg.evaluate("document.querySelector('#lb img').getAttribute('src')") != first, 3000)
+        nxt = pg.evaluate("document.querySelector('#lb img').getAttribute('src')")
+        pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('lb').open"), 3000)
+        check('W41 a picture opens full size, the arrow key shows the next one and Escape closes it', bool(first) and nxt != first and not pg.evaluate("document.getElementById('lb').open"), (first, nxt))
+        pg.click('[data-theme-shots=light]'); src = pg.evaluate("document.querySelector('#p-tasks .zoom[data-light] img').getAttribute('src')")
+        until(lambda: pg.evaluate("[...document.querySelectorAll('#p-tasks .zoom[data-light] img')].every(i => i.complete && i.naturalWidth > 0)"), 5000)
+        loaded = pg.evaluate("[...document.querySelectorAll('#p-tasks .zoom[data-light] img')].every(i => i.complete && i.naturalWidth > 0)")
+        pg.click('[data-theme-shots=dark]'); back = pg.evaluate("document.querySelector('#p-tasks .zoom[data-light] img').getAttribute('src')")
+        check('W42 Light shows the light pictures (and they load) and Dark brings the dark ones back', '-light' in src and loaded and '-light' not in back, (src, loaded, back)); c2.close()
+        stale = [r for r in pages if not r.startswith('changelog') and re.search(r'\b(36 tools|166 looks)\b', open(os.path.join(SITE, r), encoding='utf-8').read())]
+        check('W43 no page (apart from the changelog, which is history) still gives the old numbers (36 tools, 166 looks)', not stale, stale)
+
+        # the floating shapes in the top sections
+        c2 = ctx('dark', 1280); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
+        pics = pg.evaluate("[...document.querySelectorAll('.hero .sh > i')].map(i => getComputedStyle(i).backgroundImage.replace(/^url\\(\"?|\"?\\)$/g, ''))")
+        ok = [pg.request.get(u).status == 200 and 'svg' in pg.request.get(u).headers.get('content-type', '') for u in pics]
+        check('W44 Home has its four floating shapes and every shape picture loads', len(pics) == 4 and all(ok), pics)
+        # the text itself (each line of it) and the buttons, outside the app picture on the right
+        TXT = ("(() => { const out = [], w = document.createTreeWalker(document.querySelector('.hero .in'), NodeFilter.SHOW_TEXT); let n;"
+               " while ((n = w.nextNode())) { if (!n.textContent.trim() || n.parentElement.closest('.hart')) continue; const r = document.createRange(); r.selectNodeContents(n); out.push(...r.getClientRects()); }"
+               " document.querySelectorAll('.hero .in :is(.btn, .look, .chipbtn)').forEach(e => { if (!e.closest('.hart')) out.push(e.getBoundingClientRect()); }); return out.filter(r => r.width && r.height); })()")
+        SH = "[...document.querySelectorAll('.hero .sh')].map(e => e.getBoundingClientRect()).filter(r => r.width && getComputedStyle(document.querySelector('.shapes')).display != 'none')"
+        cover = []
+        for width in (1280, 1600):
+            pg.set_viewport_size({'width': width, 'height': 900})
+            for u in URLS:
+                pg.goto(B + u); settle(pg)
+                if not pg.query_selector('.hero .shapes'): continue
+                hit = pg.evaluate("(([t, s]) => t.some(a => s.some(b => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom)))([%s, %s])" % (TXT, SH))
+                if hit: cover.append('%s at %d' % (u, width))
+        check('W45 no floating shape sits behind any text in a top section (every page, 1280 and 1600 wide)', not cover, cover[:4])
+        pg.set_viewport_size({'width': 1000, 'height': 900}); pg.goto(B + '/'); settle(pg)
+        check('W46 below 1100 wide, where the text spans the page, the shapes are hidden', pg.evaluate("getComputedStyle(document.querySelector('.shapes')).display") == 'none')
+        pg.set_viewport_size({'width': 1280, 'height': 900}); pg.goto(B + '/'); settle(pg)
+        before = pg.evaluate("document.querySelector('.s-right').style.transform")
+        pg.mouse.move(300, 300); pg.mouse.move(900, 500, steps=12); until(lambda: pg.evaluate("document.querySelector('.glowm').classList.contains('on')"), 3000); pg.wait_for_timeout(400)
+        after = pg.evaluate("document.querySelector('.s-right').style.transform")
+        check('W47 moving the mouse over the top section shows the glow and shifts the shapes a little', pg.evaluate("document.querySelector('.glowm').classList.contains('on')") and after != before, (before, after)); c2.close()
+        c2 = ctx('dark', 1280, reduced_motion='reduce'); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
+        anim = pg.evaluate("[...document.querySelectorAll('.sh > i')].map(i => getComputedStyle(i).animationName)")
+        pg.mouse.move(300, 300); pg.mouse.move(900, 500, steps=12); pg.wait_for_timeout(300)
+        check('W48 with reduced motion the shapes stay still and nothing follows the mouse', all(a == 'none' for a in anim) and not pg.evaluate("document.querySelector('.sh').style.transform"), anim); c2.close()
+
         # axe, every page, both themes (this context bypasses the page policy, which would stop axe from running)
         for scheme in ('dark', 'light'):
             c2 = b.new_context(color_scheme=scheme, bypass_csp=True, viewport={'width': 1280, 'height': 900}); c2.add_init_script(TRACK_REQUESTS); found = []

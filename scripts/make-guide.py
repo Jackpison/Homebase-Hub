@@ -114,7 +114,10 @@ story += chapter('1', 'Welcome', 'Homebase Hub puts the small things you open ev
  shot('links-crop', 'The bar is the same on every page. Here it sits above Links.'),
  *sub('Search'),
  P('Search covers Links, Info, Tasks and Tools; Cards has its own search box. The sliders button in the search box chooses where to look: everything, one page, or one tab. Names, web addresses and note text are always searched.'),
- table(['To do this', 'Press or type'], [['Open search from anywhere', '<font name="M-Bold">/</font> or <font name="M-Bold">Ctrl+K</font>'], ['Search only Links', '<font name="M-Bold">links:</font> followed by your words'], ['Search only Info', '<font name="M-Bold">info:</font> followed by your words']]))
+ table(['To do this', 'Press or type'], [['Open search from anywhere', '<font name="M-Bold">/</font> or <font name="M-Bold">Ctrl+K</font>'], ['Search only Links', '<font name="M-Bold">links:</font> followed by your words'], ['Search only Info', '<font name="M-Bold">info:</font> followed by your words']]),
+ *sub('Logging in'),
+ P('Press the key icon, or anything that needs you to be logged in. The login window shows your logo and %s your site\'s name. The eye button shows the password while you type; a wrong password is explained right under the field. With two-step login on, the next step asks for the code from your app; %s skips that step on this browser for 30 days, and is never ticked for you.' % (C('Log In to'), C('Trust This Browser'))),
+ shot('login', 'The login window.'))
 
 story += chapter('2', 'Install', 'You need web hosting with PHP 8.3 or newer and a file manager or FTP. HTTPS is recommended.',
  steps(['Download <font name="M-Bold">site-update-X.Y.Z.zip</font> from the latest release on GitHub (github.com/Jackpison/Homebase-Hub/releases).',
@@ -130,7 +133,7 @@ story += chapter('2', 'Install', 'You need web hosting with PHP 8.3 or newer and
 
 story += chapter('3', 'First steps', 'Guided Setup walks you through protecting your site, one step at a time.',
  steps(['Open %s (the gear in the bar).' % C('Settings'), 'Choose %s, then the %s tab.' % (C('Overview'), C('Guided Setup')),
-        'Work through the steps: a strong password, two-step login, an encryption passphrase, a first backup, and Telegram.', 'Come back to Overview any time: it shows what still needs a look.']),
+        'Work through the steps: a strong password, two-step login, an encryption passphrase, a first backup, and Telegram.', 'Come back to Overview any time: it shows what still needs a look. After an update, its What\'s New card shows that version\'s notes, with the full Changelog a click away.']),
  shot('s-overview', 'Settings, Overview: a card for each area, the things to look at next, and a status on every menu item.'),
  Tip('You can do the steps in any order, and skip the ones you do not need. Each one also lives in its own section of Settings.'),
  *sub('Install on your phone'),
@@ -141,11 +144,13 @@ story += chapter('3', 'First steps', 'Guided Setup walks you through protecting 
  steps(['Open your site in Chrome.', 'Open the menu (the three dots).', 'Choose %s (or %s).' % (C('Install App'), C('Add to Home Screen'))]),
  P('<font name="M-Bold">Computer</font>'),
  steps(['Open your site in Chrome or Edge.', 'Click the install icon at the right end of the address bar, or open the menu and choose %s.' % C('Install'), 'The site opens in its own window and can be pinned like any app.']),
- Tip('On a computer, Settings can also show an %s button when the browser offers it.' % C('Install')))
+ Tip('On a computer, Settings can also show an %s button when the browser offers it.' % C('Install')),
+ *sub('On a phone'),
+ P('Swipe left or right to go to the next or previous page, in the order of your bar. Swipes are off while you edit, in a window or in a text field. On Home, pull down from the top for the next photo. After an update the app shows the new version by itself; only the icon on an iPhone changes after removing the app and adding it again.'))
 
 story += chapter('4', 'Home', 'Your start page: the first thing you see when you open your site.',
  shot('home-1', 'Home while you are logged in: the clock, the Glass Dock along the bottom, and Today open with Quick Add. The photo\'s credit is in the top corner, next to the buttons for the next photo and the menu.'),
- P('Background photos change on their own, and the photo\'s credit is shown in the corner. Each new photo also gets a phone-sized copy, so the page loads quickly on a phone. Your own photos and uploads are kept in <font name="M-Bold">web/hub/media/home</font>, which updates never replace.'),
+ P('Background photos change on their own, and the photo\'s credit is shown in the corner. The refresh button swaps the photo at once, because the next one is fetched ahead. Each new photo also gets a phone-sized copy, so the page loads quickly on a phone. Your own photos and uploads are kept in <font name="M-Bold">web/hub/media/home</font>, which updates never replace.'),
  P('The start page can be shown with the bar or without it. Without the bar, the gear button in the corner opens editing, the other pages and Settings once you are logged in.'),
  *sub('Clock and widgets'),
  P('Everyone sees the clock. While you are logged in, Home also shows widgets in frosted glass: %s (with Quick Add, and a tick to mark a task done), %s, %s (one box from Info), %s, %s, %s, %s, %s and %s. Visitors never receive your widgets or their data.' % (C('Today'), C('Countdown'), C('Pinned Note'), C('Recent Tools'), C('Month Calendar'), C('Scratch Pad'), C('Quote of the Day'), C('World Clock'), C('Weather'))),
@@ -153,6 +158,7 @@ story += chapter('4', 'Home', 'Your start page: the first thing you see when you
         'Turn widgets on or off and move them up or down; set the countdown, the pinned note, the World Clock places and your town for Weather. %s off hides them all.' % C('Show Widgets'), 'Press %s.' % C('Save Widgets')]),
  P('%s (the gear in that row) has the page title, the welcome text, %s and the glass look.' % (C('Home Settings'), C('Show the Bar on the Home Page'))),
  Tip('Weather is off at first. Once you turn it on and type your town, your server asks Open-Meteo for the forecast, at most every 30 minutes. Nothing else on Home contacts another site.'),
+ shot('home-settings', 'Home Settings: the title, the welcome text, the bar, and the glass (Light, Dark or Solid, how see-through, and the blur).'),
  P('Up to version 1.50 Home had its own list of links. Version 1.51 copies them once into Links, in a category called %s.' % C('From Home')),
  shot('home-3', 'What a visitor sees: the clock on another photo from the rotation, and no widgets.'))
 
@@ -169,6 +175,9 @@ story += chapter('5', 'Links', 'Bookmarks in tabs, each with categories of links
  shot('links-import', 'Import Bookmarks with the preview of a browser\'s export.'),
  P('Folders become categories; a folder inside a folder becomes "Folder / Subfolder". Links you already have are not added twice, and addresses that are not web links (such as javascript: or file:) are left out. The file is read in your browser and never uploaded; only the links are saved.'),
  Tip('Changed your mind? Settings, Backup & Restore, Earlier Versions has a copy of Links from just before the import. Choose %s afterwards to save the new links\' icons.' % C('Fetch Icons')),
+ *sub('Visit counts'),
+ P('Each link shows how often it was opened, as a small number at the end of its row. Clicks by anyone who opens your Links count, but only you see the numbers; the same browser counts again after 30 seconds. %s in Links Settings only hides the numbers. Links in encrypted tabs are never counted.' % C('Show Visit Counts')),
+ shot('links-settings', 'Links Settings: privacy, icons from Google, visit counts, text sizes and the edit bar.'),
  *sub('Encrypted tabs'),
  P('A tab can be encrypted with your passphrase (set it in Settings, Security, Encryption). The same passphrase locks Info\'s encrypted tabs and your backup files. Search finds a locked tab by its name, but never shows what is inside.'),
  P('A <font name="M-Bold">gold padlock</font> on a tab means it is private: it is only shown when you are logged in. A <font name="M-Bold">green padlock with a tick</font> means it is encrypted.'),
@@ -192,6 +201,7 @@ story += chapter('7', 'Cards', 'Your cards in one table, or grouped by holder, w
    ['Limit', 'The credit limit.'], ['Charges', 'The yearly fee, or Free. A fee is amber.'], ['Expiry', 'Month and year. Amber when it expires within 3 months, red once it has expired.'], ['Details', 'Network and variant, the base (LTF, FD or Paid), and Debit for a debit card.']]),
  P('%s (the default) shows every card together. %s gives each person a section with their totals; click a heading to fold it. Use the search box, the holder buttons, or %s for bank, network and type. Click a row to edit the card.' % (C('Table'), C('By Holder'), C('More Filters'))),
  P('Press the pencil and choose Edit This Page: the bar at the bottom has %s, %s (add, rename or delete the people the cards belong to), %s (rename a bank or set the link it opens), %s and %s. %s (for Excel and PDF) is inside Cards Settings.' % (C('Add Card'), C('Holders'), C('Banks'), C('Export'), C('Cards Settings'), C('Column Order'))),
+ shot('cards-holders', 'Holders: rename a holder in place, add one, or delete one that has no cards.'),
  Note('No card data is sent to a browser until you are logged in. Deleting cards always keeps an earlier version first, so a delete can be undone from Backup and Restore.'))
 
 story += chapter('8', 'Tasks', 'Bills, renewals and chores: anything with a due date.',
@@ -204,6 +214,9 @@ story += chapter('8', 'Tasks', 'Bills, renewals and chores: anything with a due 
  table(['List or view', 'What it shows'], [['Tasks', 'Everything.'], ['Today, Overdue', 'What is due today, and what is late.'], ['This Week, This Month', 'What is coming up, with the amounts.'], ['Paused', 'Tasks you stopped for now.'],
    ['Calendar', 'The month at a glance.'], ['Analytics', 'Spending by month and by category, coming payments and repeating costs.'], ['Completed', 'What you have done.']]),
  shot('tasks-analytics-crop', 'Analytics: the next 12 months at a glance.'),
+ *sub('Tasks Settings'),
+ P('The pencil, then %s, has three parts: %s (the default currency, and how many days before a task counts as due soon), %s (the list it opens on, what it shows, the sort and the week strip) and %s (the first day of the week, how dates look, the edit bar, and amounts in the side panel).' % (C('Tasks Settings'), C('General'), C('When the Page Opens'), C('Look'))),
+ shot('tasks-settings', 'Tasks Settings.'),
  Tip('Telegram can remind you when something is due (Settings, Telegram). Analytics also makes a Year in Review PDF.'))
 
 story += chapter('9', 'Tools', 'Small tools that run in your browser.',
@@ -215,6 +228,8 @@ story += chapter('9', 'Tools', 'Small tools that run in your browser.',
    ['Utilities', 'QR codes and barcodes (make and scan), time zones, stopwatch and timer, random picker, screen and voice recorder, text from images (OCR), background removal, hashes, JSON formatter, text tool, zip files']]),
  P('%s (Get from a Website) shows a website\'s icon in 16, 32, 64, 128, 256 and 512 pixels. Press %s under a size and the file is saved right away. Google\'s icon service gives at most 256 pixels, so the 512 picture is enlarged from that.' % (C('Favicon'), C('PNG'))),
  P('Tools has its own sections: Tools, Recent, Favourites, one per category, Organise and Settings. In %s you star favourites, drag tools to reorder them or move them to another section, and hide the ones you do not use.' % C('Organise')),
+ shot('tools-emi', 'The EMI Calculator: the monthly payment, a chart of principal and interest, and the repayment schedule by year or by month.'),
+ shot('tools-invoice-pdf', 'An invoice made by the Invoice Generator: your details and logo, the items, CGST and SGST, the total, and the total in words.'),
  P('While you are logged in, Sign PDF, both watermark tools, the QR Code Generator, the Image Resizer and the Invoice Generator have %s: your signature, a watermark, a QR style, sizes or your business details are kept on your server under a name, and come back from the list next to it. %s lists them to rename or delete. They are part of the site backup.' % (C('Save as Preset'), C('Tools Settings > Presets'))),
  Tip('Heavy engines, such as OCR and background removal, only load when a tool needs them.'))
 
@@ -225,7 +240,7 @@ story += chapter('10', 'Settings', 'Everything about the site, in one page.',
  table(['Tab', 'What it holds'], [['Basics', 'Site name, logo and time zone. One logo is used everywhere; until you choose one, Homebase Hub\'s gold house is used.'], ['Tabs', 'Rename, reorder or hide the pages in the bar.']]),
  shot('s-general', 'Settings, General.'),
  *sub('Appearance'),
- table(['Tab', 'What it holds'], [['Look', 'The font, the default theme (Follow Device, Dark or Light), where the bar sits (Top Bar, Sidebar or Bottom Dock) and whether the start page shows it, the accent color and Same Look on Every Page.'], ['Presets', '141 looks (89 dark, 52 light) with a search box and Surprise Me. Save your own and export or import them.'], ['Colors', 'Colours for Dark and Light separately, and a separate accent for each page.']]),
+ table(['Tab', 'What it holds'], [['Look', 'The font, the default theme (Follow Device, Dark or Light), where the bar sits (Top Bar, Sidebar or Bottom Dock) and whether the start page shows it, the accent color and Same Look on Every Page.'], ['Presets', '141 looks (89 dark, 52 light), among them a Vivid group of bright ones, with a search box and Surprise Me. Save your own and export or import them.'], ['Colors', 'Colours for Dark and Light separately, and a separate accent for each page.']]),
  shot('s-presets', 'Appearance, Presets.'),
  *sub('Security'),
  table(['Tab', 'What it holds'], [['Password', 'Change your password, with a strength meter.'], ['Two-Step Login', 'An authenticator app and recovery codes.'], ['Login Approval', 'Approve each login in Telegram.'],

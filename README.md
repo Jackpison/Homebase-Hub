@@ -53,8 +53,8 @@ Start page, bookmarks, notes, cards, tasks and browser tools. One login, one loo
 <table align="center">
 <tr>
 <td align="center" width="130"><b>6</b><br>pages</td>
-<td align="center" width="130"><b>36</b><br>browser tools</td>
-<td align="center" width="130"><b>166</b><br>ready-made looks</td>
+<td align="center" width="130"><b>53</b><br>browser tools</td>
+<td align="center" width="130"><b>141</b><br>ready-made looks</td>
 <td align="center" width="130"><b>1</b><br>login</td>
 <td align="center" width="130"><b>0</b><br>databases</td>
 </tr>
@@ -66,20 +66,20 @@ Six pages share one login, one bar and one Settings page. Pick a name to see its
 
 | Page | What it does | Highlights |
 |---|---|---|
-| [🏠&nbsp;**Home**](https://jackpison.github.io/Homebase-Hub/features/home/) | A start page that feels like yours | Background photos that change, phone-sized copies that load fast, with or without the bar |
-| [🔖&nbsp;**Links**](https://jackpison.github.io/Homebase-Hub/features/links/) | Bookmarks in tabs and categories | Import from any browser, icons saved on your server, colours and sizes for each tab, encrypted tabs |
+| [🏠&nbsp;**Home**](https://jackpison.github.io/Homebase-Hub/features/home/) | A start page that feels like yours | A clock and widgets in frosted glass, background photos that change, with or without the bar |
+| [🔖&nbsp;**Links**](https://jackpison.github.io/Homebase-Hub/features/links/) | Bookmarks in tabs and categories | Import from any browser, see which links you open most, icons saved on your server, encrypted tabs |
 | [📝&nbsp;**Info**](https://jackpison.github.io/Homebase-Hub/features/info/) | Notes in boxes, or as a document | 1 to 12 boxes in each tab, cards or one document with an outline, export as PDF or text |
-| [💳&nbsp;**Cards**](https://jackpison.github.io/Homebase-Hub/features/cards/) | Your cards in one searchable table | Filter by bank, network, type and holder, yearly charges added up, export to Excel |
+| [💳&nbsp;**Cards**](https://jackpison.github.io/Homebase-Hub/features/cards/) | Your cards in one searchable table | Filter by bank, network, type and holder, yearly charges added up, Holders and Banks windows, export to Excel |
 | [✅&nbsp;**Tasks**](https://jackpison.github.io/Homebase-Hub/features/tasks/) | Bills, renewals and chores | Due dates, repeats and prices, calendar and analytics, Year in Review PDF |
-| [🧰&nbsp;**Tools**](https://jackpison.github.io/Homebase-Hub/features/tools/) | Small tools that run in your browser | 36 tools: resize, crop and convert images, merge and sign PDFs, OCR, QR codes |
+| [🧰&nbsp;**Tools**](https://jackpison.github.io/Homebase-Hub/features/tools/) | Small tools that run in your browser | 53 tools in six sections: images, photos, PDF, calculators (EMI, SIP, FD and RD), documents (invoices, text compare, Markdown, spreadsheets) and utilities (QR scanner, barcodes, time zones, recorder). Save your settings as presets |
 
 And around the pages:
 
 | Extra | What you get |
 |---|---|
-| ⚙️&nbsp;**Settings** | Guided Setup for protection, 166 looks and your own colours, backup and restore, updates and health checks |
+| ⚙️&nbsp;**Settings** | Guided Setup for protection, 141 looks and your own colours, backup and restore, updates and health checks |
 | ✈️&nbsp;**[Telegram](#telegram)** | A daily digest, Due Now messages with Done, Skip and Snooze buttons, and backup files sent to your chat |
-| 📱&nbsp;**On your phone** | Add the site to the home screen of a phone or computer and it opens like an app, with its own icon and no browser bars (Settings > General > Install on Your Phone). Nothing is kept offline: your data always comes from your server |
+| 📱&nbsp;**On your phone** | Add the site to the home screen of a phone or computer and it opens like an app, with its own icon and no browser bars (Settings > General > Install on Your Phone). Swipe between pages. Nothing is kept offline: your data always comes from your server |
 | 🛡️&nbsp;**[Security](#security-in-short)** | One password, optional two-step login, encrypted tabs and backups, and checked updates you can undo |
 
 <p align="right"><a href="#readme-top">↑ Back to top</a></p>
@@ -98,7 +98,7 @@ Every picture is the running app. Dark is the default and light is one click awa
 </tr>
 <tr>
 <td valign="top"><img src="website/img/shot-tasks.webp" alt="Tasks page with smart lists and a week strip" width="100%"><br><sub><b>Tasks.</b> Due dates, repeats and prices, with a week strip, calendar and analytics.</sub></td>
-<td valign="top"><img src="website/img/shot-tools.webp" alt="Tools page with search and 36 tools" width="100%"><br><sub><b>Tools.</b> Image, PDF and text tools that run in your browser.</sub></td>
+<td valign="top"><img src="website/img/shot-tools.webp" alt="Tools page with search and 53 tools" width="100%"><br><sub><b>Tools.</b> Image, PDF and text tools that run in your browser.</sub></td>
 </tr>
 <tr>
 <td valign="top"><img src="website/img/cards-crop.webp" alt="Cards page with a table of example cards" width="100%"><br><sub><b>Cards.</b> Your cards in one table, with yearly charges added up.</sub></td>
@@ -110,6 +110,42 @@ Every picture is the running app. Dark is the default and light is one click awa
 &nbsp;&nbsp;<img src="website/img/m-info.webp" alt="Info on a phone" width="200">
 &nbsp;&nbsp;<img src="website/img/m-tasks.webp" alt="Tasks on a phone" width="200"><br>
 <sub><b>On a phone.</b> Every page works on a small screen.</sub></p>
+
+<p align="center"><a href="https://jackpison.github.io/Homebase-Hub/screenshots/"><b>See every page and its settings on the website →</b></a></p>
+
+<details>
+<summary><b>The settings of each page</b></summary>
+<br>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="website/img/links-settings.webp" alt="Links Settings window" width="100%"><br><sub><b>Links Settings.</b> Privacy, icons, visit counts, text sizes and the edit bar.</sub></td>
+<td width="50%" valign="top"><img src="website/img/tasks-settings.webp" alt="Tasks Settings window" width="100%"><br><sub><b>Tasks Settings.</b> General, When the Page Opens, and Look.</sub></td>
+</tr>
+<tr>
+<td valign="top"><img src="website/img/cards-holders.webp" alt="Cards Holders window" width="100%"><br><sub><b>Cards, Holders.</b> Rename, add, or delete a holder with no cards.</sub></td>
+<td valign="top"><img src="website/img/home-settings.webp" alt="Home Settings window" width="100%"><br><sub><b>Home Settings.</b> The title, the welcome text, the bar and the glass.</sub></td>
+</tr>
+<tr>
+<td valign="top"><img src="website/img/links-edit.webp" alt="Links while editing, with the edit bar at the bottom" width="100%"><br><sub><b>Editing.</b> Every page edits the same way, with its tools in one bar at the bottom.</sub></td>
+<td valign="top"><img src="website/img/tools-settings.webp" alt="Tools Settings with saved presets" width="100%"><br><sub><b>Tools Settings.</b> Layout, your data, and saved presets.</sub></td>
+</tr>
+</table>
+</details>
+
+<details>
+<summary><b>New tools: calculators and documents</b></summary>
+<br>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="website/img/tools-emi.webp" alt="EMI Calculator" width="100%"><br><sub><b>EMI Calculator.</b> The monthly payment, a chart and the repayment schedule.</sub></td>
+<td width="50%" valign="top"><img src="website/img/tools-invoice.webp" alt="Invoice Generator" width="100%"><br><sub><b>Invoice Generator.</b> Your details, items, and a tax line in two halves.</sub></td>
+</tr>
+<tr>
+<td valign="top"><img src="website/img/tools-compare.webp" alt="Text Compare" width="100%"><br><sub><b>Text Compare.</b> What changed, line by line or word by word.</sub></td>
+<td valign="top"><img src="website/img/tools-scanner.webp" alt="QR and Barcode Scanner" width="100%"><br><sub><b>QR and Barcode Scanner.</b> From a picture or the camera.</sub></td>
+</tr>
+</table>
+</details>
 
 <details>
 <summary><b>Light mode</b></summary>
@@ -193,6 +229,7 @@ Optional. Set it up in **Settings > Telegram** and your site can message you:
 | 🚪&nbsp;**Closed data** | Data files answer 404 to a browser, even on hosts where `.htaccess` is ignored. |
 | ♻️&nbsp;**Safe updates** | They come only from this project's GitHub releases, are compared with the release's SHA-256 checksum and fully checked before anything changes, and need your password. |
 | ⏳&nbsp;**PHP support** | Settings tells you when your PHP stops getting security fixes. |
+| 🧰&nbsp;**Tools** | Every tool runs in your browser; files are not uploaded. The camera, microphone and screen sharing are allowed on the Tools page only, after you press a button. |
 
 More on the [Security page](https://jackpison.github.io/Homebase-Hub/security/). To report a problem, [open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose). For anything else, message me on Telegram: [@Jackpison](https://t.me/Jackpison).
 
@@ -229,13 +266,25 @@ Yes. Upload it to a folder such as <code>/hub/</code> and it works the same, inc
 <details>
 <summary><b>Can I bring my bookmarks from my browser?</b></summary>
 <br>
-Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari, then choose <b>Import Bookmarks</b> in the Links pencil menu. You see a preview first.
+Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari. On Links, press the pencil, choose <b>Edit This Page</b>, then <b>Import Bookmarks</b> in the bar at the bottom. You see a preview first.
 </details>
 
 <details>
 <summary><b>Does it work offline?</b></summary>
 <br>
 No, on purpose. Your data is private, so it always comes from your server. Added to a home screen, the site opens like an app, but nothing is kept on the phone.
+</details>
+
+<details>
+<summary><b>Can Tools remember my signature or business details?</b></summary>
+<br>
+Yes, while you are logged in. Sign PDF, both watermark tools, the QR Code Generator, the Image Resizer and the Invoice Generator have <b>Save as Preset</b>. Presets are kept on your server, are part of the site backup, and can be renamed or deleted in Tools Settings.
+</details>
+
+<details>
+<summary><b>My site is on version 1.49 or older. Can it update?</b></summary>
+<br>
+Yes: install 1.59.1 first with its own updater, then the newest version. From 1.60 the updater no longer installs, or goes back to, versions from before 1.50.
 </details>
 
 <details>

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Screenshots of the real app with demo data: python3 scripts/screenshots.py build/site-update-X.Y.Z.zip OUTDIR
+"""Screenshots of the real app with demo data: python3 scripts/screenshots.py build/site-update-X.Y.Z.zip OUTDIR [--webp]
+--webp also writes them into website/img as WebP (with the cut-out versions the pages use).
 Needs PHP and Playwright with Chromium. Pages load only from the local test server."""
 import sys, os, time, json, subprocess, shutil, zipfile, urllib.request, http.cookiejar, re, datetime, threading, http.server, hashlib
 os.environ['PHP_CLI_SERVER_WORKERS']='6'
@@ -55,6 +56,13 @@ write_json(weather_file(), ['key' => 'bengaluru|c', 'town' => 'bengaluru', 'plac
              'days' => array_map(fn($x) => ['date' => $x[0], 'max' => $x[1], 'min' => $x[2], 'text' => $x[3], 'pic' => $x[4]], $days)]]);
 pad_write("Ask about the rent receipt.");
 '''
+VISITS = r'''
+require $argv[1] . '/web/links/lib.php';
+$d = hub_read_guarded(hub_dir('links') . '/bookmarks.php');
+foreach (['https://news.ycombinator.com' => 14, 'https://github.com' => 23, 'https://www.wikipedia.org' => 6, 'https://stackoverflow.com' => 9, 'https://www.openstreetmap.org' => 3, 'http://192.168.1.1' => 4, 'https://bandcamp.com' => 2] as $u => $n)
+    for ($i = 0; $i < $n; $i++) visits_add($u, 'shot' . $i, $d, false, time() - 3600 * $i);
+'''
+subprocess.run(['php', '-r', VISITS, '--', D], check=True)
 def home_seed(style): subprocess.run(['php', '-r', HOME_SEED, '--', D, style], check=True)
 cookies=[{'name':c.name,'value':c.value,'domain':'127.0.0.1','path':'/'} for c in cj]
 def snap(pg,name,url=None,wait=1800,click=None,full=False):
@@ -102,5 +110,73 @@ with sync_playwright() as p:
     m=ctx(390,844,'dark').new_page()
     m.context.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}"); evening(m.context)
     for n,u in [('m-home','/web/home/'),('m-links','/web/links/'),('m-tasks','/web/tasks/'),('m-info','/web/info/'),('m-settings','/web/settings/#overview'),('m-tools','/web/tools/')]: snap(m,n,u)
+    # ---- 1.60: the settings of every page, edit mode, the login window, new tools (dark) ----
+    def item(pg, label):   # presses a page's menu item (the pencil menu or the edit bar both use these buttons)
+        pg.evaluate("(l) => document.querySelector('[data-hub=\"item\"][data-hub-label=\"' + l + '\"]').click()", label); pg.wait_for_timeout(1200)
+    def shot(pg, name, full=False): pg.screenshot(path=f'{OUT}/{name}.png', full_page=full); print(name)
+    for theme in ('dark', 'light'):
+        sx = '' if theme == 'dark' else '-light'; pg = ctx(1440, 900, theme).new_page()
+        for app, label in [('links', 'Links Settings'), ('info', 'Info Settings'), ('cards', 'Cards Settings'), ('tasks', 'Tasks Settings')]:
+            pg.goto(B + '/web/' + app + '/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); item(pg, label); shot(pg, app + '-settings' + sx)
+        if theme == 'dark':
+            pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); item(pg, 'Holders'); shot(pg, 'cards-holders')
+            pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); item(pg, 'Banks'); shot(pg, 'cards-banks')
+            # the pencil menu, then editing with the edit bar at the bottom
+            pg.goto(B + '/web/links/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); pg.click('#ix-editb'); pg.wait_for_timeout(600); shot(pg, 'links-menu')
+            pg.locator('#ix-pop button').first.click(); pg.wait_for_timeout(1400); pg.hover('#ix-ebar .ix-eb >> nth=0'); pg.wait_for_timeout(400); shot(pg, 'links-edit')
+            pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); pg.click('#ix-editb'); pg.wait_for_timeout(500); pg.locator('#ix-pop button').first.click(); pg.wait_for_timeout(1400); shot(pg, 'cards-edit')
+            # Tools: a section, calculators, documents, presets and both layouts
+            T = B + '/web/tools/'
+            def tool(i, w=2200): pg.goto(T + '#/', wait_until='domcontentloaded'); pg.wait_for_timeout(500); pg.goto(T + '#/tool/' + i); pg.wait_for_timeout(w)
+            pg.goto(T + '#/s/calculators', wait_until='domcontentloaded'); pg.wait_for_timeout(2000); shot(pg, 'tools-calculators')
+            tool('loan-emi'); shot(pg, 'tools-emi')
+            tool('sip-calculator'); shot(pg, 'tools-sip')
+            pg.evaluate("localStorage.removeItem('tools.invoice.v1')"); tool('invoice-generator')
+            for l, v in [('Business Name', 'Sharma Traders'), ('Tax ID', '27AAAAA0000A1Z5'), ('Phone', '+91 98765 43210'), ('Email', 'accounts@sharmatraders.in'), ('Customer Name', 'Mehta & Sons'),
+                         ('Customer Tax ID', '27BBBBB1111B1Z6'), ('Description 1', 'Steel rods, 12 mm'), ('Quantity 1', '10'), ('Rate 1', '450')]: pg.get_by_label(l, exact=True).fill(v)
+            pg.locator('#root textarea').first.fill('14, Market Road\nPune 411001'); pg.locator('#root textarea').nth(1).fill('22, Station Road\nMumbai 400001')
+            pg.get_by_role('button', name='Add Item', exact=True).click(); pg.get_by_label('Description 2', exact=True).fill('Delivery'); pg.get_by_label('Rate 2', exact=True).fill('500')
+            pg.get_by_label('Split the tax into two halves').check(); pg.get_by_label('Payment Details or Notes').fill('Bank: HDFC Bank, A/c 50100123456789, IFSC HDFC0001234')
+            pg.evaluate('document.activeElement.blur(); scrollTo(0, 0)'); pg.wait_for_timeout(400); shot(pg, 'tools-invoice')
+            with pg.expect_download() as dl: pg.get_by_role('button', name='Download PDF', exact=True).click()
+            pdf = f'{OUT}/invoice.pdf'; shutil.copy(dl.value.path(), pdf)
+            if shutil.which('pdftoppm'): subprocess.run(['pdftoppm', '-r', '110', '-png', '-singlefile', '-f', '1', '-l', '1', pdf, f'{OUT}/tools-invoice-pdf'], check=False); print('tools-invoice-pdf')
+            tool('text-compare'); pg.get_by_label('Original text').fill('Dear Ravi,\nThe meeting is on Monday at 10 am.\nPlease bring the reports.\nThanks'); pg.get_by_label('Changed text').fill('Dear Ravi,\nThe meeting is on Tuesday at 11 am.\nPlease bring the reports and the budget.\nThanks,\nAsha'); pg.wait_for_timeout(700); shot(pg, 'tools-compare')
+            tool('qr-generator'); pg.fill('#root input[type=url]', 'https://example.com/hello'); pg.wait_for_timeout(400)
+            with pg.expect_download() as dl: pg.get_by_role('button', name='Download PNG', exact=True).click()
+            qr = f'{OUT}/qr-in.png'; shutil.copy(dl.value.path(), qr)
+            pg.get_by_role('button', name='Save as Preset', exact=True).click(); pg.get_by_label('Preset name').fill('Black and White'); pg.get_by_role('button', name='Save', exact=True).click(); pg.wait_for_timeout(800)
+            tool('qr-scanner'); pg.set_input_files('#root .dropwrap input[type=file]', qr); pg.wait_for_timeout(3500); shot(pg, 'tools-scanner')
+            tool('pdf-sign'); pg.get_by_role('button', name='Type', exact=True).click(); pg.get_by_label('Your name', exact=True).fill('Asha Rao'); pg.wait_for_timeout(300)
+            pg.get_by_role('button', name='Save as Preset', exact=True).click(); pg.get_by_label('Preset name').fill('My Signature'); pg.get_by_role('button', name='Save', exact=True).click(); pg.wait_for_timeout(4700)   # the message fades first
+            pg.evaluate("document.querySelector('#root .pbar').scrollIntoView({block: 'center'})"); pg.wait_for_timeout(300); shot(pg, 'tools-preset')
+            pg.goto(T + '#/settings'); pg.wait_for_timeout(1800); shot(pg, 'tools-settings')
+            pg.get_by_role('button', name='Tabs on Top', exact=True).click(); pg.wait_for_timeout(400); tool('loan-emi'); shot(pg, 'tools-tabs')
+            pg.goto(T + '#/settings'); pg.get_by_role('button', name='Side Menu', exact=True).click(); pg.wait_for_timeout(300)
+            # Home Settings and the Widgets window (Home photographed in the evening, as above)
+            hp2 = evening(ctx(1440, 900, 'dark')).new_page(); hp2.goto(B + '/web/home/', wait_until='domcontentloaded'); hp2.wait_for_timeout(2500)
+            # Home loads its settings when you choose from its menu, so go through the corner menu as a person does
+            hp2.click('[data-ix=corner]'); hp2.wait_for_timeout(500); hp2.locator('#ix-pop button', has_text='Home Settings').click(); hp2.wait_for_timeout(1300); shot(hp2, 'home-settings')
+            hp2.goto(B + '/web/home/', wait_until='domcontentloaded'); hp2.wait_for_timeout(2500); hp2.click('[data-ix=corner]'); hp2.wait_for_timeout(500)
+            hp2.locator('#ix-pop button', has_text='Edit This Page').click(); hp2.wait_for_timeout(1500); item(hp2, 'Widgets'); shot(hp2, 'home-widgets')
+            # the login window, as a visitor sees it, on a computer and a phone
+            for w, h, n in [(1440, 900, 'login'), (390, 844, 'm-login')]:
+                lc = b.new_context(user_agent=UA, viewport={'width': w, 'height': h}, device_scale_factor=1 if w > 500 else 2, timezone_id='Asia/Kolkata')
+                lc.route('**/*', lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith('data:') else r.abort())
+                lp = lc.new_page(); lp.goto(B + '/web/links/', wait_until='domcontentloaded'); lp.wait_for_timeout(1500)
+                lp.evaluate("setTimeout(() => HUB.login(), 0); 0"); lp.wait_for_timeout(1000); shot(lp, n)
     b.close()
 php.terminate()
+
+# ---- the website's pictures: every PNG as WebP in website/img, plus the cut-out versions the pages use ----
+if '--webp' in sys.argv:
+    from PIL import Image
+    IMG = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'website', 'img')
+    CROPS = {'links-crop': ('links', 560), 'info-crop': ('info', 600), 'info-doc-crop': ('info-doc', 640), 'cards-crop': ('cards', 640), 'tools-crop': ('tools', 700),
+             'tasks-analytics-crop': ('tasks-analytics', 900), 'shot-links': ('links', 709), 'shot-info': ('info', 709), 'shot-tasks': ('tasks', 709), 'shot-tools': ('tools', 709)}
+    for f in sorted(os.listdir(OUT)):
+        if f.endswith('.png') and f != 'qr-in.png':
+            Image.open(os.path.join(OUT, f)).convert('RGB').save(os.path.join(IMG, f[:-4] + '.webp'), 'WEBP', quality=82, method=6)
+    for name, (src, hgt) in CROPS.items():
+        im = Image.open(os.path.join(OUT, src + '.png')).convert('RGB'); im.crop((0, 0, im.width, min(hgt, im.height))).save(os.path.join(IMG, name + '.webp'), 'WEBP', quality=82, method=6)
+    print('website/img updated')

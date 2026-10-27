@@ -77,6 +77,53 @@
     fq.addEventListener('input', frun); frun();
   }
 
+  /* Screenshots page: Dark or Light pictures, and a click shows a picture full size (arrow keys for the next one, Escape closes). */
+  var lb = d.getElementById('lb');
+  if (lb && lb.showModal) {
+    var zooms = all('.zoom'), cur = -1, lbImg = lb.querySelector('img'), lbCap = lb.querySelector('p');
+    var visible = function () { return zooms.filter(function (z) { return !z.closest('[hidden]'); }); };
+    var open = function (z) {
+      var list = visible(); cur = list.indexOf(z); var im = z.querySelector('img');
+      lbImg.src = im.currentSrc || im.src; lbImg.alt = im.alt; lbCap.textContent = z.parentNode.querySelector('figcaption').firstChild.textContent;
+      if (!lb.open) lb.showModal();
+    };
+    var step = function (by) { var list = visible(); if (!list.length) return; open(list[(cur + by + list.length) % list.length]); };
+    zooms.forEach(function (z) { z.addEventListener('click', function (ev) { ev.preventDefault(); open(z); }); });
+    lb.querySelector('.lbx').addEventListener('click', function () { lb.close(); });
+    lb.querySelector('.lbp').addEventListener('click', function () { step(-1); });
+    lb.querySelector('.lbn').addEventListener('click', function () { step(1); });
+    lb.addEventListener('click', function (ev) { if (ev.target === lb) lb.close(); });
+    lb.addEventListener('keydown', function (ev) { if (ev.key === 'ArrowRight') step(1); if (ev.key === 'ArrowLeft') step(-1); });
+    all('[data-theme-shots]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var light = b.dataset.themeShots === 'light';
+        all('[data-theme-shots]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        all('.zoom[data-light]').forEach(function (z) {
+          var im = z.querySelector('img'); if (!z.dataset.dark) { z.dataset.dark = z.getAttribute('href'); z.dataset.darkSet = im.getAttribute('srcset') || ''; }
+          var src = light ? z.dataset.light : z.dataset.dark; z.setAttribute('href', src); im.src = src;
+          if (light) im.removeAttribute('srcset'); else if (z.dataset.darkSet) im.setAttribute('srcset', z.dataset.darkSet);
+        });
+      });
+    });
+  }
+
+  /* The shapes behind the top section shift a little with the mouse, and a soft glow follows it. Only with a mouse, and not for reduced motion. */
+  var shapes = d.querySelector('.shapes'), hero = shapes && shapes.parentNode;
+  if (shapes && !reduce && window.matchMedia && matchMedia('(pointer: fine)').matches) {
+    var glow = shapes.querySelector('.glowm'), parts = all('.sh'), tx = .5, ty = .4, cx = .5, cy = .4, running = false;
+    var frame = function () {
+      cx += (tx - cx) * .06; cy += (ty - cy) * .06; var r = hero.getBoundingClientRect();
+      glow.style.transform = 'translate(' + (cx * r.width - 170) + 'px,' + (cy * r.height - 170) + 'px)';
+      parts.forEach(function (p) { var k = +p.dataset.d; p.style.transform = 'translate(' + ((cx - .5) * -26 * k) + 'px,' + ((cy - .5) * -20 * k) + 'px)'; });
+      if (Math.abs(tx - cx) + Math.abs(ty - cy) > .001) requestAnimationFrame(frame); else running = false;
+    };
+    hero.addEventListener('pointermove', function (ev) {
+      var r = hero.getBoundingClientRect(); tx = (ev.clientX - r.left) / r.width; ty = (ev.clientY - r.top) / r.height; glow.classList.add('on');
+      if (!running) { running = true; requestAnimationFrame(frame); }
+    });
+    hero.addEventListener('pointerleave', function () { glow.classList.remove('on'); });
+  }
+
   /* The header slides away while you scroll down and comes back on any scroll up or near the top, like the Top Bar in the app.
      It stays while the phone menu is open or something in it has focus. */
   var top = d.querySelector('.top');

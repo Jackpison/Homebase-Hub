@@ -12,7 +12,7 @@ W = os.path.join(ROOT, 'website')
 CONTENT = [('install', 'Install'), ('guide', 'Guide'), ('security', 'Security'), ('about', 'Licence')]   # written by hand in website/content
 OLD = [s for s, _ in CONTENT] + ['changelog']          # addresses that were published as name.html before: they forward to name/
 SLUGS = ['index'] + OLD
-NAV = [('features/', 'Features'), ('tools/', 'Tools'), ('telegram/', 'Telegram'), ('security/', 'Security'), ('install/', 'Install'), ('guide/', 'Guide')]
+NAV = [('features/', 'Features'), ('screenshots/', 'Screenshots'), ('tools/', 'Tools'), ('telegram/', 'Telegram'), ('security/', 'Security'), ('install/', 'Install'), ('guide/', 'Guide')]
 BASE = 'https://jackpison.github.io/Homebase-Hub/'
 
 
@@ -62,7 +62,7 @@ def relink(doc, root):
         m3 = re.match(r'^index\.html(#.*)?$', u)
         if m3: return '%s="%s%s"' % (attr, root, m3.group(1) or '')
         return '%s="%s%s"' % (attr, root, u)
-    return re.sub(r'\b(href|src)="([^"]*)"', f, doc)
+    return re.sub(r'\b(href|src|data-light)="([^"]*)"', f, doc)
 
 
 def page(slug, title, body, wide=False, desc=None, cls=''):
@@ -102,6 +102,7 @@ def page(slug, title, body, wide=False, desc=None, cls=''):
 
 # Simple line icons (24 x 24), drawn for this site. {{i:name}} in a page becomes the inline SVG, so no icon file is fetched.
 ICONS = {
+    'x': '<path d="M6 6l12 12M18 6 6 18"/>', 'left': '<path d="M19 12H5M11 18l-6-6 6-6"/>',
     'home': '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
     'link': '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
     'note': '<path d="M6 3h9l4 4v14H6z"/><path d="M14.5 3v4.5H19"/><path d="M9 12h7M9 16h7"/>',

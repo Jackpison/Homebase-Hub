@@ -12,6 +12,17 @@ REPO = 'https://github.com/Jackpison/Homebase-Hub'
 LATEST = REPO + '/releases/latest'
 
 
+
+def _shapes(names):
+    """The floating shapes behind a page's top section (pictures from website/img; they move in site.js, and stay still for reduced motion)."""
+    depth = {'left': .6, 'right': 1, 'ring': 1.6, 'globe': .4}
+    return ('<div class="shapes" aria-hidden="true"><span class="glowm"></span>'
+            + ''.join('<span class="sh s-%s" data-d="%s"><i></i></span>' % (n, depth[n]) for n in names) + '</div>')
+
+
+SHAPES = _shapes(['left', 'right', 'ring', 'globe'])
+SHAPES_Q = _shapes(['right', 'globe'])
+
 def e(s): return html.escape(s, quote=True)
 def I(n): return '{{i:%s}}' % n
 def grad(s): return re.sub(r'\*(.+?)\*', r'<span class="grad">\1</span>', e(s))
@@ -55,7 +66,8 @@ FEATURES = [
                    ('Heavy pictures on a slow phone', 'Every photo gets a phone-sized copy, so it loads fast', 'phone')],
          details=[('calendar', 'Widgets, just for you', "Today's tasks with Quick Add, a countdown, a note from Info, recent tools, a calendar, a scratch pad, a quote, world clocks and the weather. Visitors see only the clock."),
                   ('image', 'Photos with credit', 'Each photo keeps its credit in the corner.'), ('phone', 'Phone-sized copies', 'Large photos get a smaller copy for phones, so the page opens quickly.'),
-                  ('settings', 'With or without the bar', 'Show the start page full screen, or keep the bar. It is a setting in Settings, Appearance, Look.'), ('search', 'Search from anywhere', 'Press / or Ctrl+K on any page to search Links, Info, Tasks and Tools at once.')],
+                  ('settings', 'With or without the bar', 'Show the start page full screen, or keep the bar. It is a setting in Settings, Appearance, Look.'), ('search', 'Search from anywhere', 'Press / or Ctrl+K on any page to search Links, Info, Tasks and Tools at once.'),
+                  ('palette', 'Glass your way', 'Home Settings sets the glass: Light, Dark or Solid, how see-through, and how much it blurs.'), ('phone', 'Pull for a new photo', 'On a phone, pull down from the top for the next background.')],
          tour=[('A clock for everyone', 'The time, the date and a greeting, on a background photo that changes.'), ('Widgets in glass', 'Logged in, your day shows below: tasks, a countdown, the weather, a note and more. Click one to open it.'), ('Credit in the corner', 'Every photo keeps its credit, so you know whose picture it is.')],
          hot=[(50, 30), (50, 60), (84, 5)], everyday=('Ten tabs to open every morning', 'One bar with every page, and search on /')),
     dict(id='links', name='Links', ac='a-links', icon='link', url='yourdomain.com/web/links',
@@ -63,13 +75,15 @@ FEATURES = [
          lead='Bookmarks in tabs and categories, with icons saved on your server. Bring yours from any browser in a minute.',
          pic=('shot-links.webp', 1440, 709, 'Links page with bookmarks in tabs and categories'),
          chips=[('link', 'Import bookmarks', 'Preview first, undo anytime'), ('lock', 'Encrypted tabs', 'Keys made in your browser')],
-         facts=[('6', 'tabs of categories'), ('6', 'browsers you can import from'), ('Icons', 'saved on your server'), ('Locked', 'tabs can be encrypted')],
+         facts=[('6', 'tabs of categories'), ('6', 'browsers you can import from'), ('Visits', 'see which links you open most'), ('Locked', 'tabs can be encrypted')],
          problems=[('Bookmarks stuck in one browser', 'Import the .html export from any browser, with a preview first', 'download'),
                    ('Icons that load from other websites', 'Fetch Icons saves each link\'s icon on your server', 'image'),
                    ('Private links in plain sight', 'Make a tab private, or encrypt it with your passphrase', 'lock')],
          details=[('download', 'Import with a preview', 'Pick the file, see how many links and which folders become which categories, then choose a new tab or an existing one. Links you already have are not added twice.'),
                   ('undo', 'Easy to undo', 'A copy of Links is kept just before an import, in Settings, Backup and Restore, Earlier Versions.'),
-                  ('palette', 'Colours and sizes', 'Each tab can have its own column colours and text sizes.'), ('lock', 'Encrypted tabs', 'Tabs can be encrypted with your passphrase. The keys are made in your browser.')],
+                  ('palette', 'Colours and sizes', 'Each tab can have its own column colours and text sizes.'), ('lock', 'Encrypted tabs', 'Tabs can be encrypted with your passphrase. The keys are made in your browser.'),
+                  ('chart', 'See which links you open most', 'Each link shows how often it was opened, at the end of its row. Only you see the numbers; links in encrypted tabs are never counted.'),
+                  ('settings', 'One bar while you edit', 'Press the pencil, choose Edit This Page, and Colors, Fetch Icons, Import Bookmarks and Links Settings sit in one bar at the bottom.')],
          tour=[('Tabs and categories', 'Group links in categories, and the categories in tabs.'), ('Icons on your server', 'Fetch Icons saves each link\'s icon, so pages load without asking other sites.'),
                ('Private and encrypted tabs', 'Make a tab private, or encrypt it with your passphrase.')],
          hot=[(12, 13), (9, 31), (56, 13)], everyday=('Bookmarks stuck in one browser', 'Import from any browser, preview first, undo anytime')),
@@ -83,7 +97,8 @@ FEATURES = [
                    ('Long notes you cannot get around in', 'Write a tab as one document with an outline', 'book'),
                    ('Private notes in plain sight', 'Encrypted tabs, with keys made in your browser', 'lock')],
          details=[('note', 'Boxes you can size and arrange', 'Each tab holds 1 to 12 boxes. Resize them and put them where you want.'), ('book', 'Cards or a document', 'Arrange boxes as cards, or write the tab as one document with an outline.'),
-                  ('download', 'Export as PDF or text', 'Export one tab, or all of them.'), ('search', 'Found by search', 'Search covers the text of your notes, not only their titles.')],
+                  ('download', 'Export as PDF or text', 'Export one tab, or all of them.'), ('search', 'Found by search', 'Search covers the text of your notes, not only their titles.'),
+                  ('settings', 'Settings in one window', 'Info Settings holds privacy, text sizes and how the edit bar looks.')],
          tour=[('Tabs of notes', 'Each tab holds up to 12 boxes.'), ('Boxes', 'Notes in boxes you can size and arrange.'), ('Encrypted tabs', 'Lock a tab with your passphrase.')],
          hot=[(24, 13), (38, 40), (62, 13)], everyday=('Notes scattered across apps', 'Boxes you can size, or one document with an outline')),
     dict(id='cards', name='Cards', ac='a-cards', icon='card', url='yourdomain.com/web/cards',
@@ -96,7 +111,8 @@ FEATURES = [
                    ('Adding up yearly fees by hand', 'Yearly charges added up for you', 'calendar'),
                    ('Card details open to anyone', 'Nothing is sent to the browser until you log in', 'lock')],
          details=[('table', 'One searchable table', 'Search your cards, and filter by bank, network, type and holder.'), ('chart', 'Yearly charges added up', 'See what your cards cost you in a year.'),
-                  ('download', 'Export to Excel', 'Take a copy whenever you need one.'), ('lock', 'Sent only after login', 'Card data is not sent to a browser until you are logged in.')],
+                  ('download', 'Export to Excel', 'Take a copy whenever you need one.'), ('lock', 'Sent only after login', 'Card data is not sent to a browser until you are logged in.'),
+                  ('home', 'Holders and Banks', 'One window to rename or add the people your cards belong to, and one for every bank: its name, the link it opens, and how many cards.')],
          tour=[('Summary tiles', 'Counts and yearly charges at the top.'), ('Filters', 'Filter by bank, network, type and holder.'), ('The table', 'Every card in one searchable table.')],
          hot=[(30, 12), (50, 27), (50, 62)], everyday=('Which card was that fee on?', 'Every card in one table, yearly charges added up')),
     dict(id='tasks', name='Tasks', ac='a-tasks', icon='tasks', url='yourdomain.com/web/tasks',
@@ -109,7 +125,8 @@ FEATURES = [
                    ('Re-typing the same monthly bill', 'Repeats bring it back by itself, with its price', 'repeat'),
                    ('Checking an app to see what is due', 'A daily digest and Due Now messages come to you', 'send')],
          details=[('tasks', 'Add in plain words', 'Type a name, a price and how often, like Netflix 649 monthly 5 Nov, and the task fills itself in.'), ('chart', 'Calendar and analytics', 'See your tasks on a calendar, and how they add up in Analytics.'),
-                  ('send', 'Done, Skip or Snooze on Telegram', 'Handle a reminder from the message itself: snooze for 1 hour, 3 hours or until tomorrow.'), ('gift', 'Year in Review', 'A PDF that looks back over your year of bills, renewals and chores.')],
+                  ('send', 'Done, Skip or Snooze on Telegram', 'Handle a reminder from the message itself: snooze for 1 hour, 3 hours or until tomorrow.'), ('gift', 'Year in Review', 'A PDF that looks back over your year of bills, renewals and chores.'),
+                  ('settings', 'Tasks Settings', 'Your currency, when a task counts as due soon, what the page opens on, and how dates look.')],
          tour=[('Smart lists', 'Today, overdue, this week and more, one click away.'), ('A week at a glance', 'See what is due on each day of the week.'),
                ('Dates, repeats, prices', 'Bills and renewals that come back by themselves.'), ('Add in plain words', 'Type Netflix 649 monthly and it understands.')],
          hot=[(12, 42), (52, 25), (60, 58), (42, 12)], everyday=('Forgotten bills and renewals', 'Due dates, repeats, and a nudge on Telegram')),
@@ -120,10 +137,12 @@ FEATURES = [
          chips=[('tools', '%d tools' % NT, 'Images, Photos, PDF, Calculators, Documents, Utilities'), ('star', 'Favourites', 'Star and arrange your own')],
          facts=[(str(NT), 'tools'), ('6', 'sections: Images, Photos, PDF, Calculators, Documents, Utilities'), ('Browser', 'does the work'), ('Yours', 'star favourites, arrange sections')],
          problems=[('Sketchy free PDF websites', 'Merge, compress, sign and protect PDFs in your browser', 'tools'),
-                   ('One-off apps for one-off jobs', 'Resize, crop, convert and compress images in one place', 'image'),
-                   ('Hunting for the tool you used last week', 'Recent and Favourites sections, and a search box', 'star')],
+                   ('A calculator for every money question', 'EMI, SIP, FD and RD, percentages and dates in one place', 'chart'),
+                   ('Typing your details into every invoice', 'Save your business details and logo once as a preset', 'star')],
          details=[('tools', 'Heavy engines load on demand', 'OCR, background removal and PDF encryption load only when a tool needs them.'), ('star', 'Favourites and your own order', 'Star favourites, drag tools to reorder them or move them between sections, and hide the ones you never use.'),
-                  ('table', 'Side menu or tabs', 'Show the sections as a side menu, or as tabs on top. Phones always get tabs.'), ('search', 'Search them all', 'Find a tool by name or by what it does.')],
+                  ('table', 'Side menu or tabs', 'Show the sections as a side menu, or as tabs on top. Phones always get tabs.'), ('search', 'Search them all', 'Find a tool by name or by what it does.'),
+                  ('chart', 'Calculators and documents', 'Loans, savings, deposits, percentages, dates, units and amounts in words; invoices as PDF, text compare, Markdown and spreadsheets.'),
+                  ('star', 'Saved presets', 'Keep a signature, a watermark, a QR style, image sizes or your business details on your server, while logged in. They are in your backups too.')],
          tour=[('Search first', 'Type what you want to do and the right tool appears.'), ('Recently used', 'Your recent tools are one click away.'), ('Sections', 'Images, Photos, PDF, Calculators, Documents and Utilities, plus Favourites.')],
          hot=[(55, 38), (30, 70), (9, 40)], everyday=('Sketchy free PDF websites', '%d tools that run in your own browser' % NT)),
 ]
@@ -188,6 +207,7 @@ def home():
         e(', '.join(t['name'] for t in tools if t['cat'] == c['id'])[:70].rsplit(',', 1)[0] + ' and more'), count[c['id']], I('arrow')) for c in cats)
     around = ''.join('<a class="card hv %s" href="%s"><div class="ico">%s</div><h3>%s</h3><p>%s</p><span class="more">%s%s</span></a>' % (ac, href, I(ic), e(t), e(p), e(m), I('arrow')) for ac, href, ic, t, p, m in [
         ('a-tg', 'telegram/', 'send', 'Telegram', 'A daily digest, Due Now messages with Done, Skip and Snooze, and backups sent to your chat.', 'See Telegram'),
+        ('a-links', 'screenshots/', 'image', 'Screenshots', 'Every page and the windows where you change it, in dark and light.', 'See them all'),
         ('a-home', 'phone/', 'phone', 'On your phone', 'Add the site to your home screen and it opens like an app, with its own icon.', 'See how'),
         ('a-info', 'guide.html', 'book', 'The guide', 'Every page and every setting, step by step, with screenshots of the real app (PDF).', 'Read the guide'),
         ('a-cards', 'security.html', 'shield', 'Security', 'What protects your data, and what does not, in plain words.', 'Read Security')])
@@ -201,18 +221,18 @@ def home():
         ('a-tools', '12:10', 'Sort out a PDF', 'Merge, compress or sign it in your browser with the PDF tools.', 'Tools'),
         ('a-tasks', '21:00', 'The bill is due', 'A Telegram message arrives with Done, Skip and Snooze. One tap and it is handled.', 'Tasks and Telegram')])
     stats = ''.join('<div class="stat %s"><b>%s</b><span>%s</span></div>' % (ac, n, e(t)) for ac, n, t in [
-        ('a-home', '6', 'pages, one login'), ('a-tools', str(NT), 'tools in your browser'), ('a-links', '166', 'ready-made looks'), ('a-cards', '0', 'databases to run'), ('a-tasks', '3', 'browser engines tested')])
+        ('a-home', '6', 'pages, one login'), ('a-tools', str(NT), 'tools in your browser'), ('a-links', '141', 'ready-made looks'), ('a-cards', '0', 'databases to run'), ('a-tasks', '3', 'browser engines tested')])
     more = ''.join('<a class="card hv %s" href="%s"><h3>%s</h3><p>%s</p><span class="more">Open%s</span></a>' % (ac, href, e(t), e(p), I('arrow')) for ac, href, t, p in [
         ('a-home', 'guide.html', 'The guide', 'Every page and every setting, step by step (PDF).'), ('a-info', 'faq/', 'Questions and answers', 'Hosting, updates, privacy and more.'),
         ('a-tasks', 'changelog.html', 'Changelog', 'What changed in every version.'), ('a-links', REPO, 'Source code', 'Read it, build it, report an issue.')])
-    body = f'''<section class="hero"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span><span class="blob b3" aria-hidden="true"></span>
+    body = f'''<section class="hero">{SHAPES}
 <div class="in hgrid"><div class="hcopy"><span class="pill"><i class="dot"></i>Free and open source. No database.</span>
 <h1>Your whole day, in one <span class="grad">private place.</span></h1>
 <p class="lead">Start page, bookmarks, notes, cards, tasks and {NT} tools that run in your browser. One login, one look, on your own hosting.</p>
 <div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Download {{{{VER}}}}</a><a class="btn lg" href="#features">Take the tour{I('arrow')}</a></div>
 <ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Accessibility-checked</li></ul>{looks_row()}</div>
 <div class="hart">{frame('shot-links.webp', 1440, 709, 'Links page with bookmarks in tabs and categories', 'yourdomain.com/web/links', True)}
-{chip('c1', 'a-links', 'link', 'Import bookmarks', 'Preview first, undo anytime')}{chip('c2', 'a-cards', 'image', '166 looks', 'Pick yours')}{chip('c3', 'a-info', 'lock', 'Encrypted tabs', 'Keys made in your browser')}</div></div></section>
+{chip('c1', 'a-links', 'link', 'Import bookmarks', 'Preview first, undo anytime')}{chip('c2', 'a-cards', 'image', '141 looks', 'Pick yours')}{chip('c3', 'a-info', 'lock', 'Encrypted tabs', 'Keys made in your browser')}</div></div></section>
 <section class="stats" aria-label="Homebase Hub at a glance"><div class="in">{stats}</div></section>
 <section class="s" id="features"><div class="in"><span class="eyebrow">The tour</span><h2>Six pages. One home.</h2>
 <p class="intro">Each page has its own colour and its own job. They share one bar, one login and one Settings page, so it feels like one app.</p>
@@ -238,9 +258,9 @@ def features_hub():
     cards = ''.join('<a class="card hv %s" href="features/%s/"><div class="ico">%s</div><h3>%s</h3><p>%s</p><ul class="mini">%s</ul><span class="more">See %s%s</span></a>' % (
         f['ac'], f['id'], I(f['icon']), e(f['name']), e(f['lead']), ''.join('<li>%s</li>' % e(d[1]) for d in f['details'][:3]), e(f['name']), I('arrow')) for f in FEATURES)
     extra = ''.join('<a class="card hv %s" href="%s"><div class="ico">%s</div><h3>%s</h3><p>%s</p><span class="more">Open%s</span></a>' % (ac, href, I(ic), e(t), e(p), I('arrow')) for ac, href, ic, t, p in [
-        ('a-tools', 'tools/', 'search', 'Tool finder', 'Search all %d tools by name or by what they do.' % NT), ('a-tg', 'telegram/', 'send', 'Telegram', 'Digest, Due Now buttons, commands and backups.'),
+        ('a-links', 'screenshots/', 'image', 'Screenshots', 'Every page, and the settings of each.'), ('a-tools', 'tools/', 'search', 'Tool finder', 'Search all %d tools by name or by what they do.' % NT), ('a-tg', 'telegram/', 'send', 'Telegram', 'Digest, Due Now buttons, commands and backups.'),
         ('a-home', 'phone/', 'phone', 'On your phone', 'Install the site like an app, on iPhone, Android or a computer.'), ('a-info', 'security.html', 'shield', 'Security', 'What protects your data, and what does not.')])
-    body = f'''<section class="hero"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
+    body = f'''<section class="hero">{SHAPES_Q}
 <div class="in"><div class="crumb"><b>Features</b></div><h1>Six pages. <span class="grad">One home.</span></h1><p class="lead">Each page does one job and has its own colour. They share the same bar, login, backup and Settings. Pick one to see what it does.</p></div></section>
 <section class="in"><div class="cards c2">{cards}</div></section>
 <section class="s"><div class="in"><span class="eyebrow">And around them</span><h2>Everything else.</h2><div class="cards c4">{extra}</div></div></section>{band()}'''
@@ -255,9 +275,9 @@ def feature(f):
     stats = ''.join('<div class="stat"><b>%s</b><span>%s</span></div>' % (e(b), e(t)) for b, t in f['facts'])
     problems = problem_cards([(f['ac'], b, a, ic, '') for b, a, ic in f['problems']])
     details = ''.join('<div class="card %s"><div class="ico">%s</div><h3>%s</h3><p>%s</p></div>' % (f['ac'], I(ic), e(t), e(p)) for ic, t, p in f['details'])
-    body = f'''<section class="hero fh"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span><span class="blob b3" aria-hidden="true"></span>
+    body = f'''<section class="hero fh">{SHAPES_Q}
 <div class="in hgrid"><div class="hcopy"><div class="crumb"><a href="features/">Features</a> / <b>{e(f['name'])}</b></div><h1>{grad(f['h1'])}</h1><p class="lead">{e(f['lead'])}</p>
-<div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Get Homebase Hub</a><a class="btn lg" href="index.html#features">All six pages{I('arrow')}</a></div></div>
+<div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Get Homebase Hub</a><a class="btn lg" href="screenshots/#p-{f['id']}">See its screenshots{I('arrow')}</a></div></div>
 <div class="hart">{frame(s, w, h, alt, f['url'], True)}{chips}</div></div></section>
 <section class="stats n4"><div class="in">{stats}</div></section>
 <section class="s"><div class="in"><span class="eyebrow">Everyday problems</span><h2>What {e(f['name'])} takes off your mind.</h2>{problems}</div></section>
@@ -278,7 +298,7 @@ def telegram():
     rows = ''.join('<tr><td><code>%s</code></td><td>%s</td></tr>' % (e(c), e(d)) for c, d in [
         ('/today', 'Overdue and due today, with Done buttons'), ('/week', 'The next 7 days'), ('/next', 'The next 10 tasks'), ('/add Netflix 649 monthly 5 Nov', 'A new task (price, repeat, date and time are optional)'),
         ('/done Netflix', 'Mark a task done'), ('/snooze Netflix 2h', 'Pause its reminders (30m, 2h, 1d or tomorrow)'), ('/backup', 'Send a backup file now'), ('/status', 'A quick check of the site')])
-    body = f'''<section class="hero fh a-tg"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
+    body = f'''<section class="hero fh a-tg">{SHAPES_Q}
 <div class="in hgrid"><div class="hcopy"><div class="crumb"><b>Telegram</b></div><h1>Reminders <span class="grad">where you already are.</span></h1>
 <p class="lead">Connect your own Telegram bot and the site tells you what needs you. It only answers your own chat. Tap a command to see the kind of reply you get.</p><div class="cmds">{buttons}</div></div>
 <div class="hart">{chat}</div></div></section>
@@ -297,8 +317,10 @@ def phone():
     panels = ''.join('<div class="a-home" id="p-%s" role="tabpanel" aria-labelledby="t-%s"><ol class="os step-list">%s</ol></div>' % (k, k, ''.join('<li class="step"><i>%d</i><span>%s</span></li>' % (j + 1, e(s)) for j, s in enumerate(ss))) for k, t, ic, ss in os_steps)
     perks = ''.join('<div class="card a-home"><div class="ico">%s</div><h3>%s</h3><p>%s</p></div>' % (I(ic), e(t), e(p)) for ic, t, p in [
         ('phone', 'Its own icon', 'The site sits on your home screen with the Homebase Hub icon, or your site name.'), ('home', 'No browser bars', 'It opens in its own window, like an app.'),
-        ('link', 'Shortcuts', 'Press and hold the icon, where your phone allows it, to jump to Links, Info, Cards, Tasks or Tools.'), ('shield', 'Nothing kept offline', 'Your data always comes from your server, and stays there.')])
-    body = f'''<section class="hero fh a-home"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
+        ('link', 'Shortcuts', 'Press and hold the icon, where your phone allows it, to jump to Links, Info, Cards, Tasks or Tools.'), ('shield', 'Nothing kept offline', 'Your data always comes from your server, and stays there.'),
+        ('arrow', 'Swipe between pages', 'Swipe left or right to go to the next or previous page, in the order of your bar. On Home, pull down for the next photo.'),
+        ('refresh', 'Always current', 'After an update the app shows the new version by itself. Only the icon on an iPhone changes after removing and adding it again.')])
+    body = f'''<section class="hero fh a-home">{SHAPES_Q}
 <div class="in hgrid"><div class="hcopy"><div class="crumb"><b>On your phone</b></div><h1>Your site, <span class="grad">on your home screen.</span></h1>
 <p class="lead">Add Homebase Hub to a phone or computer and it opens like an app, with its own icon and no browser bars. Your data still comes from your server every time.</p>
 <div class="tabs" role="tablist" aria-label="Your device">{tabs}</div>{panels}</div>
@@ -316,13 +338,13 @@ def tools_page():
     names = {c['id']: c['name'] for c in cats}
     cards = ''.join('<article class="tool %s" data-cat="%s" data-text="%s"><span class="k">%s</span><b>%s</b><p>%s</p></article>' % (
         cat_ac[t['cat']], t['cat'], e((t['name'] + ' ' + t['desc'] + ' ' + ' '.join(t['kw'])).lower()), e(names[t['cat']]), e(t['name']), e(t['desc'])) for t in sorted(tools, key=lambda t: (t['cat'], t['name'])))
-    body = f'''<section class="hero fh a-tools"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
+    body = f'''<section class="hero fh a-tools">{SHAPES_Q}
 <div class="in"><div class="crumb"><a href="features/">Features</a> / <b>Tools</b></div><h1>Find the tool <span class="grad">for the job.</span></h1>
 <p class="lead">All {len(tools)} tools in Homebase Hub run in your browser. Search by name or by what you want to do.</p></div></section>
-<section class="in a-tools"><div class="finder"><label class="sr" for="tf-q">Search the tools</label><input class="search" id="tf-q" type="search" placeholder="Try pdf, qr, resize, background" autocomplete="off">
+<section class="in a-tools"><div class="finder"><label class="sr" for="tf-q">Search the tools</label><input class="search" id="tf-q" type="search" placeholder="Try pdf, emi, invoice, qr, resize" autocomplete="off">
 <div class="cats" role="group" aria-label="Filter by section">{chips}</div><p class="count" id="tf-count" role="status" aria-live="polite">{len(tools)} tools</p>
 <div class="tgrid">{cards}</div><p class="none" id="tf-none" hidden>No tool matches that. Try a shorter word.</p></div></section>{band()}'''
-    return dict(slug='tools', title='Tool finder: Homebase Hub', cls='a-tools', desc='All %d browser tools in Homebase Hub: images, photos, PDF and utilities. Search by name or by what you want to do.' % len(tools), body=body)
+    return dict(slug='tools', title='Tool finder: Homebase Hub', cls='a-tools', desc='All %d browser tools in Homebase Hub: images, photos, PDF, calculators, documents and utilities. Search by name or by what you want to do.' % len(tools), body=body)
 
 
 FAQ = [
@@ -331,6 +353,9 @@ FAQ = [
     ('Can I put it in a sub-folder?', 'Yes. Upload it to a folder such as /hub/ and it works the same, including installing it on a phone.'),
     ('Can I bring my bookmarks from my browser?', 'Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari, then press the pencil on Links, choose Edit This Page and press Import Bookmarks on the bar at the bottom. You see a preview first, and a copy of Links is kept so you can undo.'),
     ('Does it work offline?', 'No, on purpose. Your data is private, so it always comes from your server. Added to a home screen, the site opens like an app, but nothing is kept on the phone.'),
+    ('Can Tools keep my settings, like my signature?', 'Yes, while you are logged in. Sign PDF, both watermark tools, the QR Code Generator, the Image Resizer and the Invoice Generator have Save as Preset. Presets are kept on your server, are part of the site backup, and can be renamed or deleted in Tools Settings.'),
+    ('Why does Tools ask for the camera or microphone?', 'Only the QR and Barcode Scanner (camera) and the Screen and Voice Recorder (microphone and screen) ask, and only when you press their button. Nothing is sent anywhere, and the other pages are not allowed to use them at all.'),
+    ('My site is still on version 1.49 or older. Can it update?', 'Yes, with its own updater: install 1.59.1 first (Settings, Updates), then the newest version. From 1.60 the updater no longer installs or goes back to versions from before 1.50, which used another folder layout.'),
     ('What if an update goes wrong?', 'A copy of the current version is kept before every update, and the site checks itself afterwards. If it cannot answer, the saved version comes back by itself. Go Back in Settings, Updates does the same on request. Your data in site-data is never touched by an update.'),
     ('Is my data encrypted?', 'You choose. Encrypted tabs in Links and Info, and encrypted backup files, use one passphrase, and the keys are made in your browser. A lost passphrase and a lost recovery key mean lost data.'),
     ('What if I forget my password?', 'Delete site-data/core/auth.php in your file manager, open the site, click the key icon, and use the setup code from site-data/core/SETUP-CODE.php. Encrypted tabs are locked with your passphrase, so a reset does not touch them.'),
@@ -350,5 +375,104 @@ def faq():
     return dict(slug='faq', title='Questions and answers: Homebase Hub', cls='', desc='Answers about hosting, updates, privacy, bookmarks, Telegram and more for Homebase Hub.', body=body, wide=True)
 
 
+
+# ---------------------------------------------------------------- the Screenshots page (1.60): every page, its highlights and its settings
+# (picture, caption, has a light version). Pictures come from scripts/screenshots.py --webp; website_test checks every one exists.
+GALLERY = [
+    ('home', 'Home', 'a-home', 'home', [
+        ('Highlights', [('home-1.webp', 'Logged in: the clock, the Glass Dock and Today open with Quick Add.', False),
+                        ('home-2.webp', 'Glance and Expand: the widgets as cards along the bottom.', False),
+                        ('home-3.webp', 'What a visitor sees: the clock on a photo, no widgets.', False)]),
+        ('Settings', [('home-settings.webp', 'Home Settings: the clock, the greeting, Glass, the bar and more.', False),
+                      ('home-widgets.webp', 'Widgets: choose and order them, Glass Dock or Glance and Expand.', False)])]),
+    ('links', 'Links', 'a-links', 'link', [
+        ('Highlights', [('links.webp', 'Tabs and categories, with how often each link was opened.', True),
+                        ('links-menu.webp', 'The pencil: Edit This Page and Links Settings.', False),
+                        ('links-edit.webp', 'Editing: drag links and categories; the tools sit in one bar at the bottom.', False),
+                        ('links-import.webp', 'Import Bookmarks from any browser, with a preview first.', False)]),
+        ('Settings', [('links-settings.webp', 'Links Settings: privacy, icons, visit counts, text sizes and the edit bar.', True)])]),
+    ('info', 'Info', 'a-info', 'note', [
+        ('Highlights', [('info.webp', 'Notebook Cards: boxes of different widths in each tab.', True),
+                        ('info-doc.webp', 'A tab laid out as a Document, with its outline.', False)]),
+        ('Settings', [('info-settings.webp', 'Info Settings: privacy, encryption, text sizes and the edit bar.', True)])]),
+    ('cards', 'Cards', 'a-cards', 'card', [
+        ('Highlights', [('cards.webp', 'Every card in one table, with yearly charges added up.', True),
+                        ('cards-edit.webp', 'Editing Cards: Add Card, Holders, Banks, Export and Settings in the edit bar.', False)]),
+        ('Settings', [('cards-settings.webp', 'Cards Settings: the page, text sizes, the edit bar and the column order.', True),
+                      ('cards-holders.webp', 'Holders: rename, add, or delete a holder with no cards.', False),
+                      ('cards-banks.webp', 'Banks: each bank, the link its name opens, and how many cards.', False)])]),
+    ('tasks', 'Tasks', 'a-tasks', 'tasks', [
+        ('Highlights', [('tasks.webp', 'Tasks grouped by when they are due, with this week across the top.', True),
+                        ('tasks-calendar.webp', 'The calendar.', False),
+                        ('tasks-analytics.webp', 'Analytics: the next 12 months at a glance.', False)]),
+        ('Settings', [('tasks-settings.webp', 'Tasks Settings: General, When the Page Opens, and Look.', True)])]),
+    ('tools', 'Tools', 'a-tools', 'tools', [
+        ('Highlights', [('tools.webp', 'Every tool in sections, with search, favourites and recent tools.', True),
+                        ('tools-calculators.webp', 'Calculators: loans, savings, deposits, dates, units and amounts in words.', False),
+                        ('tools-emi.webp', 'The EMI Calculator with its chart and repayment schedule.', False),
+                        ('tools-sip.webp', 'The SIP and Lumpsum Calculator, with yearly step-up and a chart by year.', False),
+                        ('tools-invoice.webp', 'The Invoice Generator: your details, items and a tax line in two halves.', False),
+                        ('tools-invoice-pdf.webp', 'The invoice it makes: an A4 PDF with the total in words.', False),
+                        ('tools-compare.webp', 'Text Compare: what changed, line by line.', False),
+                        ('tools-scanner.webp', 'The QR and Barcode Scanner reading a code from a picture.', False)]),
+        ('Settings', [('tools-preset.webp', 'Save as Preset: your signature kept on your server under a name.', False),
+                      ('tools-settings.webp', 'Tools Settings: the layout, your data and your presets.', False),
+                      ('tools-tabs.webp', 'Tabs on Top instead of the side menu.', False)])]),
+    ('settings', 'Settings', 'a-home', 'settings', [
+        ('Highlights', [('s-overview.webp', 'Overview: where things stand, and what to look at next.', True),
+                        ('login.webp', 'The login window.', False)]),
+        ('Settings', [('s-general.webp', 'General: the site name, logo, time zone and pages.', False),
+                      ('s-appearance.webp', 'Appearance: the bar, theme, font and accent colour.', False),
+                      ('s-presets.webp', 'Appearance, Presets: 141 ready-made looks, with a Vivid group.', False),
+                      ('s-colors.webp', 'Appearance, Colors: every colour of the bar and pages.', False),
+                      ('s-security.webp', 'Security: password, two-step login, devices and login history.', False),
+                      ('s-telegram.webp', 'Telegram: your bot, the digest, reminders and backups.', False),
+                      ('s-backup.webp', 'Backup and Restore: one file for the whole site, and earlier versions.', False),
+                      ('s-updates.webp', 'Updates: from GitHub or by zip, with Go Back.', False),
+                      ('s-changelog.webp', 'Changelog: what changed in every version.', False),
+                      ('s-health.webp', 'Health: what needs your attention on the server.', False),
+                      ('s-check.webp', 'Server Check.', False)])]),
+    ('phone', 'Phone', 'a-home', 'phone', [
+        ('Highlights', [('m-links.webp', 'Links on a phone.', False), ('m-tasks.webp', 'Tasks on a phone.', False), ('m-info.webp', 'Info on a phone.', False),
+                        ('m-tools.webp', 'Tools on a phone.', False), ('m-settings.webp', 'Settings on a phone.', False), ('m-login.webp', 'Logging in on a phone.', False)])]),
+]
+
+
+def gallery_pics():
+    """Every picture the Screenshots page uses (with its light copy), for the website test."""
+    out = []
+    for _, _, _, _, groups in GALLERY:
+        for _, pics in groups:
+            for f, _, light in pics: out += [f] + ([f.replace('.webp', '-light.webp')] if light else [])
+    return out
+
+
+def screenshots():
+    from PIL import Image
+    tabs, panels = '', ''
+    for i, (pid, name, ac, icon, groups) in enumerate(GALLERY):
+        tabs += '<button class="tab %s" id="t-%s" role="tab" type="button" aria-selected="%s" aria-controls="p-%s">%s%s</button>' % (ac, pid, 'true' if i == 0 else 'false', pid, I(icon), e(name))
+        body = ''
+        for title, pics in groups:
+            figs = ''
+            for f, cap, light in pics:
+                path = os.path.join(ROOT, 'website', 'img', f)
+                w, h = Image.open(path).size if os.path.isfile(path) else (1440, 900)
+                lt = ' data-light="img/%s"' % f.replace('.webp', '-light.webp') if light else ''
+                figs += ('<figure class="gfig%s"><a class="zoom" href="img/%s"%s>%s</a><figcaption>%s%s</figcaption></figure>'
+                         % (' tall' if h > w else '', f, lt, img(f, w, h, cap), e(cap), ' <span class="lt">Light too</span>' if light else ''))
+            body += '<h3 class="gh">%s</h3><div class="gallery%s">%s</div>' % (e(title), ' phones-g' if pid == 'phone' else '', figs)
+        panels += '<section class="gpanel %s" id="p-%s" role="tabpanel" aria-labelledby="t-%s"><h2 class="sr-h">%s</h2>%s</section>' % (ac, pid, pid, e(name), body)
+    n = len(gallery_pics())
+    body = ('<section class="hero sm">' + SHAPES_Q + '<div class="in"><div class="crumb"><b>Screenshots</b></div>'
+            '<h1>Every page, <span class="grad">and its settings.</span></h1><p class="lead">The real site with example data: the highlights of each page, then the windows where you change it. Click a picture to see it full size.</p>'
+            '<div class="gtheme" role="group" aria-label="Show the pictures in"><button type="button" class="chipbtn" data-theme-shots="dark" aria-pressed="true">Dark</button>'
+            '<button type="button" class="chipbtn" data-theme-shots="light" aria-pressed="false">Light</button><small>Light switches the pictures marked Light too.</small></div></div></section>'
+            '<section class="in shots-page"><div class="tabs" role="tablist" aria-label="Pages">%s</div>%s</section>'
+            '<dialog id="lb" class="lb" aria-label="Picture"><button type="button" class="lbx" aria-label="Close">%s</button><img alt=""><p></p>'
+            '<button type="button" class="lbp" aria-label="Previous picture">%s</button><button type="button" class="lbn" aria-label="Next picture">%s</button></dialog>%s'
+            % (tabs, panels, I('x'), I('left'), I('arrow'), band()))
+    return dict(slug='screenshots', title='Screenshots: Homebase Hub', cls='', desc='Screenshots of every page of Homebase Hub and its settings: Home, Links, Info, Cards, Tasks, Tools, Settings and the phone app (%d pictures).' % n, body=body)
+
 def all_pages():
-    return [home(), features_hub()] + [feature(f) for f in FEATURES] + [telegram(), phone(), tools_page(), faq()]
+    return [home(), features_hub()] + [feature(f) for f in FEATURES] + [screenshots(), telegram(), phone(), tools_page(), faq()]

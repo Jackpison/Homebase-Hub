@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1000"><defs><filter id="soft" filterUnits="userSpaceOnUse" x="-400" y="-400" width="2000" height="2000"><feGaussianBlur stdDeviation="3.5"/></filter>
+<filter id="glow" filterUnits="userSpaceOnUse" x="-400" y="-400" width="2000" height="2000"><feGaussianBlur stdDeviation="40"/></filter>
+<filter id="hi" filterUnits="userSpaceOnUse" x="-400" y="-400" width="2000" height="2000"><feGaussianBlur stdDeviation="14"/></filter>
+<filter id="sh" filterUnits="userSpaceOnUse" x="-400" y="-400" width="2000" height="2000"><feGaussianBlur stdDeviation="22"/></filter><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1000"><stop offset="0" stop-color="#7d6bff"/><stop offset=".45" stop-color="#6fc3ff"/><stop offset="1" stop-color="#b8f3ff"/></linearGradient></defs>
+<path d="M-300 60 C 600 40, 640 520, 300 640 S 40 980, 420 1120" fill="none" stroke="url(#g)" stroke-width="230" stroke-linecap="round" filter="url(#glow)" opacity=".22"/>
+<path d="M-300 60 C 600 40, 640 520, 300 640 S 40 980, 420 1120" fill="none" stroke="url(#g)" stroke-width="200" stroke-linecap="round" filter="url(#soft)"/>
+<path d="M-300 60 C 600 40, 640 520, 300 640 S 40 980, 420 1120" fill="none" stroke="#000" stroke-opacity=".28" stroke-width="100" stroke-linecap="round" filter="url(#sh)" transform="translate(36 40)"/>
+<path d="M-300 40 C 570 20, 610 500, 270 615 S 15 955, 395 1095" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="44" stroke-linecap="round" filter="url(#hi)"/></svg>
