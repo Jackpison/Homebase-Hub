@@ -38,53 +38,17 @@ const rid=()=>Array.from(crypto.getRandomValues(new Uint8Array(4)),x=>x.toString
    wrapped (encrypted) with a key derived from your passphrase (PBKDF2-SHA256, 600,000 rounds), so neither the
    server, its earlier versions nor backup files can be read without the passphrase. The unwrapped key lives only
    in this page's memory (KEY) until reload, log out or Lock. */
-const ENC="enc1:",CAN_ENC=!!(window.isSecureContext&&window.crypto&&crypto.subtle);
+const V=window.HubVault,CAN_ENC=V.ok(); // the shared encryption (shell.js, section 14)
 let KEY=null;const DEC=new Map(); // ciphertext -> text, memory only
-const te=new TextEncoder(),td=new TextDecoder();
-const b64=u=>{let s="";for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)};
-const ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-const isEnc=s=>typeof s==="string"&&s.startsWith(ENC);
-const rnd=n=>crypto.getRandomValues(new Uint8Array(n));
-async function kek(pass,salt,iter){
-  const base=await crypto.subtle.importKey("raw",te.encode(pass),"PBKDF2",false,["deriveKey"]);
-  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
-}
-// Wraps a raw key with a passphrase. Returns the vault object stored on the server.
-// Returns the raw key if the passphrase is right, otherwise null.
-const normRec=s=>String(s).replace(/[\s-]/g,"").toUpperCase(); // a recovery code may be typed with dashes, spaces or small letters
-async function unwrapOne(x,pass){
-  try{const w=ub64(x.wrap),k=await kek(pass,ub64(x.salt),x.iter);
-    return new Uint8Array(await crypto.subtle.decrypt({name:"AES-GCM",iv:w.subarray(0,12)},k,w.subarray(12)))}catch(e){return null}
-}
-async function unwrapKey(v,pass){return (await unwrapOne(v,pass))||(v.rec?await unwrapOne(v.rec,normRec(pass)):null)} // the passphrase, or the recovery key
-const useKey=raw=>crypto.subtle.importKey("raw",raw,"AES-GCM",false,["encrypt","decrypt"]); // not extractable
+const isEnc=V.isEnc;
+const unwrapKey=V.unwrap; // the raw key from the passphrase (or the recovery key), otherwise null
+const useKey=raw=>V.useKey(raw); // not extractable
 /* "Keep unlocked on this device": the tab key is kept in this browser's IndexedDB, encrypted with a device key that
    can't be read out of the browser (non-extractable). It only opens text the server sends to a logged-in browser, and it
    is deleted when you log out (on any page of this site) or press Lock. */
 const KEEPK="info-keep",keepOn=()=>lsGet(KEEPK)!=="0",setKeep=on=>lsSet(KEEPK,on?null:"0");
 const VAULT_LOGIN=()=>!!(PAGE.vault&&PAGE.vault.login);
-function devDb(){
-  return new Promise((res,rej)=>{const q=indexedDB.open("hub-vault",1);
-    q.onupgradeneeded=()=>q.result.createObjectStore("k");q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);q.onblocked=()=>rej(0)});
-}
-async function devOp(mode,fn){
-  const db=await devDb();
-  try{return await new Promise((res,rej)=>{const t=db.transaction("k",mode),st=t.objectStore("k"),q=fn(st);
-    t.oncomplete=()=>res(q&&q.result);t.onerror=t.onabort=()=>rej(t.error)})}
-  finally{db.close()} // closed straight away, so a log out on another page can delete the database
-}
-async function devSave(raw){
-  try{
-    const dk=await crypto.subtle.generateKey({name:"AES-GCM",length:256},false,["encrypt","decrypt"]),iv=rnd(12);
-    const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},dk,raw));
-    await devOp("readwrite",st=>st.put({dk,iv,ct},"dev"));
-  }catch(e){}
-}
-async function devLoad(){
-  try{const r=await devOp("readonly",st=>st.get("dev"));if(!r||!r.dk)return null;
-    return new Uint8Array(await crypto.subtle.decrypt({name:"AES-GCM",iv:r.iv},r.dk,r.ct))}catch(e){return null}
-}
-function devClear(){try{indexedDB.deleteDatabase("hub-vault")}catch(e){}}
+const devSave=raw=>V.devSave("dev",raw),devLoad=()=>V.devLoad("dev"),devClear=V.devDropAll;
 // Opens the encrypted tabs without asking when this device kept them unlocked. A kept key that no longer fits is dropped.
 let autoTried=false;
 async function autoUnlock(){
@@ -109,14 +73,11 @@ async function unlockAfterLogin(pw){
 async function seal(text){
   // Already-encrypted text is never encrypted again: open it first (or keep it as it is if it can't be opened).
   if(isEnc(text)){try{text=(await unsealDeep(text)).text}catch(e){return text}}
-  const iv=rnd(12),ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},KEY,te.encode(text)));
-  const w=new Uint8Array(12+ct.length);w.set(iv);w.set(ct,12);
-  const out=ENC+b64(w);DEC.set(out,text);return out;
+  const out=await V.seal(KEY,text);DEC.set(out,text);return out;
 }
 async function unseal(s){
   if(!isEnc(s))return s;if(DEC.has(s))return DEC.get(s);
-  const w=ub64(s.slice(ENC.length));
-  const text=td.decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:w.subarray(0,12)},KEY,w.subarray(12)));
+  const text=await V.unseal(KEY,s);
   DEC.set(s,text);return text;
 }
 // Opens text that may have been encrypted more than once (it happened when a tab lost its encrypted mark).

@@ -688,109 +688,20 @@ function prune_icons(array $site): void
 
 /* ================= outbound HTTP ================= */
 
-/** Public internet only: every IPv4 and IPv6 address of the name is checked (core/boot.php). */
-function host_is_public(string $host): bool
-{
-    return (bool) hub_public_ips($host);
-}
-function resolve_url(string $base, string $rel): string
-{
-    $rel = trim(html_entity_decode($rel, ENT_QUOTES | ENT_HTML5));
-    if ($rel === '') return $base;
-    if (preg_match('~^https?://~i', $rel)) return $rel;
-    $p = parse_url($base);
-    $scheme = $p['scheme'] ?? 'https';
-    $origin = $scheme . '://' . ($p['host'] ?? '') . (isset($p['port']) ? ':' . $p['port'] : '');
-    if (str_starts_with($rel, '//')) return $scheme . ':' . $rel;
-    if (str_starts_with($rel, '/')) return $origin . $rel;
-    $path = $p['path'] ?? '/';
-    return $origin . substr($path, 0, (int) strrpos($path, '/') + 1) . $rel;
-}
-
 /**
- * GET a URL → ['status','body','url','type'] or ['error' => message].
- * Follows up to 4 redirects and re-checks each host so it can't be pointed at your own server.
- */
-/**
- * GET a web address. By default the answer comes back in ['body'] (a string held in memory, so keep $maxBytes small).
- * With $saveTo the answer is written straight into that file instead, as it arrives, and ['body'] is empty: a 25 MB photo or a 32 MB
- * clip then never sits in PHP's memory (that was what used up the 128 MB limit when photos were being saved).
+ * GET a web address → ['status', 'body', 'url', 'type'] or ['error' => message], through the site's one checked fetcher
+ * (hub_fetch in core/boot.php: public internet only, every redirect checked). By default the answer comes back in ['body'] (held
+ * in memory, so keep $maxBytes small). With $saveTo it is written straight into that file instead, as it arrives, and ['body'] is
+ * empty: a 25 MB photo or a 32 MB clip then never sits in PHP's memory.
  */
 function http_get(string $url, array $headers = [], int $maxBytes = 2_000_000, int $timeout = 12, ?string $saveTo = null): array
 {
-    // Only a plain download (no API key in a header or in the address) may be retried without checking the https
-    // certificate, so a key can never be sent over a connection that might not be the real site.
+    // Only a plain download (no API key in a header) may be retried without checking the https certificate; hub_fetch also
+    // never does it for an address with a key in it.
     $plain = !preg_grep('/^(?!accept:)/i', $headers);
-    $headers[] = 'User-Agent: HomeLinks/3.0 (personal start page; https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ')';
-    for ($hop = 0; $hop < 5; $hop++) {
-        $plainHop = $plain && !preg_match('~[?&](key|api_?key|apikey|client_id|token|access_token|auth|sig|signature)=~i', $url);
-        $p = parse_url($url);
-        if (!$p || !in_array(strtolower($p['scheme'] ?? ''), ['http', 'https'], true) || empty($p['host'])) return ['error' => 'Bad address'];
-        if (!host_is_public($p['host'])) return ['error' => 'Can\'t reach ' . $p['host']];
-
-        $status = 0; $body = ''; $type = ''; $loc = ''; $fh = null;
-        if ($saveTo !== null) {   // every address tried (a redirect, a retry) starts the file again
-            $fh = @fopen($saveTo, 'wb');
-            if (!$fh) return ['error' => 'Can\'t save the download (the temporary folder is not writable)'];
-        }
-        if (function_exists('curl_init')) {
-            $ch = curl_init($url);
-            if (!hub_curl_pin($ch, $url)) { curl_close($ch); if ($fh) fclose($fh); return ['error' => 'Can\'t reach ' . $p['host']]; }   // connect only to the address just checked
-            $rh = [];
-            curl_setopt_array($ch, [
-                ($fh ? CURLOPT_FILE : CURLOPT_RETURNTRANSFER) => ($fh ?: true),
-                CURLOPT_FOLLOWLOCATION => false,
-                CURLOPT_CONNECTTIMEOUT => 6,
-                CURLOPT_TIMEOUT        => $timeout,
-                CURLOPT_HTTPHEADER     => $headers,
-                CURLOPT_ENCODING       => '',
-                CURLOPT_HEADERFUNCTION => function ($ch, $h) use (&$rh) { $rh[] = $h; return strlen($h); },
-                CURLOPT_NOPROGRESS     => false,
-                CURLOPT_PROGRESSFUNCTION => fn($c, $dt, $dn) => $dn > $maxBytes ? 1 : 0,
-            ]);
-            $ok = curl_exec($ch); $body = $ok;
-            $err = curl_error($ch);
-            if ($body === false && $plainHop && in_array(curl_errno($ch), [35, 51, 58, 60, 77, 83], true)) {   // host without a CA list: retry once, public photos/icons only
-                $rh = [];
-                if ($fh) { ftruncate($fh, 0); rewind($fh); }
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                $ok = curl_exec($ch); $body = $ok; $err = curl_error($ch);
-            }
-            $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-            curl_close($ch);
-            if ($fh) { fclose($fh); $fh = null; }
-            if ($ok === false) return ['error' => $err ?: 'Connection failed'];
-            if ($saveTo !== null) $body = '';
-            foreach ($rh as $h) {
-                if (stripos($h, 'location:') === 0) $loc = trim(substr($h, 9));
-                if (stripos($h, 'content-type:') === 0) $type = trim(substr($h, 13));
-            }
-        } elseif (ini_get('allow_url_fopen')) {
-            $ctx = stream_context_create(['http' => [
-                'header' => implode("\r\n", $headers), 'follow_location' => 0, 'timeout' => $timeout, 'ignore_errors' => true,
-            ]]);
-            if ($fh) {
-                $in = @fopen($url, 'rb', false, $ctx);
-                if (!$in) { fclose($fh); return ['error' => 'Connection failed']; }
-                stream_copy_to_stream($in, $fh, $maxBytes); fclose($in); fclose($fh); $fh = null;
-                $body = '';
-            } else {
-                $body = @file_get_contents($url, false, $ctx, 0, $maxBytes);
-                if ($body === false) return ['error' => 'Connection failed'];
-            }
-            foreach ($http_response_header ?? [] as $h) {
-                if (preg_match('~^HTTP/\S+\s+(\d+)~', $h, $m)) $status = (int) $m[1];
-                if (stripos($h, 'location:') === 0) $loc = trim(substr($h, 9));
-                if (stripos($h, 'content-type:') === 0) $type = trim(substr($h, 13));
-            }
-        } else {
-            if ($fh) fclose($fh);
-            return ['error' => 'Your host blocks outgoing connections (enable the curl extension)'];
-        }
-        if ($status >= 300 && $status < 400 && $loc !== '') { $url = resolve_url($url, $loc); continue; }
-        return ['status' => $status, 'body' => (string) $body, 'url' => $url, 'type' => $type];
-    }
-    return ['error' => 'Too many redirects'];
+    $r = hub_fetch($url, ['headers' => $headers, 'ua' => 'HomeLinks/3.0 (personal start page; https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ')',
+        'max' => $maxBytes, 'timeout' => $timeout, 'save' => $saveTo, 'insecure' => $plain]);
+    return isset($r['error']) ? ['error' => $r['error']] : $r;
 }
 
 /** GET JSON → [data|null, error|null] with a readable error. */

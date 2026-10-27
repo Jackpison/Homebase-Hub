@@ -296,6 +296,39 @@ try:
         wctx.close()
         check("P48 Settings > Overview shows What's New for this version, loading only its notes (not the whole changelog)",
               ver in wn and wsz and all('latest=1' in u and n < 20000 for u, n in wsz), (wn, [(u[-40:], n) for u, n in wsz]))
+        # P49: the shared encryption of encrypted tabs (shell.js HubVault, 1.53.2; before, Links, Info and Settings each had a copy).
+        # It opens what the old copies made (tests/fixtures/vault-vectors.json), and what it makes opens with plain WebCrypto
+        # written here, apart from the site's code: so the stored format did not change.
+        vec = json.load(open(os.path.join(ROOT, 'tests', 'fixtures', 'vault-vectors.json'), encoding='utf-8'))
+        xctx = b.new_context(user_agent=UA); xctx.route('**/*', handle); xp = xctx.new_page()
+        xp.goto(B + '/web/links/', wait_until='domcontentloaded'); until(lambda: xp.evaluate("!!window.HubVault"), 10000)
+        vr = xp.evaluate("""async (x) => {
+          const V = HubVault, te = new TextEncoder(), td = new TextDecoder(), same = (a, b) => !!a && a.length === b.length && a.every((n, i) => n === b[i]);
+          const ub = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+          const kek = async (pass, salt, iter) => crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' },
+            await crypto.subtle.importKey('raw', te.encode(pass), 'PBKDF2', false, ['deriveKey']), { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+          const gcm = async (key, b) => new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.subarray(0, 12) }, key, b.subarray(12)));
+          const r = {}, raw = Uint8Array.from(x.raw);
+          r.pass = same(await V.unwrap(x.vault, x.pass), raw);
+          r.rec = same(await V.unwrap(x.vault, ' ' + x.rec.toUpperCase().replace(/-/g, ' ') + ' '), raw);   // typed with spaces and capitals
+          r.wrong = (await V.unwrap(x.vault, 'not it')) === null && (await V.unwrap({ salt: 'AA==', iter: 1, wrap: '!!' }, 'x')) === null;
+          const k = await V.useKey(raw), kd = await V.useKey(raw, true);
+          r.open = (await V.unseal(k, x.sealed)) === x.plain && (await V.openDeep(kd, x.sealed)) === x.plain;
+          r.deep = (await V.openDeep(k, await V.seal(k, await V.seal(k, x.plain)))) === x.plain && (await V.openDeep(k, 'plain')) === 'plain';
+          r.bad = await V.unseal(await V.useKey(new Uint8Array(32)), x.sealed).then(() => false, () => true);
+          r.readOnly = await V.seal(kd, 'x').then(() => false, () => true);
+          const w = await V.wrap(raw, 'New pass 9', true);
+          r.wrapShape = w.v === 1 && w.iter === 600000 && w.login === true && ub(w.salt).length === 16 && !('login' in await V.wrap(raw, 'p', false));
+          r.wrapIndep = same(await gcm(await kek('New pass 9', ub(w.salt), w.iter), ub(w.wrap)), raw);
+          const s = await V.seal(k, x.plain), raw2 = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+          r.sealIndep = s.startsWith('enc1:') && s !== await V.seal(k, x.plain) && td.decode(await gcm(raw2, ub(s.slice(5)))) === x.plain;
+          await V.devSave('p49', raw); const back = await V.devLoad('p49'); await V.devForget('p49');
+          r.device = same(back, raw) && (await V.devLoad('p49')) === null;
+          return r;
+        }""", vec)
+        xctx.close()
+        check('P49 the shared encryption opens tabs made before 1.53.2 (passphrase, recovery key typed loosely, text encrypted twice), refuses a wrong key, and what it makes opens with plain WebCrypto',
+              vr and all(vr.values()), vr)
         # P47: Home's refresh button (1.53). The next background is ready, so a press swaps at once; three quick presses on a slow
         # network give one change (it never starts over); when nothing arrives it gives up within about 20 s and the button works again.
         rctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx.route('**/*', handle); rctx.add_init_script(TRACK_REQUESTS)

@@ -222,68 +222,22 @@ const HF=(u,o)=>window.HUB?HUB.fetch(u,o):fetch(u,o);   // the site's fetch: lon
    browser. The key is random; the server only keeps it wrapped with a key made from your encryption passphrase (PBKDF2-SHA256, 600,000 rounds),
    so the server, its earlier versions and backup files cannot read the tab. The open key lives in this page's memory, and (so a reload
    doesn't ask again) in this browser's IndexedDB under a device key that can't be read out; logging out or Lock deletes it. */
-const ENC = 'enc1:', CAN_ENC = !!(window.isSecureContext && window.crypto && crypto.subtle);
+const V = window.HubVault, CAN_ENC = V.ok();   // the shared encryption (shell.js, section 14)
 const KEEPK = 'links-keep';   // "keep unlocked on this device": on unless turned off in the unlock box
 const keepOn = () => { try { return localStorage.getItem(KEEPK) !== '0'; } catch { return true; } };
 const setKeep = on => { try { on ? localStorage.removeItem(KEEPK) : localStorage.setItem(KEEPK, '0'); } catch {} };
 let KEY = null;
-const te = new TextEncoder(), td = new TextDecoder();
-const b64 = u => { let s = ''; for (let i = 0; i < u.length; i += 32768) s += String.fromCharCode.apply(null, u.subarray(i, i + 32768)); return btoa(s); };
-const ub64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-const rnd = n => crypto.getRandomValues(new Uint8Array(n));
+const b64 = V.b64;
 const vault = () => (S.data.settings && S.data.settings.vault && S.data.settings.vault.wrap) ? S.data.settings.vault : null;
-async function kek(pass, salt, iter) {
-  const base = await crypto.subtle.importKey('raw', te.encode(pass), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
-}
-async function wrapKey(raw, pass) {
-  const salt = rnd(16), iter = 600000, iv = rnd(12), k = await kek(pass, salt, iter);
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, k, raw));
-  const w = new Uint8Array(12 + ct.length); w.set(iv); w.set(ct, 12);
-  return { v: 1, salt: b64(salt), iter, wrap: b64(w), login: true };
-}
-const normRec = s => String(s).replace(/[\s-]/g, '').toUpperCase();   // a recovery code may be typed with dashes, spaces or small letters
-async function unwrapOne(x, pass) {
-  try {
-    const w = ub64(x.wrap), k = await kek(pass, ub64(x.salt), x.iter);
-    return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: w.subarray(0, 12) }, k, w.subarray(12)));
-  } catch { return null; }
-}
-async function unwrapKey(v, pass) {   // the raw key, or null when the password (or the recovery key) doesn't fit
-  return (await unwrapOne(v, pass)) || (v.rec ? await unwrapOne(v.rec, normRec(pass)) : null);
-}
-const useKey = raw => crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);   // not extractable
-async function seal(text) {
-  const iv = rnd(12), ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, KEY, te.encode(text)));
-  const w = new Uint8Array(12 + ct.length); w.set(iv); w.set(ct, 12);
-  return ENC + b64(w);
-}
-async function unseal(s) {
-  const w = ub64(s.slice(ENC.length));
-  return td.decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: w.subarray(0, 12) }, KEY, w.subarray(12)));
-}
+const wrapKey = (raw, pass) => V.wrap(raw, pass, true);
+const unwrapKey = V.unwrap;   // the raw key, or null when the password (or the recovery key) doesn't fit
+const useKey = raw => V.useKey(raw);
+const seal = text => V.seal(KEY, text);
+const unseal = s => V.unseal(KEY, s);
 // "Keep unlocked on this device": the same IndexedDB Info uses (its own record), deleted when you log out or press Lock.
-function devDb() {
-  return new Promise((res, rej) => { const q = indexedDB.open('hub-vault', 1);
-    q.onupgradeneeded = () => q.result.createObjectStore('k'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); q.onblocked = () => rej(0); });
-}
-async function devOp(mode, fn) {
-  const db = await devDb();
-  try { return await new Promise((res, rej) => { const t = db.transaction('k', mode), q = fn(t.objectStore('k')); t.oncomplete = () => res(q && q.result); t.onerror = t.onabort = () => rej(t.error); }); }
-  finally { db.close(); }
-}
-async function devSave(raw) {
-  try {
-    const dk = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']), iv = rnd(12);
-    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, dk, raw));
-    await devOp('readwrite', st => st.put({ dk, iv, ct }, 'links'));
-  } catch {}
-}
-async function devLoad() {
-  try { const r = await devOp('readonly', st => st.get('links')); if (!r || !r.dk) return null;
-    return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: r.iv }, r.dk, r.ct)); } catch { return null; }
-}
-const devClear = () => devOp('readwrite', st => st.delete('links')).catch(() => {});
+const devSave = raw => V.devSave('links', raw);
+const devLoad = () => V.devLoad('links');
+const devClear = () => V.devForget('links');
 // What the server sent: tabs with "enc" become locked tabs (marked at once, so the page can draw; their text is opened afterwards).
 function markEnc() {
   for (const t of S.data.tabs) {

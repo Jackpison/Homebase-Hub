@@ -8,5 +8,3 @@ parameters:
     ignoreErrors:
         # every page's api.php has its own small out() helper; PHPStan reads all pages as one program and mixes them up
         - '#^Function out invoked with \d+ parameters?, \d+ required\.$#'
-        # a PHP feature PHPStan does not model: this variable exists after a file_get_contents() over http
-        - '#^Variable \$http_response_header on left side of \?\? always exists#'

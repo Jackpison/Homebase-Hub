@@ -1816,43 +1816,17 @@
   function infoApi(b) {
     return fetch(ROOT + 'web/info/api.php', { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'Content-Type': 'application/json', 'X-Hub-CSRF': S.csrf || '' }, body: JSON.stringify(b) });
   }
-  /* Info's encrypted-tab key, the same format the Info page uses: a random AES-256-GCM key, wrapped with a key made from
-     the password (PBKDF2-SHA256, 600,000 rounds). Text is "enc1:" + base64(iv + ciphertext). Everything happens here. */
+  /* Info's and Links' encrypted-tab keys: the shared encryption in shell.js (section 14, window.HubVault). Everything happens here. */
   var VK = (function () {
-    var te = new TextEncoder(), td = new TextDecoder();
-    var b64 = function (u) { var x = ''; for (var i = 0; i < u.length; i += 32768) x += String.fromCharCode.apply(null, u.subarray(i, i + 32768)); return btoa(x); };
-    var kek = function (pass, salt, iter) {
-      return crypto.subtle.importKey('raw', te.encode(pass), 'PBKDF2', false, ['deriveKey']).then(function (base) {
-        return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']); });
-    };
+    var V = window.HubVault;
     return {
       unwrap: function (v, pass) {   // the raw key, or null when the password (or the recovery key) doesn't fit
-        if (!window.crypto || !crypto.subtle) return Promise.reject(new Error('Encrypted tabs need a secure (https) connection.'));
-        var one = function (x, p) {
-          var w = b64bytes(x.wrap);
-          return kek(p, b64bytes(x.salt), x.iter).then(function (k) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: w.subarray(0, 12) }, k, w.subarray(12)); })
-            .then(function (r) { return new Uint8Array(r); }, function () { return null; });
-        };
-        return one(v, pass).then(function (raw) { return raw || (v.rec ? one(v.rec, String(pass).replace(/[\s-]/g, '').toUpperCase()) : null); });
+        if (!V.ok()) return Promise.reject(new Error('Encrypted tabs need a secure (https) connection.'));
+        return V.unwrap(v, pass);
       },
-      wrap: function (raw, pass, login) {
-        var salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), iter = 600000;
-        return kek(pass, salt, iter).then(function (k) { return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, raw); }).then(function (ct) {
-          ct = new Uint8Array(ct); var out = new Uint8Array(12 + ct.length); out.set(iv); out.set(ct, 12);
-          var v = { v: 1, salt: b64(salt), iter: iter, wrap: b64(out) }; if (login) v.login = true; return v;
-        });
-      },
-      use: function (raw) { return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']); },
-      open: function (s, key) {   // plain text from "enc1:..." (also text that was encrypted more than once)
-        var n = 0;
-        var step = function (x) {
-          if (typeof x !== 'string' || x.indexOf('enc1:') !== 0) return Promise.resolve(x);
-          if (++n > 5) return Promise.reject(new Error('layers'));
-          var w = b64bytes(x.slice(5));
-          return crypto.subtle.decrypt({ name: 'AES-GCM', iv: w.subarray(0, 12) }, key, w.subarray(12)).then(function (r) { return step(td.decode(r)); });
-        };
-        return step(s);
-      }
+      wrap: V.wrap,
+      use: function (raw) { return V.useKey(raw, true); },
+      open: function (s, key) { return V.openDeep(key, s); }   // plain text from "enc1:..." (also text that was encrypted more than once)
     };
   })();
   /* Info's encrypted tabs that use the website password: their key is re-wrapped here, in the browser, with the new password
@@ -1982,7 +1956,7 @@
           });
         });
       }).then(function () { return api('pp_clear', { password: o.site }); })
-        .then(function (j) { if (!j.ok) fail(j.error || 'Could not remove the passphrase.'); try { indexedDB.deleteDatabase('hub-vault'); } catch (x) {} return j; });
+        .then(function (j) { if (!j.ok) fail(j.error || 'Could not remove the passphrase.'); window.HubVault.devDropAll(); return j; });
     }
     /* Recovery key: the same tab keys, wrapped a second time with a random code shown once. It opens Info and Links tabs when the
        passphrase is forgotten (type it where the passphrase goes), and can set a new passphrase. The server never sees the code. */
@@ -2206,7 +2180,7 @@
         api('reset_all', { confirm: 'ERASE', password: p.querySelector('#ix-rsp').value }).then(function (j) {
           if (!j.ok) { er.textContent = j.error || 'Nothing was erased.'; btn.disabled = false; return; }
           try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}   // this browser's copies too (theme, cached pages, kept keys)
-          try { indexedDB.deleteDatabase('hub-vault'); } catch (e) {}
+          window.HubVault.devDropAll();
           er.className = 'ix-note'; er.textContent = 'Erased: ' + j.erased.join(', ') + '. Reloading…';
           setTimeout(function () { location.reload(); }, 1200);
         }).catch(function () { er.textContent = "Can't reach the server. Nothing was erased."; btn.disabled = false; });

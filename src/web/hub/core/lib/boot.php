@@ -712,6 +712,98 @@ function hub_get_https(string $url, array $headers = [], int $maxBytes = 2000000
     }
     return null;
 }
+/**
+ * GET from another website over http or https, public internet only: Home's pictures and Links' icons and titles (1.53.2; each
+ * had its own copy before). Every redirect hop is checked and pinned like the first address, so a public address can never
+ * bounce the server onto your own network. Options:
+ *   headers  extra request headers         ua       User-Agent                 hops     addresses tried in all (5)
+ *   max      bytes kept (2 MB)             timeout  seconds in all (12)        connect  seconds to connect (6)
+ *   save     a file: the answer is written there as it arrives (never held in memory); 'body' is then ''
+ *   stop     text: stop reading once it has arrived (a page's </head>)
+ *   cut      true: an answer longer than max is cut there instead of failing
+ *   insecure true: on an https certificate problem try once more without checking it (some hosts ship no CA list).
+ *            Never when the address carries a key or token, so a key is never sent where the site might not be the real one.
+ * Returns ['status', 'body', 'url' (the last hop), 'type'] or ['error' => message, 'url'].
+ */
+function hub_fetch(string $url, array $o = []): array {
+    $max = (int)($o['max'] ?? 2000000); $save = $o['save'] ?? null; $stop = $o['stop'] ?? null;
+    $headers = $o['headers'] ?? []; if (isset($o['ua'])) $headers[] = 'User-Agent: ' . $o['ua'];
+    $hops = (int)($o['hops'] ?? 5);
+    for ($hop = 0; $hop < $hops; $hop++) {
+        $p = parse_url($url);
+        if (!$p || !in_array(strtolower($p['scheme'] ?? ''), ['http', 'https'], true) || empty($p['host'])) return ['error' => 'Bad address', 'url' => $url];
+        // an address different parsers read differently (a backslash, a space, "user@"): refused, with or without cURL
+        if (strpos($url, '\\') !== false || preg_match('~[\x00-\x20\x7F]~', $url) || preg_match('~^[a-z][a-z0-9+.-]*://[^/?#]*@~i', $url) || !hub_fetch_host_ok($p)) return ['error' => 'Can\'t reach ' . $p['host'], 'url' => $url];
+        $status = 0; $body = ''; $type = ''; $loc = '';
+        if (function_exists('curl_init')) {
+            $insecure = !empty($o['insecure']) && !preg_match('~[?&#](key|api_?key|apikey|client_id|token|access_token|auth|sig|signature)=~i', $url);
+            $ok = false; $err = ''; $over = false; $stopped = false;
+            for ($try = 0; $try < 2; $try++) {
+                $fh = null; $body = ''; $got = 0; $over = false; $stopped = false; $loc = ''; $type = '';
+                if ($save !== null && !($fh = @fopen($save, 'wb'))) return ['error' => 'Can\'t save the download (the temporary folder is not writable)', 'url' => $url];
+                $ch = curl_init($url);
+                if (!hub_fetch_pin($ch, $url, $p)) { curl_close($ch); if ($fh) fclose($fh); return ['error' => 'Can\'t reach ' . $p['host'], 'url' => $url]; }   // connect only to the address just checked
+                curl_setopt_array($ch, [
+                    CURLOPT_FOLLOWLOCATION => false, CURLOPT_CONNECTTIMEOUT => (int)($o['connect'] ?? 6), CURLOPT_TIMEOUT => (int)($o['timeout'] ?? 12),
+                    CURLOPT_HTTPHEADER => $headers, CURLOPT_ENCODING => '',
+                    CURLOPT_SSL_VERIFYPEER => $try === 0, CURLOPT_SSL_VERIFYHOST => $try === 0 ? 2 : 0,
+                    CURLOPT_HEADERFUNCTION => function ($c, $h) use (&$loc, &$type) {
+                        if (stripos($h, 'location:') === 0) $loc = trim(substr($h, 9));
+                        if (stripos($h, 'content-type:') === 0) $type = trim(substr($h, 13));
+                        return strlen($h);
+                    },
+                    CURLOPT_WRITEFUNCTION => function ($c, $chunk) use (&$body, &$got, &$over, &$stopped, $fh, $max, $stop) {
+                        $n = strlen($chunk);
+                        if ($got + $n > $max) { $over = true; $chunk = substr($chunk, 0, max(0, $max - $got)); }
+                        $got += strlen($chunk);
+                        if ($fh) fwrite($fh, $chunk);
+                        else {
+                            $from = max(0, strlen($body) - 16); $body .= $chunk;
+                            if ($stop !== null && stripos($body, $stop, $from) !== false) { $stopped = true; return 0; }   // got what is needed
+                        }
+                        return $over ? 0 : $n;
+                    },
+                ]);
+                $ok = curl_exec($ch); $errno = curl_errno($ch); $err = curl_error($ch);
+                $status = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_close($ch);
+                if ($fh) fclose($fh);
+                if ($try === 0 && $insecure && in_array($errno, [35, 51, 58, 60, 77, 83], true)) continue;   // certificate trouble: once more without checking
+                break;
+            }
+            if ($over && empty($o['cut'])) return ['error' => 'The answer is larger than ' . round($max / 1048576, 1) . ' MB', 'url' => $url];
+            if ($ok === false && !$over && !$stopped) return ['error' => $err ?: 'Connection failed', 'url' => $url];
+        } elseif (ini_get('allow_url_fopen')) {
+            $ctx = stream_context_create(['http' => ['header' => implode("\r\n", $headers), 'follow_location' => 0, 'timeout' => (int)($o['timeout'] ?? 12), 'ignore_errors' => true]]);
+            $in = @fopen($url, 'rb', false, $ctx);
+            if (!$in) return ['error' => 'Connection failed', 'url' => $url];
+            $meta = stream_get_meta_data($in);
+            if ($save !== null) {
+                $fh = @fopen($save, 'wb');
+                if (!$fh) { fclose($in); return ['error' => 'Can\'t save the download (the temporary folder is not writable)', 'url' => $url]; }
+                stream_copy_to_stream($in, $fh, $max); fclose($fh);
+            } else $body = (string)stream_get_contents($in, $max);
+            fclose($in);
+            foreach ($meta['wrapper_data'] ?? [] as $h) {
+                if (!is_string($h)) continue;
+                if (preg_match('~^HTTP/\S+\s+(\d+)~', $h, $m)) { $status = (int)$m[1]; $loc = ''; }
+                elseif (stripos($h, 'location:') === 0) $loc = trim(substr($h, 9));
+                elseif (stripos($h, 'content-type:') === 0) $type = trim(substr($h, 13));
+            }
+        } else return ['error' => 'Your host blocks outgoing connections (enable the curl extension)', 'url' => $url];
+        if ($status >= 300 && $status < 400 && $loc !== '') { $url = hub_url_join($url, $loc); continue; }
+        return ['status' => $status, 'body' => $body, 'url' => $url, 'type' => $type];
+    }
+    return ['error' => 'Too many redirects', 'url' => $url];
+}
+/** hub_fetch's address check. Only the unit test's own small server can count as public, while that test runs (HUB_TEST_PUBLIC). */
+function hub_fetch_test_host(array $p): bool {
+    return defined('HUB_TEST_PUBLIC') && in_array(strtolower((string)$p['host']) . ':' . ($p['port'] ?? ''), (array)constant('HUB_TEST_PUBLIC'), true);
+}
+function hub_fetch_host_ok(array $p): bool { return hub_fetch_test_host($p) || (bool)hub_public_ips((string)$p['host']); }
+function hub_fetch_pin($ch, string $url, array $p): bool {
+    if (hub_fetch_test_host($p)) { if (defined('CURLPROTO_HTTP')) curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS); return true; }
+    return hub_curl_pin($ch, $url);
+}
 /** An SVG icon is only kept when nothing in it can run code or load other files. */
 function hub_svg_safe(string $b): bool {
     if (strlen($b) > 600000) return false;

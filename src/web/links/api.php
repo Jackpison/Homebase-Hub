@@ -234,67 +234,20 @@ function organize_icons(&$data, $iconDir, $secret) {
 // Public internet only: every IPv4 and IPv6 address of the name is checked (core/boot.php), and names that don't resolve are refused.
 function host_ok($host) { return (bool)hub_public_ips((string)$host); }
 /**
- * GET a page or image: [body, finalUrl, httpCode, contentType]. Redirects are followed by hand (max 5) and the host of
- * EVERY hop is checked, so a public address can't bounce the server onto your own network. With cURL the connection is
- * also pinned to the checked address, so DNS can't switch to an internal one in between. An https certificate problem
- * is retried once without checking, because some hosts ship no CA list (only public icons/pages are read this way).
+ * GET a page or image: [body, finalUrl, httpCode, contentType], through the site's one checked fetcher (hub_fetch in
+ * core/boot.php: public internet only, every redirect checked and pinned). A long answer is cut at $maxBytes; $stopAt stops
+ * reading once that text has arrived. An https certificate problem is retried once without checking, because some hosts ship
+ * no CA list (only public icons and pages are read this way, never with a key). Failed: ['', $url, 0, ''].
  */
 function fetch_url($url, $maxBytes, $headers = [], $stopAt = null) {
-    $ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
-    for ($hop = 0; $hop < 6; $hop++) {
-        $p = parse_url($url);
-        if (!$p || empty($p['host']) || !in_array(strtolower($p['scheme'] ?? ''), ['http', 'https'], true) || !host_ok($p['host'])) return ['', $url, 0, ''];
-        $buf = ''; $code = 0; $ct = ''; $loc = '';
-        if (!function_exists('curl_init')) {
-            $ctx = stream_context_create(['http' => ['timeout' => 8, 'follow_location' => 0, 'ignore_errors' => true,
-                'header' => "User-Agent: $ua\r\n" . ($headers ? implode("\r\n", $headers) . "\r\n" : '')]]);
-            $b = @file_get_contents($url, false, $ctx, 0, $maxBytes);
-            $buf = $b === false ? '' : $b;
-            foreach ($http_response_header ?? [] as $hd) {
-                if (preg_match('~^HTTP/\S+\s+(\d+)~', $hd, $m)) $code = (int)$m[1];
-                if (stripos($hd, 'content-type:') === 0) $ct = trim(substr($hd, 13));
-                if (stripos($hd, 'location:') === 0) $loc = trim(substr($hd, 9));
-            }
-        } else {
-            for ($try = 0; $try < 2; $try++) {
-                $buf = ''; $loc = ''; $ct = '';
-                $ch = curl_init($url);
-                if (!hub_curl_pin($ch, $url)) { curl_close($ch); return ['', $url, 0, '']; }
-                curl_setopt_array($ch, [
-                    CURLOPT_FOLLOWLOCATION => false, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_TIMEOUT => 8, CURLOPT_ENCODING => '',
-                    CURLOPT_SSL_VERIFYPEER => $try === 0, CURLOPT_SSL_VERIFYHOST => $try === 0 ? 2 : 0,
-                    CURLOPT_USERAGENT => $ua,
-                    CURLOPT_HTTPHEADER => array_merge(['Accept: text/html,application/xhtml+xml,image/avif,image/webp,image/*,*/*;q=0.8', 'Accept-Language: en-US,en;q=0.9'], $headers),
-                    CURLOPT_HEADERFUNCTION => function ($ch, $h) use (&$loc, &$ct) {
-                        if (stripos($h, 'location:') === 0) $loc = trim(substr($h, 9));
-                        if (stripos($h, 'content-type:') === 0) $ct = trim(substr($h, 13));
-                        return strlen($h);
-                    },
-                    CURLOPT_WRITEFUNCTION => function ($ch, $chunk) use (&$buf, $maxBytes, $stopAt) {
-                        $from = max(0, strlen($buf) - 16);
-                        $buf .= $chunk;
-                        if (strlen($buf) > $maxBytes) return 0;
-                        if ($stopAt !== null && stripos($buf, $stopAt, $from) !== false) return 0; // got what we need
-                        return strlen($chunk);
-                    },
-                ]);
-                if (defined('CURLPROTO_HTTP')) curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
-                curl_exec($ch);
-                $errno = curl_errno($ch); $e = curl_error($ch);
-                $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                curl_close($ch);
-                if ($errno && !in_array($errno, [23], true)) $GLOBALS['fetch_err'] = $e;   // 23 = we stopped the download ourselves
-                if ($try === 0 && in_array($errno, [35, 51, 58, 60, 77, 83], true)) continue;   // certificate trouble: retry once
-                break;
-            }
-        }
-        if ($code >= 300 && $code < 400 && $loc !== '') {
-            $url = resolve_url($loc, $url);
-            continue;
-        }
-        return [$buf, $url, $code, $ct];
+    $r = hub_fetch((string)$url, ['max' => (int)$maxBytes, 'cut' => true, 'stop' => $stopAt, 'hops' => 6, 'connect' => 4, 'timeout' => 8, 'insecure' => true,
+        'ua' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36',
+        'headers' => array_merge(['Accept: text/html,application/xhtml+xml,image/avif,image/webp,image/*,*/*;q=0.8', 'Accept-Language: en-US,en;q=0.9'], $headers)]);
+    if (isset($r['error'])) {
+        if (!preg_match('~^(Bad address|Can\'t reach|Too many redirects)~', $r['error'])) $GLOBALS['fetch_err'] = $r['error'];   // shown with "No icon found"
+        return ['', $r['url'], 0, ''];
     }
-    return ['', $url, 0, ''];
+    return [$r['body'], $r['url'], $r['status'], $r['type']];
 }
 function resolve_url($rel, $base) {
     $rel = trim(html_entity_decode($rel));

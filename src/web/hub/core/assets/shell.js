@@ -945,7 +945,7 @@
       // private copies some pages keep in this browser
       ls.set('family4', null); ls.set('cards3', null); ls.set('notes4', null);
       try { sessionStorage.clear(); } catch (e) {}
-      try { indexedDB.deleteDatabase('hub-vault'); } catch (e) {}   // Info's "keep unlocked on this device" key
+      window.HubVault.devDropAll();   // the "keep unlocked on this device" keys of Links and Info
       location.reload();
     });
   }
@@ -1101,4 +1101,105 @@
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
     tz: function () { return S.tz || 'Asia/Kolkata'; }   // the site's time zone (Settings > General)
   };
+})();
+
+/* ---------- 14. HubVault: the encryption of encrypted tabs, shared by Links, Info and Settings (1.53.2) ----------
+   One copy of what those three pages each carried before. Nothing here talks to the server.
+   - A tab key is 32 random bytes. The server keeps it only "wrapped": AES-256-GCM with a key made from your password or
+     passphrase (PBKDF2-SHA256, 600,000 rounds, 16-byte salt). Stored as {v: 1, salt, iter, wrap: base64(iv + ciphertext)},
+     with "login": true when the website password wraps it, and "rec": the same key wrapped with the recovery code.
+   - Text of an encrypted tab is "enc1:" + base64(12-byte iv + AES-256-GCM ciphertext).
+   - "Keep unlocked on this device": the tab key is kept in this browser's IndexedDB ("hub-vault", store "k"), encrypted with a
+     device key that cannot be read out of the browser. Each page keeps its own record (Links "links", Info "dev").
+   The format must never change without a way to open the old one: tests/fixtures/vault-vectors.json was made by the code
+   before this file, and pages_test P49 opens it with this one. */
+(function () {
+  'use strict';
+  var ENC = 'enc1:', ITER = 600000;
+  var te = new TextEncoder(), td = new TextDecoder();
+  var ok = function () { return !!(window.isSecureContext && window.crypto && crypto.subtle); };
+  var b64 = function (u) { var s = ''; for (var i = 0; i < u.length; i += 32768) s += String.fromCharCode.apply(null, u.subarray(i, i + 32768)); return btoa(s); };
+  var ub64 = function (s) { var b = atob(s), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+  var rnd = function (n) { return crypto.getRandomValues(new Uint8Array(n)); };
+  var isEnc = function (s) { return typeof s === 'string' && s.indexOf(ENC) === 0; };
+  /* the key made from a password or passphrase */
+  function kek(pass, salt, iter) {
+    return crypto.subtle.importKey('raw', te.encode(pass), 'PBKDF2', false, ['deriveKey']).then(function (base) {
+      return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    });
+  }
+  /* wraps a raw tab key with a password; login: true when it is the website password */
+  function wrap(raw, pass, login) {
+    var salt = rnd(16), iv = rnd(12);
+    return kek(pass, salt, ITER).then(function (k) { return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, raw); }).then(function (ct) {
+      ct = new Uint8Array(ct); var w = new Uint8Array(12 + ct.length); w.set(iv); w.set(ct, 12);
+      var v = { v: 1, salt: b64(salt), iter: ITER, wrap: b64(w) }; if (login) v.login = true; return v;
+    });
+  }
+  /* the raw key from one wrap, or null when the password does not fit (or the wrap is damaged) */
+  function unwrapOne(x, pass) {
+    return Promise.resolve().then(function () {
+      var w = ub64(x.wrap);
+      return kek(pass, ub64(x.salt), x.iter).then(function (k) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: w.subarray(0, 12) }, k, w.subarray(12)); });
+    }).then(function (r) { return new Uint8Array(r); }, function () { return null; });
+  }
+  var normRec = function (s) { return String(s).replace(/[\s-]/g, '').toUpperCase(); };   // a recovery code may be typed with dashes, spaces or small letters
+  /* the raw key from the password, else from the recovery code; null when neither fits */
+  function unwrap(v, pass) {
+    return unwrapOne(v, pass).then(function (raw) { return raw || (v && v.rec ? unwrapOne(v.rec, normRec(pass)) : null); });
+  }
+  /* the tab key, usable but never readable again; decryptOnly for pages that only open text */
+  function useKey(raw, decryptOnly) { return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, decryptOnly ? ['decrypt'] : ['encrypt', 'decrypt']); }
+  function seal(key, text) {
+    var iv = rnd(12);
+    return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, te.encode(text)).then(function (ct) {
+      ct = new Uint8Array(ct); var w = new Uint8Array(12 + ct.length); w.set(iv); w.set(ct, 12);
+      return ENC + b64(w);
+    });
+  }
+  /* one layer: the text inside "enc1:...". Rejects when the key does not fit. */
+  function unseal(key, s) {
+    return Promise.resolve().then(function () {
+      var w = ub64(s.slice(ENC.length));
+      return crypto.subtle.decrypt({ name: 'AES-GCM', iv: w.subarray(0, 12) }, key, w.subarray(12));
+    }).then(function (r) { return td.decode(r); });
+  }
+  /* text that may have been encrypted more than once (it happened when a tab lost its encrypted mark): up to 5 layers */
+  function openDeep(key, s) {
+    var n = 0;
+    var step = function (x) {
+      if (!isEnc(x)) return Promise.resolve(x);
+      if (++n > 5) return Promise.reject(new Error('too many layers'));
+      return unseal(key, x).then(step);
+    };
+    return step(s);
+  }
+  /* "keep unlocked on this device" */
+  function devDb() {
+    return new Promise(function (res, rej) { var q = indexedDB.open('hub-vault', 1);
+      q.onupgradeneeded = function () { q.result.createObjectStore('k'); }; q.onsuccess = function () { res(q.result); }; q.onerror = function () { rej(q.error); }; q.onblocked = function () { rej(0); }; });
+  }
+  function devOp(mode, fn) {
+    return devDb().then(function (db) {
+      return new Promise(function (res, rej) { var t = db.transaction('k', mode), q = fn(t.objectStore('k'));
+        t.oncomplete = function () { res(q && q.result); }; t.onerror = t.onabort = function () { rej(t.error); }; })
+        .then(function (r) { db.close(); return r; }, function (e) { db.close(); throw e; });   // closed at once, so a log out elsewhere can delete it
+    });
+  }
+  function devSave(name, raw) {
+    return crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']).then(function (dk) {
+      var iv = rnd(12);
+      return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, dk, raw).then(function (ct) { return devOp('readwrite', function (st) { return st.put({ dk: dk, iv: iv, ct: new Uint8Array(ct) }, name); }); });
+    }).then(function () {}, function () {});
+  }
+  function devLoad(name) {
+    return devOp('readonly', function (st) { return st.get(name); }).then(function (r) {
+      if (!r || !r.dk) return null;
+      return crypto.subtle.decrypt({ name: 'AES-GCM', iv: r.iv }, r.dk, r.ct).then(function (x) { return new Uint8Array(x); });
+    }).catch(function () { return null; });
+  }
+  function devForget(name) { return devOp('readwrite', function (st) { return st.delete(name); }).catch(function () {}); }
+  function devDropAll() { try { indexedDB.deleteDatabase('hub-vault'); } catch (e) {} }
+  window.HubVault = { ENC: ENC, ok: ok, b64: b64, ub64: ub64, rnd: rnd, isEnc: isEnc, kek: kek, wrap: wrap, unwrapOne: unwrapOne, unwrap: unwrap, normRec: normRec,
+    useKey: useKey, seal: seal, unseal: unseal, openDeep: openDeep, devSave: devSave, devLoad: devLoad, devForget: devForget, devDropAll: devDropAll };
 })();

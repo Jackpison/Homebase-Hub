@@ -21,7 +21,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 - Never put passwords, tokens or keys in the repo, in a test, or in a commit message.
 - Updates must stay safe: a zip is checked before anything changes, nothing installs without the website password, a snapshot is taken first, and Go Back must work. Do not weaken `src/web/hub/core/lib/update.php` or `ghupdate.php` without tests that prove the same safety.
 - The site makes no request to another server unless the person turned that feature on or pressed a button for it. Keep it that way.
-- Test-only shortcuts (`GH_TEST_*`, `HUB_TEST_FAVICON`) are defined only by `tests/lib/prepend.php`. The site must never define them.
+- Test-only shortcuts (`GH_TEST_*`, `HUB_TEST_FAVICON`, `HUB_TEST_PUBLIC`, `NT_TEST_*`) are defined only by the tests (`tests/lib/prepend.php` and the unit tests in `tests/unit/`). The site must never define them; `tests/unit/logic_test.php` checks.
 - After changing anything in `tools-app/`, run `python3 scripts/build-tools.py --install` (it also refreshes the Tools fingerprint) and commit `src/web/tools/` with it. A new tool also needs its line in `tools-app/src/tools.json` and in `LOAD` in `tools-app/src/main.js`; the website's tool finder reads the same list.
 - `.htaccess` files only work on Apache: a comment must be on its own line (Apache refuses `Directive value  # comment`). Test them with `tests/server/apache_test.py`.
 - Write plainly in everything a user reads: short sentences, the same names the screen shows, Title Case on buttons and headings in the app.
