@@ -1209,6 +1209,64 @@
     // Pre-loading the other pages is done by the browser from web/hub/core/assets/speculation-rules.json, which every page names in a
     // Speculation-Rules response header (an inline rule set would be refused by the pages' security policy).
   }
+  /* ---------- 15. swipe gestures on a phone (1.59) ----------
+     - swipe left or right: the next or previous page, in the order of the bar (Home, Links, Info, Cards, Tasks; Tools and
+       Settings are left out: their own screens use sideways moves);
+     - on a page that marks its tab list with data-hub-swipe-tabs (Links, Info): the next or previous tab first, and past the
+       last tab, the next page;
+     - Home: pull down from the top for the next background.
+     Never while editing, in a window or menu, in a text field, on something that scrolls sideways, or with two fingers. */
+  var SWIPE_APPS = ['home', 'links', 'info', 'cards', 'tasks'];
+  function swipePages() { return pages().filter(function (p) { return SWIPE_APPS.indexOf(p[0]) >= 0 && (!p[4] || p[0] === APP); }); }
+  function swipeTab(dir) {
+    var list = document.querySelector('[data-hub-swipe-tabs]'); if (!list) return false;
+    var tabs = [].slice.call(list.querySelectorAll('[role="tab"]')).filter(function (t) { return t.offsetParent !== null; });
+    var at = tabs.findIndex(function (t) { return t.getAttribute('aria-selected') === 'true'; });
+    var to = tabs[at + dir];
+    if (at < 0 || !to) return false;
+    to.click(); if (to.scrollIntoView) to.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    return true;
+  }
+  function swipePage(dir) {
+    var list = swipePages(), at = list.findIndex(function (p) { return p[0] === APP; }), to = list[at + dir];
+    if (at < 0 || !to) return false;
+    location.href = to[2]; return true;
+  }
+  function swipeBlocked(t) {
+    if (editing() || document.querySelector('dialog[open], #ix-dlg.open, #ix-pop, #ix-drawer.open, #ix-sheet.open, .wpanel:not([hidden])')) return true;
+    if (!t || !t.closest || t.closest('input, textarea, select, [contenteditable], #ix-bar, #ix-ebar, [data-no-swipe], .grip, .lgrip')) return true;
+    for (var e = t; e && e !== document.body; e = e.parentElement) {   // something here scrolls sideways itself (a wide table, a strip of chips)
+      var cs = getComputedStyle(e);
+      if (e.scrollWidth > e.clientWidth + 4 && /(auto|scroll)/.test(cs.overflowX)) return true;
+    }
+    return false;
+  }
+  function swipes() {
+    if (!matchMedia('(pointer: coarse)').matches || SWIPE_APPS.indexOf(APP) < 0) return;
+    var x0 = 0, y0 = 0, t0 = 0, top0 = false, off = true;
+    if (APP === 'home') H.style.overscrollBehaviorY = 'none';   // Home's pull-down is ours (the browser's own pull-to-reload would reload instead)
+    document.addEventListener('touchstart', function (e) {
+      off = e.touches.length !== 1 || swipeBlocked(e.target);
+      if (off) return;
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now(); top0 = (window.scrollY || 0) <= 0;
+    }, { passive: true });
+    document.addEventListener('touchmove', function (e) { if (e.touches.length !== 1) off = true; }, { passive: true });
+    document.addEventListener('touchend', function (e) {
+      if (off || !e.changedTouches.length) return;
+      off = true;
+      var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0, dt = Date.now() - t0;
+      if (dt > 700 || (window.getSelection && String(window.getSelection()).length)) return;
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) {
+        var dir = dx < 0 ? 1 : -1;   // a finger moving left brings the next one
+        if (!swipeTab(dir)) swipePage(dir);
+      } else if (APP === 'home' && top0 && dy > 90 && dy > Math.abs(dx) * 2) {
+        var nb = document.getElementById('nextBg'); if (nb && nb.offsetParent !== null) nb.click();
+      }
+    }, { passive: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', swipes); else swipes();
+  window.__hubSwipe = { tab: swipeTab, page: swipePage, pages: function () { return swipePages().map(function (p) { return p[0]; }); }, blocked: swipeBlocked };   // for the tests
+
   whenBody(function () { drawBar(); });                 // the bar is there on the very first paint
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 

@@ -477,6 +477,50 @@ try:
         check('P62 Cards: Banks has its own icon (not Add Card\'s) and one window like Holders: every bank with its cards, a rename moves the cards, a link is kept, a wrong link is refused, Cancel changes nothing; a holder\'s name box gets a clean border, not a cut-off outline',
               idict.get('Banks') and idict.get('Banks') != idict.get('Add Card') and brows and all(x[1].endswith('card') or x[1].endswith('cards') for x in brows) and kept
               and badlink[0] and 'https://' in badlink[1] and 'Lakeside Bank' in renamed and old not in renamed and link and ring[0] == 'none' and not cerr, (icons, brows, kept, badlink, link, ring, cerr))
+        # P63-P65 (1.59): swipe gestures on a phone. Real fingers cannot be driven here, so the test sends the same touch events
+        # a finger sends (Chromium; Firefox and WebKit have no Touch constructor on the desktop, so they skip these three).
+        if BROWSER == 'chromium':
+            subprocess.run(['php', '-r', "require '%s/web/hub/core/lib/boot.php'; hub_write_guarded(hub_dir('links') . '/bookmarks.php', ['settings' => [], 'tabs' => ["
+                            "['id' => 'one', 'title' => 'One', 'categories' => [['id' => 'c1', 'title' => 'News', 'col' => 0, 'links' => [['title' => 'Example', 'url' => 'https://example.org/']]]]], "
+                            "['id' => 'two', 'title' => 'Two', 'categories' => [['id' => 'c2', 'title' => 'Work', 'col' => 0, 'links' => [['title' => 'Docs', 'url' => 'https://example.net/']]]]]]]);" % D], check=True)
+            SWIPE = """([x0, y0, x1, y1]) => { const el = document.elementFromPoint(x0, y0) || document.body, mk = (x, y) => new Touch({ identifier: 1, target: el, clientX: x, clientY: y });
+              el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [mk(x0, y0)], changedTouches: [mk(x0, y0)] }));
+              el.dispatchEvent(new TouchEvent('touchmove', { bubbles: true, touches: [mk(x1, y1)], changedTouches: [mk(x1, y1)] }));
+              el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [mk(x1, y1)] })); return el.tagName }"""
+            gctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 780}, has_touch=True, is_mobile=True); gctx.add_cookies(cookies); gctx.route('**/*', handle)
+            gctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+            gp = gctx.new_page(); gerr = []; gp.on('pageerror', lambda e: gerr.append(str(e)[:200]))
+            ready = lambda: until(lambda: gp.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000)
+            gp.goto(B + '/web/links/', wait_until='domcontentloaded'); ready(); gp.wait_for_selector('#tabs [role=tab]', timeout=10000); settle(gp)
+            sel = lambda: gp.evaluate("(document.querySelector('#tabs [role=tab][aria-selected=true]') || {}).textContent || ''")
+            first = sel(); gp.evaluate(SWIPE, [330, 500, 120, 510]); gp.wait_for_timeout(400); second = sel()
+            gp.evaluate(SWIPE, [120, 500, 330, 505]); gp.wait_for_timeout(400); back = sel()
+            gp.evaluate("document.querySelector('[data-hub=toggle]').click()"); until(lambda: gp.evaluate("document.body.classList.contains('editing')"), 5000)
+            gp.evaluate(SWIPE, [330, 500, 120, 510]); gp.wait_for_timeout(400); while_edit = [sel(), gp.url.endswith('/web/links/') or '/web/links/#' in gp.url]
+            gp.evaluate("document.querySelector('#ix-ebar [data-ix-done]').click()"); gp.wait_for_timeout(300)
+            check('P63 on a phone, swiping left on Links shows the next tab and swiping right the one before; nothing happens while editing',
+                  first.strip().endswith('One') and second.strip().endswith('Two') and back.strip().endswith('One') and while_edit[0].strip().endswith('One') and while_edit[1], (first, second, back, while_edit))
+            gp.evaluate(SWIPE, [330, 500, 120, 510]); gp.wait_for_timeout(300)
+            with gp.expect_navigation(timeout=10000): gp.evaluate(SWIPE, [330, 500, 120, 510])   # past the last tab: the next page
+            on_info = '/web/info/' in gp.url; ready(); settle(gp)
+            order = gp.evaluate("window.__hubSwipe.pages()")
+            gp.evaluate("(() => { const t = document.querySelector('#tabs [role=tab]'); if (t) t.click() })()"); gp.wait_for_timeout(300)   # Info's first tab
+            with gp.expect_navigation(timeout=10000): gp.evaluate(SWIPE, [60, 520, 330, 515])
+            back_links = '/web/links/' in gp.url
+            check('P64 past the last tab a swipe goes to the next page in the bar\'s order (Links to Info), and from Info\'s first tab back to Links; the order leaves Tools and Settings out',
+                  on_info and back_links and order == ['home', 'links', 'info', 'cards', 'tasks'], (on_info, back_links, order))
+            gp.goto(B + '/web/home/', wait_until='domcontentloaded'); ready(); gp.wait_for_selector('#nextBg', timeout=10000); settle(gp)
+            gp.evaluate("window.__pulled = 0; document.getElementById('nextBg').addEventListener('click', () => window.__pulled++)")
+            gp.evaluate(SWIPE, [195, 200, 200, 420]); gp.wait_for_timeout(300); pulled = gp.evaluate("window.__pulled")
+            gp.evaluate(SWIPE, [195, 200, 200, 240]); gp.wait_for_timeout(300); small = gp.evaluate("window.__pulled")
+            overs = gp.evaluate("document.documentElement.style.overscrollBehaviorY")
+            gctx.close()
+            dctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); dctx.add_cookies(cookies); dctx.route('**/*', handle); dp = dctx.new_page()
+            dp.goto(B + '/web/links/', wait_until='domcontentloaded'); until(lambda: dp.evaluate("document.readyState === 'complete'"), 15000); dp.wait_for_selector('#tabs [role=tab]', timeout=10000); settle(dp)
+            dp.evaluate(SWIPE, [900, 500, 300, 510]); dp.wait_for_timeout(400)
+            desk = [dp.evaluate("(document.querySelector('#tabs [role=tab][aria-selected=true]') || {}).textContent || ''").strip(), '/web/links/' in dp.url]; dctx.close()
+            check('P65 Home: pulling down from the top asks for the next background (a short pull does not, and the browser\'s own pull-to-reload is off there); a computer with a mouse has no swipes; no page error',
+                  pulled == 1 and small == 1 and overs == 'none' and desk[0].endswith('One') and desk[1] and not gerr, (pulled, small, overs, desk, gerr))
         # P47: Home's refresh button (1.53). The next background is ready, so a press swaps at once; three quick presses on a slow
         # network give one change (it never starts over); when nothing arrives it gives up within about 20 s and the button works again.
         rctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx.route('**/*', handle); rctx.add_init_script(TRACK_REQUESTS)
