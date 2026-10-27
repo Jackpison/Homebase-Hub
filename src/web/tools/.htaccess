@@ -43,7 +43,10 @@ Options -Indexes
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  Header always set Permissions-Policy "camera=(self), microphone=(self), display-capture=(self), geolocation=(), payment=(), usb=()"
+  # In a FilesMatch block: web/.htaccess sets this header in one, and Apache applies those blocks after plain lines (a later block wins)
+  <FilesMatch ".">
+    Header always set Permissions-Policy "camera=(self), microphone=(self), display-capture=(self), geolocation=(), payment=(), usb=()"
+  </FilesMatch>
   Header always set Cross-Origin-Opener-Policy "same-origin"
   Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
 </IfModule>

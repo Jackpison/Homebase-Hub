@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.60.0 | 17 new tools (Calculators, Documents, scanner, recorder and more); saved presets in Tools; the maintained PDF writer; no going back before 1.50 |
 | 1.59.1 | iPhone app: the top bar is reachable again; swipes change pages only (1.54-1.58 were skipped) |
 | 1.59.0 | Swipe gestures on phones; vivid presets; the project keeps itself current (monthly maintenance); repeated code merged |
 | 1.53.8 | A new login window; visit counts at the end of the row, every 30 seconds; one Banks window in Cards; a full app icon |
@@ -87,6 +88,34 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.60.0
+
+### New in Tools: 17 tools, two new sections
+
+- **Calculators:** EMI Calculator (with the repayment schedule and a CSV), SIP and Lumpsum Calculator (with a yearly step-up), FD and RD Calculator, Percentage and Discount Calculator, Age and Date Calculator (working days too), Unit Converter (with Gaj, Cent and Guntha) and Number to Words (lakh and crore, or million and billion).
+- **Documents:** Invoice Generator (your logo, items, a tax line or two halves such as CGST and SGST, the total in words, an A4 PDF), Text Compare, Markdown Editor, and a CSV, JSON and Excel Converter.
+- **Utilities:** QR and Barcode Scanner (a photo or the camera), Barcode Generator, Time Zone Converter, Stopwatch and Timer, Random Picker, and Screen and Voice Recorder (the screen on a computer).
+- Everything runs in your browser. The scanner's reader comes with the site; nothing is fetched from another website.
+
+### Saved Presets
+
+- **Save as Preset** in Sign PDF, both watermark tools, the QR Code Generator, the Image Resizer and the Invoice Generator: your signature, a watermark, a QR style, sizes or your business details, kept on your server under a name. Only while you are logged in.
+- **Tools Settings > Presets** lists them to rename or delete. They are part of the site backup (**Tools Presets**).
+
+### Changed
+
+- **Tools' side menu:** a section's icon opens only that section; the page you are on is tinted in its colour.
+- **Tabs on Top:** one tidy row of tabs, with Organise and Settings at the right, and no empty space below it.
+- The Tools page may now use the camera, the microphone and screen sharing (for the scanner and the recorder). Your browser still asks first. Other pages allow none of them.
+- Tools' PDF writer is now `@cantoo/pdf-lib`, the maintained copy of pdf-lib. Every PDF tool was tested again.
+- **Updates:** the updater no longer installs or goes back to versions from before 1.50 (they used another folder layout). A site on 1.49 or older updates with its own updater first. Your pictures and config in the old places stay protected.
+
+### For people who change the code
+
+- Adding a tool: `python3 scripts/new-tool.py` writes its line in `tools.json` and a starter file; the list of tools is built from `tools.json`, and a test fails until the new tool has a check.
 
 ---
 
