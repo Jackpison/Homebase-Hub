@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.53.5 | One edit bar at the bottom on every page; the pencil keeps Edit This Page and Settings |
 | 1.53.2 | Tidier inside: one copy of the encryption and of the code that reaches other websites; nothing new to learn |
 | 1.53.1 | A check-up: security, dead code, speed and small fixes; nothing new to learn |
 | 1.53.0 | Links shows how often each link is opened; Home's refresh button no longer feels stuck; the characters are gone again |
@@ -82,6 +83,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.53.5
+
+### Changed
+
+- **The pencil is simpler.** On Links, Info, Cards and Tasks it now has two items: Edit This Page and the page's Settings. Everything else moved to the edit bar.
+- **One edit bar on every page.** While you edit, the page's tools sit in one bar at the bottom, the same as Home's: Links (Colors, Fetch Icons, Import Bookmarks), Info (Export), Cards (Add Card, Add Holder, Edit Holders, Edit Banks, Export) and Tasks (Add Task, Export), then the page's Settings and the round Done button.
+- **Cards and Tasks:** Edit This Page shows the edit bar. Done hides it again.
+- **Settings:** the pencil is gone from the Settings page, where there was nothing to edit.
+
+### New
+
+- **Edit Bar** in each page's Settings (Home, Links, Info, Cards, Tasks): Icons Only (the name shows when you point at an icon) or Icons and Text. Phones always show icons.
 
 ---
 
