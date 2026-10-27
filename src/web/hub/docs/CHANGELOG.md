@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.53.6 | No more surprise login box; one Holders window in Cards; tidier Settings windows |
 | 1.53.5 | One edit bar at the bottom on every page; the pencil keeps Edit This Page and Settings |
 | 1.53.2 | Tidier inside: one copy of the encryption and of the code that reaches other websites; nothing new to learn |
 | 1.53.1 | A check-up: security, dead code, speed and small fixes; nothing new to learn |
@@ -83,6 +84,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.53.6
+
+### Fixed
+
+- **No surprise login box.** Pressing the pencil right after a page opened could show the login box although you were logged in (seen on Info). The page now waits a moment for the server's answer and asks for a login only if you are really logged out. This also covers the gear and other buttons.
+- **Cards:** the pencil menu no longer shows a line between Edit This Page and Cards Settings.
+
+### Changed
+
+- **Cards: one Holders window.** Add Holder and Edit Holders are now one button, **Holders**. It lists every holder with their number of cards. Rename one in place, delete one that has no cards, or add a new one at the bottom. Save keeps the changes; Cancel drops them.
+- **Links and Info Settings:** a **Look** section with Text Sizes (a small Change button) and Edit Bar, each with a line of help. Info's fields are a softer grey instead of black.
+- **Tasks Settings:** three sections (General, When the Page Opens, Look), Edit Bar in Look, a short help line under a field, and softer fields.
 
 ---
 
