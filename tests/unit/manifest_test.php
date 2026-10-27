@@ -33,3 +33,14 @@ $m = hub_manifest(['siteName' => '<b>Hi</b>', 'pages' => [['id' => 'evil', 'name
 t('unknown pages are left out and names lose markup', strpos(json_encode($m), 'evil') === false && strpos(json_encode($m), '<') === false && $m['name'] === 'Hi');
 t('nothing private: no password, logo path only when used, no settings beyond names', !preg_grep('/hash|password|totp|token|csrf/i', array_keys($m)));
 array_map('unlink', glob($pub . '/web/hub/media/brand/*')); @rmdir($pub . '/web/hub/media/brand');
+
+/* 1.53.8: the icons a phone puts on its home screen fill the whole square (no dark border around a small logo) */
+foreach (['logo-512-maskable.png' => 512, 'apple-touch-icon.png' => 180] as $f => $px) {
+    $im = imagecreatefrompng($site . '/web/hub/core/assets/brand/' . $f);
+    $ok = imagesx($im) === $px;
+    foreach ([[0, 0], [$px - 1, 0], [0, $px - 1], [$px - 1, $px - 1], [intdiv($px, 2), 1], [1, intdiv($px, 2)]] as [$x, $y]) {
+        $c = imagecolorsforindex($im, imagecolorat($im, $x, $y));
+        if ($c['alpha'] !== 0 || $c['red'] < 200 || $c['green'] < 120) $ok = false;   // an opaque yellow, not the old dark frame
+    }
+    t("$f fills its whole square with the logo's yellow (phones round it themselves)", $ok);
+}

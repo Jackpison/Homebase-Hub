@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.53.8 | A new login window; visit counts at the end of the row, every 30 seconds; one Banks window in Cards; a full app icon |
 | 1.53.6 | No more surprise login box; one Holders window in Cards; tidier Settings windows |
 | 1.53.5 | One edit bar at the bottom on every page; the pencil keeps Edit This Page and Settings |
 | 1.53.2 | Tidier inside: one copy of the encryption and of the code that reaches other websites; nothing new to learn |
@@ -84,6 +85,24 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.53.8
+
+### Changed
+
+- **A new login window.** It shows your site's logo and "Log In to" your site's name, has an eye button to show the password while you type, one wide Log In button, and says right under the field when a password is wrong.
+- **Trust This Browser is no longer ticked by itself** (with two-step login, and when you approve a login in Telegram). Tick it when you want this browser remembered for 30 days.
+- **Links:** a link's visit count now sits at the end of its row, so the numbers line up.
+- **Links:** the same browser can count a link again after **30 seconds** (it was 30 minutes). Clicking again and again still adds only one.
+- **Installed app icon:** on a phone (Android and iPhone) the app icon now fills the whole shape with the yellow logo, without a dark border around a small icon.
+- **Cards Settings** looks like Links and Info Settings: Page, then Look with Text Sizes, Edit Bar and Column Order.
+- **Cards: one Banks window,** like Holders. Every bank your cards use, with its name, the link it opens and its number of cards. Renaming a bank moves its cards with it. Banks has its own icon now (it was the same as Add Card).
+
+### Fixed
+
+- **Cards:** the name boxes in Holders showed a cut-off highlight while you typed. They now get a clean border.
 
 ---
 

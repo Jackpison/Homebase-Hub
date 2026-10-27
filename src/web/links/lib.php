@@ -7,11 +7,11 @@ declare(strict_types=1);
  * Links: visit counts (1.53). Every click on a link counts, from anyone who can see it, kept on your server in
  * site-data/links/visits.json. Only you (logged in) see the numbers. Links Settings > Show Visit Counts only hides them;
  * counting goes on. Links in encrypted tabs are never counted (their addresses are secret, even from the server).
- * One browser counts once per link every 30 minutes, so nobody can pump a number up by clicking.
+ * One browser counts once per link every 30 seconds, so nobody can pump a number up by clicking again and again.
  */
 require_once __DIR__ . '/../hub/core/lib/boot.php';
 
-const VISIT_GAP = 1800;     // seconds before the same browser counts the same link again
+const VISIT_GAP = 30;       // seconds before the same browser counts the same link again (1.53.8: was 30 minutes)
 const VISIT_MAX_URL = 2048;
 
 function visits_file(): string { return hub_dir('links') . '/visits.json'; }

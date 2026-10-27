@@ -1,5 +1,5 @@
 <?php
-// Links 1.53: visit counts. Every click counts (yours and visitors'), once per browser per link every 30 minutes; only links
+// Links 1.53: visit counts. Every click counts (yours and visitors'), once per browser per link every 30 seconds (30 minutes before 1.53.8); only links
 // that exist can be counted; encrypted tabs never; a visitor cannot count a private tab's link; counts follow a link when it
 // moves and start again when its address changes; backups carry them. Runs on its own copy of src/ (run.php).
 [$self, $site] = $argv + [1 => ''];
@@ -19,12 +19,12 @@ $now = 2000000000;
 
 [$c, $n] = visits_add('https://example.org/', 'browser-a', $data, true, $now);
 t('a visitor\'s click on a link counts', $c === true && $n === 1);
-[$c, $n] = visits_add('https://example.org/', 'browser-a', $data, true, $now + 60);
-t('...the same browser clicking again within 30 minutes does not count again', $c === false && $n === 1);
-[$c, $n] = visits_add('https://example.org/', 'browser-b', $data, true, $now + 60);
+[$c, $n] = visits_add('https://example.org/', 'browser-a', $data, true, $now + 10);
+t('...the same browser clicking again within 30 seconds does not count again', $c === false && $n === 1);
+[$c, $n] = visits_add('https://example.org/', 'browser-b', $data, true, $now + 10);
 t('...another browser counts at once', $c === true && $n === 2);
 [$c, $n] = visits_add('https://example.org/', 'browser-a', $data, true, $now + VISIT_GAP + 1);
-t('...and the first browser counts again after 30 minutes', $c === true && $n === 3);
+t('...and the first browser counts again after 30 seconds', $c === true && $n === 3);
 [$c] = visits_add('https://example.org/docs', 'browser-a', $data, true, $now);
 t('an extra link (the small link next to a link) counts too', $c === true && visits_for($data)['https://example.org/docs'] === 1);
 [$c] = visits_add('https://evil.example/', 'browser-a', $data, true, $now);
@@ -69,3 +69,4 @@ $enc = $data; $enc['tabs'][1] = ['id' => 'mine', 'title' => 'Mine', 'enc' => 'v1
 visits_prune($enc);
 t('encrypting a tab removes its links\' addresses from the counts file right away (the others stay)', strpos(hub_jraw(visits_file()), 'bank.example') === false && visits_for($enc)['https://example.org/'] === 4);
 t('Links\' save runs it', strpos((string) file_get_contents($site . '/web/links/api.php'), 'visits_prune($data);') !== false);
+t('1.53.8: the same browser counts the same link again after 30 seconds (it was 30 minutes)', VISIT_GAP === 30);

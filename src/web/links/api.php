@@ -497,7 +497,7 @@ case 'get':
     fix_objects($d);
     out(200, ['auth' => false, 'setup' => $setup, 'data' => $d]);
 
-case 'visit':   // a click on a link, from anyone who can see it: {url}. Counted once per browser per link every 30 minutes.
+case 'visit':   // a click on a link, from anyone who can see it: {url}. Counted once per browser per link every 30 seconds.
     need_post();
     $b = body(1);
     $d = json_decode(current_raw(), true); $d = is_array($d) ? $d : [];

@@ -68,8 +68,8 @@ $favicon = $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0); 
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.53.6">
-<script src="../hub/core/assets/shell.js?v=1.53.6" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.53.8">
+<script src="../hub/core/assets/shell.js?v=1.53.8" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <?php if ($logoOk): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png"><?php endif; ?>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->

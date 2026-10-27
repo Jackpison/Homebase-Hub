@@ -573,7 +573,7 @@ function openImport() {
   if (!S.auth) return toast('Log in to import bookmarks.', true);
   importer ||= new Promise((ok, no) => {
     const s = document.createElement('script');
-    s.src = 'assets/links-import.js?v=1.53.6';
+    s.src = 'assets/links-import.js?v=1.53.8';
     s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
     s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
     document.head.append(s);
@@ -728,7 +728,7 @@ function renderCategory(t, cat, q, multi) {
 }
 
 /* ---------- visit counts (1.53) ----------
-   Every click on a link counts on your server (also a visitor's, once per browser per link every 30 minutes); only you see
+   Every click on a link counts on your server (also a visitor's, once per browser per link every 30 seconds); only you see
    the numbers. Links Settings > Show Visit Counts (on at first) only hides them. Links in encrypted tabs are never counted. */
 const showVisits = () => S.auth && (S.data.settings || {}).visitCounts !== false;
 const fmtVisits = n => n >= 10000 ? Math.round(n / 1000) + 'k' : n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
