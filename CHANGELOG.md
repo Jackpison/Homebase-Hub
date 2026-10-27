@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.59.1 | iPhone app: the top bar is reachable again; swipes change pages only (1.54-1.58 were skipped) |
 | 1.59.0 | Swipe gestures on phones; vivid presets; the project keeps itself current (monthly maintenance); repeated code merged |
 | 1.53.8 | A new login window; visit counts at the end of the row, every 30 seconds; one Banks window in Cards; a full app icon |
 | 1.53.6 | No more surprise login box; one Holders window in Cards; tidier Settings windows |
@@ -86,6 +87,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.59.1
+
+### Fixed
+
+- **iPhone app:** the top bar slid under the clock and battery, so the menu and the other pages could not be reached. The bar now sits below them, and a strip in the bar's colour stays behind the clock while you scroll.
+
+### Changed
+
+- **Swipes change pages only.** On Links and Info a swipe no longer moves between tabs; it always goes to the next or previous page in the order of your bar.
+- **Numbering:** versions 1.54 to 1.58 were skipped (1.53.8 was followed by 1.59.0). Nothing is missing.
+
+### For the website
+
+- **docs/FEATURES.md** lists every feature since the website was last refreshed (1.51): where it is, which screenshot to take, and which pages need new words.
 
 ---
 
