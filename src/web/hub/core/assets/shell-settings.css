@@ -632,3 +632,6 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
   #ix-page .ix-subt button[aria-selected="true"]{border-color:var(--ix-accent);background:color-mix(in srgb,var(--ix-accent) 14%,transparent)}
   #ix-page .ix-subt .ix-subi{display:none}
 }
+/* (1.61.6) phones: nothing inside a section may make the page wider than the screen (Firefox and WebKit measured 6 px on Presets and
+   Domains, from nothing visible); clip, not hidden, so the page does not get a second scroll box and the Save bar stays sticky */
+@media (max-width:760px){#ix-page .ix-pane{overflow-x:clip;min-width:0}}
