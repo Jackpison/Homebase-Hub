@@ -167,7 +167,9 @@ try:
         for sec in ('overview', 'general', 'nav', 'look', 'themes', 'colors', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates', 'files', 'changelog'):
             q.goto(s.base + '/web/settings/#' + sec); wait_js(q, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); q.wait_for_timeout(300)
             r = q.evaluate("[document.documentElement.scrollWidth - innerWidth, Math.max(0, ...[...document.querySelectorAll('.ix-subt button')].map(b => Math.round(b.getBoundingClientRect().right)))]")
-            if r[0] > 0 or r[1] > 390: wide.append((sec, r))
+            if r[0] > 0 or r[1] > 390:   # name what sticks out, so a failure in Firefox or WebKit (CI only) says where to look
+                r.append(q.evaluate("[...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > innerWidth + 0.5; }).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '.' + String(e.className).trim().split(/\\s+/).slice(0, 2).join('.') + ' ' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).slice(0, 5)"))
+                wide.append((sec, r))
         check('L26 phone, Settings: no section is wider than the screen, and every sub-tab is in view (they wrap)', not wide, wide)
         check('L27 no page error', not errs, errs)
         b.close()
