@@ -617,3 +617,6 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 #ix-page .ix-snav button[aria-current="page"] .ix-sti{background:rgba(var(--c),.28)}
 #ix-page .ix-snav button{gap:11px}
 #ix-page .ix-snav .ix-out .ix-sti{background:rgba(255,107,107,.16);color:rgb(255,107,107)}
+/* (1.61.5) section headings in Settings: accent text with a fading line (style B) */
+#ix-page .ix-sect,#ix-page .ix-cgrp>h4{display:flex;align-items:center;gap:10px;color:var(--ix-accent-tx,var(--ix-accent))}
+#ix-page .ix-sect::after,#ix-page .ix-cgrp>h4::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--ix-accent) 55%,transparent),transparent)}
