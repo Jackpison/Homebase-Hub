@@ -18,7 +18,7 @@ hub_headers();
 hub_same_origin();
 
 function out(array $d, int $code = 200): never { hub_json($code, $d); }   // the site's one JSON answer (core), arguments the other way round
-function body(): array
+function home_body(): array
 {
     $raw = (string) file_get_contents('php://input', false, null, 0, 2097153);   // settings and link data: never more than 2 MB
     if (strlen($raw) > 2097152) out(['error' => 'That is too much data.'], 413);
@@ -110,7 +110,7 @@ switch ($action) {
 
     case 'save':
         require_admin();
-        save_site(body());
+        save_site(home_body());
         out(['ok' => true, 'site' => admin_payload(), 'public' => public_payload()]);
 
     /* ---------- Scratch Pad (a widget; logged in only) ---------- */
@@ -118,7 +118,7 @@ switch ($action) {
     case 'pad':
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             require_admin();
-            $b = body();
+            $b = home_body();
             if (!is_string($b['text'] ?? null)) out(['error' => 'Nothing to save.'], 400);
             try { out(['ok' => true] + pad_write($b['text'])); } catch (RuntimeException $e) { out(['error' => $e->getMessage()], 500); }
         }
@@ -149,13 +149,13 @@ switch ($action) {
         require_post();
         // only this page's own request (JSON): another website cannot send that from a visitor's browser without asking first
         if (stripos((string) ($_SERVER['CONTENT_TYPE'] ?? ''), 'application/json') !== 0) out(['error' => 'Send JSON.'], 415);
-        $r = pool_seen((string) (body()['url'] ?? ''));
+        $r = pool_seen((string) (home_body()['url'] ?? ''));
         out(['removed' => $r['removed']]);
 
     case 'photo_now':
         // "Preview" in the editor: download one new item from this source right now.
         require_admin();
-        $src = (string) (body()['src'] ?? '');
+        $src = (string) (home_body()['src'] ?? '');
         $site = load_site();
         $all = all_sources($site);
         if (!isset($all[$src])) out(['error' => 'Save this source first, then preview.'], 400);
@@ -172,7 +172,7 @@ switch ($action) {
     case 'test_source':
         // Try a custom source without saving it: report what was found.
         require_admin();
-        $c = clean_custom(body());
+        $c = clean_custom(home_body());
         if (!$c) out(['error' => 'Enter a valid address starting with https://'], 400);
         $kw = keywords(load_site()['bg']['query'])[0];
         if ($c['kind'] === 'image') {
@@ -237,7 +237,7 @@ switch ($action) {
 
     case 'delete_upload':
         require_admin();
-        $file = (string) (body()['file'] ?? '');
+        $file = (string) (home_body()['file'] ?? '');
         if (!preg_match('/^[a-f0-9]{16}\.[a-z0-9]+$/', $file)) out(['error' => 'Invalid file name.'], 400);
         if (is_file(UPLOAD_DIR . '/' . $file)) unlink(UPLOAD_DIR . '/' . $file);
         out(['ok' => true, 'uploads' => list_uploads()]);

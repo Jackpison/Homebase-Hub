@@ -478,7 +478,8 @@
     c.insertBefore(b, foot); foot.classList.add('ix-sf');
     d.setAttribute('aria-labelledby', t.id || (t.id = (d.id || 'sd') + '-t'));
   }
-  whenBody(function () { [].forEach.call(document.querySelectorAll('dialog.ix-sdlg'), sdlgBuild); });
+  function sdlgAll() { [].forEach.call(document.querySelectorAll('dialog.ix-sdlg'), sdlgBuild); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sdlgAll); else sdlgAll();   // the dialogs are further down the page than the body
 
   /* ---------- 4. the bar: three styles, each with its own layout ----------
      top:  logo, pages, search box, theme, pencil, Backup, gear. It slides away while you scroll down (4b).
