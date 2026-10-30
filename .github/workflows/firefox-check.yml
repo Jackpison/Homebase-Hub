@@ -14,7 +14,7 @@ jobs:
     # CI tests Chromium and WebKit on every push. On the 1st and 15th the same page tests run in Firefox, so a bug only Firefox shows is
     # found within two weeks. Start it by hand (Actions > Firefox check > Run workflow) before a release that touched the layout or a window.
     # On a failure it opens one issue labelled "browsers" (or comments on the open one). The site's own CI is not affected.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     name: browser tests (Firefox)
     permissions:

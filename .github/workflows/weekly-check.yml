@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest   # on purpose: the canary. Every other workflow is pinned to ubuntu-24.04; when GitHub moves the label, this one fails first and opens an issue
     timeout-minutes: 15
     name: security check (libraries and build tools)
     permissions:
@@ -65,7 +65,7 @@ jobs:
     # The next PHP version, early (1.59): PHP's newest development build checks every file and runs the unit tests.
     # Hosts move to a new PHP about once a year; a break shows up here months before any site meets it.
     # On a failure it opens one issue labelled "php" (or comments on the open one). The site's own CI is not affected.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest   # on purpose: the canary. Every other workflow is pinned to ubuntu-24.04; when GitHub moves the label, this one fails first and opens an issue
     timeout-minutes: 20
     name: next PHP version (development build)
     permissions:

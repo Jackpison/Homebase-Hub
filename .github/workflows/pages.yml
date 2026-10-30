@@ -12,7 +12,7 @@ concurrency:
 jobs:
   deploy:
     name: deploy (website, guides, latest.json)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
       name: github-pages
@@ -33,13 +33,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || true)
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          {
+            echo "tag=$TAG"
+          } >> "$GITHUB_OUTPUT"
           if [ -n "$TAG" ]; then
             V=${TAG#v}
             gh release download "$TAG" -p "site-update-$V.zip.sha256" -D /tmp/rel
             gh release download "$TAG" -p "site-update-$V.zip" -D /tmp/rel
-            echo "sha=$(cut -d' ' -f1 /tmp/rel/site-update-$V.zip.sha256)" >> "$GITHUB_OUTPUT"
-            echo "size=$(stat -c%s /tmp/rel/site-update-$V.zip)" >> "$GITHUB_OUTPUT"
+            {
+              echo "sha=$(cut -d' ' -f1 "/tmp/rel/site-update-$V.zip.sha256")"
+              echo "size=$(stat -c%s "/tmp/rel/site-update-$V.zip")"
+            } >> "$GITHUB_OUTPUT"
             echo "ver=$V" >> "$GITHUB_OUTPUT"
           fi
       - name: Build the website

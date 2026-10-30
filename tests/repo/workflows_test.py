@@ -90,5 +90,17 @@ for f in FILES:
         m = re.match(r'^\s*(?:-\s+)?name:\s+(.*)$', line)
         if m and m.group(1)[:1] not in ('"', "'") and re.search(r':(\s|$)|\s#', m.group(1)): bad_names.append('%s:%d' % (os.path.basename(f), i + 1))
 check('W20 no unquoted step or job name holds a colon and a space (or " #"): YAML reads that as a new key or a comment and CI does not start', not bad_names, bad_names)
+loose = []
+for f in FILES:
+    for i, line in enumerate(open(f, encoding='utf-8').read().split('\n')):
+        m = re.match(r'^\s*runs-on:\s*(\S+)', line)
+        if m and m.group(1) != ('ubuntu-latest' if os.path.basename(f) == 'weekly-check.yml' else 'ubuntu-24.04'): loose.append('%s:%d %s' % (os.path.basename(f), i + 1, m.group(1)))
+check('W21 every job runs on ubuntu-24.04; only the weekly check uses ubuntu-latest, as the canary for the next move of that label', not loose and wk.count('runs-on: ubuntu-latest') >= 2, loose)
+check('W22 CI runs actionlint, downloaded at a fixed version and checked against its SHA-256 before it runs',
+      re.search(r'actionlint/releases/download/v[0-9.]+/actionlint_[0-9.]+_linux_amd64\.tar\.gz', ci) and re.search(r'echo "[0-9a-f]{64}  actionlint\.tar\.gz" \| sha256sum -c -', ci) and './actionlint' in ci)
+other = ''.join(open(f, encoding='utf-8').read() for f in FILES if not f.endswith('release.yml'))
+check('W23 the release gives the zip a signed build note (attestation), in a step that cannot stop the release, and no other workflow can write attestations (Pages needs id-token for its own deploy)',
+      'actions/attest-build-provenance@' in rel and re.search(r'attest-build-provenance@[0-9a-f]{40}[^\n]*\n\s+with:\s*\n\s+subject-path: build/site-update-\*\.zip', rel) and re.search(r'continue-on-error: true\n\s+uses: actions/attest-build-provenance', rel)
+      and 'id-token: write' in rel and 'attestations: write' in rel and 'attestations' not in other)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)
