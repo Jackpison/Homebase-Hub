@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.61.9 | Tools tidied (Image Converter tabs, four tools gone, sections you can move, a sharper recorder), one window frame and button shape on every page, Undo in Links and Cards |
 | 1.61.6 | Tidier Settings windows, Save Settings always in view, a Passkeys card, picture previews in the Files grid, phone fixes for Files and Settings |
 | 1.61.5 | A new Files page like Drive (menu, details panel, Starred, Recent), one new look for every Settings window, a shield key icon, a Saved note, Undo for Trash, Add to Calendar, Send Today's Tasks, switches and buttons in Tools |
 | 1.61.1 | Shorter help texts in every Settings window; Import and Export Bookmarks in one window; a clearer first unlock in Files; no server free-space figure |
@@ -92,6 +93,24 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.61.9
+
+### Tools, tidied
+
+- **Image Converter** now has three tabs: **Convert Images**, **SVG to PNG** and **Image and Base64**. The last two were tools of their own; their old links, stars and Recently Used entries open the right tab.
+- **Removed:** Password & UUID, ZIP Creator, QR and Barcode Scanner, and Stopwatch and Timer. Tools no longer asks for the camera. 47 tools now.
+- **New section order:** Images, Photos, PDF, Documents, Calculators, Utilities. **Text Tools** and **JSON Formatter** moved to Documents, **Time Zone Converter** to Calculators.
+- **Organise** can move whole sections up and down; the side menu and the home page follow, and your order is kept in this browser.
+- **Screen and Voice Recorder:** much sharper screen recordings (VP9 first, the full screen size up to 4K, text kept crisp) and a **Quality** choice: Standard, High (the default) or Best. Better sound too.
+
+### Every page
+
+- Every window on Links, Info, Cards and Tasks (Add Link, Edit Tab, Box Settings, Edit Card, Holders, Add Task and the rest) now has the same frame as Settings: the title and a close X on top, the buttons at the bottom, Cancel before the main button.
+- One button shape everywhere: rounded corners and bold text.
+- **Undo** after deleting a link, a category or a tab in Links, and after deleting a card. The message offers Undo for 7 seconds.
 
 ---
 
