@@ -173,7 +173,7 @@ try:
         pg.goto(B + '/#p-info'); until(lambda: vis() == ['p-info'], 3000); check('W20 a link like /#p-info (used by the README) opens that tab', vis() == ['p-info'], vis()); c2.close()
         c2 = ctx(java_script_enabled=False); pg = c2.new_page(); pg.goto(B + '/')   # no script runs: the loaded page is final
         shown = pg.evaluate("[...document.querySelectorAll('#screenshots [role=tabpanel]')].filter(p => p.offsetParent !== null).length")
-        check('W21 with scripts off the whole tour is still there (all 6 panels, no tabs)', shown == 6 and not pg.is_visible('#screenshots [role=tablist]'), shown); c2.close()
+        check('W21 with scripts off the whole tour is still there (all 7 panels, no tabs)', shown == 7 and not pg.is_visible('#screenshots [role=tablist]'), shown); c2.close()
 
         # the look picker
         c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
@@ -279,6 +279,16 @@ try:
         anim = pg.evaluate("[...document.querySelectorAll('.sh > i')].map(i => getComputedStyle(i).animationName)")
         pg.mouse.move(300, 300); pg.mouse.move(900, 500, steps=12); pg.wait_for_timeout(300)
         check('W48 with reduced motion the shapes stay still and nothing follows the mouse', all(a == 'none' for a in anim) and not pg.evaluate("document.querySelector('.sh').style.transform"), anim); c2.close()
+
+        # 1.62: the seventh page, Files, and the new pictures
+        pg = ctx().new_page(); pg.goto(B + '/features/files/'); pg.wait_for_timeout(600)
+        info = pg.evaluate("""({h1: document.querySelector('h1').textContent, pic: !!document.querySelector('img[src$="files.webp"]') && document.querySelector('img[src$="files.webp"]').naturalWidth > 0,
+            dots: document.querySelectorAll('.hot').length, tour: [...document.querySelectorAll('.hot')].length, lock: /locked/i.test(document.body.innerText), nav: [...document.querySelectorAll('footer a')].some(a => a.textContent.trim() === 'Files')})""")
+        check('W49 the Files page: its heading, its picture, numbered dots, and a link to it in the footer', 'locked' in info['h1'].lower() and info['pic'] and info['dots'] == 4 and info['nav'], info)
+        pg.goto(B + '/features/'); n = pg.evaluate("document.querySelectorAll('a[href*=\"features/files\"], a[href=\"files/\"]').length")
+        check('W50 the features page links to Files, and says seven pages', n >= 1 and 'Seven pages' in pg.inner_text('h1'), (n, pg.inner_text('h1')))
+        pg.goto(B + '/screenshots/'); pg.click('#t-files'); until(lambda: pg.is_visible('#p-files'), 3000)
+        check('W51 Screenshots has a Files group with its three pictures', pg.is_visible('#p-files') and pg.locator('#p-files .zoom').count() == 3, pg.locator('#p-files .zoom').count())
 
         # axe, every page, both themes (this context bypasses the page policy, which would stop axe from running)
         for scheme in ('dark', 'light'):

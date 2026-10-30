@@ -68,10 +68,10 @@ Seven pages share one login, one bar and one Settings page. Pick a name to see i
 |---|---|---|
 | [🏠&nbsp;**Home**](https://jackpison.github.io/Homebase-Hub/features/home/) | A start page that feels like yours | A clock and widgets in frosted glass, background photos that change, with or without the bar |
 | [🔖&nbsp;**Links**](https://jackpison.github.io/Homebase-Hub/features/links/) | Bookmarks in tabs and categories | Import from any browser, see which links you open most, icons saved on your server, encrypted tabs |
-| [📝&nbsp;**Info**](https://jackpison.github.io/Homebase-Hub/features/info/) | Notes in boxes, or as a document | 1 to 12 boxes in each tab, cards or one document with an outline, export as PDF or text |
+| [📝&nbsp;**Info**](https://jackpison.github.io/Homebase-Hub/features/info/) | Notes in boxes, or as a document | 1 to 12 boxes in each tab, cards or one document with an outline, export as PDF or text, Undo after a delete |
 | [💳&nbsp;**Cards**](https://jackpison.github.io/Homebase-Hub/features/cards/) | Your cards in one searchable table | Filter by bank, network, type and holder, yearly charges added up, Holders and Banks windows, export to Excel |
 | [✅&nbsp;**Tasks**](https://jackpison.github.io/Homebase-Hub/features/tasks/) | Bills, renewals and chores | Due dates, repeats and prices, calendar and analytics, Year in Review PDF, a secret calendar link for Google, Apple or Outlook (off until you turn it on) |
-| 📁&nbsp;**Files** | Your own files, locked in your browser | Folders, preview, Trash, share links, Starred and Recent, a 5 GB limit. Share to it from your phone |
+| [📁&nbsp;**Files**](https://jackpison.github.io/Homebase-Hub/features/files/) | Your own files, locked in your browser | Folders, preview, Trash, share links, Starred and Recent, a 5 GB limit. Share to it from your phone |
 | [🧰&nbsp;**Tools**](https://jackpison.github.io/Homebase-Hub/features/tools/) | Small tools that run in your browser | 47 tools in six sections: images, photos, PDF, calculators (EMI, SIP, FD and RD), documents (invoices, text compare, Markdown, spreadsheets) and utilities (QR scanner, barcodes, time zones, recorder). Save your settings as presets |
 
 And around the pages:
