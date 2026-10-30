@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.62.1 | Passkeys: Remove now tells you what it needs, where you can see it |
 | 1.62.0 | Undo in Info: a deleted box or tab comes back with its text, also in locked tabs |
 | 1.61.9 | Tools tidied (Image Converter tabs, four tools gone, sections you can move, a sharper recorder), one window frame and button shape on every page, Undo in Links and Cards |
 | 1.61.6 | Tidier Settings windows, Save Settings always in view, a Passkeys card, picture previews in the Files grid, phone fixes for Files and Settings |
@@ -94,6 +95,15 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.62.1
+
+### Passkeys
+
+- **Remove a passkey now shows what is wrong.** Remove needs your website password, typed in the box below the list. Before, every message about it (no password typed, wrong password) appeared only in that box, out of sight, so it looked as if nothing happened. Now the message also shows at the top of the page, and with no password typed the page scrolls to the password box.
+- If passkeys exist but adding one is not available (for example no secure connection), the password box is still shown so you can remove them.
 
 ---
 
