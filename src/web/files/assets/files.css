@@ -215,3 +215,6 @@ html[data-ix-nav="side"] .fdet{top:16px}
 @media (max-width:820px){.fa,.fa.hasdet{grid-template-columns:1fr}.fside{position:static;flex-direction:row;flex-wrap:wrap;align-items:center;min-height:0;padding:12px 18px 0}.newb{margin:0 8px 0 0}.fnav{flex-direction:row;overflow-x:auto;flex:1}.fnav button{white-space:nowrap}.fside .usage{flex:1 1 100%;margin:0;padding:6px 4px 0}}
 .pv.d{--c:var(--acc)}.pv.img{--c:#5ce1c6}.pv.vid{--c:#a9a3ff}.pv.aud{--c:#f78fe4}.pv.pdf{--c:#ff8fab}.pv.txt{--c:#6cb8ff}.pv.zip{--c:#ffb86b}
 .ico.image,.pv.image{--c:#5ce1c6}.ico.video,.pv.video{--c:#a9a3ff}.ico.audio,.pv.audio{--c:#f78fe4}.ico.text,.pv.text{--c:#6cb8ff}
+/* phones: nothing may be wider than the screen (a wide row made the whole page zoom out) */
+.fa,.fside,.fnav,.fa .wrap,.fa .top{min-width:0;max-width:100%}
+@media (max-width:820px){.fa,.fa.hasdet{grid-template-columns:minmax(0,1fr)}.fnav{flex:1 1 100%;overflow-x:auto;scrollbar-width:none}.fside{flex-wrap:wrap}.fa .top .search{flex:1 1 100%;max-width:none}}
