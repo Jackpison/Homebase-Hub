@@ -105,7 +105,7 @@ toc.levelStyles = [ParagraphStyle('t0', fontName='M-Bold', fontSize=11.5, leadin
 story += [P('Contents', 'h1'), Spacer(1, 6), toc]
 
 story += chapter('1', 'Welcome', 'Homebase Hub puts the small things you open every day in one private place on your own hosting.',
- P('There are six pages and one Settings page, all behind one login. They share the same bar, the same look and the same backup. There is no database: your data lives in one folder, <font name="M-Bold">site-data</font>, that browsers cannot open.'),
+ P('There are seven pages and one Settings page, all behind one login. They share the same bar, the same look and the same backup. There is no database: your data lives in one folder, <font name="M-Bold">site-data</font>, that browsers cannot open.'),
  table(['Page', 'What it is for'], [['Home', 'Your start page, with background photos that change.'], ['Links', 'Bookmarks in tabs and categories.'], ['Info', 'Notes in tabs, arranged as boxes or written as a document.'],
    ['Cards', 'Your cards in one table you can search.'], ['Tasks', 'Bills, renewals and chores with due dates.'], ['Tools', 'Image, PDF and text tools that run in your browser.'], ['Settings', 'Everything about the site: look, security, Telegram, backups, updates, health.']]),
  *sub('The bar'),

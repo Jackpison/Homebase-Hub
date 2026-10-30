@@ -1,4 +1,4 @@
-"""Pages of the website that are built from data: the home page, the features hub, one page for each of the six app pages,
+"""Pages of the website that are built from data: the home page, the features hub, one page for each of the seven app pages,
 Telegram, On your phone, the Tools finder and the FAQ. scripts/make-site.py imports this and wraps each body in the site's
 header and footer. Plain HTML, no inline styles or scripts (the site's security policy allows neither), so the colours come
 from classes (a-home, a-tasks ...) and the few positions that vary (the numbered dots on screenshots) from hot.css,
@@ -50,7 +50,7 @@ def looks_row():
             ''.join('<button class="look l-%s" type="button" data-look="%s" aria-label="%s look" aria-pressed="%s"></button>' % (k, k, n, 'true' if k == 'gold' else 'false') for k, n in LOOKS) + '</div>')
 
 
-# ---------------------------------------------------------------- the six app pages
+# ---------------------------------------------------------------- the seven app pages
 # Each: what it is, the facts worth a glance, the everyday problems it solves, the details we are proud of, and the
 # numbered points on its screenshot (tour = text, hot = where on the picture, in percent).
 NT = len(json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))['tools'])   # the number of tools, from the one list
@@ -98,7 +98,7 @@ FEATURES = [
                    ('Private notes in plain sight', 'Encrypted tabs, with keys made in your browser', 'lock')],
          details=[('note', 'Boxes you can size and arrange', 'Each tab holds 1 to 12 boxes. Resize them and put them where you want.'), ('book', 'Cards or a document', 'Arrange boxes as cards, or write the tab as one document with an outline.'),
                   ('download', 'Export as PDF or text', 'Export one tab, or all of them.'), ('search', 'Found by search', 'Search covers the text of your notes, not only their titles.'),
-                  ('settings', 'Settings in one window', 'Info Settings holds privacy, text sizes and how the edit bar looks.')],
+                  ('undo', 'Undo after a delete', 'Delete a box or a tab by mistake and a message offers Undo for 7 seconds. It comes back with its text, also in a locked tab.'), ('settings', 'Settings in one window', 'Info Settings holds privacy, text sizes and how the edit bar looks.')],
          tour=[('Tabs of notes', 'Each tab holds up to 12 boxes.'), ('Boxes', 'Notes in boxes you can size and arrange.'), ('Encrypted tabs', 'Lock a tab with your passphrase.')],
          hot=[(24, 13), (38, 40), (62, 13)], everyday=('Notes scattered across apps', 'Boxes you can size, or one document with an outline')),
     dict(id='cards', name='Cards', ac='a-cards', icon='card', url='yourdomain.com/web/cards',
@@ -125,11 +125,29 @@ FEATURES = [
                    ('Re-typing the same monthly bill', 'Repeats bring it back by itself, with its price', 'repeat'),
                    ('Checking an app to see what is due', 'A daily digest and Due Now messages come to you', 'send')],
          details=[('tasks', 'Add in plain words', 'Type a name, a price and how often, like Netflix 649 monthly 5 Nov, and the task fills itself in.'), ('chart', 'Calendar and analytics', 'See your tasks on a calendar, and how they add up in Analytics.'),
-                  ('send', 'Done, Skip or Snooze on Telegram', 'Handle a reminder from the message itself: snooze for 1 hour, 3 hours or until tomorrow.'), ('gift', 'Year in Review', 'A PDF that looks back over your year of bills, renewals and chores.'),
+                  ('send', 'Done, Skip or Snooze on Telegram', 'Handle a reminder from the message itself: snooze for 1 hour, 3 hours or until tomorrow.'), ('gift', 'Year in Review', 'A PDF that looks back over your year of bills, renewals and chores.'), ('calendar', 'Calendar Link', 'Turn it on in Tasks Settings for a secret link, and your tasks show up in Google Calendar, Apple Calendar or Outlook. A new link ends the old one.'),
                   ('settings', 'Tasks Settings', 'Your currency, when a task counts as due soon, what the page opens on, and how dates look.')],
          tour=[('Smart lists', 'Today, overdue, this week and more, one click away.'), ('A week at a glance', 'See what is due on each day of the week.'),
                ('Dates, repeats, prices', 'Bills and renewals that come back by themselves.'), ('Add in plain words', 'Type Netflix 649 monthly and it understands.')],
          hot=[(12, 42), (52, 25), (60, 58), (42, 12)], everyday=('Forgotten bills and renewals', 'Due dates, repeats, and a nudge on Telegram')),
+    dict(id='files', name='Files', ac='a-files', icon='folder', url='yourdomain.com/web/files',
+         h1='Your files, *locked in your browser*.',
+         lead='Keep documents, photos and anything else on your own server, in folders you name. Each file is locked in your browser before it is sent, so the server only ever holds scrambled data.',
+         pic=('files.webp', 1440, 900, 'Files page with a folder, files and the details panel'),
+         chips=[('lock', 'Locked in the browser', 'The server can not read a file or its name'), ('link', 'Share links', 'One file, one link, you choose when it ends')],
+         facts=[('Locked', 'in your browser, names too'), ('5 GB', 'default limit, you can change it'), ('Links', 'share one file, with an end date'), ('Trash', 'kept 30 days, then removed')],
+         problems=[('Documents scattered over free cloud drives', 'Folders, search and a preview on your own server', 'folder'),
+                   ('Sending a file to someone', 'A share link where the key is in the link itself, so it never reaches your server', 'link'),
+                   ('Deleting the wrong file', 'The Trash keeps it for 30 days, and Undo brings it back at once', 'undo')],
+         details=[('folder', 'Folders, search and preview', 'Make folders, search by name, and open a picture, a PDF or a text file without downloading it. A folder downloads as one zip.'),
+                  ('lock', 'Locked before it leaves your browser', 'Every file has its own key, and the name is locked too. Your passphrase unlocks them; the server never gets it.'),
+                  ('link', 'Share links you control', 'Make a link for one file and choose when it ends. The key sits after the # in the address, so it is never sent to your server. Switch share links off to end them all.'),
+                  ('star', 'Starred and Recent', 'Star the files you reach for, and see the newest ones under Recent.'),
+                  ('phone', 'Share from your phone', 'In the installed app on Android, share a photo or a file to Homebase Hub and save it to Files, or open it in Tools.'),
+                  ('settings', 'Files Settings', 'The storage limit, share links on or off, and how long the Trash keeps things.')],
+         tour=[('New and folders', 'Upload files, or make a folder, from one button.'), ('Your files, listed', 'Names, sizes and dates. One click picks a file, a double click opens it.'),
+               ('Details on the right', 'Preview, download, share, star and move, for the file you picked.'), ('Locked in your browser', 'The server can not read the file or its name.')],
+         hot=[(8, 11), (45, 40), (86, 24), (86, 59)], everyday=('Files all over the place', 'Folders on your own server, locked in your browser')),
     dict(id='tools', name='Tools', ac='a-tools', icon='tools', url='yourdomain.com/web/tools',
          h1='%d tools, *right in your browser*.' % NT,
          lead='Resize and convert images, merge and sign PDFs, work out loans and savings, make invoices, scan QR codes and more. Search, star your favourites and get on with your day.',
@@ -221,7 +239,7 @@ def home():
         ('a-tools', '12:10', 'Sort out a PDF', 'Merge, compress or sign it in your browser with the PDF tools.', 'Tools'),
         ('a-tasks', '21:00', 'The bill is due', 'A Telegram message arrives with Done, Skip and Snooze. One tap and it is handled.', 'Tasks and Telegram')])
     stats = ''.join('<div class="stat %s"><b>%s</b><span>%s</span></div>' % (ac, n, e(t)) for ac, n, t in [
-        ('a-home', '6', 'pages, one login'), ('a-tools', str(NT), 'tools in your browser'), ('a-links', '141', 'ready-made looks'), ('a-cards', '0', 'databases to run'), ('a-tasks', '3', 'browser engines tested')])
+        ('a-home', '7', 'pages, one login'), ('a-tools', str(NT), 'tools in your browser'), ('a-links', '141', 'ready-made looks'), ('a-cards', '0', 'databases to run'), ('a-tasks', '3', 'browser engines tested')])
     more = ''.join('<a class="card hv %s" href="%s"><h3>%s</h3><p>%s</p><span class="more">Open%s</span></a>' % (ac, href, e(t), e(p), I('arrow')) for ac, href, t, p in [
         ('a-home', 'guide.html', 'The guide', 'Every page and every setting, step by step (PDF).'), ('a-info', 'faq/', 'Questions and answers', 'Hosting, updates, privacy and more.'),
         ('a-tasks', 'changelog.html', 'Changelog', 'What changed in every version.'), ('a-links', REPO, 'Source code', 'Read it, build it, report an issue.')])
@@ -234,10 +252,10 @@ def home():
 <div class="hart">{frame('shot-links.webp', 1440, 709, 'Links page with bookmarks in tabs and categories', 'yourdomain.com/web/links', True)}
 {chip('c1', 'a-links', 'link', 'Import bookmarks', 'Preview first, undo anytime')}{chip('c2', 'a-cards', 'image', '141 looks', 'Pick yours')}{chip('c3', 'a-info', 'lock', 'Encrypted tabs', 'Keys made in your browser')}</div></div></section>
 <section class="stats" aria-label="Homebase Hub at a glance"><div class="in">{stats}</div></section>
-<section class="s" id="features"><div class="in"><span class="eyebrow">The tour</span><h2>Six pages. One home.</h2>
+<section class="s" id="features"><div class="in"><span class="eyebrow">The tour</span><h2>Seven pages. One home.</h2>
 <p class="intro">Each page has its own colour and its own job. They share one bar, one login and one Settings page, so it feels like one app.</p>
-<div id="screenshots"><div class="tabs" role="tablist" aria-label="The six pages">{tabs}</div>{panels}</div></div></section>
-<section class="s" id="pages"><div class="in"><span class="eyebrow">Around the pages</span><h2>More than six pages.</h2><div class="cards c4">{around}</div></div></section>
+<div id="screenshots"><div class="tabs" role="tablist" aria-label="The seven pages">{tabs}</div>{panels}</div></div></section>
+<section class="s" id="pages"><div class="in"><span class="eyebrow">Around the pages</span><h2>More than seven pages.</h2><div class="cards c4">{around}</div></div></section>
 <section class="s" id="everyday"><div class="in"><span class="eyebrow">Everyday life, improved</span><h2>The small annoyances, gone.</h2><p class="intro">What changes the day you install it.</p>{problems}</div></section>
 <section class="s" id="day"><div class="in"><span class="eyebrow">A day with Homebase Hub</span><h2>One ordinary day, made calmer.</h2><div class="cards">{moments}</div></div></section>
 <section class="s" id="telegram"><div class="in tg"><div class="a-tg"><span class="eyebrow">Telegram</span><h2>Reminders where you already are.</h2>
@@ -261,10 +279,10 @@ def features_hub():
         ('a-links', 'screenshots/', 'image', 'Screenshots', 'Every page, and the settings of each.'), ('a-tools', 'tools/', 'search', 'Tool finder', 'Search all %d tools by name or by what they do.' % NT), ('a-tg', 'telegram/', 'send', 'Telegram', 'Digest, Due Now buttons, commands and backups.'),
         ('a-home', 'phone/', 'phone', 'On your phone', 'Install the site like an app, on iPhone, Android or a computer.'), ('a-info', 'security.html', 'shield', 'Security', 'What protects your data, and what does not.')])
     body = f'''<section class="hero">{SHAPES_Q}
-<div class="in"><div class="crumb"><b>Features</b></div><h1>Six pages. <span class="grad">One home.</span></h1><p class="lead">Each page does one job and has its own colour. They share the same bar, login, backup and Settings. Pick one to see what it does.</p></div></section>
+<div class="in"><div class="crumb"><b>Features</b></div><h1>Seven pages. <span class="grad">One home.</span></h1><p class="lead">Each page does one job and has its own colour. They share the same bar, login, backup and Settings. Pick one to see what it does.</p></div></section>
 <section class="in"><div class="cards c2">{cards}</div></section>
 <section class="s"><div class="in"><span class="eyebrow">And around them</span><h2>Everything else.</h2><div class="cards c4">{extra}</div></div></section>{band()}'''
-    return dict(slug='features', title='Features: Homebase Hub', cls='', desc='The six pages of Homebase Hub: Home, Links, Info, Cards, Tasks and Tools, and what each one does for your everyday life.', body=body)
+    return dict(slug='features', title='Features: Homebase Hub', cls='', desc='The seven pages of Homebase Hub: Home, Links, Info, Cards, Tasks, Files and Tools, and what each one does for your everyday life.', body=body)
 
 
 def feature(f):
@@ -318,6 +336,7 @@ def phone():
     perks = ''.join('<div class="card a-home"><div class="ico">%s</div><h3>%s</h3><p>%s</p></div>' % (I(ic), e(t), e(p)) for ic, t, p in [
         ('phone', 'Its own icon', 'The site sits on your home screen with the Homebase Hub icon, or your site name.'), ('home', 'No browser bars', 'It opens in its own window, like an app.'),
         ('link', 'Shortcuts', 'Press and hold the icon, where your phone allows it, to jump to Links, Info, Cards, Tasks or Tools.'), ('shield', 'Nothing kept offline', 'Your data always comes from your server, and stays there.'),
+        ('send', 'Share to Homebase Hub', 'In the installed app on Android, share a photo or a file from another app and save it to Files, or open it in Tools. Nothing is sent anywhere else.'),
         ('arrow', 'Swipe between pages', 'Swipe left or right to go to the next or previous page, in the order of your bar. On Home, pull down for the next photo.'),
         ('refresh', 'Always current', 'After an update the app shows the new version by itself. Only the icon on an iPhone changes after removing and adding it again.')])
     body = f'''<section class="hero fh a-home">{SHAPES_Q}
@@ -393,7 +412,8 @@ GALLERY = [
         ('Settings', [('links-settings.webp', 'Links Settings: privacy, icons, visit counts, text sizes and the edit bar.', True)])]),
     ('info', 'Info', 'a-info', 'note', [
         ('Highlights', [('info.webp', 'Notebook Cards: boxes of different widths in each tab.', True),
-                        ('info-doc.webp', 'A tab laid out as a Document, with its outline.', False)]),
+                        ('info-doc.webp', 'A tab laid out as a Document, with its outline.', False),
+                        ('info-undo.webp', 'Delete a box and a message offers Undo for 7 seconds.', False)]),
         ('Settings', [('info-settings.webp', 'Info Settings: privacy, encryption, text sizes and the edit bar.', True)])]),
     ('cards', 'Cards', 'a-cards', 'card', [
         ('Highlights', [('cards.webp', 'Every card in one table, with yearly charges added up.', True),
@@ -404,8 +424,13 @@ GALLERY = [
     ('tasks', 'Tasks', 'a-tasks', 'tasks', [
         ('Highlights', [('tasks.webp', 'Tasks grouped by when they are due, with this week across the top.', True),
                         ('tasks-calendar.webp', 'The calendar.', False),
-                        ('tasks-analytics.webp', 'Analytics: the next 12 months at a glance.', False)]),
+                        ('tasks-analytics.webp', 'Analytics: the next 12 months at a glance.', False),
+                        ('tasks-calendar-link.webp', 'Tasks Settings, Calendar Link: a secret link for Google, Apple or Outlook.', False)]),
         ('Settings', [('tasks-settings.webp', 'Tasks Settings: General, When the Page Opens, and Look.', True)])]),
+    ('files', 'Files', 'a-files', 'folder', [
+        ('Highlights', [('files.webp', 'Files: folders, a details panel, and "Locked in your browser" for the file you picked.', False),
+                        ('files-share.webp', 'A share link for one file: the key is after the # in the address, so it never reaches your server.', False)]),
+        ('Settings', [('files-settings.webp', 'Files Settings: Only Me, the storage limit, share links and how long the Trash keeps things.', False)])]),
     ('tools', 'Tools', 'a-tools', 'tools', [
         ('Highlights', [('tools.webp', 'Every tool in sections, with search, favourites and recent tools.', True),
                         ('tools-calculators.webp', 'Calculators: loans, savings, deposits, dates, units and amounts in words.', False),
@@ -424,7 +449,9 @@ GALLERY = [
                       ('s-appearance.webp', 'Appearance: the bar, theme, font and accent colour.', False),
                       ('s-presets.webp', 'Appearance, Presets: 141 ready-made looks, with a Vivid group.', False),
                       ('s-colors.webp', 'Appearance, Colors: every colour of the bar and pages.', False),
-                      ('s-security.webp', 'Security: password, two-step login, devices and login history.', False),
+                      ('s-security.webp', 'Security: where your site stands, from the password to the passphrase that locks your data.', False),
+                      ('s-encryption.webp', 'Security, Encryption: one passphrase that locks Cards, Files, Tools presets and private tabs in your browser.', False),
+                      ('s-passkeys.webp', 'Security, Passkeys: log in with a fingerprint, face or PIN.', False),
                       ('s-telegram.webp', 'Telegram: your bot, the digest, reminders and backups.', False),
                       ('s-backup.webp', 'Backup and Restore: one file for the whole site, and earlier versions.', False),
                       ('s-updates.webp', 'Updates: from GitHub or by zip, with Go Back.', False),
