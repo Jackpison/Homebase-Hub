@@ -19,6 +19,6 @@
     "tesseract.js": "7.0.0",
     "tesseract.js-core": "7.0.0",
     "utif2": "4.1.0",
-    "zxing-wasm": "3.1.5"
+    "zxing-wasm": "3.1.6"
   }
 }
