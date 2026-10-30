@@ -145,6 +145,14 @@ Not for the website's feature pages, but worth one line on the **About** or **Se
 - [ ] **Colors** tab: 9 rows, one Accent, *Different Colors per Page* folded; **Backup & Restore** in four tabs (Back Up, Restore, Export, Start Over); **Export Bookmarks** (Links Settings and Backup > Export).
 - [ ] Retake: `cards-settings`, `tasks-settings`, `links-settings`, `info-settings`, `files-settings` (new), `s-colors`, `s-backup`, `s-backup-export`, `s-security` (passphrase, passkeys), `files` (new), `files-share` (new), `tasks-calendar` (new).
 
+## 16b. Tools, tidied (1.61.9)
+
+- [ ] **Image Converter** has three tabs: Convert Images, SVG to PNG, Image and Base64 (SVG to PNG and Image to Base64 were tools of their own; their old addresses, stars and Recent entries open the tab).
+- [ ] **Gone:** Password & UUID, ZIP Creator, QR and Barcode Scanner (Tools no longer asks for the camera), Stopwatch and Timer. 47 tools.
+- [ ] Sections in this order: Images, Photos, PDF, Documents, Calculators, Utilities. Text Tools and JSON Formatter are in Documents, Time Zone Converter in Calculators. **Organise** moves whole sections up and down.
+- [ ] **Recorder:** sharper screen recordings (VP9 first, up to 4K, a Quality choice: Standard, High, Best).
+- [ ] Every page's own windows in the same frame as Settings; one button shape; **Undo** after deleting a link, category, tab (Links) or a card.
+
 ## 17. For the people who keep it running (1.61.0)
 
 - [x] Every PHP file runs in strict mode and PHPStan runs at level 5 (a test fails for a file without `declare(strict_types=1)`).

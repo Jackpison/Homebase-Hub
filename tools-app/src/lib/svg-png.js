@@ -1,6 +1,6 @@
 // SVG to PNG: SVG files or code to sharp PNG, JPG or WebP at any size.
 import { h, field, textarea, input, seg, check, button, dropzone, panel, busy, note, toast } from '../ui.js';
-import { encode, canvas, outName, results, each } from '../lib/image.js';
+import { encode, canvas, outName, results, each } from './image.js';
 
 /** The SVG's own size, from width and height or its viewBox. */
 export function svgSize(text) {

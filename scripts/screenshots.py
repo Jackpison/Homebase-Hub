@@ -146,7 +146,6 @@ with sync_playwright() as p:
             with pg.expect_download() as dl: pg.get_by_role('button', name='Download PNG', exact=True).click()
             qr = f'{OUT}/qr-in.png'; shutil.copy(dl.value.path(), qr)
             pg.get_by_role('button', name='Save as Preset', exact=True).click(); pg.get_by_label('Preset name').fill('Black and White'); pg.get_by_role('button', name='Save', exact=True).click(); pg.wait_for_timeout(800)
-            tool('qr-scanner'); pg.set_input_files('#root .dropwrap input[type=file]', qr); pg.wait_for_timeout(3500); shot(pg, 'tools-scanner')
             tool('pdf-sign'); pg.get_by_role('button', name='Type', exact=True).click(); pg.get_by_label('Your name', exact=True).fill('Asha Rao'); pg.wait_for_timeout(300)
             pg.get_by_role('button', name='Save as Preset', exact=True).click(); pg.get_by_label('Preset name').fill('My Signature'); pg.get_by_role('button', name='Save', exact=True).click(); pg.wait_for_timeout(4700)   # the message fades first
             pg.evaluate("document.querySelector('#root .pbar').scrollIntoView({block: 'center'})"); pg.wait_for_timeout(300); shot(pg, 'tools-preset')

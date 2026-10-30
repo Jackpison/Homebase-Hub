@@ -87,6 +87,8 @@ addEventListener('scroll', hideTip, { passive: true });
 document.addEventListener('pointerdown', hideTip);
 
 const toast = (msg, bad, sticky) => { if (window.HUB) HUB.toast(msg, bad, sticky); };   // the site's one message box (shell.js)
+// (1.61.9) after a delete: the message offers Undo for 7 seconds, which puts it back where it was and saves again
+const undoable = (msg, undo) => { if (window.HUB) HUB.toast(msg, false, false, { label: 'Undo', run: undo }); };
 const RIBBON = '<path d="M3 0h14a2 2 0 0 1 2 2v19.2a.6.6 0 0 1-.95.49L10 16.5l-8.05 5.19A.6.6 0 0 1 1 21.2V2a2 2 0 0 1 2-2z"/>';
 const ribbon = outline => h('span', { 'aria-hidden': 'true', html:
   `<svg viewBox="0 0 20 22" ${outline ? 'fill="none" stroke="currentColor" stroke-width="2"' : 'fill="currentColor"'}>${RIBBON}</svg>` }).firstChild;
@@ -596,7 +598,8 @@ function renderTabs() {
       tabs.length > 1 ? ib('del', 'Delete tab', () => {
         const n = t.categories.reduce((a, c) => a + linkCount(c), 0);
         if (confirm(`Delete the "${t.title}" tab with ${t.categories.length} categories and ${n} links?`)) {
-          tabs.splice(ti, 1); S.tab = tabs[Math.max(0, ti - 1)].id; history.replaceState(null, '', '#' + S.tab); persist('Tab deleted');
+          const gone = tabs.splice(ti, 1)[0]; S.tab = tabs[Math.max(0, ti - 1)].id; history.replaceState(null, '', '#' + S.tab); persist('');
+          undoable('Tab deleted.', () => { tabs.splice(Math.min(ti, tabs.length), 0, gone); S.tab = gone.id; history.replaceState(null, '', '#' + S.tab); persist('Tab restored'); });
         }
       }, 'del') : null));
   });
@@ -700,7 +703,7 @@ function renderCategory(t, cat, q, multi) {
       ib('down', 'Move Down', () => moveWithinCol(t, cat, 1) && persist('Moved'), '', pos === same.length - 1),
       ib('edit', 'Rename category', async () => { const n = await askName('Rename category', cat.title, 'Save category'); if (n) { cat.title = n; persist('Category renamed'); } }),
       ib('del', 'Delete category', () => {
-        if (confirm(`Delete "${cat.title}" and its ${count} links?`)) { t.categories.splice(ci, 1); persist('Category deleted'); }
+        if (confirm(`Delete "${cat.title}" and its ${count} links?`)) { t.categories.splice(ci, 1); persist(''); undoable('Category deleted.', () => { t.categories.splice(Math.min(ci, t.categories.length), 0, cat); persist('Category restored'); }); }
       }, 'del')));
 
   const ul = h('ul', { class: 'links', 'data-cat': cat.id });
@@ -726,7 +729,7 @@ function renderCategory(t, cat, q, multi) {
         ib('up', 'Move up', () => move(cat.links, i, -1) && persist('Moved')),
         ib('down', 'Move Down', () => move(cat.links, i, 1) && persist('Moved')),
         ib('edit', 'Edit link', () => openLink(cat, i)),
-        ib('del', 'Delete link', () => { if (confirm(`Delete "${l.title}"?`)) { cat.links.splice(i, 1); persist('Link deleted'); } }, 'del'))));
+        ib('del', 'Delete link', () => { if (confirm(`Delete "${l.title}"?`)) { cat.links.splice(i, 1); persist(''); undoable('Link deleted.', () => { cat.links.splice(Math.min(i, cat.links.length), 0, l); persist('Link restored'); }); } }, 'del'))));
     li.addEventListener('pointerdown', e => startLinkDrag(e, t, cat, l, li));
   }
   if (!cat.links.length) ul.append(h('li', { class: 'empty-cat' }, S.editing ? 'No links yet. Add one below.' : 'No links yet.'));

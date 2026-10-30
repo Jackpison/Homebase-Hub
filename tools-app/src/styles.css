@@ -162,3 +162,7 @@ ins.dw{text-decoration:none;background:color-mix(in srgb,var(--good) 26%,transpa
 .seg-h{display:none!important}
 @media (prefers-reduced-motion:reduce){.chk input[type=checkbox],.chk input[type=checkbox]::after{transition:none}}
 .seg button[aria-checked=true]{background:var(--card-2);color:var(--text);box-shadow:0 0 0 1px var(--line-2)}
+/* (1.61.9) Organise: a section's own up and down buttons sit beside its name */
+.osh{display:flex;align-items:center;gap:6px}.osh h2{flex:1;margin:0}
+/* (1.61.9) Image Converter's tabs: Convert Images, SVG to PNG, Image and Base64 */
+.tabseg{margin:0 0 14px;flex-wrap:wrap}

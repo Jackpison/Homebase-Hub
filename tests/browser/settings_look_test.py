@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""1.61.6 in a real browser: the Settings windows (rows in cards, a hidden row joins its card, hints stay with their row, no empty
+"""1.61.6 and 1.61.9 in a real browser: the Settings windows (rows in cards, a hidden row joins its card, hints stay with their row, no empty
 strip), Import and Export Bookmarks in the window frame, Home Settings' buttons on the right, Files Settings and Tasks Settings in
 rows, the main Settings page (a Save bar you can see, switches in Tabs, Health 3 + 3, the Passkeys card, one width, Reset beside
 Dark/Light, no backup reminder on Settings), the Files grid (pictures as small previews, a picked tile keeps its shape), and nothing
@@ -153,6 +153,51 @@ try:
         hs = pg.evaluate("[...document.querySelectorAll('#list .row')].map(r => [r.classList.contains('sel'), Math.round(r.getBoundingClientRect().height)])")
         check('L23 Grid: a picked tile keeps the same size as the others (a style meant for the Sort list squashed it)', len({h for _, h in hs}) == 1 and any(s_ for s_, _ in hs), hs)
         check('L24 the details panel shows the picture too', until(lambda: pg.evaluate("!!document.querySelector('#det .pv img.th')"), 10000))
+
+        # ---- 1.61.9: every page window in the shared frame, one button shape, Undo ----
+        frames = {}
+        for page, ids in (('links', ['linkDlg', 'nameDlg', 'colorDlg', 'textDlg', 'iconDlg', 'tabDlg', 'keyDlg', 'verDlg']), ('info', ['bkdlg', 'uldlg', 'kdlg', 'etdlg', 'bxdlg', 'idlg']),
+                          ('cards', ['dlg', 'hdlg', 'idlg', 'odlg', 'bdlg']), ('tasks', ['dlg', 'ydlg'])):
+            pg.goto(s.base + '/web/%s/' % page); wait_js(pg, "!!(window.HUB && HUB.isAdmin())", 20000); pg.wait_for_timeout(300)
+            frames[page] = pg.evaluate("""ids => ids.filter(id => { const d = document.getElementById(id); if (!d) return true;
+                const sf = d.querySelector('.ix-sf, .df'); return !(d.classList.contains('ix-sdlg') && d.querySelector('.ix-sh .ix-sx, .dh [data-close]') && sf); })""", ids)
+        check('L28 every window on Links, Info, Cards and Tasks has the shared frame (title and X, buttons at the bottom)', not any(frames.values()), frames)
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.cat').length > 0", 20000)
+        pg.evaluate("document.getElementById('linkDlg').showModal()"); pg.wait_for_timeout(200)
+        lk = pg.evaluate("""(() => { const d = document.getElementById('linkDlg'), b = [...d.querySelectorAll('.ix-sf button')].filter(x => x.offsetParent).sort((x, y) => x.getBoundingClientRect().left - y.getBoundingClientRect().left);   // as they show, left to right
+            return [document.activeElement && document.activeElement.tagName !== 'BUTTON', b.map(x => x.textContent.trim()), getComputedStyle(b[0]).borderRadius]; })()""")
+        check('L29 Add Link opens with a field ready to type in (not the X); Cancel then Save Link; round 12 px buttons', lk[0] and lk[1][-1] == 'Save Link' and lk[1][0] == 'Cancel' and lk[2] == '12px', lk)
+        pg.keyboard.press('Escape')
+        pg.evaluate("document.getElementById('tabDlg').showModal()")
+        sw_h = pg.evaluate("Math.round(document.querySelector('#tabDlg .swatch').getBoundingClientRect().height)")
+        check('L30 Edit Tab: the colour and its code stay on one line', sw_h < 60, sw_h)
+        pg.keyboard.press('Escape')
+        shapes = {}
+        for page in ('links', 'cards', 'tasks', 'files'):
+            pg.goto(s.base + '/web/%s/' % page); wait_js(pg, "!!(window.HUB && HUB.isAdmin())", 20000); pg.wait_for_timeout(500)
+            shapes[page] = pg.evaluate("[...new Set([...document.querySelectorAll('.btn')].filter(b => b.offsetParent).map(b => getComputedStyle(b).borderRadius))]")
+        check('L31 one button shape on Links, Cards, Tasks and Files (12 px corners)', all(v == ['12px'] for v in shapes.values() if v), shapes)
+
+        pg.on('dialog', lambda d: d.accept())
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.querySelector('[aria-label=\"Delete link\"]')", 20000)
+        titles = lambda: pg.evaluate("[...document.querySelectorAll('.cat a')].map(a => a.textContent.trim()).filter(Boolean)")
+        before = titles()
+        pg.evaluate("document.querySelector('[aria-label=\"Delete link\"]').click()")
+        got = until(lambda: pg.evaluate("(() => { const t = document.getElementById('ix-toast'); return !!(t && t.classList.contains('on') && t.querySelector('.ix-tact')); })()"), 5000)
+        gone = len(titles()) == len(before) - 1
+        pg.wait_for_timeout(800); pg.click('#ix-toast .ix-tact')
+        until(lambda: len(titles()) == len(before), 5000); pg.wait_for_timeout(1500)
+        pg.reload(); wait_js(pg, "document.querySelectorAll('.cat a').length > 0", 20000)
+        check('L32 Links: a deleted link offers Undo, and Undo puts it back and saves it (still there after a reload)', got and gone and titles() == before, (got, gone, before, titles()))
+
+        pg.goto(s.base + '/web/cards/'); pg.wait_for_selector('#list .row.item', timeout=15000)
+        rows = lambda: pg.evaluate("document.querySelectorAll('#list .row.item').length")
+        n0 = rows(); pg.click('#list .row.item[data-id] .cn small'); until(lambda: pg.evaluate("document.getElementById('dlg').open"), 5000)
+        pg.click('#del'); pg.click('#del'); until(lambda: rows() == n0 - 1, 5000)
+        got = until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on .ix-tact')"), 5000)
+        pg.wait_for_timeout(800); pg.click('#ix-toast .ix-tact'); until(lambda: rows() == n0, 5000); pg.wait_for_timeout(1500)
+        pg.reload(); pg.wait_for_selector('#list .row.item', timeout=15000)
+        check('L33 Cards: a deleted card offers Undo, and Undo brings it back for good', got and rows() == n0, (got, n0, rows()))
 
         # ---- phones: nothing wider than the screen ----
         ph = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=BROWSER != 'firefox', has_touch=True, storage_state=ctx.storage_state())

@@ -72,27 +72,13 @@ try:
         pg.fill('#root input[placeholder^="Paste a hash"]', 'BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD'); until(lambda: 'Match:' in pg.inner_text('#root'), 3000)
         check('N10 ...and recognises a pasted hash, in capitals too', 'Match: this is the SHA-256' in pg.inner_text('#root'))
 
-        # wait for the passwords themselves: the Hash Generator before it uses the same kind of list, so "any list" could still be its (seen once on WebKit)
-        pg.goto(U + '#/tool/generators'); wait_js(pg, "(() => { const o = [...document.querySelectorAll('#root .flist .out')]; return o.length === 5 && o.every(x => x.textContent.length === 20) })()")
-        pw = pg.evaluate("[...document.querySelectorAll('#root .flist .out')].map(x => x.textContent)")
         import re as _re
-        check('N11 Password generator makes 5 passwords of 20 characters with every kind of character', len(pw) == 5 and all(len(x) == 20 and _re.search('[A-Z]', x) and _re.search('[a-z]', x) and _re.search('[0-9]', x) and _re.search(r'[^A-Za-z0-9]', x) for x in pw) and len(set(pw)) == 5, pw)
-        pg.get_by_role('button', name='UUIDs', exact=True).click(); until(lambda: pg.evaluate("[...document.querySelectorAll('#root .flist .out')].every(x => /^[0-9a-f]{8}-/.test(x.textContent))"), 3000)
-        u = pg.evaluate("[...document.querySelectorAll('#root .flist .out')].map(x => x.textContent)")
-        check('N12 ...and version 4 UUIDs', len(u) == 5 and all(_re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}', x) for x in u), u)
-
         pg.goto(U + '#/tool/text-tools'); wait_js(pg, "!!document.querySelector('#root textarea')")
         pg.fill('#root textarea', 'One two three.\n\nFour five.'); until(lambda: pg.evaluate("(document.querySelector('#root .kv div') || {}).textContent || ''").startswith('5'), 3000)
         check('N13 Word counter counts words, sentences and paragraphs', pg.evaluate("[...document.querySelectorAll('#root .kv div')].slice(0,5).map(d => d.firstChild.textContent).join(',')") == '5,26,21,2,2', pg.evaluate("[...document.querySelectorAll('#root .kv div')].map(d => d.textContent).join(' | ')"))
         pg.get_by_role('button', name='Base64', exact=True).click(); pg.fill('#root textarea >> nth=0', 'héllo ✓'); pg.get_by_role('button', name='Encode', exact=True).click(); until(lambda: pg.input_value('#root textarea >> nth=1') != '', 3000)
         enc = pg.input_value('#root textarea >> nth=1'); pg.get_by_role('button', name='Use as Input', exact=True).click(); pg.get_by_role('button', name='Decode', exact=True).click(); until(lambda: 'llo' in pg.input_value('#root textarea >> nth=1'), 3000)
         check('N14 Base64 encodes and decodes UTF-8 text', enc == 'aMOpbGxvIOKckw==' and pg.input_value('#root textarea >> nth=1') == 'héllo ✓', enc)
-
-        pg.goto(U + '#/tool/zip-creator'); wait_js(pg, "!!document.querySelector('#root input[type=file]')")
-        pg.set_input_files('#root .dropwrap input[type=file]', files=[{'name': 'a.txt', 'mimeType': 'text/plain', 'buffer': b'hello ' * 100}, {'name': 'b.txt', 'mimeType': 'text/plain', 'buffer': b'world'}])
-        data, name = dl(lambda: pg.get_by_role('button', name='Create ZIP', exact=True).click())
-        z = zipfile.ZipFile(io.BytesIO(data))
-        check('N15 ZIP Creator puts both files into one ZIP', sorted(z.namelist()) == ['a.txt', 'b.txt'] and z.read('a.txt') == b'hello ' * 100 and name == 'files.zip', (z.namelist(), name))
 
         pg.goto(U + '#/tool/favicon'); wait_js(pg, "!!document.querySelector('#root .seg')")
         pg.get_by_role('button', name='Make an Icon Pack', exact=True).click(); pg.set_input_files('#root .dropwrap input[type=file]', os.path.join(FIXDIR, 'fixture-image.png'))
@@ -163,14 +149,14 @@ try:
         open_tool('img-beautify'); data, name = go('Save PNG', FIX)
         check('I14 Screenshot Beautifier: padding and a window frame around the screenshot (928 x 762)', img(data).size == (928, 762), img(data).size)
 
-        open_tool('svg-png'); pg.fill('#root textarea', '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><rect width="100" height="50" fill="#f00"/></svg>')
+        open_tool('image-converter'); pg.get_by_role('button', name='SVG to PNG', exact=True).click(); pg.fill('#root textarea', '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><rect width="100" height="50" fill="#f00"/></svg>')
         pg.fill('#root input[type=number]', '400')
         with pg.expect_download() as d: pg.get_by_role('button', name='Convert', exact=True).click()
-        sv = img(open(d.value.path(), 'rb').read()); check('I15 SVG to PNG: code at 400 pixels wide keeps the shape and colour', sv.size == (400, 200) and sv.convert('RGB').getpixel((200, 100)) == (255, 0, 0), sv.size)
+        sv = img(open(d.value.path(), 'rb').read()); check('I15 Image Converter > SVG to PNG: code at 400 pixels wide keeps the shape and colour', sv.size == (400, 200) and sv.convert('RGB').getpixel((200, 100)) == (255, 0, 0), sv.size)
 
-        open_tool('img-base64'); pg.set_input_files('#root .dropwrap input[type=file]', FIX); until(lambda: pg.input_value('#root textarea >> nth=0').startswith('data:image'), 10000)
+        open_tool('image-converter'); pg.get_by_role('button', name='Image and Base64', exact=True).click(); pg.set_input_files('#root .dropwrap input[type=file]', FIX); until(lambda: pg.input_value('#root textarea >> nth=0').startswith('data:image'), 10000)
         uri = pg.input_value('#root textarea >> nth=0')
-        check('I16 Image to Base64 makes a data URI', uri.startswith('data:image/png;base64,iVBOR'))
+        check('I16 Image Converter > Image and Base64 makes a data URI', uri.startswith('data:image/png;base64,iVBOR'))
         pg.get_by_role('button', name='Base64 to Image', exact=True).click(); pg.fill('#root textarea', uri); pg.get_by_role('button', name='Make the File', exact=True).click()
         with pg.expect_download() as d: pg.get_by_role('button', name='Download image.png', exact=True).click()
         check('I17 ...and turns it back into the same file', open(d.value.path(), 'rb').read() == open(FIX, 'rb').read())
@@ -409,10 +395,7 @@ try:
         pg.goto(U + '#/tool/qr-generator'); wait_js(pg, "!!document.querySelector('#root canvas')"); q0 = pg.evaluate("document.querySelector('#root canvas').toDataURL()")
         pg.fill('#root input[type=url]', 'https://example.com/scan-me'); until(lambda: pg.evaluate("document.querySelector('#root canvas').toDataURL()") != q0, 3000)
         data, name = dl(lambda: pg.get_by_role('button', name='Download PNG', exact=True).click()); qp = os.path.join(TMP2, 'qr.png'); open(qp, 'wb').write(data)
-        tool('qr-scanner'); wasm = []
-        pg.on('request', lambda r: wasm.append(r.url) if '.wasm' in r.url else None)
-        after(pg, lambda: pg.set_input_files('#root .dropwrap input[type=file]', qp)); until(lambda: 'https://example.com/scan-me' in txt(), 30000)
-        check('C26 QR and Barcode Scanner: reads a QR code from a picture (ZXing from this site, not from a CDN)', 'https://example.com/scan-me' in txt() and all(u.startswith(s.base) for u in wasm), (txt()[-300:], wasm))
+        check('C26 QR Code Generator: a PNG of the code for a link', data[:8] == b'\x89PNG\r\n\x1a\n', name)
         tool('barcode-generator'); until(lambda: pg.evaluate("!!document.querySelector('#root .bcprev svg rect')"), 5000)
         data, name = dl(lambda: pg.get_by_role('button', name='Download PNG', exact=True).click())
         check('C27 Barcode Generator: a Code 128 barcode as PNG', data[:8] == b'\x89PNG\r\n\x1a\n' and name == 'barcode-Homebase-001.png', name)
@@ -420,18 +403,10 @@ try:
         pg.get_by_label('Type', exact=True).select_option('EAN13'); until(lambda: pg.evaluate("!!document.querySelector('#root .bcprev svg')"), 3000)
         pg.get_by_label('Value', exact=True).fill('12345'); until(lambda: pg.evaluate("!document.querySelector('#root .bcprev svg')"), 3000)
         check('C28 ...an EAN-13 needs 12 or 13 digits: a short number is refused with a reason', 'cannot be made' in txt() and pg.get_by_role('button', name='Download PNG', exact=True).is_disabled())
-        tool('qr-scanner'); after(pg, lambda: pg.set_input_files('#root .dropwrap input[type=file]', bp)); until(lambda: 'Homebase-001' in txt(), 30000)
-        check('C29 ...and the scanner reads that barcode back', 'Homebase-001' in txt() and 'Code 128' in txt(), txt()[-200:])
         pg.evaluate("localStorage.setItem('tools.timezones.v1', JSON.stringify(['Asia/Kolkata', 'America/New_York', 'Asia/Tokyo']))"); tool('timezone-converter')
         pg.get_by_label('In This Time Zone', exact=True).fill('Asia/Kolkata'); pg.get_by_label('In This Time Zone', exact=True).dispatch_event('change'); pg.get_by_label('Date and Time', exact=True).fill('2026-07-01T19:30')
         until(lambda: 'next day' in txt(), 3000); rws = pg.evaluate("[...document.querySelectorAll('#root .tzrow b')].map(b => b.textContent)")
         check('C30 Time Zone Converter: 7:30 pm in India on 1 July is 10:00 am in New York (summer time) and 11:00 pm in Tokyo', [r.replace(' ', ' ').lower() for r in rws] == ['7:30 pm', '10:00 am', '11:00 pm'], rws)
-        tool('stopwatch-timer'); pg.get_by_role('button', name='Start', exact=True).click(); pg.wait_for_timeout(1300); pg.get_by_role('button', name='Lap', exact=True).click(); pg.get_by_role('button', name='Pause', exact=True).click()
-        c1 = pg.inner_text('#root .clock')
-        check('C31 Stopwatch: runs, takes a lap and pauses', c1.startswith('00:01') and pg.evaluate("document.querySelectorAll('#root .tbl tbody tr').length") == 1, c1)
-        pg.get_by_role('button', name='Timer', exact=True).click(); pg.get_by_label('Minutes', exact=True).fill('0'); pg.get_by_label('Seconds', exact=True).fill('2'); pg.get_by_role('button', name='Start', exact=True).click()
-        until(lambda: 'Time is up.' in txt(), 6000)
-        check('C32 ...the timer counts down and says when time is up', 'Time is up.' in txt() and pg.inner_text('#root .clock') == '00:00')
         tool('random-picker'); pg.get_by_role('button', name='Pick', exact=True).click()
         got = pg.evaluate("[...document.querySelectorAll('#root .picked b')].map(b => b.textContent)")
         pg.get_by_role('button', name='Numbers', exact=True).click(); setf('To', 10); setf('How Many', 10); pg.get_by_role('button', name='Pick', exact=True).click()
@@ -439,7 +414,31 @@ try:
         check('C33 Random Picker: picks one name from the list, and 10 different numbers from 1 to 10', len(got) == 1 and got[0] in ['Asha', 'Ravi', 'Meera', 'Kabir', 'Zoya', 'Arjun'] and sorted(nums) == list(range(1, 11)), (got, nums))
         tool('recorder')
         check('C34 Screen and Voice Recorder: opens on Screen on a computer, with Start Recording', pg.get_by_role('button', name='Start Recording', exact=True).is_visible() and pg.get_by_role('button', name='Screen', exact=True).get_attribute('aria-pressed') == 'true')
+        check('C35 ...with a Quality choice, High by default (the old fixed 4 Mbps looked soft)', pg.get_by_role('button', name='High', exact=True).get_attribute('aria-pressed') == 'true' and pg.get_by_role('button', name='Best', exact=True).is_visible())
         shutil.rmtree(TMP2, ignore_errors=True)
+        # ---------- 1.61.9: tools that moved or went, and the order of the sections ----------
+        pg.goto(U + '#/'); wait_js(pg, "location.hash === '#/'"); pg.goto(U + '#/tool/svg-png')
+        ok = until(lambda: pg.evaluate("location.hash === '#/tool/image-converter?tab=svg' && !!document.querySelector('#root .th h1') && document.querySelector('#root .th h1').textContent === 'Image Converter'"), 15000)
+        check('N27 the old SVG to PNG address opens Image Converter on its SVG to PNG tab', ok and pg.get_by_role('button', name='SVG to PNG', exact=True).get_attribute('aria-pressed') == 'true', pg.evaluate('location.hash'))
+        gone = []
+        for i in ('generators', 'zip-creator', 'qr-scanner', 'stopwatch-timer'):
+            pg.goto(U + '#/'); wait_js(pg, "location.hash === '#/'"); pg.goto(U + '#/tool/' + i)
+            if not until(lambda: 'Tool not found' in pg.inner_text('#root'), 8000): gone.append(i)
+        check('N28 Password & UUID, ZIP Creator, QR and Barcode Scanner and Stopwatch and Timer are gone (their addresses say so)', not gone and not any(t['id'] in ('generators', 'zip-creator', 'qr-scanner', 'stopwatch-timer', 'svg-png', 'img-base64') for t in DATA['tools']), gone)
+        pg.evaluate("(() => { const v = JSON.parse(localStorage.getItem('tools.v3') || '{}'); v.fav = ['img-base64']; v.recent = ['svg-png']; v.secOrder = []; localStorage.setItem('tools.v3', JSON.stringify(v)); })()")
+        pg.goto(U + '#/'); pg.reload(); wait_js(pg, "!!document.querySelector('.tnav .ni')", 20000)
+        st3 = pg.evaluate("JSON.parse(localStorage.getItem('tools.v3'))")
+        check('N29 a star and a Recent entry on a tool that became a tab move to Image Converter', st3['fav'] == ['image-converter'] and st3['recent'][:1] == ['image-converter'], (st3['fav'], st3['recent'][:2]))
+        secs = lambda: pg.evaluate("[...document.querySelectorAll('.tnav .ni')].map(a => a.getAttribute('href')).filter(h => h.startsWith('#/s/')).map(h => h.slice(4))")
+        check('N30 the sections come as Images, Photos, PDF, Documents, Calculators, Utilities', secs() == ['images', 'photos', 'pdf', 'documents', 'calculators', 'utilities'], secs())
+        cat = {t['id']: t['cat'] for t in DATA['tools']}
+        check('N31 Text Tools and JSON Formatter are in Documents, Time Zone Converter in Calculators', cat['text-tools'] == 'documents' and cat['json-formatter'] == 'documents' and cat['timezone-converter'] == 'calculators', (cat['text-tools'], cat['json-formatter'], cat['timezone-converter']))
+        pg.goto(U + '#/organise'); wait_js(pg, "!!document.querySelector('.org [data-sec=utilities] [data-m=up]')", 10000)
+        pg.click('.org [data-sec=utilities] [data-m=up]'); pg.click('.org [data-sec=utilities] [data-m=up]')
+        check('N32 Organise moves a whole section: Utilities up twice comes before Documents, in the side menu too', until(lambda: secs() == ['images', 'photos', 'pdf', 'utilities', 'documents', 'calculators'], 5000), secs())
+        pg.reload(); wait_js(pg, "!!document.querySelector('.tnav .ni')", 20000)
+        check('N33 ...and the order is kept after a reload', secs() == ['images', 'photos', 'pdf', 'utilities', 'documents', 'calculators'], secs())
+        pg.evaluate("(() => { const v = JSON.parse(localStorage.getItem('tools.v3')); v.secOrder = []; localStorage.setItem('tools.v3', JSON.stringify(v)); })()")
         # N26 (1.60): every tool in tools.json opens: its heading shows and nothing fails (a tool added with scripts/new-tool.py is covered at once)
         broken = []
         for t in DATA['tools']:
@@ -451,7 +450,7 @@ try:
         for scheme in ('dark', 'light'):
             pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme)
             found = []
-            for u in ('#/', '#/tool/qr-generator', '#/tool/json-formatter', '#/tool/generators', '#/tool/image-converter', '#/tool/image-resize', '#/tool/img-adjust', '#/tool/img-watermark', '#/tool/collage', '#/tool/id-photo', '#/tool/image-crop', '#/tool/img-redact', '#/tool/meme', '#/tool/bg-remove', '#/tool/pdf-merge', '#/tool/pdf-split', '#/tool/pdf-protect', '#/tool/pdf-text', '#/tool/pdf-stamp', '#/tool/pdf-sign', '#/tool/pdf-annotate', '#/tool/loan-emi', '#/tool/sip-calculator', '#/tool/age-date-calculator', '#/tool/invoice-generator', '#/tool/text-compare', '#/tool/markdown-editor', '#/tool/csv-json-converter', '#/tool/timezone-converter', '#/tool/random-picker', '#/tool/barcode-generator', '#/organise', '#/settings'):
+            for u in ('#/', '#/tool/qr-generator', '#/tool/json-formatter', '#/tool/hash-generator', '#/tool/image-converter', '#/tool/image-resize', '#/tool/img-adjust', '#/tool/img-watermark', '#/tool/collage', '#/tool/id-photo', '#/tool/image-crop', '#/tool/img-redact', '#/tool/meme', '#/tool/bg-remove', '#/tool/pdf-merge', '#/tool/pdf-split', '#/tool/pdf-protect', '#/tool/pdf-text', '#/tool/pdf-stamp', '#/tool/pdf-sign', '#/tool/pdf-annotate', '#/tool/loan-emi', '#/tool/sip-calculator', '#/tool/age-date-calculator', '#/tool/invoice-generator', '#/tool/text-compare', '#/tool/markdown-editor', '#/tool/csv-json-converter', '#/tool/timezone-converter', '#/tool/random-picker', '#/tool/barcode-generator', '#/organise', '#/settings'):
                 after(pg, lambda: pg.goto(U + u), 250, 10000); pg.evaluate("document.documentElement.setAttribute('data-theme', %r)" % scheme); pg.mouse.move(2, 2)
                 pg.wait_for_timeout(100)   # on purpose: a hovered button fades back (a CSS transition) before axe reads the colours
                 pg.evaluate(AXE); v = pg.evaluate(RUN)

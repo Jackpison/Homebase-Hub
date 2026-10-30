@@ -10,7 +10,6 @@ Every bundled component is compatible with GPL-3.0. Each keeps its own licence a
 | pdf.js image decoders: OpenJPEG, JBIG2 (from PDFium), qcms | Tools `vendor/pdfjs/wasm/` | BSD-2-Clause, BSD-3-Clause, MIT | The licence files next to each decoder |
 | pdf.js character maps (Adobe) and standard fonts (Foxit from PDFium, Liberation Sans) | Tools `vendor/pdfjs/cmaps/`, `vendor/pdfjs/standard_fonts/` | BSD-3-Clause (Adobe, Foxit); Liberation: GPL-2.0 with the font exception | `LICENSE.txt`, `LICENSE_FOXIT.txt`, `LICENSE_LIBERATION.txt` next to the files |
 | @cantoo/pdf-lib 2.11.1 (the maintained copy of pdf-lib, since 1.60), with culori 4.0.2, html-entities 2.6.0, node-html-better-parser 1.5.9 and tslib 2.8.1 | Tools | MIT (tslib: 0BSD) | npm packages |
-| zxing-wasm 3.1.5 (ZXing-C++ reader, `zxing_reader.wasm`) | Tools (QR and Barcode Scanner, 1.60) | MIT (the package); Apache-2.0 (ZXing-C++) | npm package; the WebAssembly file is shipped with the site, never fetched from a CDN |
 | JsBarcode 3.12.3 | Tools (Barcode Generator, 1.60) | MIT | npm package |
 | qpdf, WebAssembly build `@neslinesli93/qpdf-wasm` 0.3.0 (`qpdf.wasm`) | Tools | Apache-2.0 (qpdf); ISC (the package) | npm package and qpdf's licence |
 | Tesseract.js 7.0.0 and tesseract.js-core 7.0.0, with `eng.traineddata` | Tools `vendor/tesseract/` | Apache-2.0 | npm packages; tesseract-ocr/tessdata states its data is Apache-2.0 |
@@ -38,4 +37,4 @@ Last checked 23 October 2026 with `npm audit` against the exact versions in the 
 | SheetJS | removed | Its last npm version (0.18.5) had GHSA-4r6h-8v6p-xvw6 and GHSA-5pgg-2g8v-p4x9 and gets no fixes there. Cards now writes Excel files with its own small writer, and the check fails if SheetJS comes back. |
 | ONNX Runtime Web (Tools) | 1.31.1 | No advisory. Replaces 1.17.3, which could not be updated while Tools had no source. |
 | libheif-js (Tools) | 1.23.5 | No advisory. The newest release. |
-| jsPDF, @cantoo/pdf-lib, Tesseract.js, qpdf, zxing-wasm, JsBarcode | 4.2.1, 2.11.1, 7.0.0, 0.3.0, 3.1.5, 3.12.3 | No advisory. `npm audit` on `tools-app/package-lock.json` finds nothing. React, JSZip, Sortable and framer-motion are no longer used. |
+| jsPDF, @cantoo/pdf-lib, Tesseract.js, qpdf, JsBarcode | 4.2.1, 2.11.1, 7.0.0, 0.3.0, 3.12.3 | No advisory. `npm audit` on `tools-app/package-lock.json` finds nothing. React, JSZip, Sortable and framer-motion are no longer used. |

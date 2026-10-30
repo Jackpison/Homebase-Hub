@@ -458,9 +458,9 @@ dialog.ix-sdlg>form{display:flex;flex-direction:column;min-height:0;flex:1;paddi
 .ix-sdlg .ix-sb{flex:1;min-height:0;overflow-y:auto;padding:4px 20px 8px;overscroll-behavior:contain}
 .ix-sdlg .ix-sb>h3,.ix-sdlg .ix-sb>h4,.ix-sdlg .sh3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:20px 0 8px;color:color-mix(in srgb,currentColor 78%,transparent)}
 .ix-sdlg .ix-sb>h3:first-child,.ix-sdlg .ix-sb>h4:first-child{margin-top:8px}
-.ix-sdlg .ix-sb input:not([type=checkbox]):not([type=radio]):not([type=file]),.ix-sdlg .ix-sb select:not(.ix-sgc-h){width:100%;font:inherit;font-size:15px;color:inherit;border-radius:10px;padding:10px 12px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
+.ix-sdlg .ix-sb input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]):not([type=range]),.ix-sdlg .ix-sb select:not(.ix-sgc-h){width:100%;font:inherit;font-size:15px;color:inherit;border-radius:10px;padding:10px 12px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
 .ix-sdlg .ix-sb input:focus,.ix-sdlg .ix-sb select:focus{outline:none;border-color:color-mix(in srgb,currentColor 55%,transparent);box-shadow:none}
-.ix-sdlg .ix-sb :not(.ix-srow)>label:not(.check):not(.chk){display:block;font-size:13px;margin:0 0 12px}
+.ix-sdlg .ix-sb :not(.ix-srow)>label:not(.check):not(.chk):not(.swatch){display:block;font-size:13px;margin:0 0 12px}
 .ix-sdlg .ix-sb label>input:not([type=checkbox]),.ix-sdlg .ix-sb label>select{margin-top:5px}
 .ix-sdlg .ix-sb .hint,.ix-sdlg .ix-sb p.hint{font-size:13px;color:color-mix(in srgb,currentColor 80%,transparent);margin:-6px 0 12px}
 .ix-sdlg .ix-sf,.ix-sdlg>form>.act,.ix-sdlg>form>.actions,.ix-sdlg .df{flex:none;display:flex;justify-content:flex-end;gap:10px;margin:0;padding:12px 20px 16px;border-top:1px solid color-mix(in srgb,currentColor 12%,transparent)}
@@ -531,3 +531,11 @@ kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7p
 #ix-toast:has(.ix-tact){pointer-events:auto}
 @media (prefers-reduced-motion:reduce){#ix-savepill{transition:none}}
 dialog.sheet .sb h3{display:flex;align-items:center;gap:10px;color:color-mix(in srgb,var(--ix-accent,#ffc21a) 32%,currentColor)!important;opacity:1!important}
+/* (1.61.9) one button shape on every page (Links, Info, Cards, Tasks, Files, Tools, Home and every window): rounded 12 px, bold,
+   at least 38 px tall. Colours stay each page's own (its accent for the main button). */
+html .btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button{border-radius:12px;font-weight:700}
+html .btn:not(.ib):not(.sm),html .ix-sdlg .ix-sf button{min-height:38px;height:auto}
+/* (1.61.9) a page's own window keeps the main button last (Cancel, then Save), and a Delete on the far left */
+.ix-sdlg.ix-plain .ix-sf{flex-direction:row}
+.ix-sdlg.ix-plain .ix-sf .primary,.ix-sdlg.ix-plain .ix-sf .pri,.ix-sdlg.ix-plain .ix-sf [data-ix-save]{order:9}
+.ix-sdlg.ix-plain .ix-sf .left,.ix-sdlg.ix-plain .ix-sf .danger{order:-1;margin-right:auto}

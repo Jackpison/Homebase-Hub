@@ -4,7 +4,7 @@
    "id": "images",
    "name": "Images",
    "icon": "image",
-   "desc": "Convert, compress and resize any image."
+   "desc": "Convert, compress, resize and edit any image, SVG and Base64 included."
   },
   {
    "id": "photos",
@@ -19,22 +19,22 @@
    "desc": "Shrink, merge, split, sign and convert PDFs."
   },
   {
-   "id": "utilities",
-   "name": "Utilities",
-   "icon": "wrench",
-   "desc": "QR codes and barcodes, time zones, timers, recording, passwords and more."
+   "id": "documents",
+   "name": "Documents",
+   "icon": "receipt",
+   "desc": "Text tools, JSON, invoices, text compare, Markdown and spreadsheet data."
   },
   {
    "id": "calculators",
    "name": "Calculators",
    "icon": "calc",
-   "desc": "Loans, savings, percentages, dates, units and amounts in words."
+   "desc": "Loans, savings, percentages, dates, time zones, units and amounts in words."
   },
   {
-   "id": "documents",
-   "name": "Documents",
-   "icon": "receipt",
-   "desc": "Invoices, text compare, Markdown and spreadsheet data."
+   "id": "utilities",
+   "name": "Utilities",
+   "icon": "wrench",
+   "desc": "QR codes, barcodes, favicons, hashes, a random picker and the recorder."
   }
  ],
  "tools": [
@@ -347,57 +347,6 @@
    ]
   },
   {
-   "id": "svg-png",
-   "name": "SVG to PNG",
-   "cat": "images",
-   "desc": "Turn SVG files or code into sharp PNG, JPG or WebP at any size.",
-   "kw": [
-    "svg",
-    "vector",
-    "convert",
-    "rasterize",
-    "icon",
-    "logo"
-   ],
-   "icon": "filecode",
-   "popular": 0,
-   "in": [
-    "svg"
-   ],
-   "out": [
-    "png",
-    "jpg",
-    "webp"
-   ]
-  },
-  {
-   "id": "img-base64",
-   "name": "Image to Base64",
-   "cat": "images",
-   "desc": "Make data URIs, CSS and HTML snippets from images, or turn Base64 back into a file.",
-   "kw": [
-    "base64",
-    "data uri",
-    "encode",
-    "decode",
-    "embed",
-    "css",
-    "html"
-   ],
-   "icon": "code",
-   "popular": 0,
-   "in": [
-    "jpg",
-    "png",
-    "webp",
-    "gif",
-    "svg"
-   ],
-   "out": [
-    "txt"
-   ]
-  },
-  {
    "id": "bg-remove",
    "name": "Background Remover",
    "cat": "photos",
@@ -513,7 +462,7 @@
    "id": "image-converter",
    "name": "Image Converter",
    "cat": "images",
-   "desc": "HEIC, PNG, WebP, TIFF, BMP, GIF or AVIF to JPG, PNG, WebP or AVIF. Batch supported.",
+   "desc": "Convert HEIC, PNG, WebP, TIFF, BMP, GIF or AVIF in a batch, turn SVG into PNG, or make Base64 from an image and back.",
    "kw": [
     "convert",
     "converter",
@@ -523,7 +472,12 @@
     "heic to jpg",
     "png to jpg",
     "jpg to png",
-    "webp to jpg"
+    "webp to jpg",
+    "svg",
+    "svg to png",
+    "base64",
+    "data uri",
+    "vector"
    ],
    "icon": "convert",
    "popular": 1,
@@ -835,7 +789,7 @@
   {
    "id": "json-formatter",
    "name": "JSON Formatter",
-   "cat": "utilities",
+   "cat": "documents",
    "desc": "Format, minify, sort and validate JSON with exact error locations.",
    "kw": [
     "json",
@@ -858,7 +812,7 @@
   {
    "id": "text-tools",
    "name": "Text Tools",
-   "cat": "utilities",
+   "cat": "documents",
    "desc": "Word counter, case converter, Base64 and URL encoding in one place.",
    "kw": [
     "word count",
@@ -877,22 +831,6 @@
    "popular": 0
   },
   {
-   "id": "generators",
-   "name": "Password & UUID",
-   "cat": "utilities",
-   "desc": "Strong random passwords and UUIDs, generated on your device.",
-   "kw": [
-    "password",
-    "random",
-    "secure",
-    "uuid",
-    "guid",
-    "generator"
-   ],
-   "icon": "key",
-   "popular": 0
-  },
-  {
    "id": "hash-generator",
    "name": "Hash Generator",
    "cat": "utilities",
@@ -906,19 +844,6 @@
     "integrity"
    ],
    "icon": "hash",
-   "popular": 0
-  },
-  {
-   "id": "zip-creator",
-   "name": "ZIP Creator",
-   "cat": "utilities",
-   "desc": "Bundle any files into a ZIP archive, with a choice of compression.",
-   "kw": [
-    "zip",
-    "archive",
-    "bundle"
-   ],
-   "icon": "archive",
    "popular": 0
   },
   {
@@ -1147,27 +1072,6 @@
    ]
   },
   {
-   "id": "qr-scanner",
-   "name": "QR and Barcode Scanner",
-   "cat": "utilities",
-   "desc": "Read QR codes and barcodes from a photo, a screenshot or the camera.",
-   "kw": [
-    "scan",
-    "qr",
-    "barcode",
-    "reader",
-    "camera",
-    "decode",
-    "upi"
-   ],
-   "icon": "scan",
-   "popular": 0,
-   "in": [
-    "jpg",
-    "png"
-   ]
-  },
-  {
    "id": "barcode-generator",
    "name": "Barcode Generator",
    "cat": "utilities",
@@ -1192,7 +1096,7 @@
   {
    "id": "timezone-converter",
    "name": "Time Zone Converter",
-   "cat": "utilities",
+   "cat": "calculators",
    "desc": "A date and time in one place, shown in every time zone you pick.",
    "kw": [
     "time zone",
@@ -1204,23 +1108,6 @@
     "meeting"
    ],
    "icon": "globe",
-   "popular": 0
-  },
-  {
-   "id": "stopwatch-timer",
-   "name": "Stopwatch and Timer",
-   "cat": "utilities",
-   "desc": "A stopwatch with laps and a countdown timer that rings at the end.",
-   "kw": [
-    "stopwatch",
-    "timer",
-    "countdown",
-    "lap",
-    "alarm",
-    "pomodoro",
-    "clock"
-   ],
-   "icon": "timer",
    "popular": 0
   },
   {

@@ -16,7 +16,9 @@ import './styles.css';
 
 const TOOLS = DATA.tools, CATS = DATA.categories;
 const BY = Object.fromEntries(TOOLS.map((t) => [t.id, t]));
-st.load(new Set(TOOLS.map((t) => t.id)));
+// (1.61.9) tools that became a tab of another: their old addresses, favourites and recent entries open that tab
+const MOVED = { 'svg-png': ['image-converter', 'svg'], 'img-base64': ['image-converter', 'base64'] };
+st.load(new Set(TOOLS.map((t) => t.id)), Object.fromEntries(Object.entries(MOVED).map(([a, b]) => [a, b[0]])));
 
 const root = document.getElementById('root');
 const nav = h('nav', { class: 'tnav', 'aria-label': 'Tools sections' });
@@ -38,7 +40,7 @@ function drawNav(route, cur) {
   const count = (c) => visible(TOOLS.filter((t) => t.cat === c)).length;
   const item = (href, ic, label, on, cls, n, open) => h('a', { href, class: 'ni ' + cls + (open ? ' open' : ''), 'aria-current': on ? 'page' : null, title: label },
     h('span', { class: 'nt' }, icon(ic)), h('span', { class: 'nl', text: label }), n != null ? h('span', { class: 'nb', text: String(n) }) : null);
-  const sections = CATS.flatMap((c) => {
+  const sections = st.sections(CATS).flatMap((c) => {
     // 1.60: a section is one line; its tools are on the page itself (the menu no longer unfolds a list under it)
     const here = cur && cur.cat === c.id;
     return [item('#/s/' + c.id, c.icon, c.name, route === '#/s/' + c.id, 'c-' + c.id, count(c.id), here)];
@@ -91,7 +93,7 @@ function pageHome(q = '') {
       results.replaceChildren(...[
         recent.length ? h('section', { class: 'sec' }, h('div', { class: 'sh' }, h('h2', { text: 'Recently Used' }), h('a', { href: '#/recent', text: 'See all' })), grid(recent)) : null,
         favs.length ? h('section', { class: 'sec' }, h('div', { class: 'sh' }, h('h2', { text: 'Favourites' })), grid(favs)) : null,
-        ...CATS.map((c) => { const list = visible(st.ordered(c.id, TOOLS.filter((t) => t.cat === c.id))); return list.length ? h('section', { class: 'sec c-' + c.id }, h('div', { class: 'sh' }, h('h2', {}, h('span', { class: 'sdot' }, icon(c.icon)), c.name, h('small', { text: String(list.length) })), h('a', { href: '#/s/' + c.id, text: 'Open' })), h('p', { class: 'sd', text: c.desc }), grid(list)) : null; }),
+        ...st.sections(CATS).map((c) => { const list = visible(st.ordered(c.id, TOOLS.filter((t) => t.cat === c.id))); return list.length ? h('section', { class: 'sec c-' + c.id }, h('div', { class: 'sh' }, h('h2', {}, h('span', { class: 'sdot' }, icon(c.icon)), c.name, h('small', { text: String(list.length) })), h('a', { href: '#/s/' + c.id, text: 'Open' })), h('p', { class: 'sd', text: c.desc }), grid(list)) : null; }),
       ].filter(Boolean));
       return;
     }
@@ -118,9 +120,13 @@ function pageList(title, sub, list, empty) {
 
 function pageOrganise() {
   const body = h('div', { class: 'org' });
-  const draw = () => body.replaceChildren(...CATS.map((c) => {
+  const draw = () => body.replaceChildren(...st.sections(CATS).map((c, si, all) => {
     const list = st.ordered(c.id, TOOLS.filter((t) => t.cat === c.id));
-    return h('section', { class: 'sec' }, h('h2', {}, icon(c.icon), c.name), h('ul', { class: 'olist' }, list.map((t, i) => h('li', { class: st.isHidden(t.id) ? 'off' : '' },
+    // (1.61.9) a section moves up or down as a whole: the side menu, the home page and the tabs follow
+    const smove = (by) => { st.moveSection(CATS, c.id, by); draw(); drawNav(location.hash || '#/organise'); const b = body.querySelector('[data-sec="' + c.id + '"] [data-m="' + (by < 0 ? 'up' : 'down') + '"]'); if (b && !b.disabled) b.focus(); };
+    return h('section', { class: 'sec', 'data-sec': c.id }, h('div', { class: 'osh' }, h('h2', {}, icon(c.icon), c.name),
+      h('button', { type: 'button', class: 'ib', 'data-m': 'up', 'aria-label': 'Move the ' + c.name + ' section up', title: 'Move section up', disabled: si === 0, onClick: () => smove(-1) }, icon('up')),
+      h('button', { type: 'button', class: 'ib', 'data-m': 'down', 'aria-label': 'Move the ' + c.name + ' section down', title: 'Move section down', disabled: si === all.length - 1, onClick: () => smove(1) }, icon('down'))), h('ul', { class: 'olist' }, list.map((t, i) => h('li', { class: st.isHidden(t.id) ? 'off' : '' },
       h('span', { class: 'on' }, icon(t.icon), h('span', { text: t.name })),
       h('button', { type: 'button', class: 'ib', 'aria-label': 'Move ' + t.name + ' up', disabled: i === 0, onClick: () => { st.move(c.id, TOOLS.filter((x) => x.cat === c.id), t.id, -1); draw(); } }, icon('up')),
       h('button', { type: 'button', class: 'ib', 'aria-label': 'Move ' + t.name + ' down', disabled: i === list.length - 1, onClick: () => { st.move(c.id, TOOLS.filter((x) => x.cat === c.id), t.id, 1); draw(); } }, icon('down')),
@@ -128,7 +134,7 @@ function pageOrganise() {
       h('button', { type: 'button', class: 'ib', 'aria-pressed': String(!st.isHidden(t.id)), 'aria-label': 'Show ' + t.name, onClick: () => { st.toggleHidden(t.id); draw(); } }, icon(st.isHidden(t.id) ? 'eyeoff' : 'eye'))))));
   }));
   draw();
-  view.replaceChildren(heading('Organise', 'Star favourites, change the order within a section, and hide tools you never use. Hidden tools stay here and in Settings.'), body);
+  view.replaceChildren(heading('Organise', 'Move sections and tools up or down, star favourites, and hide tools you never use.'), body);
 }
 
 function pageSettings() {
@@ -144,7 +150,7 @@ function pageSettings() {
     presetsPanel());
 }
 
-async function pageTool(id) {
+async function pageTool(id, tab) {
   const t = BY[id];
   if (!t) return pageList('Tool not found', 'That tool does not exist. Pick one below.', visible(TOOLS), '');
   st.used(id);
@@ -162,9 +168,9 @@ async function pageTool(id) {
   if (!LOAD[id]) { body.replaceChildren(h('p', { class: 'note', text: 'This tool is being rebuilt and will be back in the next version.' })); body.removeAttribute('aria-busy'); return; }
   try {
     const mod = await LOAD[id]();
-    if (location.hash !== '#/tool/' + id) return;   // the visitor moved on while it loaded
+    if (location.hash.split('?')[0] !== '#/tool/' + id) return;   // the visitor moved on while it loaded
     body.replaceChildren(); body.removeAttribute('aria-busy');
-    cleanup = mod.default(body, { tool: t }) || null;
+    cleanup = mod.default(body, { tool: t, tab }) || null;
   } catch (e) {
     console.error(e);
     body.replaceChildren(h('p', { class: 'note bad', role: 'alert', text: 'This tool could not load. Check your connection and reload the page.' }));
@@ -180,7 +186,9 @@ function route() {
   const cur = path.startsWith('#/tool/') ? { id: decodeURIComponent(path.slice(7)), cat: (BY[decodeURIComponent(path.slice(7))] || {}).cat } : path.startsWith('#/s/') ? { cat: path.slice(4) } : null;
   if (!path.startsWith('#/tool/')) delete view.dataset.cat;
   drawNav(path.startsWith('#/tool/') ? lastList : path, cur);
-  if (path.startsWith('#/tool/')) pageTool(decodeURIComponent(path.slice(7)));
+  const moved = path.startsWith('#/tool/') && MOVED[decodeURIComponent(path.slice(7))];
+  if (moved) { location.replace('#/tool/' + moved[0] + '?tab=' + moved[1]); return; }
+  if (path.startsWith('#/tool/')) pageTool(decodeURIComponent(path.slice(7)), new URLSearchParams(qs || '').get('tab') || '');
   else {
     lastList = path;
     if (path === '#/recent') pageList('Recently Used', 'The tools you opened last, newest first.', visible(st.state().recent.map((id) => BY[id]).filter(Boolean)), 'Tools you open will show up here.');

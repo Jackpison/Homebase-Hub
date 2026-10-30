@@ -91,7 +91,7 @@
 <input type="file" id="file" accept="application/json,.json" hidden>
 <div id="printArea"></div>
 
-<dialog id="dlg">
+<dialog id="dlg" class="ix-sdlg ix-plain">
   <form method="dialog" id="form">
     <h2 id="dt">Edit Card</h2>
     <div class="f">
@@ -113,7 +113,7 @@
   </form>
 </dialog>
 
-<dialog id="hdlg">
+<dialog id="hdlg" class="ix-sdlg ix-plain">
   <form method="dialog" id="hform">
     <h2>Holders</h2>
     <p>The people the cards belong to. Rename one here; a holder with no cards can be deleted.</p>
@@ -124,7 +124,7 @@
   </form>
 </dialog>
 
-<dialog id="idlg">
+<dialog id="idlg" class="ix-sdlg ix-plain">
   <form method="dialog" id="iform">
     <h2>Import Backup</h2>
     <p id="imsg"></p>
@@ -132,7 +132,7 @@
   </form>
 </dialog>
 
-<dialog id="odlg">
+<dialog id="odlg" class="ix-sdlg ix-plain">
   <h2>Column Order</h2>
   <p>Use the arrows to move a column. The Excel and PDF files follow this order.</p>
   <div id="olist"></div>
@@ -155,7 +155,7 @@
   <div class="act"><button type="button" id="tcancel">Cancel</button><button type="button" class="pri" id="tsave" data-ix-save>Save Settings</button></div>
 </dialog>
 
-<dialog id="bdlg">
+<dialog id="bdlg" class="ix-sdlg ix-plain">
   <form method="dialog" id="bform">
     <h2>Banks</h2>
     <p>Every bank your cards use. Rename one here (its cards follow), or give it the link its name opens. Leave a link empty for the usual one.</p>

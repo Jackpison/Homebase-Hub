@@ -29,11 +29,11 @@ check('A2 private files and folders are refused', not open_, open_)
 st, h, body = get('/web/hub/core/assets/speculation-rules.json')
 check('A3 the pre-loading rules are served as application/speculationrules+json', st == 200 and (h.get('Content-Type') or '').startswith('application/speculationrules+json') and b'prerender' in body, (st, h.get('Content-Type')))
 check('A4 other JSON files in hub/core stay refused', get('/web/hub/core/assets/nothing.json')[0] in (403, 404) and get('/web/hub/core/manifest.json')[0] == 403)
-# 1.60: the QR scanner and the recorder: the camera, microphone and screen sharing are allowed on the Tools page only, and a recording can play
+# 1.60: the recorder: the microphone and screen sharing are allowed on the Tools page only (the camera nowhere since 1.61.9, the QR scanner is gone), and a recording can play
 pp = {pg: (get(pg)[1].get('Permissions-Policy') or '') for pg in ('/web/tools/', '/web/links/', '/web/tools/assets/tools-list.json')}
 st, h, _ = get('/web/tools/')
-check('A8 Tools allows camera, microphone and screen sharing for itself (the browser still asks); other pages allow none',
-      'camera=(self)' in pp['/web/tools/'] and 'microphone=(self)' in pp['/web/tools/'] and 'display-capture=(self)' in pp['/web/tools/'] and 'camera=()' in pp['/web/links/']
+check('A8 Tools allows the microphone and screen sharing for itself (the browser still asks), not the camera; other pages allow none',
+      'camera=()' in pp['/web/tools/'] and 'microphone=(self)' in pp['/web/tools/'] and 'display-capture=(self)' in pp['/web/tools/'] and 'camera=()' in pp['/web/links/']
       and "media-src 'self' blob:" in (h.get('Content-Security-Policy') or ''), pp)
 import json
 st, h, body = get('/web/hub/core/api.php?action=manifest')

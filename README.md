@@ -72,7 +72,7 @@ Seven pages share one login, one bar and one Settings page. Pick a name to see i
 | [💳&nbsp;**Cards**](https://jackpison.github.io/Homebase-Hub/features/cards/) | Your cards in one searchable table | Filter by bank, network, type and holder, yearly charges added up, Holders and Banks windows, export to Excel |
 | [✅&nbsp;**Tasks**](https://jackpison.github.io/Homebase-Hub/features/tasks/) | Bills, renewals and chores | Due dates, repeats and prices, calendar and analytics, Year in Review PDF, a secret calendar link for Google, Apple or Outlook (off until you turn it on) |
 | 📁&nbsp;**Files** | Your own files, locked in your browser | Folders, preview, Trash, share links, Starred and Recent, a 5 GB limit. Share to it from your phone |
-| [🧰&nbsp;**Tools**](https://jackpison.github.io/Homebase-Hub/features/tools/) | Small tools that run in your browser | 53 tools in six sections: images, photos, PDF, calculators (EMI, SIP, FD and RD), documents (invoices, text compare, Markdown, spreadsheets) and utilities (QR scanner, barcodes, time zones, recorder). Save your settings as presets |
+| [🧰&nbsp;**Tools**](https://jackpison.github.io/Homebase-Hub/features/tools/) | Small tools that run in your browser | 47 tools in six sections: images, photos, PDF, calculators (EMI, SIP, FD and RD), documents (invoices, text compare, Markdown, spreadsheets) and utilities (QR scanner, barcodes, time zones, recorder). Save your settings as presets |
 
 And around the pages:
 
@@ -99,7 +99,7 @@ Every picture is the running app. Dark is the default and light is one click awa
 </tr>
 <tr>
 <td valign="top"><img src="website/img/shot-tasks.webp" alt="Tasks page with smart lists and a week strip" width="100%"><br><sub><b>Tasks.</b> Due dates, repeats and prices, with a week strip, calendar and analytics.</sub></td>
-<td valign="top"><img src="website/img/shot-tools.webp" alt="Tools page with search and 53 tools" width="100%"><br><sub><b>Tools.</b> Image, PDF and text tools that run in your browser.</sub></td>
+<td valign="top"><img src="website/img/shot-tools.webp" alt="Tools page with search and 47 tools" width="100%"><br><sub><b>Tools.</b> Image, PDF and text tools that run in your browser.</sub></td>
 </tr>
 <tr>
 <td valign="top"><img src="website/img/cards-crop.webp" alt="Cards page with a table of example cards" width="100%"><br><sub><b>Cards.</b> Your cards in one table, with yearly charges added up.</sub></td>
@@ -143,7 +143,7 @@ Every picture is the running app. Dark is the default and light is one click awa
 </tr>
 <tr>
 <td valign="top"><img src="website/img/tools-compare.webp" alt="Text Compare" width="100%"><br><sub><b>Text Compare.</b> What changed, line by line or word by word.</sub></td>
-<td valign="top"><img src="website/img/tools-scanner.webp" alt="QR and Barcode Scanner" width="100%"><br><sub><b>QR and Barcode Scanner.</b> From a picture or the camera.</sub></td>
+<td valign="top"><img src="website/img/tools-sip.webp" alt="SIP and Lumpsum Calculator" width="100%"><br><sub><b>SIP and Lumpsum Calculator.</b> With a yearly step-up and a chart by year.</sub></td>
 </tr>
 </table>
 </details>

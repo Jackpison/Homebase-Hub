@@ -45,7 +45,7 @@
   <button class="btn primary" id="doneBtn" data-hub="done">Done</button>
 </div>
 
-<dialog id="verDlg"><form method="dialog">
+<dialog id="verDlg" class="ix-sdlg ix-plain"><form method="dialog">
   <h3>Restore an Earlier Version</h3>
   <p style="margin:0 0 12px;color:var(--muted);font-size:14px">Up to 40 copies, one every 10 minutes. Restoring keeps a copy first.</p>
   <ul class="versions" id="verList"></ul>
@@ -53,7 +53,7 @@
   <div class="actions"><button class="btn" value="cancel" formnovalidate>Close</button></div>
 </form></dialog>
 
-<dialog id="linkDlg"><form method="dialog">
+<dialog id="linkDlg" class="ix-sdlg ix-plain"><form method="dialog">
   <h3 id="linkDlgTitle">Add Link</h3>
   <div class="field"><label for="lUrl">URL</label><input id="lUrl" required placeholder="https://"></div>
   <div class="field"><label for="lTitle">Name</label>
@@ -68,7 +68,7 @@
   <div class="actions"><button class="btn primary" id="linkSave">Save Link</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
 </form></dialog>
 
-<dialog id="nameDlg"><form method="dialog">
+<dialog id="nameDlg" class="ix-sdlg ix-plain"><form method="dialog">
   <h3 id="nameDlgTitle">Name</h3>
   <div class="field"><label for="nameInput">Name</label><input id="nameInput" required maxlength="60"></div>
   <div class="actions"><button class="btn primary" id="nameSave">Save</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
@@ -106,7 +106,7 @@
   <div class="actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" id="setSave" data-ix-save>Save Settings</button></div>
 </form></dialog>
 
-<dialog id="colorDlg"><form method="dialog">
+<dialog id="colorDlg" class="ix-sdlg ix-plain"><form method="dialog">
   <h3>Colors</h3>
   <div class="cmodes" role="group" aria-label="Mode"><button type="button" data-cm="dark">Dark Mode</button><button type="button" data-cm="light">Light Mode</button></div>
   <div class="cpanel" data-m="dark">
@@ -123,7 +123,7 @@
   <div class="actions"><button class="btn primary" id="colorSave">Save Colors</button><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn left" type="button" id="colorReset">Reset This Mode</button></div>
 </form></dialog>
 
-<dialog id="textDlg"><form method="dialog">
+<dialog id="textDlg" class="ix-sdlg ix-plain"><form method="dialog">
   <h3>Text Sizes</h3>
   <div id="xSizes"></div>
   <div class="sample" aria-hidden="true">
@@ -135,7 +135,7 @@
   <div class="actions"><button class="btn primary" id="textSave">Save Sizes</button><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn left" type="button" id="textReset">Reset Sizes</button></div>
 </form></dialog>
 
-<dialog id="iconDlg"><form method="dialog">
+<dialog id="iconDlg" class="ix-sdlg ix-plain"><form method="dialog">
   <h3>Fetch Icons</h3>
   <p class="hint" style="font-size:13.5px;color:var(--muted);margin:-6px 0 14px">Saves each site's icon on your server.</p>
   <label class="check" style="margin-bottom:12px"><input type="radio" name="iconMode" value="missing" checked><span>Links Without an Icon<small id="iconCnt1"></small></span></label>
@@ -145,7 +145,7 @@
   <div class="actions"><button class="btn primary" id="iconGo" type="button">Fetch Icons</button><button class="btn" value="cancel" formnovalidate>Close</button></div>
 </form></dialog>
 
-<dialog id="tabDlg"><form method="dialog">
+<dialog id="tabDlg" class="ix-sdlg ix-plain"><form method="dialog">
   <h3 id="tabDlgTitle">Edit Tab</h3>
   <div class="field"><label for="tName">Name</label><input id="tName" required maxlength="40"></div>
   <div class="field"><span class="lbl">Ribbon Color</span>
@@ -161,7 +161,7 @@
 </form></dialog>
 
 
-<dialog id="keyDlg"><form method="dialog">
+<dialog id="keyDlg" class="ix-sdlg ix-plain"><form method="dialog">
   <h3 id="keyTitle">Unlock Encrypted Tabs</h3>
   <p id="keyText"></p>
   <div class="field"><label for="keyPw" id="keyPwLbl">Encryption Passphrase</label><input type="password" id="keyPw" autocomplete="off"></div>

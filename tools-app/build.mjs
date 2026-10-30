@@ -43,8 +43,7 @@ for (const d of ['cmaps', 'standard_fonts']) {
 fs.mkdirSync(path.join(A, 'vendor/tesseract'), { recursive: true });
 for (const f of ['tesseract.js/dist/worker.min.js', 'tesseract.js-core/tesseract-core-simd-lstm.wasm.js'])   // the SIMD core only: every current browser has WebAssembly SIMD
   fs.copyFileSync(path.join(HERE, 'node_modules', f), path.join(A, 'vendor/tesseract', path.basename(f)));
-// zxing_reader.wasm: the QR and Barcode Scanner (1.60). The scanner points the library here; by itself it would fetch it from a CDN.
-for (const w of ['@jsquash/avif/codec/enc/avif_enc.wasm', 'onnxruntime-web/dist/ort-wasm-simd-threaded.wasm', 'zxing-wasm/dist/reader/zxing_reader.wasm']) fs.copyFileSync(path.join(HERE, 'node_modules', w), path.join(A, path.basename(w)));
+for (const w of ['@jsquash/avif/codec/enc/avif_enc.wasm', 'onnxruntime-web/dist/ort-wasm-simd-threaded.wasm']) fs.copyFileSync(path.join(HERE, 'node_modules', w), path.join(A, path.basename(w)));
 for (const d of fs.readdirSync(path.join(HERE, 'static'))) if (d !== 'sw.js' && fs.statSync(path.join(HERE, 'static', d)).isDirectory()) fs.cpSync(path.join(HERE, 'static', d), path.join(A, d), { recursive: true });
 
 // the tool names for Home's Recent Tools widget (Home reads which tools you used from this browser, and their names from here)

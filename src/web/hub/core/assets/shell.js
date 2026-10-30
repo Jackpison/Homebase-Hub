@@ -477,8 +477,9 @@
      dialog.ix-sdlg: title + close X on top, a scrolling body, the buttons in a footer. The X does what Cancel does. */
   function sdlgBuild(d) {
     if (d._ixS) return; d._ixS = true;
-    if (d.querySelector('.dh,.ix-sh')) { sdlgDecorate(d.querySelector('.db'), '.sh3'); return; }
-    var c = d.querySelector(':scope>form') || d, kids = [].slice.call(c.children);
+    var plain = d.classList.contains('ix-plain');   // (1.61.9) a page's own window (Add Link, Edit Card...): the frame only, its fields keep their own layout
+    if (d.querySelector('.dh,.ix-sh')) { if (!plain) sdlgDecorate(d.querySelector('.db'), '.sh3'); return; }
+    var c = d.querySelector(':scope>form') || (d.children.length === 1 && d.firstElementChild.tagName === 'DIV' ? d.firstElementChild : d), kids = [].slice.call(c.children);   // a form, a single wrapper (Info's Export) or the dialog itself
     var t = kids.filter(function (k) { return /^H[23]$/.test(k.tagName); })[0];
     var foot = kids.slice().reverse().filter(function (k) { return k.matches('.act,.actions'); })[0];
     if (!t || !foot) return;
@@ -492,8 +493,13 @@
     c.insertBefore(h, t); h.appendChild(t); h.appendChild(x);
     var b = document.createElement('div'); b.className = 'ix-sb';
     kids.forEach(function (k) { if (k !== t && k !== foot) b.appendChild(k); });
-    c.insertBefore(b, foot); foot.classList.add('ix-sf'); sdlgDecorate(b, 'h3,h4');
+    c.insertBefore(b, foot); foot.classList.add('ix-sf'); if (!plain) sdlgDecorate(b, 'h3,h4');
     d.setAttribute('aria-labelledby', t.id || (t.id = (d.id || 'sd') + '-t'));
+    // (1.61.9) a page's own window opens with its first field ready to type in, as before it had the frame (not on the X)
+    if (plain) new MutationObserver(function () {
+      if (!d.open || document.activeElement !== x) return;
+      var f = b.querySelector('input:not([type=hidden]):not([disabled]):not([type=checkbox]):not([type=radio]),select:not([disabled]),textarea:not([disabled])'); if (f && f.offsetParent) f.focus();
+    }).observe(d, { attributes: true, attributeFilter: ['open'] });
   }
   /* (1.61.5) the look inside a Settings window: each section's rows in one rounded card, a small coloured tile in front of each row */
   var RT = [
