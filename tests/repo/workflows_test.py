@@ -84,5 +84,11 @@ check('W18 several browser tests run at once through run_parallel.py, and only t
       bj.count('tests/lib/run_parallel.py -j 3') == 4 and 'run_parallel.py -j 1 "slow phone|' in bj and 'speed_test' not in bj.replace('run_parallel.py -j 1 "slow phone|tests/browser/speed_test.py', '') and 'tests/repo/parallel_test.py' in ci)
 check('W19 CI lints the Python (ruff, pinned, rules in ruff.toml) and the build job reads enough history for the commit-message secret check',
       'ruff==' in ci and '/tmp/rf/bin/ruff check' in ci and os.path.isfile(os.path.join(ROOT, 'ruff.toml')) and re.search(r'fetch-depth: 50', '\n'.join(cij['build'])))
+bad_names = []
+for f in FILES:
+    for i, line in enumerate(open(f, encoding='utf-8').read().split('\n')):
+        m = re.match(r'^\s*(?:-\s+)?name:\s+(.*)$', line)
+        if m and m.group(1)[:1] not in ('"', "'") and re.search(r':(\s|$)|\s#', m.group(1)): bad_names.append('%s:%d' % (os.path.basename(f), i + 1))
+check('W20 no unquoted step or job name holds a colon and a space (or " #"): YAML reads that as a new key or a comment and CI does not start', not bad_names, bad_names)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)
