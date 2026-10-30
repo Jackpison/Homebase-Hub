@@ -88,7 +88,7 @@ document.addEventListener('pointerdown', hideTip);
 
 const toast = (msg, bad, sticky) => { if (window.HUB) HUB.toast(msg, bad, sticky); };   // the site's one message box (shell.js)
 // (1.61.9) after a delete: the message offers Undo for 7 seconds, which puts it back where it was and saves again
-const undoable = (msg, undo) => { if (window.HUB) HUB.toast(msg, false, false, { label: 'Undo', run: undo }); };
+const undoable = (msg, undo) => { if (window.HUB) HUB.undo(msg, undo); };
 const RIBBON = '<path d="M3 0h14a2 2 0 0 1 2 2v19.2a.6.6 0 0 1-.95.49L10 16.5l-8.05 5.19A.6.6 0 0 1 1 21.2V2a2 2 0 0 1 2-2z"/>';
 const ribbon = outline => h('span', { 'aria-hidden': 'true', html:
   `<svg viewBox="0 0 20 22" ${outline ? 'fill="none" stroke="currentColor" stroke-width="2"' : 'fill="currentColor"'}>${RIBBON}</svg>` }).firstChild;
