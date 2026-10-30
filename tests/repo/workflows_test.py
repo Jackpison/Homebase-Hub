@@ -71,12 +71,14 @@ cs = open(os.path.join(ROOT, '.github', 'workflows', 'code-scanning.yml'), encod
 check('W13 CodeQL and Semgrep run on every push to main and every pull request, and weekly; a Semgrep finding fails the run', all(x in cs for x in ('push:', 'pull_request:', 'schedule:', 'github/codeql-action/analyze@', 'semgrep scan', '--error', 'security-events: write')))
 check('W14 CI runs the JavaScript type check', 'npx tsc -p tsconfig.json' in ci)
 bj = '\n'.join(cij['browsers'])
-ci_code = '\n'.join(l.split('   #')[0] for l in ci.split('\n') if not l.strip().startswith('#'))   # the comments may say Firefox and WebKit
-check('W15 CI runs the browser tests in Chromium only, in two halves side by side (no Firefox or WebKit, no visual report job)',
-      'BROWSER: chromium' in bj and 'part: [pages, tools]' in bj and not re.search(r'firefox|webkit', ci_code, re.I) and 'visual' not in cij, [x for x in ('firefox', 'webkit', 'visual') if x in ci_code.lower() or x in cij])
-oj = '\n'.join(jobs(wk).get('other-browsers', []))
-check('W16 the weekly check runs the page tests in Firefox and WebKit and reports a failure in its own issue (label browsers)',
-      'browser: [firefox, webkit]' in oj and 'pages' in oj and 'settings_look' in oj and '--label browsers' in oj and 'issues: write' in oj and 'timeout-minutes:' in oj)
+ci_code = '\n'.join(l.split('   #')[0] for l in ci.split('\n') if not l.strip().startswith('#'))   # the comments may say Firefox
+check('W15 CI runs the browser tests in Chromium (two halves) and WebKit (whole) side by side; Firefox and the visual report job are not in CI',
+      'browser: chromium, part: pages' in bj and 'browser: chromium, part: tools' in bj and 'browser: webkit, part: all' in bj and not re.search(r'firefox', ci_code, re.I) and 'visual' not in cij,
+      [x for x in ('firefox', 'visual') if x in ci_code.lower() or x in cij])
+ff = open(os.path.join(ROOT, '.github', 'workflows', 'firefox-check.yml'), encoding='utf-8').read()
+check('W16 Firefox runs on the 1st and 15th and by hand, runs the page tests and the accessibility check, and reports a failure in its own issue (label browsers)',
+      "cron: '41 5 1,15 * *'" in ff and 'workflow_dispatch:' in ff and 'BROWSER: firefox' in ff and 'settings_look' in ff and 'a11y_test' in ff and 'website_test' in ff and '--label browsers' in ff
+      and 'issues: write' in ff and 'timeout-minutes:' in ff and 'permissions: {}' in ff and not re.search(r'pull_request|push:', ff))
 check('W17 CI runs the secret check', 'tests/repo/secrets_test.py' in ci)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

@@ -66,7 +66,7 @@ python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip <previous re
 sudo sh tests/server/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/server/apache_test.py
 ```
 
-All of them must pass. `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs them one after another with one summary table (`--quick`: lint, unit, repo and server checks only, for small changes; `--apache` adds the Apache test). CI runs the same checks on every pull request and on every push to `main`, with the browser tests in Chromium only (two halves side by side). Firefox and WebKit run once a week in the weekly check (`--browser firefox|webkit` runs them by hand, and Actions > Weekly security check > Run workflow starts the weekly run); run them before a release that changed layout or windows. On a docs-only change CI skips the slow jobs; `ci-ok` sums up every job.
+All of them must pass. `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs them one after another with one summary table (`--quick`: lint, unit, repo and server checks only, for small changes; `--apache` adds the Apache test). CI runs the same checks on every pull request and on every push to `main`, with the browser tests in Chromium (two halves) and WebKit side by side. Firefox runs on the 1st and 15th in `firefox-check.yml` (`--browser firefox` runs it by hand, and Actions > Firefox check > Run workflow starts it); run it before a release that changed layout or windows. On a docs-only change CI skips the slow jobs; `ci-ok` sums up every job.
 
 ## Release checklist
 

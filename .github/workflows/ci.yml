@@ -143,18 +143,21 @@ jobs:
   browsers:
     needs: changes
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
-    # Every page in a real browser: Chromium only, in two halves that run side by side (about 5 minutes, not 9).
-    # Firefox and WebKit run once a week in weekly-check.yml. Each half installs the browser's Ubuntu packages itself, so a stuck
-    # download holds one half, not both: the install below tries three times.
+    # Every page in a real browser, three jobs side by side: Chromium in two halves (pages, tools) and WebKit whole (every iPhone browser uses it).
+    # Firefox runs on the 1st and 15th in firefox-check.yml. Each job installs the browser's Ubuntu packages itself, so a stuck
+    # download holds one job, not all: the install below tries three times.
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        part: [pages, tools]
+        include:
+          - { browser: chromium, part: pages }
+          - { browser: chromium, part: tools }
+          - { browser: webkit, part: all }
     timeout-minutes: 25
-    name: browser (chromium, ${{ matrix.part }})
+    name: browser (${{ matrix.browser }}, ${{ matrix.part }})
     env:
-      BROWSER: chromium   # the scripts read it from here, never pasted into the script text
+      BROWSER: ${{ matrix.browser }}   # the scripts read it from here, never pasted into the script text
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
@@ -168,7 +171,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
+          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
       - name: npm packages
         run: npm ci --ignore-scripts
       - name: Python packages
@@ -185,41 +188,41 @@ jobs:
       - name: The browser
         timeout-minutes: 10
         run: python -m playwright install "$BROWSER"
-      - name: Build the zip (and the website for the tools half)
+      - name: Build the zip (and the website for the tools half and WebKit)
         id: build
         env:
           PART: ${{ matrix.part }}
         run: |
           python3 scripts/build.py
-          if [ "$PART" = tools ]; then python3 scripts/make-site.py --no-guide; fi
+          if [ "$PART" != pages ]; then python3 scripts/make-site.py --no-guide; fi
       # ---- half 1: the pages, the bar, Settings, accessibility (about 275 s) ----
       - name: Install on a phone (manifest, icons, head tags, Settings card, Chromium installability)
-        if: matrix.part == 'pages' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.browser == 'chromium' && matrix.part == 'pages' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/app_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "app"
       - name: Settings and Home (Telegram backup button, GitHub link, upload limit, config.json clean-up)
-        if: matrix.part == 'pages' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.browser == 'chromium' && matrix.part == 'pages' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/settings_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "settings"
       - name: Import Bookmarks
-        if: matrix.part == 'pages' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.part != 'tools' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/import_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "import"
       - name: Pages
-        if: matrix.part == 'pages' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.part != 'tools' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/pages_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "pages"
       - name: The bar in all three styles (computer and phone)
-        if: matrix.part == 'pages' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.part != 'tools' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/nav_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "nav"
       - name: Settings windows, Only Me, Backup tabs, Export Bookmarks, calendar link, keyboard shortcuts
-        if: matrix.part == 'pages' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.part != 'tools' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/settings_ui_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "settings ui"
@@ -230,35 +233,35 @@ jobs:
           python3 tests/browser/a11y_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "a11y"
       # ---- half 2: Tools, encryption and Files, the look and phone width, passkeys, a slow phone, the website (about 240 s) ----
       - name: Tools
-        if: matrix.part == 'tools' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.part != 'pages' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/tools_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "tools"
       - name: Encryption, Files, locked Cards, Tools presets and private tabs
-        if: matrix.part == 'tools' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.part != 'pages' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           for t in encrypt files lock tabs_lock; do
             python3 tests/browser/${t}_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "$t"
           done
       - name: The look of Settings and Files (cards, Save bar, grid previews, nothing wider than a phone)
-        if: matrix.part == 'tools' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.part != 'pages' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/settings_look_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "settings look"
       - name: Passkeys and Share from the phone (Chromium only, its virtual authenticator and service workers)
-        if: matrix.part == 'tools' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.browser == 'chromium' && matrix.part == 'tools' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/passkey_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "passkeys"
           python3 tests/browser/share_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "share"
       - name: A slow phone (every page, slowed processor and network)
-        if: matrix.part == 'tools' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.browser == 'chromium' && matrix.part == 'tools' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/speed_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "slow phone"
       - name: Website (links, security policy, interactions, phone layout, accessibility in dark and light)
-        if: matrix.part == 'tools' && (success() || failure()) && steps.build.outcome == 'success'
+        if: matrix.part != 'pages' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
           python3 tests/browser/website_test.py build/site --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "website"
