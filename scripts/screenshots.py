@@ -72,6 +72,15 @@ def snap(pg,name,url=None,wait=1800,click=None,full=False):
         try: pg.locator(click).first.click(timeout=4000); pg.wait_for_timeout(1200)
         except Exception as e: print('  click failed',name,str(e)[:80])
     pg.screenshot(path=f'{OUT}/{name}.png',full_page=full); print(name)
+def waitjs(pg, expr, timeout=20000):
+    """Waits until a JavaScript expression is true: it polls evaluate(), because the pages' security policy refuses Playwright's string waits."""
+    end = time.time() + timeout / 1000
+    while time.time() < end:
+        try:
+            if pg.evaluate(expr): return True
+        except Exception: pass
+        pg.wait_for_timeout(500)
+    raise Exception('waited for: ' + expr[:80])
 with sync_playwright() as p:
     b=p.chromium.launch(args=['--no-sandbox'])
     def ctx(w,h,theme):
@@ -164,6 +173,45 @@ with sync_playwright() as p:
                 lc.route('**/*', lambda r: r.continue_() if r.request.url.startswith(B) or r.request.url.startswith('data:') else r.abort())
                 lp = lc.new_page(); lp.goto(B + '/web/links/', wait_until='domcontentloaded'); lp.wait_for_timeout(1500)
                 lp.evaluate("setTimeout(() => HUB.login(), 0); 0"); lp.wait_for_timeout(1000); shot(lp, n)
+    # ---- 1.61 and 1.62: the passphrase and Security, Files, Files Settings, the calendar link, Info Undo (dark). Last, because setting the
+    # passphrase locks Cards and the private tabs for the pictures that come after it. ----
+    PASS = 'a passphrase for the pictures 61'
+    fx = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tests', 'fixtures')
+    fb = lambda n: open(os.path.join(fx, n), 'rb').read()
+    pg = ctx(1440, 900, 'dark').new_page()
+    pg.goto(B + '/web/settings/#security/encryption'); pg.wait_for_selector('#ix-en1', timeout=20000)
+    pg.fill('#ix-en1', PASS); pg.fill('#ix-en2', PASS); pg.fill('#ix-epw', PW); pg.check('#ix-eack'); pg.click('#ix-eset')
+    waitjs(pg, "fetch('/web/hub/core/api.php?action=sv_get', {credentials: 'same-origin'}).then(r => r.json()).then(j => !!(j.pp && j.vault))", 60000)
+    pg.wait_for_timeout(1500); shot(pg, 's-encryption')
+    snap(pg, 's-security', '/web/settings/#security'); snap(pg, 's-passkeys', '/web/settings/#security', click='.ix-subt button:has-text("Passkeys")')
+    # Files: a few files with real-looking names, a folder, a star and a share link
+    pg.goto(B + '/web/files/', wait_until='domcontentloaded'); waitjs(pg, "!!(window.__files && __files.state().started)")
+    def clean(pg):   # let the message fade and hide the Transfers panel, so the picture shows the page
+        pg.wait_for_timeout(4500); pg.evaluate("(() => { const u = document.getElementById('ups'); if (u) u.hidden = true; })()")
+    def up(name, data, mime): pg.set_input_files('#pick', {'name': name, 'mimeType': mime, 'buffer': data})
+    up('Rent agreement.pdf', fb('fixture-3pages.pdf'), 'application/pdf')
+    pg.wait_for_selector('#ix-skp', timeout=20000); pg.fill('#ix-skp', PASS); pg.check('#ix-skk'); pg.click('#ix-skg'); pg.wait_for_selector('#list .row .nm[title="Rent agreement.pdf"]', timeout=30000)
+    up('Passport scan.pdf', fb('fixture-2pages.pdf'), 'application/pdf'); up('Holiday photo.png', fb('fixture-image.png'), 'image/png')
+    up('Router settings.txt', b'Router: 192.168.1.1\nWi-Fi: Homebase-5G\nBackup the config every month.\n', 'text/plain'); up('Invoice 1042.pdf', fb('fixture-2pages.pdf'), 'application/pdf')
+    pg.wait_for_selector('#list .row .nm[title="Invoice 1042.pdf"]', timeout=30000); pg.wait_for_timeout(800)
+    pg.click('#newb'); pg.click('.pm button:has-text("New Folder")'); pg.fill('#dname', 'Home Documents'); pg.click('#dform .act .pri'); pg.wait_for_selector('#list .row .nm[title="Home Documents"]', timeout=15000)
+    rowf = lambda n: pg.locator('#list .row', has=pg.locator('.nm[title="%s"]' % n))
+    def menuf(n, it): rowf(n).locator('.more').click(); pg.locator('.pm button', has_text=it).first.click()
+    rowf('Passport scan.pdf').locator('.nm').click(); pg.wait_for_selector('#det:not([hidden]) .btn.star', timeout=8000); pg.click('#det .btn.star'); pg.wait_for_timeout(800)   # Star is a button in the details panel
+    menuf('Rent agreement.pdf', 'Share Link'); pg.wait_for_selector('#dform button:has-text("Make a New Link")'); pg.click('#dform button:has-text("Make a New Link")'); pg.wait_for_selector('#dform .lk', timeout=15000); pg.wait_for_timeout(600)
+    clean(pg); shot(pg, 'files-share'); pg.keyboard.press('Escape'); pg.wait_for_timeout(500)
+    if not pg.evaluate("!!document.querySelector('#det:not([hidden])') && !!document.querySelector('#det .btn.star')"): rowf('Passport scan.pdf').locator('.nm').click()   # a second click would un-pick it
+    pg.wait_for_selector('#det:not([hidden])', timeout=8000); pg.wait_for_timeout(700); clean(pg); shot(pg, 'files')
+    item(pg, 'Files Settings'); clean(pg); shot(pg, 'files-settings'); pg.keyboard.press('Escape'); pg.wait_for_timeout(400)
+    # Tasks Settings: the calendar link
+    pg.goto(B + '/web/tasks/', wait_until='domcontentloaded'); pg.wait_for_selector('#sdlg', state='attached'); pg.wait_for_timeout(1200); pg.evaluate("document.getElementById('sdlg').showModal()")
+    pg.check('#s-calon'); waitjs(pg, "document.getElementById('s-calurl').value.includes('calendar.php?k=')", 10000)
+    pg.evaluate("document.getElementById('s-calurl').scrollIntoView({block: 'center'})"); pg.wait_for_timeout(500); shot(pg, 'tasks-calendar-link')
+    # Info: a deleted box and its Undo message
+    pg.goto(B + '/web/info/', wait_until='domcontentloaded'); pg.wait_for_timeout(2000)
+    pg.evaluate("[...document.querySelectorAll('.box')].find(b => b.offsetParent).querySelector('[data-r=cfg]').click()"); pg.wait_for_selector('#bxdlg[open]'); pg.click('#bxdel')
+    if pg.evaluate("document.getElementById('bxdel').textContent.includes('Its Text')"): pg.click('#bxdel')
+    pg.wait_for_selector('#ix-toast.on .ix-tact', timeout=10000); pg.wait_for_timeout(500); shot(pg, 'info-undo')
     b.close()
 php.terminate()
 
