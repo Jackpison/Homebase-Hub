@@ -8,8 +8,8 @@ For changing the code itself, read `AGENTS.md`.
 
 | When | What | What you see |
 |---|---|---|
-| Every push and pull request | **CI** tests everything: PHP 8.3, 8.4 and 8.5, the updater, hostile update files, Apache, and every page in Chromium, Firefox and WebKit. | A green tick or a red cross on the commit. |
-| Every Monday | **Weekly check**: (1) asks whether any library has a known security problem; (2) tries the next PHP version, still in development, so a break shows up months before hosts offer it. | An issue labelled `security` or `php`, only when something is wrong. |
+| Every push and pull request | **CI** tests everything: PHP 8.3, 8.4 and 8.5, the updater, hostile update files, Apache, the secret check, and every page in Chromium (two halves side by side). | A green tick or a red cross on the commit. |
+| Every Monday | **Weekly check**: (1) asks whether any library has a known security problem; (2) tries the next PHP version, still in development, so a break shows up months before hosts offer it; (3) runs the page tests in Firefox and WebKit. | An issue labelled `security`, `php` or `browsers`, only when something is wrong. |
 | The 3rd of every month | **Monthly maintenance**: updates the libraries inside Tools (within their major version), rebuilds Tools, raises the version by one, writes the changelog, and opens a pull request. | A pull request "Monthly maintenance: X.Y.Z", or nothing when all is current. |
 | Weekly | **Dependabot** proposes updates for GitHub's own build steps, the build tools and the test tools. | Pull requests from Dependabot. |
 | 15 November | **PHP dates reminder**: update the PHP support dates. | An issue "Check the PHP support dates". |

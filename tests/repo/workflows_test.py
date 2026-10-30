@@ -57,8 +57,8 @@ okbody = '\n'.join(cij.get('ci-ok', []))
 m = re.search(r'needs:\s*\[([^\]]*)\]', okbody)
 check('W8 ci-ok needs every other CI job and runs even when one failed (if: always())', m and sorted(x.strip() for x in m.group(1).split(',')) == sorted(others) and 'if: always()' in okbody, (m and m.group(1), others))
 gated = [j for j in others if "if: needs.changes.outputs.code == 'true'" in '\n'.join(cij[j])]
-check('W9 on a docs-only change only the slow jobs skip; changes and build always run', sorted(gated) == ['apache', 'browsers', 'server'] and "if: needs.changes.outputs.app == 'true'" in '\n'.join(cij['visual']), gated)
-check('W10 browsers install in named steps, the Ubuntu packages with a time limit and retries (no --with-deps in one step)', '--with-deps' not in ci and ci.count('playwright install-deps') == 3 and ci.count('for i in 1 2 3') == 3)
+check('W9 on a docs-only change only the slow jobs skip; changes and build always run', sorted(gated) == ['apache', 'browsers', 'server'], gated)
+check('W10 browsers install in named steps, the Ubuntu packages with a time limit and retries (no --with-deps in one step)', '--with-deps' not in ci and ci.count('playwright install-deps') == 2 and ci.count('for i in 1 2 3') == 2)
 mt = open(os.path.join(ROOT, '.github', 'workflows', 'maintenance.yml'), encoding='utf-8').read()
 trig = mt[mt.index('\non:'):mt.index('\npermissions:')]
 pushes = [l for l in mt.split('\n') if 'git push' in l]
@@ -70,5 +70,13 @@ check('W12 the weekly check also tries the next PHP version (development build) 
 cs = open(os.path.join(ROOT, '.github', 'workflows', 'code-scanning.yml'), encoding='utf-8').read()
 check('W13 CodeQL and Semgrep run on every push to main and every pull request, and weekly; a Semgrep finding fails the run', all(x in cs for x in ('push:', 'pull_request:', 'schedule:', 'github/codeql-action/analyze@', 'semgrep scan', '--error', 'security-events: write')))
 check('W14 CI runs the JavaScript type check', 'npx tsc -p tsconfig.json' in ci)
+bj = '\n'.join(cij['browsers'])
+ci_code = '\n'.join(l.split('   #')[0] for l in ci.split('\n') if not l.strip().startswith('#'))   # the comments may say Firefox and WebKit
+check('W15 CI runs the browser tests in Chromium only, in two halves side by side (no Firefox or WebKit, no visual report job)',
+      'BROWSER: chromium' in bj and 'part: [pages, tools]' in bj and not re.search(r'firefox|webkit', ci_code, re.I) and 'visual' not in cij, [x for x in ('firefox', 'webkit', 'visual') if x in ci_code.lower() or x in cij])
+oj = '\n'.join(jobs(wk).get('other-browsers', []))
+check('W16 the weekly check runs the page tests in Firefox and WebKit and reports a failure in its own issue (label browsers)',
+      'browser: [firefox, webkit]' in oj and 'pages' in oj and 'settings_look' in oj and '--label browsers' in oj and 'issues: write' in oj and 'timeout-minutes:' in oj)
+check('W17 CI runs the secret check', 'tests/repo/secrets_test.py' in ci)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

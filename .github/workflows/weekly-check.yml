@@ -3,6 +3,7 @@ name: Weekly security check
 # and the build tools (esbuild, axe-core) have a known security problem.
 # On a failure it opens one issue labelled "security", or adds a comment to the one already open.
 # (2) since 1.59 also tries the next PHP version (job next-php, its own "php" issue).
+# (3) since 1.61.10 runs the browser tests in Firefox and WebKit (job other-browsers, its own "browsers" issue). CI itself uses Chromium only.
 on:
   schedule:
     - cron: '17 6 * * 1'
@@ -103,3 +104,78 @@ jobs:
           TITLE="Next PHP version: something breaks"
           NUM=$(gh issue list --repo "$REPO" --state open --label php --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
           if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/php.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label php --body-file "$RUNNER_TEMP/php.md"; fi
+  other-browsers:
+    # CI runs Chromium only. Once a week the same page tests run in Firefox and WebKit, so a bug only those engines show is found within
+    # a week. Start it by hand (Actions > Weekly security check > Run workflow) before a release if the change touched the layout or a window.
+    # On a failure it opens one issue labelled "browsers" (or comments on the open one). The site's own CI is not affected.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    timeout-minutes: 30
+    name: browser tests (${{ matrix.browser }})
+    permissions:
+      contents: read   # check out the repo
+      issues: write    # open or comment on the "browsers" issue
+    env:
+      BROWSER: ${{ matrix.browser }}   # scripts read it from here, never pasted into the script text
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24', cache: npm }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
+      - name: npm packages
+        run: npm ci --ignore-scripts
+      - name: Python packages
+        run: pip install -r tests/requirements.txt
+      - name: Browser system packages from Ubuntu (up to 3 tries of 2 minutes)
+        timeout-minutes: 8
+        run: |
+          for i in 1 2 3; do
+            sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
+            sudo killall -q apt-get dpkg || true; sleep 10
+          done
+          exit 1
+      - name: The browser
+        timeout-minutes: 10
+        run: python -m playwright install "$BROWSER"
+      - name: Build the zip and the website
+        run: python3 scripts/build.py && python3 scripts/make-site.py --no-guide
+      - name: The page tests in this browser
+        run: |
+          set -o pipefail
+          fail=0
+          for t in import pages nav tools encrypt files lock tabs_lock settings_ui settings_look; do
+            python3 tests/browser/${t}_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1
+          done
+          if [ "$BROWSER" = firefox ]; then python3 tests/browser/a11y_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1; fi
+          python3 tests/browser/website_test.py build/site --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1
+          exit $fail
+      - name: Open or update the issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create browsers --repo "$REPO" --color 0E8A16 --description "Firefox and WebKit checks" 2>/dev/null || true
+          {
+            echo "The weekly browser tests failed in $BROWSER on $(date -u +%Y-%m-%d)."
+            echo
+            echo "Run: $RUN_URL"
+            echo
+            echo "Failing lines:"
+            echo
+            echo '```'
+            grep -E '^FAIL|Error|Traceback' browsers.log 2>/dev/null | tail -n 40 || echo "(no log)"
+            echo '```'
+          } > "$RUNNER_TEMP/browsers.md"
+          TITLE="Weekly browser tests failed in $BROWSER"
+          NUM=$(gh issue list --repo "$REPO" --state open --label browsers --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
+          if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/browsers.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label browsers --body-file "$RUNNER_TEMP/browsers.md"; fi

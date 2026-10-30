@@ -2,7 +2,7 @@
 
 These run on your own computer. Nothing here is part of the update zip.
 
-**All at once:** `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs every check below in order and prints one table (check, result, passed, seconds). `--quick` runs only lint, unit, repo and server checks (about 2 minutes); `--browser firefox|webkit` runs the browser tests in another engine; `--apache` adds the Apache test (needs sudo); `--prev` and `--old` give the update test its zips (otherwise they are downloaded and checked against their `.sha256`).
+**All at once:** `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs every check below in order and prints one table (check, result, passed, seconds). `--quick` runs only lint, unit, repo and server checks (about 2 minutes); `--browser firefox|webkit` runs the browser tests in another engine (CI does that once a week, not on every push); `--apache` adds the Apache test (needs sudo); `--prev` and `--old` give the update test its zips (otherwise they are downloaded and checked against their `.sha256`).
 
 | Folder | What is in it |
 |---|---|
@@ -30,7 +30,7 @@ Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen'
 
 ## Visual changes
 
-`python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip previous.zip OUTDIR` installs both zips with the same demo data, photographs ten views (Home, Links, Info, Cards, Tasks, Tools, Settings, Look, and Cards and Links on a phone) in Chromium, and writes `OUTDIR/<view>-before.png`, `-after.png`, `-diff.png` (changed pixels in red) and `summary.md` (how much of each view changed). It is a report, not a test: it fails only when a view cannot be shown or is not logged in. CI runs it against the last release whenever the site, Tools or the build changed (job "visual changes since the last release"): the table is in the job summary and the pictures in the `visual-changes` artifact. Look at it before a release, together with the screenshots the owner asked for.
+`python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip previous.zip OUTDIR` installs both zips with the same demo data, photographs ten views (Home, Links, Info, Cards, Tasks, Tools, Settings, Look, and Cards and Links on a phone) in Chromium, and writes `OUTDIR/<view>-before.png`, `-after.png`, `-diff.png` (changed pixels in red) and `summary.md` (how much of each view changed). It is a report, not a test: it fails only when a view cannot be shown or is not logged in. CI no longer runs it; run it by hand before a release if you want to look at what changed.
 
 ## Static analysis
 
@@ -46,7 +46,8 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 
 - `python3 scripts/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
 - `zizmor --offline --persona=auditor .github/workflows/` (zizmor 1.30.1 from pip): Trail of Bits' checker for workflow files, at its strictest setting. Fix what it finds; never silence it.
-- `python3 tests/repo/ci_changes_test.py`: which changes count as docs only (`scripts/ci_changes.py`): then CI's slow jobs (server, visual, browsers, apache) skip themselves and the `ci-ok` job still passes; any doubt runs everything.
+- `python3 tests/repo/secrets_test.py`: no token, key or private key in any file git tracks (GitHub, Slack, AWS, Google, Anthropic and OpenAI keys, Telegram bot tokens), and the check's own patterns catch a made-up sample of each. CI runs it with the workflow checks.
+- `python3 tests/repo/ci_changes_test.py`: which changes count as docs only (`scripts/ci_changes.py`): then CI's slow jobs (server, browsers, apache) skip themselves and the `ci-ok` job still passes; any doubt runs everything.
 - `python3 tests/repo/ci_status_test.py`: the release waits for CI on the tagged commit (`scripts/ci_status.py`, up to 20 minutes) and refuses to build unless every job passed; this tests that decision with made-up check runs.
 - `python3 tests/repo/releases_test.py`: `tests/lib/releases.py` picks the previous release (the newest one older than the build, compared as numbers); CI uses `python3 tests/lib/releases.py previous` and `download TAG DIR` (checked against the release's `.sha256`).
 - `python3 tests/repo/workflows_test.py`: the workflow files keep their safety settings: every outside Action pinned to a full commit SHA, `persist-credentials: false` on every checkout, a time limit on every job, `npm ci --ignore-scripts` everywhere (also in `build-tools.py`), CI checks the committed Tools against a fresh build, the release checks CI before it builds, `ci-ok` needs every other job, and only the slow jobs skip on a docs-only change.
