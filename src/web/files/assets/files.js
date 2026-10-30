@@ -172,8 +172,13 @@ const dlg = $("dlg"), dform = $("dform");
 function openDialog(title, body, buttons, o) {   // buttons: [{text, pri, danger, left, run}]; run returns false to keep the dialog open
   return new Promise(resolve => {
     o = o || {};
-    dform.replaceChildren(h("h2", { text: title }), ...[].concat(body), h("p", { class: "err", id: "derr", role: "alert" }),
-      h("div", { class: "act" }, ...buttons.map(b => h("button", { type: "button", class: "btn" + (b.pri ? " pri" : "") + (b.danger ? " danger" : "") + (b.left ? " left" : ""), text: b.text,
+    const framed = !!o.frame; dlg.classList.toggle("ix-sdlg", framed);   // Settings: the same window as every other page's (title and X, scrolling body, footer)
+    const x = h("button", { type: "button", class: "ix-sx", "aria-label": "Close", onclick: () => dform.querySelector(".act button").click() });
+    x.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    const err = h("p", { class: "err", id: "derr", role: "alert" });
+    const parts = framed ? [h("div", { class: "ix-sh" }, h("h2", { text: title }), x), h("div", { class: "ix-sb" }, ...[].concat(body), err)] : [h("h2", { text: title }), ...[].concat(body), err];
+    dform.replaceChildren(...parts,
+      h("div", { class: framed ? "act ix-sf" : "act" }, ...buttons.map(b => h("button", { type: "button", class: "btn" + (b.pri ? " pri" : "") + (b.danger ? " danger" : "") + (b.left ? " left" : ""), text: b.text,
         onclick: async ev => { const btn = ev.currentTarget; btn.disabled = true; let keep = false; try { keep = (await b.run()) === false; } finally { btn.disabled = false; } if (!keep) { dlg.close(); resolve(b.text); } } }))));
     dlg.onclose = () => resolve(null);
     dform.onsubmit = ev => { ev.preventDefault(); const p = buttons.find(b => b.pri); if (p) dform.querySelector(".act .pri").click(); };
@@ -546,18 +551,24 @@ async function shareBox(i) {
 /* ---------- settings ---------- */
 async function settingsBox() {
   const s = D.settings, lim = h("input", { type: "number", id: "dlim", min: "0", step: "0.5", value: s.limit ? +(s.limit / 1073741824).toFixed(2) : 0, "aria-label": "Storage limit in GB" });
-  const sh = h("input", { type: "checkbox", id: "dsh", checked: !!s.shares }), only = h("input", { type: "checkbox", checked: true, disabled: true, "aria-label": "Only Me: always on" });
+  const sh = h("input", { type: "checkbox", id: "dsh", class: "ix-sw", checked: !!s.shares }), only = h("input", { type: "checkbox", id: "donly", class: "ix-sw", checked: true, disabled: true });
   const td = h("select", { id: "dtd", "aria-label": "Keep Trash" }, [7, 14, 30, 60, 90].map(d => h("option", { value: d, selected: d === s.trashDays, text: d + " days" })));
+  const row = (id, name, help, ctl) => h("div", { class: "ix-srow" }, h("label", { for: id }, name, h("small", { text: help })), ctl);
   await openDialog("Files Settings", [
-    h("div", { class: "frow" }, h("div", {}, h("b", { text: "Only Me" }), h("small", { text: "Always on: this page is only for you." })), h("label", { class: "sw" }, only, h("i"))),
-    h("label", { for: "dlim", text: "Storage Limit (GB, 0 = only the server's free space limits)" }), lim,
-    h("div", { class: "frow" }, h("div", {}, h("b", { text: "Share Links" }), h("small", { text: "Lets you make a link to one file. Turning this off ends every link." })), h("label", { class: "sw" }, sh, h("i"))),
+    h("h3", { text: "Privacy" }),
+    row("donly", "Only Me", "Always on: this page is only for you.", only),
+    h("h3", { text: "Storage" }),
+    h("label", { for: "dlim", text: "Storage Limit (GB)" }), lim,
+    h("p", { class: "hint", text: "0 means only your server's free space limits it." }),
+    h("h3", { text: "Sharing" }),
+    row("dsh", "Share Links", "Lets you make a link to one file. Turning this off ends every link.", sh),
+    h("h3", { text: "Trash" }),
     h("label", { for: "dtd", text: "Keep Things in the Trash" }), td
   ], [cancelBtn, { text: "Save Settings", pri: true, run: async () => {
     const j = await post("settings", { settings: { limit: Math.round(Math.max(0, +lim.value || 0) * 1073741824), shares: sh.checked, trashDays: +td.value } });
     if (!j.ok) { derr(j.error); return false; }
     await refresh(); toast("Saved.");
-  } }]);
+  } }], { frame: true });
 }
 
 /* ---------- start ---------- */
