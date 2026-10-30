@@ -495,3 +495,11 @@ input.ix-sw:disabled{opacity:.5;cursor:not-allowed}
 label>.ix-sgc{display:flex;width:100%;margin-top:5px}
 label>.ix-sgc>button{flex:1}
 dialog.ix-sdlg>form>.actions{flex-direction:row;flex-wrap:nowrap}
+
+/* ---------- keyboard shortcuts (1.61) ---------- */
+#ix-dlg .ix-keys{text-align:left;margin:4px 0 12px;max-height:min(60vh,460px);overflow:auto}
+#ix-dlg .ix-keys h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.6;margin:16px 0 6px}
+#ix-dlg .ix-krow{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:7px 0;border-bottom:1px solid var(--ix-line);font-size:14.5px}
+#ix-dlg .ix-kk{white-space:nowrap}
+kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7px;border-radius:6px;border:1px solid color-mix(in srgb,currentColor 25%,transparent);background:color-mix(in srgb,currentColor 8%,transparent);box-shadow:0 1px 0 color-mix(in srgb,currentColor 18%,transparent)}
+#ix-chord{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483000;max-width:calc(100vw - 24px);padding:10px 16px;border-radius:12px;background:var(--ix-s2,#222);color:var(--ix-tx,#eee);border:1px solid var(--ix-line2,#444);box-shadow:0 12px 30px rgba(0,0,0,.4);font:500 14px system-ui,sans-serif}
