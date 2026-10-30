@@ -45,7 +45,9 @@ try:
     subprocess.run(['php', SEED, D], capture_output=True)
     ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/hub/core/lib/boot.php').read()).group(1)
     pages = [('Home', '/'), ('Links', '/web/links/'), ('Info', '/web/info/'), ('Cards', '/web/cards/'), ('Tasks', '/web/tasks/'), ('Tools', '/web/tools/'),
-             ('Tools: a tool', '/web/tools/#/tool/image-resize'), ('Settings', '/web/settings/#overview'), ('Settings: General (Install on Your Phone)', '/web/settings/#general'), ('Settings: Security', '/web/settings/#security'), ('Settings: Updates', '/web/settings/#updates')]
+             ('Tools: a tool', '/web/tools/#/tool/image-resize'), ('Settings', '/web/settings/#overview'), ('Settings: General (Install on Your Phone)', '/web/settings/#general'), ('Settings: Security', '/web/settings/#security'), ('Settings: Updates', '/web/settings/#updates'),
+             ('Files', '/web/files/'), ('Settings: Appearance, Colors', '/web/settings/#colors'), ('Settings: Backup (Back Up)', '/web/settings/#backup'), ('Settings: Backup, Restore', '/web/settings/#backup/restore'),
+             ('Settings: Backup, Export', '/web/settings/#backup/export'), ('Settings: Security, Passkeys', '/web/settings/#security/passkeys')]
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         for theme in ('dark', 'light'):
@@ -62,6 +64,17 @@ try:
             pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]', timeout=10000)
             pg.set_input_files('#impFile', os.path.join(FIX, 'bookmarks', 'chrome.html')); until(lambda: pg.evaluate("document.querySelector('#impPrev').textContent.length > 0"), 10000); settle(pg)
             check('Links: Import Bookmarks dialog (%s)' % theme, scan(pg))
+            # (1.61) the Settings windows of every page, the Files Settings window, and the keyboard shortcuts
+            for name, url, js, sel in [('Links Settings window', '/web/links/', "document.getElementById('settingsBtn').click()", '#setDlg[open]'),
+                                       ('Info Settings window', '/web/info/', "document.querySelector('[data-e=settings]').click()", '#setdlg[open]'),
+                                       ('Cards Settings window', '/web/cards/', "document.getElementById('tdlg').showModal()", '#tdlg[open]'),
+                                       ('Tasks Settings window (with the calendar link)', '/web/tasks/', "document.getElementById('sdlg').showModal()", '#sdlg[open]'),
+                                       ('Files Settings window', '/web/files/', "document.getElementById('psets').click()", '#dlg[open]'),
+                                       ('Keyboard shortcuts', '/web/links/', "window.dispatchEvent(new Event('focus')); document.body.focus(); 0", None)]:
+                pg.goto(B + url); settle(pg)
+                if sel: pg.evaluate(js); pg.wait_for_selector(sel, timeout=10000)
+                else: pg.keyboard.press('?'); pg.wait_for_selector('#ix-dlg.open', timeout=10000)
+                settle(pg); check('%s (%s)' % (name, theme), scan(pg))
             # the bar in each style, on a computer and on a phone, with the phone panel (Sidebar) and sheet (Bottom Dock) open
             for nav in ('side', 'dock', 'top'):
                 pg.evaluate("window.__ixShell.api('settings', {settings: {nav: '%s'}})" % nav)   # evaluate waits for the save to answer

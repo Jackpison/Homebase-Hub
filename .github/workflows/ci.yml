@@ -291,6 +291,11 @@ jobs:
           set -o pipefail
           python3 tests/browser/passkey_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "passkeys"
           python3 tests/browser/share_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "share"
+      - name: A slow phone (every page, slowed processor and network, Chromium)
+        if: matrix.browser == 'chromium' && (success() || failure()) && steps.build.outcome == 'success'
+        run: |
+          set -o pipefail
+          python3 tests/browser/speed_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "slow phone"
       - name: Accessibility (Chromium and Firefox)
         if: matrix.browser != 'webkit' && (success() || failure()) && steps.build.outcome == 'success'
         run: |

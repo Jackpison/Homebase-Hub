@@ -178,11 +178,12 @@ const dlg = $("dlg"), dform = $("dform");
 function openDialog(title, body, buttons, o) {   // buttons: [{text, pri, danger, left, run}]; run returns false to keep the dialog open
   return new Promise(resolve => {
     o = o || {};
+    dlg.setAttribute("aria-labelledby", "dtitle");   // the window is named by its own title
     const framed = !!o.frame; dlg.classList.toggle("ix-sdlg", framed);   // Settings: the same window as every other page's (title and X, scrolling body, footer)
     const x = h("button", { type: "button", class: "ix-sx", "aria-label": "Close", onclick: () => dform.querySelector(".act button").click() });
     x.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
     const err = h("p", { class: "err", id: "derr", role: "alert" });
-    const parts = framed ? [h("div", { class: "ix-sh" }, h("h2", { text: title }), x), h("div", { class: "ix-sb" }, ...[].concat(body), err)] : [h("h2", { text: title }), ...[].concat(body), err];
+    const parts = framed ? [h("div", { class: "ix-sh" }, h("h2", { text: title, id: "dtitle" }), x), h("div", { class: "ix-sb" }, ...[].concat(body), err)] : [h("h2", { text: title, id: "dtitle" }), ...[].concat(body), err];
     dform.replaceChildren(...parts,
       h("div", { class: framed ? "act ix-sf" : "act" }, ...buttons.map(b => h("button", { type: "button", class: "btn" + (b.pri ? " pri" : "") + (b.danger ? " danger" : "") + (b.left ? " left" : ""), text: b.text,
         onclick: async ev => { const btn = ev.currentTarget; btn.disabled = true; let keep = false; try { keep = (await b.run()) === false; } finally { btn.disabled = false; } if (!keep) { dlg.close(); resolve(b.text); } } }))));
