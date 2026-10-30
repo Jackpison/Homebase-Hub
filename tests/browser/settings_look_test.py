@@ -3,7 +3,7 @@
 strip), Import and Export Bookmarks in the window frame, Home Settings' buttons on the right, Files Settings and Tasks Settings in
 rows, the main Settings page (a Save bar you can see, switches in Tabs, Health 3 + 3, the Passkeys card, one width, Reset beside
 Dark/Light, no backup reminder on Settings), the Files grid (pictures as small previews, a picked tile keeps its shape), and nothing
-wider than a 390 px phone on Files and on every Settings section.
+wider than a 390 px phone on Files, on every Settings section and on Home, Links, Info, Cards, Tasks and Tools.
     python3 tests/browser/settings_look_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8985)"""
 import io, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
@@ -206,17 +206,28 @@ try:
         q.evaluate("(() => { const b = document.querySelector('#lock button'); if (b) b.click(); })()"); browser_unlock(q, PP, keep=True)
         until(lambda: 'red.png' in q.inner_text('#list'), 15000)
         q.locator('#list .row .nm[title="red.png"]').click(); q.wait_for_selector('#det:not([hidden])')
-        fp = q.evaluate("[document.documentElement.scrollWidth - innerWidth, Math.round(document.getElementById('det').getBoundingClientRect().height), getComputedStyle(document.getElementById('det')).overflowY]")
+        fp = q.evaluate("[Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.round(document.getElementById('det').getBoundingClientRect().height), getComputedStyle(document.getElementById('det')).overflowY]")
         check('L25 phone, Files: nothing wider than the screen; the details sheet takes at most half the screen and scrolls inside', fp[0] <= 0 and fp[1] <= 844 // 2 + 2 and fp[2] == 'auto', fp)
         wide = []
         for sec in ('overview', 'general', 'nav', 'look', 'themes', 'colors', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates', 'files', 'changelog'):
             q.goto(s.base + '/web/settings/#' + sec); wait_js(q, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); q.wait_for_timeout(300)
-            r = q.evaluate("[document.documentElement.scrollWidth - innerWidth, Math.max(0, ...[...document.querySelectorAll('.ix-subt button')].map(b => Math.round(b.getBoundingClientRect().right)))]")
+            r = q.evaluate("[Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.max(0, ...[...document.querySelectorAll('.ix-subt button')].map(b => Math.round(b.getBoundingClientRect().right)))]")
             if r[0] > 0 or r[1] > 390:   # name what sticks out, so a failure in Firefox or WebKit (CI only) says where to look
                 r.append(q.evaluate("[...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > innerWidth + 0.5; }).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '.' + String(e.className).trim().split(/\\s+/).slice(0, 2).join('.') + ' ' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).slice(0, 5)"))
                 wide.append((sec, r))
         check('L26 phone, Settings: no section is wider than the screen, and every sub-tab is in view (they wrap)', not wide, wide)
-        check('L27 no page error', not errs, errs)
+        wide = []
+        for path, ready in (('/', "!!document.getElementById('settingsSheet')"), ('/web/links/', "!!document.querySelector('#grid')"), ('/web/info/', "!!document.querySelector('.boxes')"),
+                            ('/web/cards/', "!!document.querySelector('#list')"), ('/web/tasks/', "!!document.querySelector('#list')"), ('/web/tools/', "!!document.querySelector('#app, main, body')")):
+            q.goto(s.base + path); wait_js(q, ready, 20000)
+            if q.evaluate("!!document.querySelector('#ix-skp')"): browser_unlock(q, PP, keep=True)
+            q.wait_for_timeout(1200)
+            r = q.evaluate("[Math.max(document.documentElement.scrollWidth, innerWidth) - 390]")   # a wide page zooms a phone out, so innerWidth grows with it: compare with 390
+            if r[0] > 0:   # name what sticks out, so a failure in Firefox or WebKit (CI only) says where to look
+                r.append(q.evaluate("[...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > 390.5; }).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '.' + String(e.className).trim().split(/\\s+/).slice(0, 2).join('.') + ' ' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).slice(0, 5)"))
+                wide.append((path, r))
+        check('L27 phone, Home, Links, Info, Cards, Tasks and Tools: nothing is wider than the screen', not wide, wide)
+        check('L28 no page error', not errs, errs)
         b.close()
 finally:
     stop_all()
