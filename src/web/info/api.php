@@ -156,6 +156,33 @@ function norm_boxes($bx) {
 }
 function default_boxes($t1 = 'Box 1', $t2 = 'Box 2') { $a = norm_box(null, $t1); $b = norm_box(null, $t2); $a['id'] = rid(); $b['id'] = rid(); return [$a, $b]; }
 
+// Undo (1.62.0): a deleted box or tab comes back with its text. The browser keeps what the server sent (for an encrypted tab that is the
+// text still locked, so the server never sees a key) and sends it back as "restore". The text must fit the tab it lands in: locked text
+// only into an encrypted tab, readable text only into a readable one, so a restore can never leave readable text in a locked tab.
+function restore_box($re, $enc, $defTitle, $id = '', $taken = []) {
+    if (!is_array($re)) return null;
+    $notes = isset($re['notes']) && is_string($re['notes']) ? $re['notes'] : '';
+    $sealed = strncmp($notes, 'enc1:', 5) === 0;
+    if ($notes !== '' && $sealed !== (bool)$enc) return null;
+    $title = isset($re['title']) && is_string($re['title']) ? box_title($re['title']) : '';
+    if (!$enc && strncmp($title, 'enc1:', 5) === 0) return null;
+    $b = norm_box(['title' => $title, 'notes' => $notes, 'w' => $re['w'] ?? '', 'h' => $re['h'] ?? ''], $defTitle);
+    if (!box_id_ok($id) || isset($taken[$id])) { do { $id = rid(); } while (isset($taken[$id])); }   // the old id comes back when it is free
+    $b['id'] = $id; $b['rev'] = 1; $b['saved'] = time();
+    return $b;
+}
+// The boxes of a restored tab: 1 to MAXBOX, each one fitting the tab, with unique ids. null when any of them does not fit.
+function restore_boxes($list, $enc) {
+    if (!is_array($list) || count($list) < 1 || count($list) > MAXBOX) return null;
+    $out = []; $used = [];
+    foreach (array_values($list) as $k => $r) {
+        $b = restore_box($r, $enc, 'Box ' . ($k + 1), is_array($r) && isset($r['id']) && is_string($r['id']) ? $r['id'] : '', $used);
+        if ($b === null) return null;
+        $used[$b['id']] = true; $out[] = $b;
+    }
+    return $out;
+}
+
 // Always returns ['tabs' => [ {id, name, boxes: [box, ...]}, ... ], 'rev' => n, 'page' => {title, icon}] with 1..MAXTAB tabs.
 function norm_data($j) {
     if (!is_array($j)) $j = [];
@@ -339,6 +366,11 @@ if ($action === 'save_boxes') {
                 $n++; if (!is_array($e)) $e = [];
                 $id = isset($e['id']) && is_string($e['id']) ? $e['id'] : '';
                 if ($id !== '' && isset($old[$id]) && !isset($used[$id])) { $b = $old[$id]; }
+                elseif (isset($e['restore'])) {   // Undo: a deleted box comes back with its text, at this place in the list
+                    $b = restore_box($e['restore'], !empty($t['enc']), 'Box ' . $n, $id, $old + $used);
+                    if ($b === null) return [422, ['ok' => false, 'error' => 'restore'], false];
+                    $id = $b['id'];
+                }
                 else { do { $id = rid(); } while (isset($old[$id]) || isset($used[$id])); $b = norm_box(null, 'Box ' . $n); $b['id'] = $id; }
                 $used[$id] = true; $b['w'] = box_w($e['w'] ?? ''); $b['h'] = box_h($e['h'] ?? '');
                 $boxes[] = $b;
@@ -370,6 +402,13 @@ if ($action === 'save_tabs') {
             if ($id !== '' && isset($old[$id]) && !isset($used[$id])) {
                 $t = $old[$id]; $t['name'] = $nm; $t['color'] = tab_color($e); $t['hc'] = tab_hc($e, $t['hc'] ?? ''); $t['layout'] = tab_layout($e, $t['layout'] ?? 'cards'); $t['enc'] = array_key_exists('enc', $e) ? !empty($e['enc']) || has_enc($t['boxes']) : $t['enc']; // pages from before encryption don't send it
                 $t['private'] = !empty($e['private']) || $t['enc']; $used[$id] = true;
+            } elseif (is_array($e) && isset($e['restore']) && is_array($e['restore'])) {   // Undo: a deleted tab comes back with all its boxes
+                $enc = !empty($e['enc']);
+                $bx = $enc && empty($all['page']['vault']) ? null : restore_boxes($e['restore']['boxes'] ?? null, $enc);   // a locked tab needs the key that locked it
+                if ($bx === null) return [422, ['ok' => false, 'error' => 'restore'], false];
+                $tid = preg_match('/^[a-f0-9]{8}$/', $id) === 1 && !isset($old[$id]) && !isset($used[$id]) ? $id : rid();
+                $t = ['id' => $tid, 'name' => $nm, 'color' => tab_color($e), 'hc' => tab_hc($e), 'layout' => tab_layout($e), 'private' => !empty($e['private']) || $enc, 'enc' => $enc, 'boxes' => $bx];
+                $used[$tid] = true;
             } else {
                 $t = ['id' => rid(), 'name' => $nm, 'color' => tab_color($e), 'hc' => tab_hc($e), 'layout' => tab_layout($e), 'private' => !empty($e['private']) || !empty($e['enc']), 'enc' => !empty($e['enc']), 'boxes' => default_boxes()];
             }

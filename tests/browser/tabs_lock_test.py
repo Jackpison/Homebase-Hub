@@ -75,12 +75,28 @@ try:
               trip.get('enc') and all(str(x.get('title', '')).startswith('enc1:') for x in trip['boxes']) and 'Weekend in the Mountains' not in raw_info and 'guest house' not in raw_info, trip.get('boxes', [{}])[0])
         check('T11 the other Info tabs stay readable', 'Lemon Pasta' in raw_info)
         pg.reload(); wait_js(pg, "server === true && TABS.length > 1", 20000)
+        # 1.62.0: Undo in a locked tab puts the locked text back unchanged, and no readable copy ever reaches the server
+        trip_now = lambda: [t for t in json.loads(open(s.dir + '/site-data/info/info.php').read().split('\n', 1)[1])['tabs'] if t.get('name') == 'Trip Notes'][0]['boxes']
+        tb = [(x['id'], x['title'], x['notes']) for x in trip_now()]
+        pg.evaluate("[...document.querySelectorAll('.tabi')].find(x => x.textContent.includes('Trip Notes')).querySelector('.tab').click()"); pg.wait_for_timeout(800)
+        pg.evaluate("[...document.querySelectorAll('.box')].find(b => b.offsetParent).querySelector('[data-r=cfg]').click()"); pg.wait_for_selector('#bxdlg[open]'); pg.click('#bxdel')
+        if pg.evaluate("document.getElementById('bxdel').textContent.includes('Its Text')"): pg.click('#bxdel')
+        got = until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on .ix-tact')"), 10000)
+        gone = len(trip_now()) == len(tb) - 1
+        pg.click('#ix-toast .ix-tact'); until(lambda: len(trip_now()) == len(tb), 8000); pg.wait_for_timeout(800)
+        ta = [(x['id'], x['title'], x['notes']) for x in trip_now()]
+        raw_after = everything(s.dir + '/site-data/info', '/**/*')
+        pg.reload(); wait_js(pg, "server === true && TABS.length > 1", 20000)
+        pg.evaluate("[...document.querySelectorAll('.tabi')].find(x => x.textContent.includes('Trip Notes')).querySelector('.tab').click()"); pg.wait_for_timeout(1200)
+        shown = pg.evaluate("[...document.querySelectorAll('.box')].filter(b => b.offsetParent).map(b => b.innerText).join(' ')")
+        check('T13 Info, a locked tab: a deleted box offers Undo and comes back in its place with the same locked text; nothing readable reaches the server; it reads normally after a reload',
+              got and gone and ta == tb and 'Weekend in the Mountains' not in raw_after and 'guest house' not in raw_after and 'guest house' in shown, (got, len(ta), len(tb), ta == tb))
         # a new private Info tab is encrypted from the start
         pg.evaluate("document.querySelector('[data-hub=toggle]') && document.querySelector('[data-hub=toggle]').click()")
         pg.evaluate("document.querySelector('[data-add]').click()"); pg.wait_for_selector('#etdlg[open]')
         pg.check('#etpriv')
         check('T12 ticking Private on a new Info tab ticks Encrypt too', pg.is_checked('#etenc'))
-        check('T13 no page error', not errs, errs)
+        check('T14 no page error', not errs, errs)
         b.close()
 finally:
     stop_all()
