@@ -26,6 +26,7 @@ export function button(label, opts = {}) {
   const b = h('button', { type: 'button', class: 'btn' + (opts.primary ? ' pri' : '') + (opts.small ? ' sm' : '') + (opts.ghost ? ' ghost' : ''), onClick: opts.onClick, title: opts.title, 'aria-label': opts.aria });
   if (opts.icon) b.append(icon(opts.icon));
   if (label) b.append(h('span', { text: label }));
+  if (opts.disabled) b.disabled = true;
   return b;
 }
 

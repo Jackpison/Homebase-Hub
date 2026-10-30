@@ -8,7 +8,7 @@ require $site . '/web/hub/core/lib/backup.php';
 require $site . '/web/hub/core/lib/presets.php';
 
 $png = 'data:image/png;base64,' . base64_encode("\x89PNG\r\n\x1a\nfake");
-t('no presets at first', pr_load() === ['kinds' => []] && json_encode(pr_view(pr_load())) === '{"kinds":{}}');
+t('no presets at first', pr_load() === ['kinds' => []] && json_encode(pr_view(pr_load())) === '{"kinds":{},"locked":false,"kid":"","pp":false}');
 [$c, $r] = pr_change(['op' => 'add', 'kind' => 'sign', 'name' => '  My Signature ', 'data' => ['img' => $png, 'colour' => '#000000', 'size' => 1.5, 'on' => true]]);
 t('a signature is saved, its name trimmed', $c === 200 && $r['kinds']->sign[0]['name'] === 'My Signature' && $r['kinds']->sign[0]['data']['img'] === $png, json_encode($r));
 t('...in a guarded PHP file inside site-data/tools (a browser gets nothing)', is_file(hub_dir('tools') . '/presets.php') && strncmp((string)file_get_contents(hub_dir('tools') . '/presets.php'), '<?php', 5) === 0);
@@ -60,3 +60,64 @@ t('Start Over removes them', in_array('Tools presets', bk_reset_all(), true) && 
 $api = (string)file_get_contents($site . '/web/hub/core/api.php');
 t('the API: reading needs the login; changing needs POST, the login and the security token', preg_match("/case 'presets':.*?need_admin\(false\).*?need_post\(\); need_admin\(\);/s", $api) === 1);
 
+
+// ---- 1.61: presets locked in the browser ----
+$enc = fn(string $seed = 'x') => 'enc1:' . base64_encode(str_pad($seed, 40, '.') . random_bytes(6));
+$kid = bin2hex(random_bytes(8));
+pr_save(['kinds' => []]);
+[$c, $r] = pr_change(['op' => 'put', 'kind' => 'sign', 'enc' => $enc('sig'), 'kid' => $kid]);
+t('a locked preset is stored as it is: only its locked text, an id and the date', $c === 200 && $r['locked'] === true && $r['kid'] === $kid && count($r['kinds']->sign) === 1 && array_keys($r['kinds']->sign[0]) === ['id', 'enc', 't'], json_encode($r));
+$raw = (string)file_get_contents(hub_jpath(pr_file()));
+t('...and nothing readable is in the file the server keeps', strpos($raw, 'name') === false && strpos($raw, 'data') === false && strncmp($raw, '<?php', 5) === 0);
+$id = pr_load()['kinds']['sign'][0]['id'];
+[$c] = pr_change(['op' => 'put', 'kind' => 'sign', 'id' => $id, 'enc' => $enc('renamed'), 'kid' => $kid]);
+t('the same id again replaces it (a rename or new settings, made in the browser)', $c === 200 && count(pr_load()['kinds']['sign']) === 1);
+foreach ([['plain text', 'hello'], ['markup', 'enc1:<script>alert(1)</script>AAAAAAAAAAAAAAAAAAAA'], ['too short', 'enc1:AAAA'], ['too long', 'enc1:' . str_repeat('A', PR_MAX_LOCKED + 10)]] as [$what, $e]) {
+    [$c] = pr_change(['op' => 'put', 'kind' => 'sign', 'enc' => $e]); t("a locked preset that is $what is refused", $c === 400, (string)$c);
+}
+[$c] = pr_change(['op' => 'put', 'kind' => 'evil', 'enc' => $enc()]);
+t('an unknown kind is refused for locked presets too', $c === 400);
+for ($i = 1; $i < PR_MAX_KIND; $i++) pr_change(['op' => 'put', 'kind' => 'sign', 'enc' => $enc("n$i")]);
+[$c] = pr_change(['op' => 'put', 'kind' => 'sign', 'enc' => $enc('one more')]);
+t('at most ' . PR_MAX_KIND . ' locked presets of one kind', $c === 400 && count(pr_load()['kinds']['sign']) === PR_MAX_KIND);
+[$c] = pr_change(['op' => 'delete', 'kind' => 'sign', 'id' => $id]);
+t('a locked preset can be deleted', $c === 200 && count(pr_load()['kinds']['sign']) === PR_MAX_KIND - 1);
+pr_save(['kinds' => []]);
+
+// with a passphrase set, readable presets are refused (they must be locked); a rename of a locked one is made in the browser
+hub_pp_mark(true);
+[$c, $r] = pr_change(['op' => 'add', 'kind' => 'qr', 'name' => 'Blue', 'data' => ['fg' => '#0000ff']]);
+t('while a passphrase is set, a readable preset is refused (409): the browser sends it locked', $c === 409 && pr_load()['kinds'] === [], json_encode($r));
+pr_change(['op' => 'put', 'kind' => 'qr', 'enc' => $enc('qr1'), 'kid' => $kid]); $qid = pr_load()['kinds']['qr'][0]['id'];
+[$c] = pr_change(['op' => 'rename', 'kind' => 'qr', 'id' => $qid, 'name' => 'Plain rename']);
+t('...and a locked preset can not be renamed with a readable name', $c === 409);
+t('the view says a passphrase is set and presets are locked', pr_view(pr_load())['pp'] === true && pr_view(pr_load())['locked'] === true);
+t('sv_in_use lists Tools presets while one is locked', sv_in_use() === ['Tools presets']);
+hub_pp_mark(false);
+
+// converting everything at once
+pr_save(['kinds' => []]);
+pr_change(['op' => 'add', 'kind' => 'qr', 'name' => 'Blue', 'data' => ['fg' => '#0000ff']]); pr_change(['op' => 'add', 'kind' => 'resize', 'name' => 'Story', 'data' => ['w' => 1080, 'h' => 1920]]);
+$l = pr_load(); $items = [];
+foreach ($l['kinds'] as $k => $list) foreach ($list as $p) $items[] = ['kind' => $k, 'id' => $p['id'], 'enc' => $enc($p['name'])];
+[$c, $r] = pr_change(['op' => 'lock_all', 'items' => $items, 'kid' => $kid]);
+t('lock_all replaces every readable preset by its locked text, in one step', $c === 200 && $r['locked'] && $r['kid'] === $kid && !isset(pr_load()['kinds']['qr'][0]['name']) && !isset(pr_load()['kinds']['resize'][0]['data']), json_encode($r));
+$ids = array_column($items, 'id');
+t('...with the same ids and kinds', array_column(pr_load()['kinds']['qr'], 'id') === [$items[0]['id']] && in_array($items[1]['id'], array_column(pr_load()['kinds']['resize'], 'id'), true));
+[$c] = pr_change(['op' => 'lock_all', 'items' => [['kind' => 'qr', 'id' => 'nope0000', 'enc' => $enc()]]]);
+t('lock_all for a preset that is not there is refused (404): the list changed meanwhile', $c === 404);
+[$c] = pr_change(['op' => 'lock_all', 'items' => [['kind' => 'qr', 'id' => $items[0]['id'], 'enc' => 'plain']]]);
+t('...and with text that is not locked text', $c === 400);
+$back = [['kind' => 'qr', 'id' => $items[0]['id'], 'name' => 'Blue', 'data' => ['fg' => '#0000ff']], ['kind' => 'resize', 'id' => $items[1]['id'], 'name' => 'Story', 'data' => ['w' => 1080, 'h' => 1920]]];
+[$c, $r] = pr_change(['op' => 'unlock_all', 'items' => $back]);
+t('unlock_all (the passphrase is being removed) brings the readable presets back, and nothing is marked locked', $c === 200 && $r['locked'] === false && pr_load()['kinds']['qr'][0]['name'] === 'Blue' && !sv_use_presets(), json_encode($r));
+[$c] = pr_change(['op' => 'unlock_all', 'items' => [['kind' => 'qr', 'id' => $items[0]['id'], 'name' => 'x', 'data' => ['logo' => 'https://evil.example/x.png']]]]);
+t('unlock_all cannot slip in an address from another website', $c === 400);
+
+// a backup with locked presets carries them, and a site with another key refuses them
+pr_save(['kinds' => []]); pr_change(['op' => 'put', 'kind' => 'qr', 'enc' => $enc('qr'), 'kid' => $kid]);
+$bk = json_decode(json_encode(bk_export(['tools' => true])), true);
+t('a backup holds locked presets locked, with the key id', $bk['parts']['tools']['locked'] === true && $bk['parts']['tools']['kid'] === $kid && isset($bk['parts']['tools']['kinds']['qr'][0]['enc']) && strpos(json_encode($bk), '"name"') === false);
+sv_swap(['v' => 1, 'salt' => base64_encode(random_bytes(16)), 'iter' => 600000, 'wrap' => base64_encode(random_bytes(60)), 'kid' => bin2hex(random_bytes(8))], '');
+$threw = false; try { bk_import($bk['parts'], ['tools' => true]); } catch (Exception $e) { $threw = true; }
+t('restoring locked presets into a site with another key is refused', $threw);

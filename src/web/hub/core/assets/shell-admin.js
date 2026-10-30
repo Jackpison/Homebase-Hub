@@ -1950,8 +1950,22 @@
         }).then(function (r) { if (!r.ok) fail('Could not save your cards as plain data. Nothing was changed.'); }, function (e) { if (e && e.user) throw e; fail('Your cards could not be opened with that key, so nothing was changed.'); });
       });
     };
+    // Tools presets: every locked one is opened here and saved as plain settings again
+    var unlockPresets = function (key) {
+      return api('presets').then(function (j) {
+        if (!j.ok || !j.locked) return;
+        var jobs = [], items = [];
+        Object.keys(j.kinds || {}).forEach(function (k) { (j.kinds[k] || []).forEach(function (p) {
+          if (!p.enc) return;
+          jobs.push(VK.open(p.enc, key).then(function (txt) { var d = JSON.parse(txt); items.push({ kind: k, id: p.id, name: d.name, data: d.data }); }));
+        }); });
+        return Promise.all(jobs).then(function () { return api('presets', { op: 'unlock_all', items: items }); }, function () { fail('Your saved presets could not be opened with that key, so nothing was changed.'); })
+          .then(function (r) { if (r && !r.ok) fail(r.error || 'Could not save your presets as plain settings. Nothing was changed.'); });
+      });
+    };
     var PP_UNLOCK = function (key, use) {
       var jobs = [];
+      if (use.indexOf('Tools presets') >= 0) jobs.push(unlockPresets(key));
       if (use.indexOf('Cards') >= 0) jobs.push(unlockCards(key));
       return Promise.all(jobs);
     };

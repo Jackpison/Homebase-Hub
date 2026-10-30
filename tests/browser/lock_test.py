@@ -27,6 +27,7 @@ try:
     s = Site(ZIP, 8977)
     subprocess.run(['php', SEED, s.dir], capture_output=True)
     doc = cards_doc(s); names = [c.get('name', '') for c in doc['cards']]; banks = [c.get('bank', '') for c in doc['cards']]
+    s.post('presets', {'op': 'add', 'kind': 'qr', 'name': 'Plain One', 'data': {'fg': '#112233'}})   # a preset made before there was a passphrase (readable)
     check('L0 setup: the demo has cards the server can read', len(names) >= 3 and all(names), doc.keys())
     secret = next(n for n in names if len(n) > 5)
     # an earlier version exists, readable
@@ -89,12 +90,43 @@ try:
         check('L18 a backup carries the cards locked, and the wrapped key (no readable card, no passphrase)', parts.get('cards', {}).get('enc', '').startswith('enc1:') and parts.get('sitevault', {}).get('wrap') and 'Vault Gold' not in json.dumps(bk) and PP not in json.dumps(bk), list(parts.keys()))
         ov = s.get('backup_overview'); check('L19 the Backup panel says the cards are locked instead of counting them', 'locked' in ov['parts']['cards']['summary'], ov['parts']['cards'])
 
+        # ---- Tools presets ----
+        U = s.base + '/web/tools/'
+        def options(page): return page.evaluate("[...document.querySelectorAll('#root .pbar option')].map(o => o.textContent)")
+        def presets_file():
+            t = open(s.dir + '/site-data/tools/presets.php').read(); return t, json.loads(t[t.index('\n') + 1:])
+        pg.goto(U + '#/tool/qr-generator'); until(lambda: pg.evaluate("!!document.querySelector('#root .pbar select')"), 10000)
+        check('P1 a preset made before the passphrase is still there to use (readable until the next save)', 'Plain One' in options(pg), options(pg))
+        pg.fill('#root input[type=color] >> nth=0', '#1a3fa0'); pg.get_by_role('button', name='Save as Preset', exact=True).click()
+        pg.get_by_label('Preset name').fill('Blue Code'); pg.get_by_role('button', name='Save', exact=True).click()
+        until(lambda: presets_file()[1].get('locked'), 15000)
+        raw_, doc_ = presets_file()
+        check('P2 saving a preset locks it, and locks the readable one with it: the server holds no name and no colour', doc_.get('locked') is True and all('enc' in x and 'name' not in x for l in doc_['kinds'].values() for x in l) and not any(w in raw_ for w in ('Plain One', 'Blue Code', '112233', '1a3fa0')), raw_[:300])
+        pg.reload(); until(lambda: 'Blue Code' in (options(pg) or []), 15000)
+        check('P3 after a reload both presets are there by name (opened here with the remembered key)', 'Blue Code' in options(pg) and 'Plain One' in options(pg), options(pg))
+        pctx = b.new_context(viewport={'width': 1100, 'height': 800}, storage_state=ctx.storage_state()); pp = pctx.new_page()
+        pp.goto(U + '#/tool/qr-generator'); until(lambda: pp.evaluate("!!document.querySelector('#root .pbar select')"), 10000)
+        check('P4 a browser that has not unlocked sees "Locked preset" and an Unlock button, never the names', 'Locked preset' in options(pp) and 'Blue Code' not in options(pp) and pp.get_by_role('button', name='Unlock Presets').count() == 1, options(pp))
+        pp.get_by_role('button', name='Unlock Presets').click(); why = browser_unlock(pp, PP); until(lambda: 'Blue Code' in (options(pp) or []), 10000)
+        check('P5 Unlock Presets asks for the passphrase and then shows the names', not why and 'Blue Code' in options(pp), why)
+        pp.goto(U + '#/settings'); until(lambda: pp.evaluate("document.querySelectorAll('#root .pgroup').length") >= 1, 10000)
+        pp.get_by_role('button', name='Rename Blue Code', exact=True).click(); pp.get_by_label('New name for Blue Code').fill('Navy Code'); pp.keyboard.press('Enter')
+        until(lambda: 'Navy Code' in pp.inner_text('#root .view'), 8000)
+        raw_, doc_ = presets_file()
+        check('P6 Tools Settings > Presets renames a locked preset (re-locked in the browser), and the server still holds nothing readable', 'Navy Code' in pp.inner_text('#root .view') and 'Navy Code' not in raw_ and 'Blue Code' not in raw_ and doc_.get('locked'))
+        pctx.close()
+        st_, hd_, raw2 = s.raw(s.api + '?action=backup&parts=tools,settings', hdr={'X-Hub-CSRF': s.csrf}); bk2 = json.loads(raw2)
+        check('P7 a backup carries the presets locked, with the key id and the wrapped key', bk2['parts']['tools'].get('locked') is True and re.fullmatch(r'[a-f0-9]{16}', bk2['parts']['tools'].get('kid', '')) and bk2['parts'].get('sitevault') and 'Navy' not in json.dumps(bk2))
+        check('P8 while presets are locked, the Backup panel says how many, and the passphrase can not be removed behind them', 'saved preset' in s.get('backup_overview')['parts']['tools']['summary'] and s.post('pp_clear', {'password': PW}).get('_status') == 409)
+
         # ---- Remove Passphrase turns the cards back into plain cards ----
         pg.goto(s.base + '/web/settings/#security/encryption'); wait_js(pg, "!!document.querySelector('#ix-erm')", 20000)
         pg.fill('#ix-ecur', PP); pg.fill('#ix-epw', PW); pg.click('#ix-erm'); pg.click('#ix-erm')
         until(lambda: s.get('sv_get').get('pp') is False, 40000)
         sv = s.get('sv_get'); d = cards_doc(s)
         check('L20 removing the passphrase turns the locked cards back into plain cards (all of them, with the one added)', sv.get('pp') is False and 'enc' not in d and any(c.get('name') == 'Vault Gold' for c in d.get('cards', [])) and len(d['cards']) == len(names) + 1, (sv, list(d.keys())))
+        raw_, doc_ = presets_file(); plain_names = sorted(x.get('name', '') for l in doc_['kinds'].values() for x in l)
+        check('P9 ...and the presets turn back into plain presets, with the renamed one', not doc_.get('locked') and plain_names == ['Navy Code', 'Plain One'] and 'enc1:' not in raw_, (plain_names, raw_[:200]))
         check('L21 no page error and no blocked request', not errs, errs)
         b.close()
 finally:
