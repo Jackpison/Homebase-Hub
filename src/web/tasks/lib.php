@@ -156,7 +156,7 @@ function tasks_next_date(array $t): string {
     }
     return $t['due'];
 }
-/* ---------- the calendar link (1.61) ----------
+/* ---------- the calendar link (1.61.0) ----------
  * An optional secret link that Google, Apple or Outlook Calendar can subscribe to (web/tasks/calendar.php?k=...). Off until you turn it on.
  * site-data/tasks/calendar.php (guarded): { on, key }. Anyone with the link sees the task names, so a new link can be made any time;
  * the old one stops at once. A wrong, missing or switched-off key all get the same plain 404. */

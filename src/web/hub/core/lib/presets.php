@@ -13,7 +13,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  * Tools' saved presets (1.60): a signature, watermark settings, a QR style, resize sizes, invoice business details.
  * Kept on the server for the logged-in owner (site-data/tools/presets.php, guarded), and in the site backup.
  *
- * File: { kinds: { <kind>: [ { id, name, data, t } or, when a passphrase is set (1.61), { id, enc, t } ] }, locked?, kid? }
+ * File: { kinds: { <kind>: [ { id, name, data, t } or, when a passphrase is set (1.61.0), { id, enc, t } ] }, locked?, kid? }
  * A locked preset is "enc1:..." text made in the browser with the site key (lib/vault.php): its name and settings are inside it, and the
  * server only checks its shape. kid = the id of that key (it matches a backup to its key).
  * data is the tool's own settings: an object of plain values, at most 8 levels deep. Pictures inside it may only be
@@ -99,7 +99,7 @@ function pr_change(array $b): array {
     if ($op === 'lock_all' || $op === 'unlock_all') return pr_convert($d, $op, is_array($b['items'] ?? null) ? $b['items'] : [], (string)($b['kid'] ?? ''));
     if (!in_array($kind, PR_KINDS, true)) return [400, ['ok' => false, 'error' => 'Unknown kind of preset.']];
     $list = $d['kinds'][$kind] ?? [];
-    if ($op === 'put') {   // 1.61: a preset locked in the browser: a new one, or the same id again (a rename, or new settings)
+    if ($op === 'put') {   // 1.61.0: a preset locked in the browser: a new one, or the same id again (a rename, or new settings)
         if (!pr_enc_ok($b['enc'] ?? null)) return [400, ['ok' => false, 'error' => 'That preset does not look right.']];
         $id = is_string($b['id'] ?? null) && preg_match('/^[a-z0-9]{6,16}$/', $b['id']) ? $b['id'] : bin2hex(random_bytes(5));
         $i = array_search($id, array_column($list, 'id'), true);

@@ -64,7 +64,7 @@ try:
             pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]', timeout=10000)
             pg.set_input_files('#impFile', os.path.join(FIX, 'bookmarks', 'chrome.html')); until(lambda: pg.evaluate("document.querySelector('#impPrev').textContent.length > 0"), 10000); settle(pg)
             check('Links: Import Bookmarks dialog (%s)' % theme, scan(pg))
-            # (1.61) the Settings windows of every page, the Files Settings window, and the keyboard shortcuts
+            # (1.61.0) the Settings windows of every page, the Files Settings window, and the keyboard shortcuts
             for name, url, js, sel in [('Links Settings window', '/web/links/', "document.getElementById('settingsBtn').click()", '#setDlg[open]'),
                                        ('Info Settings window', '/web/info/', "document.querySelector('[data-e=settings]').click()", '#setdlg[open]'),
                                        ('Cards Settings window', '/web/cards/', "document.getElementById('tdlg').showModal()", '#tdlg[open]'),

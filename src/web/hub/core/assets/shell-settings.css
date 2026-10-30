@@ -595,10 +595,18 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 #ix-page .ix-how>summary::-webkit-details-marker{display:none}
 #ix-page .ix-how .ix-steps{display:block;padding:0;margin:10px 0 0}
 @media (max-width:600px){#ix-page .ix-ec .ix-seg{display:flex;width:100%;flex-wrap:nowrap}#ix-page .ix-ec .ix-seg button{flex:1;padding:10px 4px;font-size:13px;white-space:nowrap}}
-/* (1.61) Backup: one big button, and what to include folded away */
+/* (1.61.0) Backup: one big button, and what to include folded away */
 #ix-page .ix-bkbig{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:6px 0 16px}
 #ix-page .ix-bkbig p{margin:0;color:var(--ix-mu)}
 #ix-page .ix-btn.ix-big{height:52px;padding:0 28px;font-size:16px}
 #ix-page .ix-more#ix-choose{margin:14px 0}
 #ix-page .ix-more#ix-choose>.ix-tg:first-of-type{margin-top:8px}
 #ix-page .ix-h3{margin:22px 0 4px;font-size:16px}
+/* Backup: the two folds are clearly buttons you can open */
+#ix-page #ix-choose>summary,#ix-page .ix-onebyone>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border:1px solid var(--ix-line2);border-radius:12px;background:var(--ix-s2);color:var(--ix-tx);font-size:15px;font-weight:700}
+#ix-page #ix-choose>summary::-webkit-details-marker,#ix-page .ix-onebyone>summary::-webkit-details-marker{display:none}
+#ix-page #ix-choose>summary::after,#ix-page .ix-onebyone>summary::after{content:"";width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .15s}
+#ix-page #ix-choose[open]>summary::after,#ix-page .ix-onebyone[open]>summary::after{transform:rotate(-135deg)}
+#ix-page #ix-choose>summary:hover,#ix-page .ix-onebyone>summary:hover{border-color:var(--ix-tx)}
+#ix-page #ix-choose>summary:focus-visible,#ix-page .ix-onebyone>summary:focus-visible{outline:2px solid var(--ix-tx);outline-offset:2px}
+#ix-page .ix-onebyone{margin-top:12px}

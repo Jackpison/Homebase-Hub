@@ -10,7 +10,7 @@
 declare(strict_types=1);
 
 /**
- * The site key (1.61): one random key, made in the browser, that locks what the pages keep for you: Files, Cards and Tools' saved
+ * The site key (1.61.0): one random key, made in the browser, that locks what the pages keep for you: Files, Cards and Tools' saved
  * presets. Like the tab keys of Info and Links, the server only ever holds it "wrapped": encrypted with a key made from your
  * encryption passphrase (and a second time with your recovery key). It never sees the key itself, so a copy of the server (or of a
  * backup) holds scrambled data only.

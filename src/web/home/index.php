@@ -60,7 +60,7 @@ $iconFile = HUB_PUBLIC . '/' . ($logoOk ? $siteLogo : $brand);
 $iconType = ['ico' => 'image/x-icon', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp'][pathinfo($iconPath, PATHINFO_EXTENSION)] ?? 'image/svg+xml';
 $favicon = $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0);   // the site logo, or Homebase Hub's own
 
-// (1.61) Only Me: a visitor gets a log-in screen and nothing of the page (no photos, no text, no widgets)
+// (1.61.0) Only Me: a visitor gets a log-in screen and nothing of the page (no photos, no text, no widgets)
 if (!empty($site['private']) && !hub_admin()) {
 ?><!doctype html>
 <html lang="en">
@@ -169,30 +169,30 @@ if (!empty($site['private']) && !hub_admin()) {
         <div class="group">
           <label class="g-row stack"><span class="g-label">Page Title<small>Shown in the browser tab. The logo comes from the main Settings.</small></span>
             <input type="text" id="sTitle" maxlength="80"></label>
-          <label class="g-row stack"><span class="g-label">Welcome Text<small>Fades in the middle of the screen when Home opens, then slowly fades away. Leave it empty for none.</small></span>
+          <label class="g-row stack"><span class="g-label">Welcome Text<small>Fades in when Home opens. Empty for none.</small></span>
             <input type="text" id="sWelcome" maxlength="80" placeholder="Welcome Home"></label>
         </div>
       </section>
       <section>
         <h3>Privacy</h3>
         <div class="group">
-          <label class="g-row"><span class="g-label">Only Me<small>On: visitors see a log-in screen and nothing else. Off: visitors see your background and the clock.</small></span>
+          <label class="g-row"><span class="g-label">Only Me<small>Visitors see only a login screen.</small></span>
             <input type="checkbox" class="switch" id="sPrivate"></label>
         </div>
       </section>
       <section>
         <h3>Bar</h3>
         <div class="group">
-          <label class="g-row"><span class="g-label">Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu. The same setting as in Settings › Appearance.</small></span>
+          <label class="g-row"><span class="g-label">Show the Bar on the Home Page<small>Off keeps Home clean. A corner button opens the menu.</small></span>
             <input type="checkbox" class="switch" id="sHomeBar"></label>
-          <label class="g-row stack"><span class="g-label">Edit Bar<small>The bar at the bottom while you edit this page. Icons Only shows each name when you point at it. Phones always show icons.</small></span>
+          <label class="g-row stack"><span class="g-label">Edit Bar<small>Icons Only shows each name on hover.</small></span>
             <select id="sEditBar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></label>
         </div>
       </section>
       <section>
         <h3>Glass</h3>
         <div class="group">
-          <div class="g-row stack"><span class="g-label">Tint<small>Light and Dark are see-through glass. Solid is not see-through: easiest to read on busy photos.</small></span>
+          <div class="g-row stack"><span class="g-label">Tint<small>Solid is easiest to read on busy photos.</small></span>
             <div class="seg" id="pTint" role="radiogroup" aria-label="Tint"><button type="button" role="radio" data-v="light">Light</button><button type="button" role="radio" data-v="dark">Dark</button><button type="button" role="radio" data-v="solid">Solid</button></div></div>
           <div class="g-row stack"><span class="g-label">Opacity <b id="pOpVal"></b><small>How much the widgets tint the photo. 0% is fully see-through.</small></span>
             <input type="range" id="pOpacity" min="0" max="100" step="5"></div>
@@ -213,7 +213,7 @@ if (!empty($site['private']) && !hub_admin()) {
     <header class="sh"><h2>Widgets</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
     <div class="sb">
       <section>
-        <p class="hint">Widgets show only while you are logged in. Visitors see the clock and your background, nothing else.</p>
+        <p class="hint">Only you see widgets. Visitors see the clock.</p>
         <div class="group">
           <label class="g-row"><span class="g-label">Show Widgets<small>Off: only the clock and your background, also for you.</small></span>
             <input type="checkbox" class="switch" id="wShow"></label>
@@ -239,7 +239,7 @@ if (!empty($site['private']) && !hub_admin()) {
         <div class="group">
           <div class="g-row stack"><span class="g-label">World Clock<small>Up to three places. Type a city's time zone, like Europe/London, and a name if you like.</small></span>
             <div class="wzedit" id="wZones"></div></div>
-          <div class="g-row stack"><span class="g-label">Weather<small>Weather asks Open-Meteo for your town's forecast, so it stays off until you turn it on above and type the town. Your server asks, at most every 30 minutes. Nothing else on Home contacts another site.</small></span>
+          <div class="g-row stack"><span class="g-label">Weather<small>Asks Open-Meteo for your town, at most every 30 minutes. Off until you turn it on.</small></span>
             <div class="inline"><input type="text" id="wTown" maxlength="60" placeholder="Bengaluru" aria-label="Town for Weather" autocomplete="off">
               <div class="seg" id="wUnit" role="radiogroup" aria-label="Temperature"><button type="button" role="radio" data-v="c">°C</button><button type="button" role="radio" data-v="f">°F</button></div></div></div>
         </div>
@@ -259,12 +259,12 @@ if (!empty($site['private']) && !hub_admin()) {
     <div class="sb">
       <section>
         <h3>Theme</h3>
-        <p class="hint">A theme is the set of backgrounds Home takes turns with. Your uploads also join Starter; your own themes use the uploads you choose.</p>
+        <p class="hint">Backgrounds Home takes turns with.</p>
         <div class="themes" id="themeRows"></div>
       </section>
       <section>
         <h3>Photo Sources</h3>
-        <p class="hint">Photos and videos are saved on your server so they load fast. Up to <?= PHOTOS_PER_SOURCE ?> photos (<?= VIDEOS_PER_SOURCE ?> videos) per source are kept. Each is deleted after it's been shown <?= MAX_VIEWS ?> times and a new one is downloaded.</p>
+        <p class="hint">Saved on your server so they load fast.</p>
         <div class="group" id="sourceRows"></div>
         <label class="field"><span>Keywords for Wallhaven, Unsplash, Pixabay and custom sources</span>
           <input type="text" id="bgQuery" maxlength="450" placeholder="mountains, ocean, northern lights">
@@ -373,7 +373,7 @@ if (!empty($site['private']) && !hub_admin()) {
         <label class="field"><span>Credit <small class="hint">optional</small></span><input type="text" id="cCredit" placeholder="user.name" spellcheck="false"></label>
         <label class="field"><span>Link <small class="hint">optional</small></span><input type="text" id="cLink" placeholder="links.html" spellcheck="false"></label>
       </div>
-      <p class="hint" data-kind="json">Field names are paths into the JSON reply, joined with dots. Use numbers for list positions, like <code>video_files.0.link</code>. Leave “List of items” empty if the reply itself is the list.</p>
+      <p class="hint" data-kind="json">Dotted paths into the reply, like video_files.0.link.</p>
       <div class="test-row"><button type="button" class="btn" id="cTest">Test</button><p class="test-out" id="cTestOut"></p></div>
       <p class="err" id="customErr"></p>
     </div>

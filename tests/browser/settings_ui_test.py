@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The Settings windows and screens of 1.61 in a real browser: choices as buttons (and the keyboard on them), switches, one window
+"""The Settings windows and screens of 1.61.0 in a real browser: choices as buttons (and the keyboard on them), switches, one window
 frame with a close X, "Only Me" on every page (a visitor of a private Home gets a log-in screen and nothing else; Cards, Tasks and Files
 show it locked on), the shorter Colors tab, the four Backup tabs (Files off by default, one big Download Backup), and Export Bookmarks
 (the standard bookmark file, made in the browser, with and without private tabs, and read back by Links' own importer).
@@ -54,19 +54,18 @@ try:
         check('U6b ...and nothing was saved by closing it (Edit Bar still Icons Only)', not (pg.evaluate("HUB.state().editBar || {}") or {}).get('links'))
 
         # ---- Export Bookmarks ----
-        pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]')
-        with pg.expect_download() as dl: pg.click('#sBmExport')
+        pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]', timeout=10000)
+        check('U6c Export Bookmarks is in the Import and Export window, not in Links Settings', pg.is_visible('#impExport') and not pg.evaluate("!!document.getElementById('sBmExport')"))
+        with pg.expect_download() as dl: pg.click('#impExport')
         f1 = os.path.join(TMP, 'plain.html'); dl.value.save_as(f1); t1 = open(f1, encoding='utf-8').read()
         check('U7 Export Bookmarks gives a standard bookmark file: public tabs only, as folders, with the text safely escaped',
               t1.startswith('<!DOCTYPE NETSCAPE-Bookmark-file-1>') and '<H3 ADD_DATE' in t1 and 'Daily' in t1 and 'News &amp; Mail' in t1 and 'Public &quot;Daily&quot; Link' in t1 and 'a=1&amp;b=2' in t1
               and 'Hidden Bank' not in t1 and 'bank.example.com' not in t1 and dl.value.suggested_filename.endswith('.html'), t1[:400])
-        pg.check('#sBmPriv')
-        with pg.expect_download() as dl: pg.click('#sBmExport')
+        pg.check('#impExPriv')
+        with pg.expect_download() as dl: pg.click('#impExport')
         f2 = os.path.join(TMP, 'all.html'); dl.value.save_as(f2); t2 = open(f2, encoding='utf-8').read()
         check('U8 with Include Private Tabs on, the private tab is in the file too', 'Hidden Bank Login' in t2 and 'https://bank.example.com/login' in t2 and 'Secret' in t2)
-        pg.click('#setDlg .ix-sx')
-        # read back by Links' own importer
-        pg.evaluate("document.querySelector('#importBmBtn').click()"); pg.wait_for_selector('#impDlg[open]', timeout=10000)
+        # read back by the importer in the same window
         pg.set_input_files('#impFile', f2); wait_js(pg, "document.querySelector('#impPrev').textContent || document.querySelector('#impErr').textContent", 10000)
         pv = pg.inner_text('#impPrev')
         check('U9 Links\' own importer reads the file back: 3 links, the folders as tabs and categories', 'Found 3 links' in pv and 'Daily' in pv and 'Money' in pv, pv)

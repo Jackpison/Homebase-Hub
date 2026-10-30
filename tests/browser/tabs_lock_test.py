@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Private tabs in Links and Info (1.61): "Encrypt All Private Tabs" in each page's Settings, a new private tab encrypted from the start, and what the
+"""Private tabs in Links and Info (1.61.0): "Encrypt All Private Tabs" in each page's Settings, a new private tab encrypted from the start, and what the
 server is left holding (no readable copy, earlier versions included).
     python3 tests/browser/tabs_lock_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8978)"""
 import glob, json, os, re, subprocess, sys

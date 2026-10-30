@@ -1,5 +1,5 @@
 <?php
-// 1.61: Home's "Only Me" switch. It is saved (default off), a visitor's page is only a log-in screen, and a visitor can start no photo download.
+// 1.61.0: Home's "Only Me" switch. It is saved (default off), a visitor's page is only a log-in screen, and a visitor can start no photo download.
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
 require $site . '/web/home/lib.php';

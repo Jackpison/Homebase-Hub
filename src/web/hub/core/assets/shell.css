@@ -444,7 +444,7 @@ body.boxedit #ix-ebar{display:none}
 .ix-srow>button:hover{background:color-mix(in srgb,currentColor 8%,transparent)}
 .ix-srow>select{flex:none;width:auto;font:inherit;font-size:14px;color:inherit;border-radius:10px;padding:9px 10px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 18%,transparent)}
 .ix-srow>select:focus{outline:none;border-color:color-mix(in srgb,currentColor 55%,transparent)}
-/* ---------- (1.61) one Settings window for every page ----------
+/* ---------- (1.61.0) one Settings window for every page ----------
    Title and a close X on top, a body that scrolls, and a footer that stays in view. Add class "ix-sdlg" to the page's Settings
    dialog; shell.js builds the three parts (a dialog that already has them is left as it is). Colours follow the page. */
 dialog.ix-sdlg[open]{display:flex;flex-direction:column;width:min(540px,calc(100% - 24px));max-height:calc(100dvh - 24px);padding:0;overflow:hidden}
@@ -466,7 +466,7 @@ dialog.ix-sdlg>form{display:flex;flex-direction:column;min-height:0;flex:1;paddi
 .ix-sdlg .ix-sf .left{margin-right:auto}
 .ix-sdlg .ix-sb .ix-srow>input.ix-sw{margin:0}
 
-/* ---------- (1.61) buttons instead of a dropdown, and switches ----------
+/* ---------- (1.61.0) buttons instead of a dropdown, and switches ----------
    .ix-sgc: 2 or 3 choices as one row of buttons; the chosen one is a slightly raised tile (no colour). The real <select> stays
    (hidden) so each page's code reads and writes it as before. .ix-sw: an on/off switch over a real checkbox; the ball takes
    the page colour when it is on. */
@@ -496,7 +496,7 @@ label>.ix-sgc{display:flex;width:100%;margin-top:5px}
 label>.ix-sgc>button{flex:1}
 dialog.ix-sdlg>form>.actions{flex-direction:row;flex-wrap:nowrap}
 
-/* ---------- keyboard shortcuts (1.61) ---------- */
+/* ---------- keyboard shortcuts (1.61.0) ---------- */
 #ix-dlg .ix-keys{text-align:left;margin:4px 0 12px;max-height:min(60vh,460px);overflow:auto}
 #ix-dlg .ix-keys h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ix-mu);margin:16px 0 6px}
 #ix-dlg .ix-krow{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:7px 0;border-bottom:1px solid var(--ix-line);font-size:14.5px}

@@ -1230,8 +1230,8 @@ function openSettings(){
 function fillSettings(){
   const noPw=!server||!locked;
   $("spriv").checked=PAGE.private;$("spriv").disabled=noPw;
-  $("sprivnote").textContent=noPw?"Create a password first to make the page private."
-    :"Visitors see only a login screen. To hide single tabs instead, use the pencil on a tab and choose Private tab.";
+  $("sprivnote").textContent=noPw?"Set a website password first."
+    :"";
 }
 $("setcancel").onclick=()=>setdlg.close();
 $("setsizes").onclick=()=>setdlg.close();   // the shell then opens Text Sizes (data-hub-action="sizes")

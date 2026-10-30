@@ -1,5 +1,5 @@
 <?php
-// 1.61: the site key (web/hub/core/lib/vault.php): the wrapped key that locks Files, Cards and Tools presets. The server only holds
+// 1.61.0: the site key (web/hub/core/lib/vault.php): the wrapped key that locks Files, Cards and Tools presets. The server only holds
 // it wrapped; a change must name the wrap it replaces; a backup carries it. Runs on its own copy of src/ (run.php).
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';

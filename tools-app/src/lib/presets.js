@@ -5,7 +5,7 @@ import { h, button, input, select, toast } from '../ui.js';
 export const KINDS = { sign: 'Sign PDF: Signatures', 'img-watermark': 'Watermark Images', 'pdf-stamp': 'Watermark and Page Numbers (PDF)', qr: 'QR Code Styles', resize: 'Image Resizer: Sizes', invoice: 'Invoice: Your Business' };
 const HUB = () => window.HUB;
 const SITE = () => window.HubSite;
-// When an encryption passphrase is set (1.61), presets are locked in this browser with the site key before they are sent: the server holds
+// When an encryption passphrase is set (1.61.0), presets are locked in this browser with the site key before they are sent: the server holds
 // only "enc1:" text. cache = every preset as it reads here (a locked one that is not opened yet is { locked: true }); raw = what the server holds.
 let cache = null, raw = null;
 async function admin() { const H = HUB(); if (!H || !H.api) return false; try { await H.ready(); } catch (e) { return false; } return H.isAdmin(); }

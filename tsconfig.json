@@ -1,5 +1,5 @@
 {
-  "//": "JavaScript type checking (1.61). Only files that start with // @ts-check are checked, the ones that handle keys and locked data first. Run: npx tsc -p tsconfig.json. It reads, it never writes.",
+  "//": "JavaScript type checking (1.61.0). Only files that start with // @ts-check are checked, the ones that handle keys and locked data first. Run: npx tsc -p tsconfig.json. It reads, it never writes.",
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,

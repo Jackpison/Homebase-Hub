@@ -285,7 +285,6 @@ function usage() {
   const used = D.usage;
   u.append(h("span", { class: "num", text: fmt(used) + (max ? " of " + fmt(max) : "") + " used" }));
   if (max) { const p = Math.min(100, used / max * 100); u.append(h("span", { class: "bar", role: "img", "aria-label": Math.round(p) + " percent used" }, h("i", { class: p > 90 ? "hot" : "", style: "width:" + p + "%" }))); }
-  if (D.free != null) u.append(h("span", { class: "num", text: fmt(D.free) + " free on the server" }));
 }
 
 /* ---------- the little menu ---------- */
@@ -567,7 +566,7 @@ async function settingsBox() {
     row("donly", "Only Me", "Always on: this page is only for you.", only),
     h("h3", { text: "Storage" }),
     h("label", { for: "dlim", text: "Storage Limit (GB)" }), lim,
-    h("p", { class: "hint", text: "0 means only your server's free space limits it." }),
+    h("p", { class: "hint", text: "0 means no limit." }),
     h("h3", { text: "Sharing" }),
     row("dsh", "Share Links", "Lets you make a link to one file. Turning this off ends every link.", sh),
     h("h3", { text: "Trash" }),
@@ -586,7 +585,7 @@ function privateScreen(j) {
   /** @type {any} */ (document.querySelector("#ix-private button")).onclick = () => window.HUB ? HUB.login("Log in to see your files.").then(() => location.reload(), () => {}) : location.reload();
   if (window.HUB && HUB.ready) HUB.ready();
 }
-/* ---------- shared from the phone's Share button (1.61) ----------
+/* ---------- shared from the phone's Share button (1.61.0) ----------
    web/hub/share-sw.js keeps what was shared in this browser (Cache "hub-share") and opens this page with ?shared=<id>.
    Here you choose: Save to Files (locked like any upload), Open in Tools, or Discard. */
 const shareKey = (id, p) => new URL("../hub/share-inbox/" + id + "/" + p, location.href).href;

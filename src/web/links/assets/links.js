@@ -555,7 +555,7 @@ let importer = null;
 // What the importer may use. It changes Links only through save(), which keeps an earlier version first (so Backup & Restore >
 // Earlier Versions can undo the import) and sends the page's revision, so a change made in another window is never overwritten.
 const BM = {
-  tabs: () => S.data.tabs, maxTabs: MAX_TABS, uid, toast, shortestCol, host,
+  tabs: () => S.data.tabs, title: () => (S.data.settings && S.data.settings.title) || 'Bookmarks', maxTabs: MAX_TABS, uid, toast, shortestCol, host,
   size: async () => JSON.stringify(await buildSnapshot()).length,
   async save(apply, undo, msg) {
     await saving;
@@ -1247,20 +1247,6 @@ $('#versionsBtn').onclick = async () => {
         catch (err) { $('#verErr').textContent = err.message; ev.currentTarget.disabled = false; }
       } }, 'Restore')));
   } catch (err) { list.innerHTML = ''; $('#verErr').textContent = err.message; }
-};
-
-/* export bookmarks (inside settings): the standard bookmark file, made here from what this page holds */
-$('#sBmExport').onclick = () => {
-  const withPriv = $('#sBmPriv').checked, tabs = S.data.tabs || [];
-  const locked = tabs.filter(t => t.encrypted && (t.locked || t.bad)).length;
-  const pick = tabs.filter(t => !(t.encrypted && (t.locked || t.bad)) && (withPriv || !t.private));
-  const n = pick.reduce((a, t) => a + (t.categories || []).reduce((b, c) => b + (c.links || []).filter(l => !l.divider).length, 0), 0);
-  if (!n) { $('#setErr').textContent = 'There is nothing to export yet' + (locked ? ' (locked tabs are left out).' : '.'); return; }
-  $('#setErr').textContent = '';
-  const blob = new Blob([HUB.bookmarksHtml(pick, S.data.settings && S.data.settings.title || 'Bookmarks')], { type: 'text/html' });
-  const a = h('a', { href: URL.createObjectURL(blob), download: `bookmarks-${new Date().toISOString().slice(0, 10)}.html` });
-  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  toast(`Exported ${n} bookmark${n === 1 ? '' : 's'}` + (locked ? `. ${locked} locked tab${locked === 1 ? ' was' : 's were'} left out.` : '.'));
 };
 
 /* export (inside settings) */

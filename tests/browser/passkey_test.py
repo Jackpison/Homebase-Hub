@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Passkeys in a real browser (1.61), with Chrome's virtual authenticator: adding one in Settings > Security > Passkeys, logging in with it (and not being asked
+"""Passkeys in a real browser (1.61.0), with Chrome's virtual authenticator: adding one in Settings > Security > Passkeys, logging in with it (and not being asked
 for the two-step code), what the server keeps, a wrong person (the device could not verify), a removed passkey, and the password still working.
 Runs in Chromium only: the virtual authenticator is Chromium's.
     python3 tests/browser/passkey_test.py build/site-update-X.Y.Z.zip   (port 8980; the site is opened as http://localhost:8980, a secure address for passkeys)"""

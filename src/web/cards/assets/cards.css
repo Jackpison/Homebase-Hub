@@ -190,7 +190,7 @@ dialog p{color:var(--mute);margin:0 0 6px}
 .hlist{padding:2px}
 .hrow input:focus-visible,.hadd input:focus-visible,.brow input:focus-visible,.hrow input:focus,.hadd input:focus,.brow input:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 60%,var(--panel));box-shadow:0 0 0 3px color-mix(in srgb,var(--fg) 12%,transparent)}
 
-/* 1.61: Cards locked with the passphrase */
+/* 1.61.0: Cards locked with the passphrase */
 .lockbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-left:3px solid var(--ix-accent,#ffc21a);border-radius:10px;background:var(--panel);padding:11px 14px;margin-bottom:16px}
 .lockbar p{margin:0;flex:1;min-width:220px;color:var(--mute)}
 .lockbar b{color:var(--fg)}

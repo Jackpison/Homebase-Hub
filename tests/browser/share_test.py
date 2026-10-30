@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Share from your phone (1.61), in a real browser (Chromium): the manifest lists the site as a share target, the share worker catches the
+"""Share from your phone (1.61.0), in a real browser (Chromium): the manifest lists the site as a share target, the share worker catches the
 POST that the phone's Share button makes (here a form, submitted like the phone does), keeps the files in the browser only, and opens
 Files, which asks what to do: Save to Files (locked like any upload), Open in Tools (the next tool that takes that kind of file gets it)
 or Discard. Runs in Chromium only (the share sheet and service workers on localhost are tested there).

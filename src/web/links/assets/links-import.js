@@ -140,7 +140,8 @@
     dlg = el('dialog', { id: 'impDlg', 'aria-labelledby': 'impH' });
     const form = el('form', { method: 'dialog' });
     form.append(
-      el('h3', { id: 'impH', text: 'Import Bookmarks' }),
+      el('h3', { id: 'impH', text: 'Import and Export Bookmarks' }),
+      el('h4', { text: 'Import' }),
       el('p', { class: 'hint', style: 'font-size:13.5px;color:var(--muted);margin:-6px 0 14px', text: 'In your browser, open the bookmarks manager and choose Export Bookmarks. Chrome, Edge, Firefox, Brave, Opera and Safari all make an .html file this can read. The file stays in this browser; only the links are saved.' }),
       el('div', { class: 'field' }, el('label', { for: 'impFile', text: 'Bookmarks File' }), el('input', { id: 'impFile', type: 'file', accept: '.html,.htm,text/html' })),
       el('div', { id: 'impPrev', class: 'imp-prev', role: 'status', 'aria-live': 'polite' }),
@@ -152,6 +153,10 @@
         el('label', { class: 'check' }, el('input', { type: 'radio', name: 'impTo', value: 'tab', id: 'impToTab' }), el('span', { text: 'An Existing Tab' })),
         el('div', { class: 'field imp-sub' }, el('label', { for: 'impTab', text: 'Tab' }), el('select', { id: 'impTab' })),
         el('p', { id: 'impTabNote', class: 'hint', style: 'font-size:12.5px;color:var(--faint);margin:4px 0 0' })),
+      el('h4', { text: 'Export' }),
+      el('div', { class: 'ix-srow' }, el('span', {}, 'Export Bookmarks', el('small', { text: 'A file Chrome, Edge, Firefox and Safari can import.' })), el('button', { class: 'btn', type: 'button', id: 'impExport', text: 'Export' })),
+      el('div', { class: 'ix-srow' }, el('label', { for: 'impExPriv' }, 'Include Private Tabs', el('small', { text: 'Adds private tabs and unlocked encrypted ones. Keep the file safe.' })), el('input', { type: 'checkbox', class: 'ix-sw', id: 'impExPriv' })),
+      el('p', { class: 'hint', id: 'impExNote', role: 'status', 'aria-live': 'polite' }),
       el('p', { class: 'err', id: 'impErr', role: 'alert' }),
       el('div', { id: 'impDone', class: 'imp-done', role: 'status', 'aria-live': 'polite', hidden: true }),
       el('div', { class: 'actions' },
@@ -166,6 +171,17 @@
     const $ = s => dlg.querySelector(s);
     let plan = null;
     const plain = () => BM.tabs().filter(t => !t.encrypted && !t.enc);
+    $('#impExport').onclick = () => {   // Export Bookmarks: the standard bookmark file, made here from what the page holds
+      const withPriv = $('#impExPriv').checked, tabs = BM.tabs(), locked = tabs.filter(t => t.encrypted && (t.locked || t.bad)).length;
+      const pick = tabs.filter(t => !(t.encrypted && (t.locked || t.bad)) && (withPriv || !t.private));
+      const n = pick.reduce((a, t) => a + (t.categories || []).reduce((c, g) => c + (g.links || []).filter(l => !l.divider).length, 0), 0);
+      const note = $('#impExNote');
+      if (!n) { note.textContent = 'Nothing to export yet' + (locked ? ' (locked tabs are left out).' : '.'); return; }
+      const blob = new Blob([window.HUB.bookmarksHtml(pick, BM.title())], { type: 'text/html' });
+      const a = el('a', { href: URL.createObjectURL(blob), download: 'bookmarks-' + new Date().toISOString().slice(0, 10) + '.html' });
+      document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      note.textContent = 'Exported ' + n + ' bookmark' + (n === 1 ? '' : 's') + (locked ? '. ' + locked + ' locked tab' + (locked === 1 ? ' was' : 's were') + ' left out.' : '.');
+    };
     $('#impFile').value = ''; $('#impPrev').textContent = ''; $('#impErr').textContent = '';
     $('#impWhere').hidden = true; $('#impDone').hidden = true; $('#impDone').textContent = '';
     $('#impGo').disabled = true; $('#impGo').hidden = false; $('#impClose').textContent = 'Cancel';

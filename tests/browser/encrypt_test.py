@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""1.61 end-to-end encryption, in a real browser, through the screens a person uses:
+"""1.61.0 end-to-end encryption, in a real browser, through the screens a person uses:
   * Settings > Security > Encryption: setting the passphrase makes the site key (Files, Cards, Tools presets) next to Info's and Links' keys
   * HubSite (shell.js): the unlock dialog, a wrong passphrase, "Keep unlocked on this device", seal and open
   * the recovery key opens the same data, typed loosely; changing the passphrase keeps old data readable; removing it is refused while

@@ -61,7 +61,7 @@ $api = (string)file_get_contents($site . '/web/hub/core/api.php');
 t('the API: reading needs the login; changing needs POST, the login and the security token', preg_match("/case 'presets':.*?need_admin\(false\).*?need_post\(\); need_admin\(\);/s", $api) === 1);
 
 
-// ---- 1.61: presets locked in the browser ----
+// ---- 1.61.0: presets locked in the browser ----
 $enc = fn(string $seed = 'x') => 'enc1:' . base64_encode(str_pad($seed, 40, '.') . random_bytes(6));
 $kid = bin2hex(random_bytes(8));
 pr_save(['kinds' => []]);

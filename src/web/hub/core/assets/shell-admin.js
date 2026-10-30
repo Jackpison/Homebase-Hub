@@ -52,12 +52,12 @@
   var SECTIONS = [
     ['overview', 'Overview', ICON.grid, 'How your site stands right now, and what to look at next.', [['overview', 'Overview'], ['setup', 'Guided Setup']], ''],
     ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and the tabs in the bar.', [['general', 'Basics'], ['nav', 'Tabs']], 'Web Setting'],
-    ['look', 'Appearance', ICON.palette, 'How your site looks everywhere: the bar, theme, font, accent color and the colors of every page.', [['look', 'Look'], ['themes', 'Presets'], ['colors', 'Colors']], 'Web Setting'],
-    ['security', 'Security', ICON.shield, 'Who can get in, and how well your private things are protected.', null, 'Data Setting'],
+    ['look', 'Appearance', ICON.palette, 'The bar, theme, font and colors.', [['look', 'Look'], ['themes', 'Presets'], ['colors', 'Colors']], 'Web Setting'],
+    ['security', 'Security', ICON.shield, 'Login, passkeys and encryption.', null, 'Data Setting'],
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and backups, sent to your phone.', null, 'Data Setting'],
-    ['backup', 'Backup & Restore', ICON.box, 'One file holds your pages and every setting you chose. Download it, restore it, or start over.', null, 'Data Setting'],
-    ['health', 'Health', ICON.pulse, 'Version, disk, speed, errors, your domains, and what your hosting allows.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
-    ['updates', 'Updates', ICON.upload, 'Update the site from GitHub or by uploading a zip, go back to the last version, and clear out files that do not belong.', [['updates', 'Update'], ['files', 'Files']], 'System Setting'],
+    ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over.', null, 'Data Setting'],
+    ['health', 'Health', ICON.pulse, 'Version, speed, errors and domains.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
+    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, or go back.', [['updates', 'Update'], ['files', 'Files']], 'System Setting'],
     ['changelog', 'Changelog', ICON.log, 'What changed in every version of your site, newest first.', [['changelog', 'Versions'], ['chmap', 'Version Map'], ['chnotes', 'Notes']], 'System Setting']];
   var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
   var SUB_OF = {};   // sub-tab -> its section (nav -> general, colors -> look)
@@ -371,7 +371,7 @@
       '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
       '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw">' + sw.map(function (c) { return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (draft.accent === c) + '"></button>'; }).join('') +
       '<label class="ix-swc" title="Your Own Color"><input type="color" id="ix-acc" value="' + esc(draft.accent) + '" aria-label="Your Own Color"></label><input type="text" class="ix-hex" id="ix-acch" maxlength="7" value="' + esc(draft.accent) + '" aria-label="Accent Color Hex" spellcheck="false"></div>' +
-      '<p class="ix-note">For the colors of the bar, pages and text, open the Colors tab; for ready-made looks, the Presets tab. Each page\'s own options are under its pencil icon: Edit This Page and its Settings.</p>';
+      '<p class="ix-note">More colors: the Colors tab. Ready-made looks: the Presets tab.</p>';
     bindSeg(p, function (k, v) { draft[k] = v; if (k === 'theme') K.previewTheme(v); });
     p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { setAcc(b.dataset.c); }; });
     p.querySelector('#ix-acc').oninput = function (e) { setAcc(e.target.value); };
@@ -1373,7 +1373,7 @@
         (rows.length ? '<details class="ix-more"><summary>Show the Files</summary><div class="ix-chl">' + rows.join('') + '</div></details>' : '') +
         '<p class="ix-note">Never touched: <b>site-data</b> (all your data), <b>web/hub/media</b> (your pictures and logo), <b>web/hub/core/config.php</b> and the Tools settings made from your settings.' + (chk && chk.noOldList ? ' This copy had no file list, so no old files can be removed this time.' : '') + '</p>' +
         '<div class="ix-apl"><label for="ix-upw">Website Password</label><div class="ix-row"><input type="password" id="ix-upw" autocomplete="current-password" placeholder="Needed to change the site\'s code" style="max-width:340px"><button type="button" class="ix-btn pri" id="ix-uap">Apply Update</button><button type="button" class="ix-btn" id="ix-ucn">Cancel</button></div></div>' +
-        '<label class="ix-tg"><span>Go Back by Itself<small>If the site stops answering after the update, it returns to the earlier version.</small></span><input type="checkbox" id="ix-uauto"' + (st.autoUndo ? ' checked' : '') + '></label>' +
+        '<label class="ix-tg"><span>Go Back by Itself<small>Returns to the old version if the site stops answering.</small></span><input type="checkbox" id="ix-uauto"' + (st.autoUndo ? ' checked' : '') + '></label>' +
         '<p class="ix-err" id="ix-ue"></p>';
     } else {
       review = '<label class="ix-dropz" id="ix-udz"><input type="file" id="ix-ufile" accept=".zip,application/zip"><b>Drop the Update Zip Here</b><span>or click to choose it</span></label>' +
@@ -1608,7 +1608,7 @@
       }).catch(function () { er.textContent = "Can't reach the server. Nothing was changed."; }).finally(function () { btn.disabled = false; });
     };
 
-    /* Passkeys (1.61): log in with a fingerprint, face, PIN or security key. Adding or removing one needs the website password. */
+    /* Passkeys (1.61.0): log in with a fingerprint, face, PIN or security key. Adding or removing one needs the website password. */
     function drawPk() {
       var b = body('pk'), keys = st.pk || [], can = !!(window.PublicKeyCredential && st.pkSecure && window.isSecureContext);
       var when1 = function (t) { return t ? K.when(t) : 'never'; };
@@ -1674,8 +1674,8 @@
         chip('Links Tabs', cnt(st.lenc, !!st.lvault, on ? 'none locked yet' : 'none'), !!st.lvault && st.lenc > 0) +
         chip('Files, Cards, Presets', st.sv ? (st.svUse.length ? st.svUse.join(', ') + ' locked' : 'ready') : (on ? 'ready' : 'none'), !!st.sv && st.svUse.length > 0) +
         chip('Backup Files', bk.available ? (bk.set ? 'locked' : 'not locked') : 'not available on this host', !!bk.set) + '</div>';
-      var hintTabs = on ? '<p class="ix-note">To lock an Info tab: open Info, press the pencil on a tab, then Encrypt this tab. In Links: press Edit, the pencil on a tab, then Encrypted Tab.</p>' : '';
-      var older = (!on && (st.vault || st.lvault || bk.set)) ? '<p class="ix-note">Some of your locked data still uses an older setting (your website password, or a separate passphrase). Setting the passphrase moves all of it onto it.</p>' : '';
+      var hintTabs = on ? '<p class="ix-note">To lock a tab: edit it, then choose Encrypted Tab.</p>' : '';
+      var older = (!on && (st.vault || st.lvault || bk.set)) ? '<p class="ix-note">Some locked data still uses an older key. Setting the passphrase moves it all.</p>' : '';
       var html;
       if (!on) {
         html = card('intro', ICON.shield, 'Lock Your Private Tabs and Backups', 'One passphrase locks your Files, Cards and saved presets, the encrypted tabs in Info and Links, and your backup files. Only you can unlock them, even if someone copies your server.', chips) + older +
@@ -1696,7 +1696,7 @@
             '<p class="ix-err" id="ix-re"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-rmk">' + (st.rec ? 'Make a New Recovery Key' : 'Create Recovery Key') + '</button>' +
             (st.rec ? '<button type="button" class="ix-btn danger" id="ix-rdel">Remove Recovery Key</button>' : '') + '</div><div id="ix-rshow"></div>',
             '<span class="ix-pill ' + (st.rec ? 'good' : '') + '">' + (st.rec ? (st.recGap ? 'Make a New One' : 'Created') : 'Not Created') + '</span>') +
-          (st.recGap ? '<p class="ix-note">Your recovery key was made before Files, Cards and presets were locked, so it does not open them yet. Make a new recovery key below.</p>' : '') + '</div>' +
+          (st.recGap ? '<p class="ix-note">Your recovery key is older than Files and Cards. Make a new one below.</p>' : '') + '</div>' +
           '<form id="ix-ef">' + card('danger', ICON.out, 'Remove Encryption', 'Locked tabs turn back into normal private tabs (still hidden from visitors) and backup files stop being locked. To use a different passphrase, change it above instead.',
             '<div class="ix-fgrid">' + fd('ix-ecur', 'Your Passphrase', 'off') + fd('ix-epw', 'Website Password', 'current-password') + '</div>' +
             fd('ix-eold', 'Earlier Passphrase', 'off', 'The one your existing locked tabs use now.', 'ix-eoldw') +
@@ -2200,13 +2200,13 @@
       var app = b.dataset.export, fmt = b.dataset.fmt, st = document.getElementById('ix-xs'); b.disabled = true; if (st) st.textContent = 'Reading your ' + app + '…';
       api('export&app=' + app).then(function (j) {
         if (!(app === 'cards' && j && j.ok && j.data && typeof j.data.enc === 'string')) return j;
-        if (st) st.textContent = 'Opening your locked cards…';   // locked in the browser (1.61): opened here with your passphrase, never on the server
+        if (st) st.textContent = 'Opening your locked cards…';   // locked in the browser (1.61.0): opened here with your passphrase, never on the server
         return window.HubSite.openJson(j.data.enc).then(function (d) { j.data = d; return j; }, function (e) { return { ok: false, error: e && e.code === 'cancel' ? 'Not exported: Cards are locked and need your passphrase.' : 'Your cards could not be unlocked, so nothing was exported.' }; });
       }).then(function (j) {
         b.disabled = false;
         if (!j || !j.ok) { if (st) st.textContent = (j && j.error) || 'Could not read the data.'; return; }
         var day = new Date().toISOString().slice(0, 10), r = exportRows(app, j.data);
-        if (fmt === 'html') {   // (1.61) the bookmark file other browsers import, made here
+        if (fmt === 'html') {   // (1.61.0) the bookmark file other browsers import, made here
           var pv = document.getElementById('ix-bmpriv'), all = j.data.tabs || [], lk = all.filter(function (t) { return typeof t.enc === 'string'; }).length;
           var pick = all.filter(function (t) { return typeof t.enc !== 'string' && (pv && pv.checked || !t.private); });
           var cnt = pick.reduce(function (a, t) { return a + (t.categories || []).reduce(function (b, c) { return b + (c.links || []).filter(function (l) { return !l.divider; }).length; }, 0); }, 0);
@@ -2255,13 +2255,13 @@
                 return '<label><input type="checkbox" value="' + esc(t.id) + '" checked>' + esc(t.name || 'Tab') + (t.enc ? ' 🔒' : t.private ? ' (private)' : '') + '</label>'; }).join('') + '</div>' : '') + '</div>';
           }).join('') + '</div></details></details>' +
         '<p class="ix-note">Keep backup files somewhere other than this server.</p>' +
-        '<details class="ix-acc"><summary><span>Restore</span><small>Bring everything back from a backup file. Older Links, Info, Cards and Tasks backups work too.</small></summary><div class="ix-accb">' +
+        '<details class="ix-acc"><summary><span>Restore</span><small>Bring everything back from a backup file.</small></summary><div class="ix-accb">' +
           '<label class="ix-dropz" id="ix-dropz"><input type="file" id="ix-imp" accept=".json,.gz,application/json,application/gzip"><b>Drop a Backup File Here</b><span>or click to choose. .json, or .json.gz from Telegram. You pick what to restore next, and what is there now is kept as an earlier version first.</span></label>' +
           '<div id="ix-impx"></div>' +
           '<h3 class="ix-h3" id="ix-vacc">Earlier Versions</h3><p>' + (j.versions.length ? j.versions.length + ' saved' + (newest ? ', newest ' + esc(ago(newest)) : '') : 'None yet') + '. Up to 40 per page, one every 10 minutes, kept automatically while you edit. Restoring keeps a copy first.</p>' +
           '<div class="ix-row" id="ix-vf" style="margin-bottom:6px">' + seg('vf', [['all', 'All']].concat(['links', 'info', 'cards', 'tasks', 'home'].map(function (k) {
             var c = j.versions.filter(function (v) { return v.app === k; }).length; return [k, NAMES[k] + (c ? ' ' + c : '')]; })), 'all') + '</div><div id="ix-vl"></div></div></details>' +
-        '<details class="ix-acc" id="ix-xacc"><summary><span>Export</span><small>Links, Cards or Tasks as a spreadsheet (CSV) or a JSON file, and your bookmarks for other browsers</small></summary><div class="ix-accb">' +
+        '<details class="ix-acc" id="ix-xacc"><summary><span>Export</span><small>Spreadsheets, JSON, and bookmarks for other browsers</small></summary><div class="ix-accb">' +
           tabHead(ICON.file, 'Export', 'One page at a time, to open in a spreadsheet, another browser, or to keep. This is not a backup: use Back Up for that.') +
           [['links', 'Links', ICON.bookmark, 'Every bookmark with its tab, category, name and address. Encrypted tabs stay locked and are left out of the spreadsheet.'],
            ['cards', 'Cards', ICON.card, 'Every card with its details, one row each.'],
@@ -2317,7 +2317,7 @@
         if (!q.length) { toast('Pick at least one part.'); return; }
         // downloaded with the security token in a header (not in the address), then saved from memory
         var btn = this; btn.disabled = true;
-        if (enc.set) extra += '&enc=1';   // (1.61) a backup is always locked once there is a passphrase
+        if (enc.set) extra += '&enc=1';   // (1.61.0) a backup is always locked once there is a passphrase
         fetch(CORE + 'api.php?action=backup&parts=' + q.join(',') + extra, { credentials: 'same-origin', headers: { 'X-Hub-CSRF': S.csrf } }).then(function (r) {
           if (!r.ok) return r.json().then(function (j) { throw new Error(j.error || 'Backup failed.'); });
           var name = (/filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '') || [])[1] || 'backup.json';
@@ -2375,7 +2375,7 @@
     if (!window.crypto || !crypto.subtle || !window.DecompressionStream) { box.innerHTML = '<p class="ix-err">This browser can\'t open encrypted backups. Use a current Chrome, Edge, Firefox or Safari, on https.</p>'; return; }
     box.innerHTML = '<form class="ix-encask" id="ix-encf"><p style="margin-top:10px"><b>🔒 Encrypted backup</b>' + (j.site ? ' of ' + esc(j.site) : '') + (j.created ? ', ' + esc(new Date(j.created).toLocaleString()) : '') + '.</p>' +
       '<label for="ix-encp">' + (j.pw === 'login' ? 'Website Password' : 'Encryption Passphrase (or Website Password)') + '</label><div class="ix-row"><input type="password" id="ix-encp" autocomplete="' + (j.pw === 'login' ? 'current-password' : 'off') + '" style="flex:1"><button class="ix-btn pri" id="ix-encgo">Unlock</button></div>' +
-      '<p class="ix-note">Used only in this browser. If you changed it since this file was made, use the one from back then.</p><p class="ix-err" id="ix-ence"></p></form>';
+      '<p class="ix-note">Used only in this browser.</p><p class="ix-err" id="ix-ence"></p></form>';
     var f = box.querySelector('#ix-encf'); box.querySelector('#ix-encp').focus();
     f.onsubmit = function (e) {
       e.preventDefault();
@@ -2476,7 +2476,7 @@
           (h.speed.rows || []).map(function (x) { return '<div class="ix-hrow"><span>' + esc(x.name) + '</span><span></span><b>' + (x.bytes ? x.ms + ' ms' : '—') + '</b><small>' + (x.bytes ? esc(size(x.bytes)) : 'no data yet') + '</small></div>'; }).join('') +
           '<div class="ix-hrow"><span>This check took</span><span></span><b>' + h.speed.request_ms + ' ms</b><small>on the server</small></div>' +
           '<div class="ix-hrow"><span>PHP Code Cache (OPcache)</span><span></span><b>' + (h.speed.opcache ? 'On' : 'Off') + '</b><small>' + (h.speed.opcache ? 'pages start faster' : 'ask your host to turn it on: it makes every page start faster') + '</small></div>' +
-          '<p class="ix-note">If a page is slow to start, look here first: data that reads in a few milliseconds means the wait is the connection or the host, not the site.</p></div></details>' +
+          '<p class="ix-note">Slow page? Fast data here means the wait is your connection or host.</p></div></details>' +
         '<details class="ix-acc"><summary><span>Backups</span><small>Last full backup ' + (h.backup.last ? esc(when(h.backup.last)) : 'never') + '</small></summary><div class="ix-accb">' +
           '<div class="ix-hrow"><span>Last Full Backup</span><span></span><b>' + (h.backup.last ? esc(when(h.backup.last)) : 'Never') + '</b><small>' + (h.backup.every ? 'reminder every ' + h.backup.every + ' days' : 'no reminder') + '</small></div>' +
           '<div class="ix-hrow"><span>Telegram Backups</span><span></span><b>' + (h.backup.telegram ? esc(when(h.backup.telegram)) : 'None Sent') + '</b><small>' + (h.backup.tgEvery ? 'every ' + h.backup.tgEvery + ' days' : 'off') + '</small></div>' +
@@ -2537,7 +2537,7 @@
         '<h3>Renewal Tasks</h3><p>Expiry dates become tasks, so reminders cover them.</p>' +
         '<label class="ix-tg"><span>Domain Expiry<small>A task 30 days ahead.</small></span><input type="checkbox" data-t="dom"' + (t.dom ? ' checked' : '') + '></label>' +
         '<label class="ix-tg"><span>Hosting Renewal<small>From the date you enter above.</small></span><input type="checkbox" data-t="host"' + (t.host ? ' checked' : '') + '></label>' +
-        '<label class="ix-tg"><span>SSL Certificate<small>Usually off: certificates renew themselves. You still get a 7-day warning.</small></span><input type="checkbox" data-t="ssl"' + (t.ssl ? ' checked' : '') + '></label>' +
+        '<label class="ix-tg"><span>SSL Certificate<small>Usually off: certificates renew themselves.</small></span><input type="checkbox" data-t="ssl"' + (t.ssl ? ' checked' : '') + '></label>' +
         '<p class="ix-note">Runs with the cron job: uptime every 5 minutes, expiry twice a day.</p>';
       var busy = function (b, txt) { b.disabled = true; b.textContent = txt; };
       box.querySelector('#ix-wadd').onsubmit = function (e) {

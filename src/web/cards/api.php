@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $title = is_string($s['title'] ?? null) ? $s['title'] : (is_string($j['title'] ?? null) ? $j['title'] : '');
         hub_json(200, ['private' => true, 'auth' => false, 'locked' => true, 'settings' => ['title' => $title]]);
     }
-    if (is_string($j['enc'] ?? null)) {   // 1.61: locked in the browser with the site key; the server never sees the cards
+    if (is_string($j['enc'] ?? null)) {   // 1.61.0: locked in the browser with the site key; the server never sees the cards
         echo json_encode(['enc' => $j['enc'], 'kid' => (string)($j['kid'] ?? ''), 'saved' => (int)($j['saved'] ?? 0), 'title' => (string)($j['title'] ?? ''), 'locked' => true, 'auth' => true], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         exit;
     }
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stored = is_file($file) ? json_decode(hub_jraw($file), true) : null;
     $storedLocked = is_array($stored) && is_string($stored['enc'] ?? null);
     $lockedIn = isset($d['enc']);
-    if ($lockedIn) {   // 1.61: the browser sends the cards already locked ("enc1:..."): only the shape is checked here
+    if ($lockedIn) {   // 1.61.0: the browser sends the cards already locked ("enc1:..."): only the shape is checked here
         if (!is_string($d['enc']) || strlen($d['enc']) > 1600000 || !preg_match('~^enc1:[A-Za-z0-9+/=]{20,}$~', $d['enc'])) hub_json(400, ['ok' => false, 'error' => 'bad data']);
         $kid = is_string($d['kid'] ?? null) && preg_match('/^[a-f0-9]{16}$/', $d['kid']) ? $d['kid'] : '';
         $outData = ['enc' => $d['enc'], 'kid' => $kid, 'title' => mb_substr(is_string($d['title'] ?? null) ? $d['title'] : '', 0, 60), 'saved' => time()];

@@ -429,7 +429,7 @@
     }).catch(function () { toast('The Edit Bar choice could not be saved.'); });
   }, true);
 
-  /* ---------- (1.61) buttons instead of a dropdown ----------
+  /* ---------- (1.61.0) buttons instead of a dropdown ----------
      <select data-ix-seg> with 2 or 3 options becomes one row of buttons (role radiogroup). The select stays, hidden, and is the
      truth: a click sets it and fires "change"; code that sets select.value is followed on the next change or when the window opens. */
   function segBuild(sel) {
@@ -456,7 +456,7 @@
   function segAll() { [].forEach.call(document.querySelectorAll('select[data-ix-seg],select[data-ix-editbar]'), segBuild); }
   whenBody(function () { segAll(); new MutationObserver(segAll).observe(document.body, { childList: true, subtree: true }); });
 
-  /* ---------- (1.61) one Settings window for every page ----------
+  /* ---------- (1.61.0) one Settings window for every page ----------
      dialog.ix-sdlg: title + close X on top, a scrolling body, the buttons in a footer. The X does what Cancel does. */
   function sdlgBuild(d) {
     if (d._ixS) return; d._ixS = true;
@@ -934,7 +934,7 @@
     if (e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) { e.preventDefault(); e.stopPropagation(); focusSearch(); }
   }, true);
 
-  /* ---------- 7a. keyboard shortcuts (1.61) ----------
+  /* ---------- 7a. keyboard shortcuts (1.61.0) ----------
      ? shows them. G then a letter goes to a page (G H Home, G L Links ...); E starts editing the page. Search keeps / and Ctrl+K.
      They never fire while you type in a field or while a window is open, and never with Ctrl, Alt or Cmd held. */
   var GOKEY = { home: 'h', links: 'l', info: 'i', cards: 'c', tasks: 't', files: 'f', tools: 'o' };
@@ -1080,7 +1080,7 @@
       };
     });
   }
-  /* Passkeys (1.61): the browser asks for a fingerprint, face, PIN or security key; the server checks the signature (lib/passkey.php). */
+  /* Passkeys (1.61.0): the browser asks for a fingerprint, face, PIN or security key; the server checks the signature (lib/passkey.php). */
   function bufB64u(buf) { var u = new Uint8Array(buf), t = ''; for (var i = 0; i < u.length; i++) t += String.fromCharCode(u[i]); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function b64uBuf(x) { x = x.replace(/-/g, '+').replace(/_/g, '/'); while (x.length % 4) x += '='; var t = atob(x), u = new Uint8Array(t.length); for (var i = 0; i < t.length; i++) u[i] = t.charCodeAt(i); return u.buffer; }
   function passkeyLogin() {
@@ -1309,7 +1309,7 @@
       drawBar(); applyFavicon(); ebarKey = ''; drawEditBar(); editBarPick();
     }).catch(function () {});
   }
-  /* (1.61) Share from your phone: one small service worker (web/hub/share-sw.js) takes what the phone's Share button sends to this
+  /* (1.61.0) Share from your phone: one small service worker (web/hub/share-sw.js) takes what the phone's Share button sends to this
      site (when it is added to the home screen). It is set up for you only, once you are logged in, and only on a secure address. */
   function shareWorker() {
     if (!S.admin || !('serviceWorker' in navigator) || !window.isSecureContext) return;
@@ -1388,7 +1388,7 @@
   whenBody(function () { drawBar(); });                 // the bar is there on the very first paint
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
-  /* (1.61) Export Bookmarks: the standard bookmark file every browser imports (Chrome, Edge, Firefox, Safari). Made here in the
+  /* (1.61.0) Export Bookmarks: the standard bookmark file every browser imports (Chrome, Edge, Firefox, Safari). Made here in the
      browser from tabs [{title, categories: [{title, links: [{title, url}]}]}], so nothing extra leaves the server. Only web addresses
      (http, https, ftp) and mail links are written. Each tab becomes a folder, each category a folder inside it. */
   function bookmarksHtml(tabs, title) {
@@ -1412,7 +1412,7 @@
   window.HUB = {
     app: APP, state: function () { return S; }, login: login, logout: logout, settings: settings, toast: toast, theme: themeNow, setTheme: setTheme,
     isAdmin: function () { return !!S.admin; }, ready: function () { return refresh(); }, fetch: hubFetch,
-    bufB64u: bufB64u, b64uBuf: b64uBuf, bookmarksHtml: bookmarksHtml,   // (1.61) for the passkey screens of Settings
+    bufB64u: bufB64u, b64uBuf: b64uBuf, bookmarksHtml: bookmarksHtml,   // (1.61.0) for the passkey screens of Settings
     api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
     tz: function () { return S.tz || 'Asia/Kolkata'; }   // the site's time zone (Settings > General)
@@ -1520,7 +1520,7 @@
     useKey: useKey, seal: seal, unseal: unseal, openDeep: openDeep, devSave: devSave, devLoad: devLoad, devForget: devForget, devDropAll: devDropAll };
 })();
 
-/* ---------- 16. HubSite: the site key (1.61) ----------
+/* ---------- 16. HubSite: the site key (1.61.0) ----------
    One random 32-byte key, made in this browser, that locks what the pages keep for you: Files, Cards and Tools' saved presets.
    Same scheme as the tab keys of Info and Links (section 14): the server only holds it wrapped with the encryption passphrase (and a
    second time with the recovery key), in site-data/core/site-vault.php. It never sees the key or the passphrase for this.
@@ -1575,9 +1575,9 @@
     asking = new Promise(function (res, rej) {
       var settled = false;
       var done = function (fn, v) { if (settled) return; settled = true; asking = null; K0.beforeClose = null; fn(v); };
-      K0.openDlg('<div class="ix-ico">' + K0.svg(K0.ICON.lock) + '</div><h2>' + (setup ? 'Set Up Encryption for This Data' : 'Unlock Your Data') + '</h2>' +
-        '<p>' + (setup ? 'Files, Cards and your saved presets are locked in this browser with your encryption passphrase before they are saved. The server only holds scrambled data.'
-                       : 'Type your encryption passphrase (or your recovery key) to open your locked data in this browser.') + '</p>' +
+      K0.openDlg('<div class="ix-ico">' + K0.svg(K0.ICON.lock) + '</div><h2>' + (setup ? (st.pp ? 'Lock Files and Cards' : 'Set Up Encryption') : 'Unlock Your Data') + '</h2>' +
+        '<p>' + (setup ? (st.pp ? 'Your passphrase is already set. Type it once more, with your website password, to lock this page the same way. This happens once.' : 'Your data is locked in this browser. The server only holds scrambled data.')
+                       : 'Type your passphrase (or recovery key) to open your data.') + '</p>' +
         '<form id="ix-skf"><label for="ix-skp">Encryption Passphrase' + (setup ? '' : ' or Recovery Key') + '</label><input type="password" id="ix-skp" autocomplete="off" autofocus>' +
         (setup ? '<label for="ix-skw">Website Password</label><input type="password" id="ix-skw" autocomplete="current-password"><p class="ix-note">To confirm that it is you.</p>' : '') +
         '<label class="ix-chk"><input type="checkbox" id="ix-skk"> Keep unlocked on this device</label>' +

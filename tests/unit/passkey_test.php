@@ -1,5 +1,5 @@
 <?php
-// 1.61: passkeys (web/hub/core/lib/passkey.php). A software authenticator made here (real P-256 and RSA keys, real signatures) is registered and used to log in;
+// 1.61.0: passkeys (web/hub/core/lib/passkey.php). A software authenticator made here (real P-256 and RSA keys, real signatures) is registered and used to log in;
 // every way an answer can be wrong is tried. Runs on its own copy of src/ (run.php).
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';

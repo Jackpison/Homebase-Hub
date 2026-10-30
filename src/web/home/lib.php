@@ -84,7 +84,7 @@ function default_site(): array
     return [
         'title'   => 'Home',
         'icon'    => '',
-        'private' => false,   // (1.61) Only Me: visitors get a log-in screen and nothing else
+        'private' => false,   // (1.61.0) Only Me: visitors get a log-in screen and nothing else
         'linksMoved' => 0,   // when Home's old links (up to 1.50) were copied to Links; 1.53 removed Home's own copy
         'bg' => [
             'sources'      => ['picsum' => true, 'bing' => true, 'wikimedia' => true, 'wallhaven' => true, 'unsplash' => false, 'pixabay' => false, 'pixabay_video' => false],

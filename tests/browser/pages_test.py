@@ -116,7 +116,7 @@ try:
         def items(app):
             pg.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); until(lambda: pg.evaluate("document.querySelectorAll('[data-hub=item]').length > 0"), 10000); settle(pg)
             return pg.evaluate("[...document.querySelectorAll('[data-hub=item]')].map((e, i) => [+(e.dataset.hubOrder || 0), i, e.dataset.hubLabel]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(x => x[2])")
-        want = {'links': ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings'], 'info': ['Export', 'Info Settings'],
+        want = {'links': ['Colors', 'Fetch Icons', 'Import and Export', 'Links Settings'], 'info': ['Export', 'Info Settings'],
                 'tasks': ['Add Task', 'Spreadsheet (CSV)', 'Calendar File (.ics)', 'Print or PDF', 'Tasks Settings'],
                 'cards': ['Add Card', 'Holders', 'Banks', 'PDF (print)', 'Excel Spreadsheet', 'Cards Settings']}
         got = {k: items(k) for k in want}
@@ -339,7 +339,7 @@ try:
             ep.click('#ix-editb'); until(lambda: ep.evaluate("!!document.querySelector('#ix-pop')"), 3000)
             return ep.evaluate("[...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)")
         def ebar(): return ep.evaluate("(() => { const e = document.getElementById('ix-ebar'); return e && !e.hidden ? [...e.querySelectorAll('.ix-eb')].map(b => b.getAttribute('aria-label')) : null })()")
-        want = {'links': ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings', 'Done'], 'info': ['Export', 'Info Settings', 'Done'],
+        want = {'links': ['Colors', 'Fetch Icons', 'Import and Export', 'Links Settings', 'Done'], 'info': ['Export', 'Info Settings', 'Done'],
                 'cards': ['Add Card', 'Holders', 'Banks', 'Export', 'Cards Settings', 'Done'], 'tasks': ['Add Task', 'Export', 'Tasks Settings', 'Done']}
         menus, bars, old, done = {}, {}, {}, {}
         for app in want:
@@ -368,7 +368,7 @@ try:
         ep.click('#sEditBar + .ix-sgc [data-v=text]'); ep.click('#setSave'); until(lambda: ep.evaluate("document.getElementById('ix-ebar').classList.contains('ix-ebar-text')"), 8000)
         labels = ep.evaluate("[...document.querySelectorAll('#ix-ebar .ix-ebl')].filter(l => l.offsetWidth > 0).map(l => l.textContent)")
         check('P52 Icons Only (the default) shows a button\'s name when you point at it; Links Settings > Edit Bar > Icons and Text writes the names on the bar once saved (Cancel keeps it as it was)',
-              tipname == 'Colors' and before == 'icons' and cancelled == ['', ''] and reopened == 'icons' and labels == ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings'], (tipname, before, cancelled, reopened, labels))
+              tipname == 'Colors' and before == 'icons' and cancelled == ['', ''] and reopened == 'icons' and labels == ['Colors', 'Fetch Icons', 'Import and Export', 'Links Settings'], (tipname, before, cancelled, reopened, labels))
         ep.click('#ix-ebar [data-ix-done]')
         emenu('links'); ep.click('#ix-pop button'); until(lambda: ebar() is not None, 5000)
         kept = ep.evaluate("document.getElementById('ix-ebar').classList.contains('ix-ebar-text')"); ep.click('#ix-ebar [data-ix-done]')

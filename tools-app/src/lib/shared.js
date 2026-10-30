@@ -1,4 +1,4 @@
-// Files sent to this site from the phone's Share button (1.61). The site's share worker keeps them in this browser (Cache "hub-share") and
+// Files sent to this site from the phone's Share button (1.61.0). The site's share worker keeps them in this browser (Cache "hub-share") and
 // the Files page sends them here with ?shared=<id>. They wait for the next tool that asks for a file of that kind, and are removed when
 // used or discarded. Nothing here talks to the server.
 import { h } from '../ui.js';

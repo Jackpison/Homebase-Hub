@@ -32,7 +32,7 @@ function apply(s){
 const HF=(u,o)=>window.HUB?HUB.fetch(u,o):fetch(u,o);   // the site's fetch: longer timeout and a quiet retry on slow hosts
 const api=body=>HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
 const savedMsg=()=>"Saved to your server";
-/* 1.61: when encryption is on, the cards are locked in this browser with the site key (HubSite, shell.js) before they are sent, and no plain copy
+/* 1.61.0: when encryption is on, the cards are locked in this browser with the site key (HubSite, shell.js) before they are sent, and no plain copy
    is kept in this browser. ENC says whether Cards is locked; the server then holds only {enc, kid, title}. */
 let ENC=false,lastN=0;
 const dropPlain=()=>{try{localStorage.removeItem("family4");localStorage.removeItem("cards3");localStorage.removeItem("notes4")}catch(e){}};

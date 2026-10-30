@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cards locked with the passphrase (1.61), in a real browser: the offer to lock, one press, what the server is left holding, reopening, adding a
+"""Cards locked with the passphrase (1.61.0), in a real browser: the offer to lock, one press, what the server is left holding, reopening, adding a
 card, a browser that has not unlocked, the CSV export of locked cards, and Remove Passphrase turning them back into plain cards.
     python3 tests/browser/lock_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8977)"""
 import csv, glob, io, json, os, re, subprocess, sys, tempfile

@@ -1,5 +1,5 @@
 <?php
-// 1.61: the Tasks calendar link. Off until turned on; one secret key, a new key ends the old one; the feed is valid iCalendar with the task names,
+// 1.61.0: the Tasks calendar link. Off until turned on; one secret key, a new key ends the old one; the feed is valid iCalendar with the task names,
 // dates and repeats, never the notes, and paused or done tasks are left out.
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';

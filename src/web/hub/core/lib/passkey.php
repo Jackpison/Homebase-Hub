@@ -11,7 +11,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
 
 /**
- * Passkeys (1.61): log in with a fingerprint, face, PIN or security key (WebAuthn), with no library: the checks are here, the signatures are
+ * Passkeys (1.61.0): log in with a fingerprint, face, PIN or security key (WebAuthn), with no library: the checks are here, the signatures are
  * verified by PHP's own OpenSSL.
  *
  * A passkey proves two things at once (the device, and you at the device), so a passkey login does not ask for the two-step code or the Telegram

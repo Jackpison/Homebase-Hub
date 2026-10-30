@@ -1,5 +1,5 @@
 <?php
-// 1.61: every PHP file of the site runs in strict mode (declare(strict_types=1) before anything else), so a number given where text is expected
+// 1.61.0: every PHP file of the site runs in strict mode (declare(strict_types=1) before anything else), so a number given where text is expected
 // is an error you see in a test, not a quiet conversion. A new file without it fails here.
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';

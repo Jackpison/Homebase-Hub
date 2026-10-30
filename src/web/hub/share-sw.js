@@ -1,4 +1,4 @@
-// Share from your phone (1.61). When this site is added to the home screen, the phone's Share button lists it. The shared pictures,
+// Share from your phone (1.61.0). When this site is added to the home screen, the phone's Share button lists it. The shared pictures,
 // files, text or link arrive as a POST to web/hub/share-target; this service worker catches it in the browser, keeps the files in the
 // browser's own storage (Cache "hub-share", on this device only, for a day at most), and opens the Files page, which asks what to do:
 // Save to Files (locked in the browser like any upload), Open in Tools, or Discard. Nothing is sent to the server by this step.

@@ -398,7 +398,7 @@ html.hl-welcome .stage,html.hl-welcome .wdock,html.hl-welcome .wcards{opacity:0}
 .wzedit{display:flex;flex-direction:column;gap:8px}
 .wzedit .inline > input[data-zn]{flex:0 1 170px}
 
-/* (1.61) Only Me: what a visitor sees */
+/* (1.61.0) Only Me: what a visitor sees */
 body.onlyme{min-height:100dvh;display:grid;place-items:center;background:#111;color:#eee;margin:0}
 .onlyme-card{text-align:center;padding:24px}
 .onlyme-card h1{font-size:24px;margin:0 0 8px}

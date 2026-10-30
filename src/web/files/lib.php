@@ -11,7 +11,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
 
 /**
- * Files (1.61): your files on your own server, locked in the browser before they are sent.
+ * Files (1.61.0): your files on your own server, locked in the browser before they are sent.
  *
  * What the server holds (site-data/files/):
  *   files.php   guarded JSON: { rev, items: {id: item}, shares: {token: share}, settings }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""A slow phone (1.61): every page is opened in Chromium with the processor slowed 4 times and a 1.6 Mbit/s, 150 ms network (the usual
+"""A slow phone (1.61.0): every page is opened in Chromium with the processor slowed 4 times and a 1.6 Mbit/s, 150 ms network (the usual
 "slow 4G" test), once with an empty cache. It reports the first paint, when the page has loaded, and how much it sent (as a host with
-compression would: gzip). The limits below are about twice the numbers measured at 1.61 (the first paint near 1.3 to 1.8 s, loaded under 2 s); a change that makes a page much slower or
+compression would: gzip). The limits below are about twice the numbers measured at 1.61.0 (the first paint near 1.3 to 1.8 s, loaded under 2 s); a change that makes a page much slower or
 heavier fails here, so it is noticed before a release, not after.
     python3 tests/browser/speed_test.py build/site-update-X.Y.Z.zip   (port 8983; Chromium only: it uses the DevTools throttling)"""
 import gzip, json, os, re, sys

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The build must not put a global helper in every page script (1.61): esbuild's --keep-names writes `var n=(T,S)=>Object.defineProperty(T,"name",...)`
+"""The build must not put a global helper in every page script (1.61.0): esbuild's --keep-names writes `var n=(T,S)=>Object.defineProperty(T,"name",...)`
 at the top of each minified file. Page scripts are classic scripts that share one global scope, so one file's `n` replaced another's and the shell
 failed with "Property description must be an object" on Info. This checks the build command, and (with a built zip) every minified script.
     python3 tests/repo/build_test.py [build/site-update-X.Y.Z.zip]"""

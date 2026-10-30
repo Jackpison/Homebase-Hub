@@ -268,7 +268,7 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
         if (!hub_jput(bk_info_file(), json_encode($new, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new Exception('Could not save Info.');
         $done[] = 'Info';
     }
-    if (!empty($pick['cards']) && is_array($parts['cards'] ?? null) && is_string($parts['cards']['enc'] ?? null)) {   // locked Cards (1.61): kept as they are; bk_sitevault_for already matched the key
+    if (!empty($pick['cards']) && is_array($parts['cards'] ?? null) && is_string($parts['cards']['enc'] ?? null)) {   // locked Cards (1.61.0): kept as they are; bk_sitevault_for already matched the key
         $c = $parts['cards'];
         if (strlen($c['enc']) > 1600000 || !preg_match('~^enc1:[A-Za-z0-9+/=]{20,}$~', $c['enc'])) throw new Exception('The Cards part of this file is damaged.');
         $keep = ['enc' => $c['enc'], 'kid' => is_string($c['kid'] ?? null) && preg_match('/^[a-f0-9]{16}$/', $c['kid']) ? $c['kid'] : '', 'title' => mb_substr(is_string($c['title'] ?? null) ? $c['title'] : '', 0, 60), 'saved' => time()];

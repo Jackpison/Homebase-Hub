@@ -203,7 +203,7 @@ case 'login':
     hub_start_session(hub_auth());
     hub_json(200, ['ok' => true]);
 
-/* ---- passkeys (1.61): log in with a fingerprint, face, PIN or security key. A passkey is two factors in one, so it skips the code and the Telegram tap ---- */
+/* ---- passkeys (1.61.0): log in with a fingerprint, face, PIN or security key. A passkey is two factors in one, so it skips the code and the Telegram tap ---- */
 case 'pk_login_begin':
     need_post(); require_once __DIR__ . '/lib/passkey.php';
     if (!hub_auth()) hub_json(409, ['ok' => false, 'error' => 'No password is set yet.']);

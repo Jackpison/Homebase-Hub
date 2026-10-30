@@ -45,7 +45,7 @@ foreach (['logo-512-maskable.png' => 512, 'apple-touch-icon.png' => 180] as $f =
     t("$f fills its whole square with the logo's yellow (phones round it themselves)", $ok);
 }
 
-// 1.61: the phone's Share button
+// 1.61.0: the phone's Share button
 $mf = hub_manifest(['siteName' => 'Mine'], '/hub', $pub);
 $stg = $mf['share_target'] ?? [];
 t('the manifest makes the site a share target, inside the site\'s own scope and path', ($stg['action'] ?? '') === '/hub/web/hub/share-target' && str_starts_with($stg['action'], $mf['scope']) && ($stg['method'] ?? '') === 'POST' && ($stg['enctype'] ?? '') === 'multipart/form-data');

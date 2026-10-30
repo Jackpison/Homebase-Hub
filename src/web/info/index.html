@@ -84,14 +84,14 @@
     <h2>Info Settings</h2>
     <h3>Page</h3>
     <div class="f"><label>Page Title<input id="gin" maxlength="60" placeholder="Information"></label></div>
-    <p class="hint">Shown in the browser tab and on exports. The logo comes from the main Settings.</p>
+    <p class="hint">Shown in the browser tab.</p>
     <h3>Privacy</h3>
-    <div class="ix-srow"><label for="spriv">Only Me<small>On: visitors see only a log-in screen. Off: visitors see your public tabs.</small></label><input type="checkbox" class="ix-sw" id="spriv"></div>
+    <div class="ix-srow"><label for="spriv">Only Me<small>Visitors see only a login screen.</small></label><input type="checkbox" class="ix-sw" id="spriv"></div>
     <p class="hint" id="sprivnote"></p>
-    <div class="ix-srow" id="sencrow" hidden><span>Encrypt All Private Tabs<small>Locks every private tab in this browser with your encryption passphrase. The server then holds only scrambled text.</small></span><button type="button" id="sencall">Encrypt All</button></div>
+    <div class="ix-srow" id="sencrow" hidden><span>Encrypt All Private Tabs<small>Locks your private tabs in this browser.</small></span><button type="button" id="sencall">Encrypt All</button></div>
     <h3>Look</h3>
     <div class="ix-srow"><span>Text Sizes<small>Make the tabs, box titles and text bigger or smaller.</small></span><button type="button" id="setsizes" data-hub-action="sizes">Change</button></div>
-    <div class="ix-srow"><label for="seditbar">Edit Bar<small>The bar at the bottom while you edit. Icons Only shows each name when you point at it; phones always show icons.</small></label>
+    <div class="ix-srow"><label for="seditbar">Edit Bar<small>Icons Only shows each name on hover.</small></label>
       <select id="seditbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></div>
     <p id="setmsg"></p>
     <div class="act"><button type="button" id="setcancel">Cancel</button><button type="submit" class="pri" id="setsave" data-ix-save>Save Settings</button></div>
@@ -103,8 +103,8 @@
     <h2>Export</h2>
     <div class="bgrid"><button type="button" data-b="pdf-all">All Tabs as PDF</button><button type="button" data-b="pdf-cur">Current Tab as PDF</button>
       <button type="button" data-b="txt-all">All Tabs as Text</button><button type="button" data-b="txt-cur">Current Tab as Text</button></div>
-    <p class="hint">Text keeps everything exactly. The PDF uses a basic font, so some symbols and non-Latin scripts only come through in Text. Locked encrypted boxes are left out: unlock them first.</p>
-    <p class="hint">Backups, imports and earlier versions of the whole site are under the Backup icon in the bar.</p>
+    <p class="hint">Text keeps everything. The PDF may miss some symbols.</p>
+    <p class="hint">Backups: use the Backup icon in the bar.</p>
     <div class="act"><button type="button" data-b="close">Close</button></div>
   </div>
 </dialog>

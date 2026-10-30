@@ -8,7 +8,7 @@
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /**
- * The Tasks calendar feed (1.61): calendar.php?k=<secret key>. Off until you turn it on in Tasks Settings. A calendar app (Google, Apple,
+ * The Tasks calendar feed (1.61.0): calendar.php?k=<secret key>. Off until you turn it on in Tasks Settings. A calendar app (Google, Apple,
  * Outlook) subscribes to this address and has no login, so the key in the address is the only thing that lets it in. A wrong, missing or
  * switched-off key all get the same plain 404. Nothing is written here, and nothing but the task names, dates, repeats, categories, prices
  * and links is sent (never notes).

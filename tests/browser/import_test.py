@@ -50,7 +50,7 @@ try:
         pg.wait_for_timeout(500)   # on purpose: I1 checks the importer is NOT fetched, so give the page time it could have used
         check('I1 Links does not load the importer until it is used', not loads, loads)
         items = pg.evaluate("[...document.querySelectorAll('[data-hub=item]')].map(e => e.getAttribute('data-hub-label'))")
-        check('I2 Import Bookmarks is in the Links menu, right after Fetch Icons', 'Import Bookmarks' in items and items.index('Fetch Icons') + 1 == items.index('Import Bookmarks'), items)
+        check('I2 Import Bookmarks is in the Links menu, right after Fetch Icons', 'Import and Export' in items and items.index('Fetch Icons') + 1 == items.index('Import and Export'), items)
 
         def open_dlg():
             pg.evaluate("document.querySelector('#importBmBtn').click()")

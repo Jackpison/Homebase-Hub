@@ -313,7 +313,7 @@ function hub_manifest(array $s, string $root, string $public): array {
     return [
         'id' => $u(''), 'name' => $name, 'short_name' => $short, 'description' => $name . ': start page, bookmarks, notes and tasks on your own server.',
         'start_url' => $u('web/home/'), 'scope' => $u(''), 'display' => 'standalone',
-        // (1.61) the phone's Share button: pictures, files, text and links go to web/hub/share-sw.js, which opens the Files page (see there)
+        // (1.61.0) the phone's Share button: pictures, files, text and links go to web/hub/share-sw.js, which opens the Files page (see there)
         'share_target' => ['action' => $u('web/hub/share-target'), 'method' => 'POST', 'enctype' => 'multipart/form-data',
             'params' => ['title' => 'title', 'text' => 'text', 'url' => 'url', 'files' => [['name' => 'files', 'accept' => ['image/*', 'video/*', 'audio/*', 'text/*', 'application/*']]]]],
         'background_color' => '#1a1a1a', 'theme_color' => '#1a1a1a', 'icons' => $icons, 'shortcuts' => $short_cuts,
@@ -936,7 +936,7 @@ function hub_clean_settings(array $in): array {
         $v = (int)($in['sizes'][$app][$k] ?? 0);
         if ($v >= 10 && $v <= 64) $o['sizes'][$app][$k] = $v;
     }
-    $o['look']     = true;   // (1.61) the "Same Look on Every Page" switch is gone: every site uses the shared colours
+    $o['look']     = true;   // (1.61.0) the "Same Look on Every Page" switch is gone: every site uses the shared colours
     $o['homeBar']  = (bool)($in['homeBar'] ?? false);
     $o['editBar']  = [];
     foreach (['home', 'links', 'info', 'cards', 'tasks'] as $app) if (($in['editBar'][$app] ?? '') === 'text') $o['editBar'][$app] = 'text';
