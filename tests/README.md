@@ -26,6 +26,24 @@ These run on your own computer. Nothing here is part of the update zip.
 - `nav_settings_test.php`: the bar style is top, side or dock; a new site takes the setup browser's time zone and Follow Device, while existing sites keep theirs.
 - `logic_test.php`: `/add` parsing, money, repeat dates, completing tasks, the Favicon helpers, the PHP support notice, safe names in an update zip, backup encryption, and a check that no PHP file defines a test shortcut.
 
+- `changelog_latest_test.php`: Settings > Overview's "What's New" gets only the newest version's notes, not the whole changelog.
+- `editbar_test.php`: the edit bar's look per page (Settings of each page > Edit Bar), kept in the site settings as editBar.
+- `fetch_test.php`: the one fetcher for other websites (`hub_fetch`, core/boot.php) that Home's pictures and Links' icons and titles use.
+- `firstrun_test.php`: a page with nothing on it says what to do and offers the first step (Links, Cards, Files; Tasks already did).
+- `home_private_test.php`: Home's "Only Me" switch: saved (default off), a visitor's page is only a log-in screen, and a visitor can start no photo download.
+- `home_widgets_test.php`: the widget settings, the Scratch Pad, Home's links moving to Links once, and the two Tasks actions Home uses.
+- `info_restore_test.php`: Info Undo (1.62.0): a deleted box or tab comes back with its text (`restore` in `save_boxes` and `save_tabs`); locked text only into an encrypted tab.
+- `layout_test.php`: the layout of 1.50 and later (web/hub/core, web/hub/media, web/hub/docs) and the one before (web/core-data, web/docs).
+- `links_keep_test.php`: Links keeps an earlier version before a save every 10 minutes, and always when the save asks for it (Import Bookmarks).
+- `manifest_test.php`: install on a phone: the site's own path, the owner's logo as an app icon, and the web app manifest.
+- `presets_test.php`: Tools' saved presets (lib/presets.php): kept on the server, checked, size-limited, and part of the site backup.
+- `strict_test.php`: every PHP file of the site runs in strict mode (`declare(strict_types=1)` before anything else).
+- `tasks_calendar_test.php`: the Tasks calendar link: off until turned on, one secret key (a new key ends the old one), a valid iCalendar feed.
+- `unify_test.php`: code that used to exist in several copies now lives once; these checks stop a copy from coming back.
+- `updater_test.php`: the updater's upload and staging rules (lib/update.php): strict piece numbers, a refused zip clears an older checked one.
+- `vault_test.php`: the site key (lib/vault.php): the wrapped key that locks Files, Cards and Tools presets; the server only holds it wrapped.
+- `versions_test.php`: earlier versions: a new copy never overwrites one made in the same second (`hub_version_path`).
+
 Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen', $ok)`.
 
 ## Visual changes
@@ -47,6 +65,9 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 - `python3 scripts/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
 - `zizmor --offline --persona=auditor .github/workflows/` (zizmor 1.30.1 from pip): Trail of Bits' checker for workflow files, at its strictest setting. Fix what it finds; never silence it.
 - `python3 tests/repo/secrets_test.py`: no token, key or private key in any file git tracks or in the last 50 commit messages (GitHub, Slack, AWS, Google, Anthropic and OpenAI keys, Telegram bot tokens), and the check's own patterns catch a made-up sample of each, in a file and in a commit message. CI runs it with the workflow checks.
+- `python3 tests/repo/dead_code_test.py`: nothing in `src/` that nothing uses: a PHP function or constant, a top-level JavaScript function, or a CSS class that no page or script names (a class a script builds from pieces is listed in the test). It proves its own rules on made-up samples.
+- `python3 tests/repo/maintain_test.py`, `presets_test.py` and `tools_list_test.py`: the monthly Tools update (`scripts/maintain.py`), the starter presets of Tools, and Tools' one list (`tools.json`: a file, a section, an icon and a check for every tool, and no document naming a removed tool).
+- `python3 tests/server/info_restore_test.py`: Info Undo through the real endpoint: a box and a tab come back in place with their text, a locked tab needs the site key, a stale page, a full tab and a visitor are refused (port 8780).
 - `python3 tests/repo/parallel_test.py`: `tests/lib/run_parallel.py`, which CI uses to run several browser tests at the same time (they overlap, output keeps its order, a failure or crash gives exit code 1 and an annotation).
 - `python3 tests/repo/ci_changes_test.py`: which changes count as docs only (`scripts/ci_changes.py`): then CI's slow jobs (server, browsers, apache) skip themselves and the `ci-ok` job still passes; any doubt runs everything.
 - `python3 tests/repo/ci_status_test.py`: the release waits for CI on the tagged commit (`scripts/ci_status.py`, up to 20 minutes) and refuses to build unless every job passed; this tests that decision with made-up check runs.

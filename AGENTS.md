@@ -50,6 +50,7 @@ php -d memory_limit=1G phpstan.phar analyse -c tests/repo/phpstan.neon --no-prog
 python3 tests/repo/check_libraries.py
 pip install ruff==0.14.0 && ruff check                              # Python lint for tests/ and scripts/ (rules in ruff.toml)
 python3 tests/repo/secrets_test.py                                   # no token or key in any file or in the last 50 commit messages
+python3 tests/repo/dead_code_test.py                                 # no PHP function or constant, JavaScript function or CSS class that nothing uses
 python3 scripts/build.py
 python3 scripts/make-site.py --no-guide
 python3 tests/server/update_test.py build/site-update-X.Y.Z.zip <previous release zip> <an older release zip>

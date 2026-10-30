@@ -47,7 +47,6 @@ html.ix-vt #ix-bar{view-transition-name:none}
 #ix-bar svg,#ix-pop svg,#ix-spot svg,#ix-sres svg,#ix-drawer svg,#ix-sheet svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #ix-bar svg circle,#ix-drawer svg circle,#ix-sheet svg circle{fill:none}
 .ix-brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;letter-spacing:.4px;white-space:nowrap}
-.ix-mark{width:26px;height:26px;border-radius:7px;background:var(--ix-accent);color:var(--ix-ink);display:grid;place-items:center;font-size:14px;font-weight:700}
 .ix-logo{width:28px;height:28px;object-fit:contain;border-radius:7px;display:block}
 .ix-links{display:flex;gap:4px}
 #ix-bar .ix-links a{display:flex;align-items:center;gap:8px;height:36px;padding:0 13px;border-radius:999px;font-weight:700;color:var(--ix-bartx,var(--ix-mu))!important;white-space:nowrap;transition:color .18s,background-color .18s,transform .18s}
@@ -281,8 +280,8 @@ html[data-ix-app="home"]:not([data-ix-bar]) #editBtn{display:none!important}
 /* no bar: the corner gear replaces the Edit button */
 html[data-ix-bar][data-ix-app="info"] .top{display:none}
 /* its title,search and buttons are all replaced by the bar */
-html[data-ix-app="tools"] .theme-toggle,html[data-ix-app="tools"] .search,html[data-ix-app="tools"] .search-lg{display:none!important}
-/* Tools' own theme switch and search boxes: the bar has them */
+html[data-ix-app="tools"] .search{display:none!important}
+/* Tools' own search box: the bar has it */
 html[data-ix-app="home"][data-ix-bar] .corner{top:auto!important;bottom:max(14px,env(safe-area-inset-bottom))!important}
 html[data-ix-app="home"][data-ix-bar][data-ix-nav="dock"] .corner{bottom:auto!important;top:max(14px,env(safe-area-inset-top))!important}
 /* the pages' own bottom edit bars move up above the dock */
@@ -366,8 +365,6 @@ html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!impo
 #ix-dlg .ix-tss-info [data-s="head"]{font-weight:700;color:var(--ix-accent-tx);border-bottom:1px solid var(--ix-line);padding-bottom:6px}
 #ix-dlg .ix-tss-cards [data-s="title"]{font-weight:800;letter-spacing:.01em}
 #ix-dlg .ix-tss-cards [data-s="box"]{font-weight:700;color:var(--ix-accent-tx)}
-/* Tools' first page keeps its own search in the hero (the bar search covers the rest of Tools) */
-html[data-ix-app="tools"] .tt-hero .search{display:block!important}
 @keyframes ix-pane{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 #ix-dlg.open{animation:ix-fade-in .18s ease}
 #ix-dlg .ix-box{animation:ix-box-in .24s cubic-bezier(.2,.8,.2,1)}

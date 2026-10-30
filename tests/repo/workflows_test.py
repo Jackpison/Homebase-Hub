@@ -102,5 +102,6 @@ other = ''.join(open(f, encoding='utf-8').read() for f in FILES if not f.endswit
 check('W23 the release gives the zip a signed build note (attestation), in a step that cannot stop the release, and no other workflow can write attestations (Pages needs id-token for its own deploy)',
       'actions/attest-build-provenance@' in rel and re.search(r'attest-build-provenance@[0-9a-f]{40}[^\n]*\n\s+with:\s*\n\s+subject-path: build/site-update-\*\.zip', rel) and re.search(r'continue-on-error: true\n\s+uses: actions/attest-build-provenance', rel)
       and 'id-token: write' in rel and 'attestations: write' in rel and 'attestations' not in other)
+check('W24 CI runs the dead-code check', 'tests/repo/dead_code_test.py' in ci)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

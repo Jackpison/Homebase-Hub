@@ -157,8 +157,6 @@ body.editing .wrap{padding-bottom:110px}
 #vlist{display:flex;flex-direction:column;gap:6px;max-height:min(50vh,420px);overflow-y:auto;margin-top:12px}
 @media(max-width:480px){.bgrid{grid-template-columns:1fr}}
 .tab.add{padding:9px 15px;font-size:18px;line-height:1}
-.fr{display:flex;gap:10px}
-.fr label:first-child{flex:1}
 .f select{background:var(--field);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px;font:inherit;font-size:15px}
 .f .chk{flex-direction:row;align-items:center;gap:10px;font-size:15px;color:var(--fg);cursor:pointer}
 .f .chk input{width:18px;height:18px;margin:0;accent-color:#1f9d55}

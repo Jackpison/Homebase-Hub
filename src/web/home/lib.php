@@ -55,7 +55,7 @@ const STARTER = [
     ['file' => 'abstract.webp',      'type' => 'image', 'credit' => 'Photo from Unsplash', 'poster' => ''],
     ['file' => 'forest-lake.jpg',    'type' => 'image', 'credit' => 'Photo from Unsplash', 'poster' => ''],
 ];
-const THEMES = ['starter', 'online'];   // and "t:<id>" for a theme you made from your uploads
+// Themes: 'starter', 'online', and "t:<id>" for a theme you made from your uploads.
 const MAX_THEMES = 8;
 const MAX_THEME_ITEMS = 60;
 

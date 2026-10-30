@@ -19,9 +19,6 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
 // (your hosting PHP settings: upload_max_filesize).
 const MAX_UPLOAD_MB = 128;
 
-// Largest link/site icon upload, in kilobytes.
-const MAX_ICON_KB = 500;
-
 // Photos and videos are downloaded to your server so they load fast.
 // How many to keep per source:
 const PHOTOS_PER_SOURCE = 20;

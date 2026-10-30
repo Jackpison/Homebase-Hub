@@ -84,3 +84,13 @@ $found = [];
 foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($site, FilesystemIterator::SKIP_DOTS)) as $f)
     if (substr($f, -4) === '.php' && preg_match("/define\\(\\s*'(NT_TEST_|GH_TEST_|HUB_TEST_)/", (string)file_get_contents($f))) $found[] = $f->getFilename();
 t('no PHP file in the site defines a test shortcut', !$found, implode(', ', $found));
+
+// 1.62.5: one copy of the recursive folder remover (health.php had its own, word for word)
+$rm = sys_get_temp_dir() . '/hub-rm-' . bin2hex(random_bytes(4)); mkdir($rm . '/a/b', 0777, true); file_put_contents($rm . '/a/b/f.txt', 'x'); file_put_contents($rm . '/top.txt', 'y');
+$keep = sys_get_temp_dir() . '/hub-keep-' . bin2hex(random_bytes(4)); mkdir($keep); file_put_contents($keep . '/safe.txt', 'z'); @symlink($keep, $rm . '/a/link');
+hub_rm_tree($rm);
+t('hub_rm_tree removes a folder with everything in it', !is_dir($rm));
+t('...and never follows a link into another folder', is_file($keep . '/safe.txt'));
+array_map('unlink', glob($keep . '/*')); rmdir($keep);
+$health = (string)file_get_contents($site . '/web/hub/core/lib/health.php');
+t('health.php uses it and has no copy of its own', strpos($health, 'function health_rmdir') === false && strpos($health, 'hub_rm_tree(') !== false);

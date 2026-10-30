@@ -31,15 +31,8 @@ It writes the tool's line in `tools.json` and a working starter `src/tools/<id>.
 `tests/browser/tools_test.py` (`tests/repo/tools_list_test.py` fails until its id is named there), then `python3 scripts/build-tools.py --install`.
 A new section needs its line in `tools.json` `categories`, its colours `--c-<id>` (dark and light) and `.c-<id>` / `.view[data-cat=<id>]` in `styles.css`.
 
-## Status of the rebuild
+## What is in Tools
 
-Every tool is rebuilt here and installed in `src/web/tools` (release 1.47.0). Never edit `src/web/tools/assets` by hand: change `tools-app/` and run `python3 scripts/build-tools.py --install`.
+`src/tools.json` is the one list: every tool with its section, icon and description (the Tools page, the side menu, the search and the website's tool finder all read it). Never keep a second list or a count in a document; `tests/repo/tools_list_test.py` checks that a document names no tool that was removed.
 
-| Section | Built |
-|---|---|
-| Utilities (7) | QR Code Generator, Favicon Downloader and Maker, JSON Formatter, Text Tools, Password and UUID, Hash Generator, ZIP Creator |
-| Images (10) | Rotate and Flip, Image Editor, Watermark Images, Color Picker and Palette, Screenshot Beautifier, SVG to PNG, Image to Base64, Image Converter (HEIC, TIFF, AVIF in and out), Image Compressor (target size), Image Resizer (social sizes, size cap) |
-| Photos (8) | Background Remover (U-2-Net on ONNX Runtime 1.30, touch-up brush), Blur and Redact, Passport and ID Photo (print sheets), Meme and Text, Quick Crop, Circle Crop, Collage Maker (21 layouts, PDF), Photo Metadata (see and remove) |
-| PDF (11) | Merge, Split, Organize Pages, Sign, Fill and Annotate, Protect or Unlock (qpdf, AES-256), Watermark and Page Numbers, PDF and Image to Text (text layer and Tesseract OCR), PDF Compressor, Images to PDF, PDF to Images |
-
-**All 36 tools are rebuilt and installed.**
+Never edit `src/web/tools/assets` by hand: change `tools-app/` and run `python3 scripts/build-tools.py --install`.

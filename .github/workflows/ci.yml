@@ -75,6 +75,9 @@ jobs:
       - name: Python lint (ruff, for syntax errors and unused or undefined names in tests and scripts)
         if: matrix.php == '8.3'
         run: python3 -m venv /tmp/rf && /tmp/rf/bin/pip install -q ruff==0.14.0 && /tmp/rf/bin/ruff check
+      - name: Dead code (a PHP function, constant, JavaScript function or CSS class that nothing uses)
+        if: matrix.php == '8.3'
+        run: python3 tests/repo/dead_code_test.py
       - name: Version agrees everywhere (scripts/release.py --check) and its own test
         if: matrix.php == '8.3'
         run: python3 scripts/release.py --check && python3 tests/repo/release_test.py

@@ -60,3 +60,15 @@ t('the other layout\'s media folder is gone (it was left empty)', !is_dir("$pub/
 hub_settle_layout();
 t('running it again changes nothing', (string)@file_get_contents("$pub/$here/brand/logo-ab12.png") === 'logo');
 @unlink($pub . '/' . HUB_LAYOUT_HERE['config']);
+
+// 1.62.5: the notes that ship in every zip (hub/docs/README.txt) name every page folder and every PHP library that is there
+$readme = (string)file_get_contents($site . '/web/hub/docs/README.txt');
+$pages = array_filter(scandir($site . '/web') ?: [], fn($d) => $d[0] !== '.' && $d !== 'hub' && is_dir($site . '/web/' . $d));
+$missing = array_filter($pages, fn($d) => strpos($readme, $d . '/') === false);
+t('README.txt names every page folder (' . implode(', ', $pages) . ')', !$missing, implode(', ', $missing));
+$libs = array_map(fn($f) => basename($f, '.php'), glob($site . '/web/hub/core/lib/*.php') ?: []);
+$libLine = '';
+foreach (explode("\n", $readme) as $l) if (strpos($l, 'PHP that other files load') !== false) $libLine = $l;
+$missing = array_filter($libs, fn($n) => !preg_match('/(?<![a-z])' . preg_quote($n, '/') . '(?![a-z])/', $libLine));
+t('...and every PHP library in hub/core/lib (' . implode(', ', $libs) . ')', !$missing, implode(', ', $missing));
+t('...and its first line names the pages the site has', strpos(explode("\n", $readme)[0], 'Tasks') !== false && strpos(explode("\n", $readme)[0], 'Files') !== false);

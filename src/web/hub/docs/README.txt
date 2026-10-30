@@ -1,5 +1,5 @@
-YOUR SITE: Home, Links, Info, Cards and Tools with one login and one Settings page
-===================================================================================
+YOUR SITE: Home, Links, Info, Cards, Tasks, Files and Tools with one login and one Settings page
+==================================================================================================
 
 FOLDERS
 -------
@@ -9,7 +9,7 @@ FOLDERS
     hub/             the site's own engine, your pictures and these notes
       core/          the engine shared by every page
         api.php cron.php telegram.php   the only PHP files a browser calls: site API, schedule, Telegram replies
-        lib/         PHP that other files load: boot, backup, notify, approval, watch, health, update, overview (blocked from the web)
+        lib/         PHP that other files load: boot, backup, notify, approval, watch, health, update, ghupdate, overview, activity, passkey, vault, presets (blocked from the web)
         assets/      what every page loads: shell.js, shell.css, shell-admin.js, vendor/ (PDF, Excel and QR libraries)
         manifest.json  every file of this release with its fingerprint (made when the release is built; Updates uses it)
       media/         YOUR OWN FILES: brand (the site logo), home/photos, home/uploads, home/icons (start page) and links/icons
@@ -18,14 +18,14 @@ FOLDERS
                      libraries' licences) and src/ (the readable source of every minified script and style); all blocked from the web
                      (up to 1.49 these three were web/core-data, web/core-data/media and web/docs)
     home/            start page      (its pictures are in hub/media/home)
-    links/ info/ cards/ tasks/        each has index.html (the page), api.php, and assets/ (its CSS and JavaScript)
+    links/ info/ cards/ tasks/ files/   each has index.html (the page), api.php, and assets/ (its CSS and JavaScript)
     settings/        the Settings page (a small shell: hub/core/assets/shell-admin.js draws everything in it)
     tools/           browser tools
   site-data/         PRIVATE DATA, created automatically inside the same site folder:
     core/            password hash, settings, SETUP-CODE.php (only before setup)
     updates/         an update being checked, and the saved version you can go back to (its PHP files are kept as .stored so
                      nothing in site-data can ever run as a script; its state files are guarded .php like all data)
-    links/ info/ cards/ home/    each page's data and its earlier versions
+    links/ info/ cards/ tasks/ files/ home/    each page's data and its earlier versions (Files keeps its locked pieces here too)
 
 site-data sits inside the site folder, so it always moves with the site: copy or zip the whole folder and
 nothing is left behind. It is locked three ways:
@@ -128,12 +128,13 @@ and Tools (rename, reorder or hide them in Settings > General > Tabs).
 
 BACKUP
 ------
-Round menu > Backup opens the only Backup, Import and Earlier versions screen:
-- At the top: when the last full backup was, the reminder interval, and whether Telegram sends backups for you.
-- Export (open): one file for everything, or untick parts, or "Choose Tabs" for single Links / Info tabs.
-- Import (click to open): drop or choose a .json or .json.gz file. Choose "Replace everything" or "Add or update these
-  tabs only". What is there now is kept as an earlier version first.
-- Earlier Versions (click to open): every page's saved versions, 20 at a time, with Restore.
+Settings > Backup & Restore (the Backup icon in the bar opens it too) has four tabs:
+- Back Up: when the last full backup was, the reminder interval, whether Telegram sends backups for you, the parts to include, and
+  Download Backup (one file for everything, locked with your passphrase when you have set one).
+- Restore: drop or choose a backup file (.json or .json.gz). Choose "Replace everything" or "Add or update these tabs only". What is
+  there now is kept as an earlier version first. Earlier Versions (click to open) lists every page's saved versions, with Restore.
+- Export: Links, Cards or Tasks as CSV or JSON, and Bookmarks for Other Browsers (the standard bookmark file).
+- Start Over: erases everything except your password and two-step login (it asks you to type ERASE and your password).
 Moving the site: copy the whole site folder (data included), or export a backup and import it on the new site.
 Keep backup files off the server.
 

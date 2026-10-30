@@ -264,17 +264,6 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
 .seg button[aria-checked="true"]{background:var(--s-bg);color:var(--s-ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .seg button:disabled{opacity:.4;cursor:not-allowed}
 
-.icon-edit{display:flex;gap:14px;align-items:flex-start}
-.icon-controls{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
-.icon-preview{flex:none;width:56px;height:56px;border-radius:15px;background:var(--s-bg2);display:grid;place-items:center;font-size:30px;overflow:hidden;
-  border:1px solid var(--s-line)}
-.icon-preview img{width:34px;height:34px;object-fit:contain}
-.icon-preview img.own{width:40px;height:40px;object-fit:contain}
-.icon-preview img.full{width:100%;height:100%;object-fit:cover}
-.icon-preview .letter{font-weight:600;font-size:22px;color:var(--s-mute)}
-.icon-preview.sm{width:40px;height:40px;border-radius:11px;font-size:20px}
-.icon-preview.sm img{width:24px;height:24px}
-.emoji-in{font-size:1.2rem}
 
 .group{background:var(--s-bg2);border-radius:16px;overflow:hidden}
 .g-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;width:100%;text-align:left;background:none;border:0;color:inherit}
@@ -337,7 +326,6 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   .sheet[open]{animation:up .3s cubic-bezier(.2,.9,.3,1)}
   @keyframes up{from{transform:translateY(40px);opacity:0}}
   .sf{padding-bottom:max(18px,env(safe-area-inset-bottom))}
-  .icon-edit{flex-direction:column}
 }
 
 /* Background > Theme cards */

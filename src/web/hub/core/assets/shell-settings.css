@@ -411,9 +411,6 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-bkl em{font-style:normal;color:var(--ix-mu2);font-size:12.5px;white-space:nowrap}
 #ix-page .ix-bkp .ix-linkbtn{margin:6px 0 0 30px}
 #ix-page .ix-bkp .ix-tabs{margin:8px 0 0 30px}
-#ix-page .ix-bkf{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin-top:18px;padding-top:16px;border-top:1px solid var(--ix-line)}
-#ix-page .ix-bkopt{display:flex;flex-direction:column;gap:4px}
-#ix-page .ix-bkopt .ix-chk{margin:0}
 /* ---- 1.33.0: a more modern Settings look: tab headers,hero cards,status tiles,check rows,device rows,the Changelog ---- */
 #ix-page [hidden]{display:none!important}
 #ix-page .ix-th{display:flex;gap:14px;align-items:center;margin:4px 0 18px;max-width:780px}

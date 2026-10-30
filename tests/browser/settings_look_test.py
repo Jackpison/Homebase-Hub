@@ -265,6 +265,18 @@ try:
             if r[0] > 0:   # name what sticks out, so a failure in Firefox or WebKit (CI only) says where to look
                 r.append(q.evaluate("[...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > 390.5; }).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '.' + String(e.className).trim().split(/\\s+/).slice(0, 2).join('.') + ' ' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).slice(0, 5)"))
                 wide.append((path, r))
+        # the switches on a phone and in the light theme (1.62.5): the same size as on a computer
+        small, seen = [], set()
+        for theme in ('dark', 'light'):
+            tc = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=BROWSER != 'firefox', has_touch=True, storage_state=ctx.storage_state())   # one context per theme: the order of several init scripts is not defined
+            tc.add_init_script("try { localStorage.setItem('hub-theme', '%s'); } catch (e) {}" % theme); tq = tc.new_page()
+            for sec in ('look', 'themes', 'backup'):
+                tq.goto(s.base + '/web/settings/#' + sec); wait_js(tq, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); tq.wait_for_timeout(500)
+                got = tq.evaluate("[document.documentElement.dataset.theme || '', ...[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height))]")
+                seen.add(got[0])
+                if len(got) < 2 or any(x != '44x26' for x in got[1:]): small.append((theme, sec, got))
+            tc.close()
+        check('L39 phone, dark and light: every switch in Settings is 44 x 26, in Look, Presets and Backup', not small and {'dark', 'light'} <= seen, (small, seen))
         check('L36 phone, Home, Links, Info, Cards, Tasks and Tools: nothing is wider than the screen', not wide, wide)
         check('L37 no page error', not errs, errs)
         b.close()

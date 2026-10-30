@@ -106,14 +106,6 @@ function health_clear_log(string $rel): bool {
     if (!$p || basename($p) !== 'error_log' || strpos($p, realpath(HUB_PUBLIC) . DIRECTORY_SEPARATOR) !== 0) return false;
     return @file_put_contents($p, '') !== false;
 }
-/** Recursively removes one old Tools asset folder (only ever called for web/tools/assets*). */
-function health_rmdir(string $dir): void {
-    try {
-        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
-        foreach ($it as $f) { $f->isDir() && !$f->isLink() ? @rmdir($f->getPathname()) : @unlink($f->getPathname()); }
-    } catch (Throwable $e) {}
-    @rmdir($dir);
-}
 /**
  * Files left from an earlier update (the old Read Later list, an old setup-code file, older Tools asset folders) are
  * deleted here by themselves. Only what could not be deleted, and pages that still load an older shell, are listed.
@@ -131,7 +123,7 @@ function health_leftovers(): array {
     $tools = (string)@file_get_contents(HUB_WEB . '/tools/index.html');
     foreach (glob(HUB_WEB . '/tools/assets*', GLOB_ONLYDIR) ?: [] as $dir) {
         if ($tools === '' || strpos($tools, basename($dir) . '/') !== false) continue;
-        health_rmdir($dir);
+        hub_rm_tree($dir);
         if (is_dir($dir)) $issues[] = 'web/tools/' . basename($dir) . ' is from an older version and can be deleted by hand.';
     }
     return $issues;
