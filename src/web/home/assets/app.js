@@ -403,6 +403,7 @@ function openSettings(){
   $('#sTitle').value = settingsDraft.title;
   $('#sWelcome').value = ADMIN.welcome ?? 'Welcome Home';
   $('#sHomeBar').checked = homeBarOn();
+  $('#sPrivate').checked = !!ADMIN.private;
   $('#pOpacity').value = Math.round(settingsDraft.panel.opacity * 100); $('#pOpVal').textContent = $('#pOpacity').value + '%';
   $('#pBlur').value = settingsDraft.panel.blur; $('#pBlurVal').textContent = settingsDraft.panel.blur + 'px';
   seg($('#pTint'), settingsDraft.panel.tint || 'light');
@@ -472,9 +473,10 @@ $('#pTint').addEventListener('change', e => { settingsDraft.panel.tint = e.detai
 $('#pBlur').addEventListener('input', e => { settingsDraft.panel.blur = +e.target.value; $('#pBlurVal').textContent = e.target.value + 'px'; applyPanel(settingsDraft.panel); });
 $('#settingsSheet').addEventListener('close', () => { if (ADMIN) applyPanel(ADMIN.panel); });
 $('#saveSettings').addEventListener('click', e => withBusy(e.currentTarget, async () => {
-  const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel, welcome:ADMIN.welcome };
+  const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel, welcome:ADMIN.welcome, private:ADMIN.private };
   ADMIN.title = $('#sTitle').value.trim() || 'Home';
   ADMIN.welcome = $('#sWelcome').value.trim();
+  ADMIN.private = $('#sPrivate').checked;
   ADMIN.icon = '';   // no separate start page icon any more: the site logo is used
   ADMIN.panel = settingsDraft.panel;
   const bar = $('#sHomeBar').checked, barChanged = bar !== homeBarOn();

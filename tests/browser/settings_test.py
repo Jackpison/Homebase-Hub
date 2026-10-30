@@ -100,8 +100,8 @@ try:
         check('S11 General has Basics and Tabs; Tabs holds the tab list and no longer the Navigation Style', ok, pg.evaluate(tabs))
         ok = at('#look', tabs + " === 'Look|Presets|Colors' && !!document.querySelector('#ix-font')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
-        check('S13 Appearance has Look, Presets and Colors; Look shows Font, Theme, Navigation Style (with the start-page bar switch) and Accent Color, and Same Look on Every Page',
-              ok and cards == ['Font', 'Theme', 'Navigation Style', 'Accent Color'] and pg.evaluate("!!document.querySelector('#ix-pc .ix-navpick') && !!document.querySelector('#ix-hb')") and pg.evaluate("document.querySelector('#ix-look').checkVisibility()"), (pg.evaluate(tabs), cards))
+        check('S13 Appearance has Look, Presets and Colors; Look shows Font, Theme, Navigation Style (with the start-page bar switch) and Accent Color (the "Same Look on Every Page" switch is gone)',
+              ok and cards == ['Font', 'Theme', 'Navigation Style', 'Accent Color'] and pg.evaluate("!!document.querySelector('#ix-pc .ix-navpick') && !!document.querySelector('#ix-hb')") and pg.evaluate("!document.querySelector('#ix-look')"), (pg.evaluate(tabs), cards))
         check('S14 Look offers 8 accent colors and your own', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 8 and pg.evaluate("!!document.querySelector('#ix-acc')"))
         pg.click('#ix-pane .ix-subt [data-grp="themes"]')
         wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)

@@ -60,6 +60,31 @@ $iconFile = HUB_PUBLIC . '/' . ($logoOk ? $siteLogo : $brand);
 $iconType = ['ico' => 'image/x-icon', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp'][pathinfo($iconPath, PATHINFO_EXTENSION)] ?? 'image/svg+xml';
 $favicon = $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0);   // the site logo, or Homebase Hub's own
 
+// (1.61) Only Me: a visitor gets a log-in screen and nothing of the page (no photos, no text, no widgets)
+if (!empty($site['private']) && !hub_admin()) {
+?><!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<?php if (defined('HOME_BASE')): ?><base href="<?= $h(HOME_BASE) ?>"><?php endif; ?>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title><?= $h($site['title']) ?></title>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.60.0">
+<script src="../hub/core/assets/shell.js?v=1.60.0" data-app="home"></script>
+<link rel="icon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
+<link rel="manifest" href="../hub/core/api.php?action=manifest">
+<link rel="stylesheet" href="<?= $v('assets/app.css') ?>">
+</head>
+<body class="onlyme">
+<main class="onlyme-card"><h1>This Page Is Private</h1><p>Log in to see it.</p><button type="button" class="btn primary" id="onlymeLogin">Log In</button></main>
+<script nonce="<?= $nonce ?>">document.getElementById('onlymeLogin').addEventListener('click',function(){HUB.login();});document.addEventListener('hub:login',function(){location.reload();});</script>
+</body>
+</html>
+<?php
+    exit;
+}
+
 ?><!doctype html>
 <html lang="en" data-glass="<?= $h($site['panel']['tint']) ?>">
 <head>
@@ -142,10 +167,17 @@ $favicon = $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0); 
       <section>
         <h3>Page</h3>
         <div class="group">
-          <label class="g-row stack"><span class="g-label">Site Title<small>Shown in the browser tab. The logo comes from the main Settings.</small></span>
+          <label class="g-row stack"><span class="g-label">Page Title<small>Shown in the browser tab. The logo comes from the main Settings.</small></span>
             <input type="text" id="sTitle" maxlength="80"></label>
           <label class="g-row stack"><span class="g-label">Welcome Text<small>Fades in the middle of the screen when Home opens, then slowly fades away. Leave it empty for none.</small></span>
             <input type="text" id="sWelcome" maxlength="80" placeholder="Welcome Home"></label>
+        </div>
+      </section>
+      <section>
+        <h3>Privacy</h3>
+        <div class="group">
+          <label class="g-row"><span class="g-label">Only Me<small>On: visitors see a log-in screen and nothing else. Off: visitors see your background and the clock.</small></span>
+            <input type="checkbox" class="switch" id="sPrivate"></label>
         </div>
       </section>
       <section>

@@ -48,9 +48,10 @@
 #ix-page .ix-sf{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--ix-line)}
 @media (max-width:700px){#ix-page .ix-box{border-radius:18px 18px 0 0;width:100%}#ix-page .ix-box.wide{height:calc(100dvh - 20px)}#ix-page .ix-snav{width:auto;flex-direction:row;border-right:0;border-bottom:1px solid var(--ix-line);overflow-x:auto}#ix-page .ix-snav button{flex:none}#ix-page .ix-pane{padding:16px}}
 /* choices */
-#ix-page .ix-seg{display:inline-flex;border:1px solid var(--ix-line2);border-radius:10px;overflow:hidden;flex-wrap:wrap}
-#ix-page .ix-seg button{border:0;background:none;color:var(--ix-mu);font:inherit;font-size:14px;padding:9px 15px;cursor:pointer}
-#ix-page .ix-seg button[aria-pressed="true"]{background:var(--ix-accent);color:var(--ix-ink);font-weight:700}
+#ix-page .ix-seg{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--ix-line2);border-radius:12px;background:color-mix(in srgb,var(--ix-tx) 7%,transparent);flex-wrap:wrap}
+#ix-page .ix-seg button{border:0;background:none;color:var(--ix-mu);font:inherit;font-size:14px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer}
+#ix-page .ix-seg button:hover{color:var(--ix-tx)}
+#ix-page .ix-seg button[aria-pressed="true"]{background:color-mix(in srgb,var(--ix-tx) 13%,transparent);color:var(--ix-tx);box-shadow:0 1px 3px rgba(0,0,0,.28),inset 0 1px 0 color-mix(in srgb,var(--ix-tx) 14%,transparent)}
 #ix-page .ix-navpick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 #ix-page .ix-navpick button{border:1px solid var(--ix-line2);background:var(--ix-bg);border-radius:12px;padding:10px;color:var(--ix-tx);font:inherit;font-size:13.5px;cursor:pointer;text-align:center}
 #ix-page .ix-navpick button[aria-pressed="true"]{border-color:var(--ix-accent);box-shadow:0 0 0 2px var(--ix-soft2)}
@@ -65,10 +66,11 @@
 #ix-page .ix-sw input[type=color]{width:42px;height:36px;border:1px solid var(--ix-line2);border-radius:8px;background:none;padding:2px;cursor:pointer}
 #ix-page .ix-tg{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--ix-line);font-size:14.5px;color:var(--ix-tx)}
 #ix-page .ix-tg small{display:block;color:var(--ix-mu2);font-size:12.5px;margin-top:2px}
-#ix-page .ix-tg input[type=checkbox]{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:999px;background:var(--ix-line2);position:relative;flex:none;cursor:pointer;margin:0}
-#ix-page .ix-tg input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ix-bg);transition:left .15s}
-#ix-page .ix-tg input[type=checkbox]:checked{background:var(--ix-accent)}
-#ix-page .ix-tg input[type=checkbox]:checked::after{left:21px}
+#ix-page .ix-tg input[type=checkbox]{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:13px;background:color-mix(in srgb,var(--ix-tx) 14%,transparent);border:1px solid var(--ix-line2);position:relative;flex:none;cursor:pointer;margin:0;transition:background .15s}
+#ix-page .ix-tg input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,var(--ix-tx) 62%,transparent);transition:transform .15s,background .15s}
+#ix-page .ix-tg input[type=checkbox]:checked{background:color-mix(in srgb,var(--ix-accent) 22%,transparent);border-color:color-mix(in srgb,var(--ix-accent) 55%,transparent)}
+#ix-page .ix-tg input[type=checkbox]:checked::after{transform:translateX(18px);background:var(--ix-accent)}
+#ix-page .ix-tg input[type=checkbox]:focus-visible{outline:2px solid var(--ix-tx);outline-offset:2px}
 #ix-page .ix-part{border:1px solid var(--ix-line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
 #ix-page .ix-part>label{display:flex;align-items:center;gap:10px;margin:0;color:var(--ix-tx);font-size:14.5px;cursor:pointer}
 #ix-page .ix-part>label small{color:var(--ix-mu2);margin-left:auto;font-size:12.5px;text-align:right}
@@ -593,3 +595,10 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 #ix-page .ix-how>summary::-webkit-details-marker{display:none}
 #ix-page .ix-how .ix-steps{display:block;padding:0;margin:10px 0 0}
 @media (max-width:600px){#ix-page .ix-ec .ix-seg{display:flex;width:100%;flex-wrap:nowrap}#ix-page .ix-ec .ix-seg button{flex:1;padding:10px 4px;font-size:13px;white-space:nowrap}}
+/* (1.61) Backup: one big button, and what to include folded away */
+#ix-page .ix-bkbig{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:6px 0 16px}
+#ix-page .ix-bkbig p{margin:0;color:var(--ix-mu)}
+#ix-page .ix-btn.ix-big{height:52px;padding:0 28px;font-size:16px}
+#ix-page .ix-more#ix-choose{margin:14px 0}
+#ix-page .ix-more#ix-choose>.ix-tg:first-of-type{margin-top:8px}
+#ix-page .ix-h3{margin:22px 0 4px;font-size:16px}

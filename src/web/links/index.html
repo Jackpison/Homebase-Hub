@@ -74,23 +74,28 @@
   <div class="actions"><button class="btn primary" id="nameSave">Save</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
 </form></dialog>
 
-<dialog id="setDlg"><form method="dialog">
+<dialog id="setDlg" class="ix-sdlg"><form method="dialog">
   <h3>Links Settings</h3>
-  <div class="field"><label for="sTitle">Site Title</label><input id="sTitle" maxlength="60" placeholder="Bookmarks"><span class="hint">Shown in the browser tab.</span></div>
+  <h4>Page</h4>
+  <div class="field"><label for="sTitle">Page Title</label><input id="sTitle" maxlength="60" placeholder="Bookmarks"><span class="hint">Shown in the browser tab.</span></div>
 
   <h4>Privacy</h4>
-  <label class="check" style="margin-bottom:12px"><input type="checkbox" id="sPrivate"><span>Only Show Bookmarks After Logging In<small>Visitors see a login screen and receive no bookmarks at all. You can also make single tabs private when editing a tab.</small></span></label>
-  <label class="check" style="margin-bottom:12px"><input type="checkbox" id="sWebIcons"><span>Icons from Google<small>For a link with no icon saved on your server, your browser asks Google's favicon service for one, so Google sees which sites are in your Links. Off: those links show their first letter. Fetch Icons saves icons on your server instead.</small></span></label>
+  <div class="ix-srow"><label for="sPrivate">Only Me<small>On: visitors see a login screen and get no bookmarks at all. Off: visitors see your public tabs. You can also make single tabs private when editing a tab.</small></label><input type="checkbox" class="ix-sw" id="sPrivate"></div>
+  <div class="ix-srow"><label for="sWebIcons">Icons from Google<small>For a link with no icon saved on your server, your browser asks Google's favicon service for one, so Google sees which sites are in your Links. Off: those links show their first letter. Fetch Icons saves icons on your server instead.</small></label><input type="checkbox" class="ix-sw" id="sWebIcons"></div>
 
   <div class="ix-srow" id="sEncRow" hidden><span>Encrypt All Private Tabs<small id="sEncHint">Locks every private tab in this browser with your encryption passphrase. The server then holds only scrambled text.</small></span><button type="button" id="sEncAll">Encrypt All</button></div>
 
   <h4>Visits</h4>
-  <label class="check" style="margin-bottom:12px"><input type="checkbox" id="sVisits"><span>Show Visit Counts<small>Each link shows how often it was opened, by you or anyone visiting. Only you see the numbers. Off hides them; the clicks are still counted. Links in encrypted tabs are never counted.</small></span></label>
+  <div class="ix-srow"><label for="sVisits">Show Visit Counts<small>Each link shows how often it was opened, by you or anyone visiting. Only you see the numbers. Off hides them; the clicks are still counted. Links in encrypted tabs are never counted.</small></label><input type="checkbox" class="ix-sw" id="sVisits"></div>
 
   <h4>Look</h4>
   <div class="ix-srow"><span>Text Sizes<small>Make the tabs, headings and links bigger or smaller.</small></span><button type="button" id="sTextBtn">Change</button></div>
   <div class="ix-srow"><label for="sEditBar">Edit Bar<small>The bar at the bottom while you edit. Icons Only shows each name when you point at it; phones always show icons.</small></label>
     <select id="sEditBar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></div>
+
+  <h4>Export</h4>
+  <div class="ix-srow"><span>Export Bookmarks<small>A bookmark file that Chrome, Edge, Firefox and Safari can import.</small></span><button type="button" id="sBmExport">Export</button></div>
+  <div class="ix-srow"><label for="sBmPriv">Include Private Tabs<small>Also writes private tabs, and encrypted tabs that are unlocked right now. The file is plain text: keep it safe.</small></label><input type="checkbox" class="ix-sw" id="sBmPriv"></div>
 
   <div class="split" data-hub="hide">
     <button class="btn" type="button" id="versionsBtn">Restore Earlier Version</button>
@@ -103,7 +108,7 @@
   <p class="hint" style="font-size:12.5px;color:var(--faint);margin:8px 0 0">Backup, import and earlier versions: use the Backup icon in the bar.</p>
 
   <p class="err" id="setErr" style="margin-top:14px"></p>
-  <div class="actions"><button class="btn primary" id="setSave" data-ix-save>Save Settings</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
+  <div class="actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" id="setSave" data-ix-save>Save Settings</button></div>
 </form></dialog>
 
 <dialog id="colorDlg"><form method="dialog">

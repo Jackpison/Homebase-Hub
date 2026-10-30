@@ -932,7 +932,7 @@ function hub_clean_settings(array $in): array {
         $v = (int)($in['sizes'][$app][$k] ?? 0);
         if ($v >= 10 && $v <= 64) $o['sizes'][$app][$k] = $v;
     }
-    $o['look']     = (bool)($in['look'] ?? true);
+    $o['look']     = true;   // (1.61) the "Same Look on Every Page" switch is gone: every site uses the shared colours
     $o['homeBar']  = (bool)($in['homeBar'] ?? false);
     $o['editBar']  = [];
     foreach (['home', 'links', 'info', 'cards', 'tasks'] as $app) if (($in['editBar'][$app] ?? '') === 'text') $o['editBar'][$app] = 'text';

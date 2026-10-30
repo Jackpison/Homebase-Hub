@@ -84,6 +84,7 @@ function default_site(): array
     return [
         'title'   => 'Home',
         'icon'    => '',
+        'private' => false,   // (1.61) Only Me: visitors get a log-in screen and nothing else
         'linksMoved' => 0,   // when Home's old links (up to 1.50) were copied to Links; 1.53 removed Home's own copy
         'bg' => [
             'sources'      => ['picsum' => true, 'bing' => true, 'wikimedia' => true, 'wallhaven' => true, 'unsplash' => false, 'pixabay' => false, 'pixabay_video' => false],
@@ -186,6 +187,7 @@ function clean_site(array $in): array
     return [
         'title'   => str_clip($in['title'] ?? $def['title'], 80) ?: 'Home',
         'icon'    => is_icon_path($in['icon'] ?? '') ? $in['icon'] : '',
+        'private' => !empty($in['private']),
         'bg'      => [
             'sources'      => $sources,
             'keys'         => $keys,
@@ -519,6 +521,7 @@ function public_payload(): array
     return [
         'title'   => $s['title'],
         'icon'    => '',   // no separate start page icon: the site logo is used
+        'private' => !empty($s['private']),
         'panel'   => $s['panel'],
         'welcome' => $s['welcome'] ?? WELCOME_DEFAULT,
         'clock'   => $s['widgets']['clock'],   // the big clock and greeting are for everyone; the widgets themselves are not

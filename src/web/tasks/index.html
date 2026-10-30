@@ -158,7 +158,7 @@
   </form>
 </dialog>
 
-<dialog id="sdlg" aria-labelledby="sdlgt">
+<dialog id="sdlg" class="ix-sdlg" aria-labelledby="sdlgt">
   <form method="dialog" id="sform">
     <div class="dh"><h2 id="sdlgt">Tasks Settings</h2><button type="button" class="ib" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="db">
@@ -174,16 +174,18 @@
         <label class="fl">Open On<select id="s-start"><option value="">Where I Left Off</option><option value="list">Tasks</option><option value="cal">Calendar</option><option value="an">Analytics</option><option value="done">Completed</option></select></label>
         <label class="fl">Show<select id="s-range"><option value="">Where I Left Off</option><option value="all">Tasks</option><option value="week">This Week</option><option value="month">This Month</option><option value="year">This Year</option></select></label>
         <label class="fl">Sort By<select id="s-sort"><option value="">Where I Left Off</option><option value="due">Due Date</option><option value="due-">Latest First</option><option value="price-">Price, High to Low</option><option value="price">Price, Low to High</option><option value="name">Name, A to Z</option><option value="cat">Category</option></select></label>
-        <label class="fl">Week Strip Above the List<select id="s-cal"><option value="">Where I Left Off</option><option value="on">Shown</option><option value="off">Hidden</option></select></label>
+        <label class="fl">Week Strip Above the List<select id="s-cal" data-ix-seg><option value="">Where I Left Off</option><option value="on">Shown</option><option value="off">Hidden</option></select></label>
       </div>
       <p class="hint">"Where I Left Off" keeps what this browser used last.</p>
       <h3 class="sh3">Look</h3>
       <div class="c2">
-        <label class="fl">Week Starts On<select id="s-week"><option value="sun">Sunday</option><option value="mon">Monday</option></select></label>
-        <label class="fl">Dates<select id="s-dates"><option value="in">16 Oct 2026</option><option value="us">Oct 16, 2026</option></select></label>
+        <label class="fl">Week Starts On<select id="s-week" data-ix-seg><option value="sun">Sunday</option><option value="mon">Monday</option></select></label>
+        <label class="fl">Dates<select id="s-dates" data-ix-seg><option value="in">16 Oct 2026</option><option value="us">Oct 16, 2026</option></select></label>
         <label class="fl">Edit Bar<select id="s-editbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select><small>The bar at the bottom while you edit. Phones always show icons.</small></label>
       </div>
-      <label class="chk"><input type="checkbox" id="s-stats"> Show amounts in the side panel (totals and the spending card)</label>
+      <div class="ix-srow"><label for="s-stats">Show Amounts<small>Show the totals and the spending card in the side panel.</small></label><input type="checkbox" class="ix-sw" id="s-stats"></div>
+      <h3 class="sh3">Privacy</h3>
+      <div class="ix-srow"><label for="s-onlyme">Only Me<small>Always on: this page is only for you.</small></label><input type="checkbox" class="ix-sw" id="s-onlyme" checked disabled></div>
       <p class="hint">These settings apply on every device.</p>
     </div>
     <div class="df"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn pri" data-ix-save>Save Settings</button></div>

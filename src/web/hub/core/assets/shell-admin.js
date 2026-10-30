@@ -66,7 +66,7 @@
   function P() { return PAGE || D(); }
   var OV = null;                         // what the Overview last learned: the little status labels in the menu come from it
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
-  var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Status' };   // sections whose accordions become tabs, and the name of their first tab
+  var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Back Up' };   // sections whose accordions become tabs, and the name of their first tab
   var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
   var draft;
   /* what Save Settings would send, written the same way every time (empty color sets and their order don't count) */
@@ -130,15 +130,15 @@
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
     ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'look', 'home start page corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
-    ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], ['Same Look on Every Page', 'look', 'unified'],
+    ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], 
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
     ['Passkeys', 'security/passkeys', 'passkey fingerprint face pin webauthn security key log in without password'], ['Two-Step Login', 'security/two-step-login', '2fa authenticator totp recovery codes'], ['Login Approval', 'security/login-approval', 'telegram approve tap'],
     ['Trusted Browsers', 'security/trusted-browsers', 'skip code remember'], ['Devices and Login History', 'security/devices', 'log out sessions activity wrong password ip'],
     ['Telegram Bot Setup', 'telegram/setup', 'token botfather chat cron schedule connect'], ['Telegram Backups', 'telegram/backups', 'send backup'],
     ['Telegram Messages', 'telegram/messages', 'digest reminders alerts daily hour due'], ['Instant Replies', 'telegram/instant-replies', 'webhook commands bot'],
-    ['Back Up', 'backup/back-up', 'download backup file'], ['Restore a Backup', 'backup/restore', 'import'], ['Export Data', 'backup/export-data', 'csv json spreadsheet links cards tasks'],
-    ['Earlier Versions', 'backup/earlier-versions', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
+    ['Back Up', 'backup/overview', 'download backup file locked passphrase'], ['Restore a Backup', 'backup/restore', 'import'], ['Export', 'backup/export', 'csv json spreadsheet links cards tasks'],
+    ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
     ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'files', 'extra changed missing leftover'],
     ['Health', 'health', 'disk speed errors log'], ['Domains and Uptime', 'domains', 'expiry ssl hosting renewal'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
     ['Changelog', 'changelog', 'versions history what changed new'], ['Version Map', 'chmap', 'all versions']
@@ -172,6 +172,7 @@
     if (id === 'pages') id = 'nav';        // General > Pages was removed in 1.48.5: its old links open Tabs
     if (!PAGE) { location.href = K.ROOT + 'web/settings/#' + target; return; }
     if (!SUB_OF[id]) id = 'overview';
+    if (id === 'backup' && parts[1]) parts[1] = { 'back-up': 'overview', 'export-data': 'export', 'earlier-versions': 'restore' }[parts[1]] || parts[1];   // the tabs of 1.60 and before
     if (parts[1]) TABSEL[id] = parts[1];
     pane(id);
   }
@@ -370,13 +371,11 @@
       '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
       '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw">' + sw.map(function (c) { return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (draft.accent === c) + '"></button>'; }).join('') +
       '<label class="ix-swc" title="Your Own Color"><input type="color" id="ix-acc" value="' + esc(draft.accent) + '" aria-label="Your Own Color"></label><input type="text" class="ix-hex" id="ix-acch" maxlength="7" value="' + esc(draft.accent) + '" aria-label="Accent Color Hex" spellcheck="false"></div>' +
-      '<label class="ix-tg"><span>Same Look on Every Page<small>Your colors and accent on every page. Turn off to let each page use its own colors.</small></span><input type="checkbox" id="ix-look"' + (draft.look ? ' checked' : '') + '></label>' +
       '<p class="ix-note">For the colors of the bar, pages and text, open the Colors tab; for ready-made looks, the Presets tab. Each page\'s own options are under its pencil icon: Edit This Page and its Settings.</p>';
     bindSeg(p, function (k, v) { draft[k] = v; if (k === 'theme') K.previewTheme(v); });
     p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { setAcc(b.dataset.c); }; });
     p.querySelector('#ix-acc').oninput = function (e) { setAcc(e.target.value); };
     p.querySelector('#ix-acch').oninput = function (e) { var h = hexOf(e.target.value); e.target.classList.toggle('bad', !h); if (h) setAcc(h, true); };
-    p.querySelector('#ix-look').onchange = function (e) { draft.look = e.target.checked; preview(); };
     p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
       draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
     p.querySelector('#ix-hb').onchange = function (e) { draft.homeBar = e.target.checked; preview(); };
@@ -651,13 +650,13 @@
     PG_APPS.forEach(function (a) { if (!cur.pg[a[0]] || Array.isArray(cur.pg[a[0]])) cur.pg[a[0]] = {}; });
     var m = colorMode || (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'); colorMode = m;
     var set = cur[m], def = COLOR_DEFAULT[m];
+    var anyPg = PG_APPS.some(function (a) { return cur.pg[a[0]][m]; }) || Object.keys(draft.accentPg || {}).length > 0;
     var row = function (k, label, val, shown, attrs) {
       return '<div class="ix-cr"><span>' + esc(label) + '</span><input type="color" ' + attrs + ' value="' + shown + '" aria-label="' + esc(label) + '">' +
         '<input type="text" class="ix-hex" maxlength="7" placeholder="' + shown + '" value="' + (val || '') + '" spellcheck="false" aria-label="' + esc(label) + ', hex code">' +
         '<button type="button" class="ix-ib ix-crx" title="Back to the Default"' + (val ? '' : ' hidden') + ' aria-label="Reset ' + esc(label) + '">↺</button></div>';
     };
-    p.innerHTML = (draft.look === false ? '<p class="ix-err">"Same Look on Every Page" is off (Appearance tab), so these colors aren\'t used.</p>' : '') +
-      '<div class="ix-row" style="justify-content:space-between">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
+    p.innerHTML = '<div class="ix-row" style="justify-content:space-between">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
       '<button type="button" class="ix-btn" id="ix-cres">Reset ' + (m === 'dark' ? 'Dark' : 'Light') + ' Mode</button></div>' +
       '<p class="ix-note" style="margin:0 0 12px">Ready-made looks live in the <b>Presets</b> tab.</p>' +
       COLOR_GROUPS.map(function (g) {
@@ -665,16 +664,20 @@
           return row(k[0], k[1], set[k[0]], set[k[0]] || def[k[0]], 'data-k="' + k[0] + '"');
         }).join('') + '</div>';
       }).join('') +
-      '<div class="ix-cgrp"><h4>Page Backgrounds</h4><p>A different background for one page, for example a lighter tone for Info. Replaces the page background there.</p>' +
+      '<div class="ix-cgrp"><h4>Accent</h4><p>Buttons, the current page, links and highlights, on every page.</p>' + row('', 'Accent', draft.accent, draft.accent || '#ffc21a', 'data-sa="1"') + '</div>' +
+      '<details class="ix-acc" id="ix-pgc"' + (anyPg ? ' open' : '') + '><summary><span>Different Colors per Page</span><small>' + (anyPg ? 'Some pages have their own colors' : 'Every page uses the colors above') + '</small></summary><div class="ix-accb">' +
+        '<div class="ix-cgrp"><h4>Page Backgrounds</h4><p>A different background for one page, for example a lighter tone for Info. Replaces the page background there.</p>' +
         PG_APPS.map(function (a) { var v = cur.pg[a[0]][m]; return row('', a[1], v, v || set.bg || def.bg, 'data-pg="' + a[0] + '"'); }).join('') + '</div>' +
-      '<div class="ix-cgrp"><h4>Page Accents</h4><p>A different accent color for one page: its buttons, highlights and the bar\'s current tab. Empty uses the site accent from the Look tab.</p>' +
+        '<div class="ix-cgrp"><h4>Page Accents</h4><p>A different accent color for one page: its buttons, highlights and the bar\'s current tab. Empty uses the accent above.</p>' +
         [['home', 'Start Page']].concat(PG_APPS).map(function (a) { var v = (draft.accentPg || {})[a[0]]; return row('', a[1], v, v || draft.accent || '#ffc21a', 'data-ap="' + a[0] + '"'); }).join('') + '</div>' +
-      '<p class="ix-note">The site accent: the Look tab. Tab colors: the pencil on each tab.</p>';
+      '</div></details>' +
+      '<p class="ix-note">Tab colors: the pencil on each tab.</p>';
     bindSeg(p, function (k, v) { if (k === 'cmode') { colorMode = v; K.previewTheme(v); pColors(p); } });
     p.querySelectorAll('.ix-cr').forEach(function (r) {
       var sw = r.querySelector('input[type=color]'), tx = r.querySelector('.ix-hex'), x = r.querySelector('.ix-crx');
       var put = function (v) {
-        if (sw.dataset.ap) { draft.accentPg = draft.accentPg || {}; if (v) draft.accentPg[sw.dataset.ap] = v; else delete draft.accentPg[sw.dataset.ap]; }
+        if (sw.dataset.sa) { draft.accent = (v || '#ffc21a').toLowerCase(); }
+        else if (sw.dataset.ap) { draft.accentPg = draft.accentPg || {}; if (v) draft.accentPg[sw.dataset.ap] = v; else delete draft.accentPg[sw.dataset.ap]; }
         else if (sw.dataset.pg) { if (v) cur.pg[sw.dataset.pg][m] = v; else delete cur.pg[sw.dataset.pg][m]; }
         else { if (v) set[sw.dataset.k] = v; else delete set[sw.dataset.k]; }
         x.hidden = !v; preview();
@@ -694,8 +697,7 @@
     var html = presetsHtml(m, set, def)
       .replace(/<details class="ix-acc" id="ix-presets"[^>]*><summary><span>Presets<\/span><small>([\s\S]*?)<\/small><\/summary><div class="ix-accb">/, '<div class="ix-flatp" id="ix-presets"><p class="ix-note ix-fh">$1</p><div class="ix-fb">')
       .replace(/<\/div><\/details>$/, '</div></div>');
-    p.innerHTML = (draft.look === false ? '<p class="ix-err">"Same Look on Every Page" is off (Appearance tab), so these colors aren\'t used.</p>' : '') +
-      '<div class="ix-row" style="justify-content:space-between">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
+    p.innerHTML = '<div class="ix-row" style="justify-content:space-between">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
       '<button type="button" class="ix-btn" id="ix-cres">Reset ' + (m === 'dark' ? 'Dark' : 'Light') + ' Mode</button></div>' + html +
       '<p class="ix-note">Fine-tune any color in the Colors tab. The accent color is in the Appearance tab.</p>';
     bindSeg(p, function (k, v) { if (k === 'cmode') { colorMode = v; K.previewTheme(v); pThemes(p); } });
@@ -1331,7 +1333,7 @@
     else if (!g.err) h += '<p>Press Check Now to look for a newer version.</p>';
     if (g.err) h += '<p class="ix-err">Couldn\'t check: ' + esc(g.err) + '</p>';
     h += '<p class="ix-err" id="ix-ghe"></p><div class="ix-row"><button type="button" class="ix-btn" id="ix-ghc"' + (g.curl ? '' : ' disabled') + '>Check Now</button><span class="ix-mu">' + (g.at ? 'Last checked ' + esc(ago(g.at)) : 'Not checked yet') + '</span></div>' +
-      '<label class="ix-chk" style="margin-top:10px"><input type="checkbox" id="ix-gha"' + (g.auto ? ' checked' : '') + '> Check GitHub Once a Day</label>' +
+      '<label class="ix-tg"><span>Check GitHub Once a Day<small>The site asks GitHub whether a new version is out.</small></span><input type="checkbox" id="ix-gha"' + (g.auto ? ' checked' : '') + '></label>' +
       '<p class="ix-note">Off by default. While it is off, this site makes no request to GitHub unless you press Check Now. When it is on, the check runs with the schedule from Telegram Setup (the cron job). Nothing ever installs by itself.</p>';
     return '<section class="ix-card"><div class="ix-cardh"><h3>Update From GitHub</h3><span class="ix-mu">Installed: <b>' + esc(st.version) + '</b>' + (/^[\w.-]+\/[\w.-]+$/.test(g.repo || '') ? ' · <a href="https://github.com/' + esc(g.repo) + '" target="_blank" rel="noopener">Project on GitHub</a>' : '') + '</span></div>' + h + '</section>';
   }
@@ -1371,7 +1373,7 @@
         (rows.length ? '<details class="ix-more"><summary>Show the Files</summary><div class="ix-chl">' + rows.join('') + '</div></details>' : '') +
         '<p class="ix-note">Never touched: <b>site-data</b> (all your data), <b>web/hub/media</b> (your pictures and logo), <b>web/hub/core/config.php</b> and the Tools settings made from your settings.' + (chk && chk.noOldList ? ' This copy had no file list, so no old files can be removed this time.' : '') + '</p>' +
         '<div class="ix-apl"><label for="ix-upw">Website Password</label><div class="ix-row"><input type="password" id="ix-upw" autocomplete="current-password" placeholder="Needed to change the site\'s code" style="max-width:340px"><button type="button" class="ix-btn pri" id="ix-uap">Apply Update</button><button type="button" class="ix-btn" id="ix-ucn">Cancel</button></div></div>' +
-        '<label class="ix-chk" style="margin-top:12px"><input type="checkbox" id="ix-uauto"' + (st.autoUndo ? ' checked' : '') + '> Go back by itself if the site stops answering after the update</label>' +
+        '<label class="ix-tg"><span>Go Back by Itself<small>If the site stops answering after the update, it returns to the earlier version.</small></span><input type="checkbox" id="ix-uauto"' + (st.autoUndo ? ' checked' : '') + '></label>' +
         '<p class="ix-err" id="ix-ue"></p>';
     } else {
       review = '<label class="ix-dropz" id="ix-udz"><input type="file" id="ix-ufile" accept=".zip,application/zip"><b>Drop the Update Zip Here</b><span>or click to choose it</span></label>' +
@@ -2204,6 +2206,14 @@
         b.disabled = false;
         if (!j || !j.ok) { if (st) st.textContent = (j && j.error) || 'Could not read the data.'; return; }
         var day = new Date().toISOString().slice(0, 10), r = exportRows(app, j.data);
+        if (fmt === 'html') {   // (1.61) the bookmark file other browsers import, made here
+          var pv = document.getElementById('ix-bmpriv'), all = j.data.tabs || [], lk = all.filter(function (t) { return typeof t.enc === 'string'; }).length;
+          var pick = all.filter(function (t) { return typeof t.enc !== 'string' && (pv && pv.checked || !t.private); });
+          var cnt = pick.reduce(function (a, t) { return a + (t.categories || []).reduce(function (b, c) { return b + (c.links || []).filter(function (l) { return !l.divider; }).length; }, 0); }, 0);
+          if (!cnt) { if (st) st.textContent = 'There is nothing to export yet' + (lk ? ' (encrypted tabs stay locked).' : '.'); return; }
+          download('bookmarks-' + day + '.html', 'text/html', window.HUB.bookmarksHtml(pick, (j.data.settings && j.data.settings.title) || 'Bookmarks'));
+          if (st) st.textContent = 'Saved bookmarks-' + day + '.html with ' + cnt + (cnt === 1 ? ' bookmark.' : ' bookmarks.') + (lk ? ' ' + lk + (lk === 1 ? ' encrypted tab was' : ' encrypted tabs were') + ' left out.' : ''); return;
+        }
         if (fmt === 'json') { download(app + '-' + day + '.json', 'application/json', JSON.stringify(j.data, null, 2)); if (st) st.textContent = 'Saved ' + app + '-' + day + '.json.'; return; }
         var cols = []; r.rows.forEach(function (x) { Object.keys(x).forEach(function (k) { if (cols.indexOf(k) < 0) cols.push(k); }); });
         if (!r.rows.length) { if (st) st.textContent = 'There is nothing to export yet' + (r.locked ? ' (only encrypted tabs, which stay locked).' : '.'); return; }
@@ -2229,40 +2239,41 @@
             return '<option value="' + d + '"' + (every === d ? ' selected' : '') + '>' + (d ? d + (d > 1 ? ' Days' : ' Day') : 'Never') + '</option>'; }).join('') + '</select><span>' + (due ? 'A backup is due' : every ? 'Not due yet' : 'No Reminders') + '</span></div>' +
           '<div><small>Telegram</small><b>' + (n.bkEvery && n.chat ? 'On' : 'Off') + '</b><span>' + esc(tg) + ' · <a href="#" id="ix-tgset">' + (n.chat ? 'Change' : 'Set Up') + '</a></span></div>' +
         '</div>' +
-        '<details class="ix-acc" open><summary><span>Back Up</span><small>Download one file that brings back everything, on this server or any other.</small></summary><div class="ix-accb">' +
+        '<div class="ix-bkbig"><button type="button" class="ix-btn pri ix-big" id="ix-exp">' + svg(ICON.box) + 'Download Backup</button>' +
+          '<p>One file that brings back your pages and settings, on this server or any other.' + (enc.set ? ' It is locked with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + '.' : '') + '</p><small id="ix-bksum" class="ix-mu"></small></div>' +
+        '<div class="ix-status">' + (enc.set ? '<span class="ix-ok">🔒</span><span><b>Backup Files Are Locked</b> and open only with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + '. '
+          : '<span>!</span><span><b>Backup files are not locked.</b> Set an encryption passphrase and every backup is locked. ') + '<a href="#" id="ix-encgo2">' + (enc.set ? 'Change' : 'Set one') + ' in Settings › Security</a></span></div>' +
+        '<details class="ix-more" id="ix-choose"><summary>Choose What to Include</summary>' +
+          [['pages', 'Pages', 'Links, Info, Cards, Tasks, Home and Tools presets.'], ['site', 'Site', 'Your settings, Telegram and the domain watch list.']].concat(parts.files ? [['files', 'Files', 'The files you keep on the Files page. Can be big, so it is off unless you want it.']] : []).map(function (g) {
+            return '<label class="ix-tg"><span>' + g[1] + '<small>' + g[2] + '</small></span><input type="checkbox" data-grp="' + g[0] + '"></label>'; }).join('') +
+          '<details class="ix-more ix-onebyone"><summary>Pick Parts One by One</summary>' +
           '<div class="ix-bkh"><b>What to Include</b><span class="ix-mu"><a href="#" id="ix-bkall">All</a> · <a href="#" id="ix-bknone">None</a></span></div>' +
           '<div class="ix-bkgrid">' + Object.keys(NAMES).map(function (k) {
             var pt = parts[k] || {}, tabs = pt.tabs && pt.tabs.length ? pt.tabs : null;
-            return '<div class="ix-bkp"><label class="ix-bkl"><input type="checkbox" data-part="' + k + '" data-size="' + (+pt.size || 0) + '" checked><span class="ix-bkn"><b>' + NAMES[k] + '</b><small title="' + esc(pt.summary || '') + '">' + esc(pt.summary || '') + '</small></span>' + (pt.size ? '<em>' + size(pt.size) + '</em>' : '') + '</label>' +
+            return '<div class="ix-bkp"><label class="ix-bkl"><input type="checkbox" data-part="' + k + '" data-size="' + (+pt.size || 0) + '"' + (k === 'files' ? '' : ' checked') + '><span class="ix-bkn"><b>' + NAMES[k] + '</b><small title="' + esc(pt.summary || '') + '">' + esc(pt.summary || '') + '</small></span>' + (pt.size ? '<em>' + size(pt.size) + '</em>' : '') + '</label>' +
               (tabs ? '<button type="button" class="ix-linkbtn" data-tabsbtn="' + k + '">Choose tabs (' + tabs.length + ')</button><div class="ix-tabs" data-tabs="' + k + '" hidden>' + tabs.map(function (t) {
                 return '<label><input type="checkbox" value="' + esc(t.id) + '" checked>' + esc(t.name || 'Tab') + (t.enc ? ' 🔒' : t.private ? ' (private)' : '') + '</label>'; }).join('') + '</div>' : '') + '</div>';
-          }).join('') + '</div>' +
-          '<div class="ix-bkf"><div class="ix-bkopt">' +
-            (enc.set ? '<label class="ix-chk"><input type="checkbox" id="ix-expenc" checked> Lock the file with my ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + '</label>' : '<span class="ix-mu">Not locked: turn on encryption in Security to lock backup files.</span>') +
-            '<small id="ix-bksum" class="ix-mu"></small></div>' +
-            '<button type="button" class="ix-btn pri" id="ix-exp">' + svg(ICON.box) + 'Download Backup</button></div>' +
-          '<p class="ix-note">Keep backup files somewhere other than this server.</p>' +
-        '</div></details>' +
-        '<div class="ix-status">' + (enc.set ? '<span class="ix-ok">🔒</span><span><b>Backup Files Are Encrypted</b> and open with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + '. '
-          : '<span>!</span><span><b>Backup files are not encrypted.</b> ') + '<a href="#" id="ix-encgo2">' + (enc.set ? 'Change' : 'Turn on') + ' in Settings › Security</a></span></div>' +
+          }).join('') + '</div></details></details>' +
+        '<p class="ix-note">Keep backup files somewhere other than this server.</p>' +
         '<details class="ix-acc"><summary><span>Restore</span><small>Bring everything back from a backup file. Older Links, Info, Cards and Tasks backups work too.</small></summary><div class="ix-accb">' +
           '<label class="ix-dropz" id="ix-dropz"><input type="file" id="ix-imp" accept=".json,.gz,application/json,application/gzip"><b>Drop a Backup File Here</b><span>or click to choose. .json, or .json.gz from Telegram. You pick what to restore next, and what is there now is kept as an earlier version first.</span></label>' +
-          '<div id="ix-impx"></div></div></details>' +
-        '<details class="ix-acc" id="ix-xacc"><summary><span>Export Data</span><small>Links, Cards or Tasks as a spreadsheet (CSV) or a JSON file</small></summary><div class="ix-accb">' +
-          tabHead(ICON.file, 'Export Data', 'One page at a time, to open in a spreadsheet or keep. This is not a backup: use Back Up for that.') +
+          '<div id="ix-impx"></div>' +
+          '<h3 class="ix-h3" id="ix-vacc">Earlier Versions</h3><p>' + (j.versions.length ? j.versions.length + ' saved' + (newest ? ', newest ' + esc(ago(newest)) : '') : 'None yet') + '. Up to 40 per page, one every 10 minutes, kept automatically while you edit. Restoring keeps a copy first.</p>' +
+          '<div class="ix-row" id="ix-vf" style="margin-bottom:6px">' + seg('vf', [['all', 'All']].concat(['links', 'info', 'cards', 'tasks', 'home'].map(function (k) {
+            var c = j.versions.filter(function (v) { return v.app === k; }).length; return [k, NAMES[k] + (c ? ' ' + c : '')]; })), 'all') + '</div><div id="ix-vl"></div></div></details>' +
+        '<details class="ix-acc" id="ix-xacc"><summary><span>Export</span><small>Links, Cards or Tasks as a spreadsheet (CSV) or a JSON file, and your bookmarks for other browsers</small></summary><div class="ix-accb">' +
+          tabHead(ICON.file, 'Export', 'One page at a time, to open in a spreadsheet, another browser, or to keep. This is not a backup: use Back Up for that.') +
           [['links', 'Links', ICON.bookmark, 'Every bookmark with its tab, category, name and address. Encrypted tabs stay locked and are left out of the spreadsheet.'],
            ['cards', 'Cards', ICON.card, 'Every card with its details, one row each.'],
            ['tasks', 'Tasks', ICON.check, 'Every task with its due date, repeat, price and notes.']].map(function (x) {
             return ecCard('', x[2], x[1], x[3], '<div class="ix-row"><button type="button" class="ix-btn pri" data-export="' + x[0] + '" data-fmt="csv">' + svg(ICON.down) + 'Download CSV</button><button type="button" class="ix-btn" data-export="' + x[0] + '" data-fmt="json">' + svg(ICON.down) + 'Download JSON</button></div>'); }).join('') +
+          ecCard('', ICON.bookmark, 'Bookmarks for Other Browsers', 'The standard bookmark file that Chrome, Edge, Firefox and Safari can import. Encrypted tabs stay locked here; to include them, unlock them and use Export Bookmarks in Links Settings.',
+            '<label class="ix-tg"><span>Include Private Tabs<small>Also writes your private tabs. The file is plain text: keep it safe.</small></span><input type="checkbox" id="ix-bmpriv"></label><div class="ix-row"><button type="button" class="ix-btn pri" data-export="links" data-fmt="html">' + svg(ICON.down) + 'Download Bookmark File</button></div>') +
           '<p class="ix-note" id="ix-xs">The files hold your data as plain text. Keep them somewhere safe.</p></div></details>' +
-        '<details class="ix-acc" id="ix-vacc"><summary><span>Earlier Versions</span><small>' + (j.versions.length ? j.versions.length + ' saved' + (newest ? ', newest ' + esc(ago(newest)) : '') : 'None yet') + '. Kept automatically while you edit</small></summary><div class="ix-accb">' +
-          '<p>Up to 40 per page, one every 10 minutes. Restoring keeps a copy first.</p>' +
-          '<div class="ix-row" id="ix-vf" style="margin-bottom:6px">' + seg('vf', [['all', 'All']].concat(['links', 'info', 'cards', 'tasks', 'home'].map(function (k) {
-            var c = j.versions.filter(function (v) { return v.app === k; }).length; return [k, NAMES[k] + (c ? ' ' + c : '')]; })), 'all') + '</div><div id="ix-vl"></div></div></details>' +
         '<details class="ix-acc ix-danger" id="ix-reset"><summary><span>Start Over</span><small>Erase all data and settings, like a new site</small></summary><div class="ix-accb">' +
           '<p><b>This erases:</b> every page\'s data and earlier versions (Links, Info, Cards, Tasks, Start page), your pictures, icons and logo, the site settings and colors, Telegram, the domain watch list, the encryption passphrase and Telegram login approval.</p>' +
           '<p><b>This keeps:</b> your password and two-step login, so you can log in again. Encrypted tabs cannot be opened afterwards unless you restore a backup and set the same passphrase.</p>' +
-          '<p>Everything comes back by importing a backup file (Import, above). <b>Download a full backup first.</b></p>' +
+          '<p>Everything comes back by restoring a backup file (the Restore tab). <b>Download a full backup first.</b></p>' +
           '<label class="ix-fl2">Type ERASE<input type="text" id="ix-rsc" autocomplete="off" spellcheck="false"></label>' +
           '<label class="ix-fl2">Website Password<input type="password" id="ix-rsp" autocomplete="current-password"></label>' +
           '<p class="ix-err" id="ix-rse"></p><div class="ix-row"><button type="button" class="ix-btn danger" id="ix-rsgo">Erase Everything</button></div></div></details>' +
@@ -2289,7 +2300,10 @@
         var cs = [].slice.call(p.querySelectorAll('[data-part]')), on = cs.filter(function (c) { return c.checked; }), bytes = on.reduce(function (a, c) { return a + (+c.dataset.size || 0); }, 0), el = p.querySelector('#ix-bksum');
         if (el) el.textContent = on.length + ' of ' + cs.length + ' selected' + (bytes ? ' · about ' + size(bytes) : '');
       };
-      p.querySelectorAll('[data-part]').forEach(function (c) { c.addEventListener('change', bkSum); }); bkSum();
+      var GRP = { pages: ['links', 'info', 'cards', 'tasks', 'home', 'tools'], site: ['settings', 'telegram', 'watch'], files: ['files'] };
+      var syncGrp = function () { p.querySelectorAll('[data-grp]').forEach(function (g) { var cs = GRP[g.dataset.grp].map(function (k) { return p.querySelector('[data-part="' + k + '"]'); }).filter(Boolean); g.checked = cs.length > 0 && cs.every(function (c) { return c.checked; }); }); };
+      p.querySelectorAll('[data-grp]').forEach(function (g) { g.onchange = function () { var on = g.checked; GRP[g.dataset.grp].forEach(function (k) { var c = p.querySelector('[data-part="' + k + '"]'); if (c) { c.checked = on; c.dispatchEvent(new Event('change')); } }); }; });
+      p.querySelectorAll('[data-part]').forEach(function (c) { c.addEventListener('change', function () { bkSum(); syncGrp(); }); }); bkSum(); syncGrp();
       [['ix-bkall', true], ['ix-bknone', false]].forEach(function (x) { var a = p.querySelector('#' + x[0]); if (a) a.onclick = function (e) { e.preventDefault(); p.querySelectorAll('[data-part]').forEach(function (c) { c.checked = x[1]; c.dispatchEvent(new Event('change')); }); }; });
       p.querySelector('#ix-exp').onclick = function () {
         var q = [], extra = '';
@@ -2303,14 +2317,14 @@
         if (!q.length) { toast('Pick at least one part.'); return; }
         // downloaded with the security token in a header (not in the address), then saved from memory
         var btn = this; btn.disabled = true;
-        var ec = p.querySelector('#ix-expenc'); if (ec && ec.checked) extra += '&enc=1';
+        if (enc.set) extra += '&enc=1';   // (1.61) a backup is always locked once there is a passphrase
         fetch(CORE + 'api.php?action=backup&parts=' + q.join(',') + extra, { credentials: 'same-origin', headers: { 'X-Hub-CSRF': S.csrf } }).then(function (r) {
           if (!r.ok) return r.json().then(function (j) { throw new Error(j.error || 'Backup failed.'); });
           var name = (/filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '') || [])[1] || 'backup.json';
           return r.blob().then(function (blob) {
             var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
             document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
-            if (q.length === Object.keys(NAMES).length && !/_tabs=/.test(extra)) { S.backupLast = Date.now() / 1000; remember(S); redraw(); pBackup(p); }
+            if (q.length >= Object.keys(NAMES).filter(function (k) { return k !== 'files'; }).length && !/_tabs=/.test(extra) && Object.keys(NAMES).every(function (k) { return k === 'files' || q.indexOf(k) >= 0; })) { S.backupLast = Date.now() / 1000; remember(S); redraw(); pBackup(p); }
             toast('Backup downloaded.');
           });
         }).catch(function (e) { toast(e.message || 'Backup failed.'); }).finally(function () { btn.disabled = false; });
@@ -2341,7 +2355,7 @@
         }; });
         var more = vl.querySelector('#ix-vmore'); if (more) more.onclick = function () { shown += 20; drawVersions(); };
       }
-      p.querySelector('#ix-vacc').addEventListener('toggle', function () { if (this.open && !vl.innerHTML) drawVersions(); });
+      drawVersions();
       bindSeg(p.querySelector('#ix-vf'), function (k, v) { filt = v; shown = 20; drawVersions(); });
     });
   }

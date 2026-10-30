@@ -294,11 +294,11 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
 .g-label a.ext{color:var(--accent);font-weight:500}
 .src-tools{display:flex;align-items:center;gap:10px}
 
-.switch{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:999px;background:var(--s-bg3);position:relative;cursor:pointer;transition:background .2s;
-  border:1px solid var(--s-line)}
-.switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .22s cubic-bezier(.3,1.4,.5,1)}
-.switch:checked{background:var(--accent);border-color:var(--accent)}
-.switch:checked::after{transform:translateX(18px)}
+.switch{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:13px;background:color-mix(in srgb,currentColor 14%,transparent);border:1px solid color-mix(in srgb,currentColor 18%,transparent);position:relative;cursor:pointer;transition:background .15s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,currentColor 62%,transparent);transition:transform .15s,background .15s}
+.switch:checked{background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.switch:checked::after{transform:translateX(18px);background:var(--accent)}
+.switch:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 
 input[type=range]{width:100%;accent-color:var(--accent)}
 
@@ -397,3 +397,9 @@ html.hl-welcome .stage,html.hl-welcome .wdock,html.hl-welcome .wcards{opacity:0}
 .sheet select:focus,.sheet input[type=date]:focus{outline:none;border-color:var(--accent)}
 .wzedit{display:flex;flex-direction:column;gap:8px}
 .wzedit .inline > input[data-zn]{flex:0 1 170px}
+
+/* (1.61) Only Me: what a visitor sees */
+body.onlyme{min-height:100dvh;display:grid;place-items:center;background:#111;color:#eee;margin:0}
+.onlyme-card{text-align:center;padding:24px}
+.onlyme-card h1{font-size:24px;margin:0 0 8px}
+.onlyme-card p{opacity:.7;margin:0 0 18px}

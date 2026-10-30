@@ -361,11 +361,11 @@ try:
         ep.evaluate("document.getElementById('colorDlg').close()")
         ep.click('#ix-ebar [data-tip="Links Settings"]'); until(lambda: ep.evaluate("document.getElementById('setDlg').open"), 5000)
         before = ep.evaluate("document.getElementById('sEditBar').value")
-        ep.select_option('#sEditBar', 'text'); ep.click('#setDlg button[value=cancel]'); ep.wait_for_timeout(600)
+        ep.click('#sEditBar + .ix-sgc [data-v=text]'); ep.click('#setDlg button[value=cancel]'); ep.wait_for_timeout(600)
         cancelled = ep.evaluate("[document.getElementById('ix-ebar').className, (HUB.state().editBar || {}).links || '']")
         ep.click('#ix-ebar [data-tip="Links Settings"]'); until(lambda: ep.evaluate("document.getElementById('setDlg').open"), 5000)
         reopened = ep.evaluate("document.getElementById('sEditBar').value")
-        ep.select_option('#sEditBar', 'text'); ep.click('#setSave'); until(lambda: ep.evaluate("document.getElementById('ix-ebar').classList.contains('ix-ebar-text')"), 8000)
+        ep.click('#sEditBar + .ix-sgc [data-v=text]'); ep.click('#setSave'); until(lambda: ep.evaluate("document.getElementById('ix-ebar').classList.contains('ix-ebar-text')"), 8000)
         labels = ep.evaluate("[...document.querySelectorAll('#ix-ebar .ix-ebl')].filter(l => l.offsetWidth > 0).map(l => l.textContent)")
         check('P52 Icons Only (the default) shows a button\'s name when you point at it; Links Settings > Edit Bar > Icons and Text writes the names on the bar once saved (Cancel keeps it as it was)',
               tipname == 'Colors' and before == 'icons' and cancelled == ['', ''] and reopened == 'icons' and labels == ['Colors', 'Fetch Icons', 'Import Bookmarks', 'Links Settings'], (tipname, before, cancelled, reopened, labels))
@@ -427,14 +427,17 @@ try:
             hp2.click('#ix-editb'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000); hp2.click('#ix-pop button:nth-child(2)')
             until(lambda: hp2.evaluate("document.getElementById('%s').open" % dlg), 8000); settle(hp2)
             return hp2.evaluate("""(() => { const d = document.getElementById('%s');
-              return [[...d.querySelectorAll('h3, h4')].map(h => h.textContent.trim()), [...d.querySelectorAll('.ix-srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName, r.lastElementChild.textContent.trim().slice(0, 12), r.getBoundingClientRect().width > 0 ? Math.round(r.lastElementChild.getBoundingClientRect().width) : 0])] })()""" % dlg)
+              return [[...d.querySelectorAll('h3, h4')].map(h => h.textContent.trim()), [...d.querySelectorAll('.ix-srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName, r.lastElementChild.textContent.trim().slice(0, 12), r.getBoundingClientRect().width > 0 ? Math.round(r.lastElementChild.getBoundingClientRect().width) : 0]),
+              !!d.querySelector('.ix-sx,.dh [data-close]'), [...d.querySelectorAll('.ix-sf button, .df button')].map(b => b.textContent.trim()), (d.querySelector('.ix-sb,.db') || {}).scrollHeight > 0 && getComputedStyle(d.querySelector('.ix-sb,.db')).overflowY] })()""" % dlg)
         ls_, is_ = sdlg('links', 'setDlg'), sdlg('info', 'setdlg')
         ts_ = sdlg('tasks', 'sdlg'); tl = hp2.evaluate("[...document.querySelectorAll('#sdlg .sh3')].map(h => h.textContent.trim()); ")
-        lookhas = hp2.evaluate("(() => { const h = [...document.querySelectorAll('#sdlg .sh3')].pop(); let n = h.nextElementSibling; return !!n.querySelector('#s-editbar') && !!n.querySelector('#s-week') })()")
+        lookhas = hp2.evaluate("(() => { const h = [...document.querySelectorAll('#sdlg .sh3')].find(x => x.textContent.trim() === 'Look'); let n = h.nextElementSibling; return !!n.querySelector('#s-editbar') && !!n.querySelector('#s-week') })()")
         hctx.close()
-        rows_ok = lambda r: [x[:2] for x in r[1]] == [['Text Sizes', 'BUTTON'], ['Edit Bar', 'SELECT']] and r[1][0][2] == 'Change' and r[1][0][3] < 200
-        check('P58 Links and Info Settings: a Look section with Text Sizes (a small Change button) and Edit Bar side by side with their help; Tasks Settings: General, When the Page Opens and Look, with Edit Bar in Look',
-              rows_ok(ls_) and rows_ok(is_) and 'Look' in ls_[0] and 'Look' in is_[0] and tl == ['General', 'When the Page Opens', 'Look'] and lookhas, (ls_, is_, tl, lookhas))
+        rows_ok = lambda r: ['Text Sizes', 'Edit Bar'] == [x[0] for x in r[1] if x[0] in ('Text Sizes', 'Edit Bar')] and [x[1] for x in r[1] if x[0] == 'Text Sizes'] == ['BUTTON'] and [x[1] for x in r[1] if x[0] == 'Edit Bar'] == ['DIV'] and [x[2] for x in r[1] if x[0] == 'Text Sizes'][0] == 'Change' and [x[3] for x in r[1] if x[0] == 'Text Sizes'][0] < 200
+        frame_ok = lambda r: r[2] is True and r[3][-2:] == ['Cancel', 'Save Settings'] and r[4] in ('auto', 'scroll')
+        check('P58 Links and Info Settings: a Look section with Text Sizes (a small Change button) and Edit Bar as a row of buttons; each has Only Me; Tasks Settings: General, When the Page Opens, Look and Privacy, with Edit Bar in Look; every Settings window has a close X, a scrolling body and Cancel / Save Settings',
+              rows_ok(ls_) and rows_ok(is_) and 'Look' in ls_[0] and 'Look' in is_[0] and any(x[0] == 'Only Me' for x in ls_[1]) and any(x[0] == 'Only Me' for x in is_[1])
+              and tl == ['General', 'When the Page Opens', 'Look', 'Privacy'] and lookhas and frame_ok(ls_) and frame_ok(is_) and frame_ok(ts_), (ls_, is_, ts_, tl, lookhas))
         # P60-P62 (1.53.8): the login window; Cards Settings like Links and Info; the Banks window and its own icon
         lctx2 = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); lctx2.route('**/*', handle)
         lp2 = lctx2.new_page(); lp2.goto(B + '/web/links/', wait_until='domcontentloaded'); until(lambda: lp2.evaluate("!!(window.HUB && HUB.state().admin === false)"), 15000)
@@ -472,8 +475,8 @@ try:
         cp.click('#ix-ebar [data-tip="Holders"]'); until(lambda: cp.evaluate("document.getElementById('hdlg').open"), 5000); cp.focus('#hlist input')
         ring = cp.evaluate("(() => { const s = getComputedStyle(document.querySelector('#hlist input')); return [s.outlineStyle, s.borderColor] })()"); cp.click('#hcancel')
         cctx.close()
-        check('P61 Cards Settings looks like Links and Info: Page, then Look with Text Sizes, Edit Bar and Column Order rows',
-              cs == [['Page', 'Look'], [['Text Sizes', 'BUTTON'], ['Edit Bar', 'SELECT'], ['Column Order', 'BUTTON']]], cs)
+        check('P61 Cards Settings looks like Links and Info: Page, Privacy (Only Me, locked on), then Look with Text Sizes, Edit Bar (buttons) and Column Order rows',
+              cs == [['Page', 'Privacy', 'Look'], [['Only Me', 'INPUT'], ['Text Sizes', 'BUTTON'], ['Edit Bar', 'DIV'], ['Column Order', 'BUTTON']]], cs)
         check('P62 Cards: Banks has its own icon (not Add Card\'s) and one window like Holders: every bank with its cards, a rename moves the cards, a link is kept, a wrong link is refused, Cancel changes nothing; a holder\'s name box gets a clean border, not a cut-off outline',
               idict.get('Banks') and idict.get('Banks') != idict.get('Add Card') and brows and all(x[1].endswith('card') or x[1].endswith('cards') for x in brows) and kept
               and badlink[0] and 'https://' in badlink[1] and 'Lakeside Bank' in renamed and old not in renamed and link and ring[0] == 'none' and not cerr, (icons, brows, kept, badlink, link, ring, cerr))
@@ -506,7 +509,7 @@ try:
             with gp.expect_navigation(timeout=10000): gp.evaluate(SWIPE, [60, 520, 330, 515])
             back_links = '/web/links/' in gp.url
             check('P64 swiping right goes to the previous page in the bar\'s order (Info to Links), whichever tab is open; the order leaves Tools and Settings out',
-                  back_links and order == ['home', 'links', 'info', 'cards', 'tasks'], (back_links, order))
+                  back_links and order == ['home', 'links', 'info', 'cards', 'tasks', 'files'], (back_links, order))
             gp.goto(B + '/web/home/', wait_until='domcontentloaded'); ready(); gp.wait_for_selector('#nextBg', timeout=10000); settle(gp)
             gp.evaluate("window.__pulled = 0; document.getElementById('nextBg').addEventListener('click', () => window.__pulled++)")
             gp.evaluate(SWIPE, [195, 200, 200, 420]); gp.wait_for_timeout(300); pulled = gp.evaluate("window.__pulled")

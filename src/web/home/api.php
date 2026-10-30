@@ -139,6 +139,7 @@ switch ($action) {
         // Called by visitors' browsers in the background to top up saved photos.
         // Anyone can call this, so it does nothing (no scan, no write) unless a source really is short of photos.
         $site = load_site();
+        if (!empty($site['private']) && !is_admin()) out(['added' => [], 'busy' => false]);   // Only Me: a visitor starts nothing
         if (!pool_needs_refill($site)) out(['added' => [], 'busy' => false]);
         $r = pool_refill($site, 25);
         out(['added' => $r['added'], 'busy' => $r['busy']]);

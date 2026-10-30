@@ -79,14 +79,14 @@
   </section>
 </template>
 
-<dialog id="setdlg">
+<dialog id="setdlg" class="ix-sdlg">
   <form id="setform">
     <h2>Info Settings</h2>
     <h3>Page</h3>
-    <div class="f"><label>Site Title<input id="gin" maxlength="60" placeholder="Information"></label></div>
+    <div class="f"><label>Page Title<input id="gin" maxlength="60" placeholder="Information"></label></div>
     <p class="hint">Shown in the browser tab and on exports. The logo comes from the main Settings.</p>
     <h3>Privacy</h3>
-    <div class="f"><label class="chk"><input type="checkbox" id="spriv"> Private Page</label></div>
+    <div class="ix-srow"><label for="spriv">Only Me<small>On: visitors see only a log-in screen. Off: visitors see your public tabs.</small></label><input type="checkbox" class="ix-sw" id="spriv"></div>
     <p class="hint" id="sprivnote"></p>
     <div class="ix-srow" id="sencrow" hidden><span>Encrypt All Private Tabs<small>Locks every private tab in this browser with your encryption passphrase. The server then holds only scrambled text.</small></span><button type="button" id="sencall">Encrypt All</button></div>
     <h3>Look</h3>

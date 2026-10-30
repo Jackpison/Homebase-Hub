@@ -429,6 +429,57 @@
     }).catch(function () { toast('The Edit Bar choice could not be saved.'); });
   }, true);
 
+  /* ---------- (1.61) buttons instead of a dropdown ----------
+     <select data-ix-seg> with 2 or 3 options becomes one row of buttons (role radiogroup). The select stays, hidden, and is the
+     truth: a click sets it and fires "change"; code that sets select.value is followed on the next change or when the window opens. */
+  function segBuild(sel) {
+    if (sel._ixSeg || sel.options.length > 3) return; sel._ixSeg = true;
+    var g = document.createElement('div'); g.className = 'ix-sgc'; g.setAttribute('role', 'radiogroup');
+    var lab = sel.id && document.querySelector('label[for="' + sel.id + '"]'); if (lab) { if (!lab.id) lab.id = sel.id + '-l'; g.setAttribute('aria-labelledby', lab.id); } else if (sel.getAttribute('aria-label')) g.setAttribute('aria-label', sel.getAttribute('aria-label'));
+    [].forEach.call(sel.options, function (o) {
+      var b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.v = o.value; b.textContent = o.textContent;
+      b.addEventListener('click', function () { if (sel.value === o.value) return; sel.value = o.value; sel.dispatchEvent(new Event('change', { bubbles: true })); paint(); });
+      g.appendChild(b);
+    });
+    function paint() { [].forEach.call(g.children, function (b) { var on = b.dataset.v === sel.value; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; }); }
+    g.addEventListener('keydown', function (e) {
+      var k = e.key, d = k === 'ArrowRight' || k === 'ArrowDown' ? 1 : k === 'ArrowLeft' || k === 'ArrowUp' ? -1 : 0; if (!d) return;
+      e.preventDefault(); var bs = [].slice.call(g.children), i = bs.indexOf(document.activeElement); if (i < 0) i = bs.findIndex(function (b) { return b.dataset.v === sel.value; });
+      var n = bs[(i + d + bs.length) % bs.length]; n.focus(); n.click();
+    });
+    sel.classList.add('ix-sgc-h'); sel.setAttribute('aria-hidden', 'true'); sel.tabIndex = -1; sel.parentNode.insertBefore(g, sel.nextSibling);
+    sel._ixSegPaint = paint; sel.addEventListener('change', paint); paint();
+    var d = sel.closest('dialog'); if (d) new MutationObserver(function () { if (d.open) paint(); }).observe(d, { attributes: true, attributeFilter: ['open'] });
+    var pv = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');   // setting .value from a page's code repaints too
+    Object.defineProperty(sel, 'value', { configurable: true, get: function () { return pv.get.call(sel); }, set: function (v) { pv.set.call(sel, v); paint(); } });
+  }
+  function segAll() { [].forEach.call(document.querySelectorAll('select[data-ix-seg],select[data-ix-editbar]'), segBuild); }
+  whenBody(function () { segAll(); new MutationObserver(segAll).observe(document.body, { childList: true, subtree: true }); });
+
+  /* ---------- (1.61) one Settings window for every page ----------
+     dialog.ix-sdlg: title + close X on top, a scrolling body, the buttons in a footer. The X does what Cancel does. */
+  function sdlgBuild(d) {
+    if (d._ixS) return; d._ixS = true;
+    if (d.querySelector('.dh,.ix-sh')) return;
+    var c = d.querySelector(':scope>form') || d, kids = [].slice.call(c.children);
+    var t = kids.filter(function (k) { return /^H[23]$/.test(k.tagName); })[0];
+    var foot = kids.slice().reverse().filter(function (k) { return k.matches('.act,.actions'); })[0];
+    if (!t || !foot) return;
+    var h = document.createElement('div'); h.className = 'ix-sh';
+    var x = document.createElement('button'); x.type = 'button'; x.className = 'ix-sx'; x.setAttribute('aria-label', 'Close');
+    x.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    x.addEventListener('click', function () {
+      var cb = foot.querySelector('[data-close],[value=cancel],[data-r=cancel],[id$=cancel],[id$=Cancel]');
+      if (cb) cb.click(); else d.close();
+    });
+    c.insertBefore(h, t); h.appendChild(t); h.appendChild(x);
+    var b = document.createElement('div'); b.className = 'ix-sb';
+    kids.forEach(function (k) { if (k !== t && k !== foot) b.appendChild(k); });
+    c.insertBefore(b, foot); foot.classList.add('ix-sf');
+    d.setAttribute('aria-labelledby', t.id || (t.id = (d.id || 'sd') + '-t'));
+  }
+  whenBody(function () { [].forEach.call(document.querySelectorAll('dialog.ix-sdlg'), sdlgBuild); });
+
   /* ---------- 4. the bar: three styles, each with its own layout ----------
      top:  logo, pages, search box, theme, pencil, Backup, gear. It slides away while you scroll down (4b).
      side: an 80 px rail: logo, search, pages, then theme, pencil, Backup, gear. Phones: a floating button (or a swipe
@@ -1283,10 +1334,31 @@
   whenBody(function () { drawBar(); });                 // the bar is there on the very first paint
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
+  /* (1.61) Export Bookmarks: the standard bookmark file every browser imports (Chrome, Edge, Firefox, Safari). Made here in the
+     browser from tabs [{title, categories: [{title, links: [{title, url}]}]}], so nothing extra leaves the server. Only web addresses
+     (http, https, ftp) and mail links are written. Each tab becomes a folder, each category a folder inside it. */
+  function bookmarksHtml(tabs, title) {
+    var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+    var ok = function (u) { return /^(https?|ftp):\/\/|^mailto:/i.test(String(u || '').trim()); };
+    var now = Math.floor(Date.now() / 1000), o = ['<!DOCTYPE NETSCAPE-Bookmark-file-1>', '<!-- This is an automatically generated file. It will be read and overwritten. DO NOT EDIT! -->',
+      '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">', '<TITLE>' + e(title || 'Bookmarks') + '</TITLE>', '<H1>' + e(title || 'Bookmarks') + '</H1>', '<DL><p>'];
+    (tabs || []).forEach(function (t) {
+      o.push('    <DT><H3 ADD_DATE="' + now + '">' + e(t.title || t.name || 'Tab') + '</H3>', '    <DL><p>');
+      (t.categories || []).forEach(function (c) {
+        o.push('        <DT><H3 ADD_DATE="' + now + '">' + e(c.title || c.name || 'Links') + '</H3>', '        <DL><p>');
+        (c.links || []).forEach(function (l) { if (l && !l.divider && ok(l.url)) o.push('            <DT><A HREF="' + e(String(l.url).trim()) + '" ADD_DATE="' + now + '">' + e(l.title || l.url) + '</A>'); });
+        o.push('        </DL><p>');
+      });
+      o.push('    </DL><p>');
+    });
+    o.push('</DL><p>');
+    return o.join('\n') + '\n';
+  }
+
   window.HUB = {
     app: APP, state: function () { return S; }, login: login, logout: logout, settings: settings, toast: toast, theme: themeNow, setTheme: setTheme,
     isAdmin: function () { return !!S.admin; }, ready: function () { return refresh(); }, fetch: hubFetch,
-    bufB64u: bufB64u, b64uBuf: b64uBuf,   // (1.61) for the passkey screens of Settings
+    bufB64u: bufB64u, b64uBuf: b64uBuf, bookmarksHtml: bookmarksHtml,   // (1.61) for the passkey screens of Settings
     api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
     tz: function () { return S.tz || 'Asia/Kolkata'; }   // the site's time zone (Settings > General)
