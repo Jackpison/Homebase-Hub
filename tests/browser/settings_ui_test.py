@@ -15,11 +15,11 @@ BROWSER = browser_name(); ZIP = sys.argv[1]; check = Checks()
 TMP = tempfile.mkdtemp(prefix='hub-settings-ui-')
 
 
-def visitor(url):
+def visitor(url, headers=False):
     """What a person who is not logged in is sent (no cookies)."""
     try:
-        with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'visitor/1.0'}), timeout=30) as r: return r.status, r.read().decode('utf-8', 'replace')
-    except urllib.error.HTTPError as e: return e.code, e.read().decode('utf-8', 'replace')
+        with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'visitor/1.0'}), timeout=30) as r: return (r.status, r.read().decode('utf-8', 'replace')) + ((dict(r.headers),) if headers else ())
+    except urllib.error.HTTPError as e: return (e.code, e.read().decode('utf-8', 'replace')) + ((dict(e.headers),) if headers else ())
 
 
 try:
@@ -98,6 +98,21 @@ try:
         pg.goto(s.base + '/web/tasks/'); pg.wait_for_selector('#sdlg', state='attached'); pg.evaluate("document.getElementById('sdlg').showModal()")
         t = pg.evaluate("(() => { const e = document.getElementById('s-onlyme'); return [e.checked, e.disabled]; })()")
         check('U17 Cards and Tasks show Only Me locked on (they are only ever for you)', c == [True, True] and t == [True, True], (c, t))
+
+        # ---- the calendar link ----
+        pg.goto(s.base + '/web/tasks/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.getElementById('psets')", 20000)
+        pg.evaluate("document.getElementById('psets').click()"); pg.wait_for_selector('#sdlg[open]')
+        check('U17b the calendar link is off by default (no link shown)', not pg.is_checked('#s-calon') and pg.is_hidden('#s-calbox') and visitor(s.base + '/web/tasks/calendar.php?k=' + '0' * 32)[0] == 404)
+        pg.check('#s-calon'); wait_js(pg, "document.getElementById('s-calurl').value.includes('calendar.php?k=')", 10000)
+        link = pg.input_value('#s-calurl'); code, body, hd = visitor(link, True)
+        check('U17c turning it on shows a link that a calendar app can read: text/calendar, with no login', code == 200 and body.startswith('BEGIN:VCALENDAR') and hd.get('Content-Type', '').startswith('text/calendar'), (code, hd.get('Content-Type')))
+        check('U17d a wrong key and a missing key are the same plain 404', visitor(link[:-1] + ('0' if link[-1] != '0' else '1'))[0] == 404 and visitor(s.base + '/web/tasks/calendar.php')[0] == 404)
+        pg.once('dialog', lambda d: d.accept()); pg.click('#s-calnew'); until(lambda: pg.input_value('#s-calurl') != link, 10000)
+        link2 = pg.input_value('#s-calurl')
+        check('U17e Make a New Link ends the old link at once', link2 != link and visitor(link)[0] == 404 and visitor(link2)[0] == 200)
+        pg.uncheck('#s-calon'); until(lambda: visitor(link2)[0] == 404 and pg.is_hidden('#s-calbox'), 10000)
+        check('U17f turning it off ends the link and hides it', visitor(link2)[0] == 404 and pg.is_hidden('#s-calbox'))
+        pg.click('#sdlg .dh [data-close]')
 
         # ---- Colors: shorter ----
         pg.goto(s.base + '/web/settings/#colors'); wait_js(pg, "!!document.querySelector('#ix-pgc')", 20000)

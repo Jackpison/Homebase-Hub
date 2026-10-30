@@ -44,3 +44,12 @@ foreach (['logo-512-maskable.png' => 512, 'apple-touch-icon.png' => 180] as $f =
     }
     t("$f fills its whole square with the logo's yellow (phones round it themselves)", $ok);
 }
+
+// 1.61: the phone's Share button
+$mf = hub_manifest(['siteName' => 'Mine'], '/hub', $pub);
+$stg = $mf['share_target'] ?? [];
+t('the manifest makes the site a share target, inside the site\'s own scope and path', ($stg['action'] ?? '') === '/hub/web/hub/share-target' && str_starts_with($stg['action'], $mf['scope']) && ($stg['method'] ?? '') === 'POST' && ($stg['enctype'] ?? '') === 'multipart/form-data');
+t('it takes files, a title, text and a link', ($stg['params']['files'][0]['name'] ?? '') === 'files' && array_keys($stg['params']) === ['title', 'text', 'url', 'files']);
+$sw = (string)file_get_contents($site . '/web/hub/share-sw.js');
+t('the share worker only answers a POST to share-target and lets every other request go to the network', str_contains($sw, "r.method !== 'POST'") && str_contains($sw, "endsWith('/web/hub/share-target')") && substr_count($sw, 'respondWith') === 1);
+t('the share worker sends nothing to a server (no fetch of its own)', !preg_match('/\bfetch\s*\(/', $sw));

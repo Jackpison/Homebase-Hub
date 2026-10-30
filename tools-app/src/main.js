@@ -7,6 +7,7 @@ import DATA from './tools.json';
 import { icon } from './icons.js';
 import { h, button, seg, check, toast } from './ui.js';
 import * as st from './state.js';
+import { loadShared } from './lib/shared.js';
 import './styles.css';
 
 // LOAD (each tool's module, loaded when it is opened) is written from tools.json by build.mjs into load.gen.js (1.60): adding a tool
@@ -196,4 +197,5 @@ function route() {
 
 layout();
 window.addEventListener('hashchange', route);
+loadShared();
 route();

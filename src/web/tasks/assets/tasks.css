@@ -540,3 +540,4 @@ html[data-ix-bar][data-ix-nav="dock"] .snack{bottom:calc(var(--ix-dock,76px) + 2
 #sdlg .fl>select:focus{outline:none;border-color:var(--acc,var(--accent))}
 #sdlg .fl small{display:block;margin-top:5px;font-size:12px;font-weight:400;line-height:1.35;color:var(--mute)}
 #sdlg .hint{margin:-4px 0 4px}
+.df2{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}

@@ -155,6 +155,66 @@ function tasks_next_date(array $t): string {
     }
     return $t['due'];
 }
+/* ---------- the calendar link (1.61) ----------
+ * An optional secret link that Google, Apple or Outlook Calendar can subscribe to (web/tasks/calendar.php?k=...). Off until you turn it on.
+ * site-data/tasks/calendar.php (guarded): { on, key }. Anyone with the link sees the task names, so a new link can be made any time;
+ * the old one stops at once. A wrong, missing or switched-off key all get the same plain 404. */
+function tasks_cal_file(): string { return hub_dir('tasks') . '/calendar.json'; }
+function tasks_cal_state(): array {
+    $j = hub_jread(tasks_cal_file()) ?? [];
+    $key = is_string($j['key'] ?? null) && preg_match('/^[a-f0-9]{32}$/', $j['key']) ? $j['key'] : '';
+    return ['on' => !empty($j['on']) && $key !== '', 'key' => $key];
+}
+/** Turns the link on or off (a key is made the first time), or makes a new key. Returns the state after, or null when it could not be saved. */
+function tasks_cal_set(?bool $on, bool $renew = false): ?array {
+    $cur = tasks_cal_state();
+    $key = $cur['key'] === '' || $renew ? bin2hex(random_bytes(16)) : $cur['key'];
+    $on = $on ?? $cur['on'];
+    if (!hub_jput(tasks_cal_file(), json_encode(['on' => $on, 'key' => $key]))) return null;
+    return ['on' => $on, 'key' => $key];
+}
+function tasks_cal_ok(string $k): bool {
+    $s = tasks_cal_state();
+    return $s['on'] && preg_match('/^[a-f0-9]{32}$/', $k) === 1 && hash_equals($s['key'], $k);
+}
+function tasks_ics_text(string $v): string { return str_replace(["\\", ';', ',', "\r\n", "\n", "\r"], ["\\\\", '\\;', '\\,', '\\n', '\\n', '\\n'], $v); }
+/** One content line, folded at 75 bytes (never inside a multi-byte character), ended with CRLF. */
+function tasks_ics_line(string $l): string {
+    $out = ''; $cur = ''; $first = true;
+    foreach (preg_split('//u', $l, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $ch) {
+        if (strlen($cur) + strlen($ch) > ($first ? 75 : 74)) { $out .= $cur . "\r\n "; $cur = ''; $first = false; }
+        $cur .= $ch;
+    }
+    return $out . $cur . "\r\n";
+}
+/** The tasks as an iCalendar feed: each active task is an all-day event (or a 30-minute one when it has a time), repeating like the task does. */
+function tasks_ics(array $data, string $host, string $title = 'Tasks'): string {
+    $o = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Homebase Hub//Tasks//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:' . tasks_ics_text($title),
+          'REFRESH-INTERVAL;VALUE=DURATION:PT6H', 'X-PUBLISHED-TTL:PT6H'];
+    $rr = ['day' => 'DAILY', 'week' => 'WEEKLY', 'month' => 'MONTHLY', 'year' => 'YEARLY'];
+    foreach ($data['tasks'] as $t) {
+        if (($t['status'] ?? 'active') !== 'active') continue;
+        $d = str_replace('-', '', $t['due']);
+        $o[] = 'BEGIN:VEVENT'; $o[] = 'UID:' . $t['id'] . '@' . preg_replace('/[^a-z0-9.-]/i', '', $host);
+        $o[] = 'DTSTAMP:' . gmdate('Ymd\THis\Z', (int)($t['updated'] ?? time()));
+        if ($t['time'] !== '') {
+            $start = $d . 'T' . str_replace(':', '', $t['time']) . '00';
+            $o[] = 'DTSTART:' . $start; $o[] = 'DTEND:' . gmdate('Ymd\THis', strtotime($t['due'] . ' ' . $t['time'] . ' UTC') + 1800);
+        } else {
+            $o[] = 'DTSTART;VALUE=DATE:' . $d; $o[] = 'DTEND;VALUE=DATE:' . gmdate('Ymd', strtotime($t['due'] . ' UTC') + 86400);
+        }
+        if (isset($rr[$t['repeat']['unit']])) $o[] = 'RRULE:FREQ=' . $rr[$t['repeat']['unit']] . ';INTERVAL=' . max(1, (int)$t['repeat']['n']);
+        $o[] = 'SUMMARY:' . tasks_ics_text($t['name']); $o[] = 'TRANSP:TRANSPARENT';
+        $desc = array_filter([$t['cat'] !== '' ? 'Category: ' . $t['cat'] : '', $t['price'] !== null ? 'Price: ' . rtrim(rtrim(number_format((float)$t['price'], 2, '.', ''), '0'), '.') . ($t['cur'] !== '' ? ' ' . $t['cur'] : '') : '']);
+        if ($desc) $o[] = 'DESCRIPTION:' . tasks_ics_text(implode("\n", $desc));
+        if ($t['url'] !== '') $o[] = 'URL:' . $t['url'];
+        if ($t['remind'] >= 0) { $o[] = 'BEGIN:VALARM'; $o[] = 'ACTION:DISPLAY'; $o[] = 'DESCRIPTION:' . tasks_ics_text($t['name']); $o[] = $t['remind'] === 0 ? 'TRIGGER:PT0S' : 'TRIGGER:-P' . (int)$t['remind'] . 'D'; $o[] = 'END:VALARM'; }
+        $o[] = 'END:VEVENT';
+    }
+    $o[] = 'END:VCALENDAR';
+    return implode('', array_map('tasks_ics_line', $o));
+}
+
 function tasks_repeat_label(array $r): string {
     $n = max(1, (int)($r['n'] ?? 1)); $u = $r['unit'] ?? 'none';
     if ($u === 'none') return 'One-Time';

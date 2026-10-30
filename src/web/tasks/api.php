@@ -14,6 +14,8 @@
  *  POST { action: "save", rev, tasks, log, settings }   replaces the list; rev must match, or 409 with the current data
  *  POST { action: "quick_add", text }                   one task from plain words (Home's Quick Add), like Telegram's /add
  *  POST { action: "done", id, due }                     marks that date of the task done (Home's Today), like the Done button
+ *  GET  ?action=cal                                     { on, link }   the secret calendar link (logged in only)
+ *  POST { action: "cal_set", on?, renew? }              turns the calendar link on or off, or makes a new link
  *
  * Every POST passes the same-site checks and the site's security check; saves are atomic and keep earlier versions.
  */
@@ -28,8 +30,11 @@ function view(array $d): array { return ['auth' => true, 'rev' => $d['rev'], 'ta
 $admin = hub_admin();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+function cal_view(array $c): array { return ['ok' => true, 'on' => $c['on'], 'link' => $c['key'] === '' ? '' : 'calendar.php?k=' . $c['key']]; }
+
 if ($method === 'GET') {
     if (!$admin) hub_json(200, ['private' => true, 'auth' => false]);
+    if (($_GET['action'] ?? '') === 'cal') hub_json(200, cal_view(tasks_cal_state()));
     hub_json(200, view(tasks_read()));
 }
 if ($method !== 'POST') hub_json(405, ['ok' => false, 'error' => 'Use GET or POST.']);
@@ -47,6 +52,11 @@ if (($b['action'] ?? '') === 'quick_add') {
     if ($t === null) hub_json(400, ['ok' => false, 'error' => 'Type what to add, for example: Call the bank tomorrow 11am']);
     if ($t === false) hub_json(500, ['ok' => false, 'error' => 'The saved tasks could not be read, so nothing was changed. Open Tasks.']);
     hub_json(200, ['ok' => true, 'task' => $t]);
+}
+if (($b['action'] ?? '') === 'cal_set') {
+    $c = tasks_cal_set(array_key_exists('on', $b) ? !empty($b['on']) : null, !empty($b['renew']));
+    if ($c === null) hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
+    hub_json(200, cal_view($c));
 }
 if (($b['action'] ?? '') === 'done') {
     $id = (string)($b['id'] ?? ''); $due = (string)($b['due'] ?? '');

@@ -312,6 +312,9 @@ function hub_manifest(array $s, string $root, string $public): array {
     return [
         'id' => $u(''), 'name' => $name, 'short_name' => $short, 'description' => $name . ': start page, bookmarks, notes and tasks on your own server.',
         'start_url' => $u('web/home/'), 'scope' => $u(''), 'display' => 'standalone',
+        // (1.61) the phone's Share button: pictures, files, text and links go to web/hub/share-sw.js, which opens the Files page (see there)
+        'share_target' => ['action' => $u('web/hub/share-target'), 'method' => 'POST', 'enctype' => 'multipart/form-data',
+            'params' => ['title' => 'title', 'text' => 'text', 'url' => 'url', 'files' => [['name' => 'files', 'accept' => ['image/*', 'video/*', 'audio/*', 'text/*', 'application/*']]]]],
         'background_color' => '#1a1a1a', 'theme_color' => '#1a1a1a', 'icons' => $icons, 'shortcuts' => $short_cuts,
     ];
 }

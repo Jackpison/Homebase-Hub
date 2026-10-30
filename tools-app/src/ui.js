@@ -1,6 +1,7 @@
 // Small building blocks every tool uses: elements, buttons, fields, drop zones, downloads, notices.
 // Text from a user or a file is only ever set with textContent or as a value, never as markup.
 import { icon } from './icons.js';
+import { takeShared } from './lib/shared.js';
 
 let uid = 0;
 export const nextId = (p = 'f') => p + '-' + (++uid);
@@ -78,6 +79,7 @@ export function dropzone({ accept = '', multiple = false, label = 'Choose a file
   zone.addEventListener('drop', (e) => { e.preventDefault(); zone.classList.remove('over'); if (e.dataTransfer.files.length) take(e.dataTransfer.files); });
   const paste = (e) => { if (!document.body.contains(zone)) return document.removeEventListener('paste', paste); const fs = [...(e.clipboardData?.files || [])]; if (fs.length) take(fs); };
   document.addEventListener('paste', paste);
+  setTimeout(() => { const f = takeShared(ok, multiple); if (f.length) onFiles(f); }, 0);   // a file sent from the phone's Share button goes straight in
   return h('div', { class: 'dropwrap' }, inp, zone);
 }
 

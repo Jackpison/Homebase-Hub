@@ -150,3 +150,5 @@ ins.dw{text-decoration:none;background:color-mix(in srgb,var(--good) 26%,transpa
 /* Saved presets (1.60) */
 .pbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin:0 0 14px;border-radius:12px;background:var(--bg);border:1px dashed var(--line-2)}.pbar select.inp{width:auto;min-width:180px;flex:1;padding:7px 10px}.pbar .inp{flex:1;min-width:160px;padding:7px 10px}.pbar .hint{flex:1;margin:0}
 .pgroup h3{margin:14px 0 6px;font-size:14px;color:var(--muted)}.pgroup:first-child h3{margin-top:0}.olist li .inp{flex:1;padding:6px 10px}
+
+.shnote{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:150;display:flex;align-items:center;gap:12px;max-width:min(640px,calc(100vw - 24px));padding:10px 14px;border-radius:12px;background:var(--panel,var(--bg));color:var(--text);border:1px solid var(--line,currentColor);box-shadow:0 12px 30px rgba(0,0,0,.35);font:600 14px system-ui,sans-serif}

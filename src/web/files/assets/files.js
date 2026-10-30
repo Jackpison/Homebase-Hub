@@ -578,12 +578,42 @@ function privateScreen(j) {
   document.querySelector("#ix-private button").onclick = () => window.HUB ? HUB.login("Log in to see your files.").then(() => location.reload(), () => {}) : location.reload();
   if (window.HUB && HUB.ready) HUB.ready();
 }
+/* ---------- shared from the phone's Share button (1.61) ----------
+   web/hub/share-sw.js keeps what was shared in this browser (Cache "hub-share") and opens this page with ?shared=<id>.
+   Here you choose: Save to Files (locked like any upload), Open in Tools, or Discard. */
+const shareKey = (id, p) => new URL("../hub/share-inbox/" + id + "/" + p, location.href).href;
+async function shareTake(id) {
+  const c = await caches.open("hub-share"), m = await c.match(shareKey(id, "meta"));
+  if (!m) return null;
+  const meta = await m.json(), files = [];
+  for (let i = 0; i < meta.files.length; i++) { const r = await c.match(shareKey(id, "f" + i)); if (r) files.push(new File([await r.blob()], meta.files[i].n, { type: meta.files[i].type })); }
+  return { meta, files };
+}
+async function shareDrop(id) { try { const c = await caches.open("hub-share"); for (const k of await c.keys()) if (k.url.includes("/share-inbox/" + id + "/")) await c.delete(k); } catch (e) { /* nothing kept */ } }
+async function sharedBox(id) {
+  if (!/^[a-f0-9]{20}$/.test(id)) { toast(id === "toobig" ? "That share is too big (300 MB at most)." : "Nothing came through from Share.", true); return; }
+  const got = await shareTake(id).catch(() => null);
+  if (!got) { toast("That share is no longer here.", true); return; }
+  const { meta, files } = got, text = [meta.title, meta.text, meta.url].filter(Boolean).join("\n");
+  const list = h("ul", { class: "shl" }, files.map(f => h("li", {}, f.name, h("small", { text: " " + fmt(f.size) }))), text ? h("li", {}, "Text or link", h("small", { text: " " + text.slice(0, 120) })) : null);
+  const choice = await openDialog("Shared With Homebase Hub", [h("p", { text: "Something was sent here from Share. Nothing has been saved yet." }), list],
+    [{ text: "Discard", run: () => {} }, { text: "Open in Tools", run: () => {} }, { text: "Save to Files", pri: true, run: () => {} }]);
+  if (choice === "Open in Tools") { location.href = "../tools/?shared=" + id; return; }   // Tools takes the files from the browser's storage and removes them
+  if (choice === "Save to Files") {
+    const entries = files.map(f => ({ file: f, parts: [] }));
+    if (text) entries.push({ file: new File([text + "\n"], "Shared text.txt", { type: "text/plain" }), parts: [] });
+    uploadAll(entries); await queue;
+  }
+  await shareDrop(id);
+}
 async function load() {
   let j = null;
   try { const r = await HF("api.php?action=list", { cache: "no-store" }); j = await r.json(); } catch (e) { j = null; }
   if (!j) { $("sync").textContent = "Could not reach the server."; return; }
   if (j.private && !j.auth) return privateScreen(j);
   apply(j); await names(); started = true; render();
+  const sh = new URLSearchParams(location.search).get("shared");
+  if (sh) { history.replaceState(null, "", location.pathname + location.hash); sharedBox(sh); }
 }
 function wire() {
   $("up").onclick = $("uph").onclick = () => $("pick").click();

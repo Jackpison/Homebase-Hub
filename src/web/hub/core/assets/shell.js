@@ -1261,9 +1261,15 @@
       drawBar(); applyFavicon(); ebarKey = ''; drawEditBar(); editBarPick();
     }).catch(function () {});
   }
+  /* (1.61) Share from your phone: one small service worker (web/hub/share-sw.js) takes what the phone's Share button sends to this
+     site (when it is added to the home screen). It is set up for you only, once you are logged in, and only on a secure address. */
+  function shareWorker() {
+    if (!S.admin || !('serviceWorker' in navigator) || !window.isSecureContext) return;
+    navigator.serviceWorker.register(ROOT + 'web/hub/share-sw.js', { scope: ROOT + 'web/hub/' }).catch(function () {});
+  }
   function start() {
     drawBar(); watchFavicon(); watchEditBarPick();
-    var go = function () { refresh().then(function () { afterLoad(); openFromHash(); backupReminder(); }); };
+    var go = function () { refresh().then(function () { afterLoad(); openFromHash(); backupReminder(); shareWorker(); }); };
     if (document.prerendering) document.addEventListener('prerenderingchange', go, { once: true }); else go();   // a page prepared in the background waits until you open it
     window.addEventListener('hashchange', openFromHash);
     // the Edit icon lights up while the page is in edit mode

@@ -1194,8 +1194,21 @@ $("psets").onclick=()=>{
   $("s-soon").value=String([0,1,3,7,14,30].includes(SET.soon)?SET.soon:7);
   ["start","range","sort","cal","week","dates"].forEach(k=>$("s-"+k).value=SET[k]||SET_DEF[k]);
   $("s-stats").checked=SET.stats!==false;
+  calDraw({on:false,link:""});calLoad();
   $("sdlg").showModal();
 };
+/* the calendar link: kept on the server on its own, so it takes effect at once (not with Save Settings) */
+let CAL={on:false,link:""};
+function calDraw(c){CAL=c;$("s-calon").checked=!!c.on;$("s-calbox").hidden=!c.on||!c.link;$("s-calurl").value=c.link?new URL(c.link,location.href).href:""}
+async function calLoad(){try{const r=await HF("api.php?action=cal",{cache:"no-store"}),j=await r.json();if(j&&j.ok)calDraw(j)}catch{}}
+async function calSet(body){
+  try{const r=await HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"cal_set",...body})}),j=await r.json();
+    if(!j.ok){snack(j.error||"The calendar link could not be changed.");calDraw(CAL);return}
+    calDraw(j)}catch{snack("The calendar link could not be changed.");calDraw(CAL)}
+}
+$("s-calon").onchange=()=>calSet({on:$("s-calon").checked});
+$("s-calnew").onclick=()=>{if(confirm("Make a new link? The old link stops working, so calendars using it need the new one."))calSet({renew:true})};
+$("s-calcopy").onclick=async()=>{try{await navigator.clipboard.writeText($("s-calurl").value);snack("Link copied.")}catch{$("s-calurl").select();snack("Press Ctrl+C to copy the link.")}};
 $("sform").onsubmit=e=>{e.preventDefault();SET={...SET,currency:$("s-cur").value,soon:+$("s-soon").value,start:$("s-start").value,range:$("s-range").value,sort:$("s-sort").value,cal:$("s-cal").value,
   week:$("s-week").value,dates:$("s-dates").value,stats:$("s-stats").checked};applyLook();render();for(const k in NF)delete NF[k];$("sdlg").close();touch();snack("Settings Saved.")};
 

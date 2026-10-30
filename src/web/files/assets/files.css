@@ -178,3 +178,4 @@ dialog input:focus,dialog select:focus{outline:0;border-color:var(--acc)}
 .pm button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:9px 11px;border-radius:8px;cursor:pointer;text-align:left;font-weight:600;font-size:14px}
 .pm button:hover,.pm button:focus-visible{background:color-mix(in srgb,var(--acc) 13%,transparent);outline:0}
 .pm svg{width:16px;height:16px;fill:none;stroke:var(--mute);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.shl{margin:0 0 8px;padding-left:18px}.shl small{color:var(--mute);word-break:break-all}
