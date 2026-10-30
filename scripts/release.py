@@ -51,7 +51,7 @@ def page_files():
     out = [os.path.join(SRC, 'index.php')]
     web = os.path.join(SRC, 'web')
     for d in sorted(os.listdir(web)):
-        for f in ('index.html', 'index.php'):
+        for f in ('index.html', 'index.php', 'share.html'):
             p = os.path.join(web, d, f)
             if os.path.isfile(p): out.append(p)
     return [p for p in out if os.path.isfile(p)]

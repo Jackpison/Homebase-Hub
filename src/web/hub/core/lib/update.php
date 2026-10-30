@@ -150,7 +150,7 @@ function up_name_problem(string $n, bool $dir): string {
 /** Can the site replace its own files? Returns the folders it cannot write in (empty = it can). */
 function up_unwritable(): array {
     $bad = []; $root = up_root();
-    foreach (['', 'web/hub', 'web/hub/core', 'web/hub/core/lib', 'web/hub/core/assets', 'web', 'web/tools', 'web/links', 'web/info', 'web/cards', 'web/tasks', 'web/home'] as $d) {
+    foreach (['', 'web/hub', 'web/hub/core', 'web/hub/core/lib', 'web/hub/core/assets', 'web', 'web/tools', 'web/links', 'web/info', 'web/cards', 'web/tasks', 'web/files', 'web/home'] as $d) {
         $dir = $root . ($d === '' ? '' : '/' . $d); if (!is_dir($dir)) continue;
         $t = $dir . '/.upd-test-' . bin2hex(random_bytes(4));
         if (@file_put_contents($t, 'x') === false) { $bad[] = $d === '' ? '(site folder)' : $d; continue; }

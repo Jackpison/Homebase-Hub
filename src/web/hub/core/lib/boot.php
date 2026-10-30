@@ -45,8 +45,8 @@ const HUB_LOCK_WINDOW  = 900;    // ...within 15 minutes
 const HUB_LOCK_FIRST   = 900;    // first pause 15 minutes, doubling each time
 const HUB_LOCK_MAX     = 86400;  // never longer than a day
 const HUB_GUARD        = "<?php http_response_code(404); exit; ?>\n";
-const HUB_APPS         = ['home', 'links', 'info', 'cards', 'tasks', 'tools'];   // the tabs of the bar, in their default order
-const HUB_PAGE_NAMES   = ['home' => 'Home', 'links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'tools' => 'Tools'];
+const HUB_APPS         = ['home', 'links', 'info', 'cards', 'tasks', 'files', 'tools'];   // the tabs of the bar, in their default order
+const HUB_PAGE_NAMES   = ['home' => 'Home', 'links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'files' => 'Files', 'tools' => 'Tools'];
 
 define('HUB_CORE', dirname(__DIR__));          // .../public_html/web/hub/core  (the shared engine)
 define('HUB_WEB', dirname(HUB_CORE, 2));     // .../public_html/web  (the pages, and hub/)

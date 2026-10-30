@@ -2073,7 +2073,7 @@
 
 
   /* --- Backup --- */
-  var NAMES = { links: 'Links', info: 'Info', cards: 'Cards', tasks: 'Tasks', home: 'Home', settings: 'Settings', telegram: 'Telegram', watch: 'Domain Watch', tools: 'Tools Presets' };
+  var NAMES = { links: 'Links', info: 'Info', cards: 'Cards', tasks: 'Tasks', files: 'Files', home: 'Home', settings: 'Settings', telegram: 'Telegram', watch: 'Domain Watch', tools: 'Tools Presets' };
   function size(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
   function openBackup() { go('backup'); }
   /* "3 days ago", "2 hours ago", "just now" */

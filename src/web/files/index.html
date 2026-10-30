@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src 'self' blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<link id="fav" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3C/svg%3E">
+<link id="touch" rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png">
+<title>Files</title>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.60.0">
+<script src="../hub/core/assets/shell.js?v=1.60.0" data-app="files"></script>
+<link rel="stylesheet" href="assets/files.css?v=1.60.0">
+<!-- install on a phone or computer: Settings > General > Install on Your Phone -->
+<link rel="manifest" href="../hub/core/api.php?action=manifest">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+<main class="wrap" id="app">
+  <div class="top">
+    <h1 id="ptitle">Files</h1>
+    <label class="search"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"/></svg>
+      <input type="search" id="q" placeholder="Search Files" autocomplete="off" aria-label="Search Files"></label>
+    <div class="seg" id="vsw" role="group" aria-label="Show as">
+      <button type="button" data-v="list" aria-pressed="true" title="List"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span class="lbl">List</span></button>
+      <button type="button" data-v="grid" aria-pressed="false" title="Grid"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg><span class="lbl">Grid</span></button>
+    </div>
+    <select class="sel" id="sort" aria-label="Sort">
+      <option value="name">Sort: Name</option><option value="date">Sort: Newest First</option><option value="size">Sort: Biggest First</option>
+    </select>
+    <button type="button" class="btn" id="mk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 11v5M9.5 13.5h5"/></svg><span class="lbl">New Folder</span></button>
+    <button type="button" class="btn pri" id="up"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg><span class="lbl">Upload</span></button>
+    <!-- the pencil menu (Files Settings) and the edit bar (Upload, New Folder) take these over -->
+    <span hidden>
+      <button type="button" id="uph" data-hub="item" data-hub-label="Upload" data-hub-icon="up" data-hub-order="1"></button>
+      <button type="button" id="mkh" data-hub="item" data-hub-label="New Folder" data-hub-icon="plus" data-hub-order="2"></button>
+      <button type="button" id="psets" data-hub="item" data-hub-main data-hub-label="Files Settings" data-hub-icon="gear" data-hub-order="40"></button>
+    </span>
+  </div>
+
+  <div class="tabrow">
+    <div class="seg" id="tabs" role="group" aria-label="Files or Trash">
+      <button type="button" data-t="files" aria-pressed="true">Files</button>
+      <button type="button" data-t="trash" aria-pressed="false">Trash<em id="tn"></em></button>
+    </div>
+    <nav class="crumbs" id="crumbs" aria-label="Folder"></nav>
+    <button type="button" class="btn danger" id="empty" hidden>Empty Trash</button>
+  </div>
+
+  <div class="note" id="lock" hidden></div>
+  <div class="bulk" id="bulk" hidden role="toolbar" aria-label="What to do with the picked items"></div>
+  <div class="drop" id="drop">
+    <div class="list" id="list" aria-live="polite"></div>
+    <p class="none" id="none" hidden></p>
+    <div class="dropmsg" aria-hidden="true">Drop files or folders here to upload</div>
+  </div>
+  <div class="usage" id="usage" aria-live="polite"></div>
+  <span class="sync" id="sync">Loading…</span>
+</main>
+<input type="file" id="pick" multiple hidden>
+
+<aside class="ups" id="ups" aria-label="Uploads" hidden></aside>
+
+<dialog id="dlg"><form method="dialog" id="dform"></form></dialog>
+<dialog id="pdlg" class="wide" aria-label="Preview"><div id="pbox"></div></dialog>
+
+<script src="assets/files.js?v=1.60.0"></script>
+</body>
+</html>

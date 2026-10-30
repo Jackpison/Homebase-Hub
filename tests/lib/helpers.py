@@ -223,6 +223,35 @@ def browser_login(pg, base, pw=PW, timeout=15000):
     return said or 'not logged in'
 
 
+def browser_set_passphrase(pg, base, passphrase, pw=PW, timeout=40000):
+    """Sets the encryption passphrase through Settings > Security > Encryption, the way a person does. Returns '' when it is set."""
+    pg.goto(base + '/web/settings/#security/encryption')
+    wait_js(pg, "!!document.querySelector('#ix-en1')", 20000)
+    pg.fill('#ix-en1', passphrase); pg.fill('#ix-en2', passphrase); pg.fill('#ix-epw', pw); pg.check('#ix-eack'); pg.click('#ix-eset')
+    end = time.time() + timeout / 1000
+    while time.time() < end:
+        try:
+            if pg.evaluate("fetch('/web/hub/core/api.php?action=sv_get', {credentials: 'same-origin'}).then(r => r.json()).then(j => !!(j.pp && j.vault))"): return ''
+        except Exception: pass
+        pg.wait_for_timeout(300)
+    return 'the passphrase was not set'
+
+
+def browser_unlock(pg, passphrase, keep=False, timeout=15000):
+    """Types the passphrase into the unlock dialog HubSite opened (a page asked for the site key). Returns '' when it opened."""
+    pg.wait_for_selector('#ix-skp', timeout=timeout)
+    pg.fill('#ix-skp', passphrase)
+    if keep: pg.check('#ix-skk')
+    pg.click('#ix-skg')
+    end = time.time() + timeout / 1000
+    while time.time() < end:
+        if not pg.evaluate("!!document.querySelector('#ix-skp') && document.querySelector('#ix-dlg').classList.contains('open')"): return ''
+        said = pg.evaluate("(document.querySelector('#ix-ske') || {}).textContent || ''")
+        if said: return said
+        pg.wait_for_timeout(150)
+    return 'the dialog did not close'
+
+
 # Counts the page's own requests in flight (fetch and XMLHttpRequest). Add it with context.add_init_script(TRACK_REQUESTS)
 # before the pages load; settle() then knows when the data has arrived.
 TRACK_REQUESTS = """(() => { if (window.__inflightOn) return; window.__inflightOn = true; let n = 0;

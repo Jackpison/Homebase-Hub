@@ -122,7 +122,7 @@ function health_leftovers(): array {
     $gone = array_merge([hub_dir('core') . '/SETUP-CODE.txt'], glob(hub_dir('links') . '/readlater*') ?: []);
     foreach ($gone as $f) if (is_file($f) && !@unlink($f)) $issues[] = str_replace(HUB_PUBLIC . '/', '', $f) . ' is left from an older version and can be deleted by hand.';
     $pages = ['Start Page' => HUB_WEB . '/home/index.php', 'Links' => HUB_WEB . '/links/index.html', 'Info' => HUB_WEB . '/info/index.html',
-              'Cards' => HUB_WEB . '/cards/index.html', 'Tasks' => HUB_WEB . '/tasks/index.html', 'Tools' => HUB_WEB . '/tools/index.html', 'Settings' => HUB_WEB . '/settings/index.html'];
+              'Cards' => HUB_WEB . '/cards/index.html', 'Tasks' => HUB_WEB . '/tasks/index.html', 'Files' => HUB_WEB . '/files/index.html', 'Tools' => HUB_WEB . '/tools/index.html', 'Settings' => HUB_WEB . '/settings/index.html'];
     foreach ($pages as $name => $f) {
         $t = (string)@file_get_contents($f);
         if (preg_match('/shell\.js\?v=([0-9.]+)/', $t, $m) && $m[1] !== HUB) $issues[] = $name . ' still loads version ' . $m[1] . ' (the site is ' . HUB . '): upload the whole update again.';
@@ -163,7 +163,7 @@ function health_report(): array {
     require_once __DIR__ . '/watch.php';
     $sd = hub_data_root();
     $sec = [
-        ['Links', $sd . '/links'], ['Info', $sd . '/info'], ['Cards', $sd . '/cards'], ['Tasks', $sd . '/tasks'], ['Start page data', $sd . '/home'],
+        ['Links', $sd . '/links'], ['Info', $sd . '/info'], ['Cards', $sd . '/cards'], ['Tasks', $sd . '/tasks'], ['Files', $sd . '/files'], ['Start page data', $sd . '/home'],
         ['Site settings and logins', $sd . '/core'], ['Sessions', $sd . '/sessions'],
         ['Start page photos', HUB_MEDIA . '/home/photos'], ['Start page uploads', HUB_MEDIA . '/home/uploads'], ['Link icons', HUB_MEDIA . '/links/icons'],
         ['Site code', HUB_WEB],

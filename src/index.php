@@ -9,7 +9,7 @@
  */
 /*
  * Your start page. The site is three folders side by side:
- *   web/        the pages (home, links, info, cards, tasks, tools, settings), hub/core/ (the shared engine: login,
+ *   web/        the pages (home, links, info, cards, tasks, files, tools, settings), hub/core/ (the shared engine: login,
  *               settings, backup, Telegram, the bar) and docs/ (README.txt, CHANGELOG.md, readable source)
  *   site-data/  your private data (made by the site; updates never touch it)
  */

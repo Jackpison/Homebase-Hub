@@ -36,6 +36,7 @@
     ['info', 'Info', ROOT + 'web/info/', 'M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM9 8h6M9 12h6M9 16h4'],
     ['cards', 'Cards', ROOT + 'web/cards/', 'M3 6h18v13H3zM3 10h18M7 15h4'],
     ['tasks', 'Tasks', ROOT + 'web/tasks/', 'M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M8.5 15.5l2.2 2.2 4.8-4.8'],
+    ['files', 'Files', ROOT + 'web/files/', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],
     ['tools', 'Tools', ROOT + 'web/tools/', 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z']
   ];
   var ICON = {
@@ -139,16 +140,16 @@
     light: { bg: '#f6f5f1', box: '#ffffff', panel: '#ffffff', line: '#e2dfd6', text: '#141414', mute: '#5f5b54', bar: '#f6f5f1', barText: '#5f5b54' }
   };
   var COLOR_VARS = {
-    bg:    { all: ['--ix-bg'], links: ['--bg'], info: ['--bg'], cards: ['--bg'], tasks: ['--bg'], tools: ['--bg', '--sidebar'] },
-    box:   { all: ['--ix-s1'], links: ['--raise'], info: ['--box'], cards: ['--panel'], tasks: ['--box'], tools: ['--card'], home: ['--s-bg2'] },
-    panel: { all: ['--ix-s2'], links: ['--panel'], info: ['--panel'], tasks: ['--panel'], tools: ['--card-2'], home: ['--s-bg'] },
-    line:  { all: ['--ix-line', '--ix-line2'], links: ['--line', '--line2'], info: ['--line', '--border'], cards: ['--line', '--border2'], tasks: ['--line'], tools: ['--line', '--line-2'], home: ['--s-line'] },
-    text:  { all: ['--ix-tx'], links: ['--text'], info: ['--fg'], cards: ['--fg'], tasks: ['--fg'], tools: ['--text'], home: ['--s-ink'] },
-    mute:  { all: ['--ix-mu', '--ix-mu2'], links: ['--muted'], info: ['--mute'], cards: ['--mute'], tasks: ['--mute'], tools: ['--muted'], home: ['--s-mute'] },
+    bg:    { all: ['--ix-bg'], links: ['--bg'], info: ['--bg'], cards: ['--bg'], tasks: ['--bg'], files: ['--bg'], tools: ['--bg', '--sidebar'] },
+    box:   { all: ['--ix-s1'], links: ['--raise'], info: ['--box'], cards: ['--panel'], tasks: ['--box'], files: ['--box'], tools: ['--card'], home: ['--s-bg2'] },
+    panel: { all: ['--ix-s2'], links: ['--panel'], info: ['--panel'], tasks: ['--panel'], files: ['--panel'], tools: ['--card-2'], home: ['--s-bg'] },
+    line:  { all: ['--ix-line', '--ix-line2'], links: ['--line', '--line2'], info: ['--line', '--border'], cards: ['--line', '--border2'], tasks: ['--line'], files: ['--line'], tools: ['--line', '--line-2'], home: ['--s-line'] },
+    text:  { all: ['--ix-tx'], links: ['--text'], info: ['--fg'], cards: ['--fg'], tasks: ['--fg'], files: ['--fg'], tools: ['--text'], home: ['--s-ink'] },
+    mute:  { all: ['--ix-mu', '--ix-mu2'], links: ['--muted'], info: ['--mute'], cards: ['--mute'], tasks: ['--mute'], files: ['--mute'], tools: ['--muted'], home: ['--s-mute'] },
     bar:   { all: ['--ix-barbg'] },        // the menu bar (top bar, sidebar or dock) on every page
     barText: { all: ['--ix-bartx'] }
   };
-  var PG_APPS = [['links', 'Links'], ['info', 'Info'], ['cards', 'Cards'], ['tasks', 'Tasks'], ['tools', 'Tools']];
+  var PG_APPS = [['links', 'Links'], ['info', 'Info'], ['cards', 'Cards'], ['tasks', 'Tasks'], ['files', 'Files'], ['tools', 'Tools']];
   function colorsCss(c, look) {
     if (!c || look === false) return '';
     var css = '';
@@ -1214,7 +1215,7 @@
        Settings are left out: their own screens use sideways moves). 1.59.1: a swipe no longer changes Links' or Info's tabs;
      - Home: pull down from the top for the next background.
      Never while editing, in a window or menu, in a text field, on something that scrolls sideways, or with two fingers. */
-  var SWIPE_APPS = ['home', 'links', 'info', 'cards', 'tasks'];
+  var SWIPE_APPS = ['home', 'links', 'info', 'cards', 'tasks', 'files'];
   function swipePages() { return pages().filter(function (p) { return SWIPE_APPS.indexOf(p[0]) >= 0 && (!p[4] || p[0] === APP); }); }
   function swipePage(dir) {
     var list = swipePages(), at = list.findIndex(function (p) { return p[0] === APP; }), to = list[at + dir];

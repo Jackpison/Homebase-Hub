@@ -57,16 +57,19 @@ function sv_swap(array $new, string $prev): string {
 
 function sv_clear(): void { @unlink(hub_jpath(sv_file())); @unlink(sv_file()); }
 
+/* What is locked with the site key right now, read straight from each page's own data file (the core API has not loaded the pages' code). */
+function sv_use_files(): bool { $j = hub_read_guarded(hub_jpath(hub_dir('files') . '/files.json')); return is_array($j) && !empty($j['items']); }
+function sv_use_cards(): bool { $j = hub_jread(hub_dir('cards') . '/cards.json'); return is_array($j) && is_string($j['enc'] ?? null); }
+function sv_use_presets(): bool { $j = hub_jread(hub_dir('tools') . '/presets.json'); return is_array($j) && !empty($j['locked']); }
+
 /**
- * What is locked with the site key right now (so the passphrase is never removed from under it). Each page that locks data says so
- * with a function named sv_use_<page>() in its own library; pages that are not installed are skipped.
+ * What is locked with the site key right now (so the passphrase is never removed from under it).
  * @return string[] plain names such as "Files" or "Cards"
  */
 function sv_in_use(): array {
     $out = [];
-    foreach (['files' => 'Files', 'cards' => 'Cards', 'presets' => 'Tools presets'] as $k => $name) {
-        $f = 'sv_use_' . $k;
-        if (function_exists($f) && $f()) $out[] = $name;
-    }
+    if (sv_use_files()) $out[] = 'Files';
+    if (sv_use_cards()) $out[] = 'Cards';
+    if (sv_use_presets()) $out[] = 'Tools presets';
     return $out;
 }

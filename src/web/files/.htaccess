@@ -1,0 +1,16 @@
+DirectoryIndex index.html
+Options -Indexes
+<IfModule mod_headers.c>
+  <FilesMatch "^index\.html$">
+    # only this site's own scripts and styles may run; pictures, sound, video and PDFs opened here come from the user's own locked files (blob:)
+    # Pre-load a page when you hover over its link in the bar (the rules are in hub/core/assets/speculation-rules.json).
+    Header set Speculation-Rules "\"../hub/core/assets/speculation-rules.json\""
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "^share\.html$">
+    # the page a share link opens: nobody is logged in here, so it may load nothing from anywhere else and may not be framed
+    Header set Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src blob:; frame-src blob:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

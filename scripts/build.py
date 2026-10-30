@@ -46,7 +46,7 @@ def main():
                 os.remove(os.path.join(dp, fn)); held.append(fn)
     if held: print('held back for the next release (installed sites do not accept them yet): ' + ', '.join(sorted(held)))
     # readable copy + minify (own files only)
-    pages = ['hub/core', 'home', 'links', 'info', 'cards', 'tasks', 'settings']
+    pages = ['hub/core', 'home', 'links', 'info', 'cards', 'tasks', 'files', 'settings']
     for page in pages:
         adir = os.path.join(TREE, 'web', page, 'assets')
         if not os.path.isdir(adir):
