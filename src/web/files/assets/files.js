@@ -440,7 +440,7 @@ function progress(label) {
   };
   return api;
 }
-let busy = 0, queue = Promise.resolve();
+let queue = Promise.resolve();
 function uploadAll(entries) {   // [{file, parts: [folder names]}]
   if (!entries.length) return;
   queue = queue.then(() => doUploads(entries)).catch(e => toast(e.message || "Upload stopped.", true));

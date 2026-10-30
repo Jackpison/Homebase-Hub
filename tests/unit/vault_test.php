@@ -50,6 +50,11 @@ $wrapBefore = sv_get()['wrap'];
 bk_sitevault_for(['cards' => $locked, 'sitevault' => $vault()], ['cards' => true]);
 t('a site that has a key keeps it (the file\'s key is not installed over it)', sv_get()['wrap'] === $wrapBefore);
 
-// what is in use: each page says so
-if (!function_exists('sv_use_cards')) { function sv_use_cards(): bool { return true; } }   // declared now, not hoisted to the top of the file
-t('sv_in_use lists the pages that report locked data', sv_in_use() === ['Cards']);
+// what is in use: read from each page's own data file
+t('nothing is locked yet', sv_in_use() === []);
+hub_jput(hub_dir('cards') . '/cards.json', json_encode(['enc' => 'enc1:AAAA', 'kid' => $kid]));
+t('locked Cards are reported', sv_in_use() === ['Cards']);
+hub_jput(hub_dir('cards') . '/cards.json', json_encode(['cards' => [], 'people' => []]));
+t('plain Cards are not', sv_in_use() === []);
+hub_jput(hub_dir('tools') . '/presets.json', json_encode(['kinds' => [], 'locked' => true]));
+t('locked Tools presets are reported', sv_in_use() === ['Tools presets']);
