@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.61.6 | Tidier Settings windows, Save Settings always in view, a Passkeys card, picture previews in the Files grid, phone fixes for Files and Settings |
 | 1.61.5 | A new Files page like Drive (menu, details panel, Starred, Recent), one new look for every Settings window, a shield key icon, a Saved note, Undo for Trash, Add to Calendar, Send Today's Tasks, switches and buttons in Tools |
 | 1.61.1 | Shorter help texts in every Settings window; Import and Export Bookmarks in one window; a clearer first unlock in Files; no server free-space figure |
 | 1.61.0 | Your private things are locked in your browser (one passphrase, one recovery key); a new Files page; passkeys; a calendar link for Tasks; Share from your phone; keyboard shortcuts; one Settings look everywhere |
@@ -91,6 +92,39 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.61.6
+
+### Settings windows, tidied
+
+- **Encrypt All Private Tabs** now sits inside the Privacy card (Links and Info), not loose below it.
+- No more empty strip at the bottom of a card, no line after the last row, and a help line always stays with its setting.
+- **Import and Export Bookmarks** uses the same window as the rest: an Import card with **Choose File**, an Export card, and much shorter text.
+- **Home Settings:** the Edit Bar and Tint buttons sit at the right of their name, like everywhere else.
+- **Files Settings** and **Tasks Settings** use the same rows and cards: the choice is at the right, with a short line under each name.
+
+### The Settings page
+
+- **Save Settings is always in view** on General, Tabs, Appearance and Colors (greyed out until you change something), so a change to your tabs is never left unsaved by mistake.
+- The **Show** boxes in Tabs are switches.
+- **Health:** the six cards are two rows of three, and free space is shown in GB.
+- **Security:** a **Passkeys** card joins the others; the password card is simply "Password".
+- Every section is the same width. On Colors, **Reset** sits next to Dark Mode / Light Mode.
+- No backup reminder pops up over the Settings page itself (its menu already shows when Backup is due).
+- Shorter help text on General, Appearance, Updates and Backup.
+
+### Files
+
+- **Grid view, new look:** larger tiles with **small previews of your pictures** (made in your browser, like the files themselves), the name and size below.
+- The details panel shows the picture too.
+- A picked file in the grid keeps its shape.
+
+### On phones
+
+- Files: the details sheet takes at most half the screen and scrolls inside, and the Transfers box moves above it. The page no longer gets wider than the screen.
+- Settings: the tabs of a section (Overview, Password, Encryption, Passkeys...) wrap onto more lines instead of running off the right edge.
 
 ---
 
