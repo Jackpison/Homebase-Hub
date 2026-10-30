@@ -78,7 +78,7 @@ jobs:
       - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
         if: matrix.php == '8.3'
         run: npx eslint src tools-app
-      - name: TypeScript check (the files that start with // @ts-check: keys, locked data, share links)
+      - name: TypeScript check (the files that start with ts-check - keys, locked data, share links)
         if: matrix.php == '8.3'
         run: npx tsc -p tsconfig.json && python3 tests/repo/tscheck_test.py
       - name: Check zip name and changelog
@@ -285,7 +285,7 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/browser/settings_ui_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "settings ui $BROWSER"
-      - name: Passkeys and Share from the phone (Chromium: its virtual authenticator and service workers)
+      - name: Passkeys and Share from the phone (Chromium only, its virtual authenticator and service workers)
         if: matrix.browser == 'chromium' && (success() || failure()) && steps.build.outcome == 'success'
         run: |
           set -o pipefail
