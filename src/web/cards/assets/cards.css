@@ -199,3 +199,5 @@ dialog p{color:var(--mute);margin:0 0 6px}
 .lockedbox{text-align:center;padding:60px 16px}
 .lockedbox h2{margin:0 0 8px}
 .lockedbox p{color:var(--mute);max-width:460px;margin:0 auto 16px}
+
+.empty b{display:block;color:var(--fg);font-size:17px;margin-bottom:4px}.empty span{display:block;margin-bottom:12px}

@@ -814,8 +814,10 @@ function render() {
   board.append(...cols);
 
   if (q && !shown) grid.append(h('div', { class: 'nores' }, `Nothing matches "${S.q}". Press Esc to clear the search.`));
-  if (!q && !cur.categories.length) grid.append(h('div', { class: 'nores' },
-    S.editing ? 'This tab has no categories yet. Add one to any column below.' : 'This tab is empty. Click Edit to add categories and links.'));
+  if (!q && !cur.categories.length) grid.append(h('div', { class: 'nores first' },
+    h('b', {}, S.editing ? 'This tab has no categories yet' : 'This tab is empty'),
+    h('span', {}, S.editing ? 'Add one to any column below.' : 'Add a category, then your first links.'),
+    S.auth && !S.editing ? h('button', { class: 'btn primary', type: 'button', onclick: () => { const t = document.querySelector('[data-hub=toggle]'); if (t) t.click(); } }, 'Add Your First Links') : null));
   grid.append(board);
 }
 let lastCols = visibleCols();

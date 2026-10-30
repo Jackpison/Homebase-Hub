@@ -262,3 +262,5 @@ body.is-locked .search{display:none}
 
 /* the visit count sits at the end of the row (1.53.8); the edit buttons then follow it */
 .row .vc~.ctrl{margin-left:0}
+
+.nores.first{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 16px;border:1px dashed var(--line2,var(--line));border-radius:16px}.nores.first b{font-size:1.15em;color:var(--text)}
