@@ -990,7 +990,7 @@ function hub_settings_save(array $s): array {
 /** What every page needs to draw the shared bar. Safe to send to visitors. */
 function hub_public_state(): array {
     $s = hub_settings(); $admin = hub_admin();
-    $o = ['v' => HUB, 'admin' => $admin, 'setup' => hub_auth() === null,
+    $o = ['v' => HUB, 'admin' => $admin, 'setup' => hub_auth() === null, 'passkeys' => is_file(hub_jpath(hub_dir('core') . '/passkeys.json')),   // the login box offers a passkey when one is set up
           'tz' => $s['tz'] ?? 'Asia/Kolkata', 'siteName' => $s['siteName'], 'logo' => $s['logo'], 'nav' => $s['nav'], 'theme' => $s['theme'], 'accent' => $s['accent'], 'accentPg' => (object)$s['accentPg'],
           'look' => $s['look'], 'homeBar' => $s['homeBar'], 'editBar' => (object)$s['editBar'], 'font' => $s['font'], 'fontCustom' => $s['fontCustom'], 'colors' => ['dark' => (object)$s['colors']['dark'], 'light' => (object)$s['colors']['light'], 'pg' => (object)array_map(function ($a) { return (object)$a; }, $s['colors']['pg'])],
           'sizes' => (object)array_map(function ($a) { return (object)$a; }, $s['sizes']), 'pages' => $s['pages']];

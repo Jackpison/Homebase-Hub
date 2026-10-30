@@ -133,7 +133,7 @@
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], ['Same Look on Every Page', 'look', 'unified'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
-    ['Two-Step Login', 'security/two-step-login', '2fa authenticator totp recovery codes'], ['Login Approval', 'security/login-approval', 'telegram approve tap'],
+    ['Passkeys', 'security/passkeys', 'passkey fingerprint face pin webauthn security key log in without password'], ['Two-Step Login', 'security/two-step-login', '2fa authenticator totp recovery codes'], ['Login Approval', 'security/login-approval', 'telegram approve tap'],
     ['Trusted Browsers', 'security/trusted-browsers', 'skip code remember'], ['Devices and Login History', 'security/devices', 'log out sessions activity wrong password ip'],
     ['Telegram Bot Setup', 'telegram/setup', 'token botfather chat cron schedule connect'], ['Telegram Backups', 'telegram/backups', 'send backup'],
     ['Telegram Messages', 'telegram/messages', 'digest reminders alerts daily hour due'], ['Instant Replies', 'telegram/instant-replies', 'webhook commands bot'],
@@ -1507,13 +1507,13 @@
   }
 
   function pSecurity(p) {
-    var SECS = [['pw', 'Password'], ['enc', 'Encryption'], ['2fa', 'Two-Step Login'],
+    var SECS = [['pw', 'Password'], ['enc', 'Encryption'], ['pk', 'Passkeys'], ['2fa', 'Two-Step Login'],
                 ['ap', 'Login Approval'], ['tr', 'Trusted Browsers'], ['dev', 'Devices']];
     p.innerHTML = '<div class="ix-hero" id="ix-sov">' + spinRow('Checking your protections…') + '</div><div class="ix-tiles" id="ix-stiles"></div><div id="ix-schk"></div>' +
       SECS.map(function (x) { return '<details class="ix-acc" data-sec="' + x[0] + '"><summary><span>' + x[1] + '</span><small data-sum="' + x[0] + '">…</small></summary><div class="ix-accb" data-body="' + x[0] + '"></div></details>'; }).join('');
     var body = function (k) { return p.querySelector('[data-body="' + k + '"]'); }, sum = function (k, t) { p.querySelector('[data-sum="' + k + '"]').textContent = t; };
     var acc = function (k) { return p.querySelector('[data-sec="' + k + '"]'); };
-    var st = { vault: null, sv: null, svUse: [], tabs: 0, bk: {}, ap: { trusted: [] } };
+    var st = { vault: null, sv: null, svUse: [], pk: [], pkSecure: false, tabs: 0, bk: {}, ap: { trusted: [] } };
 
     // the site checks: what is good, and a warning for what is not
     p.querySelector('#ix-schk').innerHTML = '<div class="ix-sect">Site Checks</div><div class="ix-checks">' +
@@ -1546,6 +1546,7 @@
       p.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { var d = acc(b.dataset.go); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
       sum('pw', 'Change the one password');
       sum('enc', (encOn() ? 'Passphrase Set' : 'Not Set') + ' · Info tabs: ' + (v ? st.tabs + ' encrypted' : 'none') + ' · Links tabs: ' + (st.lenc ? st.lenc + ' encrypted' : 'none') + ' · Backups: ' + (bk.set ? 'encrypted' : 'not encrypted'));
+      sum('pk', st.pk.length ? st.pk.length + (st.pk.length === 1 ? ' passkey' : ' passkeys') : 'None');
       sum('2fa', S.twoStep ? 'On · ' + S.recoveryLeft + ' recovery codes left' : 'Off');
       sum('ap', a.on ? 'On' : 'Off');
       sum('tr', trN ? trN + ' ' + (trN === 1 ? 'browser' : 'browsers') : 'None');
@@ -1556,9 +1557,10 @@
         fetch(ROOT + 'web/info/api.php', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
         api('bkkey').catch(function () { return {}; }), api('approval').catch(function () { return {}; }),
         fetch(ROOT + 'web/links/api.php?action=get', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-        api('sv_get').catch(function () { return {}; })
+        api('sv_get').catch(function () { return {}; }), api('pk_list').catch(function () { return {}; })
       ]).then(function (r) {
         var info = r[0];
+        st.pk = r[5] && r[5].ok ? r[5].keys : []; st.pkSecure = !!(r[5] && r[5].secure);
         st.sv = r[4] && r[4].ok && r[4].vault && r[4].vault.wrap ? r[4].vault : null; st.svUse = (r[4] && r[4].use) || [];
         st.vault = info && info.page && info.page.vault || null;
         st.info = info; st.tabs = info && info.tabs ? info.tabs.filter(function (t) { return t.enc; }).length : 0;
@@ -1567,7 +1569,7 @@
         st.lvault = r[3] && r[3].data && r[3].data.settings && r[3].data.settings.vault && r[3].data.settings.vault.wrap ? r[3].data.settings.vault : null;
         st.rec = !!((st.vault && st.vault.rec) || (st.lvault && st.lvault.rec) || (st.sv && st.sv.rec));
         st.recGap = st.rec && ((st.vault && !st.vault.rec) || (st.lvault && !st.lvault.rec) || (st.sv && !st.sv.rec));   // a key made before the site key existed does not cover it
-        overview(); drawEnc(); drawAp(); drawTrusted();
+        overview(); drawEnc(); drawPk(); drawAp(); drawTrusted();
       });
     }
     secRefresh = function () { overview(); };
@@ -1603,6 +1605,54 @@
         });
       }).catch(function () { er.textContent = "Can't reach the server. Nothing was changed."; }).finally(function () { btn.disabled = false; });
     };
+
+    /* Passkeys (1.61): log in with a fingerprint, face, PIN or security key. Adding or removing one needs the website password. */
+    function drawPk() {
+      var b = body('pk'), keys = st.pk || [], can = !!(window.PublicKeyCredential && st.pkSecure && window.isSecureContext);
+      var when1 = function (t) { return t ? K.when(t) : 'never'; };
+      var list = keys.length ? '<div class="ix-devs">' + keys.map(function (k) {
+        return '<div class="ix-dev"><span class="ix-dev-i" aria-hidden="true">' + svg(ICON.key) + '</span><div class="ix-dev-b"><b>' + esc(k.name) + '</b><small>Added ' + esc(when1(k.at)) + ' · Last used ' + esc(when1(k.last)) + '</small></div>' +
+          '<button type="button" class="ix-btn" data-pkren="' + esc(k.id) + '">Rename</button><button type="button" class="ix-btn danger" data-pkdel="' + esc(k.id) + '">Remove</button></div>'; }).join('') + '</div>'
+        : '<p class="ix-note">No passkey yet. Add one below, on this device or with a security key.</p>';
+      b.innerHTML = tabHead(ICON.device, 'Passkeys', 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in.') +
+        ecCard(keys.length ? 'good' : '', ICON.shield, keys.length ? 'Passkeys On' : 'No Passkeys Yet', 'Your device must check that it is you (fingerprint, face or PIN) every time. Nothing a passkey leaves on your server can log anyone in.', list) +
+        (can ? ecCard('', ICON.key, 'Add a Passkey', 'Your browser or phone asks which device or key to use. Adding or removing a passkey needs your website password.',
+          '<div class="ix-fgrid">' + ecField('ix-pkn', 'Name', 'text', 'off', 'Like "My Phone" or "Laptop".') + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div>' +
+          '<p class="ix-err" id="ix-pke"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-pkadd">Add a Passkey</button></div>')
+          : ecCard('warn', ICON.lock, 'Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.'));
+      var err = function (t) { var e = b.querySelector('#ix-pke'); if (e) e.textContent = t; }, val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
+      var add = b.querySelector('#ix-pkadd');
+      if (add) add.onclick = function () {
+        var pw = val('#ix-pkw'); if (!pw) { err('Type your website password first.'); return; }
+        var nm = val('#ix-pkn').trim() || 'Passkey'; add.disabled = true; err('Waiting for your device…');
+        api('pk_register_begin', { password: pw }).then(function (j) {
+          if (!j.ok) throw new Error(j._status === 401 ? 'That isn\'t your website password.' : j.error || 'Could not start.');
+          var o = j.publicKey, H = window.HUB;
+          return navigator.credentials.create({ publicKey: { challenge: H.b64uBuf(o.challenge), rp: o.rp, user: { id: H.b64uBuf(o.user.id), name: o.user.name, displayName: o.user.displayName }, pubKeyCredParams: o.pubKeyCredParams, timeout: o.timeout,
+            attestation: o.attestation, authenticatorSelection: o.authenticatorSelection, excludeCredentials: (o.excludeCredentials || []).map(function (c) { return { type: 'public-key', id: H.b64uBuf(c.id) }; }) } });
+        }).then(function (c) {
+          if (!c) throw new Error('No passkey was made.');
+          var H = window.HUB;
+          return api('pk_register_finish', { name: nm, response: { clientDataJSON: H.bufB64u(c.response.clientDataJSON), attestationObject: H.bufB64u(c.response.attestationObject) } });
+        }).then(function (j) {
+          if (!j.ok) throw new Error(j.error || 'The passkey was not saved.');
+          st.pk = j.keys; toast('Passkey added.'); drawPk(); overview();
+        }).catch(function (x) { err(x && x.name === 'NotAllowedError' ? 'No passkey was made: it was cancelled or timed out.' : x && x.name === 'InvalidStateError' ? 'This device already has a passkey here.' : (x && x.message) || 'Could not add a passkey.'); add.disabled = false; });
+      };
+      b.querySelectorAll('[data-pkdel]').forEach(function (x) { x.onclick = function () {
+        var pw = val('#ix-pkw'); if (!pw) { err('Type your website password first (in the box below), then press Remove.'); return; }
+        if (x.dataset.armed !== '1') { x.dataset.armed = '1'; x.textContent = 'Click Again: Remove'; return; }
+        x.disabled = true; api('pk_delete', { id: x.dataset.pkdel, password: pw }).then(function (j) {
+          if (!j.ok) { err(j._status === 401 ? 'That isn\'t your website password.' : j.error || 'Could not remove it.'); x.disabled = false; x.dataset.armed = ''; x.textContent = 'Remove'; return; }
+          st.pk = j.keys; toast('Passkey removed.'); drawPk(); overview();
+        });
+      }; });
+      b.querySelectorAll('[data-pkren]').forEach(function (x) { x.onclick = function () {
+        var k = keys.filter(function (y) { return y.id === x.dataset.pkren; })[0]; if (!k) return;
+        var nn = window.prompt('A new name for this passkey', k.name); if (nn == null || !nn.trim()) return;
+        api('pk_rename', { id: k.id, name: nn.trim() }).then(function (j) { if (j.ok) { st.pk = j.keys; drawPk(); } else toast(j.error || 'Could not rename it.', true); });
+      }; });
+    }
 
     /* Two-step login */
     twoStep(body('2fa'));
@@ -1779,7 +1829,7 @@
         dl.querySelectorAll('[data-rev]').forEach(function (x) { x.onclick = function () {
           x.disabled = true; api('session_revoke', { id: x.dataset.rev }).then(function (k) { toast(k.ok ? 'That device is logged out.' : (k.error || 'Could not log it out.')); drawDevices(); }); }; });
         var rows = j.events.map(function (e) {
-          var m = EV[e.ev] || [e.ev, '', '•'], label = e.ev === 'failed' ? (e.x === 'code' ? 'Wrong Two-Step Code' : 'Wrong Password') : m[0];
+          var m = EV[e.ev] || [e.ev, '', '•'], label = e.ev === 'failed' ? (e.x === 'code' ? 'Wrong Two-Step Code' : e.x === 'passkey' ? 'Passkey Not Accepted' : 'Wrong Password') : e.ev === 'passkey' ? (e.x === 'removed' ? 'Passkey Removed' : 'Passkey Added') : m[0];
           return checkRow(m[1], m[2], esc(label), esc(e.who || '') + ' · ' + esc(e.ip || '') + (e.cc ? ' (' + esc(e.cc) + ')' : '') + ' · ' + esc(ago(e.t)));
         });
         al.innerHTML = rows.length ? '<div class="ix-checks">' + rows.slice(0, 15).join('') + '</div>' + (rows.length > 15 ? '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn" id="ix-actmore">Show ' + (rows.length - 15) + ' More</button></div>' : '')

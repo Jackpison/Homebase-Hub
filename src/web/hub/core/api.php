@@ -202,6 +202,92 @@ case 'login':
     hub_start_session(hub_auth());
     hub_json(200, ['ok' => true]);
 
+/* ---- passkeys (1.61): log in with a fingerprint, face, PIN or security key. A passkey is two factors in one, so it skips the code and the Telegram tap ---- */
+case 'pk_login_begin':
+    need_post(); require_once __DIR__ . '/lib/passkey.php';
+    if (!hub_auth()) hub_json(409, ['ok' => false, 'error' => 'No password is set yet.']);
+    $pkk = pk_keys();
+    if (!$pkk) hub_json(404, ['ok' => false, 'error' => 'No passkey is set up on this site.']);
+    if (($w = hub_rate_wait()) > 0) hub_json(429, ['ok' => false, 'error' => 'Too many wrong tries. Try again in ' . max(1, (int)ceil($w / 60)) . ' minutes.']);
+    $chal = pk_chal_new('get');
+    if ($chal === null) hub_json(429, ['ok' => false, 'error' => 'Too many requests. Wait a few minutes.']);
+    hub_json(200, ['ok' => true, 'publicKey' => ['challenge' => $chal, 'rpId' => pk_rp(), 'timeout' => 60000, 'userVerification' => 'required',
+        'allowCredentials' => array_map(fn($k) => ['type' => 'public-key', 'id' => $k['id']], $pkk)]]);
+
+case 'pk_login_finish':
+    need_post(); require_once __DIR__ . '/lib/passkey.php';
+    if (!hub_auth()) hub_json(409, ['ok' => false, 'error' => 'No password is set yet.']);
+    if (($w = hub_rate_wait()) > 0) hub_json(429, ['ok' => false, 'error' => 'Too many wrong tries. Try again in ' . max(1, (int)ceil($w / 60)) . ' minutes.']);
+    $b = body();
+    $cdj = pk_unb64u($b['response']['clientDataJSON'] ?? null); $cdd = $cdj !== null ? json_decode($cdj, true) : null;
+    $chal = is_array($cdd) && is_string($cdd['challenge'] ?? null) ? $cdd['challenge'] : '';
+    $why = '';
+    try {
+        if (!pk_chal_use($chal, 'get')) throw new Exception('That request has ended. Try again.');
+        $hit = pk_lock_run(function () use ($b, $chal) {
+            $keys = pk_keys(); $key = pk_login($b, $chal, $keys);
+            foreach ($keys as $i => $k) if ($k['id'] === $key['id']) $keys[$i] = $key;
+            if (!pk_save($keys)) throw new Exception('Could not save (check the folder permissions).');
+            return $key;
+        });
+    } catch (Exception $e) { $why = $e->getMessage(); }
+    if ($why !== '') {
+        usleep(random_int(200000, 500000)); $left = hub_rate_fail(); hub_act('failed', 'passkey');
+        if ($left <= 0) hub_alert('locked');
+        hub_json(401, ['ok' => false, 'error' => $why]);
+    }
+    hub_rate_clear(); hub_alert('login'); hub_start_session(hub_auth());
+    hub_json(200, ['ok' => true]);
+
+case 'pk_list':
+    need_admin(false); require_once __DIR__ . '/lib/passkey.php';
+    hub_json(200, ['ok' => true, 'keys' => pk_view(), 'rp' => pk_rp(), 'secure' => hub_https() || in_array(pk_rp(), ['localhost', '127.0.0.1'], true)]);
+
+case 'pk_register_begin':   // needs the website password: a stolen login could otherwise add its own passkey
+    need_post(); need_admin(); require_once __DIR__ . '/lib/passkey.php';
+    $b = body(); need_password((string)($b['password'] ?? ''));
+    $pkk = pk_keys();
+    if (count($pkk) >= PK_MAX_KEYS) hub_json(400, ['ok' => false, 'error' => 'That is the most passkeys (' . PK_MAX_KEYS . '). Remove one first.']);
+    $chal = pk_chal_new('create');
+    if ($chal === null) hub_json(429, ['ok' => false, 'error' => 'Too many requests. Wait a few minutes.']);
+    hub_json(200, ['ok' => true, 'publicKey' => ['challenge' => $chal, 'rp' => ['name' => hub_settings()['siteName'], 'id' => pk_rp()], 'user' => ['id' => pk_uid(), 'name' => 'owner', 'displayName' => hub_settings()['siteName']],
+        'pubKeyCredParams' => [['type' => 'public-key', 'alg' => -7], ['type' => 'public-key', 'alg' => -257]], 'timeout' => 60000, 'attestation' => 'none',
+        'authenticatorSelection' => ['residentKey' => 'preferred', 'userVerification' => 'required'],
+        'excludeCredentials' => array_map(fn($k) => ['type' => 'public-key', 'id' => $k['id']], $pkk)]]);
+
+case 'pk_register_finish':
+    need_post(); need_admin(); require_once __DIR__ . '/lib/passkey.php';
+    $b = body();
+    $cdj = pk_unb64u($b['response']['clientDataJSON'] ?? null); $cdd = $cdj !== null ? json_decode($cdj, true) : null;
+    $chal = is_array($cdd) && is_string($cdd['challenge'] ?? null) ? $cdd['challenge'] : '';
+    if (!pk_chal_use($chal, 'create')) hub_json(400, ['ok' => false, 'error' => 'That request has ended. Try again.']);
+    try {
+        $new = pk_register(is_array($b['response'] ?? null) ? $b['response'] : [], $chal, (string)($b['name'] ?? ''));
+        pk_lock_run(function () use ($new) {
+            $keys = pk_keys();
+            foreach ($keys as $k) if ($k['id'] === $new['id']) throw new Exception('This device already has a passkey here.');
+            if (count($keys) >= PK_MAX_KEYS) throw new Exception('That is the most passkeys (' . PK_MAX_KEYS . '). Remove one first.');
+            $keys[] = $new;
+            if (!pk_save($keys)) throw new Exception('Could not save (check the folder permissions).');
+        });
+    } catch (Exception $e) { hub_json(400, ['ok' => false, 'error' => $e->getMessage()]); }
+    hub_act('passkey', 'added');
+    hub_json(200, ['ok' => true, 'keys' => pk_view()]);
+
+case 'pk_rename':
+    need_post(); need_admin(); require_once __DIR__ . '/lib/passkey.php';
+    $b = body(); $nm = mb_substr(trim((string)preg_replace('/[\x00-\x1F\x7F]/u', '', (string)($b['name'] ?? ''))), 0, 40);
+    if ($nm === '') hub_json(400, ['ok' => false, 'error' => 'Give the passkey a name.']);
+    $hit = pk_lock_run(function () use ($b, $nm) { $keys = pk_keys(); $f = false; foreach ($keys as $i => $k) if ($k['id'] === (string)($b['id'] ?? '')) { $keys[$i]['name'] = $nm; $f = true; } return $f && pk_save($keys); });
+    hub_json($hit ? 200 : 404, ['ok' => $hit, 'error' => $hit ? '' : 'That passkey is not there any more.', 'keys' => pk_view()]);
+
+case 'pk_delete':
+    need_post(); need_admin(); require_once __DIR__ . '/lib/passkey.php';
+    $b = body(); need_password((string)($b['password'] ?? ''));
+    $hit = pk_lock_run(function () use ($b) { $keys = pk_keys(); $n = count($keys); $keys = array_values(array_filter($keys, fn($k) => $k['id'] !== (string)($b['id'] ?? ''))); return count($keys) < $n && pk_save($keys); });
+    if ($hit) hub_act('passkey', 'removed');
+    hub_json($hit ? 200 : 404, ['ok' => $hit, 'error' => $hit ? '' : 'That passkey is not there any more.', 'keys' => pk_view()]);
+
 /* ---- a login waiting for approval in Telegram (only the browser that started it can finish it) ---- */
 case 'login_wait':
 case 'login_code':
@@ -381,6 +467,7 @@ case 'diag':   // Settings > Server check
     $pool = hub_jread(hub_dir('home') . '/photos.json'); $perr = [];
     foreach (is_array($pool['errors'] ?? null) ? $pool['errors'] : [] as $psrc => $pe) if (is_array($pe) && !empty($pe['msg']) && (int)($pe['time'] ?? 0) > time() - 7 * 86400) $perr[] = $psrc . ': ' . $pe['msg'] . ' (' . date('j M', (int)$pe['time']) . ')';
     $add('Start page photo sources', !$perr, $perr ? 'Problems in the last 7 days: ' . implode('; ', array_slice($perr, 0, 4)) . '.' : (is_array($pool) ? 'No download problems in the last 7 days.' : 'Nothing downloaded yet.'));
+    $add('Passkeys', function_exists('openssl_verify') && function_exists('openssl_pkey_get_public'), function_exists('openssl_verify') ? 'PHP\'s OpenSSL can check passkeys. They also need your site to be opened over https (or localhost).' : 'Passkeys need the OpenSSL extension in PHP, which is not on this server. Ask your host to turn it on.');
     $add('Upload limits', true, 'upload_max_filesize ' . ini_get('upload_max_filesize') . ', post_max_size ' . ini_get('post_max_size') . ' (a big backup import needs these to be larger than the file).');
     hub_json(200, ['ok' => true, 'checks' => $c]);
 

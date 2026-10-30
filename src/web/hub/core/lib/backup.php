@@ -379,10 +379,10 @@ function bk_reset_all(): array {
     require_once __DIR__ . '/notify.php';
     $n = nt_load();
     if ($n['hook'] && $n['token'] !== '') { try { nt_hook_set($n, false); } catch (Throwable $e) {} }   // tell Telegram to stop calling this site
-    foreach (['notify.json', 'watch.json', 'passphrase.json', 'backup-key.json', 'site-vault.json'] as $f) { @unlink(hub_jpath("$core/$f")); @unlink("$core/$f"); }
+    foreach (['notify.json', 'watch.json', 'passphrase.json', 'backup-key.json', 'site-vault.json', 'passkeys.json', 'passkey-challenges.json'] as $f) { @unlink(hub_jpath("$core/$f")); @unlink("$core/$f"); }
     @unlink("$core/login-approval.php");   // Telegram is gone, so approving logins there is turned off too (or nobody could log in)
     @unlink("$core/settings.php"); unset($GLOBALS['__hub_settings']);
-    array_push($done, 'Site settings', 'Telegram', 'Domain watch', 'Encryption passphrase', 'Telegram login approval');
+    array_push($done, 'Site settings', 'Telegram', 'Domain watch', 'Encryption passphrase', 'Passkeys', 'Telegram login approval');
     return $done;
 }
 

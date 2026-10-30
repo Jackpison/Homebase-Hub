@@ -949,6 +949,7 @@
         '<div id="ix-2s" hidden><label for="ix-code">Code from Your Authenticator App</label><input type="text" id="ix-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456 or a recovery code">' +
           '<label class="ix-chk"><input type="checkbox" id="ix-ltrust"> Trust this browser for 30 days (no code here next time)</label></div>' +
         '<p class="ix-err" id="ix-le" role="alert"></p><button class="ix-btn pri ix-wide" id="ix-lg">Log In</button>' +
+        (S.passkeys && window.PublicKeyCredential && window.isSecureContext ? '<button type="button" class="ix-btn ix-wide" id="ix-pk">' + svg(ICON.key) + ' Log In with a Passkey</button>' : '') +
         '<button type="button" class="ix-btn ix-quiet" data-ix="close">Cancel</button></form>');
       dlg.querySelector('.ix-box').classList.add('ix-login');
       $('#ix-eye').onclick = function () {
@@ -956,6 +957,14 @@
         $('#ix-pw').type = on ? 'text' : 'password'; this.innerHTML = svg(on ? ICON.eyeoff : ICON.eye);
         this.setAttribute('aria-pressed', String(on)); this.setAttribute('aria-label', on ? 'Hide Password' : 'Show Password'); this.title = this.getAttribute('aria-label');
         $('#ix-pw').focus();
+      };
+      if ($('#ix-pk')) $('#ix-pk').onclick = function () {
+        var pb = this; pb.disabled = true; $('#ix-le').textContent = '';
+        passkeyLogin().then(function (j) {
+          pb.disabled = false;
+          if (j && j.ok) return loggedIn();
+          $('#ix-le').textContent = (j && j.error) || 'The passkey was not accepted.';
+        }).catch(function (x) { pb.disabled = false; $('#ix-le').textContent = x && x.name === 'NotAllowedError' ? 'The passkey was not used: it was cancelled or timed out.' : (x && x.message) || 'The passkey could not be used.'; });
       };
       $('#ix-lf').onsubmit = function (e) {
         e.preventDefault();
@@ -970,6 +979,20 @@
           $('#ix-le').textContent = j.error || 'Could not log in.';
         }).catch(function () { b.disabled = false; $('#ix-le').textContent = "Can't reach the server."; });
       };
+    });
+  }
+  /* Passkeys (1.61): the browser asks for a fingerprint, face, PIN or security key; the server checks the signature (lib/passkey.php). */
+  function bufB64u(buf) { var u = new Uint8Array(buf), t = ''; for (var i = 0; i < u.length; i++) t += String.fromCharCode(u[i]); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function b64uBuf(x) { x = x.replace(/-/g, '+').replace(/_/g, '/'); while (x.length % 4) x += '='; var t = atob(x), u = new Uint8Array(t.length); for (var i = 0; i < t.length; i++) u[i] = t.charCodeAt(i); return u.buffer; }
+  function passkeyLogin() {
+    return api('pk_login_begin', {}).then(function (j) {
+      if (!j.ok) throw new Error(j.error || 'No passkey is set up on this site.');
+      var o = j.publicKey;
+      return navigator.credentials.get({ publicKey: { challenge: b64uBuf(o.challenge), rpId: o.rpId, timeout: o.timeout, userVerification: o.userVerification,
+        allowCredentials: o.allowCredentials.map(function (c) { return { type: 'public-key', id: b64uBuf(c.id) }; }) } });
+    }).then(function (c) {
+      if (!c) throw new Error('No passkey was chosen.');
+      return api('pk_login_finish', { id: c.id, response: { clientDataJSON: bufB64u(c.response.clientDataJSON), authenticatorData: bufB64u(c.response.authenticatorData), signature: bufB64u(c.response.signature) } });
     });
   }
   /* "www.example.com" -> "Example", "shop.example.co.uk" -> "Example", an IP address -> "Homebase Hub" */
@@ -1263,6 +1286,7 @@
   window.HUB = {
     app: APP, state: function () { return S; }, login: login, logout: logout, settings: settings, toast: toast, theme: themeNow, setTheme: setTheme,
     isAdmin: function () { return !!S.admin; }, ready: function () { return refresh(); }, fetch: hubFetch,
+    bufB64u: bufB64u, b64uBuf: b64uBuf,   // (1.61) for the passkey screens of Settings
     api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
     tz: function () { return S.tz || 'Asia/Kolkata'; }   // the site's time zone (Settings > General)
