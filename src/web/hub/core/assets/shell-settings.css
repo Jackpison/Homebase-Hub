@@ -74,7 +74,8 @@
 #ix-page .ix-part{border:1px solid var(--ix-line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
 #ix-page .ix-part>label{display:flex;align-items:center;gap:10px;margin:0;color:var(--ix-tx);font-size:14.5px;cursor:pointer}
 #ix-page .ix-part>label small{color:var(--ix-mu2);margin-left:auto;font-size:12.5px;text-align:right}
-#ix-page input[type=checkbox]:not(.ix-sw),#ix-page input[type=radio]{accent-color:var(--ix-accent);width:17px;height:17px;margin:0}
+/* (1.62.2) a plain box is 17 px; the switches (.ix-sw, and the older .ix-tg label with its checkbox) keep their own size: the :not() made this rule as strong as the .ix-tg one and later, so the .ix-tg switches shrank to a ring and a ball */
+#ix-page :not(.ix-tg)>input[type=checkbox]:not(.ix-sw),#ix-page input[type=radio]{accent-color:var(--ix-accent);width:17px;height:17px;margin:0}
 #ix-page .ix-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px 27px}
 #ix-page .ix-tabs label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:4px 10px;border:1px solid var(--ix-line2);border-radius:999px;color:var(--ix-tx);font-size:13px;cursor:pointer}
 #ix-page .ix-tabs label:has(input:checked){border-color:var(--ix-accent);background:var(--ix-soft)}

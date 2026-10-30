@@ -228,6 +228,16 @@ try:
         ttext1 = show()
         check('L35 Info: a deleted tab offers Undo, and Undo brings it back in its place with all its boxes and their text (still there after a reload)', got and tabs() == t0 and ttext1 == ttext0 and len(ttext0) > 20, (got, t0, tabs(), ttext0[:80], ttext1[:80]))
 
+        # 1.62.2: every switch on the Settings page keeps its size (44 x 26); the older .ix-tg switches had shrunk to a ring and a ball since 1.61.6
+        sw, bad = 0, []
+        for sec in ('general', 'nav', 'look', 'themes', 'colors', 'security', 'telegram', 'backup', 'health', 'domains', 'updates'):
+            pg.goto(s.base + '/web/settings/#' + sec); wait_js(pg, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); pg.wait_for_timeout(500)
+            r = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => [e.id || e.dataset.k || e.dataset.t || e.dataset.grp || '?', Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
+            sw += len(r); bad += [(sec, x) for x in r if x[1] != 44 or x[2] != 26]
+        pg.goto(s.base + '/web/settings/#themes'); wait_js(pg, "!!document.getElementById('ix-pacc')", 20000)
+        pacc = pg.evaluate("(() => { const r = document.getElementById('ix-pacc').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })()")
+        check('L38 every switch in Settings is 44 x 26, also the older ones (Use the Preset\'s Accent Color, Show the Bar on the Home Page, the Telegram and Backup switches)', sw >= 6 and not bad and pacc == [44, 26], (sw, bad[:6], pacc))
+
         # ---- phones: nothing wider than the screen ----
         ph = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=BROWSER != 'firefox', has_touch=True, storage_state=ctx.storage_state())
         q = ph.new_page(); q.on('pageerror', lambda e: errs.append('phone: ' + str(e)[:200]))
