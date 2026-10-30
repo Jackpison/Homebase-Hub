@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.61.5 | A new Files page like Drive (menu, details panel, Starred, Recent), one new look for every Settings window, a shield key icon, a Saved note, Undo for Trash, Add to Calendar, Send Today's Tasks, switches and buttons in Tools |
 | 1.61.1 | Shorter help texts in every Settings window; Import and Export Bookmarks in one window; a clearer first unlock in Files; no server free-space figure |
 | 1.61.0 | Your private things are locked in your browser (one passphrase, one recovery key); a new Files page; passkeys; a calendar link for Tasks; Share from your phone; keyboard shortcuts; one Settings look everywhere |
 | 1.60.0 | 17 new tools (Calculators, Documents, scanner, recorder and more); saved presets in Tools; the maintained PDF writer; no going back before 1.50 |
@@ -90,6 +91,40 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.61.5
+
+### New: Files looks like Drive
+
+- A **menu on the left** (New, My Files, Recent, Shared Links, Starred, Trash, and how much you use), the list in the middle, and a **details panel on the right** with a preview tile, Download, Share, Star and the share link.
+- **One click on a file only picks it.** It no longer downloads. Double-click opens a preview; a file with no preview says so. Download is its own button.
+- **Starred** and **Recent** are new. A star is locked with the file's name, like everything else.
+- **Undo** after Move to Trash. The empty page offers **Upload Your First File**.
+- The usage line no longer shows your server's free space, only what Files uses and your limit.
+
+### New look for Settings
+
+- Every Settings window: section headings in the accent colour with a fading line, each section's rows in one rounded card, and a small coloured tile before each row.
+- The main Settings page: coloured tiles and new icons in the left panel (all the status chips stay), and the same headings.
+- A **shield with a keyhole** is the new key icon (login, encryption, passkeys).
+- The first unlock for Files and Cards says "Lock Files and Cards" when your passphrase is already set.
+
+### Everywhere
+
+- A small **Saving... / Saved / Not saved** note at the bottom left whenever a page saves.
+- **Undo** in the message after Move to Trash in Files.
+- Empty **Links** and **Cards** pages offer a first step ("Add Your First Links", "Add Your First Card").
+- **Tools:** a choice of two or three is now a row of buttons, and on/off options are switches. (Your saved-preset list stays a dropdown.)
+- **Tasks Calendar Link:** **Add to Google Calendar** and **Add to Apple or Outlook** buttons.
+- **Telegram:** **Send Today's Tasks Now** sends the daily list at once.
+- Shorter text in the README and in the new Settings and Files screens.
+
+### Please know
+
+- Tools already shows Recently Used first on its home page.
+- The website, the PDF guide and the screenshots still describe 1.60 and are refreshed next.
 
 ---
 

@@ -473,7 +473,7 @@ dialog.ix-sdlg>form{display:flex;flex-direction:column;min-height:0;flex:1;paddi
 .ix-sgc{display:inline-flex;flex:none;gap:2px;padding:3px;border-radius:12px;background:color-mix(in srgb,currentColor 7%,transparent);border:1px solid color-mix(in srgb,currentColor 12%,transparent)}
 .ix-sgc>button{font:inherit;font-size:13.5px;font-weight:600;color:color-mix(in srgb,currentColor 94%,transparent);background:transparent;border:0;border-radius:9px;padding:7px 12px;cursor:pointer;white-space:nowrap}
 .ix-sgc>button:hover{color:inherit}
-.ix-sgc>button[aria-checked="true"]{color:inherit;background:color-mix(in srgb,currentColor 13%,transparent);box-shadow:0 1px 3px rgba(0,0,0,.28),inset 0 1px 0 color-mix(in srgb,currentColor 14%,transparent)}
+.ix-sgc>button[aria-checked="true"]{color:var(--fg,var(--text,var(--ix-tx,#fff)));background:color-mix(in srgb,currentColor 13%,transparent);box-shadow:0 1px 3px rgba(0,0,0,.28),inset 0 1px 0 color-mix(in srgb,currentColor 14%,transparent)}
 .ix-sgc>button:focus-visible{outline:2px solid currentColor;outline-offset:1px}
 .ix-sgc-h{display:none!important}
 .ix-srow>.ix-sgc{max-width:100%}
@@ -505,7 +505,7 @@ kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7p
 #ix-chord{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483000;max-width:calc(100vw - 24px);padding:10px 16px;border-radius:12px;background:var(--ix-s2,#222);color:var(--ix-tx,#eee);border:1px solid var(--ix-line2,#444);box-shadow:0 12px 30px rgba(0,0,0,.4);font:500 14px system-ui,sans-serif}
 
 /* (1.61.5) Settings windows: style-B headings, rows in one rounded card, a coloured tile in front of each row */
-.ix-sdlg .ix-sb>h3,.ix-sdlg .ix-sb>h4,.ix-sdlg .sh3,dialog.sheet .sb h3{display:flex;align-items:center;gap:10px;color:var(--ix-accent,#ffc21a)!important;opacity:1!important}
+.ix-sdlg .ix-sb>h3,.ix-sdlg .ix-sb>h4,.ix-sdlg .sh3,dialog.sheet .sb h3{display:flex;align-items:center;gap:10px;color:color-mix(in srgb,var(--ix-accent,#ffc21a) 32%,currentColor)!important;opacity:1!important}
 .ix-sdlg .ix-sb>h3::after,.ix-sdlg .ix-sb>h4::after,.ix-sdlg .sh3::after,dialog.sheet .sb h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--ix-accent,#ffc21a) 55%,transparent),transparent)}
 .ix-grp{background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 12%,transparent);border-radius:14px;padding:2px 14px;margin:0 0 6px}
 .ix-grp>.ix-srow{margin:0;padding:12px 0;border-bottom:1px solid color-mix(in srgb,currentColor 10%,transparent)}
@@ -527,3 +527,4 @@ kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7p
 #ix-toast .ix-tact{margin-left:14px;border:0;background:none;color:var(--ix-accent,#ffc21a);font:700 inherit;cursor:pointer;text-decoration:underline}
 #ix-toast:has(.ix-tact){pointer-events:auto}
 @media (prefers-reduced-motion:reduce){#ix-savepill{transition:none}}
+dialog.sheet .sb h3{display:flex;align-items:center;gap:10px;color:color-mix(in srgb,var(--ix-accent,#ffc21a) 32%,currentColor)!important;opacity:1!important}

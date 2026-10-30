@@ -427,7 +427,7 @@ try:
             hp2.click('#ix-editb'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000); hp2.click('#ix-pop button:nth-child(2)')
             until(lambda: hp2.evaluate("document.getElementById('%s').open" % dlg), 8000); settle(hp2)
             return hp2.evaluate("""(() => { const d = document.getElementById('%s');
-              return [[...d.querySelectorAll('h3, h4')].map(h => h.textContent.trim()), [...d.querySelectorAll('.ix-srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName, r.lastElementChild.textContent.trim().slice(0, 12), r.getBoundingClientRect().width > 0 ? Math.round(r.lastElementChild.getBoundingClientRect().width) : 0]),
+              return [[...d.querySelectorAll('h3, h4')].map(h => h.textContent.trim()), [...d.querySelectorAll('.ix-srow')].map(r => [[...r.children].find(c => !c.classList.contains('ix-rt')).firstChild.textContent.trim(), r.lastElementChild.tagName, r.lastElementChild.textContent.trim().slice(0, 12), r.getBoundingClientRect().width > 0 ? Math.round(r.lastElementChild.getBoundingClientRect().width) : 0]),
               !!d.querySelector('.ix-sx,.dh [data-close]'), [...d.querySelectorAll('.ix-sf button, .df button')].map(b => b.textContent.trim()), (d.querySelector('.ix-sb,.db') || {}).scrollHeight > 0 && getComputedStyle(d.querySelector('.ix-sb,.db')).overflowY] })()""" % dlg)
         ls_, is_ = sdlg('links', 'setDlg'), sdlg('info', 'setdlg')
         ts_ = sdlg('tasks', 'sdlg'); tl = hp2.evaluate("[...document.querySelectorAll('#sdlg .sh3')].map(h => h.textContent.trim()); ")
@@ -457,7 +457,7 @@ try:
         icons = cp.evaluate("[...document.querySelectorAll('#ix-ebar .ix-eb')].map(b => [b.getAttribute('aria-label'), b.querySelector('path').getAttribute('d')])")
         idict = dict(icons)
         cp.click('#ix-ebar [data-tip="Cards Settings"]'); until(lambda: cp.evaluate("document.getElementById('tdlg').open"), 5000)
-        cs = cp.evaluate("[[...document.querySelectorAll('#tdlg h3')].map(h => h.textContent), [...document.querySelectorAll('#tdlg .ix-srow')].map(r => [r.firstElementChild.firstChild.textContent.trim(), r.lastElementChild.tagName])]")
+        cs = cp.evaluate("[[...document.querySelectorAll('#tdlg h3')].map(h => h.textContent), [...document.querySelectorAll('#tdlg .ix-srow')].map(r => [[...r.children].find(c => !c.classList.contains('ix-rt')).firstChild.textContent.trim(), r.lastElementChild.tagName])]")
         cp.evaluate("document.getElementById('tdlg').close()")
         banks_of = lambda: cp.evaluate("[...new Set([...document.querySelectorAll('#list .row.item')].map(r => r.textContent))].join('|')")
         cp.click('#ix-ebar [data-tip="Banks"]'); until(lambda: cp.evaluate("document.getElementById('bdlg').open"), 5000)
