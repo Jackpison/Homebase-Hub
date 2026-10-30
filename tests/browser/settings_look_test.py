@@ -199,6 +199,35 @@ try:
         pg.reload(); pg.wait_for_selector('#list .row.item', timeout=15000)
         check('L33 Cards: a deleted card offers Undo, and Undo brings it back for good', got and rows() == n0, (got, n0, rows()))
 
+        # 1.62.0: Info offers Undo after deleting a box or a tab, and Undo brings the text back for good
+        pg.goto(s.base + '/web/info/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.box').length > 0", 20000); pg.wait_for_timeout(800)
+        names = lambda: pg.evaluate("[...document.querySelectorAll('.box .nh h2')].map(h => h.textContent.trim())")
+        n0 = names(); victim = n0[1]
+        text0 = pg.evaluate("(n => [...document.querySelectorAll('.box')].find(b => b.querySelector('.nh h2').textContent.trim() === n).querySelector('.info').innerText)", victim)
+        pg.evaluate("(n => [...document.querySelectorAll('.box')].find(b => b.querySelector('.nh h2').textContent.trim() === n).querySelector('[data-r=cfg]').click())", victim)
+        pg.wait_for_selector('#bxdlg[open]'); pg.click('#bxdel')
+        if pg.evaluate("document.getElementById('bxdel').textContent.includes('Its Text')"): pg.click('#bxdel')
+        until(lambda: victim not in names(), 5000)
+        got = until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on .ix-tact')"), 5000)
+        pg.wait_for_timeout(800); pg.click('#ix-toast .ix-tact'); until(lambda: names() == n0, 5000); pg.wait_for_timeout(1500)
+        pg.reload(); wait_js(pg, "document.querySelectorAll('.box').length > 0", 20000); pg.wait_for_timeout(800)
+        text1 = pg.evaluate("(n => { const b = [...document.querySelectorAll('.box')].find(b => b.querySelector('.nh h2').textContent.trim() === n); return b ? b.querySelector('.info').innerText : null; })", victim)
+        check('L34 Info: a deleted box offers Undo, and Undo puts it back in its place with its text, saved (still there after a reload)', got and names() == n0 and text1 == text0 and len(text0) > 3, (got, n0, names(), text0, text1))
+
+        tabs = lambda: pg.evaluate("[...document.querySelectorAll('.tabi .tab')].filter(t => !t.classList.contains('add')).map(t => t.textContent.trim())")
+        t0 = tabs(); vt = t0[-1]
+        show = lambda: (pg.evaluate("(n => [...document.querySelectorAll('.tabi')].find(x => x.textContent.includes(n)).querySelector('.tab').click())", vt), pg.wait_for_timeout(600), pg.evaluate("document.querySelector('.boxes').innerText"))[-1]
+        ttext0 = show()
+        pg.evaluate("(n => [...document.querySelectorAll('.tabi')].find(x => x.textContent.includes(n)).querySelector('.pen').click())", vt)
+        pg.wait_for_selector('#etdlg[open]'); pg.click('#etdel')
+        if pg.evaluate("document.getElementById('etdel').textContent.includes('Its Text')"): pg.click('#etdel')
+        until(lambda: vt not in tabs(), 5000)
+        got = until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on .ix-tact')"), 5000)
+        pg.wait_for_timeout(800); pg.click('#ix-toast .ix-tact'); until(lambda: tabs() == t0, 5000); pg.wait_for_timeout(1500)
+        pg.reload(); wait_js(pg, "document.querySelectorAll('.tabi').length > 0", 20000); pg.wait_for_timeout(800)
+        ttext1 = show()
+        check('L35 Info: a deleted tab offers Undo, and Undo brings it back in its place with all its boxes and their text (still there after a reload)', got and tabs() == t0 and ttext1 == ttext0 and len(ttext0) > 20, (got, t0, tabs(), ttext0[:80], ttext1[:80]))
+
         # ---- phones: nothing wider than the screen ----
         ph = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=BROWSER != 'firefox', has_touch=True, storage_state=ctx.storage_state())
         q = ph.new_page(); q.on('pageerror', lambda e: errs.append('phone: ' + str(e)[:200]))
@@ -226,8 +255,8 @@ try:
             if r[0] > 0:   # name what sticks out, so a failure in Firefox or WebKit (CI only) says where to look
                 r.append(q.evaluate("[...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > 390.5; }).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '.' + String(e.className).trim().split(/\\s+/).slice(0, 2).join('.') + ' ' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).slice(0, 5)"))
                 wide.append((path, r))
-        check('L27 phone, Home, Links, Info, Cards, Tasks and Tools: nothing is wider than the screen', not wide, wide)
-        check('L28 no page error', not errs, errs)
+        check('L36 phone, Home, Links, Info, Cards, Tasks and Tools: nothing is wider than the screen', not wide, wide)
+        check('L37 no page error', not errs, errs)
         b.close()
 finally:
     stop_all()

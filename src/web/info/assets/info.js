@@ -810,7 +810,7 @@ async function saveTabsList(list,say,done){
   const before=new Set(TABS.map(t=>t.id));
   const showNew=()=>{const t=TABS.find(x=>!before.has(x.id));if(t)showTab(t.id)};
   if(!server){
-    mergeTabs({rev:REV+1,tabs:list.map(x=>{const t=plainTabs().find(y=>y.id===x.id);return t?{...t,name:x.name,color:x.color,hc:x.hc,private:x.private}:{id:rid(),name:x.name,color:x.color,hc:x.hc,private:x.private}})});
+    mergeTabs({rev:REV+1,tabs:list.map(x=>{const t=plainTabs().find(y=>y.id===x.id);return t?{...t,name:x.name,color:x.color,hc:x.hc,private:x.private}:{id:rid(),name:x.name,color:x.color,hc:x.hc,private:x.private,boxes:x.restore?x.restore.boxes:undefined}})});
     showNew();if(done)done();return;
   }
   try{
@@ -818,6 +818,7 @@ async function saveTabsList(list,say,done){
     if(r.status===403){dropAuth();status(savedMsg());renderTabs();guard(()=>saveTabsList(list,say,done));return}
     if(r.status===429){say("Too many wrong password tries. Wait a few minutes, then try again.");return}
     if(r.status===409){const j=await r.json();mergeTabs(j.data);say("The tabs were changed on another device. The latest tabs are shown now, so please make your change again.");return}
+    if(r.status===422){say("This tab can't be put back any more.");return}
     if(!r.ok)throw 0;
     const j=await r.json();
     // Text of removed tabs is gone, so their unsaved drafts go too.
@@ -833,13 +834,14 @@ async function saveBoxList(t,list,say,done){
   const before=new Set(t.boxes.map(b=>b.id));
   if(!server){
     const pt=plainTabs(),x=pt.find(y=>y.id===t.id);
-    x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h}:{id:rid(),title:"",notes:"",rev:0,saved:0,w:e.w,h:e.h}});
+    x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h}:{id:e.restore&&e.id?e.id:rid(),title:e.restore?e.restore.title:"",notes:e.restore?e.restore.notes:"",rev:0,saved:0,w:e.w,h:e.h}});
     mergeTabs({rev:REV+1,tabs:pt});if(done)done(before);return;
   }
   try{
     const r=await api({action:"save_boxes",tab:t.id,boxes:list,rev:REV});
     if(r.status===403){dropAuth();status(savedMsg());renderTabs();guard(()=>saveBoxList(t,list,say,done));return}
     if(r.status===409){const j=await r.json();if(j.data)mergeTabs(j.data);say("This tab was changed on another device. The latest version is shown now, so please make your change again.");return}
+    if(r.status===422){say("This box can't be put back here any more.");return}
     if(!r.ok)throw 0;
     const j=await r.json(),keep=new Set(j.data.tabs.flatMap(x=>x.boxes.map(b=>x.id+"-"+b.id)));
     t.boxes.forEach(b=>{if(!keep.has(b.key))dSet(b,null)});   // the text of a removed box is gone, so its unsaved draft goes too
@@ -882,8 +884,19 @@ function bxList(remove){
 }
 $("bxdel").onclick=()=>{
   if((BX.b.sealed||BX.b.notes.trim())&&!BX.armed){BX.armed=true;$("bxdel").textContent="Delete Box and Its Text?";return}   // a box with text needs a second click
-  saveBoxList(BX.t,bxList(true),x=>$("bxmsg").textContent=x,()=>bxdlg.close());
+  const t=BX.t,gone=rawBox(BX.b,t.enc),at=t.boxes.indexOf(BX.b);
+  saveBoxList(t,bxList(true),x=>$("bxmsg").textContent=x,()=>{bxdlg.close();if(window.HUB&&HUB.undo)HUB.undo("Box deleted.",()=>undoBox(t.id,gone,at))});
 };
+// (1.62.0) Undo after a delete: what the server sent is kept for 7 seconds (a locked tab's text stays locked) and sent back as "restore"
+const rawBox=(b,enc)=>({id:b.id,w:b.w,h:b.h,title:enc?b.ct:b.title,notes:enc?b.cn:b.notes});
+function undoBox(tabId,gone,at){
+  const t=TABS.find(x=>x.id===tabId);
+  if(!t){status("That tab is gone, so the box can't come back.");return}
+  if(t.boxes.length>=MAXBOX){status("This tab is full, so the box can't come back.");return}
+  const list=t.boxes.map(b=>({id:b.id,w:b.w,h:b.h}));
+  list.splice(Math.min(at,list.length),0,{id:gone.id,w:gone.w,h:gone.h,restore:{title:gone.title,notes:gone.notes}});
+  guard(()=>saveBoxList(t,list,status,()=>status("Box is back.")));
+}
 $("bxform").addEventListener("submit",e=>{e.preventDefault();saveBoxList(BX.t,bxList(false),x=>$("bxmsg").textContent=x,()=>bxdlg.close())});
 
 /* Edit tab dialog: name, color, private, position, delete. Also used for new tabs (id null). */
@@ -955,8 +968,15 @@ function etList(remove){
 }
 $("etdel").onclick=()=>{
   if(hasText(ET.id)&&!ET.armed){ET.armed=true;$("etdel").textContent="Delete Tab and Its Text?";return} // tabs with text need a second click
-  saveTabsList(etList(true),t=>$("etmsg").textContent=t,()=>etdlg.close());
+  const t=TABS.find(x=>x.id===ET.id),at=TABS.indexOf(t),gone=t&&{id:t.id,name:t.name,color:tabColor(t,at),hc:t.hc,layout:t.layout,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>rawBox(b,t.enc))};
+  saveTabsList(etList(true),x=>$("etmsg").textContent=x,()=>{etdlg.close();if(gone&&window.HUB&&HUB.undo)HUB.undo("Tab deleted.",()=>undoTab(gone,at))});
 };
+function undoTab(gone,at){
+  if(TABS.length>=MAXTAB){status("There are too many tabs, so the tab can't come back.");return}
+  const {boxes,...head}=gone,list=TABS.map((t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,private:t.private,enc:t.enc}));
+  list.splice(Math.min(at,list.length),0,{...head,restore:{boxes}});
+  guard(()=>saveTabsList(list,status,()=>status("Tab is back.")));
+}
 $("etform").addEventListener("submit",async e=>{
   e.preventDefault();
   const say=x=>$("etmsg").textContent=x,want=$("etenc").checked,t=ET.id?TABS.find(x=>x.id===ET.id):null,was=!!(t&&t.enc);
