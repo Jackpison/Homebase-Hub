@@ -472,7 +472,7 @@ async function trash(ids) {
   sel.clear();
   if (!await run(post("trash", { ids }), "")) return;
   const msg = ids.length === 1 ? "Moved to the Trash." : "Moved to the Trash: " + ids.length + " items.";
-  if (window.HUB) HUB.toast(msg, false, false, { label: "Undo", run: () => restore(ids) }); else toast(msg);
+  if (window.HUB) HUB.undo(msg, () => restore(ids)); else toast(msg);
 }
 async function restore(ids) { sel.clear(); await run(post("restore", { ids }), "Restored."); }
 async function purge(ids) {

@@ -207,6 +207,13 @@ try:
         quiet = list(errs)
         pg.evaluate("void Promise.reject(new Error('a real problem'))"); pg.wait_for_timeout(400)
         check('N7 an aborted page glide is not a page error, but another unhandled rejection still is', not quiet and any('a real problem' in e for e in errs), (quiet, errs))
+        # HUB.undo is the one Undo message for Links, Cards and Files (1.61.10): the text, one Undo button, and the action runs once
+        ctx = ctx_for(DESK); pg, errs = open_page(ctx)
+        pg.evaluate("(() => { window.__undone = 0; HUB.undo('Thing deleted.', () => { window.__undone++; }); })()")
+        pg.wait_for_selector('#ix-toast.on .ix-tact', timeout=5000)
+        shown = pg.evaluate("[document.getElementById('ix-toast').innerText, document.querySelectorAll('#ix-toast .ix-tact').length, document.querySelector('#ix-toast .ix-tact').textContent.trim()]")
+        pg.wait_for_timeout(700); pg.click('#ix-toast .ix-tact'); pg.wait_for_timeout(300)
+        check('N8 HUB.undo shows the message with one Undo button, and Undo runs the action once', 'Thing deleted.' in shown[0] and shown[1] == 1 and shown[2] == 'Undo' and pg.evaluate('window.__undone') == 1, shown)
         ctx.close()
         b.close()
 finally:

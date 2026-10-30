@@ -389,7 +389,7 @@ $("del").onclick=()=>{
   if(!armed){armed=true;$("del").textContent="Tap again to confirm";return}
   const gone=editing,at=D.indexOf(gone);D=D.filter(c=>c!==gone);armed=false;persist();dlg.close();render();
   // (1.61.9) a deleted card can come back for 7 seconds: Undo puts it where it was and saves again
-  if(window.HUB)HUB.toast("Card deleted.",false,false,{label:"Undo",run:()=>{if(!D.includes(gone))D.splice(Math.max(0,Math.min(at,D.length)),0,gone);persist();render()}});
+  if(window.HUB)HUB.undo("Card deleted.",()=>{if(!D.includes(gone))D.splice(Math.max(0,Math.min(at,D.length)),0,gone);persist();render()});
 };
 
 $("hlist").addEventListener("input",e=>{const x=e.target.closest("[data-hi]");if(x){HD[+x.dataset.hi].name=x.value;$("hmsg").textContent=""}});
