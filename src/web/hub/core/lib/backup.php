@@ -23,6 +23,8 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  * Import also accepts the old single-site backups from Links, Info and Cards.
  */
 
+require_once __DIR__ . '/vault.php';
+
 /* ---------- reading what's there ---------- */
 
 function bk_links_file(): string { return hub_dir('links') . '/bookmarks.php'; }
@@ -113,6 +115,9 @@ function bk_export(array $pick, bool $secrets = false): array {
         if ($parts['settings']['logo'] !== '' && is_file($lf)) $parts['settings']['logoData'] = base64_encode((string)file_get_contents($lf)) . ';' . pathinfo($lf, PATHINFO_EXTENSION);
     }
 
+    // the wrapped site key travels with any backup that holds data locked with it (it is useless without the passphrase or recovery key)
+    if ((!empty($pick['cards']) || !empty($pick['tools']) || !empty($pick['settings']) || !empty($pick['files'])) && ($sv = sv_get())) $parts['sitevault'] = $sv;
+
     $partial = [];
     foreach (['links', 'info'] as $k) if (!empty($pick[$k]) && is_array($pick[$k])) $partial[$k] = $pick[$k];
     return ['format' => 'site-backup', 'version' => 1, 'created' => gmdate('c'), 'site' => hub_settings()['siteName'],
@@ -137,7 +142,27 @@ function bk_normalize($j): array {
  * $mode per part: 'replace' (everything in that part is replaced) or 'merge' (tabs with the same id are replaced, new tabs added).
  * Every part keeps an earlier version first, so a restore can be undone.
  */
+/**
+ * Locked data (Cards, saved presets) only opens with the key it was locked with. A site that has no site key takes the one in the file;
+ * a site with a different key refuses, so nothing is restored that could never be opened.
+ */
+function bk_sitevault_for(array $parts, array $pick): void {
+    $kids = [];
+    if (!empty($pick['cards']) && is_array($parts['cards'] ?? null) && is_string($parts['cards']['enc'] ?? null)) $kids[] = (string)($parts['cards']['kid'] ?? '');
+    if (!empty($pick['tools']) && is_array($parts['tools'] ?? null) && !empty($parts['tools']['locked'])) $kids[] = (string)($parts['tools']['kid'] ?? '');
+    if (!$kids) return;
+    $cur = sv_get(); $fv = $parts['sitevault'] ?? null;
+    if ($cur === null) {
+        if (!is_array($fv) || !hub_norm_vault($fv)) throw new Exception('This file holds locked data, but not the key that opens it. Nothing was restored.');
+        if (sv_swap($fv, '') !== '') throw new Exception('Could not save the key from the backup. Nothing was restored.');
+        return;
+    }
+    foreach ($kids as $kid) if ($kid !== '' && ($cur['kid'] ?? '') !== '' && $kid !== $cur['kid'])
+        throw new Exception('This file was locked with another key than this site uses, so it would never open. Restore it into a new site, or use Start Over first. Nothing was restored.');
+}
+
 function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
+    bk_sitevault_for($parts, $pick);
     $done = [];
     if (!empty($pick['links']) && isset($parts['links']['data']) && is_array($parts['links']['data'])) {
         $in = $parts['links']['data'];

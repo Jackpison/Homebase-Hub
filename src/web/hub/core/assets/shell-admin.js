@@ -1513,7 +1513,7 @@
       SECS.map(function (x) { return '<details class="ix-acc" data-sec="' + x[0] + '"><summary><span>' + x[1] + '</span><small data-sum="' + x[0] + '">…</small></summary><div class="ix-accb" data-body="' + x[0] + '"></div></details>'; }).join('');
     var body = function (k) { return p.querySelector('[data-body="' + k + '"]'); }, sum = function (k, t) { p.querySelector('[data-sum="' + k + '"]').textContent = t; };
     var acc = function (k) { return p.querySelector('[data-sec="' + k + '"]'); };
-    var st = { vault: null, tabs: 0, bk: {}, ap: { trusted: [] } };
+    var st = { vault: null, sv: null, svUse: [], tabs: 0, bk: {}, ap: { trusted: [] } };
 
     // the site checks: what is good, and a warning for what is not
     p.querySelector('#ix-schk').innerHTML = '<div class="ix-sect">Site Checks</div><div class="ix-checks">' +
@@ -1555,15 +1555,18 @@
       return Promise.all([
         fetch(ROOT + 'web/info/api.php', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
         api('bkkey').catch(function () { return {}; }), api('approval').catch(function () { return {}; }),
-        fetch(ROOT + 'web/links/api.php?action=get', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+        fetch(ROOT + 'web/links/api.php?action=get', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+        api('sv_get').catch(function () { return {}; })
       ]).then(function (r) {
         var info = r[0];
+        st.sv = r[4] && r[4].ok && r[4].vault && r[4].vault.wrap ? r[4].vault : null; st.svUse = (r[4] && r[4].use) || [];
         st.vault = info && info.page && info.page.vault || null;
         st.info = info; st.tabs = info && info.tabs ? info.tabs.filter(function (t) { return t.enc; }).length : 0;
         st.bk = r[1] && r[1].ok ? r[1] : {}; st.ap = r[2] && r[2].ok ? r[2] : { trusted: [] };
         st.lenc = r[3] && r[3].data && r[3].data.tabs ? r[3].data.tabs.filter(function (t) { return typeof t.enc === 'string'; }).length : 0;
         st.lvault = r[3] && r[3].data && r[3].data.settings && r[3].data.settings.vault && r[3].data.settings.vault.wrap ? r[3].data.settings.vault : null;
-        st.rec = !!((st.vault && st.vault.rec) || (st.lvault && st.lvault.rec));
+        st.rec = !!((st.vault && st.vault.rec) || (st.lvault && st.lvault.rec) || (st.sv && st.sv.rec));
+        st.recGap = st.rec && ((st.vault && !st.vault.rec) || (st.lvault && !st.lvault.rec) || (st.sv && !st.sv.rec));   // a key made before the site key existed does not cover it
         overview(); drawEnc(); drawAp(); drawTrusted();
       });
     }
@@ -1617,12 +1620,13 @@
       var chips = '<div class="ix-chips">' +
         chip('Info Tabs', cnt(st.tabs, !!st.vault, on ? 'none locked yet' : 'none'), !!st.vault && st.tabs > 0) +
         chip('Links Tabs', cnt(st.lenc, !!st.lvault, on ? 'none locked yet' : 'none'), !!st.lvault && st.lenc > 0) +
+        chip('Files, Cards, Presets', st.sv ? (st.svUse.length ? st.svUse.join(', ') + ' locked' : 'ready') : (on ? 'ready' : 'none'), !!st.sv && st.svUse.length > 0) +
         chip('Backup Files', bk.available ? (bk.set ? 'locked' : 'not locked') : 'not available on this host', !!bk.set) + '</div>';
       var hintTabs = on ? '<p class="ix-note">To lock an Info tab: open Info, press the pencil on a tab, then Encrypt this tab. In Links: press Edit, the pencil on a tab, then Encrypted Tab.</p>' : '';
       var older = (!on && (st.vault || st.lvault || bk.set)) ? '<p class="ix-note">Some of your locked data still uses an older setting (your website password, or a separate passphrase). Setting the passphrase moves all of it onto it.</p>' : '';
       var html;
       if (!on) {
-        html = card('intro', ICON.shield, 'Lock Your Private Tabs and Backups', 'One passphrase locks the encrypted tabs in Info and Links, and your backup files. Only you can unlock them, even if someone copies your server.', chips) + older +
+        html = card('intro', ICON.shield, 'Lock Your Private Tabs and Backups', 'One passphrase locks your Files, Cards and saved presets, the encrypted tabs in Info and Links, and your backup files. Only you can unlock them, even if someone copies your server.', chips) + older +
           '<form id="ix-ef">' + card('', ICON.key, 'Set a Passphrase', 'At least 8 characters. A few words you will remember work better than a short jumble.',
             '<div class="ix-fgrid">' + fd('ix-en1', 'New Passphrase', 'new-password') + fd('ix-en2', 'Type It Again', 'new-password') + '</div>' +
             fd('ix-epw', 'Website Password', 'current-password', 'To confirm that it is you.') +
@@ -1630,22 +1634,23 @@
             '<label class="ix-chk"><input type="checkbox" id="ix-eack"> I understand a lost passphrase cannot be recovered</label>' +
             '<p class="ix-err" id="ix-ee"></p><div class="ix-row"><button class="ix-btn pri" id="ix-eset">Set Passphrase</button></div>') + '</form>';
       } else {
-        html = card('good', ICON.shield, 'Encryption Is On', 'Your locked tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
-          card('', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked tabs are not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
+        html = card('good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
+          card('', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
             '<div class="ix-fgrid">' + fd('ix-ccur', 'Current Passphrase or Recovery Key', 'off') + fd('ix-cpw', 'Website Password', 'current-password') + '</div>' +
             '<div class="ix-fgrid">' + fd('ix-cn1', 'New Passphrase', 'new-password') + fd('ix-cn2', 'Type It Again', 'new-password') + '</div>' +
             '<p class="ix-err" id="ix-ce"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-cgo">Change Passphrase</button></div>') +
-          '<div id="ix-rec">' + card('', ICON.box, 'Recovery Key', 'A spare way in. If you ever forget the passphrase, this code opens your locked tabs and lets you set a new passphrase. Keep it somewhere safe (print it, or put it in a password manager): anyone who has it can open your locked tabs.',
+          '<div id="ix-rec">' + card('', ICON.box, 'Recovery Key', 'A spare way in. If you ever forget the passphrase, this code opens your Files, Cards, presets and locked tabs and lets you set a new passphrase. Keep it somewhere safe (print it, or put it in a password manager): anyone who has it can open them.',
             '<div class="ix-fgrid">' + fd('ix-rpp', 'Your Passphrase', 'off') + fd('ix-rpw', 'Website Password', 'current-password') + '</div>' +
             '<p class="ix-err" id="ix-re"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-rmk">' + (st.rec ? 'Make a New Recovery Key' : 'Create Recovery Key') + '</button>' +
             (st.rec ? '<button type="button" class="ix-btn danger" id="ix-rdel">Remove Recovery Key</button>' : '') + '</div><div id="ix-rshow"></div>',
-            '<span class="ix-pill ' + (st.rec ? 'good' : '') + '">' + (st.rec ? 'Created' : 'Not Created') + '</span>') + '</div>' +
+            '<span class="ix-pill ' + (st.rec ? 'good' : '') + '">' + (st.rec ? (st.recGap ? 'Make a New One' : 'Created') : 'Not Created') + '</span>') +
+          (st.recGap ? '<p class="ix-note">Your recovery key was made before Files, Cards and presets were locked, so it does not open them yet. Make a new recovery key below.</p>' : '') + '</div>' +
           '<form id="ix-ef">' + card('danger', ICON.out, 'Remove Encryption', 'Locked tabs turn back into normal private tabs (still hidden from visitors) and backup files stop being locked. To use a different passphrase, change it above instead.',
             '<div class="ix-fgrid">' + fd('ix-ecur', 'Your Passphrase', 'off') + fd('ix-epw', 'Website Password', 'current-password') + '</div>' +
             fd('ix-eold', 'Earlier Passphrase', 'off', 'The one your existing locked tabs use now.', 'ix-eoldw') +
             '<p class="ix-err" id="ix-ee"></p><div class="ix-row"><button type="button" class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
       }
-      b.innerHTML = tabHead(ICON.lock, 'Encryption', 'One passphrase locks your private tabs in Info and Links, and your backup files. Only you can unlock them.') + html;
+      b.innerHTML = tabHead(ICON.lock, 'Encryption', 'One passphrase locks your Files, Cards and saved presets, your private tabs in Info and Links, and your backup files. Only you can unlock them.') + html;
       var f = b.querySelector('#ix-ef'), er = b.querySelector('#ix-ee'), val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
       var run = function (btn, msg, work, ok) {
         btn.disabled = true; er.textContent = msg;
@@ -1855,9 +1860,38 @@
       });
     };
     var state = function () {
-      return Promise.all([getJson('info/api.php'), getJson('links/api.php?action=get')]).then(function (r) {
-        var ls = r[1].data && r[1].data.settings;
-        return { info: r[0], iv: (r[0].page && r[0].page.vault && r[0].page.vault.wrap) ? r[0].page.vault : null, links: r[1].data || {}, lv: ls && ls.vault && ls.vault.wrap ? ls.vault : null };
+      return Promise.all([getJson('info/api.php'), getJson('links/api.php?action=get'), api('sv_get')]).then(function (r) {
+        var ls = r[1].data && r[1].data.settings, sv = r[2] && r[2].ok && r[2].vault && r[2].vault.wrap ? r[2].vault : null;
+        return { info: r[0], iv: (r[0].page && r[0].page.vault && r[0].page.vault.wrap) ? r[0].page.vault : null, links: r[1].data || {}, lv: ls && ls.vault && ls.vault.wrap ? ls.vault : null, sv: sv, use: (r[2] && r[2].use) || [] };
+      });
+    };
+    // the site key (Files, Cards, Tools presets): the same wrap, saved through the core API with the website password
+    var svSave = function (vault, prev, site) {
+      return api('sv_save', { vault: vault, prev: prev, password: site }).then(function (j) {
+        if (j.ok) return j;
+        if (j._status === 401) fail('That isn\'t your website password.');
+        if (j._status === 409) fail('The site key changed on another device. Close Settings and try again.');
+        fail(j.error || 'Could not save. Nothing was changed.');
+      });
+    };
+    var infoSave = function (vault, prev) { return infoApi({ action: 'save_vault', vault: vault, prev: prev, pw: '' }); };
+    var linksSave = function (vault, prev, site) { return linksApi('save_vault', { vault: vault, prev: prev, pw: site }); };
+    // the three keys in the order they are changed: site, Info, Links. Whatever moved is put back when a later one fails, so they never end up on different passphrases.
+    var changeAll = function (d, o, mk) {   // mk(v, what) gives the vault to store, or null to leave it
+      var undo = [];
+      var one = function (v, what, save, back) {
+        return Promise.resolve(mk(v, what)).then(function (nv) {
+          if (!nv) return;
+          return save(nv, v ? v.wrap : '').then(function () { if (v) undo.push(function () { return back(v, nv.wrap); }); });
+        });
+      };
+      var chain = Promise.resolve();
+      if (d.sv || o.makeSite) chain = chain.then(function () { return one(d.sv, 'Site', function (nv, prev) { return svSave(nv, prev, o.site); }, function (v, cur) { return svSave(v, cur, o.site); }); });
+      if (d.iv || o.makeInfo) chain = chain.then(function () { return one(d.iv, 'Info', function (nv, prev) { return infoSave(nv, prev).then(function (r) { return okOrFail(r, 'Info'); }); }, infoSave); });
+      if (d.lv || o.makeLinks) chain = chain.then(function () { return one(d.lv, 'Links', function (nv, prev) { return linksSave(nv, prev, o.site).then(function (r) { return okOrFail(r, 'Links'); }); }, function (v, cur) { return linksSave(v, cur, o.site); }); });
+      return chain.catch(function (e) {
+        var back = function () { return undo.reduceRight(function (q, f) { return q.then(f, f); }, Promise.resolve()); };
+        return back().then(function () { throw e; }, function () { throw e; });
       });
     };
     // opens a key with the first secret that fits: the passphrase, the website password (older lock), or an earlier passphrase
@@ -1874,11 +1908,18 @@
     };
     var needOld = function (what, o) {
       if (o && o.change) return fail('That isn\'t the current passphrase or recovery key.');
-      return fail(what + ' tabs are locked with a different passphrase. Type it under “Earlier Passphrase” and they move to the new one.', true);
+      return fail((what === 'Site' ? 'Your Files, Cards and saved presets are' : what + ' tabs are') + ' locked with a different passphrase. Type it under “Earlier Passphrase” and they move to the new one.', true);
     };
     // a vault (none yet: made now) ends up wrapped with the passphrase
     var move = function (v, o, what, save) {
-      if (!v) { var raw = crypto.getRandomValues(new Uint8Array(32)); return VK.wrap(raw, o.pp, false).then(function (nv) { raw.fill(0); return save(nv, ''); }); }
+      if (!v) {
+        var raw = crypto.getRandomValues(new Uint8Array(32));
+        return Promise.all([VK.wrap(raw, o.pp, false), what === 'Site' ? crypto.subtle.digest('SHA-256', raw) : null]).then(function (w) {
+          raw.fill(0); var nv = w[0];
+          if (w[1]) nv.kid = Array.prototype.map.call(new Uint8Array(w[1]).subarray(0, 8), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');   // the key's id (see lib/vault.php)
+          return save(nv, '');
+        });
+      }
       return openWith(v, o).then(function (r) {
         if (!r) return needOld(what, o);
         if (r.used === 'pp' && !v.login) { r.raw.fill(0); return null; }   // already locked with it
@@ -1886,20 +1927,28 @@
       });
     };
     function set(o) {
-      var infoMoved = null;   // {from, to}: Info's key after it moved, so a later failure can put it back (the two must never end up on different passphrases)
       return checkSite(o.site).then(state).then(function (d) {
-        return move(d.iv, o, 'Info', function (nv, prev) { return infoApi({ action: 'save_vault', vault: nv, prev: prev, pw: '' }).then(function (r) { return okOrFail(r, 'Info'); }).then(function (r) { if (d.iv) infoMoved = { from: d.iv, to: nv }; return r; }); })
-          .then(function () { return move(d.lv, o, 'Links', function (nv, prev) { return linksApi('save_vault', { vault: nv, prev: prev, pw: o.site }).then(function (r) { return okOrFail(r, 'Links'); }); }); })
-          .catch(function (e) {
-            if (!infoMoved) throw e;
-            return infoApi({ action: 'save_vault', vault: infoMoved.from, prev: infoMoved.to.wrap, pw: '' }).then(function () { throw e; }, function () { throw e; });
-          });
+        return changeAll(d, { site: o.site, makeSite: true, makeInfo: true, makeLinks: true }, function (v, what) {
+          var save = null;
+          return move(v, o, what, function (nv) { save = nv; return Promise.resolve(); }).then(function () { return save; });   // null when it already opens with this passphrase
+        });
       }).then(function () { return api('pp_set', { password: o.site, passphrase: o.pp }); })
         .then(function (j) { if (!j.ok) fail(j.error || 'Could not save the passphrase.'); return j; });
     }
+    // Files, Cards and saved presets are locked with the site key: Cards and presets are turned back into plain data here; Files must be deleted first
+    var PP_UNLOCK = function (key, use) { return use.length ? fail('Cannot unlock ' + use.join(' and ') + ' here.') : Promise.resolve(); };   // Cards and presets are added below
+    var unlockSiteData = function (d, o) {
+      if (!d.sv || !d.use.length) return Promise.resolve();
+      if (d.use.indexOf('Files') >= 0) return fail('Files are locked with your passphrase. Download what you need and delete every file in Files first; then you can remove the passphrase.');
+      return openWith(d.sv, o).then(function (r) {
+        if (!r) return needOld('Site', o);
+        return VK.use(r.raw).then(function (key) { r.raw.fill(0); return PP_UNLOCK(key, d.use); });
+      });
+    };
     function remove(o) {
       return checkSite(o.site).then(state).then(function (d) {
-        var infoStep = !d.iv ? Promise.resolve() : openWith(d.iv, o).then(function (r) {
+        var siteStep = unlockSiteData(d, o);
+        var infoStep = function () { return !d.iv ? Promise.resolve() : openWith(d.iv, o).then(function (r) {
           if (!r) return needOld('Info');
           return VK.use(r.raw).then(function (key) {
             r.raw.fill(0);
@@ -1910,8 +1959,8 @@
             });
             return Promise.all(jobs).then(function () { return out; }, function () { return fail('A box couldn\'t be decrypted, so nothing was changed.'); });
           }).then(function (tabs) { return infoApi({ action: 'remove_vault', prev: d.iv.wrap, pw: o.site, tabs: tabs }); }).then(function (r2) { return okOrFail(r2, 'Info'); });
-        });
-        return infoStep.then(function () {
+        }); };
+        return siteStep.then(infoStep).then(function () {
           if (!d.lv) return null;
           return openWith(d.lv, o).then(function (r) {
             if (!r) return needOld('Links');
@@ -1941,42 +1990,29 @@
       for (var i = 0; i < 20; i++) c += CODE_CHARS.charAt(b[i] & 31) + (i % 4 === 3 && i < 19 ? '-' : '');
       return c;
     };
-    var saveBoth = function (d, o, mk) {   // mk(v) gives the vault to store (or null to leave it); Info first, put back if Links fails
-      var done = null;
-      var info = !d.iv ? Promise.resolve() : Promise.resolve(mk(d.iv)).then(function (nv) {
-        if (!nv) return;
-        return infoApi({ action: 'save_vault', vault: nv, prev: d.iv.wrap, pw: '' }).then(function (r) { return okOrFail(r, 'Info'); }).then(function () { done = nv; });
-      });
-      return info.then(function () {
-        if (!d.lv) return;
-        return Promise.resolve(mk(d.lv)).then(function (nv) { if (!nv) return; return linksApi('save_vault', { vault: nv, prev: d.lv.wrap, pw: o.site }).then(function (r) { return okOrFail(r, 'Links'); }); });
-      }).catch(function (e) {
-        if (!done) throw e;
-        return infoApi({ action: 'save_vault', vault: d.iv, prev: done.wrap, pw: '' }).then(function () { throw e; }, function () { throw e; });
-      });
-    };
     function makeRecovery(o) {   // o = {pp, site}
       var code = newCode(), plain = code.replace(/-/g, '');
       return checkSite(o.site).then(state).then(function (d) {
-        if (!d.iv && !d.lv) fail('Set the passphrase first.');
+        if (!d.iv && !d.lv && !d.sv) fail('Set the passphrase first.');
+        var list = [['Site', d.sv], ['Info', d.iv], ['Links', d.lv]], recs = {};
         var open = function (v) {
-          if (!v) return Promise.resolve(null);
           return VK.unwrap({ salt: v.salt, iter: v.iter, wrap: v.wrap }, o.pp).then(function (raw) { if (!raw) fail('That isn\'t the passphrase.'); return raw; });   // the passphrase only: never the recovery key itself
         };
-        return Promise.all([open(d.iv), open(d.lv)]).then(function (raws) {
-          return Promise.all(raws.map(function (raw) { return raw ? VK.wrap(raw, plain, false).then(function (r) { raw.fill(0); return { salt: r.salt, iter: r.iter, wrap: r.wrap }; }) : null; }));
-        }).then(function (recs) {
-          return saveBoth(d, o, function (v) {
-            var rec = v === d.iv ? recs[0] : recs[1]; if (!rec) return null;
-            var nv = { v: 1, salt: v.salt, iter: v.iter, wrap: v.wrap }; if (v.login) nv.login = true; nv.rec = rec; return nv;
+        return Promise.all(list.map(function (x) {
+          if (!x[1]) return null;
+          return open(x[1]).then(function (raw) { return VK.wrap(raw, plain, false).then(function (r) { raw.fill(0); recs[x[0]] = { salt: r.salt, iter: r.iter, wrap: r.wrap }; }); });
+        })).then(function () {
+          return changeAll(d, { site: o.site }, function (v, what) {
+            if (!v || !recs[what]) return null;
+            var nv = { v: 1, salt: v.salt, iter: v.iter, wrap: v.wrap }; if (v.login) nv.login = true; nv.rec = recs[what]; return nv;
           });
         });
       }).then(function () { return code; });
     }
     function dropRecovery(o) {   // o = {site}
       return checkSite(o.site).then(state).then(function (d) {
-        return saveBoth(d, o, function (v) {
-          if (!v.rec) return null;
+        return changeAll(d, { site: o.site }, function (v) {
+          if (!v || !v.rec) return null;
           var nv = { v: 1, salt: v.salt, iter: v.iter, wrap: v.wrap }; if (v.login) nv.login = true; return nv;
         });
       });

@@ -35,6 +35,7 @@
  */
 require __DIR__ . '/lib/boot.php';
 require __DIR__ . '/lib/backup.php';
+require_once __DIR__ . '/lib/vault.php';
 hub_headers();
 header('Content-Type: application/json; charset=utf-8');
 hub_same_origin();
@@ -602,7 +603,21 @@ case 'pp_set':     // the browser has already wrapped the Info and Links keys wi
 case 'pp_clear':   // the browser has already turned the encrypted tabs back into normal private tabs
     need_post(); need_admin();
     need_password((string)(body()['password'] ?? ''));
-    bk_key_clear(); hub_pp_mark(false);
+    if (($use = sv_in_use())) hub_json(409, ['ok' => false, 'inUse' => $use, 'error' => 'These are still locked with your passphrase: ' . implode(', ', $use) . '. Unlock them first, then remove the passphrase.']);
+    sv_clear(); bk_key_clear(); hub_pp_mark(false);
+    hub_json(200, ['ok' => true]);
+
+case 'sv_get':   // the wrapped site key (it locks Files, Cards and Tools presets); the key itself never reaches the server
+    need_admin(false);
+    hub_json(200, ['ok' => true, 'vault' => sv_get(), 'pp' => hub_pp_on(), 'use' => sv_in_use()]);
+
+case 'sv_save':   // {vault, prev, password}: the browser wrapped the key with the passphrase (and the recovery key); prev = the wrap it replaces
+    need_post(); need_admin();
+    $b = body(); need_password((string)($b['password'] ?? ''));
+    $why = sv_swap(is_array($b['vault'] ?? null) ? $b['vault'] : [], (string)($b['prev'] ?? ''));
+    if ($why === 'bad') hub_json(400, ['ok' => false, 'error' => 'That key does not look right. Nothing was changed.']);
+    if ($why === 'conflict') hub_json(409, ['ok' => false, 'error' => 'The key changed on another device. Close Settings and try again.']);
+    if ($why !== '') hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
     hub_json(200, ['ok' => true]);
 
 /* ---- Health > Domains: domain, SSL and uptime watch ---- */
