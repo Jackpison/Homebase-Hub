@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.62.5 | A cleanup: unused styles and code removed, the notes in your zip brought up to date, and every picture of the website retaken |
 | 1.62.2 | Settings: the on and off switches that had shrunk to a ring and a ball are switches again |
 | 1.62.1 | Passkeys: Remove now tells you what it needs, where you can see it |
 | 1.62.0 | Undo in Info: a deleted box or tab comes back with its text, also in locked tabs |
@@ -96,6 +97,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.62.5
+
+### Cleaner code
+
+- **Unused styles and code are gone.** About twenty style rules that no page used, two unused settings in the code, and a folder-removal routine that existed twice are removed. Nothing changes on screen.
+- **The notes in your zip are up to date.** `README.txt` now names Tasks and Files, lists the libraries, and describes the four Backup & Restore tabs instead of a menu that was never built.
+- **A new check keeps it tidy:** a test fails when a function, a setting or a style is left that nothing uses.
+
+### Website
+
+- Every screenshot on the website was retaken from the current app, including the Cards, Tasks, Links and Info Settings windows, Colors and Backup.
 
 ---
 
