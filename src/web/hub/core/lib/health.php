@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
 /* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
  * Copyright (C) 2026 Jackpison
@@ -88,7 +89,7 @@ function health_logs(): array {
         $r = @realpath($f); if (!$r || isset($seen[$r]) || !@is_readable($r)) continue; $seen[$r] = true;
         $size = (int)@filesize($r); $tail = '';
         if ($size > 0 && ($fh = @fopen($r, 'rb'))) { fseek($fh, max(0, $size - 65536)); $tail = (string)fread($fh, 65536); fclose($fh); }
-        $lines = array_values(array_filter(preg_split('/\r?\n/', $tail), 'strlen'));
+        $lines = array_values(array_filter(preg_split('/\r?\n/', $tail) ?: [], static fn(string $x): bool => $x !== ''));
         if ($size > 65536) array_shift($lines);   // the first line may be cut
         $inSite = strpos($r, realpath(HUB_PUBLIC) . DIRECTORY_SEPARATOR) === 0;
         $rel = $inSite ? substr($r, strlen(realpath(HUB_PUBLIC)) + 1) : $r;

@@ -1,0 +1,12 @@
+# What CodeQL reads: the site's own scripts and the Tools source. The built bundles in src/web/tools/assets are generated from tools-app
+# (and checked against a fresh build in CI), and third-party libraries are checked by tests/repo/check_libraries.py, so they are left out.
+name: Homebase Hub
+paths:
+  - src
+  - tools-app/src
+  - scripts
+  - tests
+paths-ignore:
+  - src/web/tools/assets
+  - src/web/hub/core/assets/vendor
+  - '**/node_modules'

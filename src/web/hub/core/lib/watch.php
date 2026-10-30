@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
 /* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
  * Copyright (C) 2026 Jackpison
@@ -49,7 +50,7 @@ function wt_regdomain(string $h): string {
     if ($n <= 2) return $h;
     $sl = $p[$n - 2];
     $two = in_array($sl, ['co', 'com', 'net', 'org', 'gov', 'ac', 'edu', 'gen', 'firm', 'ind', 'ltd', 'plc', 'me', 'nic', 'res', 'mil'], true) && strlen($p[$n - 1]) === 2;
-    return implode('.', array_slice($p, $two && $n >= 3 ? -3 : -2));
+    return implode('.', array_slice($p, $two ? -3 : -2));
 }
 /**
  * GET a JSON document over https (RDAP, the update address), following up to 4 redirects to other registries.

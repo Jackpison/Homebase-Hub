@@ -7,6 +7,7 @@
     "axe-core": "4.14.0",
     "esbuild": "0.28.2",
     "eslint": "10.13.0",
-    "globals": "17.13.0"
+    "globals": "17.13.0",
+    "typescript": "5.9.3"
   }
 }

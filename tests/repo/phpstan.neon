@@ -1,7 +1,20 @@
 # Static analysis of the site's PHP (see AGENTS.md). Run from the repo folder:  php phpstan.phar analyse -c tests/repo/phpstan.neon
 parameters:
-    level: 3   # 1.53.1: raised from 1 (no finding at 3)
+    level: 5   # 1.61: raised from 3. 1.53.1: raised from 1
     paths:
         - ../../src
     bootstrapFiles:
         - ../lib/phpstan-bootstrap.php
+    # Four findings at level 5 that are the analyser's blind spots, not faults (each checked by hand):
+    ignoreErrors:
+        # Home's built-in backgrounds have no poster picture today; the check is for the day one does
+        - message: '#^Strict comparison using !== between .. and .. will always evaluate to false\.$#'
+          path: ../../src/web/home/lib.php
+        - message: '#^Result of && is always false\.$#'
+          path: ../../src/web/home/lib.php
+        # a list filled by the other requests of the same shutdown function (taken by reference), so it is not empty when it runs
+        - message: '#^Empty array passed to foreach\.$#'
+          path: ../../src/web/hub/core/lib/boot.php
+        # the update checker's $block and $st come from a by-reference helper and a state file the analyser cannot see into
+        - message: '#^(If condition|Negated boolean expression) is always false\.$#'
+          path: ../../src/web/hub/core/lib/update.php

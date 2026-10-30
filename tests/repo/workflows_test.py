@@ -67,5 +67,8 @@ check('W11 the monthly maintenance runs only on its schedule or by hand, and pus
       and len(pushes) == 1 and 'refs/heads/${BRANCH}' in pushes[0] and 'BRANCH="maintenance/' in mt and 'case "$BRANCH" in maintenance/*)' in mt and 'main' not in pushes[0], pushes)
 wk = open(os.path.join(ROOT, '.github', 'workflows', 'weekly-check.yml'), encoding='utf-8').read()
 check('W12 the weekly check also tries the next PHP version (development build) and reports a break in its own issue', 'next-php:' in wk and "php-version: 'nightly'" in wk and 'tests/unit/run.php' in wk and '--label php' in wk)
+cs = open(os.path.join(ROOT, '.github', 'workflows', 'code-scanning.yml'), encoding='utf-8').read()
+check('W13 CodeQL and Semgrep run on every push to main and every pull request, and weekly; a Semgrep finding fails the run', all(x in cs for x in ('push:', 'pull_request:', 'schedule:', 'github/codeql-action/analyze@', 'semgrep scan', '--error', 'security-events: write')))
+check('W14 CI runs the JavaScript type check', 'npx tsc -p tsconfig.json' in ci)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

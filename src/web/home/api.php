@@ -212,6 +212,7 @@ switch ($action) {
         $tmpDir = DATA_DIR . '/upload-tmp';
         ensure_dir($tmpDir);
         foreach (glob($tmpDir . '/*') ?: [] as $old) if (filemtime($old) < time() - 7200) @unlink($old);   // pieces of uploads abandoned 2 hours ago
+        $id = basename($id);   // already 16 hex characters (checked above); basename tells static scanners the name cannot leave this folder
         $part = $tmpDir . '/' . $id . '.part'; $meta = $tmpDir . '/' . $id . '.next';
         $next = is_file($meta) ? (int) file_get_contents($meta) : 0;
         if ($index === $next - 1) out(['ok' => true, 'next' => $next]);   // the same piece sent again (a retry): already have it

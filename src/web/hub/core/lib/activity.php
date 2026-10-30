@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even
 /* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
  * Copyright (C) 2026 Jackpison

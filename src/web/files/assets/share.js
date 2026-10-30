@@ -8,10 +8,13 @@
  */
 /* A share link (web/files/share.html?t=TOKEN#KEY): opens one file for anyone who has the link. TOKEN lets this page fetch the file's
    locked pieces; KEY (after the #, which browsers never send anywhere) unlocks them here. Nothing on this page talks to any other site. */
+// @ts-check
 (() => {
 "use strict";
+/** @type {(id: string) => any} the page's own elements: they are all in share.html */
 const $ = id => document.getElementById(id);
 const td = new TextDecoder();
+const why = x => (x instanceof Error ? x.message : String(x));
 const fmt = n => { const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return (i ? (n >= 100 ? n.toFixed(0) : n.toFixed(1)).replace(/\.0$/, "") : String(n)) + " " + u[i]; };
 const ub64 = s => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
 const ub64u = s => ub64(s.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - s.length % 4) % 4));
@@ -55,7 +58,7 @@ async function main() {
       const parts = await get(n => { dl.textContent = "Opening… " + Math.round(Math.min(100, n / Math.max(1, size) * 100)) + "%"; });
       const u = URL.createObjectURL(new Blob(parts, { type: "application/octet-stream" })), a = document.createElement("a"); a.href = u; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000);
       dl.textContent = "Download Again";
-    } catch (x) { $("err").textContent = x.message; dl.textContent = "Download"; }
+    } catch (x) { $("err").textContent = why(x); dl.textContent = "Download"; }
     dl.disabled = false;
   };
   if (size <= 60 * 1024 * 1024 && (MIME[e] || TEXT.includes(e))) {   // a quick look, for what a browser shows safely
@@ -63,10 +66,11 @@ async function main() {
       const parts = await get(), pv = $("pv"); pv.hidden = false;
       if (TEXT.includes(e)) { const pre = document.createElement("pre"); pre.textContent = td.decode(await new Blob(parts).slice(0, 400000).arrayBuffer()); pv.append(pre); return; }
       const u = URL.createObjectURL(new Blob(parts, { type: MIME[e] })), k = MIME[e].split("/")[0];
+      /** @type {any} */
       const el = document.createElement(MIME[e] === "application/pdf" ? "iframe" : k === "image" ? "img" : k === "video" ? "video" : "audio");
       el.src = u; if (el.tagName === "VIDEO" || el.tagName === "AUDIO") el.controls = true; if (el.tagName === "IMG") el.alt = name; if (el.tagName === "IFRAME") el.title = name;
       pv.append(el);
-    } catch (x) { $("err").textContent = x.message; }
+    } catch (x) { $("err").textContent = why(x); }
   }
 }
 main();

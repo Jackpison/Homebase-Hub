@@ -11,9 +11,13 @@
    piece count are part of what is checked, so a piece can not be moved, repeated or cut off). FK is kept next to the file, locked with
    your site key (HubSite, shell.js). Names, types, sizes and dates are locked with the site key too.
    A share link holds the token and, after the #, FK: browsers never send the part after # to the server. */
+// @ts-check
 (() => {
 "use strict";
+/** @type {(id: string) => any} the page's own elements: they are all in index.html */
 const $ = id => document.getElementById(id);
+/** @typedef {any} Loose */
+const why = e => (e instanceof Error ? e.message : String(e));
 const HF = (u, o) => window.HUB ? HUB.fetch(u, o) : fetch(u, o);
 const toast = (m, bad) => window.HUB ? HUB.toast(m, bad) : alert(m);
 const V = window.HubVault, SITE = window.HubSite;
@@ -63,6 +67,7 @@ const kindOf = n => { const e = ext(n); for (const k in KINDS) if (KINDS[k].incl
 const PREVIEW_MAX = 80 * 1024 * 1024;
 
 /* ---------- state ---------- */
+/** @type {{ items: any[], shares: any[], settings: any, usage: number, free: number | null, max: number | null }} */
 let D = { items: [], shares: [], settings: { limit: 5368709120, shares: true, trashDays: 30, view: "list", sort: "name" }, usage: 0, free: null, max: null };
 let byId = new Map();
 const MC = new Map();   // locked text -> what it says (names do not change under an id, so each is opened once)
@@ -108,7 +113,8 @@ async function ensureKey() {
     await SITE.key();
     if (!unlocked) { unlocked = true; noPass = false; await names(); render(); }
     return true;
-  } catch (e) {
+  } catch (err) {
+    const e = /** @type {any} */ (err);
     if (e && e.code === "nopass") { noPass = true; render(); }
     else if (e && e.code === "insecure") toast("Files need a secure (https) connection to lock your files.", true);
     else if (e && e.code === "login" && window.HUB) HUB.login("Log in to open Files.").catch(() => {});
@@ -162,7 +168,7 @@ function zipOf(entries) {   // [{path, blob, crc, size, mt}]
     cen.push(ch.buffer, nm);
     off += 30 + nm.length + e.size;
   }
-  const cdSize = cen.reduce((a, x) => a + (x.byteLength !== undefined ? x.byteLength : x.length), 0), end = new DataView(new ArrayBuffer(22));
+  const cdSize = cen.reduce((a, x) => a + x.byteLength, 0), end = new DataView(new ArrayBuffer(22));
   end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
   return new Blob([...parts, ...cen, end.buffer], { type: "application/zip" });
 }
@@ -286,6 +292,7 @@ let pm = null;
 function closeMenu() { if (pm) { pm.remove(); pm = null; } }
 function menu(anchor, i) {
   closeMenu();
+  /** @type {any[][]} */
   const acts = [];
   if (tab === "trash") acts.push(["back", "Restore", () => restore([i.id])], ["trash", "Delete Forever", () => purge([i.id])]);
   else {
@@ -302,7 +309,7 @@ function menu(anchor, i) {
   pm.querySelector("button").focus();
   pm.addEventListener("keydown", e => { const b = [...pm.querySelectorAll("button")], k = b.indexOf(document.activeElement); if (e.key === "ArrowDown") { b[(k + 1) % b.length].focus(); e.preventDefault(); } if (e.key === "ArrowUp") { b[(k + b.length - 1) % b.length].focus(); e.preventDefault(); } if (e.key === "Escape") { closeMenu(); anchor.focus(); } });
 }
-document.addEventListener("pointerdown", e => { if (pm && !pm.contains(e.target) && !e.target.closest(".more")) closeMenu(); });
+document.addEventListener("pointerdown", e => { const t = /** @type {Element} */ (e.target); if (pm && !pm.contains(t) && !t.closest(".more")) closeMenu(); });
 
 /* ---------- picking several ---------- */
 function bulk() {
@@ -391,7 +398,7 @@ async function download(ids) {
   try {
     if (items.length === 1 && items[0].t === "f") {
       const i = items[0], p = progress("Downloading " + nameOf(i));
-      try { const r = await readFile(i, "application/octet-stream", n => p.add(n, sizeOf(i))); save(r.blob, nameOf(i)); p.done("Downloaded"); } catch (e) { p.fail(e.message); }
+      try { const r = await readFile(i, "application/octet-stream", n => p.add(n, sizeOf(i))); save(r.blob, nameOf(i)); p.done("Downloaded"); } catch (e) { p.fail(why(e)); }
       return;
     }
     /* folders and several files: one zip, made here */
@@ -407,8 +414,8 @@ async function download(ids) {
       for (const f of files) { const r = await readFile(f.i, "application/octet-stream", n => { done += n; p.add(done, total, true); }); out.push({ path: f.path, blob: r.blob, crc: r.crc, size: r.size, mt: dateOf(f.i) }); }
       const nm = items.length === 1 ? nameOf(items[0]) : "Files";
       save(zipOf(out), nm + ".zip"); p.done("Zip ready");
-    } catch (e) { p.fail(e.message); }
-  } catch (e) { toast(e.message || "Could not download.", true); }
+    } catch (e) { p.fail(why(e)); }
+  } catch (e) { toast(why(e) || "Could not download.", true); }
 }
 
 /* ---------- preview ---------- */
@@ -428,7 +435,7 @@ async function preview(i) {
     else if (k === "video") pv.append(h("video", { src: url, controls: true }));
     else if (k === "audio") pv.append(h("audio", { src: url, controls: true }));
     else pv.append(h("iframe", { src: url, title: name }));
-  } catch (e) { const pv = $("pv"); if (pv) pv.textContent = e.message; }
+  } catch (e) { const pv = $("pv"); if (pv) pv.textContent = why(e); }
 }
 
 /* ---------- uploads ---------- */
@@ -468,7 +475,7 @@ async function doUploads(entries) {
           made.set(key, f.id);
         }
       }
-      parent = made.get(key);
+      parent = /** @type {string} */ (made.get(key));
     }
     return parent;
   };
@@ -476,7 +483,7 @@ async function doUploads(entries) {
   for (const e of entries) {
     const p = progress("Uploading " + e.file.name);
     try { const parent = await folderFor(e.parts); await uploadOne(e.file, parent, p); okN++; p.done("Done"); }
-    catch (x) { p.fail(x.message || "Failed"); }
+    catch (x) { p.fail(why(x) || "Failed"); }
   }
   await refresh();
   if (okN) toast(okN === 1 ? "Uploaded." : "Uploaded " + okN + " files.");
@@ -574,8 +581,8 @@ async function settingsBox() {
 /* ---------- start ---------- */
 function privateScreen(j) {
   document.body.innerHTML = '<div id="ix-private"><div class="ix-ico"><svg viewBox="0 0 24 24"><path d="M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3"/></svg></div><h1></h1><p>This page is private. Log in to see it.</p><button type="button">Log In</button></div>';
-  document.querySelector("#ix-private h1").textContent = document.title || "Files";
-  document.querySelector("#ix-private button").onclick = () => window.HUB ? HUB.login("Log in to see your files.").then(() => location.reload(), () => {}) : location.reload();
+  /** @type {any} */ (document.querySelector("#ix-private h1")).textContent = document.title || "Files";
+  /** @type {any} */ (document.querySelector("#ix-private button")).onclick = () => window.HUB ? HUB.login("Log in to see your files.").then(() => location.reload(), () => {}) : location.reload();
   if (window.HUB && HUB.ready) HUB.ready();
 }
 /* ---------- shared from the phone's Share button (1.61) ----------
@@ -626,11 +633,11 @@ function wire() {
   $("sort").onchange = e => { D.settings.sort = e.target.value; render(); post("settings", { settings: { sort: e.target.value } }); };
   let qt; $("q").oninput = e => { clearTimeout(qt); qt = setTimeout(() => { q = e.target.value.trim(); if (q && tab !== "files") tab = "files"; render(); }, 120); };
   const dz = $("drop"); let depth = 0;
-  window.addEventListener("dragenter", e => { if ([...(e.dataTransfer.types || [])].includes("Files")) { depth++; dz.classList.add("over"); } });
+  window.addEventListener("dragenter", e => { if ([...(e.dataTransfer?.types || [])].includes("Files")) { depth++; dz.classList.add("over"); } });
   window.addEventListener("dragleave", () => { depth = Math.max(0, depth - 1); if (!depth) dz.classList.remove("over"); });
-  window.addEventListener("dragover", e => { if ([...(e.dataTransfer.types || [])].includes("Files")) e.preventDefault(); });
-  window.addEventListener("drop", async e => { depth = 0; dz.classList.remove("over"); if (![...(e.dataTransfer.types || [])].includes("Files") || tab !== "files") return; e.preventDefault(); uploadAll(await dropped(e.dataTransfer)); });
-  document.addEventListener("keydown", e => { if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && !document.querySelector("dialog[open]")) { e.preventDefault(); $("q").focus(); } });
+  window.addEventListener("dragover", e => { if ([...(e.dataTransfer?.types || [])].includes("Files")) e.preventDefault(); });
+  window.addEventListener("drop", async e => { depth = 0; dz.classList.remove("over"); if (![...(e.dataTransfer?.types || [])].includes("Files") || tab !== "files") return; e.preventDefault(); uploadAll(await dropped(/** @type {DataTransfer} */ (e.dataTransfer))); });
+  document.addEventListener("keydown", e => { if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || "") && !document.querySelector("dialog[open]")) { e.preventDefault(); $("q").focus(); } });
 }
 wire();
 load();

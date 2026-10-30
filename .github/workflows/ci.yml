@@ -78,6 +78,9 @@ jobs:
       - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
         if: matrix.php == '8.3'
         run: npx eslint src tools-app
+      - name: TypeScript check (the files that start with // @ts-check: keys, locked data, share links)
+        if: matrix.php == '8.3'
+        run: npx tsc -p tsconfig.json && python3 tests/repo/tscheck_test.py
       - name: Check zip name and changelog
         if: matrix.php == '8.3'
         run: |
@@ -131,6 +134,12 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/server/core_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "core"
+
+      - name: Files, server side (locked names, limit, Trash, share links)
+        if: success() || failure()
+        run: |
+          set -o pipefail
+          python3 tests/server/files_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "files server"
 
   visual:
     needs: changes
@@ -264,6 +273,24 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/browser/tools_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "tools $BROWSER"
+      - name: Encryption, Files, locked Cards, Tools presets and private tabs
+        if: (success() || failure()) && steps.build.outcome == 'success'
+        run: |
+          set -o pipefail
+          for t in encrypt files lock tabs_lock; do
+            python3 tests/browser/${t}_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "$t $BROWSER"
+          done
+      - name: Settings windows, Only Me, Backup tabs, Export Bookmarks, calendar link, keyboard shortcuts
+        if: (success() || failure()) && steps.build.outcome == 'success'
+        run: |
+          set -o pipefail
+          python3 tests/browser/settings_ui_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "settings ui $BROWSER"
+      - name: Passkeys and Share from the phone (Chromium: its virtual authenticator and service workers)
+        if: matrix.browser == 'chromium' && (success() || failure()) && steps.build.outcome == 'success'
+        run: |
+          set -o pipefail
+          python3 tests/browser/passkey_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "passkeys"
+          python3 tests/browser/share_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "share"
       - name: Accessibility (Chromium and Firefox)
         if: matrix.browser != 'webkit' && (success() || failure()) && steps.build.outcome == 'success'
         run: |

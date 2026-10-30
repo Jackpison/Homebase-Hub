@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
  * Copyright (C) 2026 Jackpison
  * SPDX-License-Identifier: GPL-3.0-only
@@ -421,7 +422,7 @@ case 'favicon':   // Tools > Favicon: the icon of a website, fetched here becaus
     $png = hub_icon_fetch($dom, min($sz, 256));   // the service gives at most 256; the browser enlarges it for 512
     if ($png === null) hub_json(502, ['ok' => false, 'error' => 'The icon service did not answer. Try again later.']);
     header('Content-Type: image/png'); header('Content-Length: ' . strlen($png)); header('Cache-Control: public, max-age=86400'); header('X-Content-Type-Options: nosniff');
-    echo $png; exit;
+    echo $png; exit;   // nosemgrep: php.lang.security.injection.echoed-request.echoed-request -- PNG bytes from the icon service, sent as image/png with nosniff, never HTML
 
 case 'presets':   // Tools' saved presets (1.60). GET: all of them; POST {op: add | rename | delete, kind, ...}: one change
     require_once __DIR__ . '/lib/presets.php';
@@ -442,7 +443,7 @@ case 'diag':   // Settings > Server check
     $get = function ($url) use ($hasCurl) {
         if (!$hasCurl) return [0, 'cURL missing'];
         $ch = curl_init($url);
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => 1, CURLOPT_FOLLOWLOCATION => 1, CURLOPT_MAXREDIRS => 4, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_TIMEOUT => 8,
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 4, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_TIMEOUT => 8,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (site check)']);
         $b = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); $err = curl_error($ch); curl_close($ch);
         return [$code, $err !== '' ? $err : ($b === false ? 'no answer' : strlen((string)$b) . ' bytes')];
@@ -482,7 +483,7 @@ case 'backup':
     foreach (array_merge(BK_PARTS, BK_OPTIONAL) as $p) if (in_array($p, $parts, true)) $pick[$p] = true;
     foreach (['links', 'info'] as $p) {
         $ids = trim((string)($_GET[$p . '_tabs'] ?? ''));
-        if ($ids !== '' && isset($pick[$p])) $pick[$p] = array_values(array_filter(explode(',', $ids), 'strlen'));
+        if ($ids !== '' && isset($pick[$p])) $pick[$p] = array_values(array_filter(explode(',', $ids), static fn(string $x): bool => $x !== ''));
     }
     if (!$pick) hub_json(400, ['ok' => false, 'error' => 'Pick at least one part.']);
     try { $data = bk_export($pick, !empty($_GET['enc']) && bk_key()); }   // the Telegram bot token only goes into encrypted files
@@ -496,7 +497,7 @@ case 'backup':
     }
     header('Content-Disposition: attachment; filename="' . $name . '"');
     if (count(array_intersect_key($pick, array_flip(BK_PARTS))) === count(BK_PARTS) && !array_filter($pick, 'is_array')) hub_settings_update(function ($s) { $s['backupLast'] = time(); return $s; });
-    echo $json;
+    echo $json;   // nosemgrep: php.lang.security.injection.echoed-request.echoed-request -- the backup as a JSON download (attachment), never shown as a page
     exit;
 
 case 'restore':
@@ -561,7 +562,7 @@ case 'approval_untrust':
         hub_json(200, ['ok' => true]);
     }
     $n = nt_load();
-    if ($action === 'approval_on' && ($n['token'] === '' || $n['chat'] === '')) hub_json(400, ['ok' => false, 'error' => 'Set up the Telegram bot first (Settings > Telegram).']);
+    if ($n['token'] === '' || $n['chat'] === '') hub_json(400, ['ok' => false, 'error' => 'Set up the Telegram bot first (Settings > Telegram).']);
     ap_update(function (&$d) { $d['on'] = true; });
     hub_json(200, ['ok' => true]);
 

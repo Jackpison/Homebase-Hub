@@ -40,9 +40,10 @@ if not os.path.isfile(ZIP): sys.exit('No zip at %s: build it first (python3 scri
 b = ['--browser', BROWSER] if BROWSER else []
 
 run('ESLint', ['npx', 'eslint', 'src', 'tools-app'])
+run('TypeScript check', ['npx', 'tsc', '-p', 'tsconfig.json'])
 run('Unit tests', ['php', 'tests/unit/run.php'])
 run('Version agrees everywhere', [PY, 'scripts/release.py', '--check'])
-for t in ('release_test', 'workflows_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test', 'presets_test', 'tools_list_test'):
+for t in ('release_test', 'workflows_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test', 'presets_test', 'tools_list_test', 'tscheck_test', 'build_test'):
     run('repo/' + t, [PY, 'tests/repo/%s.py' % t])
 run('Library check', [PY, 'tests/repo/check_libraries.py'])
 if os.path.isfile(os.path.join(ROOT, 'phpstan.phar')):
@@ -57,9 +58,10 @@ if not prev or not old:
 run('Update test', [PY, 'tests/server/update_test.py', ZIP, prev, old])
 run('Hostile update zips', [PY, 'tests/server/update_attack_test.py', ZIP])
 run('Core', [PY, 'tests/server/core_test.py', ZIP])
+run('Files (server)', [PY, 'tests/server/files_test.py', ZIP])
 
 if not QUICK:
-    for t in ('import', 'app', 'settings', 'tools', 'pages', 'nav', 'a11y'):
+    for t in ('import', 'app', 'settings', 'tools', 'pages', 'nav', 'a11y', 'encrypt', 'files', 'lock', 'tabs_lock', 'settings_ui', 'passkey', 'share'):
         if BROWSER and t in ('app', 'settings'): continue   # Chromium only
         run('browser/' + t + (' (%s)' % BROWSER if BROWSER else ''), [PY, 'tests/browser/%s_test.py' % t, ZIP] + ([] if t in ('app',) else b))
     run('Website build', [PY, 'scripts/make-site.py', '--no-guide'])

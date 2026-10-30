@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
  * Copyright (C) 2026 Jackpison
  * SPDX-License-Identifier: GPL-3.0-only

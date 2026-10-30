@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // an include file: never run on its own, even where .htaccess is ignored
 /* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
  * Copyright (C) 2026 Jackpison
@@ -65,8 +66,8 @@ function nt_tg(string $token, string $method, array $params = []): array {
     $raw = false; $err = '';
     if (function_exists('curl_init')) {
         $ch = curl_init($url);
-        curl_setopt_array($ch, [CURLOPT_POST => 1, CURLOPT_POSTFIELDS => $body, CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_RETURNTRANSFER => 1, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_TIMEOUT => 15]);
+        curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $body, CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_TIMEOUT => 15]);
         $raw = curl_exec($ch); if ($raw === false) $err = curl_error($ch); curl_close($ch);
     } else {
         $raw = @file_get_contents($url, false, stream_context_create(['http' => ['method' => 'POST', 'header' => "Content-Type: application/json\r\n", 'content' => $body, 'timeout' => 15, 'ignore_errors' => true]]));
@@ -84,8 +85,8 @@ function nt_tg_file(string $token, string $chat, string $path, string $name, str
     $raw = false; $err = '';
     if (function_exists('curl_init')) {
         $ch = curl_init($url);
-        curl_setopt_array($ch, [CURLOPT_POST => 1, CURLOPT_POSTFIELDS => $fields + ['document' => new CURLFile($path, 'application/octet-stream', $name)],
-            CURLOPT_RETURNTRANSFER => 1, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_TIMEOUT => 180]);
+        curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $fields + ['document' => new CURLFile($path, 'application/octet-stream', $name)],
+            CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_TIMEOUT => 180]);
         $raw = curl_exec($ch); if ($raw === false) $err = curl_error($ch); curl_close($ch);
     } else {
         $b = '----hub' . bin2hex(random_bytes(8)); $body = '';

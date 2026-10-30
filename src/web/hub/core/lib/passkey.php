@@ -55,7 +55,7 @@ function pk_cbor(string $b, int &$o = 0, int $depth = 0) {
         case 1: return -1 - $n;
         case 2: case 3:
             if ($n > strlen($b) - $o) throw new Exception('cbor');
-            $s = substr($b, $o, $n); $o += $n;
+            $s = substr($b, $o, $n); $o += (int)$n;
             if ($mt === 3 && !mb_check_encoding($s, 'UTF-8')) throw new Exception('cbor');
             return $s;
         case 4:

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /* Homebase Hub - https://github.com/Jackpison/Homebase-Hub
  * Copyright (C) 2026 Jackpison
  * SPDX-License-Identifier: GPL-3.0-only
@@ -196,7 +197,7 @@ function organize_icons(&$data, $iconDir, $secret) {
                 if (!is_array($l) || empty($l['icon']) || !is_string($l['icon'])) continue;
                 if (!preg_match('~^icons/((?:[a-z0-9-]+/)?)([A-Za-z0-9._-]+\.(?:png|ico|gif|jpg|webp|svg))(\?[^#]*)?$~', $l['icon'], $m)) continue;
                 $file = $m[2]; $rel = $m[1] . $file; $target = $slug . '/' . $file;
-                if ($file[0] === '_') continue;
+                if (str_starts_with($file, '_')) continue;
                 if ($rel !== $target) {
                     $src = $iconDir . '/' . $rel; $dst = $iconDir . '/' . $target;
                     if (!is_dir(dirname($dst))) @mkdir(dirname($dst), 0755, true);

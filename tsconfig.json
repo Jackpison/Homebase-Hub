@@ -1,0 +1,24 @@
+{
+  "//": "JavaScript type checking (1.61). Only files that start with // @ts-check are checked, the ones that handle keys and locked data first. Run: npx tsc -p tsconfig.json. It reads, it never writes.",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "es2022",
+      "dom",
+      "dom.iterable"
+    ],
+    "strict": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true
+  },
+  "files": [
+    "tests/types/hub-globals.d.ts",
+    "src/web/files/assets/share.js",
+    "src/web/files/assets/files.js"
+  ]
+}
