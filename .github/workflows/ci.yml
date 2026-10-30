@@ -148,6 +148,7 @@ jobs:
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
     # Every page in a real browser: Chromium and WebKit (every iPhone browser uses it), each in two halves (pages, tools), four jobs side by side.
     # Inside a half several tests run at the same time (tests/lib/run_parallel.py): each test has its own port and /tmp folder.
+    # Chromium runs three at once, WebKit two: with three, WebKit cancelled requests and missed timings on a busy runner (1.61.10).
     # Only the slow-phone test runs alone, because it measures time. Firefox runs on the 1st and 15th in firefox-check.yml.
     # Each job installs the browser's Ubuntu packages itself, so a stuck download holds one job, not all: the install tries three times.
     runs-on: ubuntu-latest
@@ -213,7 +214,7 @@ jobs:
       - name: Pages half in WebKit (several tests at once)
         if: matrix.browser == 'webkit' && matrix.part == 'pages' && steps.build.outcome == 'success'
         run: |
-          python3 tests/lib/run_parallel.py -j 3 \
+          python3 tests/lib/run_parallel.py -j 2 \
             "pages webkit|tests/browser/pages_test.py build/site-update-*.zip --browser webkit" \
             "nav webkit|tests/browser/nav_test.py build/site-update-*.zip --browser webkit" \
             "settings ui webkit|tests/browser/settings_ui_test.py build/site-update-*.zip --browser webkit" \
@@ -237,7 +238,7 @@ jobs:
       - name: Tools half in WebKit (several tests at once)
         if: matrix.browser == 'webkit' && matrix.part == 'tools' && steps.build.outcome == 'success'
         run: |
-          python3 tests/lib/run_parallel.py -j 3 \
+          python3 tests/lib/run_parallel.py -j 2 \
             "tools webkit|tests/browser/tools_test.py build/site-update-*.zip --browser webkit" \
             "website webkit|tests/browser/website_test.py build/site --browser webkit" \
             "encrypt webkit|tests/browser/encrypt_test.py build/site-update-*.zip --browser webkit" \

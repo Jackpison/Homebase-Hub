@@ -81,7 +81,7 @@ check('W16 Firefox runs on the 1st and 15th and by hand, runs the page tests and
       and 'issues: write' in ff and 'timeout-minutes:' in ff and 'permissions: {}' in ff and not re.search(r'pull_request|push:', ff))
 check('W17 CI runs the secret check', 'tests/repo/secrets_test.py' in ci)
 check('W18 several browser tests run at once through run_parallel.py, and only the slow-phone test (it measures time) runs alone (-j 1)',
-      bj.count('tests/lib/run_parallel.py -j 3') == 4 and 'run_parallel.py -j 1 "slow phone|' in bj and 'speed_test' not in bj.replace('run_parallel.py -j 1 "slow phone|tests/browser/speed_test.py', '') and 'tests/repo/parallel_test.py' in ci)
+      bj.count('tests/lib/run_parallel.py -j 3') == 2 and bj.count('tests/lib/run_parallel.py -j 2') == 2 and 'run_parallel.py -j 1 "slow phone|' in bj and 'speed_test' not in bj.replace('run_parallel.py -j 1 "slow phone|tests/browser/speed_test.py', '') and 'tests/repo/parallel_test.py' in ci)
 check('W19 CI lints the Python (ruff, pinned, rules in ruff.toml) and the build job reads enough history for the commit-message secret check',
       'ruff==' in ci and '/tmp/rf/bin/ruff check' in ci and os.path.isfile(os.path.join(ROOT, 'ruff.toml')) and re.search(r'fetch-depth: 50', '\n'.join(cij['build'])))
 bad_names = []
