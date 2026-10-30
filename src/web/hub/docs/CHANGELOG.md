@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.61.0 | Your private things are locked in your browser (one passphrase, one recovery key); a new Files page; passkeys; a calendar link for Tasks; Share from your phone; keyboard shortcuts; one Settings look everywhere |
 | 1.60.0 | 17 new tools (Calculators, Documents, scanner, recorder and more); saved presets in Tools; the maintained PDF writer; no going back before 1.50 |
 | 1.59.1 | iPhone app: the top bar is reachable again; swipes change pages only (1.54-1.58 were skipped) |
 | 1.59.0 | Swipe gestures on phones; vivid presets; the project keeps itself current (monthly maintenance); repeated code merged |
@@ -88,6 +89,62 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.61.0
+
+### Locked in your browser
+
+- **One passphrase locks your private things.** The key is made in your browser, kept on your server only in a locked form, and never seen by the server. Set it (and the **recovery key**) in **Settings > Security**. If you forget the passphrase, the recovery key opens everything; without both, nobody can, not even you.
+- **Cards** are locked with it. **Tools' saved presets** are locked with it. **Private tabs** in Links and Info are locked from the start: a new private tab is encrypted, and **Encrypt All Private Tabs** in each page's Settings locks the ones you already had. The server keeps no readable copy, not even in earlier versions.
+- **Backups you download are always locked** once you have a passphrase.
+- **Tasks stay readable** on your server, so Telegram reminders and the daily list keep working.
+
+### New: Files
+
+- A **Files** page for your own files: folders, search, preview, Trash, and a zip of a whole folder. **Every file is locked in your browser before it is sent.** The server holds only scrambled pieces and cannot read a name or a word.
+- **Share links** (on by default; switch them off in Files Settings): anyone with the link opens one file without logging in. The key is in the link after the `#`, which no browser sends to a server. You choose when a link ends, and you can end it at once.
+- A **5 GB limit** you can change (or set to 0 to be limited only by your host).
+- Files are **not** part of a backup unless you switch **Files** on in Backup > Back Up (they can be big).
+
+### New: Passkeys
+
+- **Settings > Security > Passkeys:** log in with your fingerprint, face or phone's PIN instead of the password. A passkey needs no two-step code (it is already two things at once). Your password and two-step login still work. Add as many as you like and remove any with your password.
+
+### New: Tasks calendar link
+
+- **Tasks Settings > Calendar Link** (off until you turn it on): a secret link for Google, Apple or Outlook Calendar. Your tasks appear there with their repeats and reminders (never the notes). Anyone who has the link can see your task names, so **Make a New Link** ends the old one at once.
+
+### New: Share from your phone
+
+- Add the site to your phone's home screen. Then **Share** in any app lists it. Send a picture, a PDF or some text: you choose **Save to Files** (locked first), **Open in Tools** (the next tool that takes that kind of file gets it) or **Discard**. Nothing leaves the phone until you choose. (Works where the browser supports it, such as Chrome on Android.)
+
+### New: Keyboard shortcuts
+
+- **?** shows them. **G** then a letter goes to a page (**G H** Home, **G L** Links, **G T** Tasks ...); **E** starts editing the page you are on. They never run while you type.
+
+### Settings, tidier
+
+- **One Settings window** on every page: a title and a close X on top, a body that scrolls, and **Cancel** and **Save Settings** always in view. Every page calls its title **Page Title**.
+- **Only Me** on every page except Tools: on, a visitor sees a log-in screen and nothing else. Cards, Tasks and Files are always only for you, so they show it locked on. (It replaces *Only Show Bookmarks After Logging In* in Links and *Private Page* in Info, and is new for Home.)
+- **Buttons instead of dropdowns** for choices of two or three, and **switches** for on and off, on every page and in Settings.
+- **Colors:** the *Same Look on Every Page* switch is gone (every site uses the shared colors; your saved colors still apply). One **Accent** row, and the page-by-page backgrounds and accents are folded into **Different Colors per Page**. 9 rows instead of 21.
+- **Backup & Restore** has four tabs: **Back Up** (one big button; *Choose What to Include* is folded away, with *Pages* and *Site* switches; *Files* is off), **Restore** (with Earlier Versions), **Export** and **Start Over**. The old addresses still open the right tab.
+- **Export Bookmarks** (Links Settings, and Backup > Export): the standard bookmark file that Chrome, Edge, Firefox and Safari import. Made in your browser; private tabs only if you ask.
+
+### Safer inside
+
+- Every PHP file runs in strict mode, and the analysis behind the tests is stricter (PHPStan level 5).
+- The scripts that handle keys and locked data are type-checked in CI.
+- CodeQL and Semgrep scan the code on every push, and every week.
+- A new check measures every page on a slowed-down phone; a new accessibility check covers the new windows. A few low-contrast texts in the new windows were fixed because of it.
+
+### Please know
+
+- The calendar link and the saved share are not part of a backup: after a restore, make a new calendar link.
+- Passkeys belong to a web address: if the site moves to another address, add them again.
+- A site moved to a new folder or server keeps its passphrase, key and files by moving the whole site folder (`site-data` included), as before.
 
 ---
 

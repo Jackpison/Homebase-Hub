@@ -8,7 +8,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 |---|---|
 | `src/` | The site, readable. `index.php` and `web/` are what ships. Edit here, never in `build/`. |
 | `src/web/hub/core/` | The shared engine: login, settings, updates, Telegram, the bar (`assets/shell.js`, `shell.css`, `shell-admin.js`). |
-| `src/web/<page>/` | Each page: `home`, `links`, `info`, `cards`, `tasks`, `tools`, `settings`. |
+| `src/web/<page>/` | Each page: `home`, `links`, `info`, `cards`, `tasks`, `files`, `tools`, `settings`. `src/web/hub/share-sw.js` is the small service worker behind Share from the phone. |
 | `tools-app/` | The source of Tools (plain ES modules, esbuild). `python3 scripts/build-tools.py --install` builds it into `src/web/tools/` (index.html, sw.js, assets/); never edit `src/web/tools/assets/` by hand. See `tools-app/README.md`. |
 | `src/web/hub/docs/` | `README.txt` and `CHANGELOG.md` (shipped inside every zip, closed to browsers). |
 | `scripts/` | `build.py` (the zip), `build-tools.py` (Tools from `tools-app/`), `tools-rev.py` (Tools fingerprint), `make-site.py`, `site_pages.py` and `make-guide.py` (website, its data-built pages, and the PDF guide), `make-latest.py`, `release-notes.py`, `screenshots.py` (the website's screenshots from the real app), `maintain.py` (the monthly Tools library update that `.github/workflows/maintenance.yml` runs). |
@@ -25,6 +25,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 - Test-only shortcuts (`GH_TEST_*`, `HUB_TEST_FAVICON`, `HUB_TEST_PUBLIC`, `NT_TEST_*`) are defined only by the tests (`tests/lib/prepend.php` and the unit tests in `tests/unit/`). The site must never define them; `tests/unit/logic_test.php` checks.
 - After changing anything in `tools-app/`, run `python3 scripts/build-tools.py --install` (it also refreshes the Tools fingerprint) and commit `src/web/tools/` with it. A new tool: `python3 scripts/new-tool.py <id> "<Name>" <section> <icon> "<description>"` writes its line in `tools-app/src/tools.json` and a starter file; the build makes the list of tool modules from `tools.json`, and `tests/repo/tools_list_test.py` fails until the tool has its own check in `tests/browser/tools_test.py`. The website's tool finder reads the same list.
 - `.htaccess` files only work on Apache: a comment must be on its own line (Apache refuses `Directive value  # comment`). Test them with `tests/server/apache_test.py`.
+- Every PHP file starts with `declare(strict_types=1);` (a unit test fails for one that does not). Keys and locked data are handled only in the browser: the server never gets a passphrase or a key, and the files that handle them (`files.js`, `share.js`) start with `// @ts-check` and are listed in `tsconfig.json`.
 - Write plainly in everything a user reads: short sentences, the same names the screen shows, Title Case on buttons and headings in the app.
 - **Every new feature and every bug fix in the PHP code gets at least one unit test** in `tests/unit/` (a new `*_test.php` is picked up by itself; for a fix, write a test that fails without it). A change to a page or a tool gets a check in the matching browser test (`tests/*_test.py`). A green run proves only what the tests cover, so do not describe it as proof that everything works.
 - Do not claim something works unless you ran it and saw it work. Say what you did not test.
@@ -34,6 +35,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 ```
 npm ci --ignore-scripts
 npx eslint src tools-app
+npx tsc -p tsconfig.json && python3 tests/repo/tscheck_test.py
 php tests/unit/run.php
 python3 scripts/release.py --check
 python3 tests/repo/release_test.py
@@ -57,6 +59,8 @@ python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/pages_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/nav_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/a11y_test.py build/site-update-X.Y.Z.zip
+for t in encrypt files lock tabs_lock settings_ui passkey share speed; do python3 tests/browser/${t}_test.py build/site-update-X.Y.Z.zip; done   # passkey, share and speed run in Chromium only
+python3 tests/server/files_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/website_test.py build/site            # after python3 scripts/make-site.py --no-guide
 python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip <previous release zip> build/visual   # a report of what changed on screen
 sudo sh tests/server/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/server/apache_test.py

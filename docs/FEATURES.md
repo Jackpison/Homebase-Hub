@@ -123,6 +123,37 @@ Not for the website's feature pages, but worth one line on the **About** or **Se
 
 ---
 
+## 13. Locked in your browser (1.61)
+
+- [ ] **One passphrase and a recovery key** (Settings > Security): Cards, Files, Tools' saved presets and private tabs in Links and Info are locked in the browser; backups you download are locked too. Tasks stay readable. Say what is lost if both are lost. (Security page, guide.)
+- [ ] **Encrypt All Private Tabs** in Links Settings and Info Settings; a new private tab is encrypted from the start.
+- [ ] **Passkeys** (Settings > Security > Passkeys): no two-step code after a passkey.
+
+## 14. Files (1.61)
+
+- [ ] A new seventh page: **Files**. Folders, search, preview, Trash, a folder as a zip, share links (key after the `#`, you choose when it ends), a 5 GB limit you can change. Needs a feature page on the website, a tour card on the home page and a guide chapter.
+- [ ] **Share from your phone** (installed app, Chrome on Android): Save to Files, Open in Tools, Discard. (On Your Phone page.)
+
+## 15. Tasks and shortcuts (1.61)
+
+- [ ] **Calendar Link** in Tasks Settings (off by default, secret, a new link ends the old one). Tasks page, guide.
+- [ ] **Keyboard shortcuts**: `?` lists them; `G` then a letter goes to a page; `E` edits. (Guide, a short card on the home page tour.)
+
+## 16. Settings, tidier (1.61)
+
+- [ ] **One Settings window** on every page (close X, scrolling body, Cancel and Save Settings in view; "Page Title"); **Only Me** on every page but Tools; **buttons** for two or three choices and **switches** for on and off, everywhere.
+- [ ] **Colors** tab: 9 rows, one Accent, *Different Colors per Page* folded; **Backup & Restore** in four tabs (Back Up, Restore, Export, Start Over); **Export Bookmarks** (Links Settings and Backup > Export).
+- [ ] Retake: `cards-settings`, `tasks-settings`, `links-settings`, `info-settings`, `files-settings` (new), `s-colors`, `s-backup`, `s-backup-export`, `s-security` (passphrase, passkeys), `files` (new), `files-share` (new), `tasks-calendar` (new).
+
+## 17. For the people who keep it running (1.61)
+
+- [x] Every PHP file runs in strict mode and PHPStan runs at level 5 (a test fails for a file without `declare(strict_types=1)`).
+- [x] `npx tsc -p tsconfig.json` type-checks the files that start with `// @ts-check` (the Files page and the share-link page first); add more files to `tsconfig.json` as they are cleaned up.
+- [x] CodeQL and Semgrep scan on every push and every week (`.github/workflows/code-scanning.yml`).
+- [x] New checks: a slow-phone speed check (`tests/browser/speed_test.py`) and accessibility checks for the new windows.
+
+---
+
 ## Screenshot checklist for the refresh
 
 Take these with `python3 scripts/screenshots.py build/site-update-X.Y.Z.zip OUT` (add the scenes it does not take yet):

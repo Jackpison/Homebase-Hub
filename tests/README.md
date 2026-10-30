@@ -7,9 +7,9 @@ These run on your own computer. Nothing here is part of the update zip.
 | Folder | What is in it |
 |---|---|
 | `unit/` | PHP unit tests (`php tests/unit/run.php`) |
-| `browser/` | Tests in a real browser: `pages_test`, `nav_test`, `settings_test`, `tools_test`, `import_test`, `a11y_test`, `app_test`, `website_test` |
-| `server/` | Tests of the server side: `update_test`, `update_attack_test`, `core_test`, and Apache (`apache_setup.sh`, `apache_test.py`) |
-| `repo/` | Checks of the repository itself: `release_test`, `check_libraries`, `workflows_test`, `ci_status_test`, `ci_changes_test`, `releases_test` |
+| `browser/` | Tests in a real browser: `pages_test`, `nav_test`, `settings_test`, `settings_ui_test` (Settings windows, Only Me, Backup tabs, Export Bookmarks, calendar link, shortcuts), `tools_test`, `import_test`, `a11y_test`, `app_test`, `website_test`, and for 1.61 `encrypt_test`, `files_test`, `lock_test`, `tabs_lock_test`, `passkey_test` and `share_test` (Chromium only), `speed_test` (a slowed phone, Chromium only) |
+| `server/` | Tests of the server side: `update_test`, `update_attack_test`, `core_test`, `files_test`, and Apache (`apache_setup.sh`, `apache_test.py`) |
+| `repo/` | Checks of the repository itself: `tscheck_test` (the JavaScript type check, `npx tsc -p tsconfig.json`), `build_test`, `release_test`, `check_libraries`, `workflows_test`, `ci_status_test`, `ci_changes_test`, `releases_test` |
 | `fixtures/` | Files the tests open: PDFs, pictures, a HEIC photo, the favicon stand-in, bookmark exports |
 | `lib/` | Shared helpers: `helpers.py` (sites, logins, paths), `releases.py` (the previous release and its zip), `annotate.py` (CI annotations), `prepend.php` (test-only shortcuts), `seed_demo.php` (demo data), `phpstan-bootstrap.php` |
 
@@ -34,7 +34,7 @@ Add a new `*_test.php` next to them. `lib.php` gives you `t('what should happen'
 
 ## Static analysis
 
-`tests/repo/phpstan.neon` (level 3) is run by CI with a pinned PHPStan, and CI checks the download's SHA-256 before it runs it. See AGENTS.md for the command. To raise the PHPStan version, change the version and the checksum in both `.github/workflows/ci.yml` and `AGENTS.md` (get the new checksum with `sha256sum phpstan.phar`). The checksum is pinned when you first download a version, so it guards against the file changing later, not against a bad first download. `tests/lib/phpstan-bootstrap.php` only tells it the folder constants that `boot.php` defines at run time.
+`tests/repo/phpstan.neon` (level 5, raised from 3 in 1.61; level 6 asks for the type of every array and is not worth it yet) is run by CI with a pinned PHPStan, and CI checks the download's SHA-256 before it runs it. See AGENTS.md for the command. To raise the PHPStan version, change the version and the checksum in both `.github/workflows/ci.yml` and `AGENTS.md` (get the new checksum with `sha256sum phpstan.phar`). The checksum is pinned when you first download a version, so it guards against the file changing later, not against a bad first download. `tests/lib/phpstan-bootstrap.php` only tells it the folder constants that `boot.php` defines at run time.
 
 ## Python packages
 

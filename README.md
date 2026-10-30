@@ -62,7 +62,7 @@ Start page, bookmarks, notes, cards, tasks and browser tools. One login, one loo
 
 ## Features
 
-Six pages share one login, one bar and one Settings page. Pick a name to see its own page on the website.
+Seven pages share one login, one bar and one Settings page. Pick a name to see its own page on the website.
 
 | Page | What it does | Highlights |
 |---|---|---|
@@ -70,7 +70,8 @@ Six pages share one login, one bar and one Settings page. Pick a name to see its
 | [🔖&nbsp;**Links**](https://jackpison.github.io/Homebase-Hub/features/links/) | Bookmarks in tabs and categories | Import from any browser, see which links you open most, icons saved on your server, encrypted tabs |
 | [📝&nbsp;**Info**](https://jackpison.github.io/Homebase-Hub/features/info/) | Notes in boxes, or as a document | 1 to 12 boxes in each tab, cards or one document with an outline, export as PDF or text |
 | [💳&nbsp;**Cards**](https://jackpison.github.io/Homebase-Hub/features/cards/) | Your cards in one searchable table | Filter by bank, network, type and holder, yearly charges added up, Holders and Banks windows, export to Excel |
-| [✅&nbsp;**Tasks**](https://jackpison.github.io/Homebase-Hub/features/tasks/) | Bills, renewals and chores | Due dates, repeats and prices, calendar and analytics, Year in Review PDF |
+| [✅&nbsp;**Tasks**](https://jackpison.github.io/Homebase-Hub/features/tasks/) | Bills, renewals and chores | Due dates, repeats and prices, calendar and analytics, Year in Review PDF, a secret calendar link for Google, Apple or Outlook (off until you turn it on) |
+| 📁&nbsp;**Files** | Your own files, locked in your browser | Folders, search, preview, Trash, share links that open one file (the key is in the link, after the `#`), a 5 GB limit you can change. Share to it from your phone |
 | [🧰&nbsp;**Tools**](https://jackpison.github.io/Homebase-Hub/features/tools/) | Small tools that run in your browser | 53 tools in six sections: images, photos, PDF, calculators (EMI, SIP, FD and RD), documents (invoices, text compare, Markdown, spreadsheets) and utilities (QR scanner, barcodes, time zones, recorder). Save your settings as presets |
 
 And around the pages:
@@ -225,7 +226,8 @@ Optional. Set it up in **Settings > Telegram** and your site can message you:
 | Area | What it does |
 |---|---|
 | 🔑&nbsp;**Login** | One bcrypt password, optional two-step login with recovery codes, trusted browsers and a device list. Logins pause after five wrong tries. |
-| 🔐&nbsp;**Encryption** | Tabs in Links and Info and your backups can be encrypted. The keys are made in your browser from your passphrase, so a lost passphrase and recovery key means lost data. |
+| 🔐&nbsp;**Encryption** | Cards, Files, Tools' saved presets, private tabs in Links and Info, and your backups are locked in your browser with one passphrase (and a recovery key). The server never sees the key, so a lost passphrase and recovery key means lost data. Tasks stay readable on the server so reminders work. |
+| 🪪&nbsp;**Passkeys** | Log in with a fingerprint, face or PIN (WebAuthn). A passkey needs no two-step code. The server keeps only the public key. |
 | 🚪&nbsp;**Closed data** | Data files answer 404 to a browser, even on hosts where `.htaccess` is ignored. |
 | ♻️&nbsp;**Safe updates** | They come only from this project's GitHub releases, are compared with the release's SHA-256 checksum and fully checked before anything changes, and need your password. |
 | ⏳&nbsp;**PHP support** | Settings tells you when your PHP stops getting security fixes. |
@@ -272,7 +274,25 @@ Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari. On Links, p
 <details>
 <summary><b>Does it work offline?</b></summary>
 <br>
-No, on purpose. Your data is private, so it always comes from your server. Added to a home screen, the site opens like an app, but nothing is kept on the phone.
+No, on purpose. Your data is private, so it always comes from your server. Added to a home screen, the site opens like an app, but nothing is kept on the phone, except what you send to it with the phone's Share button: that waits in the browser (for a day at most) until you choose Save to Files, Open in Tools or Discard.
+</details>
+
+<details>
+<summary><b>What is locked, and what if I forget the passphrase?</b></summary>
+<br>
+Cards, Files, Tools' saved presets, private tabs in Links and Info (when encrypted) and the backups you download are locked in your browser with your passphrase. The server holds only scrambled text and cannot read it. Set the passphrase and the <b>recovery key</b> in <b>Settings &gt; Security</b> and keep the recovery key somewhere safe: with a lost passphrase and no recovery key, nobody can open what is locked, not even you. Tasks are not locked, so Telegram reminders keep working.
+</details>
+
+<details>
+<summary><b>Can I see my tasks in Google, Apple or Outlook Calendar?</b></summary>
+<br>
+Yes. In <b>Tasks Settings &gt; Calendar Link</b> turn the link on and paste it into your calendar app (Google: Other calendars, From URL). Anyone who has the link can see your task names (never the notes), so keep it private; <b>Make a New Link</b> ends the old one at once. It is off until you turn it on.
+</details>
+
+<details>
+<summary><b>Are there keyboard shortcuts?</b></summary>
+<br>
+Yes. Press <b>?</b> to see them: <b>/</b> searches, <b>G</b> then a letter goes to a page (<b>G H</b> Home, <b>G L</b> Links, <b>G T</b> Tasks ...), <b>E</b> starts editing the page. Tasks also has <b>N</b>, <b>F</b> and <b>C</b>.
 </details>
 
 <details>

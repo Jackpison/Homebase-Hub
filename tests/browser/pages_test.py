@@ -435,9 +435,9 @@ try:
         hctx.close()
         rows_ok = lambda r: ['Text Sizes', 'Edit Bar'] == [x[0] for x in r[1] if x[0] in ('Text Sizes', 'Edit Bar')] and [x[1] for x in r[1] if x[0] == 'Text Sizes'] == ['BUTTON'] and [x[1] for x in r[1] if x[0] == 'Edit Bar'] == ['DIV'] and [x[2] for x in r[1] if x[0] == 'Text Sizes'][0] == 'Change' and [x[3] for x in r[1] if x[0] == 'Text Sizes'][0] < 200
         frame_ok = lambda r: r[2] is True and r[3][-2:] == ['Cancel', 'Save Settings'] and r[4] in ('auto', 'scroll')
-        check('P58 Links and Info Settings: a Look section with Text Sizes (a small Change button) and Edit Bar as a row of buttons; each has Only Me; Tasks Settings: General, When the Page Opens, Look and Privacy, with Edit Bar in Look; every Settings window has a close X, a scrolling body and Cancel / Save Settings',
+        check('P58 Links and Info Settings: a Look section with Text Sizes (a small Change button) and Edit Bar as a row of buttons; each has Only Me; Tasks Settings: General, When the Page Opens, Look, Calendar Link and Privacy, with Edit Bar in Look; every Settings window has a close X, a scrolling body and Cancel / Save Settings',
               rows_ok(ls_) and rows_ok(is_) and 'Look' in ls_[0] and 'Look' in is_[0] and any(x[0] == 'Only Me' for x in ls_[1]) and any(x[0] == 'Only Me' for x in is_[1])
-              and tl == ['General', 'When the Page Opens', 'Look', 'Privacy'] and lookhas and frame_ok(ls_) and frame_ok(is_) and frame_ok(ts_), (ls_, is_, ts_, tl, lookhas))
+              and tl == ['General', 'When the Page Opens', 'Look', 'Calendar Link', 'Privacy'] and lookhas and frame_ok(ls_) and frame_ok(is_) and frame_ok(ts_), (ls_, is_, ts_, tl, lookhas))
         # P60-P62 (1.53.8): the login window; Cards Settings like Links and Info; the Banks window and its own icon
         lctx2 = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); lctx2.route('**/*', handle)
         lp2 = lctx2.new_page(); lp2.goto(B + '/web/links/', wait_until='domcontentloaded'); until(lambda: lp2.evaluate("!!(window.HUB && HUB.state().admin === false)"), 15000)
