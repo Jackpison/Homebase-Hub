@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.61.1 | Shorter help texts in every Settings window; Import and Export Bookmarks in one window; a clearer first unlock in Files; no server free-space figure |
 | 1.61.0 | Your private things are locked in your browser (one passphrase, one recovery key); a new Files page; passkeys; a calendar link for Tasks; Share from your phone; keyboard shortcuts; one Settings look everywhere |
 | 1.60.0 | 17 new tools (Calculators, Documents, scanner, recorder and more); saved presets in Tools; the maintained PDF writer; no going back before 1.50 |
 | 1.59.1 | iPhone app: the top bar is reachable again; swipes change pages only (1.54-1.58 were skipped) |
@@ -89,6 +90,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.61.1
+
+### Changed
+
+- **Much shorter help texts** in the Settings windows of every page and in Settings itself: one short line under a name, no paragraphs.
+- **Export Bookmarks moved** out of Links Settings into the bookmarks window, which is now **Import and Export** (the pencil menu says so too).
+- **Files no longer shows your server's free space** (hosts differ and the figure can mislead). It shows only what Files uses and your own limit.
+- **First unlock in Files and Cards:** if your passphrase is already set, the window now says so ("Lock Files and Cards") and asks for it once more with your website password. It is needed once because the new locked pages use their own key.
+- **Backup:** *Choose What to Include* and *Pick Parts One by One* are now clear buttons.
+
+### Fixed
+
+- Firefox: the Settings windows did not get their new frame (title, close X, footer).
+- Version names inside the code now say 1.61.0, not 1.61.
 
 ---
 

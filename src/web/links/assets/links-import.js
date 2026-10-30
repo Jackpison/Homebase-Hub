@@ -152,7 +152,7 @@
         el('label', { class: 'check imp-sub' }, el('input', { type: 'checkbox', id: 'impPrivate' }), el('span', { text: 'Make the New Tab Private' }, el('small', { text: 'Only visible when you are logged in.' }))),
         el('label', { class: 'check' }, el('input', { type: 'radio', name: 'impTo', value: 'tab', id: 'impToTab' }), el('span', { text: 'An Existing Tab' })),
         el('div', { class: 'field imp-sub' }, el('label', { for: 'impTab', text: 'Tab' }), el('select', { id: 'impTab' })),
-        el('p', { id: 'impTabNote', class: 'hint', style: 'font-size:12.5px;color:var(--faint);margin:4px 0 0' })),
+        el('p', { id: 'impTabNote', class: 'hint', style: 'font-size:12.5px;color:var(--muted);margin:4px 0 0' })),
       el('h4', { text: 'Export' }),
       el('div', { class: 'ix-srow' }, el('span', {}, 'Export Bookmarks', el('small', { text: 'A file Chrome, Edge, Firefox and Safari can import.' })), el('button', { class: 'btn', type: 'button', id: 'impExport', text: 'Export' })),
       el('div', { class: 'ix-srow' }, el('label', { for: 'impExPriv' }, 'Include Private Tabs', el('small', { text: 'Adds private tabs and unlocked encrypted ones. Keep the file safe.' })), el('input', { type: 'checkbox', class: 'ix-sw', id: 'impExPriv' })),
