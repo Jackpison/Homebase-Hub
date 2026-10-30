@@ -1643,7 +1643,8 @@
         (can ? ecCard('', ICON.key, 'Add a Passkey', 'Your browser or phone asks which device or key to use. Adding or removing a passkey needs your website password.',
           '<div class="ix-fgrid">' + ecField('ix-pkn', 'Name', 'text', 'off', 'Like "My Phone" or "Laptop".') + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div>' +
           '<p class="ix-err" id="ix-pke"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-pkadd">Add a Passkey</button></div>')
-          : ecCard('warn', ICON.lock, 'Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.'));
+          : ecCard('warn', ICON.lock, 'Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.' + (keys.length ? ' You can still remove the ones you have: type your website password below.' : ''),
+            keys.length ? '<div class="ix-fgrid">' + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div><p class="ix-err" id="ix-pke"></p>' : ''));
       var err = function (t) { var e = b.querySelector('#ix-pke'); if (e) e.textContent = t; }, val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
       var add = b.querySelector('#ix-pkadd');
       if (add) add.onclick = function () {
@@ -1663,11 +1664,18 @@
           st.pk = j.keys; toast('Passkey added.'); drawPk(); overview();
         }).catch(function (x) { err(x && x.name === 'NotAllowedError' ? 'No passkey was made: it was cancelled or timed out.' : x && x.name === 'InvalidStateError' ? 'This device already has a passkey here.' : (x && x.message) || 'Could not add a passkey.'); add.disabled = false; });
       };
+      // (1.62.1) Remove used to say nothing near the button: its messages went to the line in the box below, out of sight. Now each one also shows as a message on top.
+      var say = function (t) { err(t); toast(t, true); };
       b.querySelectorAll('[data-pkdel]').forEach(function (x) { x.onclick = function () {
-        var pw = val('#ix-pkw'); if (!pw) { err('Type your website password first (in the box below), then press Remove.'); return; }
+        var pw = val('#ix-pkw'), pwBox = b.querySelector('#ix-pkw');
+        if (!pw) {
+          say('Type your website password in the box below, then press Remove again.');
+          if (pwBox) { pwBox.scrollIntoView({ block: 'center', behavior: 'smooth' }); pwBox.focus(); }
+          return;
+        }
         if (x.dataset.armed !== '1') { x.dataset.armed = '1'; x.textContent = 'Click Again: Remove'; return; }
         x.disabled = true; api('pk_delete', { id: x.dataset.pkdel, password: pw }).then(function (j) {
-          if (!j.ok) { err(j._status === 401 ? 'That isn\'t your website password.' : j.error || 'Could not remove it.'); x.disabled = false; x.dataset.armed = ''; x.textContent = 'Remove'; return; }
+          if (!j.ok) { say(j._status === 401 ? 'That isn\'t your website password.' : j.error || 'Could not remove it.'); x.disabled = false; x.dataset.armed = ''; x.textContent = 'Remove'; return; }
           st.pk = j.keys; toast('Passkey removed.'); drawPk(); overview();
         });
       }; });
