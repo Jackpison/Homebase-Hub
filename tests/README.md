@@ -11,7 +11,7 @@ These run on your own computer. Nothing here is part of the update zip.
 | `server/` | Tests of the server side: `update_test`, `update_attack_test`, `core_test`, `files_test`, and Apache (`apache_setup.sh`, `apache_test.py`) |
 | `repo/` | Checks of the repository itself: `tscheck_test` (the JavaScript type check, `npx tsc -p tsconfig.json`), `build_test`, `release_test`, `check_libraries`, `workflows_test`, `ci_status_test`, `ci_changes_test`, `releases_test` |
 | `fixtures/` | Files the tests open: PDFs, pictures, a HEIC photo, the favicon stand-in, bookmark exports |
-| `lib/` | Shared helpers: `helpers.py` (sites, logins, paths), `releases.py` (the previous release and its zip), `annotate.py` (CI annotations), `prepend.php` (test-only shortcuts), `seed_demo.php` (demo data), `phpstan-bootstrap.php` |
+| `lib/` | Shared helpers: `helpers.py` (sites, logins, paths), `releases.py` (the previous release and its zip), `annotate.py` (CI annotations), `run_parallel.py` (runs several browser tests at once, as CI does), `prepend.php` (test-only shortcuts), `seed_demo.php` (demo data), `phpstan-bootstrap.php` |
 
 `requirements.txt` stays here (Dependabot and the pip cache look for it in `tests/`).
 
@@ -47,6 +47,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 - `python3 scripts/release.py --check`: `HUB`, every `?v=` on the pages, the newest changelog heading, the top Version Map row and the root `CHANGELOG.md` agree, no `TODO` marker is left, `src/site-data` does not exist, and the Tools fingerprint is current.
 - `zizmor --offline --persona=auditor .github/workflows/` (zizmor 1.30.1 from pip): Trail of Bits' checker for workflow files, at its strictest setting. Fix what it finds; never silence it.
 - `python3 tests/repo/secrets_test.py`: no token, key or private key in any file git tracks (GitHub, Slack, AWS, Google, Anthropic and OpenAI keys, Telegram bot tokens), and the check's own patterns catch a made-up sample of each. CI runs it with the workflow checks.
+- `python3 tests/repo/parallel_test.py`: `tests/lib/run_parallel.py`, which CI uses to run several browser tests at the same time (they overlap, output keeps its order, a failure or crash gives exit code 1 and an annotation).
 - `python3 tests/repo/ci_changes_test.py`: which changes count as docs only (`scripts/ci_changes.py`): then CI's slow jobs (server, browsers, apache) skip themselves and the `ci-ok` job still passes; any doubt runs everything.
 - `python3 tests/repo/ci_status_test.py`: the release waits for CI on the tagged commit (`scripts/ci_status.py`, up to 20 minutes) and refuses to build unless every job passed; this tests that decision with made-up check runs.
 - `python3 tests/repo/releases_test.py`: `tests/lib/releases.py` picks the previous release (the newest one older than the build, compared as numbers); CI uses `python3 tests/lib/releases.py previous` and `download TAG DIR` (checked against the release's `.sha256`).

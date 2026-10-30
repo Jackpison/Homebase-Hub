@@ -88,6 +88,9 @@
   ['pagereveal', 'pageswap'].forEach(function (ev) {
     addEventListener(ev, function (e) { var vt = e.viewTransition; if (vt) [vt.ready, vt.finished, vt.updateCallbackDone].forEach(function (p) { if (p && p.catch) p.catch(function () {}); }); });
   });
+  // The same cut-short glide can reject after this script loaded (a slow computer, or a page that was already shown). Only that one message is
+  // let through quietly; every other rejection stays a page error.
+  addEventListener('unhandledrejection', function (e) { var m = e.reason && e.reason.message; if (typeof m === 'string' && /^Transition was aborted|Skipped ViewTransition/.test(m)) e.preventDefault(); });
   /* The tabs as you set them: [id, name, address, icon, hidden], in your order. Pages added later appear at their default place. */
   function pageList(st) {
     st = st || S;

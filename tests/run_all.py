@@ -43,7 +43,7 @@ run('ESLint', ['npx', 'eslint', 'src', 'tools-app'])
 run('TypeScript check', ['npx', 'tsc', '-p', 'tsconfig.json'])
 run('Unit tests', ['php', 'tests/unit/run.php'])
 run('Version agrees everywhere', [PY, 'scripts/release.py', '--check'])
-for t in ('release_test', 'workflows_test', 'secrets_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test', 'presets_test', 'tools_list_test', 'tscheck_test', 'build_test'):
+for t in ('release_test', 'workflows_test', 'secrets_test', 'parallel_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test', 'presets_test', 'tools_list_test', 'tscheck_test', 'build_test'):
     run('repo/' + t, [PY, 'tests/repo/%s.py' % t])
 run('Library check', [PY, 'tests/repo/check_libraries.py'])
 if os.path.isfile(os.path.join(ROOT, 'phpstan.phar')):

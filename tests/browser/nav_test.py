@@ -201,6 +201,13 @@ try:
         dur = pg.evaluate("parseFloat(getComputedStyle(document.querySelector('#ix-bar')).transitionDuration)")
         check('N6 with reduced motion the bar does not slide', dur < 0.01, dur)
         ctx.close()
+        # a view transition cut short is not a page error; any other rejection still is (1.61.10)
+        ctx = ctx_for(DESK); pg, errs = open_page(ctx)
+        pg.evaluate("void Promise.reject(new DOMException('Transition was aborted because of invalid state. Page already revealed', 'InvalidStateError'))"); pg.wait_for_timeout(400)
+        quiet = list(errs)
+        pg.evaluate("void Promise.reject(new Error('a real problem'))"); pg.wait_for_timeout(400)
+        check('N7 an aborted page glide is not a page error, but another unhandled rejection still is', not quiet and any('a real problem' in e for e in errs), (quiet, errs))
+        ctx.close()
         b.close()
 finally:
     php.terminate()
