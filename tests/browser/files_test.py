@@ -200,6 +200,11 @@ try:
         check('B46 Shared Links is empty until a file has a link, with a hint', pg.is_visible('#none') and 'No share links' in pg.inner_text('#none'), pg.inner_text('#none'))
         pg.click('#tabs button[data-t=files]')
         pg.click('#newb'); check('B47 New offers Upload Files and New Folder', pg.inner_text('.pm') .replace('\n', ' ').count('Upload Files') == 1 and 'New Folder' in pg.inner_text('.pm')); pg.keyboard.press('Escape')
+        menu(pg, 'pack.zip', 'Move to Trash'); until(lambda: 'pack.zip' not in names(pg), 10000)
+        pg.wait_for_selector('#ix-toast.on .ix-tact', timeout=5000)
+        check('B48 Move to Trash says so, with an Undo button', 'Moved to the Trash' in pg.inner_text('#ix-toast') and 'Undo' in pg.inner_text('#ix-toast'), pg.inner_text('#ix-toast'))
+        pg.click('#ix-toast .ix-tact'); wait_names(pg, ['pack.zip'])
+        check('B49 Undo brings it back', 'pack.zip' in names(pg))
         check('B39 no page error and no blocked request in all of it', not errs and not csp, (errs, csp))
         b.close()
 finally:

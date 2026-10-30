@@ -894,6 +894,7 @@
           ecCard(n.encReady ? 'good' : '', ICON.lock, n.encReady ? 'Backup Files Are Encrypted' : 'Backup Files Are Not Encrypted',
             n.encReady ? 'Files open with your ' + (n.encMode === 'login' ? 'website password' : 'encryption passphrase') + '. Anyone who gets into your Telegram still cannot read them.' :
             'Anyone who gets into your Telegram could open them. <a href="#" id="nt-encgo">Set an encryption passphrase in Settings › Security</a>.', '') +
+          ecCard('', ICON.send, 'Send Today\'s Tasks', 'The daily list, sent to your chat right now.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="nt-today"' + (ready ? '' : ' disabled') + '>Send Today\'s Tasks Now</button></div>') +
           ecCard('', ICON.send, 'Send One Now', 'Sends a backup file to your chat right away, without waiting for the schedule.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="nt-bknow"' + (ready ? '' : ' disabled') + '>Send Backup Now</button></div>')) +
 
         acc('msg', 'Messages', !ready ? 'Finish Setup first, then choose what you want to hear about.' : n.on ? 'A daily message at ' + hourLabel(n.hour) + ', plus the alerts you pick below.' : 'Daily messages are off.',
@@ -967,6 +968,10 @@
         if (k !== 'nbk') return;
         call('notify_save', { bkEvery: +v }).then(function (j) { if (j) { n = j; draw(j, null); toast(j.bkEvery ? 'Backups will be sent ' + (BK_TXT[j.bkEvery] || 'regularly').toLowerCase() + '.' : 'Backups to Telegram are off.'); } });
       });
+      p.querySelector('#nt-today').onclick = function () {
+        var b = this; b.textContent = 'Sending…';
+        call('notify_today', {}, b, { timeout: 30000 }).then(function (j) { b.textContent = 'Send Today\'s Tasks Now'; if (j) toast('Sent. Check Telegram.'); });
+      };
       p.querySelector('#nt-bknow').onclick = function () {
         var b = this; b.textContent = 'Sending…';
         call('notify_backup', {}, b, { timeout: 240000 }).then(function (j) { if (j) { S.backupLast = j.backupLast || S.backupLast; remember(S); redraw(); draw(j, null, 'Backup sent. Check Telegram.'); } else b.textContent = 'Send Backup Now'; });

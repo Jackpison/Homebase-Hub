@@ -519,3 +519,11 @@ kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7p
 .ix-sdlg .ix-sb .ix-srow>.ix-rt+label,.ix-sdlg .ix-sb .ix-srow>.ix-rt+span{margin:0}
 .ix-srow>span.ix-rt,.g-row>span.ix-rt{flex:0 0 34px;width:34px;min-width:34px;max-width:34px}
 .g-row{gap:13px}
+
+/* (1.61.5) the save note and the Undo button in a message */
+#ix-savepill{position:fixed;left:14px;bottom:14px;z-index:2147483001;padding:6px 13px;border-radius:99px;background:var(--ix-s1,#1b1b1b);color:var(--ix-tx,#eee);border:1px solid var(--ix-line2,#333);font:600 12.5px system-ui,sans-serif;opacity:0;transform:translateY(6px);transition:opacity .15s,transform .15s;pointer-events:none}
+#ix-savepill.on{opacity:1;transform:none}
+#ix-savepill.saved{color:#6fe0a6}#ix-savepill.failed{color:#ff8a8a;border-color:#ff8a8a}
+#ix-toast .ix-tact{margin-left:14px;border:0;background:none;color:var(--ix-accent,#ffc21a);font:700 inherit;cursor:pointer;text-decoration:underline}
+#ix-toast:has(.ix-tact){pointer-events:auto}
+@media (prefers-reduced-motion:reduce){#ix-savepill{transition:none}}

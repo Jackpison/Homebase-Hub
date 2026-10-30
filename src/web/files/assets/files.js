@@ -438,7 +438,12 @@ async function moveBox(ids) {
     sel.clear(); await refresh(); toast("Moved.");
   } }]);
 }
-async function trash(ids) { sel.clear(); await run(post("trash", { ids }), ids.length === 1 ? "Moved to the Trash." : "Moved to the Trash: " + ids.length + " items."); }
+async function trash(ids) {
+  sel.clear();
+  if (!await run(post("trash", { ids }), "")) return;
+  const msg = ids.length === 1 ? "Moved to the Trash." : "Moved to the Trash: " + ids.length + " items.";
+  if (window.HUB) HUB.toast(msg, false, false, { label: "Undo", run: () => restore(ids) }); else toast(msg);
+}
 async function restore(ids) { sel.clear(); await run(post("restore", { ids }), "Restored."); }
 async function purge(ids) {
   if (!await confirmBox("Delete Forever?", ids.length === 1 ? "This can't be undone." : "These " + ids.length + " items can't be brought back.", "Delete Forever", true)) return;

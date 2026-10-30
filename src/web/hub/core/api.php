@@ -125,6 +125,7 @@ case 'notify_find':
 case 'notify_test':
 case 'notify_run':
 case 'notify_backup':
+case 'notify_today':
     need_post(); need_admin();
     require_once __DIR__ . '/lib/notify.php';
     $b = body(); $d = nt_load();
@@ -162,6 +163,11 @@ case 'notify_backup':
         if (isset($b['chatName']) && $d['chatName'] === '') $d['chatName'] = mb_substr(strip_tags((string)$b['chatName']), 0, 80);
         nt_save_keys($d, NT_USER_KEYS);
         hub_json(200, ['ok' => true] + nt_view($d));
+    }
+    if ($action === 'notify_today') {   // Send Today's Tasks Now: the daily list, at once (even when nothing is due)
+        $r = nt_send($d, (string)nt_digest($d, true));
+        if (empty($r['ok'])) hub_json(400, ['ok' => false, 'error' => 'Telegram: ' . ($r['description'] ?? 'no answer')]);
+        hub_json(200, ['ok' => true, 'note' => 'Sent. Check Telegram.'] + nt_view($d));
     }
     if ($action === 'notify_backup') {
         @set_time_limit(240); @ignore_user_abort(true);   // finish and remember the backup even if the browser stopped waiting

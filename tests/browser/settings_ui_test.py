@@ -105,6 +105,8 @@ try:
         pg.check('#s-calon'); wait_js(pg, "document.getElementById('s-calurl').value.includes('calendar.php?k=')", 10000)
         link = pg.input_value('#s-calurl'); code, body, hd = visitor(link, True)
         check('U17c turning it on shows a link that a calendar app can read: text/calendar, with no login', code == 200 and body.startswith('BEGIN:VCALENDAR') and hd.get('Content-Type', '').startswith('text/calendar'), (code, hd.get('Content-Type')))
+        ap, go = pg.get_attribute('#s-calapple', 'href'), pg.get_attribute('#s-calgoogle', 'href')
+        check('U17c2 Add to Google Calendar and Add to Apple or Outlook hold the same link (webcal, and Google\'s add-by-address)', ap.startswith('webcal://') and 'calendar.php?k=' in ap and go.startswith('https://calendar.google.com/calendar/r?cid=') and 'webcal' in go, (ap, go))
         check('U17d a wrong key and a missing key are the same plain 404', visitor(link[:-1] + ('0' if link[-1] != '0' else '1'))[0] == 404 and visitor(s.base + '/web/tasks/calendar.php')[0] == 404)
         pg.once('dialog', lambda d: d.accept()); pg.click('#s-calnew'); until(lambda: pg.input_value('#s-calurl') != link, 10000)
         link2 = pg.input_value('#s-calurl')
@@ -112,6 +114,15 @@ try:
         pg.uncheck('#s-calon'); until(lambda: visitor(link2)[0] == 404 and pg.is_hidden('#s-calbox'), 10000)
         check('U17f turning it off ends the link and hides it', visitor(link2)[0] == 404 and pg.is_hidden('#s-calbox'))
         pg.click('#sdlg .dh [data-close]')
+
+        # ---- the save note ----
+        pg.goto(s.base + '/web/tasks/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin())", 20000)
+        pg.evaluate("HUB.fetch('/web/tasks/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{\"action\":\"cal_set\",\"on\":false}' }).then(() => 0)")
+        pg.wait_for_selector('#ix-savepill.on.saved', timeout=8000)
+        check('U17g a save shows "Saved" at the bottom left', pg.inner_text('#ix-savepill') == 'Saved')
+        pg.evaluate("HUB.fetch('/web/tasks/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(() => 0)")
+        pg.wait_for_selector('#ix-savepill.on.failed', timeout=8000)
+        check('U17h a save that fails says "Not saved"', 'Not saved' in pg.inner_text('#ix-savepill'))
 
         # ---- Colors: shorter ----
         pg.goto(s.base + '/web/settings/#colors'); wait_js(pg, "!!document.querySelector('#ix-pgc')", 20000)

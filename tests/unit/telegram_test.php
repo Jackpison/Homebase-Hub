@@ -110,3 +110,9 @@ nt_update(function (&$d) { $d['hookPath'] = ''; });
 $n = count(calls()); nt_run(false);
 t('the reminders run (cron, or the site being open) does it', count($hooks($n)) === 1 && nt_load()['hookPath'] === NT_HOOK_PATH);
 nt_update(function (&$d) { $d['hook'] = false; $d['url'] = ''; });
+
+// 1.61.5: Send Today's Tasks Now
+$dg = nt_digest(nt_load(), true);
+t('Send Today\'s Tasks: the forced daily list is a message even when nothing is due, and Telegram accepts its markup', is_string($dg) && $dg !== '' && html_ok($dg), (string)$dg);
+$apiSrc = (string)file_get_contents($site . '/web/hub/core/api.php');
+t('the Send Today\'s Tasks action is a logged-in POST like the other Telegram buttons', preg_match("/case 'notify_today':\\s*need_post\\(\\); need_admin\\(\\);/", str_replace("case 'notify_backup':\n", '', $apiSrc)) === 1);

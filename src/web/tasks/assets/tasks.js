@@ -1199,7 +1199,7 @@ $("psets").onclick=()=>{
 };
 /* the calendar link: kept on the server on its own, so it takes effect at once (not with Save Settings) */
 let CAL={on:false,link:""};
-function calDraw(c){CAL=c;$("s-calon").checked=!!c.on;$("s-calbox").hidden=!c.on||!c.link;$("s-calurl").value=c.link?new URL(c.link,location.href).href:""}
+function calDraw(c){CAL=c;$("s-calon").checked=!!c.on;$("s-calbox").hidden=!c.on||!c.link;const u=c.link?new URL(c.link,location.href).href:"";$("s-calurl").value=u;const w=u.replace(/^https?:/,"webcal:");$("s-calapple").href=u?w:"#";$("s-calgoogle").href=u?"https://calendar.google.com/calendar/r?cid="+encodeURIComponent(w):"#"}
 async function calLoad(){try{const r=await HF("api.php?action=cal",{cache:"no-store"}),j=await r.json();if(j&&j.ok)calDraw(j)}catch{}}
 async function calSet(body){
   try{const r=await HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"cal_set",...body})}),j=await r.json();

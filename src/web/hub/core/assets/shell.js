@@ -254,7 +254,19 @@
         throw err;
       });
     }
-    return once(0);
+    var track = method !== 'GET' && method !== 'HEAD' && /\/web\/(links|info|cards|tasks|home)\//.test(String(url));   // page saves only
+    if (!track) return once(0);
+    saveNote('saving');
+    return once(0).then(function (r) { saveNote(r.ok ? 'saved' : 'failed'); return r; }, function (e) { saveNote('failed'); throw e; });
+  }
+  /* (1.61.5) a small "Saving... / Saved / Not saved" note at the bottom left, on every page that saves */
+  var saveT = 0;
+  function saveNote(state) {
+    var n = document.getElementById('ix-savepill');
+    if (!n) { n = document.createElement('div'); n.id = 'ix-savepill'; n.setAttribute('role', 'status'); n.setAttribute('aria-live', 'polite'); (document.body || document.documentElement).appendChild(n); }
+    clearTimeout(saveT); n.className = 'on ' + state;
+    n.textContent = state === 'saving' ? 'Saving…' : state === 'saved' ? 'Saved' : 'Not saved. Try again.';
+    if (state !== 'saving') saveT = setTimeout(function () { n.className = ''; }, state === 'saved' ? 1800 : 7000);
   }
   function sameSite(u) { try { return new URL(u, location.href).origin === location.origin; } catch (e) { return false; } }
   /* only web addresses become links; anything like javascript: turns into a harmless "#" */
@@ -269,14 +281,19 @@
   }
   var toastT;
   /* The one message box of every page (1.59: Home and Links use it too). bad: a problem (red, stays longer); sticky: stays until the next message. */
-  function toast(msg, bad, sticky) {
+  function toast(msg, bad, sticky, act) {   // act: {label, run} adds one button, such as Undo
     var t = document.getElementById('ix-toast');
     if (!t) { t = document.createElement('div'); t.id = 'ix-toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); }
     // a page's open modal <dialog> is drawn above everything: the message goes inside it so it can be seen
     var host = [].slice.call(document.querySelectorAll('dialog[open]')).pop() || document.body;
     if (t.parentNode !== host) host.appendChild(t);
     t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.add('on'); clearTimeout(toastT);
-    if (!sticky) toastT = setTimeout(function () { t.classList.remove('on'); }, bad ? 6000 : 3200);
+    if (act && act.label) {
+      var ab = document.createElement('button'); ab.type = 'button'; ab.className = 'ix-tact'; ab.textContent = act.label;
+      ab.onclick = function () { t.classList.remove('on'); clearTimeout(toastT); act.run(); };
+      t.appendChild(ab);
+    }
+    if (!sticky) toastT = setTimeout(function () { t.classList.remove('on'); }, bad ? 6000 : act ? 7000 : 3200);
   }
   function remember(st) {
     var keep = {}; ['siteName', 'logo', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'editBar', 'colors', 'font', 'fontCustom', 'sizes', 'pages', 'backupEvery', 'backupLast', 'tz'].forEach(function (k) { if (k in st) keep[k] = st[k]; });
