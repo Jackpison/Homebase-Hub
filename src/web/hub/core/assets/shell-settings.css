@@ -610,3 +610,10 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 #ix-page #ix-choose>summary:hover,#ix-page .ix-onebyone>summary:hover{border-color:var(--ix-tx)}
 #ix-page #ix-choose>summary:focus-visible,#ix-page .ix-onebyone>summary:focus-visible{outline:2px solid var(--ix-tx);outline-offset:2px}
 #ix-page .ix-onebyone{margin-top:12px}
+
+/* (1.61.5) left panel: coloured icon tiles */
+#ix-page .ix-snav .ix-sti{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none;background:rgba(var(--c),.18);color:rgb(var(--c))}
+#ix-page .ix-snav .ix-sti svg{width:17px;height:17px}
+#ix-page .ix-snav button[aria-current="page"] .ix-sti{background:rgba(var(--c),.28)}
+#ix-page .ix-snav button{gap:11px}
+#ix-page .ix-snav .ix-out .ix-sti{background:rgba(255,107,107,.16);color:rgb(255,107,107)}

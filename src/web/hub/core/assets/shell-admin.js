@@ -59,6 +59,18 @@
     ['health', 'Health', ICON.pulse, 'Version, speed, errors and domains.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
     ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, or go back.', [['updates', 'Update'], ['files', 'Files']], 'System Setting'],
     ['changelog', 'Changelog', ICON.log, 'What changed in every version of your site, newest first.', [['changelog', 'Versions'], ['chmap', 'Version Map'], ['chnotes', 'Notes']], 'System Setting']];
+  /* (1.61.5) the left panel: a coloured tile and a redrawn icon for each section */
+  var SEC_TILE = {
+    overview: ['255,194,26', 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],
+    general: ['91,141,255', 'M4 11l8-7 8 7M6 10v9h12v-9M10 19v-5h4v5'],
+    look: ['179,146,240', 'M12 3a9 9 0 1 0 0 18c1.4 0 2-.9 2-1.8 0-1.2-1-1.6-1-2.6s.9-1.6 2-1.6h2a4 4 0 0 0 4-4c0-4.4-4-8-9-8zM8 11h.01M12 7.5h.01M16 11h.01'],
+    security: ['80,200,140', 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM12 9.5a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6zM12 13v3'],
+    telegram: ['76,201,240', 'M21 4 3 11l6 2 2 6 3-4 4 3zM9 13l12-9'],
+    backup: ['255,138,92', 'M12 4v11m-4-4 4 4 4-4M5 20h14'],
+    health: ['255,107,129', 'M3 12h4l2.5-6 4 12 2.5-6H21'],
+    updates: ['95,214,138', 'M12 20V8m-4 4 4-4 4 4M5 4h14'],
+    changelog: ['170,170,170', 'M7 3h8l4 4v14H7zM15 3v4h4M10 12h6M10 16h6']
+  };
   var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
   var SUB_OF = {};   // sub-tab -> its section (nav -> general, colors -> look)
   SECTIONS.forEach(function (x) { (x[4] || [[x[0]]]).forEach(function (t) { SUB_OF[t[0]] = x[0]; }); });
@@ -102,8 +114,8 @@
     var gl = null;
     host.innerHTML = '<aside class="ix-snav" aria-label="Settings Sections"><div class="ix-snh">Settings</div><div class="ix-ssearch"><input type="search" id="ix-ss" placeholder="Search Settings" aria-label="Search settings" autocomplete="off" spellcheck="false"><div class="ix-sres" id="ix-sres" hidden></div></div>' + SECTIONS.map(function (x) {
         var head = x[5] !== gl ? (gl = x[5], x[5] ? '<div class="ix-sgl">' + x[5] + '</div>' : '') : '';
-        return head + '<button type="button" data-sec="' + x[0] + '">' + svg(x[2]) + '<span>' + x[1] + '</span><em class="ix-sp" data-pill="' + x[0] + '"></em></button>'; }).join('') +
-        '<button type="button" class="ix-out" data-ix="logout">' + svg(ICON.out) + '<span>Log Out</span></button></aside>' +
+        return head + '<button type="button" data-sec="' + x[0] + '"><i class="ix-sti" style="--c:' + (SEC_TILE[x[0]] || ['170,170,170'])[0] + '">' + svg((SEC_TILE[x[0]] || [0, x[2]])[1]) + '</i><span>' + x[1] + '</span><em class="ix-sp" data-pill="' + x[0] + '"></em></button>'; }).join('') +
+        '<button type="button" class="ix-out" data-ix="logout"><i class="ix-sti">' + svg(ICON.out) + '</i><span>Log Out</span></button></aside>' +
       '<section class="ix-pane" id="ix-pane"></section>' +
       '<div class="ix-sf" id="ix-sf" hidden><span id="ix-sfnote"></span><span class="ix-err" id="ix-sferr"></span><button type="button" class="ix-btn" id="ix-discard">Discard</button><button type="button" class="ix-btn pri" id="ix-save">Save Settings</button></div>';
     host.querySelectorAll('[data-sec]').forEach(function (b) { b.onclick = function () { go(b.dataset.sec); }; });

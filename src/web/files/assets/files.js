@@ -43,7 +43,9 @@ const ICONS = {
   back: "M3 12a9 9 0 1 0 3-6.7M3 4v5h5",
   move: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM10 13h6M13.5 10.5l2.5 2.5-2.5 2.5",
   edit: "M4 20h4L19 9l-4-4L4 16zM13 7l4 4",
-  x: "M6 6l12 12M18 6L6 18"
+  x: "M6 6l12 12M18 6L6 18",
+  lock: "M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3",
+  up: "M12 16V4M7 9l5-5 5 5M5 20h14"
 };
 const svg = (name, cls) => { const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("aria-hidden", "true"); if (cls) s.setAttribute("class", cls); const p = document.createElementNS(NS, "path"); p.setAttribute("d", ICONS[name] || ICONS.file); s.appendChild(p); return s; };
 const h = (tag, attrs, ...kids) => {
@@ -215,12 +217,15 @@ const kidsOf = id => live().filter(i => i.p === id);
 function shown() {
   let list;
   if (tab === "trash") list = trashed();
+  else if (tab === "recent" && !q) list = live().filter(i => i.t === "f");
+  else if (tab === "starred" && !q) list = live().filter(i => (meta(i) || {}).st);
+  else if (tab === "shared" && !q) { const ids = new Set(D.shares.map(x => x.id)); list = live().filter(i => ids.has(i.id)); }
   else if (q) { const t = q.toLowerCase(); list = live().filter(i => nameOf(i).toLowerCase().includes(t)); }
   else list = kidsOf(cwd);
   const s = D.settings.sort || "name";
   list.sort((a, b) => {
     if (tab === "files" && a.t !== b.t) return a.t === "d" ? -1 : 1;
-    if (s === "date") return dateOf(b) - dateOf(a);
+    if (s === "date" || (tab === "recent" && !q)) return dateOf(b) - dateOf(a);
     if (s === "size") return (sizeOf(b) || 0) - (sizeOf(a) || 0);
     return nameOf(a).localeCompare(nameOf(b), undefined, { numeric: true, sensitivity: "base" });
   });
@@ -238,12 +243,14 @@ function render() {
   const cr = $("crumbs"); cr.replaceChildren();
   if (tab === "trash") cr.append(h("button", { type: "button", "aria-current": "page", text: "Trash (kept " + D.settings.trashDays + " days, then removed for good)" }));
   else if (q) cr.append(h("button", { type: "button", "aria-current": "page", text: "Search results" }));
+  else if (tab !== "files") cr.append(h("button", { type: "button", "aria-current": "page", text: { recent: "Recent: your newest files", shared: "Files with a share link", starred: "Starred" }[tab] }));
   else {
-    const trail = [{ id: "", n: "All Files" }].concat(pathOf(cwd).map(i => ({ id: i.id, n: nameOf(i) })));
+    const trail = [{ id: "", n: "My Files" }].concat(pathOf(cwd).map(i => ({ id: i.id, n: nameOf(i) })));
     trail.forEach((c, k) => { if (k) cr.append(h("i", { "aria-hidden": "true", text: "/" })); cr.append(h("button", { type: "button", text: c.n, "aria-current": k === trail.length - 1 ? "page" : false, onclick: () => { if (k < trail.length - 1) { cwd = c.id; sel.clear(); render(); } } })); });
   }
   $("empty").hidden = !(tab === "trash" && trashed().length);
-  $("mk").hidden = $("up").hidden = tab === "trash";
+  $("mk").hidden = $("up").hidden = true;   // the sidebar's New button does both
+  $("newb").hidden = tab === "trash";
   /* locked / no passphrase */
   const lock = $("lock"); lock.replaceChildren();
   if (noPass) { lock.hidden = false; lock.append(h("p", {}, h("b", { text: "Files are locked with your encryption passphrase. " }), "Set one first, in Settings, Security, Encryption."), h("button", { type: "button", class: "btn pri", text: "Open Encryption Settings", onclick: () => window.HUB ? HUB.settings("security/encryption") : location.href = "../settings/#security/encryption" })); }
@@ -258,9 +265,12 @@ function render() {
   if (!list.length) {
     none.replaceChildren(...(tab === "trash" ? [h("b", { text: "The Trash is empty" }), "Things you remove wait here, and are removed for good after " + D.settings.trashDays + " days."]
       : q ? [h("b", { text: "Nothing found" }), "No file or folder has that in its name."]
-      : [h("b", { text: cwd ? "This folder is empty" : "No files yet" }), "Drag files here, or press Upload. Everything is locked in your browser before it is sent."]));
+      : tab === "starred" ? [h("b", { text: "Nothing starred yet" }), "Pick a file and press Star to keep it here."]
+      : tab === "shared" ? [h("b", { text: "No share links yet" }), "Pick a file and press Share to make a link."]
+      : tab === "recent" ? [h("b", { text: "No files yet" }), "Your newest files show up here."]
+      : [h("b", { text: cwd ? "This folder is empty" : "No files yet" }), "Drag files here, or press New, then Upload. Everything is locked in your browser before it is sent.", cwd ? null : h("div", { style: "margin-top:12px" }, h("button", { type: "button", class: "btn pri", text: "Upload Your First File", onclick: () => $("pick").click() }))]));
   }
-  bulk(); usage();
+  bulk(); usage(); details();
   $("sync").textContent = D.items.length ? "Saved on your server, locked" : "";
 }
 
@@ -270,14 +280,16 @@ function row(i) {
   const left = tab === "trash" ? Math.max(0, Math.ceil((i.del + D.settings.trashDays * 86400 - Date.now() / 1000) / 86400)) : 0;
   const sub = tab === "trash" ? "Removed for good in " + left + (left === 1 ? " day" : " days") : (isD ? "Folder" : fmt(sz)) + " · " + when(at) + (where ? " · in " + where : "");
   const ck = h("input", { type: "checkbox", class: "ck", "aria-label": "Pick " + name, checked: sel.has(i.id), onchange: e => { e.target.checked ? sel.add(i.id) : sel.delete(i.id); row.sync(); } });
-  const open = h("button", { type: "button", class: "nm", title: name, onclick: () => openItem(i) },
-    h("span", { class: "ico " + icoOf(i) }, svg(icoName(i))), h("span", { class: "t" }, name, where && tab === "files" ? h("small", { text: "in " + where }) : null));
+  const open = h("button", { type: "button", class: "nm", title: name, onclick: () => { if (i.t === "d" || tab === "trash") return openItem(i); pick1(i.id); } },
+    h("span", { class: "ico " + icoOf(i) }, svg(icoName(i))), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
   const more = h("button", { type: "button", class: "ib more", "aria-label": "More for " + name, "aria-haspopup": "menu", onclick: e => menu(e.currentTarget, i) }, svg("more"));
-  const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : ""), "data-id": i.id, oncontextmenu: e => { e.preventDefault(); menu(more, i); } },
+  const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : ""), "data-id": i.id, ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); menu(more, i); } },
     ck, open, h("span", { class: "cell sz num", text: isD ? "" : fmt(sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), more, h("span", { class: "cell meta", text: sub }));
   return el;
 }
-row.sync = () => { for (const r of $("list").querySelectorAll(".row")) r.classList.toggle("sel", sel.has(r.dataset.id)); bulk(); };
+row.sync = () => { for (const r of $("list").querySelectorAll(".row")) { r.classList.toggle("sel", sel.has(r.dataset.id)); const c = r.querySelector(".ck"); if (c) c.checked = sel.has(r.dataset.id); } bulk(); details(); };
+/* one click on a file picks it and shows it in the panel on the right: it never downloads */
+function pick1(id) { if (sel.size === 1 && sel.has(id)) sel.clear(); else { sel.clear(); sel.add(id); } row.sync(); }
 
 function usage() {
   const u = $("usage"), max = D.max;
@@ -285,6 +297,48 @@ function usage() {
   const used = D.usage;
   u.append(h("span", { class: "num", text: fmt(used) + (max ? " of " + fmt(max) : "") + " used" }));
   if (max) { const p = Math.min(100, used / max * 100); u.append(h("span", { class: "bar", role: "img", "aria-label": Math.round(p) + " percent used" }, h("i", { class: p > 90 ? "hot" : "", style: "width:" + p + "%" }))); }
+}
+
+/* ---------- the details panel (right side) ---------- */
+const KIND = { d: "Folder", image: "Picture", video: "Video", audio: "Sound", pdf: "PDF document", text: "Text", zip: "Zip archive" };
+function details() {
+  const det = $("det"), fa = $("fa"), ids = [...sel];
+  const i = ids.length === 1 ? byId.get(ids[0]) : null;
+  if (!i || tab === "trash") { det.hidden = true; fa.classList.remove("hasdet"); return; }
+  det.hidden = false; fa.classList.add("hasdet");
+  const isD = i.t === "d", name = nameOf(i), m = meta(i) || {};
+  const where = pathOf(i.p || "").map(nameOf).join(" / ");
+  const link = h("button", { type: "button", class: "btn", onclick: () => shareBox(i) }, svg("share", "i"), "Share");
+  const acts = h("div", { class: "acts" },
+    isD ? h("button", { type: "button", class: "btn pri", onclick: () => openItem(i) }, svg("folder", "i"), "Open") : (previewable(i) ? h("button", { type: "button", class: "btn pri", onclick: () => openItem(i) }, svg("file", "i"), "Preview") : null),
+    h("button", { type: "button", class: "btn", onclick: () => download([i.id]) }, svg("down", "i"), "Download"),
+    !isD && D.settings.shares ? link : null,
+    h("button", { type: "button", class: "btn star", "aria-pressed": String(!!m.st), onclick: () => star(i) }, m.st ? "★ Starred" : "☆ Star"),
+    h("button", { type: "button", class: "btn more", "aria-haspopup": "menu", onclick: e => menu(e.currentTarget, i) }, svg("more", "i"), "More"));
+  const shares = D.shares.filter(x => x.id === i.id).length;
+  det.replaceChildren(
+    h("div", { class: "dh" }, h("b", { text: "Details" }), h("button", { type: "button", class: "ib", "aria-label": "Close details", onclick: () => { sel.clear(); row.sync(); } }, svg("x"))),
+    h("div", { class: "pv " + icoOf(i) }, svg(icoName(i))),
+    h("h3", { text: name }), acts,
+    h("div", { class: "locknote" }, svg("lock"), "Locked in your browser. The server can't read it."),
+    h("dl", {}, h("dt", { text: "Type" }), h("dd", { text: isD ? "Folder" : (KIND[kindOf(name)] || (/\.([A-Za-z0-9]{1,8})$/.exec(name) || [, "File"])[1].toUpperCase() + " file") }),
+      isD ? null : h("dt", { text: "Size" }), isD ? null : h("dd", { text: fmt(sizeOf(i)) }),
+      h("dt", { text: "Modified" }), h("dd", { text: when(dateOf(i)) }), h("dt", { text: "Location" }), h("dd", { text: "My Files" + (where ? " / " + where : "") })),
+    !isD && D.settings.shares ? h("div", { class: "shb" }, h("b", { text: "Share link" }), h("small", { text: shares ? shares + " active. Anyone with a link opens this file." : "None yet. Anyone with a link can open this file." }), h("button", { type: "button", class: "btn", onclick: () => shareBox(i) }, shares ? "Manage Links" : "Make a Link")) : null);
+}
+async function star(i) {
+  if (!await ensureKey()) return;
+  const old = meta(i) || {}, m = await SITE.sealJson(Object.assign({}, old, { st: old.st ? 0 : 1 }));
+  await run(post("rename", { id: i.id, m }), old.st ? "Star removed." : "Starred.");
+}
+function newMenu() {
+  closeMenu();
+  /** @type {any[][]} */
+  const acts = [["up", "Upload Files", () => $("pick").click()], ["folder", "New Folder", mkdir]];
+  pm = h("div", { class: "pm newm", role: "menu" }, acts.map(a => h("button", { type: "button", role: "menuitem", onclick: () => { closeMenu(); a[2](); } }, svg(a[0]), a[1])));
+  document.body.append(pm);
+  const r = $("newb").getBoundingClientRect(); pm.style.left = r.left + "px"; pm.style.top = (r.bottom + 4) + "px"; pm.querySelector("button").focus();
+  pm.addEventListener("keydown", e => { if (e.key === "Escape") { closeMenu(); $("newb").focus(); } });
 }
 
 /* ---------- the little menu ---------- */
@@ -309,12 +363,12 @@ function menu(anchor, i) {
   pm.querySelector("button").focus();
   pm.addEventListener("keydown", e => { const b = [...pm.querySelectorAll("button")], k = b.indexOf(document.activeElement); if (e.key === "ArrowDown") { b[(k + 1) % b.length].focus(); e.preventDefault(); } if (e.key === "ArrowUp") { b[(k + b.length - 1) % b.length].focus(); e.preventDefault(); } if (e.key === "Escape") { closeMenu(); anchor.focus(); } });
 }
-document.addEventListener("pointerdown", e => { const t = /** @type {Element} */ (e.target); if (pm && !pm.contains(t) && !t.closest(".more")) closeMenu(); });
+document.addEventListener("pointerdown", e => { const t = /** @type {Element} */ (e.target); if (pm && !pm.contains(t) && !t.closest(".more") && !t.closest("#newb")) closeMenu(); });
 
 /* ---------- picking several ---------- */
 function bulk() {
   const b = $("bulk"); b.replaceChildren();
-  const ids = [...sel]; b.hidden = !ids.length; if (!ids.length) return;
+  const ids = [...sel]; b.hidden = ids.length < 2 && !(ids.length === 1 && tab === "trash"); if (b.hidden) return;
   const btn = (t, f, o) => h("button", { type: "button", class: "btn" + (o && o.danger ? " danger" : ""), text: t, onclick: f });
   b.append(h("b", { text: ids.length + (ids.length === 1 ? " picked" : " picked") }));
   if (tab === "trash") b.append(btn("Restore", () => restore(ids)), btn("Delete Forever", () => purge(ids), { danger: true }));
@@ -343,7 +397,7 @@ function openItem(i) {
   if (tab === "trash") return toast(i.t === "d" ? "Restore the folder to open it." : "Restore the file to open it.");
   if (i.t === "d") { cwd = i.id; q = ""; $("q").value = ""; sel.clear(); render(); return; }
   if (!unlocked) { ensureKey().then(ok => { if (ok) openItem(byId.get(i.id)); }); return; }
-  if (previewable(i)) preview(i); else download([i.id]);
+  if (previewable(i)) preview(i); else toast("No preview for this kind of file. Use Download.");
 }
 async function mkdir() {
   if (!await ensureKey()) return;
@@ -624,6 +678,7 @@ async function load() {
 }
 function wire() {
   $("up").onclick = $("uph").onclick = () => $("pick").click();
+  $("newb").onclick = e => { e.stopPropagation(); if (pm && pm.classList.contains("newm")) closeMenu(); else newMenu(); };
   $("mk").onclick = $("mkh").onclick = mkdir;
   $("psets").onclick = settingsBox;
   $("pick").onchange = e => { uploadAll([...e.target.files].map(f => ({ file: f, parts: [] }))); e.target.value = ""; };

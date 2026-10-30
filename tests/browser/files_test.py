@@ -66,7 +66,7 @@ try:
         check('B10 after "keep unlocked on this device" a reload shows the names with no question', not pg.is_visible('#ix-skp') and not pg.is_visible('#lock'))
 
         # ---- folders ----
-        pg.click('#mk'); pg.fill('#dname', 'Docs'); pg.click('#dform .act .pri'); wait_names(pg, ['Docs'])
+        pg.click('#newb'); pg.click('.pm button:has-text("New Folder")'); pg.fill('#dname', 'Docs'); pg.click('#dform .act .pri'); wait_names(pg, ['Docs'])
         check('B11 New Folder makes a folder, shown first', names(pg)[0] == 'Docs', names(pg))
         row(pg, 'Docs').locator('.nm').click()
         check('B12 opening it shows the way back in the path, and it is empty', until(lambda: 'Docs' in pg.inner_text('#crumbs'), 5000) and 'empty' in pg.inner_text('#none'), pg.inner_text('#crumbs'))
@@ -103,11 +103,11 @@ try:
 
         # ---- preview ----
         upload(pg, 'photo.png', PNG, 'image/png'); wait_names(pg, ['photo.png'])
-        row(pg, 'photo.png').locator('.nm').click(); pg.wait_for_selector('#pbox img', timeout=15000)
+        row(pg, 'photo.png').locator('.nm').dblclick(); pg.wait_for_selector('#pbox img', timeout=15000)
         check('B22 a picture opens in a preview', pg.evaluate("(() => { const i = document.querySelector('#pbox img'); return i && i.complete && i.naturalWidth > 0; })()"))
         pg.keyboard.press('Escape')
         pg.locator('.nm[title="Docs"]').click(); wait_names(pg, ['greeting.txt'])
-        row(pg, 'greeting.txt').locator('.nm').click(); pg.wait_for_selector('#pbox pre', timeout=15000)
+        row(pg, 'greeting.txt').locator('.nm').dblclick(); pg.wait_for_selector('#pbox pre', timeout=15000)
         check('B23 a text file opens in a preview with its words', 'hello files' in pg.inner_text('#pbox pre'), pg.inner_text('#pbox pre'))
         pg.keyboard.press('Escape')
 
@@ -179,6 +179,27 @@ try:
                 except Exception: pass
         check('B38 nothing the server keeps holds a file name, any file\'s words, the picture, the passphrase or a file key',
               not any(x in blob for x in (b'greeting', b'photo.png', b'inside the folder', b'hello files', PP.encode(), PNG[:64], BIG[:64], key.encode())))
+        # ---- 1.61.5: the Drive-style layout ----
+        pg.click('#tabs button[data-t=files]'); pg.locator('.crumbs button').first.click()
+        upload(pg, 'pack.zip', b'PK\x03\x04 not really a zip', 'application/zip'); wait_names(pg, ['pack.zip'])
+        got = []; pg.on('download', lambda d: got.append(d.suggested_filename))
+        row(pg, 'pack.zip').locator('.nm').click(); pg.wait_for_timeout(1200)
+        check('B40 one click on a file only picks it: nothing downloads, and the details panel shows it', got == [] and pg.is_visible('#det') and 'pack.zip' in pg.inner_text('#det h3') and 'Locked in your browser' in pg.inner_text('#det'), (got, pg.inner_text('#det')[:80]))
+        row(pg, 'pack.zip').locator('.nm').dblclick(); pg.wait_for_timeout(800)
+        check('B41 opening a file that has no preview does not download it either (it says so)', got == [])
+        check('B42 the sidebar lists My Files, Recent, Shared Links, Starred and Trash, and the usage has no server figure',
+              pg.evaluate("[...document.querySelectorAll('#tabs button')].map(b => b.textContent.trim().replace(/[0-9 ]+$/, ''))") == ['My Files', 'Recent', 'Shared Links', 'Starred', 'Trash'] and 'free' not in pg.inner_text('#usage'), pg.inner_text('#usage'))
+        pg.click('#det button.star'); until(lambda: pg.evaluate("document.querySelector('#det button.star').getAttribute('aria-pressed')") == 'true', 10000)
+        pg.click('#tabs button[data-t=starred]'); wait_names(pg, ['pack.zip'])
+        check('B43 Star puts it under Starred (and only it)', names(pg) == ['pack.zip'], names(pg))
+        stored = open(s.dir + '/site-data/files/files.php').read()
+        check('B44 the star is locked with the name: the server file shows no readable star or name', 'pack.zip' not in stored and '"st"' not in stored)
+        pg.click('#tabs button[data-t=recent]'); until(lambda: len(names(pg)) >= 3, 10000)
+        check('B45 Recent lists files only, newest first', 'Docs' not in names(pg) and names(pg)[0] in ('pack.zip', 'photo.png'), names(pg))
+        pg.click('#tabs button[data-t=shared]')
+        check('B46 Shared Links is empty until a file has a link, with a hint', pg.is_visible('#none') and 'No share links' in pg.inner_text('#none'), pg.inner_text('#none'))
+        pg.click('#tabs button[data-t=files]')
+        pg.click('#newb'); check('B47 New offers Upload Files and New Folder', pg.inner_text('.pm') .replace('\n', ' ').count('Upload Files') == 1 and 'New Folder' in pg.inner_text('.pm')); pg.keyboard.press('Escape')
         check('B39 no page error and no blocked request in all of it', not errs and not csp, (errs, csp))
         b.close()
 finally:

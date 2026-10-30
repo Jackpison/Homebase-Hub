@@ -43,7 +43,7 @@
     sun: 'M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41',
     moon: 'M20.99 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.78 9.79z',
     gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
-    key: 'M8 11a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM11 12l9-9M16 7l3 3',
+    key: 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM12 9.5a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6zM12 13v3',
     out: 'M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10',
     lock: 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3',
     menu: 'M4 7h16M4 12h16M4 17h16',
@@ -460,7 +460,7 @@
      dialog.ix-sdlg: title + close X on top, a scrolling body, the buttons in a footer. The X does what Cancel does. */
   function sdlgBuild(d) {
     if (d._ixS) return; d._ixS = true;
-    if (d.querySelector('.dh,.ix-sh')) return;
+    if (d.querySelector('.dh,.ix-sh')) { sdlgDecorate(d.querySelector('.db'), '.sh3'); return; }
     var c = d.querySelector(':scope>form') || d, kids = [].slice.call(c.children);
     var t = kids.filter(function (k) { return /^H[23]$/.test(k.tagName); })[0];
     var foot = kids.slice().reverse().filter(function (k) { return k.matches('.act,.actions'); })[0];
@@ -475,10 +475,52 @@
     c.insertBefore(h, t); h.appendChild(t); h.appendChild(x);
     var b = document.createElement('div'); b.className = 'ix-sb';
     kids.forEach(function (k) { if (k !== t && k !== foot) b.appendChild(k); });
-    c.insertBefore(b, foot); foot.classList.add('ix-sf');
+    c.insertBefore(b, foot); foot.classList.add('ix-sf'); sdlgDecorate(b, 'h3,h4');
     d.setAttribute('aria-labelledby', t.id || (t.id = (d.id || 'sd') + '-t'));
   }
-  function sdlgAll() { [].forEach.call(document.querySelectorAll('dialog.ix-sdlg'), sdlgBuild); }
+  /* (1.61.5) the look inside a Settings window: each section's rows in one rounded card, a small coloured tile in front of each row */
+  var RT = [
+    [/only me|private|lock|password/i, 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3', '80,200,140'],
+    [/google|icons?\b/i, 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18', '255,138,92'],
+    [/encrypt|passphrase|recovery/i, 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM12 10v4', '179,146,240'],
+    [/visit|count|analytics/i, 'M5 20V10M12 20V4M19 20v-7', '91,141,255'],
+    [/text size|font/i, 'M4 19 9 5l5 14M6 14h6M16 19l2.5-7 2.5 7M17 17h3', '255,194,26'],
+    [/edit bar|bar\b|menu/i, 'M3 15h18v4H3zM7 11l2-2 2 2', '76,201,240'],
+    [/column|order|sort/i, 'M5 4v16M12 4v16M19 4v16', '91,141,255'],
+    [/calendar|due|week|date|remind/i, 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4', '255,107,129'],
+    [/amount|price|stat|currency|spend/i, 'M12 3v18M16 7c-1-1-2.5-1.5-4-1.5-2.5 0-4 1-4 2.8 0 4 8 2 8 5.7 0 1.8-1.7 2.8-4 2.8-1.7 0-3.2-.6-4.2-1.7', '95,214,138'],
+    [/share|link|webcal/i, 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1', '91,141,255'],
+    [/storage|limit|disk|photo|upload|background/i, 'M4 7h16v10H4zM8 17v3M16 17v3M4 11h16', '255,138,92'],
+    [/trash|delete|erase/i, 'M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13', '170,170,170'],
+    [/export|import|backup/i, 'M12 4v11m-4-4 4 4 4-4M5 20h14', '255,138,92'],
+    [/title|name|page/i, 'M4 20h4L19 9l-4-4L4 16zM13 7l4 4', '91,141,255'],
+    [/welcome|hello|greeting/i, 'M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z', '255,194,26'],
+    [/tint|opacity|blur|glass/i, 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z', '179,146,240'],
+    [/widget|clock|show/i, 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', '76,201,240']
+  ];
+  function rowTile(text) {
+    var hit = RT.filter(function (r) { return r[0].test(text); })[0] || [0, 'M4 7h10M18 7h2M4 17h2M10 17h10M14 5v4M8 15v4', '170,170,170'];
+    var t = document.createElement('span'); t.className = 'ix-rt'; t.setAttribute('aria-hidden', 'true');
+    t.style.cssText = 'background:rgba(' + hit[2] + ',.18);color:rgb(' + hit[2] + ')';
+    t.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + hit[1] + '"/></svg>'; return t;
+  }
+  function sdlgDecorate(body, headSel) {
+    if (!body || body._ixG) return; body._ixG = true;
+    var kids = [].slice.call(body.children), grp = null;
+    kids.forEach(function (k) {
+      if (k.matches(headSel)) { grp = null; return; }
+      if (k.hidden || k.matches('p.hint,.hint,.err,[id$=Err],.ix-sb-skip')) return;
+      if (!grp) { grp = document.createElement('div'); grp.className = 'ix-grp'; body.insertBefore(grp, k); }
+      grp.appendChild(k);
+    });
+    [].forEach.call(body.querySelectorAll('.ix-srow,.g-row:not(.stack)'), function (r) {
+      var lab = r.querySelector('label,.g-label,span'); if (!lab || r.querySelector('.ix-rt')) return;
+      r.insertBefore(rowTile((lab.firstChild && lab.firstChild.textContent || lab.textContent || '')), r.firstChild);
+    });
+    [].forEach.call(body.querySelectorAll('.ix-grp'), function (g) { if (!g.children.length) g.remove(); });
+  }
+  function sdlgAll() { [].forEach.call(document.querySelectorAll('dialog.ix-sdlg'), sdlgBuild); [].forEach.call(document.querySelectorAll('dialog.sheet .sb'), function (b) { sdlgDecorateSheet(b); }); }
+  function sdlgDecorateSheet(b) { if (b._ixT) return; b._ixT = true; [].forEach.call(b.querySelectorAll('.g-row:not(.stack)'), function (r) { var lab = r.querySelector('.g-label'); if (lab && !r.querySelector('.ix-rt')) r.insertBefore(rowTile(lab.firstChild ? lab.firstChild.textContent : ''), r.firstChild); }); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sdlgAll); else sdlgAll();   // the dialogs are further down the page than the body
 
   /* ---------- 4. the bar: three styles, each with its own layout ----------

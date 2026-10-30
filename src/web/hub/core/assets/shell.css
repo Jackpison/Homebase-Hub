@@ -503,3 +503,19 @@ dialog.ix-sdlg>form>.actions{flex-direction:row;flex-wrap:nowrap}
 #ix-dlg .ix-kk{white-space:nowrap}
 kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7px;border-radius:6px;border:1px solid color-mix(in srgb,currentColor 25%,transparent);background:color-mix(in srgb,currentColor 8%,transparent);box-shadow:0 1px 0 color-mix(in srgb,currentColor 18%,transparent)}
 #ix-chord{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483000;max-width:calc(100vw - 24px);padding:10px 16px;border-radius:12px;background:var(--ix-s2,#222);color:var(--ix-tx,#eee);border:1px solid var(--ix-line2,#444);box-shadow:0 12px 30px rgba(0,0,0,.4);font:500 14px system-ui,sans-serif}
+
+/* (1.61.5) Settings windows: style-B headings, rows in one rounded card, a coloured tile in front of each row */
+.ix-sdlg .ix-sb>h3,.ix-sdlg .ix-sb>h4,.ix-sdlg .sh3,dialog.sheet .sb h3{display:flex;align-items:center;gap:10px;color:var(--ix-accent,#ffc21a)!important;opacity:1!important}
+.ix-sdlg .ix-sb>h3::after,.ix-sdlg .ix-sb>h4::after,.ix-sdlg .sh3::after,dialog.sheet .sb h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--ix-accent,#ffc21a) 55%,transparent),transparent)}
+.ix-grp{background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 12%,transparent);border-radius:14px;padding:2px 14px;margin:0 0 6px}
+.ix-grp>.ix-srow{margin:0;padding:12px 0;border-bottom:1px solid color-mix(in srgb,currentColor 10%,transparent)}
+.ix-grp>.ix-srow:last-child{border-bottom:0}
+.ix-grp>label,.ix-grp>.field,.ix-grp>.f,.ix-grp>.c2{padding-top:12px}
+.ix-grp>:last-child{margin-bottom:12px}
+.ix-grp>.ix-srow:last-child{margin-bottom:0}
+.ix-rt{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+.ix-rt svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ix-srow>.ix-rt+*{flex:1}
+.ix-sdlg .ix-sb .ix-srow>.ix-rt+label,.ix-sdlg .ix-sb .ix-srow>.ix-rt+span{margin:0}
+.ix-srow>span.ix-rt,.g-row>span.ix-rt{flex:0 0 34px;width:34px;min-width:34px;max-width:34px}
+.g-row{gap:13px}

@@ -20,6 +20,18 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
+<div class="fa" id="fa">
+<aside class="fside" aria-label="Files menu">
+  <button type="button" class="btn pri newb" id="newb" aria-haspopup="menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>New</button>
+  <nav class="fnav" id="tabs" role="group" aria-label="Where">
+    <button type="button" data-t="files" aria-pressed="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>My Files</button>
+    <button type="button" data-t="recent" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>Recent</button>
+    <button type="button" data-t="shared" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>Shared Links</button>
+    <button type="button" data-t="starred" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>Starred</button>
+    <button type="button" data-t="trash" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>Trash<em id="tn"></em></button>
+  </nav>
+  <div class="usage" id="usage" aria-live="polite"></div>
+</aside>
 <main class="wrap" id="app">
   <div class="top">
     <h1 id="ptitle">Files</h1>
@@ -42,14 +54,7 @@
     </span>
   </div>
 
-  <div class="tabrow">
-    <div class="seg" id="tabs" role="group" aria-label="Files or Trash">
-      <button type="button" data-t="files" aria-pressed="true">Files</button>
-      <button type="button" data-t="trash" aria-pressed="false">Trash<em id="tn"></em></button>
-    </div>
-    <nav class="crumbs" id="crumbs" aria-label="Folder"></nav>
-    <button type="button" class="btn danger" id="empty" hidden>Empty Trash</button>
-  </div>
+  <div class="tabrow"><nav class="crumbs" id="crumbs" aria-label="Folder"></nav><button type="button" class="btn danger" id="empty" hidden>Empty Trash</button></div>
 
   <div class="note" id="lock" hidden></div>
   <div class="bulk" id="bulk" hidden role="toolbar" aria-label="What to do with the picked items"></div>
@@ -58,9 +63,10 @@
     <p class="none" id="none" hidden></p>
     <div class="dropmsg" aria-hidden="true">Drop files or folders here to upload</div>
   </div>
-  <div class="usage" id="usage" aria-live="polite"></div>
   <span class="sync" id="sync">Loading…</span>
 </main>
+<aside class="fdet" id="det" aria-label="Details" hidden></aside>
+</div>
 <input type="file" id="pick" multiple hidden>
 
 <aside class="ups" id="ups" aria-label="Uploads" hidden></aside>
