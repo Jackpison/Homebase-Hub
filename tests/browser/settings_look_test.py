@@ -3,7 +3,7 @@
 strip), Import and Export Bookmarks in the window frame, Home Settings' buttons on the right, Files Settings and Tasks Settings in
 rows, the main Settings page (a Save bar you can see, switches in Tabs, Health 3 + 3, the Passkeys card, one width, Reset beside
 Dark/Light, no backup reminder on Settings), the Files grid (pictures as small previews, a picked tile keeps its shape), and nothing
-wider than a 390 px phone on Files and on every Settings section.
+wider than a 390 px phone on Files, on every Settings section and on Home, Links, Info, Cards, Tasks and Tools.
     python3 tests/browser/settings_look_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8985)"""
 import io, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
@@ -216,7 +216,18 @@ try:
                 r.append(q.evaluate("[...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > innerWidth + 0.5; }).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '.' + String(e.className).trim().split(/\\s+/).slice(0, 2).join('.') + ' ' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).slice(0, 5)"))
                 wide.append((sec, r))
         check('L26 phone, Settings: no section is wider than the screen, and every sub-tab is in view (they wrap)', not wide, wide)
-        check('L27 no page error', not errs, errs)
+        wide = []
+        for path, ready in (('/', "!!document.getElementById('settingsSheet')"), ('/web/links/', "!!document.querySelector('#grid')"), ('/web/info/', "!!document.querySelector('.boxes')"),
+                            ('/web/cards/', "!!document.querySelector('#list')"), ('/web/tasks/', "!!document.querySelector('#list')"), ('/web/tools/', "!!document.querySelector('#app, main, body')")):
+            q.goto(s.base + path); wait_js(q, ready, 20000)
+            if q.evaluate("!!document.querySelector('#ix-skp')"): browser_unlock(q, PP, keep=True)
+            q.wait_for_timeout(1200)
+            r = q.evaluate("[document.documentElement.scrollWidth - innerWidth]")
+            if r[0] > 0:   # name what sticks out, so a failure in Firefox or WebKit (CI only) says where to look
+                r.append(q.evaluate("[...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > innerWidth + 0.5; }).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '.' + String(e.className).trim().split(/\\s+/).slice(0, 2).join('.') + ' ' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).slice(0, 5)"))
+                wide.append((path, r))
+        check('L27 phone, Home, Links, Info, Cards, Tasks and Tools: nothing is wider than the screen', not wide, wide)
+        check('L28 no page error', not errs, errs)
         b.close()
 finally:
     stop_all()
