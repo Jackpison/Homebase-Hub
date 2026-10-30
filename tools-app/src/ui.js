@@ -42,9 +42,20 @@ export function field(label, control, hint) {
 export const input = (props = {}) => h('input', { class: 'inp', type: 'text', ...props });
 export const textarea = (props = {}) => h('textarea', { class: 'inp area', spellcheck: false, ...props });
 export function select(options, value, props = {}) {
-  const s = h('select', { class: 'inp', ...props });
+  const { keep, ...rest } = props;   // keep: leave it a dropdown (a list of saved names, not a fixed choice)
+  const s = h('select', { class: 'inp', ...rest });
   for (const o of options) { const [v, l] = Array.isArray(o) ? o : [o, o]; s.append(h('option', { value: String(v), text: String(l), selected: String(v) === String(value) })); }
+  if (!keep && options.length >= 2 && options.length <= 3) asButtons(s);
   return s;
+}
+/** (1.61.5) A choice of two or three shows as a row of buttons. The select stays (hidden) and is still what the tool reads and listens to. */
+function asButtons(s) {
+  const g = h('div', { class: 'seg', role: 'radiogroup' });
+  const paint = () => [...g.children].forEach((b) => { const on = b.dataset.v === s.value; b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1; });
+  for (const o of s.options) g.append(h('button', { type: 'button', role: 'radio', 'data-v': o.value, text: o.textContent, onClick: () => { if (s.value !== o.value) { s.value = o.value; s.dispatchEvent(new Event('change', { bubbles: true })); s.dispatchEvent(new Event('input', { bubbles: true })); } paint(); } }));
+  s.addEventListener('change', paint);
+  const place = () => { if (s.parentNode && !g.parentNode) { s.classList.add('seg-h'); s.setAttribute('aria-hidden', 'true'); s.tabIndex = -1; s.after(g); paint(); } };
+  queueMicrotask(place); setTimeout(place, 0);
 }
 export function check(label, checked, onChange) {
   const id = nextId('c');

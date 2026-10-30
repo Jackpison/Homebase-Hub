@@ -152,3 +152,13 @@ ins.dw{text-decoration:none;background:color-mix(in srgb,var(--good) 26%,transpa
 .pgroup h3{margin:14px 0 6px;font-size:14px;color:var(--muted)}.pgroup:first-child h3{margin-top:0}.olist li .inp{flex:1;padding:6px 10px}
 
 .shnote{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:150;display:flex;align-items:center;gap:12px;max-width:min(640px,calc(100vw - 24px));padding:10px 14px;border-radius:12px;background:var(--panel,var(--bg));color:var(--text);border:1px solid var(--line,currentColor);box-shadow:0 12px 30px rgba(0,0,0,.35);font:600 14px system-ui,sans-serif}
+
+/* (1.61.5) switches for on/off choices, and the hidden select behind a row of buttons */
+.chk input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:42px;height:24px;border-radius:12px;position:relative;cursor:pointer;margin:0;background:color-mix(in srgb,currentColor 16%,transparent);border:1px solid color-mix(in srgb,currentColor 20%,transparent);transition:background .15s}
+.chk input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:color-mix(in srgb,currentColor 65%,transparent);transition:transform .15s,background .15s}
+.chk input[type=checkbox]:checked{background:color-mix(in srgb,var(--accent) 24%,transparent);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.chk input[type=checkbox]:checked::after{transform:translateX(18px);background:var(--accent)}
+.chk input[type=checkbox]:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.seg-h{display:none!important}
+@media (prefers-reduced-motion:reduce){.chk input[type=checkbox],.chk input[type=checkbox]::after{transition:none}}
+.seg button[aria-checked=true]{background:var(--card-2);color:var(--text);box-shadow:0 0 0 1px var(--line-2)}

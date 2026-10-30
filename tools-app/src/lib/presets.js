@@ -91,7 +91,7 @@ export function presetBar(kind, { get, set }) {
     }
     let L = [];
     try { L = (await list())[kind] || []; } catch (e) { box.replaceChildren(h('span', { class: 'hint', text: e.message })); return; }
-    const sel = select([['', L.length ? 'Choose a Preset' : 'No Presets Yet'], ...L.map((p) => [p.id, p.locked ? 'Locked preset' : p.name])], '', { 'aria-label': 'Saved presets', disabled: !L.length });
+    const sel = select([['', L.length ? 'Choose a Preset' : 'No Presets Yet'], ...L.map((p) => [p.id, p.locked ? 'Locked preset' : p.name])], '', { keep: true, 'aria-label': 'Saved presets', disabled: !L.length });
     sel.addEventListener('change', async () => {
       const p = L.find((x) => x.id === sel.value); if (!p) return;
       if (p.locked) { sel.value = ''; return toast('Unlock your presets first.', true); }
