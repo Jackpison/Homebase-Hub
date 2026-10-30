@@ -50,7 +50,7 @@ function bk_overview(): array {
                     'summary' => count($l['tabs'] ?? []) . ' tabs, ' . $links . ' links', 'size' => @filesize(bk_links_file()) ?: 0],
         'info'  => ['tabs' => array_map(function ($t) { return ['id' => (string)($t['id'] ?? ''), 'name' => (string)($t['name'] ?? ''), 'private' => !empty($t['private']), 'enc' => !empty($t['enc'])]; }, $i['tabs'] ?? []),
                     'summary' => count($i['tabs'] ?? []) . ' tabs', 'size' => @filesize(hub_jpath(bk_info_file())) ?: 0],
-        'cards' => ['summary' => count($c['cards'] ?? []) . ' cards, ' . count($c['people'] ?? []) . ' holders', 'size' => @filesize(hub_jpath(bk_cards_file())) ?: 0],
+        'cards' => ['summary' => is_string($c['enc'] ?? null) ? 'locked with your passphrase (the server can not count them)' : count($c['cards'] ?? []) . ' cards, ' . count($c['people'] ?? []) . ' holders', 'size' => @filesize(hub_jpath(bk_cards_file())) ?: 0],
         'tasks' => ['summary' => count($tk['tasks'] ?? []) . ' tasks', 'size' => @filesize(hub_jpath(bk_tasks_file())) ?: 0],
         'home'  => ['summary' => $h ? 'widgets, Scratch Pad, settings, background sources' : 'not set up yet', 'size' => @filesize(hub_jpath(bk_home_file())) ?: 0],
         'settings' => ['summary' => 'site name, logo, look and colors, navigation, pages, Tools branding'],
@@ -223,7 +223,14 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
         if (!hub_jput(bk_info_file(), json_encode($new, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new Exception('Could not save Info.');
         $done[] = 'Info';
     }
-    if (!empty($pick['cards']) && (isset($parts['cards']['cards']) && is_array($parts['cards']['cards']))) {
+    if (!empty($pick['cards']) && is_array($parts['cards'] ?? null) && is_string($parts['cards']['enc'] ?? null)) {   // locked Cards (1.61): kept as they are; bk_sitevault_for already matched the key
+        $c = $parts['cards'];
+        if (strlen($c['enc']) > 1600000 || !preg_match('~^enc1:[A-Za-z0-9+/=]{20,}$~', $c['enc'])) throw new Exception('The Cards part of this file is damaged.');
+        $keep = ['enc' => $c['enc'], 'kid' => is_string($c['kid'] ?? null) && preg_match('/^[a-f0-9]{16}$/', $c['kid']) ? $c['kid'] : '', 'title' => mb_substr(is_string($c['title'] ?? null) ? $c['title'] : '', 0, 60), 'saved' => time()];
+        if (is_file(hub_jpath(bk_cards_file()))) @copy(hub_jpath(bk_cards_file()), hub_dir('cards') . '/cards.before-restore.php');
+        if (!hub_jput(bk_cards_file(), json_encode($keep, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) throw new Exception('Could not save Cards.');
+        $done[] = 'Cards';
+    } elseif (!empty($pick['cards']) && (isset($parts['cards']['cards']) && is_array($parts['cards']['cards']))) {
         $c = $parts['cards'];
         $keep = array_intersect_key($c, array_flip(['cards', 'people', 'notes', 'banks', 'settings', 'saved']));
         $keep['saved'] = time();

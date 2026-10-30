@@ -1936,7 +1936,25 @@
         .then(function (j) { if (!j.ok) fail(j.error || 'Could not save the passphrase.'); return j; });
     }
     // Files, Cards and saved presets are locked with the site key: Cards and presets are turned back into plain data here; Files must be deleted first
-    var PP_UNLOCK = function (key, use) { return use.length ? fail('Cannot unlock ' + use.join(' and ') + ' here.') : Promise.resolve(); };   // Cards and presets are added below
+    var plainPost = function (path, body) {
+      return fetch(ROOT + 'web/' + path, { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'Content-Type': 'application/json', 'X-Hub-CSRF': S.csrf || '' }, body: JSON.stringify(body) });
+    };
+    // Cards: opened with the key and saved as plain data again (the server accepts that only when asked on purpose)
+    var unlockCards = function (key) {
+      return getJson('cards/api.php').then(function (j) {
+        if (typeof j.enc !== 'string') return;
+        return VK.open(j.enc, key).then(function (txt) {
+          var d = JSON.parse(txt);
+          if (!d || !Array.isArray(d.cards)) throw new Error('shape');
+          return plainPost('cards/api.php', { cards: d.cards, people: d.people || [], notes: d.notes || '', banks: d.banks || {}, settings: d.settings || {}, unlock: true });
+        }).then(function (r) { if (!r.ok) fail('Could not save your cards as plain data. Nothing was changed.'); }, function (e) { if (e && e.user) throw e; fail('Your cards could not be opened with that key, so nothing was changed.'); });
+      });
+    };
+    var PP_UNLOCK = function (key, use) {
+      var jobs = [];
+      if (use.indexOf('Cards') >= 0) jobs.push(unlockCards(key));
+      return Promise.all(jobs);
+    };
     var unlockSiteData = function (d, o) {
       if (!d.sv || !d.use.length) return Promise.resolve();
       if (d.use.indexOf('Files') >= 0) return fail('Files are locked with your passphrase. Download what you need and delete every file in Files first; then you can remove the passphrase.');
@@ -2115,6 +2133,10 @@
       var b = e.target.closest && e.target.closest('[data-export]'); if (!b) return;
       var app = b.dataset.export, fmt = b.dataset.fmt, st = document.getElementById('ix-xs'); b.disabled = true; if (st) st.textContent = 'Reading your ' + app + '…';
       api('export&app=' + app).then(function (j) {
+        if (!(app === 'cards' && j && j.ok && j.data && typeof j.data.enc === 'string')) return j;
+        if (st) st.textContent = 'Opening your locked cards…';   // locked in the browser (1.61): opened here with your passphrase, never on the server
+        return window.HubSite.openJson(j.data.enc).then(function (d) { j.data = d; return j; }, function (e) { return { ok: false, error: e && e.code === 'cancel' ? 'Not exported: Cards are locked and need your passphrase.' : 'Your cards could not be unlocked, so nothing was exported.' }; });
+      }).then(function (j) {
         b.disabled = false;
         if (!j || !j.ok) { if (st) st.textContent = (j && j.error) || 'Could not read the data.'; return; }
         var day = new Date().toISOString().slice(0, 10), r = exportRows(app, j.data);

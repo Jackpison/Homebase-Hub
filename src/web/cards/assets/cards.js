@@ -32,7 +32,29 @@ function apply(s){
 const HF=(u,o)=>window.HUB?HUB.fetch(u,o):fetch(u,o);   // the site's fetch: longer timeout and a quiet retry on slow hosts
 const api=body=>HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
 const savedMsg=()=>"Saved to your server";
+/* 1.61: when encryption is on, the cards are locked in this browser with the site key (HubSite, shell.js) before they are sent, and no plain copy
+   is kept in this browser. ENC says whether Cards is locked; the server then holds only {enc, kid, title}. */
+let ENC=false,lastN=0;
+const dropPlain=()=>{try{localStorage.removeItem("family4");localStorage.removeItem("cards3");localStorage.removeItem("notes4")}catch(e){}};
+async function sendLocked(extra){
+  const enc=await HubSite.sealJson(snap());
+  const fewer=D.length<lastN;lastN=D.length;
+  return api({enc,kid:HubSite.kid(),title:ST.title||"",fewer,...extra});
+}
 function persist(){
+  if(ENC){
+    dropPlain();
+    status("Saving…");clearTimeout(pt);
+    pt=setTimeout(async()=>{
+      try{
+        const r=await sendLocked();
+        if(r.status===403){status("You were logged out. Log in again to save your change.");if(window.HUB)HUB.login("You were logged out. Log in to save your change.").then(()=>persist(),()=>{});return}
+        if(!r.ok)throw 0;
+        status("Saved to your server, locked");
+      }catch(e){status(e&&e.code==="cancel"?"Not saved: unlock Cards to save your change.":"Server save failed. Your change is not saved yet.")}
+    },300);
+    return;
+  }
   try{localStorage.setItem("family4",JSON.stringify(snap()))}catch(e){}
   if(!server){status("Saved in this browser only");return}
   status("Saving…");clearTimeout(pt);
@@ -72,14 +94,52 @@ async function load(){
     if(!j||typeof j!=="object")throw 0;
     server=true;
     if(j.private&&!j.auth){privateScreen(j);return}     // visitors: no card data is ever sent
-    if(Array.isArray(j.cards)&&Array.isArray(j.people)){apply(j);status(savedMsg())}
-    else{apply({cards:[],people:[],notes:""});status(savedMsg())}
+    if(typeof j.enc==="string"){   // locked in the browser: open it here (the passphrase is asked for once)
+      ENC=true;
+      try{const data=await HubSite.openJson(j.enc);apply(data);lastN=D.length;dropPlain();status("Saved to your server, locked")}
+      catch(e){lockedScreen(e);return}
+    }
+    else if(Array.isArray(j.cards)&&Array.isArray(j.people)){apply(j);status(savedMsg());offerLock()}
+    else{apply({cards:[],people:[],notes:""});status(savedMsg());offerLock()}
   }catch(e){
     // offline: only this device's own copy, which exists only while you're logged in here
     server=false;
     if(local.cards.length){apply(local);status("Offline: showing this device's copy")}else{privateScreen({});return}
   }
   render();
+}
+
+/* Cards that are locked but not opened yet (the passphrase was not given), or locked with a passphrase that is not set up here */
+function lockedScreen(e){
+  const code=e&&e.code,msg=code==="nopass"?"Cards are locked with your encryption passphrase, which is not set on this site now. Set it in Settings, Security, Encryption.":
+    code==="wrongkey"?"Your key does not open these cards. If you restored a backup from another site, use the passphrase of that site.":
+    code==="insecure"?"Locked cards need a secure (https) connection to open.":"Type your encryption passphrase to open your cards. They are locked in this browser, so the server only holds scrambled data.";
+  $("list").innerHTML='<div class="lockedbox"><h2>Your cards are locked</h2><p></p><button type="button" class="pri" id="unlockBtn">Unlock</button></div>';
+  $("list").querySelector("p").textContent=msg;
+  const n=document.querySelector(".notes");if(n)n.hidden=true;
+  status("Locked");
+  $("unlockBtn").onclick=()=>{if(code==="nopass"&&window.HUB)HUB.settings("security/encryption");else location.reload()};
+}
+/* Encryption is on but these cards are still plain: say so, and lock them with one press (earlier readable copies are deleted) */
+async function offerLock(){
+  try{
+    const st=await HubSite.status();
+    if(!st.pp)return;
+    if(!D.length&&!P.length&&!NOTES.trim()){ENC=true;lastN=0;return}   // a new, empty Cards is locked from its first save
+    $("lockbar").hidden=false;
+  }catch(e){}
+}
+async function lockNow(){
+  const b=$("lockBtn");b.disabled=true;
+  try{
+    await HubSite.key();
+    ENC=true;lastN=D.length;dropPlain();
+    const r=await sendLocked({purgePlain:true});
+    if(!r.ok)throw 0;
+    $("lockbar").hidden=true;status("Saved to your server, locked");
+    if(window.HUB)HUB.toast("Cards are locked. Readable earlier copies were deleted.");
+  }catch(e){ENC=false;if(!e||e.code!=="cancel"){if(window.HUB)HUB.toast("Could not lock Cards. Nothing was changed.",true)}}
+  b.disabled=false;
 }
 
 /* official links: bank website and the card's own page on the bank site */
@@ -514,6 +574,7 @@ $("infoEdit").onclick=()=>guard(()=>{$("notes").value=NOTES;infoMode(true);$("no
 $("infoCancel").onclick=()=>infoMode(false);
 $("infoSave").onclick=()=>{NOTES=$("notes").value;persist();renderInfo();infoMode(false)};
 
+$("lockBtn").onclick=lockNow;
 $("fq").addEventListener("input",e=>{F.q=e.target.value;render()});
 [["fbank","bank"],["fnet","net"],["fkind","kind"]].forEach(([id,k])=>$(id).addEventListener("change",e=>{F[k]=e.target.value;render()}));
 $("fchips").addEventListener("click",e=>{const b=e.target.closest("[data-h]");if(!b)return;active=b.dataset.h;render();const nb=$("fchips").querySelector(`[data-h="${CSS.escape(active)}"]`);if(nb)nb.focus()});

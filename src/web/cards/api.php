@@ -32,8 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (!$admin) {
         // Only what's needed to draw the login screen.
         $s = is_array($j['settings'] ?? null) ? $j['settings'] : [];
-        hub_json(200, ['private' => true, 'auth' => false, 'locked' => true,
-                  'settings' => ['title' => is_string($s['title'] ?? null) ? $s['title'] : '']]);
+        $title = is_string($s['title'] ?? null) ? $s['title'] : (is_string($j['title'] ?? null) ? $j['title'] : '');
+        hub_json(200, ['private' => true, 'auth' => false, 'locked' => true, 'settings' => ['title' => $title]]);
+    }
+    if (is_string($j['enc'] ?? null)) {   // 1.61: locked in the browser with the site key; the server never sees the cards
+        echo json_encode(['enc' => $j['enc'], 'kid' => (string)($j['kid'] ?? ''), 'saved' => (int)($j['saved'] ?? 0), 'title' => (string)($j['title'] ?? ''), 'locked' => true, 'auth' => true], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        exit;
     }
     $j['locked'] = true;
     $j['auth'] = true;
@@ -43,17 +47,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $raw = file_get_contents('php://input', false, null, 0, 1048577);
-    if ($raw === false || strlen($raw) > 1048576) hub_json(413, ['ok' => false, 'error' => 'too large']);
+    $raw = file_get_contents('php://input', false, null, 0, 2097153);
+    if ($raw === false || strlen($raw) > 2097152) hub_json(413, ['ok' => false, 'error' => 'too large']);
     $d = json_decode($raw, true);
     if (!is_array($d)) hub_json(400, ['ok' => false, 'error' => 'bad data']);
     if (!$admin) hub_json(403, ['ok' => false, 'error' => 'password']);
     if (!hub_csrf_ok()) hub_json(403, ['ok' => false, 'error' => 'Security check failed. Reload the page.']);
 
-    if (!isset($d['cards']) || !is_array($d['cards']) || !isset($d['people']) || !is_array($d['people'])) {
-        hub_json(400, ['ok' => false, 'error' => 'bad data']);
+    $stored = is_file($file) ? json_decode(hub_jraw($file), true) : null;
+    $storedLocked = is_array($stored) && is_string($stored['enc'] ?? null);
+    $lockedIn = isset($d['enc']);
+    if ($lockedIn) {   // 1.61: the browser sends the cards already locked ("enc1:..."): only the shape is checked here
+        if (!is_string($d['enc']) || strlen($d['enc']) > 1600000 || !preg_match('~^enc1:[A-Za-z0-9+/=]{20,}$~', $d['enc'])) hub_json(400, ['ok' => false, 'error' => 'bad data']);
+        $kid = is_string($d['kid'] ?? null) && preg_match('/^[a-f0-9]{16}$/', $d['kid']) ? $d['kid'] : '';
+        $outData = ['enc' => $d['enc'], 'kid' => $kid, 'title' => mb_substr(is_string($d['title'] ?? null) ? $d['title'] : '', 0, 60), 'saved' => time()];
+        $fewer = !empty($d['fewer']);
+    } else {
+        if (!isset($d['cards']) || !is_array($d['cards']) || !isset($d['people']) || !is_array($d['people'])) {
+            hub_json(400, ['ok' => false, 'error' => 'bad data']);
+        }
+        // locked cards are never saved back as plain text by accident: only when the browser says it is unlocking them on purpose (removing the passphrase)
+        if ($storedLocked && empty($d['unlock'])) hub_json(409, ['ok' => false, 'error' => 'locked']);
     }
-    $outData = [
+    if (!$lockedIn) $outData = [
         'cards'  => array_values($d['cards']),
         'people' => array_values($d['people']),
         'notes'  => isset($d['notes']) && is_string($d['notes']) ? $d['notes'] : '',
@@ -65,9 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($json === false) hub_json(400, ['ok' => false, 'error' => 'bad data']);
     $lk = @fopen($dir . '/cards.lock', 'c'); if ($lk) flock($lk, LOCK_EX);   // two saves at once: one after the other, never mixed
     $before = is_file($file) ? json_decode(hub_jraw($file), true) : null;
-    $fewer = is_array($before) && count($outData['cards']) < count($before['cards'] ?? []);   // deleting cards always keeps an earlier version first
+    if (!$lockedIn) $fewer = is_array($before) && count($outData['cards']) < count($before['cards'] ?? []);   // deleting cards always keeps an earlier version first
     cards_snapshot($dir, $file, $fewer);
     $ok = hub_jput($file, $json);
+    if ($ok && $lockedIn && !empty($d['purgePlain'])) cards_purge_plain($dir);   // Lock Cards: earlier copies that can be read are deleted
     if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
     if (!$ok) hub_json(500, ['ok' => false, 'error' => 'write failed']);
     hub_json(200, ['ok' => true]);
@@ -75,6 +92,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 hub_json(405, ['ok' => false]);
 
+/** Deletes every earlier copy of Cards that is not locked (they hold the cards in plain text). Used when Cards is locked. */
+function cards_purge_plain($dir) {
+    $plain = function ($f) { $j = hub_read_guarded($f); return is_array($j) && !is_string($j['enc'] ?? null); };
+    foreach (glob($dir . '/versions/*.php') ?: [] as $f) if ($plain($f)) @unlink($f);
+    $b = $dir . '/cards.before-restore.php';
+    if (is_file($b) && $plain($b)) @unlink($b);
+}
 /** Keeps an earlier version at most every 10 minutes; the last 40 are kept. Restored from site Settings > Backup. */
 function cards_snapshot($dir, $file, $force = false) {
     if (!is_file($file)) return;

@@ -189,3 +189,13 @@ dialog p{color:var(--mute);margin:0 0 6px}
 /* Holders and Banks: a clean border on the field you are typing in (the list's edge cut the outline off) */
 .hlist{padding:2px}
 .hrow input:focus-visible,.hadd input:focus-visible,.brow input:focus-visible,.hrow input:focus,.hadd input:focus,.brow input:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 60%,var(--panel));box-shadow:0 0 0 3px color-mix(in srgb,var(--fg) 12%,transparent)}
+
+/* 1.61: Cards locked with the passphrase */
+.lockbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-left:3px solid var(--ix-accent,#ffc21a);border-radius:10px;background:var(--panel);padding:11px 14px;margin-bottom:16px}
+.lockbar p{margin:0;flex:1;min-width:220px;color:var(--mute)}
+.lockbar b{color:var(--fg)}
+.lockbar button,.lockedbox button{background:var(--ix-accent,#ffc21a);color:#000;border:0;border-radius:999px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer}
+.lockbar button:disabled{opacity:.6;cursor:default}
+.lockedbox{text-align:center;padding:60px 16px}
+.lockedbox h2{margin:0 0 8px}
+.lockedbox p{color:var(--mute);max-width:460px;margin:0 auto 16px}
