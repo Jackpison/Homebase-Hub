@@ -153,6 +153,10 @@ Not for the website's feature pages, but worth one line on the **About** or **Se
 - [ ] **Recorder:** sharper screen recordings (VP9 first, up to 4K, a Quality choice: Standard, High, Best).
 - [ ] Every page's own windows in the same frame as Settings; one button shape; **Undo** after deleting a link, category, tab (Links) or a card.
 
+## 16c. Info: Undo (1.62.0)
+
+- [ ] **Undo after deleting a box or a tab** in Info (7 seconds), also in locked tabs; the same message as Links, Cards and Files. Info page, guide.
+
 ## 17. For the people who keep it running (1.61.0)
 
 - [x] Every PHP file runs in strict mode and PHPStan runs at level 5 (a test fails for a file without `declare(strict_types=1)`).

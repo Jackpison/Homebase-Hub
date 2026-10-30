@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.62.0 | Undo in Info: a deleted box or tab comes back with its text, also in locked tabs |
 | 1.61.9 | Tools tidied (Image Converter tabs, four tools gone, sections you can move, a sharper recorder), one window frame and button shape on every page, Undo in Links and Cards |
 | 1.61.6 | Tidier Settings windows, Save Settings always in view, a Passkeys card, picture previews in the Files grid, phone fixes for Files and Settings |
 | 1.61.5 | A new Files page like Drive (menu, details panel, Starred, Recent), one new look for every Settings window, a shield key icon, a Saved note, Undo for Trash, Add to Calendar, Send Today's Tasks, switches and buttons in Tools |
@@ -93,6 +94,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.62.0
+
+### Info: Undo
+
+- **Undo after you delete a box or a tab.** A message offers **Undo** for 7 seconds. It puts the box back in its place with its text, or the tab back with all its boxes. Before this, a deleted box could only come back from an earlier version in Backup.
+- **Locked tabs work too.** The text goes back exactly as it was, still locked. The server never sees your passphrase, and it refuses to put readable text into a locked tab.
+- If the tab was changed on another device, or has no room left, Undo tells you so and changes nothing.
+
+### Behind the scenes
+
+- Links, Cards, Files and Info now share one Undo message. Nothing changes on screen.
+- A page change that is cut short no longer causes a harmless error in the browser's log.
 
 ---
 
