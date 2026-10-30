@@ -526,7 +526,9 @@
     var kids = [].slice.call(body.children), grp = null;
     kids.forEach(function (k) {
       if (k.matches(headSel)) { grp = null; return; }
-      if (k.hidden || k.matches('p.hint,.hint,.err,[id$=Err],.ix-sb-skip')) return;
+      if (k.matches('.err,[id$=Err],.ix-sb-skip,.split,p:not(.hint)')) return;   // status lines and old leftovers stay outside the cards
+      if (k.matches('p.hint,.hint') && !grp) return;
+      // (1.61.6) a hidden row (Encrypt All Private Tabs) joins its card too, so it is not drawn loose once it shows; a hint stays with its row
       if (!grp) { grp = document.createElement('div'); grp.className = 'ix-grp'; body.insertBefore(grp, k); }
       grp.appendChild(k);
     });
@@ -635,7 +637,7 @@
   function backupSeen() { if (backupDue()) { ls.set('hub-bk-ack', String(Date.now())); lastBar = ''; drawBar(); } }
   /* ...and one quiet message per visit while it is due */
   function backupReminder() {
-    if (!S.admin || !backupDue()) return;   // same rule as the red icon: not after it was clicked today
+    if (!S.admin || !backupDue() || APP === 'settings') return;   // same rule as the red icon; (1.61.6) not on Settings, whose menu already says when Backup is due
     var days = Math.floor((Date.now() / 1000 - (S.backupLast || 0)) / 86400);
     if (S.backupLast && days < S.backupEvery) return;
     try { if (sessionStorage.getItem('hub-bk-told')) return; sessionStorage.setItem('hub-bk-told', '1'); } catch (e) {}
@@ -1474,7 +1476,9 @@
     bufB64u: bufB64u, b64uBuf: b64uBuf, bookmarksHtml: bookmarksHtml,   // (1.61.0) for the passkey screens of Settings
     api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
-    tz: function () { return S.tz || 'Asia/Kolkata'; }   // the site's time zone (Settings > General)
+    tz: function () { return S.tz || 'Asia/Kolkata'; },   // the site's time zone (Settings > General)
+    settingsWindow: function (d) { d.classList.add('ix-sdlg'); sdlgBuild(d); },
+    settingsRows: function (body, heads) { sdlgDecorate(body, heads || 'h3,h4'); }   // (1.61.6) cards and tiles for a body a page draws itself (Files Settings)   // (1.61.6) a Settings window made later by a page (Import and Export, Files Settings) gets the same look
   };
 })();
 

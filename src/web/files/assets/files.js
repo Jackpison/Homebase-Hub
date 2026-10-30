@@ -153,6 +153,34 @@ async function readFile(item, type, onBytes) {
   }
   return { blob: new Blob(parts, { type: type || "application/octet-stream" }), crc, size };
 }
+/* (1.61.6) small pictures for the grid view and the details panel: opened here (like a preview), shrunk to 320 px, kept in this tab only.
+   One at a time, only for pictures up to 12 MB that come into view; anything that fails keeps its icon. */
+const THUMB = new Map(), THUMB_MAX = 12 * 1048576, thumbQ = [];
+let thumbBusy = false;
+const thumbKey = i => i.id + ":" + (dateOf(i) || "") + ":" + sizeOf(i);
+const thumbable = i => i.t === "f" && unlocked && kindOf(nameOf(i)) === "image" && ext(nameOf(i)) !== "svg" && sizeOf(i) > 0 && sizeOf(i) <= THUMB_MAX;
+async function thumbMake(i) {
+  const r = await readFile(i, MIME[ext(nameOf(i))] || "image/png"), bmp = await createImageBitmap(r.blob), sc = Math.min(1, 320 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(bmp.width * sc)); c.height = Math.max(1, Math.round(bmp.height * sc));
+  /** @type {any} */ (c.getContext("2d")).drawImage(bmp, 0, 0, c.width, c.height); bmp.close();
+  const b = await new Promise(res => c.toBlob(res, "image/webp", 0.8)); if (!b) throw new Error("no thumbnail");
+  return URL.createObjectURL(/** @type {Blob} */ (b));
+}
+async function thumbNext() {
+  if (thumbBusy) return; const job = thumbQ.shift(); if (!job) return; thumbBusy = true;
+  const k = thumbKey(job.i);
+  if (!THUMB.has(k)) { let u = ""; try { u = await thumbMake(job.i); } catch (e) { /* keeps its icon */ } THUMB.set(k, u); }
+  thumbBusy = false; thumbShow(job.i); thumbNext();
+}
+function thumbShow(i) {
+  const u = THUMB.get(thumbKey(i)); if (!u) return;
+  for (const box of document.querySelectorAll('[data-th="' + i.id + '"]')) if (!box.querySelector("img.th")) { box.replaceChildren(h("img", { class: "th", src: u, alt: "" })); box.classList.add("hasth"); }
+}
+const thumbIO = "IntersectionObserver" in window ? new IntersectionObserver((es, io) => { for (const e of es) if (e.isIntersecting) { io.unobserve(e.target); const i = byId.get(/** @type {any} */ (e.target).dataset.th); if (i && !THUMB.has(thumbKey(i))) { thumbQ.push({ i }); thumbNext(); } } }, { rootMargin: "200px" }) : null;
+function thumbWatch(box, i) {
+  if (!thumbable(i)) return; box.dataset.th = i.id;
+  if (THUMB.has(thumbKey(i))) thumbShow(i); else if (thumbIO) thumbIO.observe(box);
+}
 const save = (blob, name) => { const u = URL.createObjectURL(blob), a = h("a", { href: u, download: name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); };
 
 /* ---------- a zip, made here (stored, not squeezed: pictures and PDFs do not shrink anyway) ---------- */
@@ -191,8 +219,9 @@ function openDialog(title, body, buttons, o) {   // buttons: [{text, pri, danger
         onclick: async ev => { const btn = ev.currentTarget; btn.disabled = true; let keep = false; try { keep = (await b.run()) === false; } finally { btn.disabled = false; } if (!keep) { dlg.close(); resolve(b.text); } } }))));
     dlg.onclose = () => resolve(null);
     dform.onsubmit = ev => { ev.preventDefault(); const p = buttons.find(b => b.pri); if (p) dform.querySelector(".act .pri").click(); };
+    if (o.rows && window.HUB && HUB.settingsRows) HUB.settingsRows(dform.querySelector(".ix-sb"), "h3");   // (1.61.6) the same cards and tiles as every Settings window
     dlg.showModal();
-    const f = dform.querySelector("[autofocus],input,select"); if (f) { f.focus(); if (f.select) f.select(); }
+    const f = o.frame ? null : dform.querySelector("[autofocus],input,select"); if (f) { f.focus(); if (f.select) f.select(); }
   });
 }
 const derr = t => { const e = $("derr"); if (e) e.textContent = t || ""; };
@@ -285,6 +314,7 @@ function row(i) {
   const more = h("button", { type: "button", class: "ib more", "aria-label": "More for " + name, "aria-haspopup": "menu", onclick: e => menu(e.currentTarget, i) }, svg("more"));
   const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : ""), "data-id": i.id, ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); menu(more, i); } },
     ck, open, h("span", { class: "cell sz num", text: isD ? "" : fmt(sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), more, h("span", { class: "cell meta", text: sub }));
+  if (D.settings.view === "grid") { const ic = open.querySelector(".ico"); if (ic) queueMicrotask(() => thumbWatch(ic, i)); }
   return el;
 }
 row.sync = () => { for (const r of $("list").querySelectorAll(".row")) { r.classList.toggle("sel", sel.has(r.dataset.id)); const c = r.querySelector(".ck"); if (c) c.checked = sel.has(r.dataset.id); } bulk(); details(); };
@@ -318,7 +348,7 @@ function details() {
   const shares = D.shares.filter(x => x.id === i.id).length;
   det.replaceChildren(
     h("div", { class: "dh" }, h("b", { text: "Details" }), h("button", { type: "button", class: "ib", "aria-label": "Close details", onclick: () => { sel.clear(); row.sync(); } }, svg("x"))),
-    h("div", { class: "pv " + icoOf(i) }, svg(icoName(i))),
+    (() => { const pv = h("div", { class: "pv " + icoOf(i) }, svg(icoName(i))); queueMicrotask(() => thumbWatch(pv, i)); return pv; })(),
     h("h3", { text: name }), acts,
     h("div", { class: "locknote" }, svg("lock"), "Locked in your browser. The server can't read it."),
     h("dl", {}, h("dt", { text: "Type" }), h("dd", { text: isD ? "Folder" : (KIND[kindOf(name)] || (/\.([A-Za-z0-9]{1,8})$/.exec(name) || [, "File"])[1].toUpperCase() + " file") }),
@@ -616,25 +646,24 @@ async function shareBox(i) {
 
 /* ---------- settings ---------- */
 async function settingsBox() {
-  const s = D.settings, lim = h("input", { type: "number", id: "dlim", min: "0", step: "0.5", value: s.limit ? +(s.limit / 1073741824).toFixed(2) : 0, "aria-label": "Storage limit in GB" });
+  const s = D.settings, lim = h("input", { type: "number", id: "dlim", class: "num", min: "0", step: "0.5", value: s.limit ? +(s.limit / 1073741824).toFixed(2) : 0, "aria-label": "Storage limit in GB" });
   const sh = h("input", { type: "checkbox", id: "dsh", class: "ix-sw", checked: !!s.shares }), only = h("input", { type: "checkbox", id: "donly", class: "ix-sw", checked: true, disabled: true });
   const td = h("select", { id: "dtd", "aria-label": "Keep Trash" }, [7, 14, 30, 60, 90].map(d => h("option", { value: d, selected: d === s.trashDays, text: d + " days" })));
   const row = (id, name, help, ctl) => h("div", { class: "ix-srow" }, h("label", { for: id }, name, h("small", { text: help })), ctl);
   await openDialog("Files Settings", [
     h("h3", { text: "Privacy" }),
-    row("donly", "Only Me", "Always on: this page is only for you.", only),
+    row("donly", "Only Me", "Always on for Files.", only),
     h("h3", { text: "Storage" }),
-    h("label", { for: "dlim", text: "Storage Limit (GB)" }), lim,
-    h("p", { class: "hint", text: "0 means no limit." }),
+    row("dlim", "Storage Limit", "In GB. 0 means no limit.", lim),
     h("h3", { text: "Sharing" }),
-    row("dsh", "Share Links", "Lets you make a link to one file. Turning this off ends every link.", sh),
+    row("dsh", "Share Links", "Off ends every link.", sh),
     h("h3", { text: "Trash" }),
-    h("label", { for: "dtd", text: "Keep Things in the Trash" }), td
+    row("dtd", "Keep in Trash", "Then it is deleted for good.", td)
   ], [cancelBtn, { text: "Save Settings", pri: true, run: async () => {
     const j = await post("settings", { settings: { limit: Math.round(Math.max(0, +lim.value || 0) * 1073741824), shares: sh.checked, trashDays: +td.value } });
     if (!j.ok) { derr(j.error); return false; }
     await refresh(); toast("Saved.");
-  } }], { frame: true });
+  } }], { frame: true, rows: true });
 }
 
 /* ---------- start ---------- */

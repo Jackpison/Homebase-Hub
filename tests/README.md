@@ -7,7 +7,7 @@ These run on your own computer. Nothing here is part of the update zip.
 | Folder | What is in it |
 |---|---|
 | `unit/` | PHP unit tests (`php tests/unit/run.php`) |
-| `browser/` | Tests in a real browser: `pages_test`, `nav_test`, `settings_test`, `settings_ui_test` (Settings windows, Only Me, Backup tabs, Export Bookmarks, calendar link, shortcuts), `tools_test`, `import_test`, `a11y_test`, `app_test`, `website_test`, and for 1.61.0 `encrypt_test`, `files_test`, `lock_test`, `tabs_lock_test`, `passkey_test` and `share_test` (Chromium only), `speed_test` (a slowed phone, Chromium only) |
+| `browser/` | Tests in a real browser: `pages_test`, `nav_test`, `settings_test`, `settings_ui_test` (Settings windows, Only Me, Backup tabs, Export Bookmarks, calendar link, shortcuts), `settings_look_test` (the look of the Settings windows and page, the Files grid, nothing wider than a phone), `tools_test`, `import_test`, `a11y_test`, `app_test`, `website_test`, and for 1.61.0 `encrypt_test`, `files_test`, `lock_test`, `tabs_lock_test`, `passkey_test` and `share_test` (Chromium only), `speed_test` (a slowed phone, Chromium only) |
 | `server/` | Tests of the server side: `update_test`, `update_attack_test`, `core_test`, `files_test`, and Apache (`apache_setup.sh`, `apache_test.py`) |
 | `repo/` | Checks of the repository itself: `tscheck_test` (the JavaScript type check, `npx tsc -p tsconfig.json`), `build_test`, `release_test`, `check_libraries`, `workflows_test`, `ci_status_test`, `ci_changes_test`, `releases_test` |
 | `fixtures/` | Files the tests open: PDFs, pictures, a HEIC photo, the favicon stand-in, bookmark exports |

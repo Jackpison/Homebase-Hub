@@ -361,7 +361,7 @@ try:
         ep.evaluate("document.getElementById('colorDlg').close()")
         ep.click('#ix-ebar [data-tip="Links Settings"]'); until(lambda: ep.evaluate("document.getElementById('setDlg').open"), 5000)
         before = ep.evaluate("document.getElementById('sEditBar').value")
-        ep.click('#sEditBar + .ix-sgc [data-v=text]'); ep.click('#setDlg button[value=cancel]'); ep.wait_for_timeout(600)
+        ep.click('#sEditBar + .ix-sgc [data-v=text]'); ep.click('#setDlg button[value=cancel]'); until(lambda: not ep.evaluate("document.getElementById('setDlg').open"), 5000)
         cancelled = ep.evaluate("[document.getElementById('ix-ebar').className, (HUB.state().editBar || {}).links || '']")
         ep.click('#ix-ebar [data-tip="Links Settings"]'); until(lambda: ep.evaluate("document.getElementById('setDlg').open"), 5000)
         reopened = ep.evaluate("document.getElementById('sEditBar').value")
@@ -406,7 +406,7 @@ try:
         hrows = lambda: hp2.evaluate("[...document.querySelectorAll('#hlist .hrow')].map(r => [r.querySelector('input').value, r.querySelector('.hn').textContent, r.querySelector('.hdel').disabled])")
         hp2.click('#ix-ebar [data-tip="Holders"]'); until(lambda: hp2.evaluate("document.getElementById('hdlg').open"), 5000)
         first = hrows()
-        hp2.fill('#hname', 'Riya'); hp2.click('#hadd'); hp2.click('#hcancel'); hp2.wait_for_timeout(300)
+        hp2.fill('#hname', 'Riya'); hp2.click('#hadd'); hp2.click('#hcancel'); until(lambda: not hp2.evaluate("document.getElementById('hdlg').open"), 5000)
         hp2.click('#ix-ebar [data-tip="Holders"]'); until(lambda: hp2.evaluate("document.getElementById('hdlg').open"), 5000)
         cancelled = [r[0] for r in hrows()]
         who = first[0][0]
@@ -462,11 +462,11 @@ try:
         banks_of = lambda: cp.evaluate("[...new Set([...document.querySelectorAll('#list .row.item')].map(r => r.textContent))].join('|')")
         cp.click('#ix-ebar [data-tip="Banks"]'); until(lambda: cp.evaluate("document.getElementById('bdlg').open"), 5000)
         brows = cp.evaluate("[...document.querySelectorAll('#blist .brow')].map(r => [r.querySelector('[data-bf=name]').value, r.querySelector('.hn').textContent])")
-        cp.fill('#blist .brow:first-child [data-bf=name]', 'Lakeside Bank'); cp.click('#bcancel'); cp.wait_for_timeout(300)
+        cp.fill('#blist .brow:first-child [data-bf=name]', 'Lakeside Bank'); cp.click('#bcancel'); until(lambda: not cp.evaluate("document.getElementById('bdlg').open"), 5000)
         kept = 'Lakeside Bank' not in banks_of()
         cp.click('#ix-ebar [data-tip="Banks"]'); until(lambda: cp.evaluate("document.getElementById('bdlg').open"), 5000)
         old = brows[0][0]
-        cp.fill('#blist .brow:first-child [data-bf=name]', 'Lakeside Bank'); cp.fill('#blist .brow:first-child [data-bf=url]', 'not a link'); cp.click('#bsave'); cp.wait_for_timeout(300)
+        cp.fill('#blist .brow:first-child [data-bf=name]', 'Lakeside Bank'); cp.fill('#blist .brow:first-child [data-bf=url]', 'not a link'); cp.click('#bsave'); until(lambda: cp.evaluate("document.getElementById('bmsg').textContent.trim().length > 0"), 5000)
         badlink = cp.evaluate("[document.getElementById('bdlg').open, document.getElementById('bmsg').textContent]")
         cp.fill('#blist .brow:first-child [data-bf=url]', 'https://lakeside.example/'); cp.click('#bsave'); until(lambda: not cp.evaluate("document.getElementById('bdlg').open"), 5000); settle(cp)
         renamed = banks_of(); link = cp.evaluate("[...document.querySelectorAll('#list a[href]')].some(a => a.href === 'https://lakeside.example/')")
@@ -499,13 +499,13 @@ try:
             first = sel()
             gp.evaluate("document.querySelector('[data-hub=toggle]').click()"); until(lambda: gp.evaluate("document.body.classList.contains('editing')"), 5000)
             gp.evaluate(SWIPE, [330, 500, 120, 510]); gp.wait_for_timeout(500); while_edit = [sel(), '/web/links/' in gp.url]
-            gp.evaluate("document.querySelector('#ix-ebar [data-ix-done]').click()"); gp.wait_for_timeout(300)
+            gp.evaluate("document.querySelector('#ix-ebar [data-ix-done]').click()"); until(lambda: gp.evaluate("!document.querySelector('#ix-ebar') || document.querySelector('#ix-ebar').hidden"), 5000)
             with gp.expect_navigation(timeout=10000): gp.evaluate(SWIPE, [330, 500, 120, 510])   # Links has two tabs: the swipe still goes to the next page (1.59.1)
             on_info = '/web/info/' in gp.url; ready(); settle(gp)
             check('P63 on a phone, swiping left on Links goes straight to the next page (Info), not to its next tab (1.59.1); nothing happens while editing',
                   first.strip().endswith('One') and while_edit[0].strip().endswith('One') and while_edit[1] and on_info, (first, while_edit, on_info))
             order = gp.evaluate("window.__hubSwipe.pages()")
-            gp.evaluate("(() => { const t = [...document.querySelectorAll('#tabs [role=tab]')].pop(); if (t) t.click() })()"); gp.wait_for_timeout(300)   # on Info's last tab, not its first
+            gp.evaluate("(() => { const t = [...document.querySelectorAll('#tabs [role=tab]')].pop(); if (t) t.click() })()"); until(lambda: gp.evaluate("(() => { const t = [...document.querySelectorAll('#tabs [role=tab]')].pop(); return !t || t.getAttribute('aria-selected') === 'true'; })()"), 5000)   # on Info's last tab, not its first
             with gp.expect_navigation(timeout=10000): gp.evaluate(SWIPE, [60, 520, 330, 515])
             back_links = '/web/links/' in gp.url
             check('P64 swiping right goes to the previous page in the bar\'s order (Info to Links), whichever tab is open; the order leaves Tools and Settings out',

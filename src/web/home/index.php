@@ -185,14 +185,14 @@ if (!empty($site['private']) && !hub_admin()) {
         <div class="group">
           <label class="g-row"><span class="g-label">Show the Bar on the Home Page<small>Off keeps Home clean. A corner button opens the menu.</small></span>
             <input type="checkbox" class="switch" id="sHomeBar"></label>
-          <label class="g-row stack"><span class="g-label">Edit Bar<small>Icons Only shows each name on hover.</small></span>
+          <label class="g-row"><span class="g-label">Edit Bar<small>Icons Only shows each name on hover.</small></span>
             <select id="sEditBar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></label>
         </div>
       </section>
       <section>
         <h3>Glass</h3>
         <div class="group">
-          <div class="g-row stack"><span class="g-label">Tint<small>Solid is easiest to read on busy photos.</small></span>
+          <div class="g-row"><span class="g-label">Tint<small>Solid is easiest to read on busy photos.</small></span>
             <div class="seg" id="pTint" role="radiogroup" aria-label="Tint"><button type="button" role="radio" data-v="light">Light</button><button type="button" role="radio" data-v="dark">Dark</button><button type="button" role="radio" data-v="solid">Solid</button></div></div>
           <div class="g-row stack"><span class="g-label">Opacity <b id="pOpVal"></b><small>How much the widgets tint the photo. 0% is fully see-through.</small></span>
             <input type="range" id="pOpacity" min="0" max="100" step="5"></div>

@@ -74,7 +74,7 @@
 #ix-page .ix-part{border:1px solid var(--ix-line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
 #ix-page .ix-part>label{display:flex;align-items:center;gap:10px;margin:0;color:var(--ix-tx);font-size:14.5px;cursor:pointer}
 #ix-page .ix-part>label small{color:var(--ix-mu2);margin-left:auto;font-size:12.5px;text-align:right}
-#ix-page input[type=checkbox],#ix-page input[type=radio]{accent-color:var(--ix-accent);width:17px;height:17px;margin:0}
+#ix-page input[type=checkbox]:not(.ix-sw),#ix-page input[type=radio]{accent-color:var(--ix-accent);width:17px;height:17px;margin:0}
 #ix-page .ix-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px 27px}
 #ix-page .ix-tabs label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:4px 10px;border:1px solid var(--ix-line2);border-radius:999px;color:var(--ix-tx);font-size:13px;cursor:pointer}
 #ix-page .ix-tabs label:has(input:checked){border-color:var(--ix-accent);background:var(--ix-soft)}
@@ -99,7 +99,7 @@
 #ix-page .ix-pgi{display:grid;place-items:center;width:28px;color:var(--ix-mu);flex:none}
 #ix-page .ix-pgi svg{width:18px;height:18px}
 #ix-page .ix-pgs{display:flex;align-items:center;gap:6px;margin:0 2px 0 4px;font-size:13px;color:var(--ix-mu);cursor:pointer;white-space:nowrap}
-#ix-page .ix-pgs input{accent-color:var(--ix-accent);width:16px;height:16px;margin:0}
+#ix-page .ix-pgs input:not(.ix-sw){accent-color:var(--ix-accent);width:16px;height:16px;margin:0}
 #ix-page .ix-pgr svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #ix-page .ix-pgr .ix-ib{border:0;background:none;cursor:pointer}
 #ix-page .ix-pgr .ix-ib:not(:disabled):hover{color:var(--ix-accent-tx)!important;background:var(--ix-soft)}
@@ -191,6 +191,8 @@
 #ix-page .ix-encask{padding:12px 14px;border:1px solid var(--ix-line);border-radius:12px;margin-top:10px}
 /* ---------- Health ---------- */
 #ix-page .ix-hcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+#ix-page .ix-hcards.six{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:560px){#ix-page .ix-hcards.six{grid-template-columns:repeat(2,minmax(0,1fr))}}   /* (1.61.6) Health's six cards: 3 + 3, never 5 + 1 alone */
 #ix-page .ix-hc{border:1px solid var(--ix-line);border-left:4px solid var(--ix-line2);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
 #ix-page .ix-hc.good{border-left-color:var(--ix-good)}
 #ix-page .ix-hc.warn{border-left-color:var(--ix-accent)}
@@ -620,3 +622,13 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 /* (1.61.5) section headings in Settings: accent text with a fading line (style B) */
 #ix-page .ix-sect,#ix-page .ix-cgrp>h4{display:flex;align-items:center;gap:10px;color:var(--ix-accent-tx,var(--ix-accent))}
 #ix-page .ix-sect::after,#ix-page .ix-cgrp>h4::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--ix-accent) 55%,transparent),transparent)}
+/* (1.61.6) one width for every tab: cards, folds, tables and step lists all stop at the same edge */
+#ix-page #ix-pc>:not(.ix-tabbar),#ix-page #ix-pc>.ix-tabbar~*{max-width:780px}   /* the tab row itself may be wider */
+#ix-page .ix-sf{max-width:780px}
+/* (1.61.6) phones: the tabs of a section wrap onto more lines as small pills, so none is cut off at the right edge */
+@media (max-width:760px){
+  #ix-page .ix-subt{flex-wrap:wrap;overflow:visible;gap:6px;border-bottom:0;padding-bottom:4px}
+  #ix-page .ix-subt button{padding:7px 12px;border:1px solid var(--ix-line);border-radius:999px;font-size:13.5px}
+  #ix-page .ix-subt button[aria-selected="true"]{border-color:var(--ix-accent);background:color-mix(in srgb,var(--ix-accent) 14%,transparent)}
+  #ix-page .ix-subt .ix-subi{display:none}
+}

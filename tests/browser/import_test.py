@@ -71,7 +71,7 @@ try:
         # ----- Chrome export into a new tab -----
         open_dlg()
         check('I3 the importer is loaded once, on first use', len(loads) == 1, loads)
-        check('I4 the dialog opens with focus on the file field', pg.evaluate("document.activeElement && document.activeElement.id") == 'impFile')
+        check('I4 the dialog opens with focus on Choose File', pg.evaluate("document.activeElement && document.activeElement.id") == 'impPick')
         pv, er = choose('chrome.html')
         check('I5 Chrome: the preview counts 6 links in 4 categories from 4 folders and names the skipped address', 'Found 6 links in 4 categories (from 4 folders)' in pv and '1 address that is not a web link' in pv and not er, (pv, er))
         check('I6 the preview shows which folder becomes which category', 'Bookmarks bar / Work / Projects → Work / Projects' in pv and 'Other bookmarks' in pv, pv)

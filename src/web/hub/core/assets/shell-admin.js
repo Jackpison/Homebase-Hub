@@ -99,10 +99,14 @@
   function markDirty(edited) {
     var f = $('#ix-sfnote'); if (!f) return;
     var d = dirty(), sf = $('#ix-sf');
-    f.textContent = d ? 'You have changes that are not saved yet.' : ''; f.className = d ? 'ix-dirty' : '';
-    if (sf) sf.hidden = !d;
+    f.textContent = d ? 'You have changes that are not saved yet.' : 'No changes yet.'; f.className = d ? 'ix-dirty' : '';
+    // (1.61.6) the tabs that are kept with Save Settings always show the bar (greyed until a change), so it is never missed;
+    // the others (Security, Telegram, Backup...) save at once and show it only if a change from elsewhere is waiting
+    if (sf) sf.hidden = !d && DRAFT_TABS.indexOf(curSub) < 0;
+    var b = $('#ix-save'), x = $('#ix-discard'); if (b && b.textContent !== 'Saving…') b.disabled = !d; if (x) x.disabled = !d;
   }
-  /* markDirty: the save bar appears at the bottom only while something is not saved yet */
+  var DRAFT_TABS = ['general', 'nav', 'look', 'themes', 'colors'];
+  /* markDirty: the save bar sits at the bottom of the screen on the tabs above, and elsewhere while something is not saved yet */
   function mount(host, hash) {
     PAGE = host; host.classList.add('ix-pg'); host.id = 'ix-page';
     if (!S.admin) {
@@ -335,13 +339,13 @@
   }
   function pGeneral(p) {
     p.innerHTML = '<h3>Site Name</h3><p>Shown in the bar, Telegram messages and backup names.</p><input type="text" id="ix-name" maxlength="30" value="' + esc(draft.siteName) + '" aria-label="Site Name">' +
-      '<h3>Site Logo</h3><p>The one logo for your whole site: the bar, the browser tab and every page. PNG, JPG, WebP or GIF.</p>' +
+      '<h3>Site Logo</h3><p>Shown in the bar and the browser tab. PNG, JPG, WebP or GIF.</p>' +
       '<div class="ix-row"><span class="ix-logoprev" id="ix-lp">' + (S.logo ? '<img src="' + esc(ROOT + S.logo) + '" alt="">' : '<span>' + esc((S.siteName || 'M').charAt(0).toUpperCase()) + '</span>') + '</span>' +
       '<button type="button" class="ix-btn" id="ix-lu">' + svg(ICON.image) + 'Change Logo</button><button type="button" class="ix-btn" id="ix-lx"' + (S.logo ? '' : ' hidden') + '>Remove</button>' +
       '<input type="file" id="ix-lf2" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>' +
       '<h3>Time Zone</h3><p>Today, due times, backups and Telegram all follow it.</p>' +
       '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>' +
-      '<h3 id="ix-install">Install on Your Phone</h3><p>Opens like an app, with its own icon. Your data still comes from your server every time.</p>' +
+      '<h3 id="ix-install">Install on Your Phone</h3><p>Opens like an app, with its own icon.</p>' +
       '<details class="ix-how"><summary>How?</summary><div class="ix-steps"><h4>iPhone or iPad</h4><p>In Safari, tap Share, then Add to Home Screen.</p>' +
       '<h4>Android</h4><p>In Chrome, open the menu (the three dots), then Install App or Add to Home Screen.</p>' +
       '<h4>Computer</h4><p>In Chrome or Edge, click the install icon at the right end of the address bar, or open the menu and choose Install.</p></div></details>' +
@@ -373,12 +377,12 @@
   }
   function pLook(p) {
     var sw = ['#ffc21a', '#ffd45c', '#ff6a3d', '#ff2d95', '#b392f0', '#2d8cff', '#4cc9f0', '#5fd68a'];
-    p.innerHTML = '<h3>Font</h3><p>One font for every page. Code and keyboard keys keep their own.</p><select id="ix-font" class="ix-sel" aria-label="Font">' +
+    p.innerHTML = '<h3>Font</h3><p>One font for every page.</p><select id="ix-font" class="ix-sel" aria-label="Font">' +
         FONTS.map(function (f) { return '<option value="' + f[0] + '"' + (draft.font === f[0] || (!draft.font && f[0] === 'default') ? ' selected' : '') + '>' + esc(f[1]) + '</option>'; }).join('') + '</select>' +
       '<input type="text" id="ix-fontc" maxlength="40" placeholder="A font installed on your device, like Calibri" value="' + esc(draft.fontCustom || '') + '" aria-label="Font Name"' + (draft.font === 'custom' ? '' : ' hidden') + '>' +
-      '<h3>Theme</h3><p>The look for anyone who has not chosen one. The theme button in the bar changes it for you alone, on every page at once.</p>' +
+      '<h3>Theme</h3><p>The default look. The sun/moon button in the bar changes it just for you.</p>' +
       seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
-      '<h3>Navigation Style</h3><p>Applies to every page. Only the Top Bar hides itself while you scroll.</p>' +
+      '<h3>Navigation Style</h3><p>For every page. The Top Bar hides while you scroll.</p>' +
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
       '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
       '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw">' + sw.map(function (c) { return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (draft.accent === c) + '"></button>'; }).join('') +
@@ -668,7 +672,7 @@
         '<input type="text" class="ix-hex" maxlength="7" placeholder="' + shown + '" value="' + (val || '') + '" spellcheck="false" aria-label="' + esc(label) + ', hex code">' +
         '<button type="button" class="ix-ib ix-crx" title="Back to the Default"' + (val ? '' : ' hidden') + ' aria-label="Reset ' + esc(label) + '">↺</button></div>';
     };
-    p.innerHTML = '<div class="ix-row" style="justify-content:space-between">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
+    p.innerHTML = '<div class="ix-row" style="gap:10px">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
       '<button type="button" class="ix-btn" id="ix-cres">Reset ' + (m === 'dark' ? 'Dark' : 'Light') + ' Mode</button></div>' +
       '<p class="ix-note" style="margin:0 0 12px">Ready-made looks live in the <b>Presets</b> tab.</p>' +
       COLOR_GROUPS.map(function (g) {
@@ -709,7 +713,7 @@
     var html = presetsHtml(m, set, def)
       .replace(/<details class="ix-acc" id="ix-presets"[^>]*><summary><span>Presets<\/span><small>([\s\S]*?)<\/small><\/summary><div class="ix-accb">/, '<div class="ix-flatp" id="ix-presets"><p class="ix-note ix-fh">$1</p><div class="ix-fb">')
       .replace(/<\/div><\/details>$/, '</div></div>');
-    p.innerHTML = '<div class="ix-row" style="justify-content:space-between">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
+    p.innerHTML = '<div class="ix-row" style="gap:10px">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
       '<button type="button" class="ix-btn" id="ix-cres">Reset ' + (m === 'dark' ? 'Dark' : 'Light') + ' Mode</button></div>' + html +
       '<p class="ix-note">Fine-tune any color in the Colors tab. The accent color is in the Appearance tab.</p>';
     bindSeg(p, function (k, v) { if (k === 'cmode') { colorMode = v; K.previewTheme(v); pThemes(p); } });
@@ -794,7 +798,7 @@
           '<input type="text" maxlength="20" value="' + esc(x.name) + '" placeholder="' + esc(x.def) + '" aria-label="Name of the ' + esc(x.def) + ' tab" data-k="name">' +
           '<button type="button" class="ix-ib" data-k="up" aria-label="Move ' + esc(x.def) + ' up" title="Move up"' + (i === 0 ? ' disabled' : '') + '>' + svg(ICON.up) + '</button>' +
           '<button type="button" class="ix-ib" data-k="down" aria-label="Move ' + esc(x.def) + ' down" title="Move Down"' + (i === list.length - 1 ? ' disabled' : '') + '>' + svg(ICON.down) + '</button>' +
-          '<label class="ix-pgs" title="Show This Tab"><input type="checkbox" data-k="show"' + (x.hide ? '' : ' checked') + '> Show</label></div>';
+          '<label class="ix-pgs" title="Show This Tab"><input type="checkbox" class="ix-sw" data-k="show" aria-label="Show the ' + esc(x.def) + ' tab"' + (x.hide ? '' : ' checked') + '></label></div>';
       }).join('');
     }
     function move(i, j) { if (j < 0 || j >= list.length || i === j) return; var x = list.splice(i, 1)[0]; list.splice(j, 0, x); draw(); keep(); }
@@ -1351,7 +1355,7 @@
     if (g.err) h += '<p class="ix-err">Couldn\'t check: ' + esc(g.err) + '</p>';
     h += '<p class="ix-err" id="ix-ghe"></p><div class="ix-row"><button type="button" class="ix-btn" id="ix-ghc"' + (g.curl ? '' : ' disabled') + '>Check Now</button><span class="ix-mu">' + (g.at ? 'Last checked ' + esc(ago(g.at)) : 'Not checked yet') + '</span></div>' +
       '<label class="ix-tg"><span>Check GitHub Once a Day<small>The site asks GitHub whether a new version is out.</small></span><input type="checkbox" id="ix-gha"' + (g.auto ? ' checked' : '') + '></label>' +
-      '<p class="ix-note">Off by default. While it is off, this site makes no request to GitHub unless you press Check Now. When it is on, the check runs with the schedule from Telegram Setup (the cron job). Nothing ever installs by itself.</p>';
+      '<p class="ix-note">Off: GitHub is asked only when you press Check Now. Nothing ever installs by itself.</p>';
     return '<section class="ix-card"><div class="ix-cardh"><h3>Update From GitHub</h3><span class="ix-mu">Installed: <b>' + esc(st.version) + '</b>' + (/^[\w.-]+\/[\w.-]+$/.test(g.repo || '') ? ' · <a href="https://github.com/' + esc(g.repo) + '" target="_blank" rel="noopener">Project on GitHub</a>' : '') + '</span></div>' + h + '</section>';
   }
   function ghWire(p, st) {
@@ -1480,7 +1484,7 @@
       if (!j.ok || !j.state) {
         return fail(j._status === 401 ? 'You were logged out. Log in again, then save.' : j._status === 403 ? 'Security check failed. Reload the page, then save again.' : (j.error || 'Could not save (server answered ' + (j._status || 'nothing') + ').'));
       }
-      b.disabled = false; b.textContent = 'Save Settings'; $('#ix-sferr').textContent = '';
+      b.textContent = 'Save Settings'; $('#ix-sferr').textContent = '';
       if (j.state.theme !== S.theme) K.storeTheme(j.state.theme);   // a newly saved theme becomes this browser's theme too (shown on close)
       try { localStorage.setItem('hub-theme-site', j.state.theme); } catch (e) {}
       Object.assign(S, j.state); remember(S); applyAttrs(); applyColors(); applyFont(); applySizes(); redraw();
@@ -1555,10 +1559,11 @@
           '<div class="ix-chips" style="margin-top:12px"><span class="ix-chip on"><b>Password</b>on</span>' + have.map(function (x) { return '<span class="ix-chip' + (x[1] ? ' on' : '') + '"><b>' + x[0].replace(/^./, function (c) { return c.toUpperCase(); }) + '</b>' + (x[1] ? 'on' : 'off') + '</span>'; }).join('') + '</div></div>';
       var trN = (a.trusted || []).length;
       p.querySelector('#ix-stiles').innerHTML =
-        tile('pw', ICON.key, 'Website Password', 'Set', 'good', 'The one password for every page. Change it any time.') +
+        tile('pw', ICON.key, 'Password', 'Set', 'good', 'One password for every page.') +
         tile('enc', ICON.lock, 'Encryption', encLabel(), encOn() ? 'good' : 'warn', encOn() ? 'Info: ' + (v ? st.tabs + ' locked' : 'none') + ' · Links: ' + (st.lenc ? st.lenc + ' locked' : 'none') + ' · Backups: ' + (bk.set ? 'locked' : 'not locked') + '.' : 'Lock private tabs and backups with one passphrase.') +
         (encOn() ? tile('enc', ICON.shield, 'Recovery Key', st.rec ? 'Created' : 'Not Created', st.rec ? 'good' : 'warn', st.rec ? 'A spare way in if you ever forget the passphrase.' : 'Create one, so a forgotten passphrase does not mean lost tabs.') : '') +
         tile('2fa', ICON.device, 'Two-Step Login', S.twoStep ? 'On' : 'Off', S.twoStep ? 'good' : 'warn', S.twoStep ? S.recoveryLeft + ' recovery ' + (S.recoveryLeft === 1 ? 'code' : 'codes') + ' left.' : 'A 6-digit code from your phone on top of the password.') +
+        tile('pk', ICON.device, 'Passkeys', st.pk.length ? st.pk.length + (st.pk.length === 1 ? ' Passkey' : ' Passkeys') : 'None', st.pk.length ? 'good' : '', st.pk.length ? 'Log in with your fingerprint, face or PIN.' : (st.pkSecure ? 'Log in with your fingerprint, face or PIN.' : 'Needs HTTPS.')) +   // (1.61.6) it had a tab but no card
         tile('ap', ICON.send, 'Login Approval', a.on ? 'On' : 'Off', a.on ? 'good' : '', a.on ? 'Every new browser waits for your tap in Telegram.' : (a.telegram ? 'Approve new logins with one tap in Telegram.' : 'Needs the Telegram bot to be set up first.')) +
         tile('tr', ICON.desktop, 'Trusted Browsers', trN ? trN + (trN === 1 ? ' Browser' : ' Browsers') : 'None', '', 'Browsers that skip the code and the tap for 30 days.') +
         tile('dev', ICON.out, 'Devices', '', '', 'Log out every other device in one tap.');
@@ -2175,7 +2180,7 @@
 
   /* --- Backup --- */
   var NAMES = { links: 'Links', info: 'Info', cards: 'Cards', tasks: 'Tasks', files: 'Files', home: 'Home', settings: 'Settings', telegram: 'Telegram', watch: 'Domain Watch', tools: 'Tools Presets' };
-  function size(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+  function size(n) { return n >= 1073741824 ? (n / 1073741824).toFixed(1) + ' GB' : n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }   // (1.61.6) GB from 1 GB up
   function openBackup() { go('backup'); }
   /* "3 days ago", "2 hours ago", "just now" */
   function ago(t) {
@@ -2294,7 +2299,7 @@
           '<label class="ix-fl2">Type ERASE<input type="text" id="ix-rsc" autocomplete="off" spellcheck="false"></label>' +
           '<label class="ix-fl2">Website Password<input type="password" id="ix-rsp" autocomplete="current-password"></label>' +
           '<p class="ix-err" id="ix-rse"></p><div class="ix-row"><button type="button" class="ix-btn danger" id="ix-rsgo">Erase Everything</button></div></div></details>' +
-        '<p class="ix-note">Moving the site to another server or folder? Your data is in the <code>site-data</code> folder inside the site folder, so copying the whole site folder brings it along. A backup file is the safe second copy.</p>';
+        '<p class="ix-note">Moving the site? Copy the whole folder: your data is in <code>site-data</code>.</p>';
       p.querySelector('#ix-tgset').onclick = function (e) { e.preventDefault(); go('telegram'); };
       p.querySelector('#ix-rsgo').onclick = function () {
         var er = p.querySelector('#ix-rse'), btn = this;
@@ -2473,7 +2478,7 @@
         });
       });
       var down = (w.sites || []).filter(function (s) { return s.up && s.st && s.st.at && !s.st.ok; }).length;
-      p.innerHTML = '<div class="ix-hcards">' +
+      p.innerHTML = '<div class="ix-hcards six">' +
           hCard('Version', esc(h.version), up.newer ? '<a href="' + esc(up.link || '#') + '" target="_blank" rel="noopener">' + esc(up.version) + ' is available</a>' : (h.leftovers.length ? h.leftovers.length + ' update problem' + (h.leftovers.length > 1 ? 's' : '') : 'Files match'), up.newer || h.leftovers.length ? 'warn' : 'good') +
           hCard('Schedule', cronOk ? 'Running' : h.cron ? 'Stopped' : 'Not Set Up', h.cron ? 'Last run ' + esc(ago(h.cron)) : 'Add the cron job (Settings › Telegram)', cronOk ? 'good' : 'warn', 'telegram') +
           hCard('Last Backup', h.backup.last ? esc(ago(h.backup.last)) : 'Never', (h.backup.encrypted ? '🔒 Encrypted' : 'Not Encrypted') + (h.backup.tgEvery ? ', Telegram on' : ''), !h.backup.last || (h.backup.every && (Date.now() / 1000 - h.backup.last) / 86400 >= h.backup.every) ? 'warn' : 'good', 'backup') +

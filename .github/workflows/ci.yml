@@ -285,6 +285,11 @@ jobs:
         run: |
           set -o pipefail
           python3 tests/browser/settings_ui_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "settings ui $BROWSER"
+      - name: The look of Settings and Files (cards, Save bar, grid previews, nothing wider than a phone)
+        if: (success() || failure()) && steps.build.outcome == 'success'
+        run: |
+          set -o pipefail
+          python3 tests/browser/settings_look_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | python3 tests/lib/annotate.py "settings look $BROWSER"
       - name: Passkeys and Share from the phone (Chromium only, its virtual authenticator and service workers)
         if: matrix.browser == 'chromium' && (success() || failure()) && steps.build.outcome == 'success'
         run: |

@@ -163,29 +163,23 @@
     <div class="dh"><h2 id="sdlgt">Tasks Settings</h2><button type="button" class="ib" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="db">
       <h3 class="sh3 first">General</h3>
-      <div class="c2">
-        <label class="fl">Default Currency<select id="s-cur"></select><small>For tasks that don't pick their own.</small></label>
-        <label class="fl">Show a Task as Due Soon<select id="s-soon">
-          <option value="0">Only on the Day</option><option value="1">1 Day Before</option><option value="3">3 Days Before</option><option value="7">1 Week Before</option>
-          <option value="14">2 Weeks Before</option><option value="30">1 Month Before</option></select><small>A task's own Remind Me comes first.</small></label>
-      </div>
+      <div class="ix-srow"><label for="s-cur">Default Currency<small>For tasks without their own.</small></label><select id="s-cur"></select></div>
+      <div class="ix-srow"><label for="s-soon">Due Soon<small>A task's own Remind Me comes first.</small></label><select id="s-soon">
+        <option value="0">Only on the Day</option><option value="1">1 Day Before</option><option value="3">3 Days Before</option><option value="7">1 Week Before</option>
+        <option value="14">2 Weeks Before</option><option value="30">1 Month Before</option></select></div>
       <h3 class="sh3">When the Page Opens</h3>
-      <div class="c2">
-        <label class="fl">Open On<select id="s-start"><option value="">Where I Left Off</option><option value="list">Tasks</option><option value="cal">Calendar</option><option value="an">Analytics</option><option value="done">Completed</option></select></label>
-        <label class="fl">Show<select id="s-range"><option value="">Where I Left Off</option><option value="all">Tasks</option><option value="week">This Week</option><option value="month">This Month</option><option value="year">This Year</option></select></label>
-        <label class="fl">Sort By<select id="s-sort"><option value="">Where I Left Off</option><option value="due">Due Date</option><option value="due-">Latest First</option><option value="price-">Price, High to Low</option><option value="price">Price, Low to High</option><option value="name">Name, A to Z</option><option value="cat">Category</option></select></label>
-        <label class="fl">Week Strip Above the List<select id="s-cal" data-ix-seg><option value="">Where I Left Off</option><option value="on">Shown</option><option value="off">Hidden</option></select></label>
-      </div>
+      <div class="ix-srow"><label for="s-start">Open On</label><select id="s-start"><option value="">Where I Left Off</option><option value="list">Tasks</option><option value="cal">Calendar</option><option value="an">Analytics</option><option value="done">Completed</option></select></div>
+      <div class="ix-srow"><label for="s-range">Show</label><select id="s-range"><option value="">Where I Left Off</option><option value="all">Tasks</option><option value="week">This Week</option><option value="month">This Month</option><option value="year">This Year</option></select></div>
+      <div class="ix-srow"><label for="s-sort">Sort By</label><select id="s-sort"><option value="">Where I Left Off</option><option value="due">Due Date</option><option value="due-">Latest First</option><option value="price-">Price, High to Low</option><option value="price">Price, Low to High</option><option value="name">Name, A to Z</option><option value="cat">Category</option></select></div>
+      <div class="ix-srow"><label for="s-cal">Week Strip</label><select id="s-cal" data-ix-seg><option value="">Where I Left Off</option><option value="on">Shown</option><option value="off">Hidden</option></select></div>
       <p class="hint">"Where I Left Off" keeps what this browser used last.</p>
       <h3 class="sh3">Look</h3>
-      <div class="c2">
-        <label class="fl">Week Starts On<select id="s-week" data-ix-seg><option value="sun">Sunday</option><option value="mon">Monday</option></select></label>
-        <label class="fl">Dates<select id="s-dates" data-ix-seg><option value="in">16 Oct 2026</option><option value="us">Oct 16, 2026</option></select></label>
-        <label class="fl">Edit Bar<select id="s-editbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select><small>The bar at the bottom while you edit.</small></label>
-      </div>
-      <div class="ix-srow"><label for="s-stats">Show Amounts<small>Show the totals and the spending card in the side panel.</small></label><input type="checkbox" class="ix-sw" id="s-stats"></div>
+      <div class="ix-srow"><label for="s-week">Week Starts On</label><select id="s-week" data-ix-seg><option value="sun">Sunday</option><option value="mon">Monday</option></select></div>
+      <div class="ix-srow"><label for="s-dates">Dates</label><select id="s-dates" data-ix-seg><option value="in">16 Oct 2026</option><option value="us">Oct 16, 2026</option></select></div>
+      <div class="ix-srow"><label for="s-editbar">Edit Bar<small>Icons Only shows each name on hover.</small></label><select id="s-editbar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></div>
+      <div class="ix-srow"><label for="s-stats">Show Amounts<small>Totals and the spending card in the side panel.</small></label><input type="checkbox" class="ix-sw" id="s-stats"></div>
       <h3 class="sh3">Calendar Link</h3>
-      <div class="ix-srow"><label for="s-calon">Calendar Link<small>A secret link for Google, Apple or Outlook Calendar. Off until you turn it on.</small></label><input type="checkbox" class="ix-sw" id="s-calon"></div>
+      <div class="ix-srow"><label for="s-calon">Calendar Link<small>A secret link for Google, Apple or Outlook.</small></label><input type="checkbox" class="ix-sw" id="s-calon"></div>
       <div id="s-calbox" hidden>
         <label class="fl">Your Link<input id="s-calurl" readonly aria-label="Calendar link" autocomplete="off" spellcheck="false"></label>
         <div class="df2"><a class="btn" id="s-calgoogle" target="_blank" rel="noopener noreferrer">Add to Google Calendar</a><a class="btn" id="s-calapple">Add to Apple or Outlook</a></div>
@@ -193,7 +187,7 @@
         <p class="hint">Anyone with the link sees your task names. A new link ends the old one.</p>
       </div>
       <h3 class="sh3">Privacy</h3>
-      <div class="ix-srow"><label for="s-onlyme">Only Me<small>Always on: this page is only for you.</small></label><input type="checkbox" class="ix-sw" id="s-onlyme" checked disabled></div>
+      <div class="ix-srow"><label for="s-onlyme">Only Me<small>Always on for Tasks.</small></label><input type="checkbox" class="ix-sw" id="s-onlyme" checked disabled></div>
       <p class="hint">These settings apply on every device.</p>
     </div>
     <div class="df"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn pri" data-ix-save>Save Settings</button></div>
