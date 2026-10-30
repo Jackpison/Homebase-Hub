@@ -62,11 +62,11 @@ python3 tests/browser/a11y_test.py build/site-update-X.Y.Z.zip
 for t in encrypt files lock tabs_lock settings_ui settings_look passkey share speed; do python3 tests/browser/${t}_test.py build/site-update-X.Y.Z.zip; done   # passkey, share and speed run in Chromium only
 python3 tests/server/files_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/website_test.py build/site            # after python3 scripts/make-site.py --no-guide
-python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip <previous release zip> build/visual   # a report of what changed on screen
+python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip <previous release zip> build/visual   # optional: a report of what changed on screen (CI no longer makes it)
 sudo sh tests/server/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/server/apache_test.py
 ```
 
-All of them must pass. `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs them one after another with one summary table (`--quick`: lint, unit, repo and server checks only, for small changes; `--apache` adds the Apache test). CI runs the same checks on every pull request and on every push to `main`, the browser tests also on Firefox and WebKit (`--browser firefox|webkit`), and the accessibility check also on Firefox. On a docs-only change CI skips the slow jobs; `ci-ok` sums up every job.
+All of them must pass. `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs them one after another with one summary table (`--quick`: lint, unit, repo and server checks only, for small changes; `--apache` adds the Apache test). CI runs the same checks on every pull request and on every push to `main`, with the browser tests in Chromium only (two halves side by side). Firefox and WebKit run once a week in the weekly check (`--browser firefox|webkit` runs them by hand, and Actions > Weekly security check > Run workflow starts the weekly run); run them before a release that changed layout or windows. On a docs-only change CI skips the slow jobs; `ci-ok` sums up every job.
 
 ## Release checklist
 
