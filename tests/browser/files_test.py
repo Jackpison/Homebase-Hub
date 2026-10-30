@@ -3,9 +3,9 @@
 restore, preview, download (a file and a folder as a zip), share links opened by someone who is not logged in, the limit, a locked page,
 and what the server is left holding (nothing readable).
     python3 tests/browser/files_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8976)"""
-import glob, io, json, os, re, sys, tempfile, zipfile
+import glob, os, re, sys, tempfile, zipfile
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, PW
+from helpers import FIX
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, browser_unlock, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 

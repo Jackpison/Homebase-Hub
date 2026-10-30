@@ -2,9 +2,9 @@
 """Cards locked with the passphrase (1.61.0), in a real browser: the offer to lock, one press, what the server is left holding, reopening, adding a
 card, a browser that has not unlocked, the CSV export of locked cards, and Remove Passphrase turning them back into plain cards.
     python3 tests/browser/lock_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8977)"""
-import csv, glob, io, json, os, re, subprocess, sys, tempfile
+import csv, glob, json, os, re, subprocess, sys, tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED, PW
+from helpers import SEED, PW
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, browser_unlock, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 

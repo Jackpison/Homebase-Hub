@@ -48,6 +48,8 @@ curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/
 echo "48caad125554d6b416159db71dd7fd890295ba1a24b3650b49e32752e24fd6a0  phpstan.phar" | sha256sum -c -
 php -d memory_limit=1G phpstan.phar analyse -c tests/repo/phpstan.neon --no-progress
 python3 tests/repo/check_libraries.py
+pip install ruff==0.14.0 && ruff check                              # Python lint for tests/ and scripts/ (rules in ruff.toml)
+python3 tests/repo/secrets_test.py                                   # no token or key in any file or in the last 50 commit messages
 python3 scripts/build.py
 python3 scripts/make-site.py --no-guide
 python3 tests/server/update_test.py build/site-update-X.Y.Z.zip <previous release zip> <an older release zip>

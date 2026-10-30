@@ -3,11 +3,11 @@
 nothing from a hostile file runs or appears as markup, undo through Earlier Versions, the limits, and axe on the dialog.
     python3 tests/browser/import_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]
 Needs PHP 8.3+, Playwright and axe-core (npm ci). Fixtures are in tests/bookmarks/. Port 8850."""
-import json, os, re, sys, tempfile
+import os, re, sys, tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED
-from helpers import PW, HERE, Site, Checks, stop_all, browser_name, launch, browser_login, wait_js, CSP_REPORTER
+from helpers import ROOT, FIX
+from helpers import Site, Checks, stop_all, browser_name, launch, browser_login, wait_js, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
 BROWSER = browser_name()

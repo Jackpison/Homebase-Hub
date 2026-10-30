@@ -13,7 +13,7 @@ Needs Playwright and axe-core (npm ci). The built tools list is compared with th
 import functools, html.parser, http.server, json, os, re, socketserver, sys, threading, urllib.parse
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED
+from helpers import ROOT
 from helpers import Checks, browser_name, launch, CSP_REPORTER, TRACK_REQUESTS, settle, until
 from playwright.sync_api import sync_playwright
 

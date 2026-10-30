@@ -10,7 +10,7 @@ import json, os, re, subprocess, sys, tempfile, time, urllib.request, http.cooki
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED
+from helpers import SEED
 from helpers import browser_name, launch, browser_login, wait_js, CSP_REPORTER, TRACK_REQUESTS, settle, until
 BROWSER = browser_name()
 SHOTS = None

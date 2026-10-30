@@ -5,7 +5,7 @@ rows, the main Settings page (a Save bar you can see, switches in Tabs, Health 3
 Dark/Light, no backup reminder on Settings), the Files grid (pictures as small previews, a picked tile keeps its shape), and nothing
 wider than a 390 px phone on Files, on every Settings section and on Home, Links, Info, Cards, Tasks and Tools.
     python3 tests/browser/settings_look_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8985)"""
-import io, os, subprocess, sys
+import os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import SEED, Site, Checks, stop_all, browser_login, browser_set_passphrase, browser_unlock, wait_js, browser_name, launch, until, CSP_REPORTER
 from playwright.sync_api import sync_playwright

@@ -2,9 +2,9 @@
 """Private tabs in Links and Info (1.61.0): "Encrypt All Private Tabs" in each page's Settings, a new private tab encrypted from the start, and what the
 server is left holding (no readable copy, earlier versions included).
     python3 tests/browser/tabs_lock_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8978)"""
-import glob, json, os, re, subprocess, sys
+import glob, json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED, PW
+from helpers import SEED
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 

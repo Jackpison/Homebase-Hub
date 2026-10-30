@@ -7,7 +7,7 @@ import io, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.request
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED
+from helpers import ROOT, SEED
 from helpers import browser_name, launch, browser_login, CSP_REPORTER, TRACK_REQUESTS, settle, until
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)

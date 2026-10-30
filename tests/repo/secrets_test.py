@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Looks for secrets in every file git tracks: GitHub, Slack, AWS, Google, Anthropic and OpenAI keys, Telegram bot tokens and private keys.
+"""Looks for secrets in every file git tracks and in the messages of the last 50 commits: GitHub, Slack, AWS, Google, Anthropic and OpenAI keys, Telegram bot tokens and private keys.
 AGENTS.md says no password, token or key goes into the repo, a test or a commit message; this is the check that says so.
 It also proves its own patterns catch a made-up secret of each kind (the samples are built from pieces, so this file never holds one).
   python3 tests/repo/secrets_test.py"""
-import os, re, subprocess, sys
+import os, re, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 res = []
@@ -55,5 +55,19 @@ for f in files:
     read += 1
     for kind in scan(text): found.append('%s: %s' % (f, kind))   # never print the match itself
 check('S3 no file git tracks holds a secret (%d text files read)' % read, not found and read > 100, found[:10] or read)
+def message_findings(root):
+    """[(short hash, kinds)] for the last 50 commit messages in a repo, and how many it read (CI's checkout is shallow: it reads what it has)."""
+    out = subprocess.run(['git', '-C', root, 'log', '-n', '50', '--format=%H%x00%B%x01'], capture_output=True, text=True).stdout.split('\x01')
+    rows = [m.split('\x00', 1) for m in out if '\x00' in m]
+    return [(h.strip()[:10], ', '.join(scan(body))) for h, body in rows if scan(body)], len(rows)
+
+
+bad_msgs, n_msgs = message_findings(ROOT)
+check('S4 none of the last 50 commit messages holds a secret (%d read)' % n_msgs, not bad_msgs and n_msgs > 0, bad_msgs[:10])
+tmp = tempfile.mkdtemp()
+g = lambda *a: subprocess.run(['git', '-C', tmp, '-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false'] + list(a), capture_output=True, text=True, check=True)
+g('init', '-q'); g('commit', '-q', '--allow-empty', '-m', 'fine message'); g('commit', '-q', '--allow-empty', '-m', 'oops ' + SAMPLES['GitHub token'])
+found, read = message_findings(tmp)
+check('S5 a commit message that holds a token is found (made-up sample in a scratch repo), a clean one is not', read == 2 and len(found) == 1 and found[0][1] == 'GitHub token', (found, read))
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

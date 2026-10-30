@@ -3,7 +3,7 @@
   python3 tests/lib/releases.py previous               prints the newest release tag older than HUB in boot.php (e.g. v1.50.0)
   python3 tests/lib/releases.py download TAG DIR       saves TAG's site-update-X.Y.Z.zip into DIR, after checking its SHA-256
 Uses GitHub's REST API (gh api) for the list and a plain download for the files; works in CI and in a sandbox without GraphQL."""
-import hashlib, json, os, re, subprocess, sys, urllib.request
+import hashlib, os, re, subprocess, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REPO = os.environ.get('GH_REPO') or 'Jackpison/Homebase-Hub'

@@ -4,10 +4,10 @@
 compression would: gzip). The limits below are about twice the numbers measured at 1.61.0 (the first paint near 1.3 to 1.8 s, loaded under 2 s); a change that makes a page much slower or
 heavier fails here, so it is noticed before a release, not after.
     python3 tests/browser/speed_test.py build/site-update-X.Y.Z.zip   (port 8983; Chromium only: it uses the DevTools throttling)"""
-import gzip, json, os, re, sys
+import gzip, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, SEED
-from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
+from helpers import SEED
+from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch
 from playwright.sync_api import sync_playwright
 import subprocess
 

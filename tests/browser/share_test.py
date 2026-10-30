@@ -4,9 +4,9 @@ POST that the phone's Share button makes (here a form, submitted like the phone 
 Files, which asks what to do: Save to Files (locked like any upload), Open in Tools (the next tool that takes that kind of file gets it)
 or Discard. Runs in Chromium only (the share sheet and service workers on localhost are tested there).
     python3 tests/browser/share_test.py build/site-update-X.Y.Z.zip   (port 8982)"""
-import json, os, re, sys
+import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, PW
+from helpers import FIX
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, browser_unlock, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 

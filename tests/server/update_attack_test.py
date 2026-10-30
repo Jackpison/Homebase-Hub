@@ -4,10 +4,10 @@ with a clear message, and afterwards the version, the files (files_scan) and sit
 written outside the site folder. Also abuses the chunk upload itself.
     python3 tests/server/update_attack_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ with zip and mbstring. Uses ports 8800-8810 and a few hundred MB in /tmp."""
-import hashlib, io, json, os, random, re, struct, sys, tempfile, time, zipfile, zlib
+import hashlib, io, json, os, random, re, struct, sys, tempfile, time, zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED
+from helpers import FIX
 from helpers import PW, Site, Checks, stop_all, zip_version
 
 if len(sys.argv) < 2: sys.exit(__doc__)

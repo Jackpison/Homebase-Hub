@@ -2,7 +2,7 @@
 """Screenshots of the real app with demo data: python3 scripts/screenshots.py build/site-update-X.Y.Z.zip OUTDIR [--webp]
 --webp also writes them into website/img as WebP (with the cut-out versions the pages use).
 Needs PHP and Playwright with Chromium. Pages load only from the local test server."""
-import sys, os, time, json, subprocess, shutil, zipfile, urllib.request, http.cookiejar, re, datetime, threading, http.server, hashlib
+import sys, os, time, json, subprocess, shutil, zipfile, urllib.request, http.cookiejar, re, datetime, http.server
 os.environ['PHP_CLI_SERVER_WORKERS']='6'
 from playwright.sync_api import sync_playwright
 UA='Mozilla/5.0 (X11; Linux x86_64) HomebaseShots/1.0'; PW='correct horse battery staple'

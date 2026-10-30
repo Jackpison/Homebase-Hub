@@ -2,9 +2,9 @@
 """Files through the real API (no browser): who may call what, hostile uploads, hostile ids, the headers of everything that is sent,
 the limit, Trash, and the share links anyone may open.   python3 tests/server/files_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+. Runs a site on port 8770."""
-import base64, json, os, re, sys, time, urllib.request, urllib.error
+import base64, json, os, re, sys, time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, PW
+from helpers import PW
 from helpers import Site, Checks, stop_all
 
 if len(sys.argv) < 2: sys.exit(__doc__)

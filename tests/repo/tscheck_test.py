@@ -2,7 +2,7 @@
 """The JavaScript type check (tsconfig.json) and the files that ask for it agree: every file that starts with // @ts-check is listed in
 tsconfig.json (or it would be silently unchecked), and every listed file has the line. The check itself is `npx tsc -p tsconfig.json`.
   python3 tests/repo/tscheck_test.py"""
-import json, os, re, subprocess, sys
+import json, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 res = []

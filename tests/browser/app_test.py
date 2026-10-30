@@ -7,7 +7,6 @@ import io, json, os, re, sys
 from urllib.parse import urljoin
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED
 from helpers import Site, Checks, stop_all, browser_login, wait_js, until
 from playwright.sync_api import sync_playwright
 from PIL import Image

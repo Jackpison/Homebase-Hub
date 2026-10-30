@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Update tests for Homebase Hub, against a local stand-in for GitHub (no network needed).
 Needs PHP 8.3+ with curl, zip and mbstring. See tests/README.md."""
-import json, os, shutil, subprocess, sys, threading, time, urllib.request, urllib.error, http.cookiejar, zipfile, hashlib, http.server, socketserver, glob
+import json, os, subprocess, sys, threading, time, urllib.request, urllib.error, http.cookiejar, zipfile, http.server, socketserver
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED
+from helpers import FIX
 from helpers import UA, PW, HERE, Site, Checks, mutate_zip, zip_version, zip_core, sha, stop_all
 if len(sys.argv) < 4:
     sys.exit('Usage: python3 tests/server/update_test.py CURRENT.zip PREVIOUS.zip OLDER.zip\n'

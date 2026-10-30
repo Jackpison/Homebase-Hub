@@ -5,11 +5,11 @@ settings, the carry-over from the old Tools, light and dark) and every tool buil
     python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser ...]
 With a second argument (python3 scripts/build-tools.py makes build/tools-new) that staging copy is swapped in first.
 Needs PHP, Playwright and axe-core (npm ci). Port 8960."""
-import hashlib, io, json, os, shutil, sys, zipfile
+import io, json, os, shutil, sys, zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX as FIXDIR, SEED
-from helpers import Site, Checks, stop_all, browser_name, launch, wait_js, HERE, until, after
+from helpers import ROOT, FIX as FIXDIR
+from helpers import Site, Checks, stop_all, browser_name, launch, wait_js, until, after
 from playwright.sync_api import sync_playwright
 
 BROWSER = browser_name()
@@ -72,7 +72,6 @@ try:
         pg.fill('#root input[placeholder^="Paste a hash"]', 'BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD'); until(lambda: 'Match:' in pg.inner_text('#root'), 3000)
         check('N10 ...and recognises a pasted hash, in capitals too', 'Match: this is the SHA-256' in pg.inner_text('#root'))
 
-        import re as _re
         pg.goto(U + '#/tool/text-tools'); wait_js(pg, "!!document.querySelector('#root textarea')")
         pg.fill('#root textarea', 'One two three.\n\nFour five.'); until(lambda: pg.evaluate("(document.querySelector('#root .kv div') || {}).textContent || ''").startswith('5'), 3000)
         check('N13 Word counter counts words, sentences and paragraphs', pg.evaluate("[...document.querySelectorAll('#root .kv div')].slice(0,5).map(d => d.firstChild.textContent).join(',')") == '5,26,21,2,2', pg.evaluate("[...document.querySelectorAll('#root .kv div')].map(d => d.textContent).join(' | ')"))
@@ -386,7 +385,6 @@ try:
         until(lambda: pg.inner_text('#root .total') == '₹5,900.00', 3000)
         check('C24 Invoice Generator: 10 × 450 + 500 with 18% tax split into CGST and SGST totals ₹5,900.00', pg.inner_text('#root .total') == '₹5,900.00' and 'CGST (9%)' in txt(), pg.inner_text('#root .total'))
         data, name = dl(lambda: pg.get_by_role('button', name='Download PDF', exact=True).click())
-        from pypdf import PdfReader
         pt = PdfReader(io.BytesIO(data)).pages[0].extract_text()
         check('C25 ...the PDF has the business, customer, items, CGST and SGST at 9%, the total and the total in words', name == 'invoice-INV-001.pdf' and all(x in pt for x in ['Sharma Traders', 'Mehta & Sons', 'Steel rods, 12 mm', 'CGST @ 9%', 'SGST @ 9%', '5,900.00', 'Five Thousand Nine Hundred Rupees Only']), pt[:600])
         open(os.path.join(TMP2, 'invoice.pdf'), 'wb').write(data)

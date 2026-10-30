@@ -6,8 +6,8 @@ Needs PHP 8.3+ with curl, zip, mbstring and openssl. Runs sites on ports 8700-87
 import base64, hashlib, hmac, http.client, json, os, re, struct, subprocess, sys, time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX, SEED
-from helpers import PW, HERE, Site, Checks, stop_all
+from helpers import SEED
+from helpers import PW, Site, Checks, stop_all
 
 if len(sys.argv) < 2: sys.exit(__doc__)
 ZIP = sys.argv[1]

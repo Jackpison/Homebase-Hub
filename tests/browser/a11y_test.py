@@ -3,13 +3,12 @@
   npm i --no-save axe-core
   python3 tests/browser/a11y_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ and Playwright with Chromium (or --browser firefox|webkit). Nothing leaves this computer."""
-import http.cookiejar, http.server, json, os, re, shutil, socketserver, subprocess, sys, tempfile, threading, time, urllib.request, zipfile
-from functools import partial
+import http.cookiejar, http.server, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.request, zipfile
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, SEED
-from helpers import browser_name, launch, CSP_REPORTER, TRACK_REQUESTS, WATCH_DOM, settle, until
+from helpers import browser_name, launch, TRACK_REQUESTS, WATCH_DOM, settle, until
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 AXE_PATH, d = None, ROOT   # npm puts it in the nearest node_modules: the repo's, or a parent folder's

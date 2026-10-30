@@ -3,10 +3,10 @@
 for the two-step code), what the server keeps, a wrong person (the device could not verify), a removed passkey, and the password still working.
 Runs in Chromium only: the virtual authenticator is Chromium's.
     python3 tests/browser/passkey_test.py build/site-update-X.Y.Z.zip   (port 8980; the site is opened as http://localhost:8980, a secure address for passkeys)"""
-import base64, hashlib, hmac, json, os, re, struct, sys, time
+import base64, hashlib, hmac, json, os, struct, sys, time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, PW
-from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, CSP_REPORTER
+from helpers import PW
+from helpers import Site, Checks, stop_all, wait_js, browser_name, launch, until, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)

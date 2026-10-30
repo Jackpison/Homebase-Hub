@@ -1,0 +1,6 @@
+# Python lint for tests/ and scripts/ (CI step "Python lint"). Only real mistakes: syntax errors (E9) and pyflakes (F: unused or
+# undefined names, redefinitions). No style rules: the code's own style stays as it is.
+target-version = "py312"
+extend-exclude = ["node_modules", "build", "src/web/tools"]
+[lint]
+select = ["E9", "F"]
