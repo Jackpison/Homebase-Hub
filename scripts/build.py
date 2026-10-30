@@ -59,7 +59,7 @@ def main():
             sd = os.path.join(TREE, 'web/hub/docs/src', page)
             os.makedirs(sd, exist_ok=True)
             shutil.copyfile(p, os.path.join(sd, f'{m.group(1)}.src.{m.group(2)}'))
-            subprocess.run(['npx', 'esbuild', p, '--minify', '--keep-names', '--target=es2017',
+            subprocess.run(['npx', 'esbuild', p, '--minify', '--target=es2017',
                             '--allow-overwrite', f'--outfile={p}', '--log-level=error'], check=True)
     # empty folders from .gitkeep
     for dp, dn, fn in os.walk(TREE):

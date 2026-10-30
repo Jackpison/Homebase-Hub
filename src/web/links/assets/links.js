@@ -633,6 +633,22 @@ $('#tColor').addEventListener('input', () => { $('#tColorText').value = $('#tCol
 $('#tColorText').addEventListener('input', () => { let v = $('#tColorText').value.trim(); if (v && v[0] !== '#') v = '#' + v; if (isHex(v)) $('#tColor').value = v; });
 $('#tColorDefault').onclick = () => setTabColorFields('');
 $('#tEnc').addEventListener('change', () => { if ($('#tEnc').checked) $('#tPrivate').checked = true; $('#tPrivate').disabled = $('#tEnc').checked; });
+// With a passphrase set, a new private tab is encrypted from the start (untick Encrypted Tab to keep it private only)
+$('#tPrivate').addEventListener('change', () => { if ($('#tPrivate').checked && !tabCtx && !$('#tEnc').disabled) { $('#tEnc').checked = true; $('#tPrivate').disabled = true; } });
+// Locks every private tab that is still readable (one press): the key is asked for once, then every such tab is sealed when the page saves
+const plainPrivate = () => S.data.tabs.filter(t => t.private && !t.encrypted);
+function encRowUI() {
+  const todo = plainPrivate().length, row = $('#sEncRow');
+  row.hidden = !(CAN_ENC && vault() && todo);
+  $('#sEncAll').textContent = todo === 1 ? 'Encrypt 1 Tab' : 'Encrypt ' + todo + ' Tabs';
+}
+$('#sEncAll').onclick = async () => {
+  const todo = plainPrivate(); if (!todo.length) return;
+  if (!(await ensureKey())) return;
+  for (const t of todo) { t.encrypted = true; t.private = true; t._blob = ''; t._plain = ''; t.locked = false; t.bad = false; }
+  persist(todo.length === 1 ? 'Tab encrypted' : todo.length + ' tabs encrypted');
+  encRowUI();
+};
 $('#tabSave').onclick = async e => {
   e.preventDefault();
   const name = $('#tName').value.trim(); if (!name) return;
@@ -1201,7 +1217,7 @@ $('#settingsBtn').onclick = () => {
   $('#sPrivate').checked = !!draft.private;
   $('#sWebIcons').checked = !!draft.webIcons;
   $('#sVisits').checked = draft.visitCounts !== false;
-  readSettingsForm(); $('#setErr').textContent = '';
+  readSettingsForm(); $('#setErr').textContent = ''; encRowUI();
   $('#setDlg').showModal();
 };
 $('#sTitle').addEventListener('input', readSettingsForm);

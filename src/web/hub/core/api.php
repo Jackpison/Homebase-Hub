@@ -392,14 +392,15 @@ case 'backup':
     need_admin();
     $pick = [];
     $parts = explode(',', (string)($_GET['parts'] ?? implode(',', BK_PARTS)));
-    foreach (BK_PARTS as $p) if (in_array($p, $parts, true)) $pick[$p] = true;
+    foreach (array_merge(BK_PARTS, BK_OPTIONAL) as $p) if (in_array($p, $parts, true)) $pick[$p] = true;
     foreach (['links', 'info'] as $p) {
         $ids = trim((string)($_GET[$p . '_tabs'] ?? ''));
         if ($ids !== '' && isset($pick[$p])) $pick[$p] = array_values(array_filter(explode(',', $ids), 'strlen'));
     }
     if (!$pick) hub_json(400, ['ok' => false, 'error' => 'Pick at least one part.']);
-    $data = bk_export($pick, !empty($_GET['enc']) && bk_key());   // the Telegram bot token only goes into encrypted files
-    $name = preg_replace('/[^a-z0-9]+/', '-', strtolower(hub_settings()['siteName'])) . '-backup-' . (count($pick) < count(BK_PARTS) || array_filter($pick, 'is_array') ? 'partial-' : '') . date('Y-m-d-His') . '.json';
+    try { $data = bk_export($pick, !empty($_GET['enc']) && bk_key()); }   // the Telegram bot token only goes into encrypted files
+    catch (Exception $e) { hub_json(400, ['ok' => false, 'error' => $e->getMessage()]); }
+    $name = preg_replace('/[^a-z0-9]+/', '-', strtolower(hub_settings()['siteName'])) . '-backup-' . (count(array_intersect_key($pick, array_flip(BK_PARTS))) < count(BK_PARTS) || array_filter($pick, 'is_array') ? 'partial-' : '') . date('Y-m-d-His') . '.json';
     $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRETTY_PRINT);
     if (!empty($_GET['enc'])) {   // encrypted with the backup passphrase (Backup > Encryption)
         if (!bk_key()) hub_json(400, ['ok' => false, 'error' => 'Set a backup passphrase first (Backup > Encryption).']);
@@ -407,7 +408,7 @@ case 'backup':
         $name = preg_replace('/\.json$/', '.enc.json', $name);
     }
     header('Content-Disposition: attachment; filename="' . $name . '"');
-    if (count($pick) === count(BK_PARTS) && !array_filter($pick, 'is_array')) hub_settings_update(function ($s) { $s['backupLast'] = time(); return $s; });
+    if (count(array_intersect_key($pick, array_flip(BK_PARTS))) === count(BK_PARTS) && !array_filter($pick, 'is_array')) hub_settings_update(function ($s) { $s['backupLast'] = time(); return $s; });
     echo $json;
     exit;
 

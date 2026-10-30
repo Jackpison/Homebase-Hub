@@ -940,7 +940,8 @@ function etEncUI(){
     :"For extra protection, encrypt the box titles and text with your encryption passphrase.");
 }
 $("etenc").addEventListener("change",etEncUI);
-$("etpriv").addEventListener("change",()=>{if(!$("etpriv").checked)$("etenc").checked=false;etEncUI()});
+// With a passphrase set, a new private tab is encrypted from the start (untick Encrypt to keep it private only)
+$("etpriv").addEventListener("change",()=>{if(!$("etpriv").checked)$("etenc").checked=false;else if(!ET.id&&!$("etenc").disabled)$("etenc").checked=true;etEncUI()});
 $("etdef").onclick=()=>{ET.color="";$("etcolor").value=tabColor({color:""},ET.pos);hxSync()};
 $("etleft").onclick=()=>{ET.pos--;etPos();if(!ET.color)$("etcolor").value=tabColor({color:""},ET.pos)};
 $("etright").onclick=()=>{ET.pos++;etPos();if(!ET.color)$("etcolor").value=tabColor({color:""},ET.pos)};
@@ -990,6 +991,24 @@ async function convertTab(t,encrypt,say){
   }
   return true;
 }
+
+// Locks every private tab that is still readable, in one go (the key is asked for once); earlier readable versions are then deleted
+const plainPrivate=()=>TABS.filter(t=>t.private&&!t.enc);
+function encRowUI(){const n=plainPrivate().length;$("sencrow").hidden=!(CAN_ENC&&server&&locked&&PAGE.vault&&n);$("sencall").textContent=n===1?"Encrypt 1 Tab":"Encrypt "+n+" Tabs"}
+$("sencall").onclick=async()=>{
+  const say=x=>$("setmsg").textContent=x,todo=plainPrivate();if(!todo.length)return;
+  if(!KEY&&!(await ensureKey(say)))return;
+  if(todo.some(t=>t.boxes.some(b=>b.editing||busy.has(b.key)))){say("Save or cancel the box you are editing first.");return}
+  $("sencall").disabled=true;
+  for(const t of todo){say("Encrypting "+t.name+"…");if(!(await convertTab(t,true,say))){$("sencall").disabled=false;return}}
+  const ids=new Set(todo.map(t=>t.id));
+  const list=TABS.map((t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,private:t.private||ids.has(t.id),enc:t.enc||ids.has(t.id)}));
+  saveTabsList(list,say,async()=>{
+    try{await api({action:"clear_versions"})}catch(err){}
+    $("sencall").disabled=false;encRowUI();renderGates();
+    say(todo.length===1?"1 tab encrypted. Earlier versions were deleted so no readable copy stays on the server.":todo.length+" tabs encrypted. Earlier versions were deleted so no readable copy stays on the server.");
+  });
+};
 
 /* passphrase: unlock. The passphrase is set (and removed) in Settings › Security › Encryption; this page only opens the tabs with it. */
 const uldlg=$("uldlg");let ulDone=null;
@@ -1205,7 +1224,7 @@ function renderPage(){
 const setdlg=$("setdlg");
 function openSettings(){
   $("gin").value=PAGE.title;
-  fillSettings();$("setmsg").textContent="";if(!setdlg.open)setdlg.showModal();
+  fillSettings();$("setmsg").textContent="";encRowUI();if(!setdlg.open)setdlg.showModal();
 }
 // The privacy and password parts, which change when a password is created or removed.
 function fillSettings(){

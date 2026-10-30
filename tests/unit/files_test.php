@@ -162,3 +162,41 @@ $d['items'] = [];
 fl_save($d);
 t('...and with none it can', !sv_use_files());
 t('sizes read as words', fl_bytes(0) === '0 B' && fl_bytes(1536) === '1.5 KB' && fl_bytes(5 * 1024 ** 3) === '5 GB');
+
+// ---- Files in a backup (an optional part) ----
+require_once $site . '/web/hub/core/lib/vault.php';
+$d = fl_load(); $d['items'] = []; $d['shares'] = []; $d['settings'] = fl_settings_default(); fl_save($d); $d = fl_load();
+foreach (glob(fl_blob_dir() . '/*') ?: [] as $x) @unlink($x);   // pieces left by the sections above
+fl_op_mkdir($d, '', $enc('docs')); $docs = array_key_first($d['items']);
+$f1 = put($d, $docs, 2, 800, $enc); $f2 = put($d, '', 1, 100, $enc);
+$o = []; fl_op_share_create($d, $f1, $enc('meta'), 0, $o); $tok = $o['token'];
+fl_save($d);
+$kidB = bin2hex(random_bytes(8)); sv_swap(['v' => 1, 'salt' => base64_encode(random_bytes(16)), 'iter' => 600000, 'wrap' => base64_encode(random_bytes(60)), 'kid' => $kidB], '');
+t('Files is an optional part: not in a full backup unless asked for', !in_array('files', BK_PARTS, true) && in_array('files', BK_OPTIONAL, true) && !isset(bk_export(array_fill_keys(BK_PARTS, true))['parts']->files));
+$ov = bk_overview()['files'];
+t('the Backup panel counts the files and says they are locked', $ov['summary'] === '2 files, 900 B, locked' && $ov['tooBig'] === false && $ov['optional'] === true, json_encode($ov));
+$bk = json_decode(json_encode(bk_export(['files' => true, 'settings' => true])), true);
+t('a backup with Files carries the list, the links, the locked pieces (as they are) and the key id', count($bk['parts']['files']['items']) === 3 && count($bk['parts']['files']['blobs']) === 3 && isset($bk['parts']['files']['shares'][$tok]) && $bk['parts']['files']['kid'] === $kidB && !empty($bk['parts']['sitevault']));
+t('...and no name, no key and no plain content', strpos(json_encode($bk['parts']['files']), 'docs') === false && base64_decode($bk['parts']['files']['blobs'][$f2 . '_0']) === str_repeat('B', 100));
+// the folder and its files are removed, then restored
+$d = fl_load(); fl_purge($d, array_keys($d['items'])); fl_save($d);
+t('(the files are gone)', fl_load()['items'] === [] && glob(fl_blob_dir() . '/*') === []);
+t('restore brings back the list, the links and every piece', bk_import($bk['parts'], ['files' => true]) === ['Files'] && count(fl_load()['items']) === 3 && isset(fl_load()['shares'][$tok]) && is_file(fl_blob_path($f1, 1)) && file_get_contents(fl_blob_path($f2, 0)) === str_repeat('B', 100));
+t('...and a share link works again', fl_share_get($tok) !== null);
+$bad = $bk; unset($bad['parts']['files']['blobs'][$f1 . '_1']);
+$threw = false; try { bk_import($bad['parts'], ['files' => true]); } catch (Exception $e) { $threw = strpos($e->getMessage(), 'missing a piece') !== false; }
+t('a backup with a piece missing is refused, and Files is left as it was', $threw && count(fl_load()['items']) === 3);
+$bad = $bk; $bad['parts']['files']['blobs'][$f2 . '_0'] = base64_encode(str_repeat('B', 90));
+$threw = false; try { bk_import($bad['parts'], ['files' => true]); } catch (Exception $e) { $threw = strpos($e->getMessage(), 'does not match its size') !== false; }
+t('...and one with a piece of the wrong size', $threw);
+$bad = $bk; $bad['parts']['files']['blobs']['../../evil'] = base64_encode(str_repeat('x', 40)); $bad['parts']['files']['blobs'][str_repeat('a', 16) . '_0'] = base64_encode(str_repeat('x', 40));
+bk_import($bad['parts'], ['files' => true]);
+t('a piece with a name that is not a piece of one of the files is ignored (no path tricks)', !is_file(fl_blob_dir() . '/../../evil') && !is_file(fl_blob_dir() . '/' . str_repeat('a', 16) . '_0'));
+$other = $bk; $other['parts']['files']['kid'] = bin2hex(random_bytes(8));
+$threw = false; try { bk_import($other['parts'], ['files' => true]); } catch (Exception $e) { $threw = strpos($e->getMessage(), 'another key') !== false; }
+t('Files locked with another key than this site has are refused', $threw);
+// too big
+$d = fl_load(); $d['items'][$f2]['z'] = BK_FILES_MAX + 10; fl_save($d);
+$threw = false; try { bk_export(['files' => true]); } catch (Exception $e) { $threw = strpos($e->getMessage(), 'site-data/files') !== false; }
+t('Files too big for a backup file say what to do instead (copy the folder)', $threw && bk_overview()['files']['tooBig'] === true && strpos(bk_overview()['files']['summary'], 'copy the folder') !== false);
+t('Start Over removes Files and the site key', in_array('Files', bk_reset_all(), true) && fl_load()['items'] === [] && sv_get() === null && glob(fl_blob_dir() . '/*') === []);
