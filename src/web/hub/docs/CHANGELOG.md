@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.62.2 | Settings: the on and off switches that had shrunk to a ring and a ball are switches again |
 | 1.62.1 | Passkeys: Remove now tells you what it needs, where you can see it |
 | 1.62.0 | Undo in Info: a deleted box or tab comes back with its text, also in locked tabs |
 | 1.61.9 | Tools tidied (Image Converter tabs, four tools gone, sections you can move, a sharper recorder), one window frame and button shape on every page, Undo in Links and Cards |
@@ -95,6 +96,14 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.62.2
+
+### Settings
+
+- **The on and off switches are switches again.** In Settings, many switches (Use the Preset's Accent Color, Show the Bar on the Home Page, the Telegram, Backup and Updates switches, and more) had shrunk to a small ring and a ball since version 1.61.6. They work as before and now look right.
 
 ---
 
