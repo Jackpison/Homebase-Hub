@@ -83,6 +83,11 @@
   var ls = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
              set: function (k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } };
   var H = document.documentElement;
+  // (1.61.9) the glide between pages (@view-transition in shell.css): when you move on very fast the browser cuts it short and
+  // rejects its promises ("Transition was aborted ... Page already revealed"). Harmless: catch them so they are not page errors.
+  ['pagereveal', 'pageswap'].forEach(function (ev) {
+    addEventListener(ev, function (e) { var vt = e.viewTransition; if (vt) [vt.ready, vt.finished, vt.updateCallbackDone].forEach(function (p) { if (p && p.catch) p.catch(function () {}); }); });
+  });
   /* The tabs as you set them: [id, name, address, icon, hidden], in your order. Pages added later appear at their default place. */
   function pageList(st) {
     st = st || S;
