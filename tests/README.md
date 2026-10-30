@@ -2,7 +2,7 @@
 
 These run on your own computer. Nothing here is part of the update zip.
 
-**All at once:** `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs every check below in order and prints one table (check, result, passed, seconds). `--quick` runs only lint, unit, repo and server checks (about 2 minutes); `--browser firefox|webkit` runs the browser tests in another engine (CI does that once a week, not on every push); `--apache` adds the Apache test (needs sudo); `--prev` and `--old` give the update test its zips (otherwise they are downloaded and checked against their `.sha256`).
+**All at once:** `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs every check below in order and prints one table (check, result, passed, seconds). `--quick` runs only lint, unit, repo and server checks (about 2 minutes); `--browser firefox|webkit` runs the browser tests in another engine (CI runs Chromium and WebKit on every push and Firefox on the 1st and 15th); `--apache` adds the Apache test (needs sudo); `--prev` and `--old` give the update test its zips (otherwise they are downloaded and checked against their `.sha256`).
 
 | Folder | What is in it |
 |---|---|
