@@ -68,8 +68,8 @@ try:
         open_menu(pg, s.base, '/web/info/', 'Info Settings')
         cards = pg.evaluate(CARDS, '#setdlg')
         check('L4 Info: no empty strip at the bottom of a card (the Look card used to have one)', cards and all(c[2] <= (4 if c[3] else 16) for c in cards) and all(c[1] == 0 for c in cards), cards)
-        hint = pg.evaluate("(() => { const h = [...document.querySelectorAll('#setdlg .hint')].find(x => /browser tab/.test(x.textContent)); return !!(h && h.closest('.ix-grp') && h.closest('.ix-grp').contains(document.getElementById('gin'))); })()")
-        check('L5 Info: "Shown in the browser tab" stays inside the Page Title card', hint)
+        hint = pg.evaluate("(() => { const g = document.getElementById('gin').closest('.ix-srow'); return !!(g && /browser tab/.test(g.textContent) && g.closest('.ix-grp')); })()")
+        check('L5 Info: "Shown in the browser tab" is the hint of the Page Title row, inside its card (1.64.3: a row like the others)', hint)
         pg.click('#setdlg .ix-sx')
 
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.getElementById('importBmBtn')", 20000)
@@ -96,10 +96,10 @@ try:
         pg.goto(s.base + '/'); wait_js(pg, "!!document.getElementById('settingsSheet')", 20000)
         pg.evaluate("document.getElementById('settingsSheet').showModal()"); pg.wait_for_timeout(300)
         hm = pg.evaluate("""(() => { const r = id => document.getElementById(id), seg = r('sEditBar').nextElementSibling, tint = r('pTint');
-            const right = (ctl) => { const row = ctl.closest('.g-row'), l = row.querySelector('.g-label').getBoundingClientRect(), c = ctl.getBoundingClientRect(); return c.left >= l.right - 2 && Math.abs((c.top + c.bottom) / 2 - (l.top + l.bottom) / 2) < 30; };
+            const right = (ctl) => { const row = ctl.closest('.g-row'), l = row.querySelector('.g-label').getBoundingClientRect(), c = ctl.getBoundingClientRect(); return (c.left >= l.right - 2 && Math.abs((c.top + c.bottom) / 2 - (l.top + l.bottom) / 2) < 30) || c.top >= l.bottom - 2; };   // beside the label, or (1.64.3) under it at full width when they do not fit side by side
             const only = r('sPrivate').closest('.g-row'), lab = only.querySelector('.g-label').getBoundingClientRect(), tile = only.querySelector('.ix-rt').getBoundingClientRect();
             return [right(seg), right(tint), Math.round(lab.left - tile.right) <= 24]; })()""")
-        check('L9 Home Settings: Edit Bar and Tint buttons sit at the right of their label; Only Me starts next to its tile', hm == [True, True, True], hm)
+        check('L9 Home Settings: Edit Bar and Tint buttons sit at the right of their label or under it; Only Me starts next to its tile', hm == [True, True, True], hm)
 
         # ---- the main Settings page ----
         pg.goto(s.base + '/web/settings/#nav'); wait_js(pg, "!!document.querySelector('#ix-pgl .ix-pgr')", 20000)

@@ -564,7 +564,7 @@ function openImport() {
   if (!S.auth) return toast('Log in to import bookmarks.', true);
   importer ||= new Promise((ok, no) => {
     const s = document.createElement('script');
-    s.src = 'assets/links-import.js?v=1.64.2';
+    s.src = 'assets/links-import.js?v=1.64.3';
     s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
     s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
     document.head.append(s);
@@ -646,9 +646,7 @@ function editTab(t) {
 // Locks every private tab that is still readable (one press): the key is asked for once, then every such tab is sealed when the page saves
 const plainPrivate = () => S.data.tabs.filter(t => t.private && !t.encrypted);
 function encRowUI() {
-  const todo = plainPrivate().length, row = $('#sEncRow');
-  row.hidden = !(CAN_ENC && vault() && todo);
-  $('#sEncAll').textContent = todo === 1 ? 'Encrypt 1 Tab' : 'Encrypt ' + todo + ' Tabs';
+  HUB.encRow({ row: $('#sEncRow'), can: CAN_ENC && vault(), priv: S.data.tabs.filter(t => t.private).length, waiting: plainPrivate().length, total: S.data.tabs.length });
 }
 $('#sEncAll').onclick = async () => {
   const todo = plainPrivate(); if (!todo.length) return;
@@ -1038,6 +1036,7 @@ function openLink(cat, i) {
   const sel = $('#lCat'); sel.innerHTML = '';
   S.data.tabs.forEach(t => sel.append(h('optgroup', { label: t.title },
     t.categories.map(c => h('option', { value: c.id, selected: c === cat }, c.title)))));
+  $('#lOptIcon').open = !!l.icon; $('#lOptExtra').open = !!(l.extra && l.extra.length);   // a link that has them shows them
   $('#linkErr').textContent = '';
   titleSeq++; titleUrl = '';
   $('#lTitleFetch').disabled = false; $('#lTitleFetch').textContent = 'Get Title';

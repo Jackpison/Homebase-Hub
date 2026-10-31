@@ -9,9 +9,9 @@
 <link id="fav" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E">
 <link id="touch" rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E">
 <title>Cards</title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.64.2">
-<script src="../hub/core/assets/shell.js?v=1.64.2" data-app="cards"></script>
-<link rel="stylesheet" href="assets/cards.css?v=1.64.2">
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.64.3">
+<script src="../hub/core/assets/shell.js?v=1.64.3" data-app="cards"></script>
+<link rel="stylesheet" href="assets/cards.css?v=1.64.3">
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <meta name="theme-color" content="#1a1a1a">
@@ -141,10 +141,8 @@
 
 <dialog id="tdlg" class="ix-sdlg">
   <h2>Cards Settings</h2>
-  <h3>Page</h3>
-  <div class="f">
-    <label class="w">Page Title<input id="ttl" maxlength="60"></label>
-  </div>
+  <h3>General</h3>
+  <div class="ix-srow"><label for="ttl">Page Title<small>Shown in the browser tab.</small></label><input id="ttl" maxlength="60"></div>
   <h3>Privacy</h3>
   <div class="ix-srow"><label for="tonlyme">Only Me<small>Always on: this page is only for you.</small></label><input type="checkbox" class="ix-sw" id="tonlyme" checked disabled></div>
   <h3>Look</h3>
@@ -165,6 +163,6 @@
   </form>
 </dialog>
 
-<script src="assets/cards.js?v=1.64.2"></script>
+<script src="assets/cards.js?v=1.64.3"></script>
 </body>
 </html>

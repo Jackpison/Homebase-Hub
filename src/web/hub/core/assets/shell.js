@@ -7,7 +7,7 @@
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.64.2" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.64.3" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -493,8 +493,25 @@
       if (f && f.offsetParent) f.focus(); else { d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); }
     }).observe(d, { attributes: true, attributeFilter: ['open'] });
   }
+  /* (1.64.3) "Save Settings" looks dim until something in the window changes. Only how it looks: the button always works (a change made by a page's own code is not seen here, so it is never switched off). */
+  function sdlgWatch(d, getBtn) {
+    if (d._ixW) return; d._ixW = true;
+    var base = '', touched = false, btn = null, timer = 0;
+    function snap() { return [].map.call(d.querySelectorAll('input,select,textarea'), function (e) { return e.type === 'checkbox' || e.type === 'radio' ? (e.checked ? 1 : 0) : e.value; }).join('\u0001'); }
+    function sync() { if (btn) btn.classList.toggle('ix-clean', !touched && snap() === base); }
+    function arm() {
+      btn = getBtn(); if (!btn || !/^save settings$/i.test(btn.textContent.trim())) { btn = null; return; }
+      touched = false; base = snap(); sync(); clearTimeout(timer);
+      timer = setTimeout(function () { if (!touched) { base = snap(); sync(); } }, 600);   // a window filled in just after it opened
+    }
+    new MutationObserver(function () { if (d.open) arm(); else clearTimeout(timer); }).observe(d, { attributes: true, attributeFilter: ['open'] });
+    ['input', 'change'].forEach(function (ev) { d.addEventListener(ev, function () { touched = true; sync(); }); });
+    d.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.ix-sgc button')) setTimeout(function () { touched = true; sync(); }, 0); });
+    if (d.open) arm();
+  }
   function sdlgBuild(d) {
     if (d._ixS) return; d._ixS = true;
+    sdlgWatch(d, function () { return d.querySelector('.ix-sf [type=submit],.ix-sf .pri,.ix-sf .primary,.df .pri,.df .primary,.act .pri,.actions .primary'); });
     var plain = d.classList.contains('ix-plain');   // (1.61.9) a page's own window (Add Link, Edit Card...): the frame only, its fields keep their own layout
     if (d.querySelector('.dh,.ix-sh')) { var db = d.querySelector('.db'); if (db) db.classList.add('ix-sb'); /* (1.64.1) the same body as every window: its fields take the shared look */ if (!plain) sdlgDecorate(db, '.sh3'); sdlgFocus(d, d.querySelector('.db,.ix-sb') || d, d.querySelector('.dh [data-close],.dh .ib,.ix-sx')); return; }
     var c = d.querySelector(':scope>form') || (d.children.length === 1 && d.firstElementChild.tagName === 'DIV' ? d.firstElementChild : d), kids = [].slice.call(c.children);   // a form, a single wrapper (Info's Export) or the dialog itself
@@ -517,10 +534,11 @@
   }
   /* (1.61.5) the look inside a Settings window: each section's rows in one rounded card, a small coloured tile in front of each row */
   var RT = [
+    /* (1.64.3) Encrypt first: "Encrypt All Private Tabs" has the word private and took the green lock of Only Me; now it keeps its own purple shield */
+    [/encrypt|passphrase|recovery/i, 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM9.5 12.5h5v3.5h-5zM10.5 12.5v-1a1.5 1.5 0 0 1 3 0v1', '179,146,240'],
     [/only me|private|lock|password/i, 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3', '80,200,140'],
     [/google|icons?\b/i, 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18', '255,138,92'],
     [/colou?r|ribbon|accent|palette/i, 'M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2-.5-1.2.3-2.5 1.6-2.5H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5zM7.5 11h.01M10 7.5h.01M14.5 7.5h.01', '255,107,129'],
-    [/encrypt|passphrase|recovery/i, 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM12 10v4', '179,146,240'],
     [/visit|count|analytics/i, 'M5 20V10M12 20V4M19 20v-7', '91,141,255'],
     [/text size|font/i, 'M4 19 9 5l5 14M6 14h6M16 19l2.5-7 2.5 7M17 17h3', '255,194,26'],
     [/edit bar|bar\b|menu/i, 'M3 15h18v4H3zM7 11l2-2 2 2', '76,201,240'],
@@ -562,7 +580,13 @@
     [].forEach.call(body.querySelectorAll('.ix-grp'), function (g) { if (!g.children.length) g.remove(); });
   }
   function sdlgAll() { [].forEach.call(document.querySelectorAll('dialog.ix-sdlg'), sdlgBuild); [].forEach.call(document.querySelectorAll('dialog.sheet .sb'), function (b) { sdlgDecorateSheet(b); }); }
-  function sdlgDecorateSheet(b) { if (b._ixT) return; b._ixT = true; [].forEach.call(b.querySelectorAll('.g-row:not(.stack)'), function (r) { var lab = r.querySelector('.g-label'); if (lab && !r.querySelector('.ix-rt')) r.insertBefore(rowTile(lab.firstChild ? lab.firstChild.textContent : ''), r.firstChild); }); }
+  function sdlgDecorateSheet(b) {   // Home's own sheets (1.64.3): the same tiles on every row (a row with a field or slider under it too), the same Save Settings dimming, and the focus off the X
+    if (b._ixT) return; b._ixT = true;
+    [].forEach.call(b.querySelectorAll('.g-row'), function (r) { var lab = r.querySelector('.g-label'); if (lab && !r.querySelector('.ix-rt')) r.insertBefore(rowTile(r.getAttribute('data-rt') || (lab.firstChild ? lab.firstChild.textContent : '')), r.firstChild); });
+    var d = b.closest('dialog'); if (!d) return;
+    sdlgFocus(d, b, d.querySelector('.sh .x'));
+    sdlgWatch(d, function () { return d.querySelector('.sf .primary'); });
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sdlgAll); else sdlgAll();   // the dialogs are further down the page than the body
 
   /* ---------- 4. the bar: three styles, each with its own layout ----------
@@ -1501,6 +1525,16 @@
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
     tz: function () { return S.tz || 'Asia/Kolkata'; },   // the site's time zone (Settings > General)
     settingsWindow: function (d) { d.classList.add('ix-sdlg'); sdlgBuild(d); },
+    /* (1.64.3) the "Encrypt Private Tabs" row of Links and Info: a badge with how many wait, a short button, and "All encrypted" once done */
+    watchSave: function (d) { sdlgWatch(d, function () { return d.querySelector('.ix-sf .pri,.act .pri'); }); },   // (1.64.3) Files draws its Settings window itself, each time it opens
+    encRow: function (o) {
+      var left = o.waiting, row = o.row; row.hidden = !(o.can && o.priv);
+      if (row.hidden) return;
+      var badge = row.querySelector('.ix-badge'), hint = row.querySelector('small'), btn = row.querySelector('button');
+      badge.textContent = left ? left + ' waiting' : 'All encrypted'; badge.classList.toggle('done', !left);
+      hint.textContent = left ? left + ' of your ' + o.total + ' tab' + (o.total === 1 ? '' : 's') + (left === 1 ? ' is' : ' are') + ' private but not encrypted yet.' : 'Nothing waiting.';
+      btn.textContent = 'Encrypt'; btn.disabled = !left;
+    },
     settingsRows: function (body, heads) { sdlgDecorate(body, heads || 'h3,h4'); }   // (1.61.6) cards and tiles for a body a page draws itself (Files Settings)   // (1.61.6) a Settings window made later by a page (Import and Export, Files Settings) gets the same look
   };
 })();

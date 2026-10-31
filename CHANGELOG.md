@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.3 | One look for every Settings window: Page Title under General, a clearer Encrypt row, controls that drop under their name, visible off switches, a simpler Add Link, and Save Settings dim until you change something |
 | 1.64.2 | The top bar fits on tablets and small laptops: tabs show icons only (the current one keeps its name); a sweep of every page and Settings tab found nothing else |
 | 1.64.1 | Edit Tab: the icons fold away until you open them; every window is now checked by one test; Tasks and Files windows fixed to match |
 | 1.64.0 | Calmer cards and tiles that follow your Boxes and Cards colour, two soft presets (Soft Dark, Soft Warm), one look for every window, Show Visit Counts in Look |
@@ -105,6 +106,24 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.3
+
+### One look for every Settings window
+
+- **General:** the first group of every Settings window is now called General, and Page Title is a row like the others (a tile, the name, the hint, the field on the right). Links, Info, Cards and Home.
+- **Encrypt Private Tabs (Links and Info):** a purple shield tile of its own (it used to borrow the green lock of Only Me), a badge such as "1 waiting", a short **Encrypt** button and a hint that says how many of your tabs are waiting. When all are done the row stays and says **All encrypted** instead of disappearing.
+- **Controls that do not fit drop under their name:** Edit Bar's Icons Only / Icons and Text no longer squeezes its label into a thin column. In every Settings window, also Home's.
+- **Switches that are off** have a clear outline now, so they no longer look disabled (also Home and the main Settings page).
+- **Save Settings looks dim** until something in the window changes. It always works; only the look changes.
+- **Add Link:** the Link card has Address, Name and Category. Icon and Extra Links fold away under Optional (they open by themselves for a link that has them). "URL" is now called Address.
+- **Home Settings:** the same headings, tiles on every row, and the focus off the close button.
+
+### Checked
+
+- The window test now also fails a window with a heading called "Page", a squeezed control row, or a Save Settings that is not dim before anything changed; the private-tab tests check the "1 waiting" and "All encrypted" states.
 
 ---
 

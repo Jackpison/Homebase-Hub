@@ -7,14 +7,14 @@
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
 <title>Information</title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.64.2">
-<link rel="stylesheet" href="../hub/core/assets/tabs.css?v=1.64.2">
-<script src="../hub/core/assets/shell.js?v=1.64.2" data-app="info"></script>
-<script src="../hub/core/assets/tabs.js?v=1.64.2"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.64.3">
+<link rel="stylesheet" href="../hub/core/assets/tabs.css?v=1.64.3">
+<script src="../hub/core/assets/shell.js?v=1.64.3" data-app="info"></script>
+<script src="../hub/core/assets/tabs.js?v=1.64.3"></script>
 <link rel="icon" id="favIcon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6M8 13h8M8 17h8'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" id="touchIcon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6M8 13h8M8 17h8'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/info.css?v=1.64.2">
-<script src="assets/info-boot.js?v=1.64.2"></script>
+<link rel="stylesheet" href="assets/info.css?v=1.64.3">
+<script src="assets/info-boot.js?v=1.64.3"></script>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <meta name="theme-color" content="#1a1a1a">
@@ -84,13 +84,12 @@
 <dialog id="setdlg" class="ix-sdlg">
   <form id="setform">
     <h2>Info Settings</h2>
-    <h3>Page</h3>
-    <div class="f"><label>Page Title<input id="gin" maxlength="60" placeholder="Information"></label></div>
-    <p class="hint">Shown in the browser tab.</p>
+    <h3>General</h3>
+    <div class="ix-srow"><label for="gin">Page Title<small>Shown in the browser tab.</small></label><input id="gin" maxlength="60" placeholder="Information"></div>
     <h3>Privacy</h3>
     <div class="ix-srow"><label for="spriv">Only Me<small>Visitors see only a login screen.</small></label><input type="checkbox" class="ix-sw" id="spriv"></div>
     <p class="hint" id="sprivnote"></p>
-    <div class="ix-srow" id="sencrow" hidden><span>Encrypt All Private Tabs<small>Locks your private tabs in this browser.</small></span><button type="button" id="sencall">Encrypt All</button></div>
+    <div class="ix-srow" id="sencrow" hidden><span><span class="ix-tl">Encrypt Private Tabs<b class="ix-badge"></b></span><small></small></span><button type="button" id="sencall">Encrypt</button></div>
     <h3>Look</h3>
     <div class="ix-srow"><span>Text Sizes<small>Make the tabs, box titles and text bigger or smaller.</small></span><button type="button" id="setsizes" data-hub-action="sizes">Change</button></div>
     <div class="ix-srow"><label for="seditbar">Edit Bar<small>Icons Only shows each name on hover.</small></label>
@@ -162,6 +161,6 @@
 </dialog>
 
 
-<script src="assets/info.js?v=1.64.2"></script>
+<script src="assets/info.js?v=1.64.3"></script>
 </body>
 </html>

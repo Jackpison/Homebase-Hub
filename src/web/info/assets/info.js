@@ -907,7 +907,7 @@ async function convertTab(t,encrypt,say){
 
 // Locks every private tab that is still readable, in one go (the key is asked for once); earlier readable versions are then deleted
 const plainPrivate=()=>TABS.filter(t=>t.private&&!t.enc);
-function encRowUI(){const n=plainPrivate().length;$("sencrow").hidden=!(CAN_ENC&&server&&locked&&PAGE.vault&&n);$("sencall").textContent=n===1?"Encrypt 1 Tab":"Encrypt "+n+" Tabs"}
+function encRowUI(){HUB.encRow({row:$("sencrow"),can:CAN_ENC&&server&&locked&&PAGE.vault,priv:TABS.filter(t=>t.private).length,waiting:plainPrivate().length,total:TABS.length})}
 $("sencall").onclick=async()=>{
   const say=x=>$("setmsg").textContent=x,todo=plainPrivate();if(!todo.length)return;
   if(!KEY&&!(await ensureKey(say)))return;

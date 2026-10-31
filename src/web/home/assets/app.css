@@ -283,8 +283,8 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
 .g-label a.ext{color:var(--accent);font-weight:500}
 .src-tools{display:flex;align-items:center;gap:10px}
 
-.switch{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:13px;background:color-mix(in srgb,currentColor 14%,transparent);border:1px solid color-mix(in srgb,currentColor 18%,transparent);position:relative;cursor:pointer;transition:background .15s}
-.switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,currentColor 62%,transparent);transition:transform .15s,background .15s}
+.switch{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:13px;background:color-mix(in srgb,currentColor 12%,transparent);border:1px solid color-mix(in srgb,currentColor 42%,transparent);position:relative;cursor:pointer;transition:background .15s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,currentColor 78%,transparent);transition:transform .15s,background .15s}
 .switch:checked{background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
 .switch:checked::after{transform:translateX(18px);background:var(--accent)}
 .switch:focus-visible{outline:2px solid currentColor;outline-offset:2px}
@@ -394,5 +394,15 @@ body.onlyme{min-height:100dvh;display:grid;place-items:center;background:#111;co
 /* (1.61.6) a row in Home Settings: the name and help take the free space, the switch or the buttons sit at the right at their own width */
 .g-row:not(.stack)>.g-label{flex:1;min-width:0}
 .g-row:not(.stack)>.ix-sgc,.g-row:not(.stack)>.seg{flex:none;width:auto;max-width:60%}
+/* (1.64.3) the same touches as the other windows: a control that does not fit beside the name drops under it; a row with a field or a slider under its name still has its tile */
+.g-row:not(.stack):has(>.ix-sgc){flex-wrap:wrap}
+.g-row:not(.stack):has(>.ix-sgc)>.g-label{flex:100 1 190px}
+.g-row:not(.stack)>.ix-sgc{flex:1 1 auto;max-width:100%}
+.g-row:not(.stack)>.ix-sgc>button{flex:1}
+.g-row.stack{display:grid;grid-template-columns:34px 1fr;align-items:center;column-gap:12px;row-gap:9px}
+.g-row.stack>.ix-rt{grid-column:1;grid-row:1}
+.g-row.stack>.g-label{grid-column:2;grid-row:1}
+.g-row.stack>:not(.ix-rt):not(.g-label){grid-column:1/-1}
+.sheet .sb h3:first-child{margin-top:8px}
 .g-row:not(.stack)>.seg{display:inline-flex;flex-wrap:nowrap}
 @media (max-width:480px){.g-row:not(.stack):has(>.ix-sgc,>.seg){flex-wrap:wrap}.g-row:not(.stack)>.ix-sgc,.g-row:not(.stack)>.seg{max-width:100%}}

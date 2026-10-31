@@ -36,6 +36,14 @@ AUDIT = """(id => {
     for (const g of body.querySelectorAll('.ix-grp')) if (vis(g) && g.getBoundingClientRect().height < 24) bad.push('an empty card');
     if (body.scrollWidth > body.clientWidth + 1) bad.push('wider than the window (' + body.scrollWidth + ' > ' + body.clientWidth + ')');
   }
+  for (const h of d.querySelectorAll('h3,h4,.sh3')) if (vis(h) && !h.closest('.ix-sh,.sh') && /^page$/i.test(h.textContent.trim())) bad.push('a heading called "Page" (it is "General")');
+  for (const r of d.querySelectorAll('.ix-srow,.g-row')) {
+    const c = r.querySelector(':scope>.ix-sgc'); if (!c || !vis(c)) continue;
+    const l = r.querySelector(':scope>label,:scope>.g-label,:scope>span:not(.ix-rt)'), lr = l && l.getBoundingClientRect(), cr = c.getBoundingClientRect();
+    if (lr && lr.width < 120 && cr.top < lr.bottom - 4) bad.push('a squeezed row: ' + l.textContent.trim().slice(0, 20) + ' (' + Math.round(lr.width) + ' px wide)');
+  }
+  const sv = [...d.querySelectorAll('.ix-sf button,.sf button,.df button,.act button')].find(b => /^save settings$/i.test(b.textContent.trim()));
+  if (sv && !sv.classList.contains('ix-clean')) bad.push('Save Settings is not dim on a window nothing changed in');
   for (const b of d.querySelectorAll('.ix-sf button, .df button, .act button, .actions button')) if (vis(b) && getComputedStyle(b).borderRadius !== '12px') bad.push('button radius ' + getComputedStyle(b).borderRadius + ': ' + b.textContent.trim().slice(0, 18));
   if (document.activeElement && document.activeElement.closest('.ix-sx, .dh')) bad.push('the close X has the focus');
   return bad;
@@ -122,6 +130,9 @@ try:
         wait_js(pg, "[...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 44; })", 5000)   # after the opening animation, not a fixed pause
         d = pg.evaluate("[document.getElementById('settingsSheet').open, [...document.querySelectorAll('#settingsSheet .group')].length, [...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 44 && Math.round(r.height) === 26; })]")
         check('W Home Settings: open, in groups, with 44 x 26 switches', d[0] and d[1] >= 3 and d[2], d)
+        if SHEET:
+            pg.evaluate("(() => { const d = document.getElementById('settingsSheet'); d.style.maxHeight = 'none'; d.style.height = 'auto'; const b = d.querySelector('.sb'); b.style.maxHeight = 'none'; b.style.overflow = 'visible'; })()")
+            pg.query_selector('#settingsSheet').screenshot(path=os.path.join(SHEET, 'Home_Settings.png'))
         if SHEET:
             pg.evaluate(TALL); pg.query_selector('#settingsSheet').screenshot(path=os.path.join(SHEET, 'Home_Settings.png'))
         # the top bar at tablet widths: the last tab must end before the buttons on the right (1.64.2: Tools slid under them at 820)

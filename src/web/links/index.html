@@ -6,14 +6,14 @@
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'">
 <title>Bookmarks</title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.64.2">
-<link rel="stylesheet" href="../hub/core/assets/tabs.css?v=1.64.2">
-<script src="assets/links-early.js?v=1.64.2"></script>
-<script src="../hub/core/assets/shell.js?v=1.64.2" data-app="links"></script>
-<script src="../hub/core/assets/tabs.js?v=1.64.2"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.64.3">
+<link rel="stylesheet" href="../hub/core/assets/tabs.css?v=1.64.3">
+<script src="assets/links-early.js?v=1.64.3"></script>
+<script src="../hub/core/assets/shell.js?v=1.64.3" data-app="links"></script>
+<script src="../hub/core/assets/tabs.js?v=1.64.3"></script>
 <link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔖%3C/text%3E%3C/svg%3E">
-<script src="assets/links-boot.js?v=1.64.2"></script>
-<link rel="stylesheet" href="assets/links.css?v=1.64.2">
+<script src="assets/links-boot.js?v=1.64.3"></script>
+<link rel="stylesheet" href="assets/links.css?v=1.64.3">
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <meta name="theme-color" content="#1a1a1a">
@@ -57,15 +57,16 @@
 
 <dialog id="linkDlg" class="ix-sdlg"><form method="dialog">
   <h3 id="linkDlgTitle">Add Link</h3>
-  <div class="field"><label for="lUrl">URL</label><input id="lUrl" required placeholder="https://"></div>
+  <h4>Link</h4>
+  <div class="field"><label for="lUrl">Address</label><input id="lUrl" required placeholder="https://"></div>
   <div class="field"><label for="lTitle">Name</label>
     <div class="iconrow"><input id="lTitle" placeholder="Filled in from the page title"><button class="btn" type="button" id="lTitleFetch">Get Title</button></div></div>
-  <div class="field"><label for="lExtra">Extra Links</label>
-    <textarea id="lExtra" rows="2" placeholder="IP | https://1.2.3.4"></textarea>
-    <span class="hint">Shown after the name, like "Swizzin Seedbox | IP". One per line: label | URL</span></div>
-  <div class="field"><label for="lIcon">Icon</label>
-    <div class="iconrow"><span class="prev" id="lIconPrev"></span><input id="lIcon" placeholder="Fetched from the site when you save"><button class="btn" type="button" id="lIconFetch">Fetch</button></div></div>
   <div class="field"><label for="lCat">Category</label><select id="lCat"></select></div>
+  <h4>Optional</h4>
+  <details class="ix-opt" id="lOptIcon"><summary><span class="ix-rt" aria-hidden="true" style="background:rgba(255,138,92,.18);color:rgb(255,138,92)"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span><span class="ix-ot">Icon<small>Fetched from the site when you save.</small></span></summary>
+    <div class="ix-ob"><div class="iconrow"><span class="prev" id="lIconPrev"></span><input id="lIcon" aria-label="Icon address" placeholder="Fetched from the site when you save"><button class="btn" type="button" id="lIconFetch">Fetch</button></div></div></details>
+  <details class="ix-opt" id="lOptExtra"><summary><span class="ix-rt" aria-hidden="true" style="background:rgba(91,141,255,.18);color:rgb(91,141,255)"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span><span class="ix-ot">Extra Links<small>Shown after the name, like "Seedbox | IP".</small></span></summary>
+    <div class="ix-ob"><textarea id="lExtra" rows="2" aria-label="Extra links" placeholder="IP | https://1.2.3.4"></textarea><span class="hint">One per line: label | URL</span></div></details>
   <p class="err" id="linkErr"></p>
   <div class="actions"><button class="btn primary" id="linkSave">Save Link</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
 </form></dialog>
@@ -78,14 +79,14 @@
 
 <dialog id="setDlg" class="ix-sdlg"><form method="dialog">
   <h3>Links Settings</h3>
-  <h4>Page</h4>
-  <div class="field"><label for="sTitle">Page Title</label><input id="sTitle" maxlength="60" placeholder="Bookmarks"><span class="hint">Shown in the browser tab.</span></div>
+  <h4>General</h4>
+  <div class="ix-srow"><label for="sTitle">Page Title<small>Shown in the browser tab.</small></label><input id="sTitle" maxlength="60" placeholder="Bookmarks"></div>
 
   <h4>Privacy</h4>
   <div class="ix-srow"><label for="sPrivate">Only Me<small>Visitors see only a login screen.</small></label><input type="checkbox" class="ix-sw" id="sPrivate"></div>
   <div class="ix-srow"><label for="sWebIcons">Icons from Google<small>Asks Google for missing icons. Google sees which sites you use.</small></label><input type="checkbox" class="ix-sw" id="sWebIcons"></div>
 
-  <div class="ix-srow" id="sEncRow" hidden><span>Encrypt All Private Tabs<small id="sEncHint">Locks your private tabs in this browser.</small></span><button type="button" id="sEncAll">Encrypt All</button></div>
+  <div class="ix-srow" id="sEncRow" hidden><span><span class="ix-tl">Encrypt Private Tabs<b class="ix-badge"></b></span><small></small></span><button type="button" id="sEncAll">Encrypt</button></div>
 
   <h4>Look</h4>
   <div class="ix-srow"><label for="sVisits">Show Visit Counts<small>Shows how often each link was opened. Only you see it.</small></label><input type="checkbox" class="ix-sw" id="sVisits"></div>
@@ -166,6 +167,6 @@
 </form></dialog>
 
 
-<script src="assets/links.js?v=1.64.2"></script>
+<script src="assets/links.js?v=1.64.3"></script>
 </body>
 </html>

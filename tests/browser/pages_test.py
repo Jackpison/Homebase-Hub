@@ -475,8 +475,8 @@ try:
         cp.click('#ix-ebar [data-tip="Holders"]'); until(lambda: cp.evaluate("document.getElementById('hdlg').open"), 5000); cp.focus('#hlist input')
         ring = cp.evaluate("(() => { const s = getComputedStyle(document.querySelector('#hlist input')); return [s.outlineStyle, s.borderColor] })()"); cp.click('#hcancel')
         cctx.close()
-        check('P61 Cards Settings looks like Links and Info: Page, Privacy (Only Me, locked on), then Look with Text Sizes, Edit Bar (buttons) and Column Order rows',
-              cs == [['Page', 'Privacy', 'Look'], [['Only Me', 'INPUT'], ['Text Sizes', 'BUTTON'], ['Edit Bar', 'DIV'], ['Column Order', 'BUTTON']]], cs)
+        check('P61 Cards Settings looks like Links and Info: General (Page Title), Privacy (Only Me, locked on), then Look with Text Sizes, Edit Bar (buttons) and Column Order rows',
+              cs == [['General', 'Privacy', 'Look'], [['Page Title', 'INPUT'], ['Only Me', 'INPUT'], ['Text Sizes', 'BUTTON'], ['Edit Bar', 'DIV'], ['Column Order', 'BUTTON']]], cs)
         check('P62 Cards: Banks has its own icon (not Add Card\'s) and one window like Holders: every bank with its cards, a rename moves the cards, a link is kept, a wrong link is refused, Cancel changes nothing; a holder\'s name box gets a clean border, not a cut-off outline',
               idict.get('Banks') and idict.get('Banks') != idict.get('Add Card') and brows and all(x[1].endswith('card') or x[1].endswith('cards') for x in brows) and kept
               and badlink[0] and 'https://' in badlink[1] and 'Lakeside Bank' in renamed and old not in renamed and link and ring[0] == 'none' and not cerr, (icons, brows, kept, badlink, link, ring, cerr))
