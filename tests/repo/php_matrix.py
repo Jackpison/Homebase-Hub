@@ -90,8 +90,11 @@ def run_one(v, exe):
         if r.returncode != 0: bad.append(f.replace(ROOT + '/', '') + ': ' + (r.stdout + r.stderr).strip().split('\n')[0])
     lint = (len(files), bad)
     r = subprocess.run([exe, os.path.join(ROOT, 'tests', 'unit', 'run.php')], capture_output=True, text=True, cwd=ROOT)
-    tail = [l for l in r.stdout.strip().split('\n') if l.strip()][-1:] or [r.stderr.strip()[-200:]]
-    return lint, r.returncode == 0, tail[0]
+    lines = [l for l in (r.stdout + r.stderr).strip().split('\n') if l.strip()]
+    if r.returncode != 0:   # show what failed, so CI says it without a second run
+        print('--- unit tests on PHP %s failed; the output that matters:' % v)
+        for l in [l for l in lines if re.search(r'FAIL|Fatal|Warning|Deprecated|Error|Uncaught|==', l)][:25]: print('    ' + l[:260])
+    return lint, r.returncode == 0, (lines[-1:] or [''])[0]
 
 
 if __name__ == '__main__':
