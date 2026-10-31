@@ -45,9 +45,9 @@ const useKey=raw=>V.useKey(raw); // not extractable
 /* "Keep unlocked on this device": the tab key is kept in this browser's IndexedDB, encrypted with a device key that
    can't be read out of the browser (non-extractable). It only opens text the server sends to a logged-in browser, and it
    is deleted when you log out (on any page of this site) or press Lock. */
-const KEEPK="info-keep",keepOn=()=>lsGet(KEEPK)!=="0",setKeep=on=>lsSet(KEEPK,on?null:"0");
+const keeper=V.keeper("dev","info-keep",true),keepOn=keeper.on,setKeep=keeper.set;
 const VAULT_LOGIN=()=>!!(PAGE.vault&&PAGE.vault.login);
-const devSave=raw=>V.devSave("dev",raw),devLoad=()=>V.devLoad("dev"),devClear=V.devDropAll;
+const devSave=keeper.save,devLoad=keeper.load,devClear=keeper.clear;
 // Opens the encrypted tabs without asking when this device kept them unlocked. A kept key that no longer fits is dropped.
 let autoTried=false;
 async function autoUnlock(){
@@ -61,14 +61,7 @@ async function autoUnlock(){
 }
 // Just logged in with the website password: encrypted tabs that use it open right away (and stay open on this device
 // when "keep unlocked" is on). Runs before the page reloads.
-async function unlockAfterLogin(pw){
-  if(!pw||!CAN_ENC||!keepOn())return;
-  try{
-    const j=await fetchData(),v=j.page&&j.page.vault;
-    if(!v||!v.login)return;
-    const raw=await unwrapKey(v,pw);if(raw){await devSave(raw);raw.fill(0)}
-  }catch(e){}
-}
+const unlockAfterLogin=pw=>keeper.afterLogin(pw,async()=>{const j=await fetchData();return j.page&&j.page.vault});
 async function seal(text){
   // Already-encrypted text is never encrypted again: open it first (or keep it as it is if it can't be opened).
   if(isEnc(text)){try{text=(await unsealDeep(text)).text}catch(e){return text}}

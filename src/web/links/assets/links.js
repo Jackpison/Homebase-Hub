@@ -221,9 +221,8 @@ const HF = HUB.fetch;   // the site's fetch: longer timeout and a quiet retry on
    so the server, its earlier versions and backup files cannot read the tab. The open key lives in this page's memory, and (so a reload
    doesn't ask again) in this browser's IndexedDB under a device key that can't be read out; logging out or Lock deletes it. */
 const V = window.HubVault, CAN_ENC = V.ok();   // the shared encryption (shell.js, section 14)
-const KEEPK = 'links-keep';   // "keep unlocked on this device": on unless turned off in the unlock box
-const keepOn = () => { try { return localStorage.getItem(KEEPK) !== '0'; } catch { return true; } };
-const setKeep = on => { try { on ? localStorage.removeItem(KEEPK) : localStorage.setItem(KEEPK, '0'); } catch {} };
+const keeper = V.keeper('links', 'links-keep', false);   // "keep unlocked on this device": on unless turned off in the unlock box
+const keepOn = keeper.on, setKeep = keeper.set;
 let KEY = null;
 const b64 = V.b64;
 const vault = () => (S.data.settings && S.data.settings.vault && S.data.settings.vault.wrap) ? S.data.settings.vault : null;
@@ -233,9 +232,7 @@ const useKey = raw => V.useKey(raw);
 const seal = text => V.seal(KEY, text);
 const unseal = s => V.unseal(KEY, s);
 // "Keep unlocked on this device": the same IndexedDB Info uses (its own record), deleted when you log out or press Lock.
-const devSave = raw => V.devSave('links', raw);
-const devLoad = () => V.devLoad('links');
-const devClear = () => V.devForget('links');
+const devSave = keeper.save, devLoad = keeper.load, devClear = keeper.clear;
 // What the server sent: tabs with "enc" become locked tabs (marked at once, so the page can draw; their text is opened afterwards).
 function markEnc() {
   for (const t of S.data.tabs) {
@@ -289,14 +286,7 @@ async function lockNow() {
   render(); toast('Encrypted tabs are locked');
 }
 // Just logged in: the password was typed, so the key is opened right away and kept for this browser (the page reloads next).
-async function unlockAfterLogin(pw) {
-  if (!pw || !CAN_ENC || !keepOn()) return;
-  try {
-    const j = await api('get'), v = j.data && j.data.settings && j.data.settings.vault;
-    if (!v || !v.login) return;
-    const raw = await unwrapKey(v, pw); if (raw) { await devSave(raw); raw.fill(0); }
-  } catch {}
-}
+const unlockAfterLogin = pw => keeper.afterLogin(pw, async () => { const j = await api('get'); return j.data && j.data.settings && j.data.settings.vault; });
 // Icons of an encrypted tab travel inside its encrypted text (a file in icons/ is named after the site and readable by the server).
 let embeddedAny = false;   // icons were swapped for embedded copies: the page must redraw (the old files are deleted by the server)
 async function embedIcons(t) {

@@ -132,6 +132,21 @@ try:
         until(lambda: s.get('sv_get').get('pp') is False, 30000)
         sv = s.get('sv_get')
         check('E20 removing the passphrase (nothing locked with the site key) clears the key and the mark', sv.get('pp') is False and sv.get('vault') is None, sv)
+        # ---- the "keep unlocked" helper Links and Info share (HubVault.keeper) ----
+        pg.goto(base + '/web/links/', wait_until='domcontentloaded'); wait_js(pg, "!!(window.HubVault && HubVault.keeper)", 15000)
+        kp = pg.evaluate("""async () => {
+          const k = HubVault.keeper('test-ns', 'test-keep', false), r = {};
+          r.onByDefault = k.on(); k.set(false); r.off = k.on(); k.set(true); r.on = k.on();
+          r.none = (await k.load()) === null;
+          await k.save(new Uint8Array([1, 2, 3, 4])); const got = await k.load(); r.saved = !!got && got.join() === '1,2,3,4';
+          await k.clear(); r.cleared = (await k.load()) === null;
+          let asked = 0; k.set(false); await k.afterLogin('pw', async () => { asked++; return { login: true }; }); r.offSkips = asked === 0;
+          k.set(true); await k.afterLogin('', async () => { asked++; return null; }); r.noPw = asked === 0;
+          await k.afterLogin('pw', async () => { asked++; return { wrap: 'x' }; }); r.noLoginRecord = asked === 1 && (await k.load()) === null;
+          await k.afterLogin('pw', async () => { throw new Error('x'); }); r.errorsQuiet = true;
+          return r; }""")
+        check('E22 keeper: on by default, off and on again, a kept key is saved, read and forgotten', kp['onByDefault'] and kp['off'] is False and kp['on'] and kp['none'] and kp['saved'] and kp['cleared'], kp)
+        check('E23 keeper: after a login it does nothing when off, without a password, without a login-record vault, or when reading fails', kp['offSkips'] and kp['noPw'] and kp['noLoginRecord'] and kp['errorsQuiet'], kp)
         check('E21 no page errors in all of it', not errs, errs)
         b.close()
 finally:

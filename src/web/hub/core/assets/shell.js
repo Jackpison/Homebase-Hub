@@ -1593,7 +1593,28 @@
   }
   function devForget(name) { return devOp('readwrite', function (st) { return st.delete(name); }).catch(function () {}); }
   function devDropAll() { try { indexedDB.deleteDatabase('hub-vault'); } catch (e) {} }
-  window.HubVault = { ENC: ENC, ok: ok, b64: b64, ub64: ub64, rnd: rnd, isEnc: isEnc, kek: kek, wrap: wrap, unwrapOne: unwrapOne, unwrap: unwrap, normRec: normRec,
+  /* "Keep unlocked on this device" for one page (Links, Info): whether it is on (a switch kept in localStorage, on unless turned off),
+     the kept key, and opening the tabs right after a login. dropAll: forgetting the key deletes every page's kept key, not only this one. */
+  function keeper(name, switchKey, dropAll) {
+    function on() { try { return localStorage.getItem(switchKey) !== '0'; } catch (e) { return true; } }
+    function clear() { return dropAll ? devDropAll() : devForget(name); }
+    return {
+      on: on,
+      set: function (v) { try { v ? localStorage.removeItem(switchKey) : localStorage.setItem(switchKey, '0'); } catch (e) {} },
+      save: function (raw) { return devSave(name, raw); },
+      load: function () { return devLoad(name); },
+      clear: clear,
+      // Just logged in: the password was typed, so a key that uses it is opened and kept right away. getVault() gives the stored vault record.
+      afterLogin: function (pw, getVault) {
+        if (!pw || !ok() || !on()) return Promise.resolve();
+        return Promise.resolve().then(getVault).then(function (v) {
+          if (!v || !v.login) return;
+          return unwrap(v, pw).then(function (raw) { if (raw) return devSave(name, raw).then(function () { raw.fill(0); }); });
+        }).catch(function () {});
+      }
+    };
+  }
+  window.HubVault = { keeper: keeper, ENC: ENC, ok: ok, b64: b64, ub64: ub64, rnd: rnd, isEnc: isEnc, kek: kek, wrap: wrap, unwrapOne: unwrapOne, unwrap: unwrap, normRec: normRec,
     useKey: useKey, seal: seal, unseal: unseal, openDeep: openDeep, devSave: devSave, devLoad: devLoad, devForget: devForget, devDropAll: devDropAll };
 })();
 
