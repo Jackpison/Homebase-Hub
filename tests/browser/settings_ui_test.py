@@ -146,6 +146,7 @@ try:
         fb = os.path.join(TMP, 'backup.json'); dl.value.save_as(fb); bk = json.load(open(fb))
         check('U24 Download Backup saves a full backup without Files', bk.get('format') == 'site-backup' and {'links', 'info', 'cards', 'tasks', 'settings'} <= set(bk.get('parts', {})) and 'files' not in bk.get('parts', {}), list(bk.get('parts', {})))
         pg.goto(s.base + '/web/settings/#backup/export-data'); wait_js(pg, "!!document.querySelector('[data-export=links]')", 20000)
+        wait_js(pg, "!!document.querySelector('.ix-tabbar [aria-selected=true]')", 10000)   # the tab bar marks the tab a moment after its pane shows (WebKit)
         check('U25 the old address of the Export tab still opens it', pg.evaluate("document.querySelector('.ix-tabbar [aria-selected=true]').textContent") == 'Export')
         with pg.expect_download() as dl: pg.click('[data-export=links][data-fmt=html]')
         fh = os.path.join(TMP, 'settings.html'); dl.value.save_as(fh); th = open(fh, encoding='utf-8').read()
@@ -155,6 +156,7 @@ try:
         fh2 = os.path.join(TMP, 'settings2.html'); dl.value.save_as(fh2)
         check('U27 ...and with Include Private Tabs on, the private tab is there too', 'Hidden Bank Login' in open(fh2, encoding='utf-8').read())
         pg.goto(s.base + '/web/settings/#backup/restore'); wait_js(pg, "!!document.getElementById('ix-vl')", 20000)
+        wait_js(pg, "!!document.querySelector('.ix-tabbar [aria-selected=true]')", 10000)
         check('U28 Earlier Versions is part of the Restore tab', 'Earlier Versions' in pg.inner_text('.ix-tpane.ix-on') and pg.evaluate("document.querySelector('.ix-tabbar [aria-selected=true]').textContent") == 'Restore')
         # ---- keyboard shortcuts ----
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.tab').length > 1", 20000)

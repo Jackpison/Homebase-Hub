@@ -67,14 +67,19 @@ try:
         dp.keyboard.press('Enter'); dp.keyboard.press('Enter'); dp.keyboard.type('more', delay=0); dp.wait_for_timeout(300)
         check('V12 Info: new lines still make the box grow', dp.evaluate('window.__h') >= 1, dp.evaluate('window.__h'))
         dp.goto(s.base + '/web/info/'); wait_js(dp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.box').length > 0", 30000)
-        def slow(route):
-            if 'save_page' in (route.request.post_data or ''): dp.wait_for_timeout(1500)
-            route.continue_()
-        dp.route('**/api.php*', slow)
+        dc = dp.context.new_cdp_session(dp); dc.send('Network.enable'); dc.send('Network.emulateNetworkConditions', {'offline': False, 'latency': 1500, 'downloadThroughput': -1, 'uploadThroughput': -1})
         dp.evaluate("[...document.querySelectorAll('[data-hub=item]')].find(e => e.getAttribute('data-hub-label') === 'Info Settings').click()"); dp.wait_for_selector('#setdlg[open]')
         dp.fill('#gin', 'Renamed at once'); t0 = dp.evaluate('performance.now()'); dp.click('#setsave')
         wait_js(dp, "!document.getElementById('setdlg').open", 1200)
         check('V13 Info Settings: the window closes and the title changes at once, not after the server answers', dp.evaluate("!document.getElementById('setdlg').open") and dp.evaluate("document.getElementById('ptitle').textContent") == 'Renamed at once', dp.evaluate("document.getElementById('ptitle').textContent"))
+        # Home Settings also closes before a slow server answers
+        hp = b.new_context(viewport={'width': 1300, 'height': 800}).new_page(); browser_login(hp, s.base)
+        hp.goto(s.base + '/'); wait_js(hp, "!!(window.HUB && HUB.isAdmin()) && !!document.getElementById('editBtn')", 30000)
+        hc = hp.context.new_cdp_session(hp); hc.send('Network.enable'); hc.send('Network.emulateNetworkConditions', {'offline': False, 'latency': 1500, 'downloadThroughput': -1, 'uploadThroughput': -1})   # every answer takes 1.5 s
+        hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#ix-ebar:not([hidden])', timeout=15000)
+        hp.evaluate("document.querySelector('[data-open=settingsSheet]').click()"); hp.wait_for_selector('#settingsSheet[open]'); hp.fill('#sWelcome', 'Hello there'); hp.click('#saveSettings')
+        wait_js(hp, "!document.getElementById('settingsSheet').open", 1000)
+        check('V14 Home Settings: the window closes at once, not after the server answers', hp.evaluate("!document.getElementById('settingsSheet').open"))
         check('Vend no page error', not errs, errs)
         b.close()
 finally:

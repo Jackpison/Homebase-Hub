@@ -485,10 +485,11 @@ $('#saveSettings').addEventListener('click', e => withBusy(e.currentTarget, asyn
   ADMIN.panel = settingsDraft.panel;
   const bar = $('#sHomeBar').checked, barChanged = bar !== homeBarOn();
   try {
+    if (!barChanged) closeSheet('settingsSheet');   // (1.64.4) the window closes at once; the server catches up. If it refuses, it opens again below
     await saveAll(barChanged ? '' : 'Settings saved');
     if (barChanged){ await saveHomeBar(bar); toast('Settings saved'); setTimeout(() => location.reload(), 600); return; }   // the bar comes or goes with a reload
     closeSheet('settingsSheet');
-  } catch (err){ Object.assign(ADMIN, prev); toast(err.message, true); }
+  } catch (err){ Object.assign(ADMIN, prev); toast(err.message, true); openSheet('settingsSheet'); }
 }));
 $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async () => {
   const prev = ADMIN.widgets;

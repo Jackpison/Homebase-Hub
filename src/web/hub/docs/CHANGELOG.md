@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.5 | Quicker Cards (long lists draw only what you see) and Home Settings closes at once; a steadier test |
 | 1.64.4 | Faster Info: typing in a big box no longer lags, Settings closes at once, big pages draw only what you see; a new Export window |
 | 1.64.3 | One look for every Settings window: Page Title under General, a clearer Encrypt row, controls that drop under their name, visible off switches, a simpler Add Link, and Save Settings dim until you change something |
 | 1.64.2 | The top bar fits on tablets and small laptops: tabs show icons only (the current one keeps its name); a sweep of every page and Settings tab found nothing else |
@@ -107,6 +108,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.5
+
+### Quicker
+
+- **Cards:** rows that are off the screen are not laid out until you scroll to them, so opening a window or saving Settings is quicker with a long list (measured on 400 cards with a 4 times slower processor: opening Add Card 310 to 184 ms).
+- **Home Settings:** the window closes at once and the server catches up; if it refuses, the window opens again with the reason (the same as Info Settings in 1.64.4).
+
+### Checked
+
+- The speed test now also checks that Home Settings closes before a slow server answers, with a 1.5 s delay on every answer.
+- A test that read the Settings tab bar too early in WebKit now waits for it.
 
 ---
 
