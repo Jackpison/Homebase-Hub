@@ -72,7 +72,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .row.head{border-top:0;color:var(--mute);font-size:13px;font-weight:700;padding-top:4px;padding-bottom:4px}
 .list:not(.grouped)>.row.head{padding-top:12px;padding-bottom:10px}
 .list.grouped>.row.head{border:0}
-.row.item{cursor:pointer;content-visibility:auto;contain-intrinsic-size:auto 46px}
+.row.item{cursor:pointer}
 .row.item:hover{background:var(--hover)}
 .num{text-align:right;font-variant-numeric:tabular-nums}
 .cn{min-width:0}
