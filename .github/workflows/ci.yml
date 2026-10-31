@@ -32,69 +32,66 @@ jobs:
 
   build:
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.3', '8.4', '8.5']
-    timeout-minutes: 15
-    name: build (PHP ${{ matrix.php }})
+    timeout-minutes: 25
+    # one job: lint and the unit tests on every supported PHP (8.5, 8.4, 8.3), then the rest of the checks on 8.3
+    name: build (PHP 8.3, 8.4 and 8.5)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false, fetch-depth: 50 }   # the secret check also reads the last 50 commit messages
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
-        with: { php-version: '${{ matrix.php }}' }
+        with: { php-version: '8.5' }
+      - name: PHP 8.5 - lint and unit tests
+        run: |
+          php -v | head -1
+          find src -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+          php tests/unit/run.php
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.4' }
+      - name: PHP 8.4 - lint and unit tests
+        run: |
+          php -v | head -1
+          find src -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+          php tests/unit/run.php
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        if: matrix.php == '8.3'
         with: { node-version: '24', cache: npm }
-      - name: PHP lint
+      - name: PHP 8.3 - lint
         run: find src -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
-      - name: Unit tests (Telegram snooze, /add, dates, update names, backup encryption)
+      - name: PHP 8.3 - unit tests (Telegram snooze, /add, dates, update names, backup encryption)
         run: php tests/unit/run.php
       - name: PHPStan (static analysis)
-        if: matrix.php == '8.3'
         run: |
           curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.1.33/phpstan.phar
           echo "48caad125554d6b416159db71dd7fd890295ba1a24b3650b49e32752e24fd6a0  phpstan.phar" | sha256sum -c -
           php -d memory_limit=1G phpstan.phar analyse -c tests/repo/phpstan.neon --no-progress
       - name: Library safety check
-        if: matrix.php == '8.3'   # the same answer on any PHP: 8.4 and 8.5 run only lint and the unit tests
         run: python3 tests/repo/check_libraries.py
       - name: Workflow files keep their safety settings (pinned Actions, no kept token, time limits) and no secret is in the repo
-        if: matrix.php == '8.3'
         run: python3 tests/repo/workflows_test.py && python3 tests/repo/secrets_test.py && python3 tests/repo/parallel_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py && python3 tests/repo/releases_test.py && python3 tests/repo/maintain_test.py && python3 tests/repo/presets_test.py && python3 tests/repo/tools_list_test.py && python3 tests/repo/root_test.py
       - name: Workflow check (zizmor, strictest setting)
-        if: matrix.php == '8.3'
         run: python3 -m venv /tmp/zz && /tmp/zz/bin/pip install -q zizmor==1.30.1 && /tmp/zz/bin/zizmor --offline --persona=auditor .github/workflows/
       - name: Workflow check (actionlint, with shellcheck on the shell steps; the download is checked against its SHA-256)
-        if: matrix.php == '8.3'
         run: |
           curl -fsSL -o actionlint.tar.gz https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz
           echo "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757  actionlint.tar.gz" | sha256sum -c -
           tar xzf actionlint.tar.gz actionlint
           ./actionlint -color
       - name: Python lint (ruff, for syntax errors and unused or undefined names in tests and scripts)
-        if: matrix.php == '8.3'
         run: python3 -m venv /tmp/rf && /tmp/rf/bin/pip install -q ruff==0.14.0 && /tmp/rf/bin/ruff check
       - name: Dead code (a PHP function, constant, JavaScript function or CSS class that nothing uses)
-        if: matrix.php == '8.3'
         run: python3 tests/repo/dead_code_test.py
       - name: Version agrees everywhere (scripts/release.py --check) and its own test
-        if: matrix.php == '8.3'
         run: python3 scripts/release.py --check && python3 tests/repo/release_test.py
       - name: Build
-        if: matrix.php == '8.3'
         run: npm ci --ignore-scripts && python3 scripts/build.py
       - name: Tools is exactly what tools-app builds (no stale library in the committed files)
-        if: matrix.php == '8.3'
         run: python3 scripts/build-tools.py --check
       - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
-        if: matrix.php == '8.3'
         run: npx eslint src tools-app
       - name: TypeScript check (the files that start with ts-check - keys, locked data, share links)
-        if: matrix.php == '8.3'
         run: npx tsc -p config/tsconfig.json && npx tsc -p config/tsconfig.links.json && npx tsc -p config/tsconfig.home.json && npx tsc -p config/tsconfig.cards.json && npx tsc -p config/tsconfig.tasks.json && npx tsc -p config/tsconfig.info.json && python3 tests/repo/tscheck_test.py
       - name: Check zip name and changelog
-        if: matrix.php == '8.3'
         run: |
           set -- build/site-update-*.zip
           echo "$@"
