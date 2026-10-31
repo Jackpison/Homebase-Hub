@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.62.8 | Behind the scenes only: the Cards, Tasks and Info scripts are now type-checked too. Nothing looks different |
 | 1.62.7 | Behind the scenes only: Links and Info share their "keep unlocked on this device" code and a colour check, and two more page scripts are type-checked. Nothing looks different |
 | 1.62.6 | Behind the scenes only: one safe way to save shared files, the core split into smaller parts, and shared page helpers. Nothing looks different |
 | 1.62.5 | A cleanup: unused styles and code removed, the notes in your zip brought up to date, and every picture of the website retaken |
@@ -99,6 +100,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.62.8
+
+### Behind the scenes
+
+Nothing on screen changes in this version.
+
+- The Cards, Tasks and Info page scripts are now checked for type slips, like Links, Home, Files and Import Bookmarks, so a later change that passes the wrong kind of value fails a check before it can ship.
+- In those three scripts the small function that shows the "Saving…" and "Saved" message was renamed, because its old name clashed with a name the browser already has. It does the same job.
+- The check now runs for six page scripts, each on its own.
 
 ---
 
