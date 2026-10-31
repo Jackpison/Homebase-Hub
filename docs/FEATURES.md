@@ -159,7 +159,7 @@ Not for the website's feature pages, but worth one line on the **About** or **Se
 ## 17. For the people who keep it running (1.61.0)
 
 - [x] Every PHP file runs in strict mode and PHPStan runs at level 5 (a test fails for a file without `declare(strict_types=1)`).
-- [x] `npx tsc -p tsconfig.json` type-checks the files that start with `// @ts-check` (the Files page and the share-link page first); add more files to `tsconfig.json` as they are cleaned up.
+- [x] `npx tsc -p config/tsconfig.json` type-checks the files that start with `// @ts-check` (the Files page and the share-link page first); add more files to `tsconfig.json` as they are cleaned up.
 - [x] CodeQL and Semgrep scan on every push and every week (`.github/workflows/code-scanning.yml`).
 - [x] New checks: a slow-phone speed check (`tests/browser/speed_test.py`) and accessibility checks for the new windows.
 

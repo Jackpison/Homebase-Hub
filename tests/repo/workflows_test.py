@@ -69,7 +69,7 @@ wk = open(os.path.join(ROOT, '.github', 'workflows', 'weekly-check.yml'), encodi
 check('W12 the weekly check also tries the next PHP version (development build) and reports a break in its own issue', 'next-php:' in wk and "php-version: 'nightly'" in wk and 'tests/unit/run.php' in wk and '--label php' in wk)
 cs = open(os.path.join(ROOT, '.github', 'workflows', 'code-scanning.yml'), encoding='utf-8').read()
 check('W13 CodeQL and Semgrep run on every push to main and every pull request, and weekly; a Semgrep finding fails the run', all(x in cs for x in ('push:', 'pull_request:', 'schedule:', 'github/codeql-action/analyze@', 'semgrep scan', '--error', 'security-events: write')))
-check('W14 CI runs the JavaScript type check', 'npx tsc -p tsconfig.json' in ci)
+check('W14 CI runs the JavaScript type check', 'npx tsc -p config/tsconfig.json' in ci)
 bj = '\n'.join(cij['browsers'])
 ci_code = '\n'.join(l.split('   #')[0] for l in ci.split('\n') if not l.strip().startswith('#'))   # the comments may say Firefox
 check('W15 CI runs the browser tests in Chromium and WebKit, each in two halves (pages, tools), side by side; Firefox and the visual report job are not in CI',

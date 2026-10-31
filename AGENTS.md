@@ -12,12 +12,14 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 | `tools-app/` | The source of Tools (plain ES modules, esbuild). `python3 scripts/build-tools.py --install` builds it into `src/web/tools/` (index.html, sw.js, assets/); never edit `src/web/tools/assets/` by hand. See `tools-app/README.md`. |
 | `src/web/hub/docs/` | `README.txt` and `CHANGELOG.md` (shipped inside every zip, closed to browsers). |
 | `scripts/` | `build.py` (the zip), `build-tools.py` (Tools from `tools-app/`), `tools-rev.py` (Tools fingerprint), `make-site.py`, `site_pages.py` and `make-guide.py` (website, its data-built pages, and the PDF guide), `make-latest.py`, `release-notes.py`, `screenshots.py` (the website's screenshots from the real app), `maintain.py` (the monthly Tools library update that `.github/workflows/maintenance.yml` runs). |
-| `MAINTAINING.md` | Keeping the project alive without a programmer: what runs by itself, the monthly routine, what to do when something fails. |
+| `config/` | The TypeScript check files (`tsconfig.json` and one per page script). Run with `npx tsc -p config/tsconfig.json`. |
+| `docs/MAINTAINING.md` | Keeping the project alive without a programmer: what runs by itself, the monthly routine, what to do when something fails. |
 | `tests/` | `unit/` PHP unit tests; `browser/` tests in a real browser (pages, bar, Settings, Tools, Import, accessibility, the website, installing on a phone); `server/` update, hostile-zip, core and Apache tests; `repo/` checks of the repository (release script, libraries); `fixtures/` files the tests open; `lib/` shared helpers (`helpers.py`, `annotate.py`, `prepend.php`, `seed_demo.php`). See `tests/README.md`. |
 | `website/` | The GitHub Pages site: `style.css`, `theme.js`, `site.js`, `content/` (Install, Guide, Security and Licence, written by hand), `data/tools.json` (the tool list), screenshots, logo. The home page, the six feature pages, Telegram, On your phone, the tool finder and the FAQ are built from `scripts/site_pages.py`. The security policy allows no inline style or script, so colours come from classes and the numbered dots from a generated `hot.css`. |
 
 ## Rules
 
+- Keep the root of the repository tidy: new config goes in `config/`, notes in `docs/`, scripts in `scripts/`. `tests/repo/root_test.py` fails on a new file or folder in the root; add one there only when a tool can find it nowhere else.
 - Users' data lives in `site-data/` on their server. Never commit it, never ship it, and never write code that reads it from a browser. The build refuses to run if `src/site-data`, `src/web/hub/core/config.php` or `src/web/hub/core/data` exist.
 - Never put passwords, tokens or keys in the repo, in a test, or in a commit message.
 - Updates must stay safe: a zip is checked before anything changes, nothing installs without the website password, a snapshot is taken first, and Go Back must work. Do not weaken `src/web/hub/core/lib/update.php` or `ghupdate.php` without tests that prove the same safety.
@@ -35,7 +37,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 ```
 npm ci --ignore-scripts
 npx eslint src tools-app
-npx tsc -p tsconfig.json && npx tsc -p tsconfig.links.json && npx tsc -p tsconfig.home.json && npx tsc -p tsconfig.cards.json && npx tsc -p tsconfig.tasks.json && npx tsc -p tsconfig.info.json && python3 tests/repo/tscheck_test.py
+npx tsc -p config/tsconfig.json && npx tsc -p config/tsconfig.links.json && npx tsc -p config/tsconfig.home.json && npx tsc -p config/tsconfig.cards.json && npx tsc -p config/tsconfig.tasks.json && npx tsc -p config/tsconfig.info.json && python3 tests/repo/tscheck_test.py
 php tests/unit/run.php
 python3 scripts/release.py --check
 python3 tests/repo/release_test.py

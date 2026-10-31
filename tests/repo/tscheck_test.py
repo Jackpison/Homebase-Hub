@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The JavaScript type check (tsconfig.json) and the files that ask for it agree: every file that starts with // @ts-check is listed in
-one of the tsconfig files (or it would be silently unchecked), and every listed file has the line. The check itself is `npx tsc -p tsconfig.json`.
+one of the tsconfig files (or it would be silently unchecked), and every listed file has the line. The check itself is `npx tsc -p config/tsconfig.json`.
   python3 tests/repo/tscheck_test.py"""
 import json, os, re, sys
 
@@ -9,8 +9,8 @@ res = []
 def check(name, ok, extra=''):
     res.append(bool(ok)); print(('PASS ' if ok else 'FAIL ') + name + ('' if ok or not extra else '  -> ' + str(extra)[:400]))
 
-CONFIGS = ('tsconfig.json', 'tsconfig.links.json', 'tsconfig.home.json', 'tsconfig.cards.json', 'tsconfig.tasks.json', 'tsconfig.info.json')   # the strict one, and one looser one for each page script
-listed = [f for c in CONFIGS for f in json.load(open(os.path.join(ROOT, c)))['files'] if f.endswith('.js')]
+CONFIGS = ('config/tsconfig.json', 'config/tsconfig.links.json', 'config/tsconfig.home.json', 'config/tsconfig.cards.json', 'config/tsconfig.tasks.json', 'config/tsconfig.info.json')   # the strict one, and one looser one for each page script
+listed = [os.path.normpath(os.path.join(os.path.dirname(c), f)).replace(os.sep, '/') for c in CONFIGS for f in json.load(open(os.path.join(ROOT, c)))['files'] if f.endswith('.js')]   # paths in a config are relative to the config's own folder (config/)
 flagged = []
 for base in ('src', 'tools-app/src'):
     for d, _, fs in os.walk(os.path.join(ROOT, base)):

@@ -1,6 +1,6 @@
 name: Monthly maintenance
 # Once a month (and on demand: Actions > Monthly maintenance > Run workflow) this keeps the libraries inside Tools current,
-# so the project keeps going with a few clicks and no programmer (see MAINTAINING.md):
+# so the project keeps going with a few clicks and no programmer (see docs/MAINTAINING.md):
 #   1. scripts/maintain.py plan asks npm for newer versions, within the same major version only (a new major is only listed);
 #   2. if there is something to update: rebuild Tools, raise the version by one patch, write the changelog, check it all;
 #   3. push the result to a branch maintenance/YYYY-MM (never to main) and open a pull request;
@@ -76,7 +76,7 @@ jobs:
             echo
             echo "**What to do:** wait until CI is green on this pull request, then press **Merge**."
             echo "Then publish the release: Releases > Draft a new release > tag \`v$NEXT\` (create on publish, target main) > Publish."
-            echo "If CI is red: do not merge; open MAINTAINING.md, section \"When something fails\"."
+            echo "If CI is red: do not merge; open docs/MAINTAINING.md, section \"When something fails\"."
           } > "$RUNNER_TEMP/pr.md"
           gh pr create --repo "$REPO" --base main --head "$BRANCH" --title "Monthly maintenance: $NEXT" --body-file "$RUNNER_TEMP/pr.md" || gh pr edit "$BRANCH" --repo "$REPO" --body-file "$RUNNER_TEMP/pr.md"
           gh workflow run ci.yml --repo "$REPO" --ref "$BRANCH"
@@ -88,5 +88,5 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           gh label create maintenance --repo "$REPO" --color 0E8A16 --description "Monthly maintenance" 2>/dev/null || true
-          printf 'The monthly maintenance could not finish on %s. Nothing was changed on main.\n\nRun: %s\n\nSee MAINTAINING.md, section "When something fails".\n' "$(date -u +%Y-%m-%d)" "$RUN_URL" > "$RUNNER_TEMP/body.md"
+          printf 'The monthly maintenance could not finish on %s. Nothing was changed on main.\n\nRun: %s\n\nSee docs/MAINTAINING.md, section "When something fails".\n' "$(date -u +%Y-%m-%d)" "$RUN_URL" > "$RUNNER_TEMP/body.md"
           gh issue create --repo "$REPO" --title "Monthly maintenance failed" --label maintenance --body-file "$RUNNER_TEMP/body.md"
