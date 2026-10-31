@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.4 | Faster Info: typing in a big box no longer lags, Settings closes at once, big pages draw only what you see; a new Export window |
 | 1.64.3 | One look for every Settings window: Page Title under General, a clearer Encrypt row, controls that drop under their name, visible off switches, a simpler Add Link, and Save Settings dim until you change something |
 | 1.64.2 | The top bar fits on tablets and small laptops: tabs show icons only (the current one keeps its name); a sweep of every page and Settings tab found nothing else |
 | 1.64.1 | Edit Tab: the icons fold away until you open them; every window is now checked by one test; Tasks and Files windows fixed to match |
@@ -106,6 +107,24 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.4
+
+### Info feels quicker
+
+- **Typing in a big box:** the box used to measure the whole page twice on every key, which made typing lag on a page with many long boxes (about 55 ms per key on a slow computer). It now measures only when the text needs more room, and once per frame.
+- **Info Settings:** Save Settings closes the window and changes the title at once; the server catches up in the background. If it refuses, the old settings come back and the window opens again with the reason.
+- **Big pages:** boxes that are off the screen are no longer laid out until you scroll to them, so opening an editor, switching tabs and opening windows are quicker on a page with a lot of text (printing is unchanged).
+
+### Export
+
+- The Export window has the same look as the others: one card with two rows, All Tabs and Current Tab (with its name), each with PDF and Text buttons.
+
+### Checked
+
+- The speed test now types in a big Info page and counts the box re-measurements, and checks that Info Settings closes before a slow server answers.
 
 ---
 

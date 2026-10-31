@@ -51,6 +51,30 @@ try:
             gz += m['html'] * 0.3; kb = round(gz / 1024)
             print('   %-9s first paint %5d ms   loaded %5d ms   about %4d KB sent (gzip)' % (name, m['fp'], m['load'], kb))
             check('V%s %s: first paint under %.1f s, loaded under %.1f s, under %d KB' % (name[:3], name, fp_max / 1000, load_max / 1000, kb_max), 0 < m['fp'] <= fp_max and m['load'] <= load_max and kb <= kb_max, (m['fp'], m['load'], kb))
+        # ---- Info with a big page (1.64.4): typing does not measure the whole page on every key, and Settings closes before the server answers ----
+        import json as _json, random as _r
+        f = s.dir + '/site-data/info/info.php'; head, body = open(f).read().split('\n', 1); doc = _json.loads(body)
+        line = lambda i: 'Line %d  Axis Flipkart - Rs. %d (Multiple Shopping) | Payment Sagar Icici' % (i, _r.randint(100, 99999))
+        doc['tabs'] = [{'id': '%08x' % (0xa0000 + k), 'name': 'T%d' % k, 'layout': 'cards', 'color': '', 'boxes': [{'id': '%08x' % (0xb0000 + k * 10 + j), 'w': 'half', 'h': '', 'title': 'Box %d' % j, 'notes': '\n'.join(line(i) for i in range(160)), 'rev': 1, 'saved': 1793457750} for j in range(4)]} for k in range(4)]
+        open(f, 'w').write(head + '\n' + _json.dumps(doc))
+        dp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); browser_login(dp, s.base)
+        dp.goto(s.base + '/web/info/'); wait_js(dp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.box').length > 0", 30000)
+        check('V10 Info: boxes off the screen are not laid out (content-visibility)', dp.evaluate("getComputedStyle(document.querySelector('.box')).contentVisibility") == 'auto')
+        dp.keyboard.press('e'); dp.wait_for_selector('#ix-ebar:not([hidden])', timeout=10000); dp.click('.box [data-r=edit] >> nth=0'); dp.wait_for_timeout(500)
+        dp.evaluate("window.__h = 0; new MutationObserver(m => { window.__h += m.length; }).observe(document.querySelector('.box textarea'), {attributes: true, attributeFilter: ['style']})")
+        dp.click('.box textarea >> nth=0'); dp.keyboard.press('Control+End'); dp.keyboard.type('thirty letters typed on one line', delay=0); dp.wait_for_timeout(300)
+        check('V11 Info: typing 33 letters does not re-measure the box on every key (a few height changes when a line wraps, not one per key)', dp.evaluate('window.__h') <= 4, dp.evaluate('window.__h'))
+        dp.keyboard.press('Enter'); dp.keyboard.press('Enter'); dp.keyboard.type('more', delay=0); dp.wait_for_timeout(300)
+        check('V12 Info: new lines still make the box grow', dp.evaluate('window.__h') >= 1, dp.evaluate('window.__h'))
+        dp.goto(s.base + '/web/info/'); wait_js(dp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.box').length > 0", 30000)
+        def slow(route):
+            if 'save_page' in (route.request.post_data or ''): dp.wait_for_timeout(1500)
+            route.continue_()
+        dp.route('**/api.php*', slow)
+        dp.evaluate("[...document.querySelectorAll('[data-hub=item]')].find(e => e.getAttribute('data-hub-label') === 'Info Settings').click()"); dp.wait_for_selector('#setdlg[open]')
+        dp.fill('#gin', 'Renamed at once'); t0 = dp.evaluate('performance.now()'); dp.click('#setsave')
+        wait_js(dp, "!document.getElementById('setdlg').open", 1200)
+        check('V13 Info Settings: the window closes and the title changes at once, not after the server answers', dp.evaluate("!document.getElementById('setdlg').open") and dp.evaluate("document.getElementById('ptitle').textContent") == 'Renamed at once', dp.evaluate("document.getElementById('ptitle').textContent"))
         check('Vend no page error', not errs, errs)
         b.close()
 finally:

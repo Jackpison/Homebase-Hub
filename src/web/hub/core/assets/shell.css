@@ -583,7 +583,6 @@ label.ix-srow{cursor:pointer}
 .ix-sdlg .ix-sb .sample{margin:12px 0 6px;padding:12px 14px}
 /* (1.64.0) a card around a list the page has not filled yet is not drawn (Holders, Banks, Column Order) */
 .ix-grp:has(>div:empty:only-child),.ix-grp:has(>ul:empty:only-child){display:none}
-#bkdlg .bgrid,.ix-sdlg .bgrid{margin-bottom:10px}
 
 /* ---------- (1.64.3) the shared touches ---------- */
 /* a row with a segmented control: when the name and the control do not fit side by side, the control drops under the name at full width */

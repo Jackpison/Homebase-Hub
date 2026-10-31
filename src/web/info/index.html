@@ -7,14 +7,14 @@
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
 <title>Information</title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.64.3">
-<link rel="stylesheet" href="../hub/core/assets/tabs.css?v=1.64.3">
-<script src="../hub/core/assets/shell.js?v=1.64.3" data-app="info"></script>
-<script src="../hub/core/assets/tabs.js?v=1.64.3"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.64.4">
+<link rel="stylesheet" href="../hub/core/assets/tabs.css?v=1.64.4">
+<script src="../hub/core/assets/shell.js?v=1.64.4" data-app="info"></script>
+<script src="../hub/core/assets/tabs.js?v=1.64.4"></script>
 <link rel="icon" id="favIcon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6M8 13h8M8 17h8'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" id="touchIcon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6M8 13h8M8 17h8'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/info.css?v=1.64.3">
-<script src="assets/info-boot.js?v=1.64.3"></script>
+<link rel="stylesheet" href="assets/info.css?v=1.64.4">
+<script src="assets/info-boot.js?v=1.64.4"></script>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <meta name="theme-color" content="#1a1a1a">
@@ -102,8 +102,9 @@
 <dialog id="bkdlg" class="ix-sdlg">
   <div>
     <h2>Export</h2>
-    <div class="bgrid"><button type="button" data-b="pdf-all">All Tabs as PDF</button><button type="button" data-b="pdf-cur">Current Tab as PDF</button>
-      <button type="button" data-b="txt-all">All Tabs as Text</button><button type="button" data-b="txt-cur">Current Tab as Text</button></div>
+    <h3>What to Export</h3>
+    <div class="ix-srow" data-rt="export"><span>All Tabs<small>Every tab on this page.</small></span><button type="button" data-b="pdf-all">PDF</button><button type="button" data-b="txt-all">Text</button></div>
+    <div class="ix-srow" data-rt="export"><span>Current Tab<small id="bkcur"></small></span><button type="button" data-b="pdf-cur">PDF</button><button type="button" data-b="txt-cur">Text</button></div>
     <p class="hint">Text keeps everything. The PDF may miss some symbols.</p>
     <div class="act"><button type="button" data-b="close">Close</button></div>
   </div>
@@ -161,6 +162,6 @@
 </dialog>
 
 
-<script src="assets/info.js?v=1.64.3"></script>
+<script src="assets/info.js?v=1.64.4"></script>
 </body>
 </html>

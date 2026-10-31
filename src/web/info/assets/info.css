@@ -74,7 +74,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .boxes{flex:1;min-height:0}
 /* Boxes sit in a 12-column grid: a box is half the width unless it is set to a third, two thirds or the full width. Notebook cards is the look. */
 .bxs{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(14px,1.8vw,26px);align-content:start}
-.box{grid-column:span 6;display:flex;flex-direction:column;min-width:0;background:var(--box);border:1px solid var(--line);border-top:4px solid var(--tc,var(--line));border-radius:18px;padding:14px 16px 16px;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+.box{grid-column:span 6;display:flex;flex-direction:column;min-width:0;background:var(--box);border:1px solid var(--line);border-top:4px solid var(--tc,var(--line));border-radius:18px;padding:14px 16px 16px;box-shadow:0 10px 28px rgba(0,0,0,.22);content-visibility:auto;contain-intrinsic-size:auto 420px}
 :root[data-theme="light"] .box{box-shadow:0 6px 20px rgba(0,0,0,.08)}
 .box[data-w="third"]{grid-column:span 4}.box[data-w="half"]{grid-column:span 6}.box[data-w="twothirds"]{grid-column:span 8}.box[data-w="full"]{grid-column:1/-1}
 .box .nh{margin-bottom:6px}.box .nh h2{font-size:calc(var(--ix-s-head,20px) * 1.05)}
@@ -139,16 +139,12 @@ body.editing .wrap{padding-bottom:110px}
 #setdlg h3,#bkdlg h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:20px 0 8px}
 .hint{font-size:13px;color:var(--mute);margin:6px 0 0}
 .act.start{justify-content:flex-start;flex-wrap:wrap;margin-top:10px}
-.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.bgrid button{font:inherit;font-size:14px;font-weight:700;border-radius:10px;padding:10px 12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--fg);text-align:center}
-.bgrid button:hover{border-color:var(--fg)}
-.bgrid .pri{background:var(--inv);color:var(--inv-fg);border-color:var(--inv)}
 .crow{display:flex;align-items:center;gap:10px;font-size:14px;margin-top:4px}
 .crow span{flex:1;color:var(--mute);font-size:13px}
 .crow button{font:inherit;font-size:13px;font-weight:700;border-radius:10px;padding:8px 12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--fg)}
 .crow button:disabled{opacity:.4;cursor:default}
 #vlist{display:flex;flex-direction:column;gap:6px;max-height:min(50vh,420px);overflow-y:auto;margin-top:12px}
-@media(max-width:480px){.bgrid{grid-template-columns:1fr}}
+
 .tab.add{padding:9px 15px;font-size:18px;line-height:1}
 .f select{background:var(--field);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px;font:inherit;font-size:15px}
 .f .chk{flex-direction:row;align-items:center;gap:10px;font-size:15px;color:var(--fg);cursor:pointer}
@@ -218,6 +214,7 @@ dialog p{color:var(--mute);margin:0 0 6px}
 .themebtn svg{width:18px;height:18px}
 @media(max-width:480px){.themebtn{width:36px;height:36px}}
 @media print{
+  .box{content-visibility:visible}
   body>*:not(#printArea){display:none!important}
   html,body{background:#fff!important;color:#000!important}
   #printArea{display:block;font-family:"Trebuchet MS",Tahoma,sans-serif;color:#000}

@@ -189,7 +189,7 @@ function buildBox(b){
   const q=s=>n.querySelector(s);
   b.el={title:q(".title"),copy:q('[data-r="copy"]'),edit:q('[data-r="edit"]'),cfg:q('[data-r="cfg"]'),meta:q(".meta"),info:q(".info"),form:q(".form"),tin:q(".tin"),
         ta:q("textarea"),conflict:q(".conflict"),msg:q(".msg"),save:q('[data-r="save"]'),help:q(".mdhelp"),prev:q(".prev"),tools:q(".tools")};
-  b.el.ta.addEventListener("input",()=>{grow(b.el.ta);saveDraftSoon(b)});
+  b.el.ta.addEventListener("input",()=>{grow(b.el.ta,true);saveDraftSoon(b)});
   b.el.tin.addEventListener("input",()=>saveDraftSoon(b));
   n.addEventListener("keydown",e=>{
     if(!b.editing)return;
@@ -591,7 +591,15 @@ async function load(){
 }
 
 /* editor */
-function grow(ta){const y=window.scrollY;ta.style.height="auto";ta.style.height=ta.scrollHeight+2+"px";window.scrollTo(0,y)}
+/* Fits the box to its text. Measuring means setting the height to "auto" and reading it back, which lays out the whole page twice; doing that on
+   every key made typing in a big box lag. So while typing (soft) nothing is measured as long as the text still fits and has not got shorter; the
+   rest waits for the next frame, once. */
+function grow(ta,soft){
+  const full=()=>{ta._raf=0;const y=window.scrollY;ta.style.height="auto";ta.style.height=ta.scrollHeight+2+"px";ta._len=ta.value.length;window.scrollTo(0,y)};
+  if(!soft){cancelAnimationFrame(ta._raf||0);full();return}
+  if(ta.value.length>=(ta._len||0)&&ta.scrollHeight<=ta.clientHeight){ta._len=ta.value.length;return}
+  if(!ta._raf)ta._raf=requestAnimationFrame(full);
+}
 function saveDraft(b){clearTimeout(b.dt);if(b.editing)dSet(b,JSON.stringify({text:b.el.ta.value,title:b.el.tin.value,rev:b.rev}))}
 function saveDraftSoon(b){clearTimeout(b.dt);b.dt=setTimeout(()=>saveDraft(b),400)} // typing doesn't write to storage on every key
 function openEditor(b,text,title){
@@ -1155,14 +1163,18 @@ async function saveSettings(){
   m.textContent="";
   if(!server){Object.assign(PAGE,p);keepLocal();renderPage();setdlg.close();return}
   $("setsave").disabled=true;
+  // The window closes and the title changes at once; the server catches up. If it refuses, the old settings come back and the window opens again with the reason.
+  const prev={title:PAGE.title,private:PAGE.private};
+  Object.assign(PAGE,{title:p.title,private:p.private});renderPage();setStatus("Saving…");setdlg.close();
+  const back=msg=>{Object.assign(PAGE,prev);renderPage();openSettings();$("gin").value=p.title;$("spriv").checked=p.private;$("setmsg").textContent=msg};
   try{
     const r=await api({action:"save_page",...p});
-    if(r.status===403){dropAuth();setStatus(savedMsg());guard(saveSettings);return}
-    if(r.status===429){m.textContent="Too many wrong password tries. Wait a few minutes, then try again.";return}
-    if(r.status===400){m.textContent="That icon couldn't be saved. Try a different image.";return}
+    if(r.status===403){dropAuth();back("");setStatus(savedMsg());guard(saveSettings);return}
+    if(r.status===429){back("Too many wrong password tries. Wait a few minutes, then try again.");setStatus("Not saved");return}
+    if(r.status===400){back("That icon couldn't be saved. Try a different image.");setStatus("Not saved");return}
     if(!r.ok)throw 0;
-    const j=await r.json();PAGE=normPage(j.page);PAGE.iconHash="";keepLocal();renderPage();setStatus(savedMsg());setdlg.close();
-  }catch(e){m.textContent="Couldn't reach the server, so nothing was changed."}
+    const j=await r.json();PAGE=normPage(j.page);PAGE.iconHash="";keepLocal();renderPage();setStatus(savedMsg());
+  }catch(e){back("Couldn't reach the server, so nothing was changed.");setStatus("Not saved to the server.")}
   finally{$("setsave").disabled=false}
 }
 $("setform").addEventListener("submit",e=>{e.preventDefault();saveSettings()});
@@ -1227,7 +1239,7 @@ async function exportPdf(all){
 
 /* Backup panel: exports, full backup, reminder and earlier versions */
 const bkdlg=$("bkdlg");
-function openBackup(){bkdlg.showModal()}
+function openBackup(){const t=TABS.find(x=>x.id===active);$("bkcur").textContent=t?t.name:"";bkdlg.showModal()}
 bkdlg.addEventListener("click",e=>{
   const b=/** @type {any} */ (e.target).closest("[data-b]");if(!b)return;const k=b.dataset.b;
   if(k==="close")bkdlg.close();
