@@ -143,7 +143,7 @@ Not for the website's feature pages, but worth one line on the **About** or **Se
 
 - [x] **One Settings window** on every page (close X, scrolling body, Cancel and Save Settings in view; "Page Title"); **Only Me** on every page but Tools; **buttons** for two or three choices and **switches** for on and off, everywhere.
 - [x] **Colors** tab: 9 rows, one Accent, *Different Colors per Page* folded; **Backup & Restore** in four tabs (Back Up, Restore, Export, Start Over); **Export Bookmarks** (Links Settings and Backup > Export).
-- [ ] Retake (still to do, they show the 1.60 look): `cards-settings`, `tasks-settings`, `links-settings`, `info-settings`, `s-colors`, `s-backup`, `s-backup-export`. Done on 30 Oct 2026: `files`, `files-share`, `files-settings`, `tasks-calendar-link`, `info-undo`, `s-security`, `s-encryption`, `s-passkeys`.
+- [x] Retaken on 30 Oct 2026, every picture in dark and light, from the real 1.62.2 app (`python3 scripts/screenshots.py ZIP OUT --webp`): `cards-settings`, `tasks-settings`, `links-settings`, `info-settings`, `files-settings`, `s-colors`, `s-backup`, `s-security`, `s-encryption`, `s-passkeys`, `files`, `files-share`, `tasks-calendar-link`, `info-undo`. A picture of the Backup Export tab (`s-backup-export`) was never made: `s-backup` is the Backup picture on the website and in the guide.
 
 ## 16b. Tools, tidied (1.61.9)
 
