@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.0 | Calmer cards and tiles that follow your Boxes and Cards colour, two soft presets (Soft Dark, Soft Warm), one look for every window, Show Visit Counts in Look |
 | 1.63.1 | Fix: dragging a tab now always lands where you drop it, also with a fast mouse or a slow browser |
 | 1.63.0 | Links and Info tabs: drag to reorder, 16 icons to choose from, and one new Edit Tab window; new-look Banks and Add Task windows; Tools list, grid and Markdown fixes |
 | 1.62.8 | Behind the scenes only: the Cards, Tasks and Info scripts are now type-checked too. Nothing looks different |
@@ -102,6 +103,28 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.0
+
+### A calmer look
+
+- **The cards in Settings and in every window now follow your Boxes and Cards colour** (Settings > Appearance > Colors, or any preset). Before, they were made from the text colour, so a bright text made them bright.
+- **The coloured icon tiles are calmer** for everyone (a little less saturated), also in the Settings menu.
+- **Two new presets** in Settings > Appearance > Presets, under Site Looks: **Soft Dark** (neutral grey, softer text) and **Soft Warm** (a warm dark brown with creamy text). Both keep your accent colour and stay easy to read.
+
+### One look for every window
+
+- Every window on Links, Info, Cards and Tasks (Colors, Text Sizes, Fetch Icons, Restore an Earlier Version, Add Link, Name, Unlock, Edit Card, Holders, Banks, Column Order, Box Settings, Add Task and the rest) now has the same pieces as Settings: headings with a fading line, rounded cards, rows with a tile, the choice or switch at the right.
+- **Colors (Links):** the Dark and Light choice is no longer cut off; each colour is a row with a preview, a swatch and its code in full (it was cut: `#8751d`).
+- **Fetch Icons:** the two choices are rows with a radio at the right.
+- **Text Sizes:** three slider rows in one card.
+- A window opens with its first field ready to type in on a computer, and the close X no longer holds the focus (it drew a yellow ring). A list that is still empty (Holders, Banks) is not drawn as an empty bar.
+
+### Links Settings
+
+- **Show Visit Counts** moved into Look; the Visits section is gone.
 
 ---
 

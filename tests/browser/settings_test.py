@@ -5,7 +5,7 @@
   * Settings > Updates has a link to the project on GitHub
   * Home takes uploads of up to 128 MB
   * the first request after an update removes the old Tools config.json
-  * the Settings menu and its groups, every address opening the right section and tab, Appearance with all 141 presets,
+  * the Settings menu and its groups, every address opening the right section and tab, Appearance with all 143 presets,
     a chosen font surviving a later save, the Security and Telegram cards, and the site search without field checkboxes
     python3 tests/browser/settings_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8970)"""
 import os, sys, glob, re, json
@@ -108,7 +108,7 @@ try:
         pg.click('#ix-pc [data-seg="cmode"] [data-v="light"]'); wait_js(pg, "document.querySelector('#ix-pc [data-seg=cmode] [data-v=light]').getAttribute('aria-pressed') === 'true' && document.querySelectorAll('#ix-pc .ix-preset').length > 0", 5000)
         n += pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # and the light-mode list
         pg.click('#ix-pc [data-seg="cmode"] [data-v="dark"]'); wait_js(pg, "document.querySelector('#ix-pc [data-seg=cmode] [data-v=dark]').getAttribute('aria-pressed') === 'true'", 5000)
-        check('S15 Appearance > Presets has all 141 presets (dark and light together; 1.59 removed near-duplicates and added vivid ones)', n == 141, n)
+        check('S15 Appearance > Presets has all 143 presets (dark and light together; 1.59 removed near-duplicates and added vivid ones; 1.64 added Soft Dark and Soft Warm)', n == 143, n)
         # a font chosen in Look survives a later save made after changing only the accent
         at('#look', "!!document.querySelector('#ix-font')")
         pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); until(lambda: s.get('state').get('font') == 'georgia', 5000)
