@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.63.1 | Fix: dragging a tab now always lands where you drop it, also with a fast mouse or a slow browser |
 | 1.63.0 | Links and Info tabs: drag to reorder, 16 icons to choose from, and one new Edit Tab window; new-look Banks and Add Task windows; Tools list, grid and Markdown fixes |
 | 1.62.8 | Behind the scenes only: the Cards, Tasks and Info scripts are now type-checked too. Nothing looks different |
 | 1.62.7 | Behind the scenes only: Links and Info share their "keep unlocked on this device" code and a colour check, and two more page scripts are type-checked. Nothing looks different |
@@ -101,6 +102,14 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.63.1
+
+### Tabs
+
+- Dragging a tab in Links or Info now always lands where you let go. Before, with a very fast mouse or a slow browser, a tab could stop one place short or not move at all.
 
 ---
 
