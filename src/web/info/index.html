@@ -8,7 +8,9 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
 <title>Information</title>
 <link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.62.8">
+<link rel="stylesheet" href="../hub/core/assets/tabs.css?v=1.62.8">
 <script src="../hub/core/assets/shell.js?v=1.62.8" data-app="info"></script>
+<script src="../hub/core/assets/tabs.js?v=1.62.8"></script>
 <link rel="icon" id="favIcon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6M8 13h8M8 17h8'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" id="touchIcon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6M8 13h8M8 17h8'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/info.css?v=1.62.8">
@@ -131,29 +133,6 @@
     </div>
     <p id="kmsg"></p>
     <div class="act"><button type="button" class="left" id="kdef">Reset to Default</button><button type="button" id="kcancel">Cancel</button><button type="submit" class="pri" id="ksave">Save Colors</button></div>
-  </form>
-</dialog>
-
-<dialog id="etdlg" class="ix-sdlg ix-plain">
-  <form id="etform">
-    <h2 id="ett">Edit Tab</h2>
-    <div class="f">
-      <label>Name<input id="etname" maxlength="40"></label>
-      <div class="crow"><span>Tab Color</span><input type="color" id="etcolor" aria-label="Tab Color"><input type="text" class="hx" id="etcolortx" maxlength="7" placeholder="default" aria-label="Tab Color Hex" spellcheck="false"><button type="button" id="etdef">Use Default</button></div>
-      <div class="crow"><span>Box Headline Color</span><input type="color" id="ethc" aria-label="Box Headline Color"><input type="text" class="hx" id="ethctx" maxlength="7" placeholder="default" aria-label="Box Headline Color Hex" spellcheck="false"><button type="button" id="ethcdef">Default</button></div>
-      <div class="lays" id="etlays" role="radiogroup" aria-label="Layout">
-        <span class="lt">Layout</span>
-        <button type="button" class="lay" data-lay="cards" role="radio" aria-checked="true"><i class="lp lp-cards" aria-hidden="true"></i><b>Notebook Cards</b><small>Cards you can size and arrange. The default.</small></button>
-        <button type="button" class="lay" data-lay="doc" role="radio" aria-checked="false"><i class="lp lp-doc" aria-hidden="true"></i><b>Document</b><small>One page with an outline</small></button>
-      </div>
-      <label class="chk"><input type="checkbox" id="etpriv"> Private Tab</label>
-    </div>
-    <p class="hint" id="etprivnote"></p>
-    <div class="f" style="margin-top:12px"><label class="chk"><input type="checkbox" id="etenc"> Encrypt This Tab (Extra protection)</label></div>
-    <p class="hint" id="etencnote"></p>
-    <div class="crow"><span id="etpos"></span><button type="button" id="etleft">Move Left</button><button type="button" id="etright">Move Right</button></div>
-    <p id="etmsg"></p>
-    <div class="act"><button type="button" class="danger" id="etdel">Delete Tab</button><button type="button" id="etcancel">Cancel</button><button type="submit" class="pri" id="etsave">Save Tab</button></div>
   </form>
 </dialog>
 

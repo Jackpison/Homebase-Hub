@@ -536,7 +536,8 @@ html[data-ix-bar][data-ix-nav="dock"] .snack{bottom:calc(var(--ix-dock,76px) + 2
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* Tasks Settings (1.53.6): three sections, fields a shade lighter than the window, a short help line under a field */
 #sdlg .sh3.first{margin-top:6px;padding-top:0;border-top:0}
-#sdlg .fl>select{background:color-mix(in srgb,var(--fg) 5%,var(--panel));border-color:color-mix(in srgb,var(--fg) 12%,var(--panel))}
+#sdlg .fl>select,#dlg .fl>input,#dlg .fl>select,#dlg .fl>textarea,#dlg .pair input,#dlg .pair select{background:color-mix(in srgb,var(--fg) 5%,var(--panel));border-color:color-mix(in srgb,var(--fg) 12%,var(--panel))}
+#dlg .fl>input:focus,#dlg .fl>select:focus,#dlg .fl>textarea:focus{outline:none;border-color:var(--acc,var(--accent))}
 #sdlg .fl>select:focus{outline:none;border-color:var(--acc,var(--accent))}
 #sdlg .fl small{display:block;margin-top:5px;font-size:12px;font-weight:400;line-height:1.35;color:var(--mute)}
 #sdlg .hint{margin:-4px 0 4px}

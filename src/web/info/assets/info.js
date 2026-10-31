@@ -145,11 +145,12 @@ function mkBox(tabId,k,src,enc){
 const LAYS=["cards","doc"],okLay=v=>v==="doc"?"doc":"cards";   // how a tab is laid out: notebook cards (the default; "classic" from earlier versions is cards too) or one document
 // Boxes: a tab has 1 to MAXBOX of them, each with a stable id, and optionally a width and a height ("" = what the layout gives it)
 const MAXBOX=12,BW=["","third","half","twothirds","full"],BH=["","short","tall","xtall"],okW=v=>BW.includes(v)?v:"",okH=v=>BH.includes(v)?v:"";
+const okIcon=v=>HubTabs.isIcon(v)?v:"";   // which icon a tab wears (tabs.js); empty = the document icon
 const okColor=c=>typeof c==="string"&&HUB.isHex(c)?c.toLowerCase():"";
 function mkTab(src){
   src=src||{};const id=/^[a-f0-9]{8}$/.test(src.id)?src.id:rid(),bx=Array.isArray(src.boxes)?src.boxes:[];
   const enc=!!src.enc||bx.some(b=>b&&(isEnc(b.title)||isEnc(b.notes))); // encrypted text always means an encrypted tab
-  return{id,name:str(src.name)||"Tab",color:okColor(src.color),hc:okColor(src.hc),layout:okLay(src.layout),private:!!src.private||enc,enc,boxes:(bx.length?bx:[{},{}]).slice(0,MAXBOX).map((x,k)=>mkBox(id,k,x,enc))};
+  return{id,name:str(src.name)||"Tab",color:okColor(src.color),hc:okColor(src.hc),layout:okLay(src.layout),icon:okIcon(src.icon),private:!!src.private||enc,enc,boxes:(bx.length?bx:[{},{}]).slice(0,MAXBOX).map((x,k)=>mkBox(id,k,x,enc))};
 }
 /* tab colors: the first tab is gold, the rest get distinct colors; each can be changed in Edit tabs */
 const PALETTE=["#d4a72c","#e5484d","#0090ff","#46a758","#8e4ec6","#f76b15","#12a594","#e93d82","#3e63dd","#99d52a",
@@ -165,7 +166,7 @@ function textOn(hex){
 const findBox=key=>{for(const t of TABS)for(const b of t.boxes)if(b.key===key)return b};
 // The tabs as stored: encrypted tabs keep their ciphertext, never the decrypted text.
 const stored=(t,b)=>t.enc?{title:b.ct??b.title,notes:b.cn??b.notes}:{title:b.title,notes:b.notes};
-const plainTabs=()=>TABS.map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>({...stored(t,b),id:b.id,w:b.w,h:b.h,rev:b.rev,saved:b.saved}))}));
+const plainTabs=()=>TABS.map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>({...stored(t,b),id:b.id,w:b.w,h:b.h,rev:b.rev,saved:b.saved}))}));
 // The copy kept in this browser for instant loading. Private tabs (and everything, when the page is private)
 // are left out, so private text is never stored on the device. The icon is stored separately and only when it changes.
 let savedIcon=null;
@@ -514,7 +515,7 @@ let loaded=false,lastFetch=0;
 // Coming back to the page after a while quietly fetches changes made on other devices.
 document.addEventListener("visibilitychange",async()=>{
   if(document.hidden||!loaded||!server)return;
-  if(Date.now()-lastFetch<60000||openEdits()||document.querySelector("dialog[open]")||drag)return;
+  if(Date.now()-lastFetch<60000||openEdits()||document.querySelector("dialog[open]")||document.body.classList.contains("dragtabs"))return;
   lastFetch=Date.now();
   try{const had=authed;takeData(await fetchData());if(had&&!authed){setEdit(false);setStatus("You were logged out on this device.")}}catch(e){}
 }); // true once the server has answered (or is known to be unreachable)
@@ -683,7 +684,7 @@ function renderTabs(){
   // Each tab is a wrapper holding the tab button and its pencil button (shown while editing).
   $("tabs").innerHTML=TABS.map((t,i)=>{const c=tabColor(t,i),on=t.id===active,id=esc(t.id),nm=esc(t.name);
     return`<div class="tabi${on?" on":""}" role="none" data-t="${id}" style="--tc:${c};--tf:${textOn(c)}">`+
-      `<button class="tab" role="tab" data-t="${id}" aria-selected="${on}">${nm}`+
+      `<button class="tab" role="tab" data-t="${id}" aria-selected="${on}">${HubTabs.iconSvg(t.icon||"doc","ti")}${nm}`+
       (t.enc?`<span class="lk enc" title="Encrypted tab: encrypted with your passphrase">${IMG_SAFE}</span>`
        :t.private?`<span class="lk" title="Private tab: only visible when you're logged in">${IMG_LOCK}</span>`:"")+`</button>`+
       `<button class="pen" type="button" title="Edit Tab" aria-label="Edit tab ${nm}">${PEN}</button></div>`}).join("")+
@@ -701,9 +702,13 @@ function showTab(id){
   spyOutline();
   const t=TABS.find(x=>x.id===id);if(t)t.boxes.forEach(b=>{if(b.el&&!b.el.info.childNodes.length)renderBox(b)});
 }
-let noClick=false; // set right after a drag so the drop doesn't also count as a click
+// Drag a tab to move it (tabs.js, shared with Links); Alt + Left/Right does the same from the keyboard. Colors that come from a tab's position are fixed first, so tabs keep their colors when they move.
+const tabDrag=HubTabs.drag($("tabs"),{enabled:()=>EDIT,onDrop(order,focusId){
+  const list=order.map(id=>{const i=TABS.findIndex(t=>t.id===id);return tabItem(TABS[i],i)});
+  saveTabsList(list,setStatus,()=>{setStatus("Tab order saved.");if(focusId){const b=/** @type {HTMLElement|null} */ (document.querySelector(`#tabs .tab[data-t="${CSS.escape(focusId)}"]`));if(b)b.focus()}});
+}});
 $("tabs").onclick=e=>{
-  if(noClick)return;
+  if(tabDrag.justDragged())return;
   const pen=/** @type {any} */ (e.target).closest(".pen");if(pen){guard(()=>openTabEditor(pen.parentElement.dataset.t));return}
   const b=/** @type {any} */ (e.target).closest(".tab");if(!b)return;
   if(b.dataset.add)guard(()=>openTabEditor(null));else showTab(b.dataset.t);
@@ -711,85 +716,12 @@ $("tabs").onclick=e=>{
 $("tabs").addEventListener("contextmenu",e=>{if(EDIT&&/** @type {any} */ (e.target).closest(".tabi"))e.preventDefault()}); // no long-press menu while editing
 const openEdits=()=>TABS.some(t=>t.boxes.some(b=>b.editing||busy.has(b.key)));
 
-/* drag tabs to reorder them (editing mode). The tab follows the pointer; the others glide aside.
-   Mouse: start moving. Touch: press and hold briefly, then drag (a quick swipe still scrolls the row). */
-let drag=null,dragRaf=0;
-$("tabs").addEventListener("pointerdown",e=>{
-  if(!EDIT||e.button>0||/** @type {any} */ (e.target).closest(".pen"))return;
-  const w=/** @type {any} */ (e.target).closest(".tabi");if(!w)return;
-  drag={w,pid:e.pointerId,x0:e.clientX,y0:e.clientY,x:e.clientX,touch:e.pointerType!=="mouse",on:false,timer:0};
-  if(drag.touch)drag.timer=setTimeout(()=>{if(drag&&!drag.on)startDrag()},220);
-});
-function startDrag(){
-  const w=drag.w;drag.on=true;
-  drag.grab=drag.x0-w.getBoundingClientRect().left;
-  w.classList.add("dragging");document.body.classList.add("dragtabs");
-  if(drag.touch&&navigator.vibrate)try{navigator.vibrate(8)}catch(_){}
-  dragFrame();
-}
-document.addEventListener("pointermove",e=>{
-  if(!drag||e.pointerId!==drag.pid)return;
-  drag.x=e.clientX;
-  if(!drag.on){
-    const d=Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0);
-    if(drag.touch){if(d>10){clearTimeout(drag.timer);drag=null}return} // moved before the hold: it's a scroll
-    if(d<5)return;startDrag();
-  }
-  e.preventDefault();
-  if(!dragRaf)dragRaf=requestAnimationFrame(dragFrame);
-},{passive:false});
-$("tabs").addEventListener("touchmove",e=>{if(drag&&drag.on)e.preventDefault()},{passive:false});
-// Slides a tab from where it was to where it now is.
-function glide(el,dx){
-  if(!dx)return;
-  el.style.transition="none";el.style.transform=`translateX(${dx}px)`;void el.offsetWidth;
-  el.style.transition="transform .22s cubic-bezier(.2,.8,.2,1)";el.style.transform="";
-}
-function dragFrame(){
-  dragRaf=0;if(!drag||!drag.on)return;
-  const w=drag.w,row=$("tabs"),rr=row.getBoundingClientRect();
-  // scroll the row when the pointer is near its edges
-  const edge=48,sp=drag.x<rr.left+edge?-(rr.left+edge-drag.x):drag.x>rr.right-edge?drag.x-(rr.right-edge):0;
-  if(sp)row.scrollLeft+=sp/3;
-  const slot=()=>rr.left+w.offsetLeft-row.scrollLeft; // where the tab sits without the drag offset
-  let tx=drag.x-drag.grab-slot();
-  const mid=w.offsetLeft+tx+w.offsetWidth/2;
-  const prev=w.previousElementSibling,next=w.nextElementSibling&&w.nextElementSibling.classList.contains("tabi")?w.nextElementSibling:null;
-  // swap with a neighbour once the dragged tab's middle passes the neighbour's middle
-  const swap=prev&&mid<prev.offsetLeft+prev.offsetWidth/2?prev:next&&mid>next.offsetLeft+next.offsetWidth/2?next:null;
-  if(swap){
-    const was=swap.getBoundingClientRect().left; // where it is on screen now (including any glide in progress)
-    if(swap===prev)row.insertBefore(w,prev);else row.insertBefore(next,w);
-    glide(swap,was-(rr.left+swap.offsetLeft-row.scrollLeft));
-    tx=drag.x-drag.grab-slot();
-  }
-  w.style.transition="none";w.style.transform=`translateX(${tx}px)`;
-  if(sp)dragRaf=requestAnimationFrame(dragFrame); // keep scrolling while held at an edge
-}
-function endDrag(e){
-  if(!drag||e.pointerId!==drag.pid)return;
-  clearTimeout(drag.timer);const d=drag;drag=null;
-  if(!d.on)return;
-  cancelAnimationFrame(dragRaf);dragRaf=0;
-  noClick=true;setTimeout(()=>noClick=false,0);
-  document.body.classList.remove("dragtabs");
-  // glide the tab into its new place, then save the order
-  const w=d.w;w.style.transition="transform .2s cubic-bezier(.2,.8,.2,1)";w.style.transform="";
-  setTimeout(()=>{w.style.transition="";w.classList.remove("dragging")},210);
-  const order=[...$("tabs").querySelectorAll(".tabi")].map(x=>x.dataset.t);
-  if(order.join()===TABS.map(t=>t.id).join())return;
-  // Colors that come from the tab's position are fixed first, so tabs keep their colors when they move.
-  const list=order.map(id=>{const i=TABS.findIndex(t=>t.id===id),t=TABS[i];return{id,name:t.name,color:tabColor(t,i),hc:t.hc,private:t.private}});
-  setTimeout(()=>saveTabsList(list,setStatus,()=>setStatus("Tab order saved.")),220);
-}
-document.addEventListener("pointerup",endDrag);document.addEventListener("pointercancel",endDrag);
-
 // Keeps the boxes of tabs that still exist (and any open editors), adds new tabs, drops removed ones.
 function mergeTabs(d){
   const old=new Map(TABS.map(t=>[t.id,t]));
   TABS=d.tabs.map(src=>{
     const t=old.get(src.id);if(!t)return mkTab(src);
-    t.name=src.name;t.color=okColor(src.color);t.hc=okColor(src.hc);t.layout=okLay(src.layout);setHead(t);
+    t.name=src.name;t.color=okColor(src.color);t.hc=okColor(src.hc);t.layout=okLay(src.layout);t.icon=okIcon(src.icon);setHead(t);
     t.enc=!!src.enc||(src.boxes||[]).some(b=>b&&(isEnc(b.title)||isEnc(b.notes)));t.private=!!src.private||t.enc;
     // boxes are matched by id, so adding, removing and reordering on another device lands on the right box
     const had=new Map(t.boxes.map(b=>[b.id,b]));
@@ -807,7 +739,7 @@ async function saveTabsList(list,say,done){
   const before=new Set(TABS.map(t=>t.id));
   const showNew=()=>{const t=TABS.find(x=>!before.has(x.id));if(t)showTab(t.id)};
   if(!server){
-    mergeTabs({rev:REV+1,tabs:list.map(x=>{const t=plainTabs().find(y=>y.id===x.id);return t?{...t,name:x.name,color:x.color,hc:x.hc,private:x.private}:{id:rid(),name:x.name,color:x.color,hc:x.hc,private:x.private,boxes:x.restore?x.restore.boxes:undefined}})});
+    mergeTabs({rev:REV+1,tabs:list.map(x=>{const t=plainTabs().find(y=>y.id===x.id);return t?{...t,name:x.name,color:x.color,hc:x.hc,layout:x.layout||t.layout,icon:x.icon!=null?x.icon:t.icon,private:x.private}:{id:rid(),name:x.name,color:x.color,hc:x.hc,layout:x.layout,icon:x.icon,private:x.private,boxes:x.restore?x.restore.boxes:undefined}})});
     showNew();if(done)done();return;
   }
   try{
@@ -896,104 +828,66 @@ function undoBox(tabId,gone,at){
 }
 $("bxform").addEventListener("submit",e=>{e.preventDefault();saveBoxList(BX.t,bxList(false),x=>$("bxmsg").textContent=x,()=>bxdlg.close())});
 
-/* Edit tab dialog: name, color, private, position, delete. Also used for new tabs (id null). */
-const etdlg=$("etdlg");
-/** @type {any} */
-let ET=null;
+/* Edit Tab / New Tab: the window itself is shared with Links (tabs.js); what saving does is Info's own. */
 const hasText=id=>{const t=TABS.find(x=>x.id===id);return!!t&&t.boxes.some(b=>b.notes.trim())};
 function nextTabName(){let n=TABS.length+1;const names=new Set(TABS.map(t=>t.name.trim().toLowerCase()));while(names.has("tab "+n))n++;return"Tab "+n}
-function etPos(){
-  const n=TABS.length+(ET.id?0:1);
-  $("etpos").textContent=`Position ${ET.pos+1} of ${n}`;$("etleft").disabled=ET.pos<=0;$("etright").disabled=ET.pos>=n-1;
-}
+// A tab as the server takes it. The colors that come from a tab's position are fixed first, so tabs keep their colors when positions change.
+const tabItem=(t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,icon:t.icon,private:t.private,enc:t.enc});
 function openTabEditor(id){
   const i=id?TABS.findIndex(t=>t.id===id):-1,t=i>=0?TABS[i]:null;
   if(!t&&TABS.length>=MAXTAB)return;
-  ET={id:t?t.id:null,pos:t?i:TABS.length,armed:false};
-  ET.color=t?t.color:freeColor(TABS.map((x,j)=>tabColor(x,j)));ET.hc=t?t.hc||"":"";ET.layout=t?t.layout:"cards";layUI();
-  $("ett").textContent=t?"Edit Tab":"New Tab";$("etsave").textContent=t?"Save Tab":"Add Tab";
-  $("etname").value=t?t.name:nextTabName();
-  $("etcolor").value=ET.color||tabColor({color:""},ET.pos);
-  $("ethc").value=ET.hc||"#ffffff";$("ethcdef").textContent=ET.hc?"Use default":"Default";
-  const noPw=server&&!locked;
-  $("etpriv").checked=!!(t&&t.private);$("etpriv").disabled=noPw;
-  $("etenc").checked=!!(t&&t.enc);ET.wasEnc=!!(t&&t.enc);etEncUI();
-  $("etprivnote").textContent=noPw?"Create a password first (in Settings) so private tabs can be hidden from visitors."
-    :"Only visible when you're logged in. Visitors never receive this tab.";
-  $("etdel").hidden=!t||TABS.length<2;$("etdel").textContent="Delete Tab";
-  $("etmsg").textContent="";etPos();hxSync();etdlg.showModal();$("etname").focus();$("etname").select();
-}
-// Layout of this tab: the three designs, chosen with buttons that show a little picture of each.
-function layUI(){document.querySelectorAll("#etlays .lay").forEach((/** @type {HTMLElement} */ b)=>{const on=b.dataset.lay===ET.layout;b.setAttribute("aria-checked",String(on));b.classList.toggle("on",on)})}
-$("etlays").addEventListener("click",e=>{const b=/** @type {any} */ (e.target).closest(".lay");if(!b)return;ET.layout=okLay(b.dataset.lay);layUI()});
-$("etlays").addEventListener("keydown",e=>{
-  if(!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key))return;e.preventDefault();
-  const i=LAYS.indexOf(ET.layout),n=(i+(e.key==="ArrowLeft"||e.key==="ArrowUp"?-1:1)+LAYS.length)%LAYS.length;
-  ET.layout=LAYS[n];layUI();/** @type {HTMLElement} */ (document.querySelector(`#etlays .lay[data-lay="${ET.layout}"]`)).focus();
-});
-$("etcolor").addEventListener("input",e=>{ET.color=e.target.value.toLowerCase();hxSync()});
-$("ethc").addEventListener("input",e=>{ET.hc=e.target.value.toLowerCase();$("ethcdef").textContent="Use default";hxSync()});
-// Colors can also be typed: #1a1a1a, 1a1a1a or #fff. An empty box means the default.
-const hexOf=v=>{v=String(v||"").trim().replace(/^#/,"");if(/^[0-9a-f]{3}$/i.test(v))v=v.replace(/./g,"$&$&");return/^[0-9a-f]{6}$/i.test(v)?"#"+v.toLowerCase():""};
-function hxSync(){$("etcolortx").value=ET.color||"";$("ethctx").value=ET.hc||"";$("etcolortx").classList.remove("bad");$("ethctx").classList.remove("bad")}
-$("etcolortx").addEventListener("input",e=>{const h=hexOf(e.target.value);e.target.classList.toggle("bad",!h&&!!e.target.value.trim());if(h){ET.color=h;$("etcolor").value=h}else if(!e.target.value.trim())ET.color=""});
-$("ethctx").addEventListener("input",e=>{const h=hexOf(e.target.value);e.target.classList.toggle("bad",!h&&!!e.target.value.trim());if(h){ET.hc=h;$("ethc").value=h;$("ethcdef").textContent="Use default"}else if(!e.target.value.trim()){ET.hc="";$("ethcdef").textContent="Default"}});
-$("ethcdef").onclick=()=>{ET.hc="";$("ethc").value="#ffffff";$("ethcdef").textContent="Default";hxSync()};
-// Encrypt needs a password, a secure (https) page and the server; an encrypted tab is always private.
-function etEncUI(){
-  const why=!CAN_ENC?"Encryption needs the page to be opened over a secure (https) connection."
+  const pos=t?i:TABS.length,noPw=server&&!locked;
+  let armed=false;
+  // Encrypt needs a password, a secure (https) page and the server; an encrypted tab is always private.
+  const encWhy=!CAN_ENC?"Encryption needs the page to be opened over a secure (https) connection."
     :!server?"Encryption needs the server, which can't be reached right now."
     :!locked?"Create a password first (in Settings), then you can encrypt tabs."
-    :!PAGE.vault&&!(ET.id&&TABS.some(x=>x.id===ET.id&&x.enc))?"Set an encryption passphrase first: Settings › Security › Encryption.":"";
-  $("etenc").disabled=!!why;
-  if($("etenc").checked){$("etpriv").checked=true;$("etpriv").disabled=true}else $("etpriv").disabled=server&&!locked;
-  $("etencnote").textContent=why||($("etenc").checked
-    ?"The box titles and text are encrypted in your browser with your encryption passphrase, so the server, earlier versions and backups only hold scrambled data. The tab name isn't encrypted."
-    :"For extra protection, encrypt the box titles and text with your encryption passphrase.");
+    :!PAGE.vault&&!(t&&t.enc)?"Set an encryption passphrase first: Settings › Security › Encryption.":"";
+  // The list to save: the other tabs as they are, and this one in its place (left out when it is deleted).
+  const etList=(remove,v)=>{
+    const list=TABS.map(tabItem).filter(x=>x.id!==id);
+    if(!remove)list.splice(pos,0,{id:id||null,name:v.name,color:v.color,hc:v.hc,layout:v.layout,icon:v.icon,private:v.priv||v.enc,enc:v.enc});
+    return list;
+  };
+  HubTabs.edit({
+    isNew:!t,title:t?"Edit Tab":"New Tab",saveLabel:t?"Save Tab":"Add Tab",name:t?t.name:nextTabName(),defaultName:nextTabName(),
+    color:t?t.color:freeColor(TABS.map((x,j)=>tabColor(x,j))),colorShown:tabColor({color:""},pos),colorLabel:"Tab Color",
+    hc:t?t.hc||"":"",layouts:LAYS,layout:t?t.layout:"cards",icon:t&&t.icon,iconDefault:"doc",
+    priv:!!(t&&t.private),enc:!!(t&&t.enc),
+    privWhy:noPw?"Create a password first (in Settings) so private tabs can be hidden from visitors.":"",encWhy,
+    encOnNote:"The box titles and text are encrypted in your browser with your encryption passphrase, so the server, earlier versions and backups only hold scrambled data. The tab name isn't encrypted.",
+    encOffNote:"For extra protection, encrypt the box titles and text with your encryption passphrase.",
+    canDelete:!!t&&TABS.length>1,
+    async onSave(v,ctl){
+      const say=ctl.say,want=v.enc,was=!!(t&&t.enc);
+      if(want&&!KEY&&!(await ensureKey(say)))return;   // encrypting needs the key: set or unlock the passphrase first
+      if(!want&&was&&!KEY&&!(await ensureKey(say)))return;
+      if(t&&want!==was){
+        if(t.boxes.some(b=>b.editing||busy.has(b.key))){say("Save or cancel the open box in this tab first.");return}
+        ctl.busy(true,want?"Encrypting…":"Decrypting…");
+        const ok=await convertTab(t,want,say);ctl.busy(false);if(!ok)return;
+      }
+      saveTabsList(etList(false,v),say,async()=>{
+        ctl.close();renderGates();
+        if(want&&!was&&t){ // remove earlier versions that still hold this tab's unencrypted text
+          try{await api({action:"clear_versions"})}catch(err){}
+          setStatus("Tab encrypted. Earlier versions were deleted so no unencrypted copy stays on the server.");
+        }else if(!want&&was)setStatus("Tab decrypted. It's still a private tab.");
+      });
+    },
+    onDelete(ctl){
+      if(hasText(id)&&!armed){armed=true;ctl.deleteLabel("Delete Tab and Its Text?");return} // tabs with text need a second click
+      const at=TABS.indexOf(t),gone={...tabItem(t,at),boxes:t.boxes.map(b=>rawBox(b,t.enc))};
+      saveTabsList(etList(true,null),ctl.say,()=>{ctl.close();if(window.HUB&&HUB.undo)HUB.undo("Tab deleted.",()=>undoTab(gone,at))});
+    }
+  });
 }
-$("etenc").addEventListener("change",etEncUI);
-// With a passphrase set, a new private tab is encrypted from the start (untick Encrypt to keep it private only)
-$("etpriv").addEventListener("change",()=>{if(!$("etpriv").checked)$("etenc").checked=false;else if(!ET.id&&!$("etenc").disabled)$("etenc").checked=true;etEncUI()});
-$("etdef").onclick=()=>{ET.color="";$("etcolor").value=tabColor({color:""},ET.pos);hxSync()};
-$("etleft").onclick=()=>{ET.pos--;etPos();if(!ET.color)$("etcolor").value=tabColor({color:""},ET.pos)};
-$("etright").onclick=()=>{ET.pos++;etPos();if(!ET.color)$("etcolor").value=tabColor({color:""},ET.pos)};
-$("etcancel").onclick=()=>etdlg.close();
-function etList(remove){
-  // Fix the position-based colors of the other tabs, so they keep their colors when positions change.
-  const list=TABS.map((t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,private:t.private,enc:t.enc})).filter(x=>x.id!==ET.id);
-  if(!remove)list.splice(ET.pos,0,{id:ET.id,name:$("etname").value.trim().slice(0,40)||nextTabName(),color:ET.color,hc:ET.hc,layout:ET.layout,
-    private:$("etpriv").checked||$("etenc").checked,enc:$("etenc").checked});
-  return list;
-}
-$("etdel").onclick=()=>{
-  if(hasText(ET.id)&&!ET.armed){ET.armed=true;$("etdel").textContent="Delete Tab and Its Text?";return} // tabs with text need a second click
-  const t=TABS.find(x=>x.id===ET.id),at=TABS.indexOf(t),gone=t&&{id:t.id,name:t.name,color:tabColor(t,at),hc:t.hc,layout:t.layout,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>rawBox(b,t.enc))};
-  saveTabsList(etList(true),x=>$("etmsg").textContent=x,()=>{etdlg.close();if(gone&&window.HUB&&HUB.undo)HUB.undo("Tab deleted.",()=>undoTab(gone,at))});
-};
 function undoTab(gone,at){
   if(TABS.length>=MAXTAB){setStatus("There are too many tabs, so the tab can't come back.");return}
-  const {boxes,...head}=gone,list=TABS.map((t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,private:t.private,enc:t.enc}));
+  const {boxes,...head}=gone,list=TABS.map(tabItem);
   list.splice(Math.min(at,list.length),0,{...head,restore:{boxes}});
   guard(()=>saveTabsList(list,setStatus,()=>setStatus("Tab is back.")));
 }
-$("etform").addEventListener("submit",async e=>{
-  e.preventDefault();
-  const say=x=>$("etmsg").textContent=x,want=$("etenc").checked,t=ET.id?TABS.find(x=>x.id===ET.id):null,was=!!(t&&t.enc);
-  if(want&&!KEY&&!(await ensureKey(say)))return;   // encrypting needs the key: set or unlock the passphrase first
-  if(!want&&was&&!KEY&&!(await ensureKey(say)))return;
-  if(t&&want!==was){
-    if(t.boxes.some(b=>b.editing||busy.has(b.key))){say("Save or cancel the open box in this tab first.");return}
-    $("etsave").disabled=true;say(want?"Encrypting…":"Decrypting…");
-    const ok=await convertTab(t,want,say);$("etsave").disabled=false;if(!ok)return;
-  }
-  saveTabsList(etList(false),say,async()=>{
-    etdlg.close();renderGates();
-    if(want&&!was&&t){ // remove earlier versions that still hold this tab's unencrypted text
-      try{await api({action:"clear_versions"})}catch(err){}
-      setStatus("Tab encrypted. Earlier versions were deleted so no unencrypted copy stays on the server.");
-    }else if(!want&&was)setStatus("Tab decrypted. It's still a private tab.");
-  });
-});
 // Rewrites a tab's two boxes encrypted (or back to plain text) on the server.
 async function convertTab(t,encrypt,say){
   if(t.enc)await queueDecrypt();
@@ -1021,7 +915,7 @@ $("sencall").onclick=async()=>{
   $("sencall").disabled=true;
   for(const t of todo){say("Encrypting "+t.name+"…");if(!(await convertTab(t,true,say))){$("sencall").disabled=false;return}}
   const ids=new Set(todo.map(t=>t.id));
-  const list=TABS.map((t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,private:t.private||ids.has(t.id),enc:t.enc||ids.has(t.id)}));
+  const list=TABS.map((t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,icon:t.icon,private:t.private||ids.has(t.id),enc:t.enc||ids.has(t.id)}));
   saveTabsList(list,say,async()=>{
     try{await api({action:"clear_versions"})}catch(err){}
     $("sencall").disabled=false;encRowUI();renderGates();

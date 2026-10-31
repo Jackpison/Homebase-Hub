@@ -181,11 +181,16 @@ dialog p{color:var(--mute);margin:0 0 6px}
 #tdlg .f input:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 55%,var(--panel))}
 /* Banks (1.53.8): a name and a link per bank, like Holders */
 #bdlg{width:min(600px,calc(100% - 28px))}
-.blist{display:flex;flex-direction:column;gap:8px;margin:14px 0 0;max-height:52vh;overflow:auto;padding:2px}
-.brow{display:grid;grid-template-columns:1fr 1.4fr auto;gap:10px;align-items:center}
-.brow input{min-width:0;background:var(--bg);color:var(--fg);border:1px solid var(--border2);border-radius:10px;padding:10px;font:inherit;font-size:15px}
+.blist{display:block}
+.brow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0}
+.brow+.brow{border-top:1px solid color-mix(in srgb,currentColor 10%,transparent)}
+.bi{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:16px;text-transform:uppercase;background:hsl(var(--h) 70% 55% / .2);color:hsl(var(--h) 80% 70%)}
+.bf{display:grid;grid-template-columns:1fr 1.3fr;gap:8px;min-width:0}
+.brow input{min-width:0;width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--border2);border-radius:10px;padding:9px 10px;font:inherit;font-size:15px}
+.brow input[data-bf=url]{font-size:13.5px;color:var(--mute)}
 #bmsg{min-height:1em;margin-top:10px;color:var(--c-exp)}
-@media (max-width:520px){.brow{grid-template-columns:1fr auto}.brow input[data-bf=url]{grid-column:1/-1;grid-row:2}}
+@media (max-width:560px){.bf{grid-template-columns:1fr}}
+@media (max-width:520px){.brow{grid-template-columns:auto 1fr}.brow .hn{grid-column:2}}
 /* Holders and Banks: a clean border on the field you are typing in (the list's edge cut the outline off) */
 .hlist{padding:2px}
 .hrow input:focus-visible,.hadd input:focus-visible,.brow input:focus-visible,.hrow input:focus,.hadd input:focus,.brow input:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 60%,var(--panel));box-shadow:0 0 0 3px color-mix(in srgb,var(--fg) 12%,transparent)}

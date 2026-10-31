@@ -156,7 +156,7 @@ try:
 
         # ---- 1.61.9: every page window in the shared frame, one button shape, Undo ----
         frames = {}
-        for page, ids in (('links', ['linkDlg', 'nameDlg', 'colorDlg', 'textDlg', 'iconDlg', 'tabDlg', 'keyDlg', 'verDlg']), ('info', ['bkdlg', 'uldlg', 'kdlg', 'etdlg', 'bxdlg', 'idlg']),
+        for page, ids in (('links', ['linkDlg', 'nameDlg', 'colorDlg', 'textDlg', 'iconDlg', 'keyDlg', 'verDlg']), ('info', ['bkdlg', 'uldlg', 'kdlg', 'bxdlg', 'idlg']),
                           ('cards', ['dlg', 'hdlg', 'idlg', 'odlg', 'bdlg']), ('tasks', ['dlg', 'ydlg'])):
             pg.goto(s.base + '/web/%s/' % page); wait_js(pg, "!!(window.HUB && HUB.isAdmin())", 20000); pg.wait_for_timeout(300)
             frames[page] = pg.evaluate("""ids => ids.filter(id => { const d = document.getElementById(id); if (!d) return true;
@@ -168,9 +168,9 @@ try:
             return [document.activeElement && document.activeElement.tagName !== 'BUTTON', b.map(x => x.textContent.trim()), getComputedStyle(b[0]).borderRadius]; })()""")
         check('L29 Add Link opens with a field ready to type in (not the X); Cancel then Save Link; round 12 px buttons', lk[0] and lk[1][-1] == 'Save Link' and lk[1][0] == 'Cancel' and lk[2] == '12px', lk)
         pg.keyboard.press('Escape')
-        pg.evaluate("document.getElementById('tabDlg').showModal()")
-        sw_h = pg.evaluate("Math.round(document.querySelector('#tabDlg .swatch').getBoundingClientRect().height)")
-        check('L30 Edit Tab: the colour and its code stay on one line', sw_h < 60, sw_h)
+        pg.evaluate("document.querySelector('#tabs .pen').click()"); pg.wait_for_selector('#hubTabDlg[open]')
+        sw_h = pg.evaluate("Math.round(document.querySelector('#hubTabDlg .hubt-ctl').getBoundingClientRect().height)")
+        check('L30 Edit Tab: the colour, its code and Use Default stay on one line', sw_h < 60, sw_h)
         pg.keyboard.press('Escape')
         shapes = {}
         for page in ('links', 'cards', 'tasks', 'files'):
@@ -219,8 +219,8 @@ try:
         show = lambda: (pg.evaluate("(n => [...document.querySelectorAll('.tabi')].find(x => x.textContent.includes(n)).querySelector('.tab').click())", vt), pg.wait_for_timeout(600), pg.evaluate("document.querySelector('.boxes').innerText"))[-1]
         ttext0 = show()
         pg.evaluate("(n => [...document.querySelectorAll('.tabi')].find(x => x.textContent.includes(n)).querySelector('.pen').click())", vt)
-        pg.wait_for_selector('#etdlg[open]'); pg.click('#etdel')
-        if pg.evaluate("document.getElementById('etdel').textContent.includes('Its Text')"): pg.click('#etdel')
+        pg.wait_for_selector('#hubTabDlg[open]'); pg.click('#htDel')
+        if pg.evaluate("document.getElementById('htDel').textContent.includes('Its Text')"): pg.click('#htDel')
         until(lambda: vt not in tabs(), 5000)
         got = until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on .ix-tact')"), 5000)
         pg.wait_for_timeout(800); pg.click('#ix-toast .ix-tact'); until(lambda: tabs() == t0, 5000); pg.wait_for_timeout(1500)

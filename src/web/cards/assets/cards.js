@@ -491,15 +491,16 @@ function exportPdf(){
 /* Banks (1.53.8: one window, like Holders). Banks come from the cards; changes are made on a copy and kept only with Save. */
 const bdlg=$("bdlg");let BD=[];   // [{was, name, url}]
 function drawBanks(){
-  $("blist").innerHTML=BD.map((b,i)=>{const n=D.filter(c=>c.bank===b.was).length;
-    return `<div class="brow"><input data-bi="${i}" data-bf="name" value="${esc(b.name)}" maxlength="60" aria-label="Bank name">`+
-      `<input data-bi="${i}" data-bf="url" value="${esc(b.url)}" inputmode="url" placeholder="${esc(BANK_URL[nk(b.was)]||"https://…")}" aria-label="Website link for ${esc(b.name)}">`+
+  $("blist").innerHTML=BD.map((b,i)=>{const n=D.filter(c=>c.bank===b.was).length,hue=[...b.was].reduce((s,ch)=>(s*31+ch.charCodeAt(0))%360,7);
+    return `<div class="brow"><span class="bi" aria-hidden="true" style="--h:${hue}">${esc([...b.name.trim()][0]||"?")}</span>`+
+      `<div class="bf"><input data-bi="${i}" data-bf="name" value="${esc(b.name)}" maxlength="60" aria-label="Bank name">`+
+      `<input data-bi="${i}" data-bf="url" value="${esc(b.url)}" inputmode="url" placeholder="${esc(BANK_URL[nk(b.was)]||"https://…")}" aria-label="Website link for ${esc(b.name)}"></div>`+
       `<span class="hn">${n===1?"1 card":n+" cards"}</span></div>`}).join("");
 }
 function openBank(){
   const banks=[...new Set(D.map(c=>c.bank).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   if(!banks.length){(window.HUB?HUB.toast:setStatus)("Banks come from your cards. Add a card first.");return}
-  BD=banks.map(b=>({was:b,name:b,url:B[nk(b)]||""}));drawBanks();$("bmsg").textContent="";bdlg.showModal();
+  BD=banks.map(b=>({was:b,name:b,url:B[nk(b)]||""}));drawBanks();$("bmsg").textContent="";bdlg.showModal();$("blist").querySelector("input").focus();
 }
 $("blist").addEventListener("input",e=>{const x=e.target.closest("[data-bi]");if(x){BD[+x.dataset.bi][x.dataset.bf]=x.value;$("bmsg").textContent=""}});
 $("bcancel").onclick=()=>bdlg.close();

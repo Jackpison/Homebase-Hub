@@ -58,7 +58,11 @@ export function blocks(src) {
       while (i < L.length) {
         const x = LI.exec(L[i]);
         if (x && x[1].length <= base + 1) { if (/\d/.test(x[2]) !== ordered) break; items.push([x[3]]); i++; continue; }
-        if (!L[i].trim()) { if (i + 1 < L.length && (LI.test(L[i + 1]) || /^\s{2,}\S/.test(L[i + 1]))) { items[items.length - 1].push(''); i++; continue; } break; }
+        if (!L[i].trim()) {   // a blank line goes on with the list only when what follows belongs to it: another item of this list, a deeper one, or an indented line
+          const nx = L[i + 1] === undefined ? null : LI.exec(L[i + 1]);
+          if (i + 1 < L.length && ((nx && (nx[1].length > base + 1 || (nx[1].length <= base + 1 && /\d/.test(nx[2]) === ordered))) || (!nx && /^\s{2,}\S/.test(L[i + 1])))) { items[items.length - 1].push(''); i++; continue; }
+          break;
+        }
         if (/^\s/.test(L[i]) || !starts(L[i], L[i + 1])) { items[items.length - 1].push(L[i].replace(new RegExp('^\\s{0,' + (base + 4) + '}'), '')); i++; continue; }
         break;
       }
@@ -68,7 +72,9 @@ export function blocks(src) {
         if (t) { first = t[2]; box = h('input', { type: 'checkbox', disabled: true, checked: t[1] !== ' ', 'aria-label': t[1] !== ' ' ? 'Done' : 'Not done' }); }
         const rest = it.slice(1), simple = rest.every((x) => !x.trim() || !starts(x.trim(), undefined)) && !rest.some((x) => !x.trim());
         const li = h('li', { class: box ? 'task' : null }, box, box ? ' ' : null);
-        if (simple) li.append(...inline([first, ...rest].join('\n'))); else li.append(...blocks([first, ...rest].join('\n')));
+        // a tight item with a list under it keeps its first line as plain text (not a paragraph), so the gaps stay small
+        const nested = rest.length && !rest.some((x) => !x.trim()) && LI.test(rest[0]);
+        if (simple) li.append(...inline([first, ...rest].join('\n'))); else if (nested) li.append(...inline(first), ...blocks(rest.join('\n'))); else li.append(...blocks([first, ...rest].join('\n')));
         list.append(li);
       }
       out.push(list); continue;

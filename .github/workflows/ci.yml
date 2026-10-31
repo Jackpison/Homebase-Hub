@@ -241,6 +241,7 @@ jobs:
             "files|tests/browser/files_test.py build/site-update-*.zip --browser chromium" \
             "lock|tests/browser/lock_test.py build/site-update-*.zip --browser chromium" \
             "tabs lock|tests/browser/tabs_lock_test.py build/site-update-*.zip --browser chromium" \
+            "tabs kit|tests/browser/tabs_kit_test.py build/site-update-*.zip --browser chromium" \
             "settings look|tests/browser/settings_look_test.py build/site-update-*.zip --browser chromium" \
             "passkeys|tests/browser/passkey_test.py build/site-update-*.zip" \
             "share|tests/browser/share_test.py build/site-update-*.zip" || rc=1
@@ -256,6 +257,7 @@ jobs:
             "files webkit|tests/browser/files_test.py build/site-update-*.zip --browser webkit" \
             "lock webkit|tests/browser/lock_test.py build/site-update-*.zip --browser webkit" \
             "tabs lock webkit|tests/browser/tabs_lock_test.py build/site-update-*.zip --browser webkit" \
+            "tabs kit webkit|tests/browser/tabs_kit_test.py build/site-update-*.zip --browser webkit" \
             "settings look webkit|tests/browser/settings_look_test.py build/site-update-*.zip --browser webkit"
 
   apache:

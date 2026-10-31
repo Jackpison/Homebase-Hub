@@ -7,8 +7,10 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'">
 <title>Bookmarks</title>
 <link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.62.8">
+<link rel="stylesheet" href="../hub/core/assets/tabs.css?v=1.62.8">
 <script src="assets/links-early.js?v=1.62.8"></script>
 <script src="../hub/core/assets/shell.js?v=1.62.8" data-app="links"></script>
+<script src="../hub/core/assets/tabs.js?v=1.62.8"></script>
 <link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔖%3C/text%3E%3C/svg%3E">
 <script src="assets/links-boot.js?v=1.62.8"></script>
 <link rel="stylesheet" href="assets/links.css?v=1.62.8">
@@ -144,22 +146,6 @@
   <p class="hint" id="iconStat" role="status" aria-live="polite" style="font-size:13.5px;color:var(--muted);margin:10px 0 0;min-height:1.4em"></p>
   <div class="actions"><button class="btn primary" id="iconGo" type="button">Fetch Icons</button><button class="btn" value="cancel" formnovalidate>Close</button></div>
 </form></dialog>
-
-<dialog id="tabDlg" class="ix-sdlg ix-plain"><form method="dialog">
-  <h3 id="tabDlgTitle">Edit Tab</h3>
-  <div class="field"><label for="tName">Name</label><input id="tName" required maxlength="40"></div>
-  <div class="field"><span class="lbl">Ribbon Color</span>
-    <div class="split">
-      <label class="swatch" style="flex:1"><input type="color" id="tColor" aria-label="Ribbon Color"><input type="text" id="tColorText" maxlength="7" placeholder="Default" aria-label="Ribbon Color Hex"></label>
-      <button class="btn" type="button" id="tColorDefault">Use Default</button>
-    </div>
-    <span class="hint">Leave it on default to use the tab ribbon color from Colors.</span></div>
-  <label class="check" style="margin-bottom:14px"><input type="checkbox" id="tPrivate"><span>Private Tab<small>Only visible when you're logged in. Visitors never receive it.</small></span></label>
-  <label class="check" style="margin-bottom:14px"><input type="checkbox" id="tEnc"><span>Encrypted Tab<small id="tEncHint">Locked in this browser. The server holds only scrambled text.</small></span></label>
-  <p class="err" id="tabErr"></p>
-  <div class="actions"><button class="btn primary" id="tabSave">Save Tab</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
-</form></dialog>
-
 
 <dialog id="keyDlg" class="ix-sdlg ix-plain"><form method="dialog">
   <h3 id="keyTitle">Unlock Encrypted Tabs</h3>

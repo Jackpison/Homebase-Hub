@@ -262,3 +262,12 @@ function hub_alert(string $what, string $extra = ''): void {
     }
     $queue[] = $ctx;
 }
+
+/* ======================= tab icons ======================= */
+// The icons a tab of Links or Info can wear (1.63.0). The same ids, in the same order, are in hub/core/assets/tabs.js (a test keeps them equal).
+const HUB_TAB_ICONS = ['bookmark', 'doc', 'star', 'heart', 'folder', 'home', 'globe', 'briefcase', 'tag', 'flag', 'bolt', 'cart', 'book', 'code', 'wallet', 'music'];
+/** The icon id if it is one of those, else '' (the page's own icon). */
+function hub_tab_icon($v): string
+{
+    return is_string($v) && in_array($v, HUB_TAB_ICONS, true) ? $v : '';
+}

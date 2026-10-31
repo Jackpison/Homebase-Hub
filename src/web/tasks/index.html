@@ -119,11 +119,17 @@
   <div class="df" id="vfoot"></div>
 </dialog>
 
-<dialog id="dlg" class="ix-sdlg ix-plain" aria-labelledby="dlgt">
+<dialog id="dlg" class="ix-sdlg" aria-labelledby="dlgt">
   <form method="dialog" id="form" novalidate>
     <div class="dh"><h2 id="dlgt">Add Task</h2><button type="button" class="ib" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="db">
+      <h3 class="sh3 first">Task</h3>
       <label class="fl">Name<input id="e-name" maxlength="120" required placeholder="Netflix, Car Insurance, Domain Renewal…"></label>
+      <div class="c2">
+        <label class="fl">Category<input id="e-cat" maxlength="40" list="cats" placeholder="Subscription"></label>
+        <label class="fl">Website<input type="url" id="e-url" maxlength="500" placeholder="https://"></label>
+      </div>
+      <h3 class="sh3">When</h3>
       <div class="c2">
         <label class="fl">Due Date<input type="date" id="e-due" required></label>
         <label class="fl">Time (Optional)<input type="time" id="e-time"></label>
@@ -134,23 +140,21 @@
           <option value="month:1">Every Month</option><option value="month:2">Every 2 Months</option><option value="month:3">Every 3 Months (Quarterly)</option>
           <option value="month:6">Every 6 Months</option><option value="year:1">Every Year</option><option value="year:2">Every 2 Years</option><option value="year:3">Every 3 Years</option>
           <option value="custom">Custom…</option></select></label>
-        <div class="fl" id="e-custom" hidden>Every<div class="pair"><input type="number" id="e-n" min="1" max="99" value="1" aria-label="How Many">
-          <select id="e-unit" aria-label="Unit"><option value="day">Days</option><option value="week">Weeks</option><option value="month">Months</option><option value="year">Years</option></select></div></div>
-      </div>
-      <p class="hint" id="e-next"></p>
-      <div class="c3">
-        <label class="fl">Price<input type="number" id="e-price" min="0" step="0.01" inputmode="decimal" placeholder="0"></label>
-        <label class="fl">Currency<select id="e-cur"></select></label>
-        <label class="fl">Category<input id="e-cat" maxlength="40" list="cats" placeholder="Subscription"></label>
-      </div>
-      <div class="c2">
-        <div class="fl">Online or Offline<div class="seg" id="e-mode" role="group" aria-label="Online or Offline">
-          <button type="button" data-m="" aria-pressed="true">Not Set</button><button type="button" data-m="online" aria-pressed="false">Online</button><button type="button" data-m="offline" aria-pressed="false">Offline</button></div></div>
         <label class="fl">Remind Me<select id="e-remind">
           <option value="-1">Page Default</option><option value="0">On the Day</option><option value="1">1 Day Before</option><option value="3">3 Days Before</option>
           <option value="7">1 Week Before</option><option value="14">2 Weeks Before</option><option value="30">1 Month Before</option><option value="60">2 Months Before</option></select></label>
       </div>
-      <label class="fl">Website<input type="url" id="e-url" maxlength="500" placeholder="https://"></label>
+      <div class="fl" id="e-custom" hidden>Every<div class="pair"><input type="number" id="e-n" min="1" max="99" value="1" aria-label="How Many">
+        <select id="e-unit" aria-label="Unit"><option value="day">Days</option><option value="week">Weeks</option><option value="month">Months</option><option value="year">Years</option></select></div></div>
+      <p class="hint" id="e-next"></p>
+      <h3 class="sh3">Payment</h3>
+      <div class="c2">
+        <label class="fl">Price<input type="number" id="e-price" min="0" step="0.01" inputmode="decimal" placeholder="0"></label>
+        <label class="fl">Currency<select id="e-cur"></select></label>
+      </div>
+      <div class="fl">Online or Offline<div class="seg" id="e-mode" role="group" aria-label="Online or Offline">
+        <button type="button" data-m="" aria-pressed="true">Not Set</button><button type="button" data-m="online" aria-pressed="false">Online</button><button type="button" data-m="offline" aria-pressed="false">Offline</button></div></div>
+      <h3 class="sh3">Notes</h3>
       <label class="fl">Notes<textarea id="e-notes" maxlength="4000" placeholder="Account number, plan, who to call…"></textarea></label>
       <p class="err" id="e-err"></p>
     </div>

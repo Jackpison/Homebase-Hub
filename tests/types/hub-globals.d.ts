@@ -2,3 +2,4 @@
 interface Window { HUB: any; HubVault: any; HubSite: any; __files?: any; LinksImport?: any; }
 declare const HUB: any;
 declare const HubSite: any;
+declare const HubTabs: any;

@@ -522,6 +522,7 @@ case 'save':
     if (!isset($data['settings']) || !is_array($data['settings'])) $data['settings'] = [];
     unset($data['settings']['vault']); if ($curV) $data['settings']['vault'] = $curV;
     hub_links_enc_clean($data);
+    foreach ($data['tabs'] as &$nt) { $ic = hub_tab_icon($nt['icon'] ?? ''); if ($ic === '') unset($nt['icon']); else $nt['icon'] = $ic; } unset($nt);   // a tab's icon is one of the known ones or none
     $oldById = []; foreach ($cur['tabs'] ?? [] as $ot) if (is_array($ot)) $oldById[(string)($ot['id'] ?? '')] = $ot;
     $newlyEnc = [];   // tabs that were readable until now and are encrypted in this save
     foreach ($data['tabs'] as $nt) if (!empty($nt['enc']) && isset($oldById[(string)($nt['id'] ?? '')]) && empty($oldById[(string)$nt['id']]['enc'])) $newlyEnc[] = $oldById[(string)$nt['id']];

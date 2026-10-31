@@ -58,6 +58,8 @@ function icon_ok($v) {
 // Tab colors are #rrggbb; an empty color means the page picks one automatically.
 function color_ok($c) { return is_string($c) && preg_match('/^#[0-9a-fA-F]{6}$/', $c); }
 function tab_color($e) { return is_array($e) && isset($e['color']) && color_ok($e['color']) ? strtolower($e['color']) : ''; }
+// The icon of a tab (one of the ids in hub_tab_icon()); not sent = keep the one it has, '' = the page's own icon.
+function tab_icon($e, $keep = '') { return is_array($e) && array_key_exists('icon', $e) ? hub_tab_icon($e['icon']) : $keep; }
 // Optional color for the box headlines of a tab; empty = the normal text color.
 function tab_hc($e, $keep = '') { return is_array($e) && array_key_exists('hc', $e) ? (color_ok($e['hc']) ? strtolower($e['hc']) : '') : $keep; }
 
@@ -199,7 +201,7 @@ function norm_data($j) {
         // A tab holding encrypted text is always an encrypted (and private) tab, whatever its flag says,
         // so encrypted text is never shown raw and never sent to visitors.
         $enc = !empty($t['enc']) || has_enc($boxes);
-        $tabs[] = ['id' => $id, 'name' => $nm !== '' ? $nm : 'Tab ' . (count($tabs) + 1), 'color' => tab_color($t), 'hc' => tab_hc($t), 'layout' => tab_layout($t), 'private' => !empty($t['private']) || $enc, 'enc' => $enc,
+        $tabs[] = ['id' => $id, 'name' => $nm !== '' ? $nm : 'Tab ' . (count($tabs) + 1), 'color' => tab_color($t), 'hc' => tab_hc($t), 'layout' => tab_layout($t), 'icon' => tab_icon($t), 'private' => !empty($t['private']) || $enc, 'enc' => $enc,
                    'boxes' => $boxes];
     }
     if (!$tabs) $tabs[] = ['id' => rid(), 'name' => 'Information & Notes', 'color' => '', 'layout' => 'cards', 'boxes' => default_boxes('Information', 'Notes')];
@@ -400,17 +402,17 @@ if ($action === 'save_tabs') {
             $nm = is_array($e) && isset($e['name']) && is_string($e['name']) ? cut($e['name'], 40) : '';
             if ($nm === '') $nm = 'Tab ' . ($i + 1);
             if ($id !== '' && isset($old[$id]) && !isset($used[$id])) {
-                $t = $old[$id]; $t['name'] = $nm; $t['color'] = tab_color($e); $t['hc'] = tab_hc($e, $t['hc'] ?? ''); $t['layout'] = tab_layout($e, $t['layout'] ?? 'cards'); $t['enc'] = array_key_exists('enc', $e) ? !empty($e['enc']) || has_enc($t['boxes']) : $t['enc']; // pages from before encryption don't send it
+                $t = $old[$id]; $t['name'] = $nm; $t['color'] = tab_color($e); $t['hc'] = tab_hc($e, $t['hc'] ?? ''); $t['layout'] = tab_layout($e, $t['layout'] ?? 'cards'); $t['icon'] = tab_icon($e, $t['icon'] ?? ''); $t['enc'] = array_key_exists('enc', $e) ? !empty($e['enc']) || has_enc($t['boxes']) : $t['enc']; // pages from before encryption don't send it
                 $t['private'] = !empty($e['private']) || $t['enc']; $used[$id] = true;
             } elseif (is_array($e) && isset($e['restore']) && is_array($e['restore'])) {   // Undo: a deleted tab comes back with all its boxes
                 $enc = !empty($e['enc']);
                 $bx = $enc && empty($all['page']['vault']) ? null : restore_boxes($e['restore']['boxes'] ?? null, $enc);   // a locked tab needs the key that locked it
                 if ($bx === null) return [422, ['ok' => false, 'error' => 'restore'], false];
                 $tid = preg_match('/^[a-f0-9]{8}$/', $id) === 1 && !isset($old[$id]) && !isset($used[$id]) ? $id : rid();
-                $t = ['id' => $tid, 'name' => $nm, 'color' => tab_color($e), 'hc' => tab_hc($e), 'layout' => tab_layout($e), 'private' => !empty($e['private']) || $enc, 'enc' => $enc, 'boxes' => $bx];
+                $t = ['id' => $tid, 'name' => $nm, 'color' => tab_color($e), 'hc' => tab_hc($e), 'layout' => tab_layout($e), 'icon' => tab_icon($e), 'private' => !empty($e['private']) || $enc, 'enc' => $enc, 'boxes' => $bx];
                 $used[$tid] = true;
             } else {
-                $t = ['id' => rid(), 'name' => $nm, 'color' => tab_color($e), 'hc' => tab_hc($e), 'layout' => tab_layout($e), 'private' => !empty($e['private']) || !empty($e['enc']), 'enc' => !empty($e['enc']), 'boxes' => default_boxes()];
+                $t = ['id' => rid(), 'name' => $nm, 'color' => tab_color($e), 'hc' => tab_hc($e), 'layout' => tab_layout($e), 'icon' => tab_icon($e), 'private' => !empty($e['private']) || !empty($e['enc']), 'enc' => !empty($e['enc']), 'boxes' => default_boxes()];
             }
             $tabs[] = $t;
         }

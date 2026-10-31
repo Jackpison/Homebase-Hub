@@ -57,9 +57,9 @@ try:
         pg.keyboard.press('Escape')
         # a new private tab starts encrypted
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_selector('body.editing', timeout=10000)
-        pg.evaluate("document.querySelector('.tab.add').click()"); pg.wait_for_selector('#tabDlg[open]')
-        pg.check('#tPrivate')
-        check('T8 ticking Private on a new Links tab ticks Encrypted Tab too (it can be unticked)', pg.is_checked('#tEnc'))
+        pg.evaluate("document.querySelector('.tab.add').click()"); pg.wait_for_selector('#hubTabDlg[open]')
+        pg.check('#htPriv')
+        check('T8 ticking Private on a new Links tab ticks Encrypted Tab too (it can be unticked)', pg.is_checked('#htEnc'))
         pg.keyboard.press('Escape')
 
         # ---- Info ----
@@ -93,9 +93,9 @@ try:
               got and gone and ta == tb and 'Weekend in the Mountains' not in raw_after and 'guest house' not in raw_after and 'guest house' in shown, (got, len(ta), len(tb), ta == tb))
         # a new private Info tab is encrypted from the start
         pg.evaluate("document.querySelector('[data-hub=toggle]') && document.querySelector('[data-hub=toggle]').click()")
-        pg.evaluate("document.querySelector('[data-add]').click()"); pg.wait_for_selector('#etdlg[open]')
-        pg.check('#etpriv')
-        check('T12 ticking Private on a new Info tab ticks Encrypt too', pg.is_checked('#etenc'))
+        pg.evaluate("document.querySelector('[data-add]').click()"); pg.wait_for_selector('#hubTabDlg[open]')
+        pg.check('#htPriv')
+        check('T12 ticking Private on a new Info tab ticks Encrypt too', pg.is_checked('#htEnc'))
         check('T14 no page error', not errs, errs)
         b.close()
 finally:

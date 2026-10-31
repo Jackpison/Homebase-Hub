@@ -62,7 +62,7 @@ python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/pages_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/nav_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/a11y_test.py build/site-update-X.Y.Z.zip
-for t in encrypt files lock tabs_lock settings_ui settings_look passkey share speed; do python3 tests/browser/${t}_test.py build/site-update-X.Y.Z.zip; done   # passkey, share and speed run in Chromium only
+for t in encrypt files lock tabs_lock tabs_kit settings_ui settings_look passkey share speed; do python3 tests/browser/${t}_test.py build/site-update-X.Y.Z.zip; done   # passkey, share and speed run in Chromium only
 python3 tests/server/files_test.py build/site-update-X.Y.Z.zip
 python3 tests/browser/website_test.py build/site            # after python3 scripts/make-site.py --no-guide
 python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip <previous release zip> build/visual   # optional: a report of what changed on screen (CI no longer makes it)

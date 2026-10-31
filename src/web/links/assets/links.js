@@ -576,25 +576,25 @@ $('#importBmBtn').onclick = openImport;
 /* ---------- render ---------- */
 function visibleCols() { return innerWidth >= 1100 ? 4 : innerWidth >= 700 ? 2 : 1; }
 
+// The tabs: one wrapper per tab (the tab and its pencil, shown while editing). Drag a tab to move it (tabs.js); Alt + Left/Right does the same from the keyboard.
+const tabDrag = HubTabs.drag($('#tabs'), { enabled: () => S.editing, onDrop(order, focusId) {
+  const by = new Map(S.data.tabs.map(x => [x.id, x]));
+  S.data.tabs.splice(0, S.data.tabs.length, ...order.map(id => by.get(id)).filter(Boolean));
+  persist('Moved'); if (focusId) { const a = /** @type {HTMLElement | null} */ (document.querySelector(`#tabs .tab[data-tab="${CSS.escape(focusId)}"]`)); if (a) a.focus(); }
+} });
+$('#tabs').addEventListener('dragstart', e => { if (S.editing) e.preventDefault(); });   // a tab is a link: the browser must not drag it as one
+// The icon of a tab: the one chosen for it (Edit Tab), else the ribbon.
+const tabIcon = t => HubTabs.isIcon(t.icon) ? h('span', { 'aria-hidden': 'true', html: HubTabs.iconSvg(t.icon) }).firstChild : ribbon();
 function renderTabs() {
   const wrap = $('#tabs'); wrap.innerHTML = '';
   const tabs = S.data.tabs, cur = curTab();
-  tabs.forEach((t, ti) => {
+  tabs.forEach(t => {
     const active = t === cur && !S.q;
-    wrap.append(h('a', { class: 'tab' + (active ? ' active' : ''), href: '#' + encodeURIComponent(t.id), 'data-tab': t.id, role: 'tab', style: isHex(t.ribbon) ? `--tab-ribbon:${t.ribbon}` : null, 'aria-selected': active ? 'true' : 'false',
-      onclick: () => { if (S.q) { $('#q').value = ''; S.q = ''; } } }, ribbon(), h('span', {}, t.title),
-      t.private ? h('span', { 'aria-label': t.encrypted ? 'encrypted' : 'private', title: t.encrypted ? 'Encrypted tab: encrypted with your passphrase' : 'Private tab: only shown when you are logged in', html: t.encrypted ? ICONS.safe : ICONS.lock }) : null));
-    if (t === cur && S.editing) wrap.append(h('div', { class: 'tab-ctrl' },
-      tabs.length > 1 ? ib('left', 'Move tab left', () => move(tabs, ti, -1) && persist('Moved')) : null,
-      tabs.length > 1 ? ib('right', 'Move tab right', () => move(tabs, ti, 1) && persist('Moved')) : null,
-      ib('edit', 'Edit tab name and color', () => editTab(t)),
-      tabs.length > 1 ? ib('del', 'Delete tab', () => {
-        const n = t.categories.reduce((a, c) => a + linkCount(c), 0);
-        if (confirm(`Delete the "${t.title}" tab with ${t.categories.length} categories and ${n} links?`)) {
-          const gone = tabs.splice(ti, 1)[0]; S.tab = tabs[Math.max(0, ti - 1)].id; history.replaceState(null, '', '#' + S.tab); persist('');
-          undoable('Tab deleted.', () => { tabs.splice(Math.min(ti, tabs.length), 0, gone); S.tab = gone.id; history.replaceState(null, '', '#' + S.tab); persist('Tab restored'); });
-        }
-      }, 'del') : null));
+    wrap.append(h('div', { class: 'tabi' + (active ? ' on' : ''), 'data-t': t.id, role: 'none' },
+      h('a', { class: 'tab' + (active ? ' active' : ''), href: '#' + encodeURIComponent(t.id), 'data-tab': t.id, role: 'tab', style: isHex(t.ribbon) ? `--tab-ribbon:${t.ribbon}` : null, 'aria-selected': active ? 'true' : 'false',
+        onclick: e => { if (tabDrag.justDragged()) { e.preventDefault(); return; } if (S.q) { $('#q').value = ''; S.q = ''; } } }, tabIcon(t), h('span', {}, t.title),
+        t.private ? h('span', { 'aria-label': t.encrypted ? 'encrypted' : 'private', title: t.encrypted ? 'Encrypted tab: encrypted with your passphrase' : 'Private tab: only shown when you are logged in', html: t.encrypted ? ICONS.safe : ICONS.lock }) : null),
+      h('button', { class: 'pen', type: 'button', title: 'Edit Tab', 'aria-label': 'Edit tab ' + t.title, html: ICONS.edit, onclick: () => { if (!tabDrag.justDragged()) editTab(t); } })));
   });
   if (S.editing && tabs.length < MAX_TABS) wrap.append(h('button', { class: 'tab add', type: 'button', onclick: addTab }, ribbon(true), 'New tab'));
   const act = wrap.querySelector('.tab.active');
@@ -604,33 +604,45 @@ function addTab() {
   if (S.data.tabs.length >= MAX_TABS) return toast(`You can have up to ${MAX_TABS} tabs`, true);
   editTab(null);
 }
-let tabCtx = null;
-function setTabColorFields(v) {
-  $('#tColorText').value = v || '';
-  $('#tColor').value = v || colorsFor(mode()).ribbon;
-}
+// New Tab and Edit Tab: the window itself is shared with Info (tabs.js); what saving does is Links' own.
 function editTab(t) {
-  tabCtx = t;
-  $('#tabDlgTitle').textContent = t ? 'Edit Tab' : 'New tab';
-  $('#tabSave').textContent = t ? 'Save tab' : 'Add Tab';
-  $('#tName').value = t ? t.title : '';
-  setTabColorFields(t && isHex(t.ribbon) ? t.ribbon : '');
-  $('#tPrivate').checked = !!(t && t.private);
   const stuck = !!(t && t.encrypted && (t.locked || t.bad));   // a locked tab can only be turned back to plain text after unlocking it
   const noKey = !vault() && !(t && t.encrypted);   // keys are made in Settings › Security › Encryption
-  $('#tEnc').checked = !!(t && t.encrypted); $('#tEnc').disabled = !CAN_ENC || stuck || noKey;
-  $('#tPrivate').disabled = $('#tEnc').checked;
-  $('#tEncHint').textContent = !CAN_ENC ? 'Needs a secure (https) connection.' : noKey ? 'Set an encryption passphrase first: Settings › Security › Encryption.' : stuck ? 'Unlock this tab first to change this.'
-    : 'Locked in this browser with your encryption passphrase before it is saved: the server, its earlier versions and backups only hold scrambled text. The tab name stays readable.';
-  $('#tabErr').textContent = '';
-  $('#tabDlg').showModal(); $('#tName').select();
+  HubTabs.edit({
+    isNew: !t, title: t ? 'Edit Tab' : 'New Tab', saveLabel: t ? 'Save Tab' : 'Add Tab', name: t ? t.title : '',
+    color: t && isHex(t.ribbon) ? t.ribbon : '', colorShown: colorsFor(mode()).ribbon, colorLabel: 'Ribbon Color', colorHint: 'Leave it on default to use the tab ribbon color from Colors.',
+    icon: t && t.icon, iconDefault: 'bookmark', priv: !!(t && t.private), enc: !!(t && t.encrypted),
+    encWhy: !CAN_ENC ? 'Needs a secure (https) connection.' : noKey ? 'Set an encryption passphrase first: Settings › Security › Encryption.' : stuck ? 'Unlock this tab first to change this.' : '',
+    canDelete: !!t && S.data.tabs.length > 1,
+    async onSave(v, ctl) {
+      const wantEnc = v.enc, wasEnc = !!(t && t.encrypted);
+      if (wantEnc && !wasEnc && !(await ensureKey())) { ctl.say('Encryption was not turned on.'); return; }
+      if (!wantEnc && wasEnc && !confirm('Store this tab as readable text again? Its links will no longer be encrypted on the server.')) return;
+      let tab = t;
+      if (!tab) {
+        if (S.data.tabs.length >= MAX_TABS) { ctl.say(`You can have up to ${MAX_TABS} tabs.`); return; }
+        tab = { id: uid(), title: v.name, categories: [] };
+        S.data.tabs.push(tab); S.tab = tab.id; history.replaceState(null, '', '#' + tab.id);
+      }
+      tab.title = v.name;
+      if (v.color) tab.ribbon = v.color; else delete tab.ribbon;
+      if (v.icon) tab.icon = v.icon; else delete tab.icon;
+      if (wantEnc) { tab.encrypted = true; tab.private = true; if (!wasEnc) { tab._blob = ''; tab._plain = ''; tab.locked = false; tab.bad = false; } }
+      else {
+        if (wasEnc) { delete tab.encrypted; delete tab._blob; delete tab._plain; delete tab.locked; delete tab.bad; }
+        if (v.priv) tab.private = true; else delete tab.private;
+      }
+      ctl.close();
+      persist(t ? 'Tab saved' : 'Tab added');
+    },
+    onDelete(ctl) {
+      const tabs = S.data.tabs, ti = tabs.indexOf(t), n = t.categories.reduce((a, c) => a + linkCount(c), 0);
+      if (!confirm(`Delete the "${t.title}" tab with ${t.categories.length} categories and ${n} links?`)) return;
+      const gone = tabs.splice(ti, 1)[0]; S.tab = tabs[Math.max(0, ti - 1)].id; history.replaceState(null, '', '#' + S.tab); ctl.close(); persist('');
+      undoable('Tab deleted.', () => { tabs.splice(Math.min(ti, tabs.length), 0, gone); S.tab = gone.id; history.replaceState(null, '', '#' + S.tab); persist('Tab restored'); });
+    }
+  });
 }
-$('#tColor').addEventListener('input', () => { $('#tColorText').value = $('#tColor').value; });
-$('#tColorText').addEventListener('input', () => { let v = $('#tColorText').value.trim(); if (v && v[0] !== '#') v = '#' + v; if (isHex(v)) $('#tColor').value = v; });
-$('#tColorDefault').onclick = () => setTabColorFields('');
-$('#tEnc').addEventListener('change', () => { if ($('#tEnc').checked) $('#tPrivate').checked = true; $('#tPrivate').disabled = $('#tEnc').checked; });
-// With a passphrase set, a new private tab is encrypted from the start (untick Encrypted Tab to keep it private only)
-$('#tPrivate').addEventListener('change', () => { if ($('#tPrivate').checked && !tabCtx && !$('#tEnc').disabled) { $('#tEnc').checked = true; $('#tPrivate').disabled = true; } });
 // Locks every private tab that is still readable (one press): the key is asked for once, then every such tab is sealed when the page saves
 const plainPrivate = () => S.data.tabs.filter(t => t.private && !t.encrypted);
 function encRowUI() {
@@ -644,30 +656,6 @@ $('#sEncAll').onclick = async () => {
   for (const t of todo) { t.encrypted = true; t.private = true; t._blob = ''; t._plain = ''; t.locked = false; t.bad = false; }
   persist(todo.length === 1 ? 'Tab encrypted' : todo.length + ' tabs encrypted');
   encRowUI();
-};
-$('#tabSave').onclick = async e => {
-  e.preventDefault();
-  const name = $('#tName').value.trim(); if (!name) return;
-  let c = $('#tColorText').value.trim(); if (c && c[0] !== '#') c = '#' + c;
-  if (c && !isHex(c)) { $('#tabErr').textContent = 'Use a color like #d9a85b, or Use default.'; return; }
-  const wantEnc = $('#tEnc').checked, wasEnc = !!(tabCtx && tabCtx.encrypted);
-  if (wantEnc && !wasEnc && !(await ensureKey())) { $('#tabErr').textContent = 'Encryption was not turned on.'; return; }
-  if (!wantEnc && wasEnc && !confirm('Store this tab as readable text again? Its links will no longer be encrypted on the server.')) return;
-  let t = tabCtx;
-  if (!t) {
-    if (S.data.tabs.length >= MAX_TABS) { $('#tabErr').textContent = `You can have up to ${MAX_TABS} tabs.`; return; }
-    t = { id: uid(), title: name, categories: [] };
-    S.data.tabs.push(t); S.tab = t.id; history.replaceState(null, '', '#' + t.id);
-  }
-  t.title = name;
-  if (c) t.ribbon = c.toLowerCase(); else delete t.ribbon;
-  if (wantEnc) { t.encrypted = true; t.private = true; if (!wasEnc) { t._blob = ''; t._plain = ''; t.locked = false; t.bad = false; } }
-  else {
-    if (wasEnc) { delete t.encrypted; delete t._blob; delete t._plain; delete t.locked; delete t.bad; }
-    if ($('#tPrivate').checked) t.private = true; else delete t.private;
-  }
-  $('#tabDlg').close();
-  persist(tabCtx ? 'Tab saved' : 'Tab added');
 };
 async function addCategory(col) {
   const t = curTab();
@@ -1021,7 +1009,7 @@ $('#doneBtn').onclick = () => setEditing(false);
 async function endSession(msg, bad, serverLogout) {
   KEY = null; devClear();   // leaving the owner view locks the encrypted tabs
   S.auth = false; S.editing = false; S.rev = '';
-  ['#linkDlg', '#iconDlg', '#tabDlg', '#nameDlg', '#setDlg', '#colorDlg', '#textDlg', '#verDlg'].forEach(id => { const d = $(id); if (d.open) d.close(); });
+  ['#linkDlg', '#iconDlg', '#hubTabDlg', '#nameDlg', '#setDlg', '#colorDlg', '#textDlg', '#verDlg'].forEach(id => { const d = $(id); if (d.open) d.close(); });
   if (S.data.settings && S.data.settings.private) { S.locked = true; S.data.tabs = []; }
   else S.data.tabs = S.data.tabs.filter(t => !t.private);
   pickTab(); render();

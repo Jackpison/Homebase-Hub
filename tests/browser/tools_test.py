@@ -367,6 +367,25 @@ try:
         check('C19 ...saves as HTML named after its heading', name == 'hi.html' and b'<h1>Hi</h1>' in data and b'javascript:' not in data, name)
         pg.reload(); wait_js(pg, "!!document.querySelector('#root .md h1')", 10000)
         check('C20 ...and keeps the draft after a reload', pg.input_value('#root textarea').startswith('# Hi'))
+        pg.get_by_label('Markdown text').fill('- Milk\n- Bread\n  - Brown\n- [x] Pay rent\n- [ ] Call the bank\n\n1. First\n2. Second')
+        until(lambda: pg.evaluate("document.querySelectorAll('#root .md ol > li').length") == 2, 3000)
+        ml = pg.evaluate("""(() => { const m = document.querySelector('#root .md'), li = [...m.querySelectorAll(':scope > ul > li')];
+            return { ps: m.querySelectorAll('li > p').length, nested: m.querySelectorAll('li > ul > li').length, top: li.length, ol: m.querySelectorAll(':scope > ol > li').length,
+              tasks: [...m.querySelectorAll('li.task')].map(l => [l.firstElementChild && l.firstElementChild.type, l.textContent.trim(), !!l.querySelector('p')]),
+              gap: Math.round(li[1].getBoundingClientRect().top - li[0].getBoundingClientRect().bottom) }; })()""")
+        check('C20b Markdown Editor: a task list followed by a numbered list keeps each task on one line (checkbox and text together), and a nested list adds no paragraphs or big gaps',
+              ml['ps'] == 0 and ml['nested'] == 1 and ml['top'] == 4 and ml['ol'] == 2 and ml['tasks'] == [['checkbox', 'Pay rent', False], ['checkbox', 'Call the bank', False]] and ml['gap'] < 10, ml)
+        tool('hash-generator'); pg.fill('#root textarea', 'abc'); until(lambda: pg.evaluate("document.querySelectorAll('#root .flist .out').length") == 4, 5000)
+        hw = pg.evaluate("({ over: document.documentElement.scrollWidth - innerWidth, li: Math.max(...[...document.querySelectorAll('#root .flist li')].map(x => x.getBoundingClientRect().right)), panel: document.querySelector('#root .panel').getBoundingClientRect().right, seg: Math.round(document.querySelector('#root .seg').getBoundingClientRect().width), main: Math.round(document.querySelector('#root .tbody').getBoundingClientRect().width) })")
+        check('C20c Hash Generator: the four hashes stay inside the page (they wrap), and a segmented control is only as wide as its buttons', hw['over'] <= 1 and hw['li'] <= hw['panel'] + 1 and hw['seg'] < hw['main'] / 2, hw)
+        pg.set_viewport_size({'width': 390, 'height': 800})
+        wide = []
+        for i in ('hash-generator', 'loan-emi', 'sip-calculator', 'fd-rd-calculator'):
+            tool(i); pg.wait_for_timeout(300)
+            ov = pg.evaluate("document.documentElement.scrollWidth - innerWidth")
+            if ov > 1: wide.append((i, ov))
+        pg.set_viewport_size({'width': 1280, 'height': 900})
+        check('C20d on a phone the Hash Generator and the three calculators do not scroll sideways', not wide, wide)
         tool('csv-json-converter'); pg.get_by_role('button', name='JSON', exact=True).click()
         until(lambda: '"city": "Delhi, NCR"' in pg.input_value('#root textarea[aria-label="Converted text"]'), 3000)
         js = json.loads(pg.input_value('#root textarea[aria-label="Converted text"]'))

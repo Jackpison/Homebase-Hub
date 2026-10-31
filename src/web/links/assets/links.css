@@ -52,7 +52,13 @@ header{display:flex;align-items:center;gap:20px 28px;flex-wrap:wrap;max-width:15
 .tab.add{font-size:15px;font-weight:500;letter-spacing:0;color:var(--muted);border:1px dashed var(--line2);border-radius:8px;padding:5px 11px 5px 9px}
 .tab.add:hover{color:var(--text);border-color:var(--faint)}
 .tab.add svg{width:13px;height:15px;color:currentColor}
-.tab-ctrl{display:flex;gap:1px;margin-left:-16px}
+.tabi{position:relative;flex:none;display:flex;align-items:center}
+.tabi .pen{display:none;place-items:center;width:26px;height:26px;margin-left:2px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer}
+.tabi .pen:hover,.tabi .pen:focus-visible{background:color-mix(in srgb,currentColor 18%,transparent);color:var(--text)}
+.tabi .pen svg{width:13px;height:13px}
+body.editing .tabi .pen{display:grid}
+body.editing .tabi .tab:not(.add){cursor:grab;touch-action:pan-x;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
+.tab svg.ti{width:20px;height:20px}
 .tools{margin-left:auto;display:flex;gap:8px;align-items:center}
 .search{position:relative}
 .search input{width:260px;max-width:52vw;background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:8px 34px 8px 12px;outline:none}

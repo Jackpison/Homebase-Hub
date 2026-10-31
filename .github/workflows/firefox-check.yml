@@ -53,7 +53,7 @@ jobs:
         run: |
           set -o pipefail
           fail=0
-          for t in import pages nav tools encrypt files lock tabs_lock settings_ui settings_look; do
+          for t in import pages nav tools encrypt files lock tabs_lock tabs_kit settings_ui settings_look; do
             python3 tests/browser/${t}_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1
           done
           python3 tests/browser/a11y_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1
