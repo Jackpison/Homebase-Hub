@@ -221,7 +221,7 @@ function openDialog(title, body, buttons, o) {   // buttons: [{text, pri, danger
     dform.onsubmit = ev => { ev.preventDefault(); const p = buttons.find(b => b.pri); if (p) dform.querySelector(".act .pri").click(); };
     if (o.rows && window.HUB && HUB.settingsRows) HUB.settingsRows(dform.querySelector(".ix-sb"), "h3");   // (1.61.6) the same cards and tiles as every Settings window
     dlg.showModal();
-    const f = o.frame ? null : dform.querySelector("[autofocus],input,select"); if (f) { f.focus(); if (f.select) f.select(); }
+    const f = o.frame ? dform.querySelector(".ix-sb input:not([type=checkbox]):not([type=hidden]),.ix-sb select") : dform.querySelector("[autofocus],input,select"); if (f) { f.focus(); if (f.select) f.select(); }   // (1.64.1) a frame window: its first field, never the close X
   });
 }
 const derr = t => { const e = $("derr"); if (e) e.textContent = t || ""; };

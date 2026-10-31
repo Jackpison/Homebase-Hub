@@ -61,7 +61,7 @@ run('Core', [PY, 'tests/server/core_test.py', ZIP])
 run('Files (server)', [PY, 'tests/server/files_test.py', ZIP])
 
 if not QUICK:
-    for t in ('import', 'app', 'settings', 'tools', 'pages', 'nav', 'a11y', 'encrypt', 'files', 'lock', 'tabs_lock', 'tabs_kit', 'settings_ui', 'settings_look', 'passkey', 'share', 'speed'):
+    for t in ('import', 'app', 'settings', 'tools', 'pages', 'nav', 'a11y', 'encrypt', 'files', 'lock', 'tabs_lock', 'tabs_kit', 'settings_ui', 'settings_look', 'windows', 'passkey', 'share', 'speed'):
         if BROWSER and t in ('app', 'settings'): continue   # Chromium only
         run('browser/' + t + (' (%s)' % BROWSER if BROWSER else ''), [PY, 'tests/browser/%s_test.py' % t, ZIP] + ([] if t in ('app',) else b))
     run('Website build', [PY, 'scripts/make-site.py', '--no-guide'])

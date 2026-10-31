@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.1 | Edit Tab: the icons fold away until you open them; every window is now checked by one test; Tasks and Files windows fixed to match |
 | 1.64.0 | Calmer cards and tiles that follow your Boxes and Cards colour, two soft presets (Soft Dark, Soft Warm), one look for every window, Show Visit Counts in Look |
 | 1.63.1 | Fix: dragging a tab now always lands where you drop it, also with a fast mouse or a slow browser |
 | 1.63.0 | Links and Info tabs: drag to reorder, 16 icons to choose from, and one new Edit Tab window; new-look Banks and Add Task windows; Tools list, grid and Markdown fixes |
@@ -103,6 +104,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.1
+
+### Windows
+
+- **Edit Tab (Links and Info):** the Icon row is one line that shows the current icon. Press it to open the 16 icons; it is closed every time the window opens.
+- **Tasks:** the Add Task fields now have the same rounded look as everywhere else, and Tasks Settings keeps its dropdowns on the right.
+- **Files:** opening Settings or another window no longer puts the yellow ring on the X; the first field is selected.
+
+### A test for every window
+
+- New `windows_test`: opens 30 windows (Links, Info, Cards, Tasks, Files, Home) and checks the same rules on each: title and X, scrolling body, footer buttons, headings, cards, switch and field sizes, nothing wider than the window. A window that breaks one fails the build.
 
 ---
 

@@ -7,7 +7,7 @@
  * See the GNU General Public License (the LICENSE file) for more details.
  */
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.64.0" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.64.1" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -496,7 +496,7 @@
   function sdlgBuild(d) {
     if (d._ixS) return; d._ixS = true;
     var plain = d.classList.contains('ix-plain');   // (1.61.9) a page's own window (Add Link, Edit Card...): the frame only, its fields keep their own layout
-    if (d.querySelector('.dh,.ix-sh')) { if (!plain) sdlgDecorate(d.querySelector('.db'), '.sh3'); sdlgFocus(d, d.querySelector('.db,.ix-sb') || d, d.querySelector('.dh [data-close],.dh .ib,.ix-sx')); return; }
+    if (d.querySelector('.dh,.ix-sh')) { var db = d.querySelector('.db'); if (db) db.classList.add('ix-sb'); /* (1.64.1) the same body as every window: its fields take the shared look */ if (!plain) sdlgDecorate(db, '.sh3'); sdlgFocus(d, d.querySelector('.db,.ix-sb') || d, d.querySelector('.dh [data-close],.dh .ib,.ix-sx')); return; }
     var c = d.querySelector(':scope>form') || (d.children.length === 1 && d.firstElementChild.tagName === 'DIV' ? d.firstElementChild : d), kids = [].slice.call(c.children);   // a form, a single wrapper (Info's Export) or the dialog itself
     var t = kids.filter(function (k) { return /^H[23]$/.test(k.tagName); })[0];
     var foot = kids.slice().reverse().filter(function (k) { return k.matches('.act,.actions'); })[0];

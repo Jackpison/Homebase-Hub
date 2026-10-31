@@ -457,6 +457,8 @@ dialog.ix-sdlg>form{display:flex;flex-direction:column;min-height:0;flex:1;paddi
 .ix-sdlg .ix-sb>h3:first-child,.ix-sdlg .ix-sb>h4:first-child,.ix-sdlg .ix-sub>h4:first-child{margin-top:8px}
 .ix-sdlg .ix-sb input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]):not([type=range]),.ix-sdlg .ix-sb select:not(.ix-sgc-h){width:100%;font:inherit;font-size:15px;color:inherit;border-radius:10px;padding:10px 12px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
 .ix-sdlg .ix-sb input:focus,.ix-sdlg .ix-sb select:focus{outline:none;border-color:color-mix(in srgb,currentColor 55%,transparent);box-shadow:none}
+.ix-sdlg .ix-sb .ix-srow>select{width:auto;flex:none;font-size:14px;padding:9px 10px}
+.ix-sdlg .ix-sb .ix-srow>input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]):not([type=range]){width:auto;flex:none;max-width:45%}
 .ix-sdlg .ix-sb :not(.ix-srow)>label:not(.ix-srow):not(.check):not(.chk):not(.swatch){display:block;font-size:13px;margin:0 0 12px}
 .ix-sdlg .ix-sb label>input:not([type=checkbox]),.ix-sdlg .ix-sb label>select{margin-top:5px}
 .ix-sdlg .ix-sb .hint,.ix-sdlg .ix-sb p.hint{font-size:13px;color:color-mix(in srgb,currentColor 80%,transparent);margin:-6px 0 12px}

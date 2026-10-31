@@ -150,7 +150,8 @@
       '<div class="hubt-block" id="htLayBlock" hidden><span class="hubt-lt">Layout</span><div class="hubt-lays" id="htLays" role="radiogroup" aria-label="Layout">' +
         '<button type="button" class="hubt-lay" data-lay="cards" role="radio" aria-checked="true"><i class="hubt-lp hubt-lp-cards" aria-hidden="true"></i><b>Notebook Cards</b><small>Cards you can size and arrange. The default.</small></button>' +
         '<button type="button" class="hubt-lay" data-lay="doc" role="radio" aria-checked="false"><i class="hubt-lp hubt-lp-doc" aria-hidden="true"></i><b>Document</b><small>One page with an outline</small></button></div></div>' +
-      '<div class="hubt-block"><span class="hubt-lt" id="htIcoLbl">Icon</span><div class="hubt-icons" id="htIcons" role="radiogroup" aria-labelledby="htIcoLbl">' + icons + '</div></div>' +
+      '<div class="hubt-block hubt-iconblk"><button type="button" class="hubt-iconhd" id="htIcoBtn" aria-expanded="false" aria-controls="htIcons"><span class="hubt-ilbl" id="htIcoLbl">Icon</span><span class="hubt-cur" id="htIcoCur"></span><span class="hubt-chev" aria-hidden="true"></span></button>' +
+        '<div class="hubt-icons" id="htIcons" role="radiogroup" aria-labelledby="htIcoLbl" hidden>' + icons + '</div></div>' +
       '<h4>Privacy</h4>' +
       '<div class="ix-srow"><label for="htPriv">Private Tab<small id="htPrivNote"></small></label><input type="checkbox" class="ix-sw" id="htPriv"></div>' +
       '<div class="ix-srow"><label for="htEnc">Encrypted Tab<small id="htEncNote"></small></label><input type="checkbox" class="ix-sw" id="htEnc"></div>' +
@@ -162,7 +163,14 @@
   }
   function setColor(key, v) { var el = $('ht' + key), tx = $('ht' + key + 'Tx'); cur[key.toLowerCase()] = v; tx.value = v || ''; tx.classList.remove('bad'); if (v) el.value = v; else el.value = key === 'Color' ? cur.colorShown || '#d4a72c' : '#ffffff'; $('ht' + key + 'Def').disabled = !v; }
   function setLayout(v) { cur.layout = v; [].forEach.call(dlg.querySelectorAll('.hubt-lay'), function (b) { var on = b.dataset.lay === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; }); }
-  function setIcon(v) { cur.icon = v; [].forEach.call(dlg.querySelectorAll('.hubt-ico'), function (b) { var on = b.dataset.i === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; }); }
+  // (1.64.1) the 16 icons stay folded away; the row shows the one in use (its picture and name) and opens the picker
+  function iconOpen(on) { var b = $('htIcoBtn'); b.setAttribute('aria-expanded', String(on)); $('htIcons').hidden = !on; }
+  function setIcon(v) {
+    cur.icon = v;
+    [].forEach.call(dlg.querySelectorAll('.hubt-ico'), function (b) { var on = b.dataset.i === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; });
+    var info = ICONS.filter(function (i) { return i.id === v; })[0];
+    $('htIcoCur').innerHTML = (info ? iconSvg(info.id, 'hubt-svg') : (cur.cfg && cur.cfg.iconDefault ? iconSvg(cur.cfg.iconDefault, 'hubt-svg') : '')) + '<span>' + (info ? esc(info.name) : 'Default') + '</span>';
+  }
   // Encrypt needs a key and a secure page; an encrypted tab is always private.
   function encUI() {
     var c = cur.cfg, enc = $('htEnc'), priv = $('htPriv');
@@ -184,6 +192,7 @@
       var L = cur.cfg.layouts, i = L.indexOf(cur.layout), n = (i + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1) + L.length) % L.length;
       setLayout(L[n]); dlg.querySelector('.hubt-lay[data-lay="' + L[n] + '"]').focus();
     });
+    $('htIcoBtn').addEventListener('click', function () { iconOpen($('htIcoBtn').getAttribute('aria-expanded') !== 'true'); });
     $('htIcons').addEventListener('click', function (e) { var b = e.target.closest('.hubt-ico'); if (b) setIcon(b.dataset.i); });
     $('htIcons').addEventListener('keydown', function (e) {
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(e.key) < 0) return; e.preventDefault();
@@ -224,7 +233,7 @@
     $('htLayBlock').hidden = !cfg.layouts;
     setColor('Color', cur.color); setColor('Hc', cur.hc); setLayout(cur.layout);
     // the Default button of the icon picker shows what the page draws without a choice
-    $('htIcoDef').innerHTML = (cfg.iconDefault ? iconSvg(cfg.iconDefault, 'hubt-svg') : '') + '<span class="hubt-def">Default</span>'; setIcon(cur.icon);
+    $('htIcoDef').innerHTML = (cfg.iconDefault ? iconSvg(cfg.iconDefault, 'hubt-svg') : '') + '<span class="hubt-def">Default</span>'; setIcon(cur.icon); iconOpen(false);
     $('htPriv').checked = !!cfg.priv; $('htEnc').checked = !!cfg.enc; encUI();
     $('htDel').hidden = !cfg.canDelete; dlg._ctl.deleteLabel('Delete Tab'); dlg._ctl.busy(false, '');
     dlg.showModal(); $('htName').focus(); $('htName').select();

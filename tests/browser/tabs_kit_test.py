@@ -62,11 +62,15 @@ try:
             sw: d.querySelectorAll('input.ix-sw').length, icons: d.querySelectorAll('.hubt-ico').length, lay: !d.querySelector('#htLayBlock').hidden, hc: !d.querySelector('#htHcRow').hidden,
             title: d.querySelector('.ix-sh h3').textContent, del: !d.querySelector('#htDel').hidden }; })()""")
         check('K2 Links: Edit Tab is a Settings-look window (title and X, cards, two switches), with 16 icons and Default; no layout or headline colour', d['x'] and d['grp'] >= 3 and d['sw'] == 2 and d['icons'] == 17 and not d['lay'] and not d['hc'] and d['title'] == 'Edit Tab' and d['del'], d)
+        col = pg.evaluate("[document.getElementById('htIcoBtn').getAttribute('aria-expanded'), document.getElementById('htIcons').hidden, getComputedStyle(document.getElementById('htIcons')).display, document.getElementById('htIcoCur').textContent.trim()]")
+        check('K2b the Icon row is folded: the 16 icons are hidden when the window opens, and the row says which icon is in use', col == ['false', True, 'none', 'Default'], col)
+        pg.click('#htIcoBtn'); opened = pg.evaluate("[document.getElementById('htIcoBtn').getAttribute('aria-expanded'), !document.getElementById('htIcons').hidden, document.querySelector('.hubt-ico[data-i=\"star\"]').offsetParent !== null]")
         pg.click('.hubt-ico[data-i="star"]')
+        check('K2c ...pressing the row opens the icons, and choosing one is shown in the row (Star)', opened == ['true', True, True] and pg.evaluate("document.getElementById('htIcoCur').textContent.trim()") == 'Star', opened)
         check('K3 ...the chosen icon is marked', pg.evaluate("document.querySelector('.hubt-ico[data-i=\"star\"]').getAttribute('aria-checked')") == 'true')
         pg.click('#htSave'); until(lambda: links_tabs(s)[0].get('icon') == 'star', 10000)
         check('K4 saving keeps the icon on the tab (on the server) and the tab draws it', links_tabs(s)[0].get('icon') == 'star' and pg.evaluate("!!document.querySelector('#tabs .tabi:first-child svg.ti')"), links_tabs(s)[0])
-        pg.evaluate("document.querySelectorAll('#tabs .pen')[0].click()"); pg.wait_for_selector('#hubTabDlg[open]'); pg.click('#htIcoDef'); pg.click('#htSave')
+        pg.evaluate("document.querySelectorAll('#tabs .pen')[0].click()"); pg.wait_for_selector('#hubTabDlg[open]'); pg.click('#htIcoBtn'); pg.click('#htIcoDef'); pg.click('#htSave')
         until(lambda: 'icon' not in links_tabs(s)[0], 10000)
         check('K5 Default takes the icon away again, and the tab goes back to its ribbon', 'icon' not in links_tabs(s)[0] and pg.evaluate("!document.querySelector('#tabs .tabi:first-child svg.ti')"))
 
@@ -91,7 +95,7 @@ try:
             hc: !d.querySelector('#htHcRow').hidden, move: /Move (Left|Right)/.test(d.textContent), title: d.querySelector('.ix-sh h3').textContent, colorLabel: d.querySelector('label[for=htColor]').firstChild.textContent }; })()""")
         check('K9 Info: the same window, with Layout and Box Headline Color (its own), the same 16 icons, and no Move Left / Move Right', d['x'] and d['icons'] == 17 and d['lay'] and d['hc'] and not d['move'] and d['title'] == 'Edit Tab' and d['colorLabel'] == 'Tab Color', d)
         check('K10 ...a tab with no icon chosen is marked Default and draws the document icon', pg.evaluate("document.querySelector('#htIcoDef').getAttribute('aria-checked')") == 'true' and pg.evaluate("!!document.querySelector('#tabs .tabi:first-child svg.ti')"))
-        pg.click('.hubt-ico[data-i="globe"]'); pg.click('#htSave')
+        pg.click('#htIcoBtn'); pg.click('.hubt-ico[data-i="globe"]'); pg.click('#htSave')
         until(lambda: info_tabs(s)[0].get('icon') == 'globe', 10000)
         check('K11 Info: the chosen icon is saved on the tab and drawn', info_tabs(s)[0].get('icon') == 'globe' and pg.evaluate("document.querySelector('#tabs .tabi:first-child svg.ti path').getAttribute('d')") != '', info_tabs(s)[0])
         until(lambda: not pg.evaluate("document.getElementById('hubTabDlg').open"), 10000)   # the window closes once the save is answered

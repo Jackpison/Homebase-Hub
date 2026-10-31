@@ -243,6 +243,7 @@ jobs:
             "tabs lock|tests/browser/tabs_lock_test.py build/site-update-*.zip --browser chromium" \
             "tabs kit|tests/browser/tabs_kit_test.py build/site-update-*.zip --browser chromium" \
             "settings look|tests/browser/settings_look_test.py build/site-update-*.zip --browser chromium" \
+            "windows|tests/browser/windows_test.py build/site-update-*.zip --browser chromium" \
             "passkeys|tests/browser/passkey_test.py build/site-update-*.zip" \
             "share|tests/browser/share_test.py build/site-update-*.zip" || rc=1
           python3 tests/lib/run_parallel.py -j 1 "slow phone|tests/browser/speed_test.py build/site-update-*.zip" || rc=1
@@ -258,7 +259,8 @@ jobs:
             "lock webkit|tests/browser/lock_test.py build/site-update-*.zip --browser webkit" \
             "tabs lock webkit|tests/browser/tabs_lock_test.py build/site-update-*.zip --browser webkit" \
             "tabs kit webkit|tests/browser/tabs_kit_test.py build/site-update-*.zip --browser webkit" \
-            "settings look webkit|tests/browser/settings_look_test.py build/site-update-*.zip --browser webkit"
+            "settings look webkit|tests/browser/settings_look_test.py build/site-update-*.zip --browser webkit" \
+            "windows webkit|tests/browser/windows_test.py build/site-update-*.zip --browser webkit"
 
   apache:
     needs: changes

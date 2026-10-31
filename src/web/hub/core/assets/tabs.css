@@ -17,6 +17,17 @@ body.dragtabs,body.dragtabs *{cursor:grabbing!important}
 #hubTabDlg .ix-grp>.field>label{margin:0 0 8px}
 #hubTabDlg .ix-grp>:not([hidden])~.field,#hubTabDlg .ix-grp>:not([hidden])~.hubt-block{border-top:1px solid color-mix(in srgb,currentColor 10%,transparent)}
 #hubTabDlg .hubt-lt{display:block;font-size:13px;opacity:.8;margin:0 0 8px}
+/* the Icon row: its name, the icon in use, an arrow; the 16 icons open below it */
+#hubTabDlg .hubt-iconhd{display:flex;align-items:center;gap:10px;width:100%;padding:0;margin:0;background:none;border:0;color:inherit;font:inherit;cursor:pointer;text-align:left}
+#hubTabDlg .hubt-ilbl{flex:1;font-size:15px}
+#hubTabDlg .hubt-cur{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;opacity:.85}
+#hubTabDlg .hubt-cur .hubt-svg{width:20px;height:20px}
+#hubTabDlg .hubt-chev{width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);opacity:.6;transition:transform .15s;margin:0 4px 0 2px}
+#hubTabDlg .hubt-iconhd[aria-expanded="true"] .hubt-chev{transform:rotate(-135deg) translate(-2px,-2px)}
+#hubTabDlg .hubt-iconhd:focus-visible{outline:2px solid currentColor;outline-offset:4px;border-radius:6px}
+#hubTabDlg .hubt-icons{margin-top:12px}
+#hubTabDlg .hubt-icons[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){#hubTabDlg .hubt-chev{transition:none}}
 #hubTabDlg .hubt-color{flex-wrap:wrap}
 #hubTabDlg .hubt-color>label{flex:1 1 140px}
 #hubTabDlg .hubt-ctl{display:flex;flex:1 1 auto;min-width:0;align-items:center;gap:8px;flex-wrap:nowrap;justify-content:flex-end}
