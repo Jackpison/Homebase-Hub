@@ -1,0 +1,6 @@
+{
+  "//": "Type check of the Home page script (looser than tsconfig.json: not strict). Run: npx tsc -p tsconfig.home.json. It reads, it never writes. Page scripts share one global scope, so each page has its own file.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "strict": false, "typeRoots": [] },
+  "files": ["tests/types/hub-globals.d.ts", "src/web/home/assets/app.js"]
+}

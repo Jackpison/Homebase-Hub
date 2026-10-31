@@ -143,7 +143,7 @@ function mkBox(tabId,k,src,enc){
 const LAYS=["cards","doc"],okLay=v=>v==="doc"?"doc":"cards";   // how a tab is laid out: notebook cards (the default; "classic" from earlier versions is cards too) or one document
 // Boxes: a tab has 1 to MAXBOX of them, each with a stable id, and optionally a width and a height ("" = what the layout gives it)
 const MAXBOX=12,BW=["","third","half","twothirds","full"],BH=["","short","tall","xtall"],okW=v=>BW.includes(v)?v:"",okH=v=>BH.includes(v)?v:"";
-const okColor=c=>typeof c==="string"&&/^#[0-9a-f]{6}$/i.test(c)?c.toLowerCase():"";
+const okColor=c=>typeof c==="string"&&HUB.isHex(c)?c.toLowerCase():"";
 function mkTab(src){
   src=src||{};const id=/^[a-f0-9]{8}$/.test(src.id)?src.id:rid(),bx=Array.isArray(src.boxes)?src.boxes:[];
   const enc=!!src.enc||bx.some(b=>b&&(isEnc(b.title)||isEnc(b.notes))); // encrypted text always means an encrypted tab

@@ -6,15 +6,18 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
+// @ts-check
 (() => {
 'use strict';
 
+/** @type {(s: string, r?: ParentNode) => any} */   // (any: the page knows which element each id is)
 const $  = (s, r = document) => r.querySelector(s);
+/** @type {(s: string, r?: ParentNode) => any[]} */
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc=HUB.esc;   // the shell's HTML escaper (shell.js, loaded first)
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let PUB = window.PUB;      // what visitors see
+let PUB = /** @type {any} */ (window).PUB;      // what visitors see
 let ADMIN = null;          // full data while logged in
 let CSRF = null;
 let editing = false;
@@ -29,8 +32,8 @@ function setFavicon(icon){
   const link = document.createElement('link');
   link.id = 'favicon'; link.rel = 'icon'; link.sizes = 'any';
   const ext = (icon.split('.').pop() || '').toLowerCase();
-  link.type = icon ? ({ ico:'image/x-icon', png:'image/png', jpg:'image/jpeg', gif:'image/gif', webp:'image/webp' }[ext] || '') : (window.LOGO_FAVICON ? '' : 'image/svg+xml');
-  link.href = icon ? media(icon) + '?v=' + Date.now() : (window.LOGO_FAVICON || DEFAULT_FAVICON);
+  link.type = icon ? ({ ico:'image/x-icon', png:'image/png', jpg:'image/jpeg', gif:'image/gif', webp:'image/webp' }[ext] || '') : (/** @type {any} */ (window).LOGO_FAVICON ? '' : 'image/svg+xml');
+  link.href = icon ? media(icon) + '?v=' + Date.now() : (/** @type {any} */ (window).LOGO_FAVICON || DEFAULT_FAVICON);
   old.replaceWith(link);
 }
 function applyPanel(p){
@@ -55,7 +58,7 @@ function applyPageMeta(src){
    the bytes, same picture). Landscape screens and photos without a copy use the full photo. Turning the phone swaps the file. */
 const portraitMQ = matchMedia('(max-aspect-ratio: 3/4)');
 const bgSrc = item => media(item.p && portraitMQ.matches ? item.url.replace(/\.(jpe?g|png|webp)$/i, '-p.jpg') : item.url);
-portraitMQ.addEventListener?.('change', () => document.querySelectorAll('#bg > img[data-p]').forEach(n => { n.src = bgSrc({ url:n.dataset.u, p:1 }); }));
+portraitMQ.addEventListener?.('change', () => document.querySelectorAll('#bg > img[data-p]').forEach((/** @type {HTMLImageElement} */ n) => { n.src = bgSrc({ url:n.dataset.u, p:1 }); }));
 
 const BG = {
   el: $('#bg'),
@@ -81,7 +84,7 @@ const BG = {
       if (item.type === 'video' && item.poster){
         const v = document.createElement('video');
         const still = () => { const img = new Image(); img.alt = ''; img.onload = () => res(img); img.onerror = () => rej(new Error('load')); img.src = media(item.poster); };
-        if (navigator.connection?.saveData || REDUCED || (/\.mp4$/i.test(item.url) && !v.canPlayType('video/mp4; codecs="av01.0.08M.08"'))) return still();
+        if (/** @type {any} */ (navigator).connection?.saveData || REDUCED || (/\.mp4$/i.test(item.url) && !v.canPlayType('video/mp4; codecs="av01.0.08M.08"'))) return still();
         Object.assign(v, { muted:true, loop:true, autoplay:true, playsInline:true, preload:'auto', poster:media(item.poster) });
         v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
         v.onerror = () => { v.remove(); const cur = this.el.lastElementChild; if (cur === v) this.show({ ...item, type:'image', url:item.poster }, { count:false }); };
@@ -135,7 +138,7 @@ const BG = {
       const rank = i => seen.lastIndexOf(bgTag(i.url)), oldest = Math.min(...l.map(rank));
       return l.filter(i => rank(i) === oldest);
     };
-    const saveData = navigator.connection?.saveData;
+    const saveData = /** @type {any} */ (navigator).connection?.saveData;
     const all = PUB.bg.photos || [];
     const videos = saveData ? [] : all.filter(i => i.type === 'video');
     const images = all.filter(i => i.type !== 'video');
@@ -189,7 +192,7 @@ const BG = {
      usually swaps at once. */
   preloadNext(current){
     this.nextUp = null; this.preloading = null;
-    if (navigator.connection?.saveData) return;   // data saver: the next photo is fetched only when asked for
+    if (/** @type {any} */ (navigator).connection?.saveData) return;   // data saver: the next photo is fetched only when asked for
     const item = this.pick([current.url]);
     if (!item || item.url === current.url) return;
     setTimeout(() => {
@@ -257,7 +260,7 @@ const BG = {
   },
 };
 // videos pause while the tab is hidden, so they don't use battery in the background
-document.addEventListener('visibilitychange', () => document.querySelectorAll('#bg video').forEach(v => { if (document.hidden) v.pause(); else v.play().catch(() => {}); }));
+document.addEventListener('visibilitychange', () => document.querySelectorAll('#bg video').forEach((/** @type {HTMLVideoElement} */ v) => { if (document.hidden) v.pause(); else v.play().catch(() => {}); }));
 function motionOn(){ return (editing && ADMIN ? ADMIN.bg.motion : PUB.bg.motion) && !REDUCED; }
 const BG_REMEMBER = 30;   // the same as BG_REMEMBER in lib.php
 /** A short tag for a background's address (FNV-1a, 32 bits, hex); bg_tag() in lib.php gives the same. */
@@ -279,6 +282,7 @@ function toast(msg, err = false){ if (window.HUB) HUB.toast(msg, err); }   // th
    API
    ====================================================================== */
 async function api(action, body, form = false, keepalive = false){
+  /** @type {any} */
   const o = { method: body !== undefined ? 'POST' : 'GET', credentials:'same-origin', headers:{}, keepalive };
   if (CSRF) o.headers['X-CSRF-Token'] = CSRF;
   if (body !== undefined){
@@ -310,8 +314,8 @@ async function withBusy(btn, fn){
 function openSheet(id){ const d = $('#' + id); if (!d.open) d.showModal(); return d; }
 function closeSheet(id){ const d = $('#' + id); if (d.open) d.close(); }
 document.addEventListener('click', e => {
-  const c = e.target.closest('[data-close]'); if (c) c.closest('dialog').close();
-  const o = e.target.closest('[data-open]'); if (o) openSheetFor(o.dataset.open);
+  const c = /** @type {Element} */ (e.target).closest('[data-close]'); if (c) c.closest('dialog').close();
+  const o = /** @type {HTMLElement | null} */ (/** @type {Element} */ (e.target).closest('[data-open]')); if (o) openSheetFor(o.dataset.open);
 });
 $$('dialog.sheet').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
 
@@ -979,9 +983,10 @@ function siteToday(){
     return g('year') + '-' + g('month') + '-' + g('day');
   } catch { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
 }
+/** @type {(s: string) => Date} */
 const dParse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
 const dStr = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-const dDiff = (a, b) => Math.round((dParse(a) - dParse(b)) / 86400000);   // days from b to a
+const dDiff = (a, b) => Math.round((+dParse(a) - +dParse(b)) / 86400000);   // days from b to a
 const dLong = s => dParse(s).toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long' });
 const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
 
@@ -1001,6 +1006,7 @@ function renderClock(){
 
 /* ---------- reading this site's data ---------- */
 async function siteJSON(url, body, opts = {}){
+  /** @type {any} */
   const o = { method: body ? 'POST' : 'GET', credentials:'same-origin', headers:{}, ...opts };
   if (body){ o.headers['Content-Type'] = 'application/json'; if (CSRF) o.headers['X-Hub-CSRF'] = CSRF; o.body = JSON.stringify(body); }
   let r;
@@ -1103,9 +1109,10 @@ const QUOTES = [
   ['Rome was not built in a day.', 'Proverb'],
 ];
 let quoteMore = 0;
-function quoteNow(){ const day = Math.floor(dParse(siteToday()) / 86400000); return QUOTES[((day + quoteMore) % QUOTES.length + QUOTES.length) % QUOTES.length]; }
+function quoteNow(){ const day = Math.floor(+dParse(siteToday()) / 86400000); return QUOTES[((day + quoteMore) % QUOTES.length + QUOTES.length) % QUOTES.length]; }
 /* World Clock: the time in up to three places you choose, and how far ahead or behind you they are */
 function tzOffset(tz, d){
+  /** @type {any} */
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone:tz, hourCycle:'h23', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }).formatToParts(d).map(x => [x.type, x.value]));
   return Math.round((Date.UTC(+p.year, p.month - 1, +p.day, +p.hour, +p.minute) - d.getTime()) / 60000);
 }
@@ -1179,7 +1186,7 @@ function summary(id){
 /* ---------- drawing ---------- */
 function renderWidgets(quiet = false){
   renderClock();
-  const a = document.activeElement, keep = a && a.dataset && a.dataset.w && !$('#wPanel').contains(a) ? [a.parentNode.id, a.dataset.w] : null;
+  const a = /** @type {HTMLElement} */ (document.activeElement), keep = a && a.dataset && a.dataset.w && !$('#wPanel').contains(a) ? [/** @type {HTMLElement} */ (a.parentNode).id, a.dataset.w] : null;
   const list = WCFG && WCFG.show ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];   // Widgets > Show Widgets off: none
   const dock = WCFG && WCFG.style === 'dock';
   if (wOpen && !list.includes(wOpen)) wOpen = '';
@@ -1347,9 +1354,9 @@ function closeWidget(){
   $(`[data-w="${was}"]`)?.focus();
 }
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-w]');
+  const b = /** @type {HTMLElement | null} */ (/** @type {Element} */ (e.target).closest('[data-w]'));
   if (b && !b.closest('#wPanel')) return openWidget(b.dataset.w);
-  const c = e.target.closest('[data-cal]');
+  const c = /** @type {HTMLElement | null} */ (/** @type {Element} */ (e.target).closest('[data-cal]'));
   if (c){
     const d = dParse((calMonth || siteToday().slice(0, 7)) + '-01'); d.setMonth(d.getMonth() + +c.dataset.cal);
     calMonth = dStr(d).slice(0, 7); renderPanel(); $(`[data-cal="${c.dataset.cal}"]`)?.focus();
@@ -1447,7 +1454,7 @@ welcome();
 BG.start();
 $('#nextBg').addEventListener('click', () => BG.next());
 addEventListener('keydown', e => {
-  if (e.target.matches('input, textarea') || $$('dialog[open]').length) return;
+  if (/** @type {Element} */ (e.target).matches('input, textarea') || $$('dialog[open]').length) return;
   if (e.key === 'e' && !editing) $('#editBtn').click();
   if (e.key === 'Escape' && editing) exitEdit();
 });

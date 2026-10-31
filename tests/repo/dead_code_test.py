@@ -95,5 +95,7 @@ for f in glob.glob(ROOT + '/src/web/*/assets/*.js'):
         if not re.match(r'HUB\.(esc|fetch);', m.group(2)): own.append('%s %s' % (f.split('src/web/')[-1], m.group(1)))
 check('D7 pages take esc and HF from the shell (HUB.esc, HUB.fetch) instead of keeping their own copy', not own, own)
 check('D7b the shell hands out HUB.esc', re.search(r'esc: esc,', read(ROOT + '/src/web/hub/core/assets/shell.js')) is not None, '')
+own = [p for p in ('links/assets/links.js', 'info/assets/info.js') if re.search(r'\^#\[0-9a-f\]\{6\}\$', read(ROOT + '/src/web/' + p))]
+check('D7c Links and Info check a hex color with HUB.isHex, not their own pattern', not own and 'isHex: isHex' in read(ROOT + '/src/web/hub/core/assets/shell.js'), own)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

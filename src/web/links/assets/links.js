@@ -6,25 +6,28 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
+// @ts-check
 (() => {
 const API = 'api.php';
 const MAX_TABS = 6, COLS = 4;
 const DEFAULT_COLORS = { dark: { bg: '#1a1a1a', accent: '#d9a85b' }, light: { bg: '#f4f4f5', accent: '#a5701c' } };
 // ribbon and the 4 column colors follow the accent until they're set on their own
 // [key, label, min, max, default] in px
+/** @type {[string, string, number, number, number][]} */
 const SIZE_KEYS = [['tab', 'Tabs', 14, 32, 20], ['cat', 'Categories', 11, 22, 14], ['link', 'Links', 12, 22, 15]];
 function sizesFor(s) {
   const out = {}, old = parseInt(s && s.fontSize, 10); // "fontSize" came from version 5/6
   const legacy = old >= 12 && old <= 20 ? { tab: Math.round(old * 1.35), cat: Math.round(old * .93), link: old } : null;
   for (const [k, , min, max, def] of SIZE_KEYS) {
-    const v = parseInt(s && s.sizes && s.sizes[k], 10);
-    out[k] = v >= min && v <= max ? v : legacy ? Math.min(max, Math.max(min, legacy[k])) : def;
+    const v = parseInt(s && s.sizes && s.sizes[k], 10), lg = /** @type {any} */ (legacy);
+    out[k] = v >= min && v <= max ? v : legacy ? Math.min(max, Math.max(min, lg[k])) : def;
   }
   return out;
 }
 const COLOR_KEYS = [['bg', 'Background'], ['accent', 'Accent (Buttons)'], ['ribbon', 'Tab Ribbon'],
   ['c0', 'Column 1'], ['c1', 'Column 2'], ['c2', 'Column 3'], ['c3', 'Column 4']];
 const S = { data: { tabs: [], settings: {} }, auth: false, setup: false, locked: false, rev: '', editing: false, q: '', tab: null };
+/** @type {(s: string) => any} */   // (any: the page knows which element each id is)
 const $ = s => document.querySelector(s);
 const root = document.documentElement;
 
@@ -52,7 +55,7 @@ const mediaUrl = u => /^icons\//i.test(u) ? '../hub/media/links/' + u : u;
 function host(u) { try { return new URL(safeUrl(u), location.href).hostname; } catch { return ''; } }
 const uid = () => Math.random().toString(36).slice(2, 9);
 const isWeb = u => /^https?:/i.test(u || '');
-const isHex = v => /^#[0-9a-f]{6}$/i.test(v || '');
+const isHex = HUB.isHex;
 // Full name on hover, only for names cut off with "..."
 const tip = document.body.appendChild(document.createElement('div'));
 tip.className = 'tip'; tip.setAttribute('aria-hidden', 'true');   // repeats the link's own name, which screen readers already read
@@ -63,7 +66,7 @@ function hideTip() {
   tipFor = null;
 }
 document.addEventListener('mouseover', e => {
-  const el = e.target.closest && e.target.closest('#grid a.main, #grid .cat-head h2, #tabs a.tab');
+  const tg = /** @type {Element} */ (e.target), el = /** @type {HTMLAnchorElement | null} */ (tg.closest && tg.closest('#grid a.main, #grid .cat-head h2, #tabs a.tab'));
   if (el === tipFor) return;
   hideTip();
   if (!el || document.body.classList.contains('dragging')) return;
@@ -371,7 +374,7 @@ async function api(action, body) {
   };
   const r = await HF(`${API}?action=${action}&t=${Date.now()}`, { credentials: 'same-origin', ...opt });
   let j = {}; try { j = await r.json(); } catch {}
-  if (!r.ok) { const e = new Error(j.error || `Request failed (${r.status})`); e.status = r.status; e.data = j; throw e; }
+  if (!r.ok) { const e = /** @type {any} */ (new Error(j.error || `Request failed (${r.status})`)); e.status = r.status; e.data = j; throw e; }
   return j;
 }
 function pickTab() {
@@ -389,7 +392,7 @@ function paintFromCache() {
 async function load() {
   let j;
   try {
-    const early = window.__bmGet ? await window.__bmGet : null; window.__bmGet = null;   // used once: later reloads ask the server again
+    const w = /** @type {any} */ (window), early = w.__bmGet ? await w.__bmGet : null; w.__bmGet = null;   // used once: later reloads ask the server again
     j = early && early.r.ok && early.j && early.j.data ? early.j : await api('get');
   }
   catch (e) {
@@ -532,7 +535,7 @@ function openIconDlg() {
 $('#iconGo').onclick = async e => {
   e.preventDefault();
   if (bulkRunning) return;
-  const mode = document.querySelector('input[name=iconMode]:checked').value;
+  const mode = /** @type {HTMLInputElement} */ (document.querySelector('input[name=iconMode]:checked')).value;
   $('#iconGo').disabled = true; $('#iconProg').hidden = false; $('#iconBar').style.width = '0%'; $('#iconStat').textContent = 'Starting…';
   const n = await fetchIcons(mode, false, (d, t) => { $('#iconBar').style.width = Math.round(d / t * 100) + '%'; $('#iconStat').textContent = `Fetching icons: ${d} of ${t}`; });
   $('#iconGo').disabled = false;
@@ -750,15 +753,15 @@ function countVisit(a) {
     .then(r => r.json()).then(j => {
       if (!j || !j.counted || !S.auth || !j.count) return;
       S.visits[url] = j.count;
-      document.querySelectorAll('a.main[data-u]').forEach(m => {
+      document.querySelectorAll('a.main[data-u]').forEach((/** @type {HTMLElement} */ m) => {
         if (m.dataset.u !== url) return;
         const row = m.closest('.row'), old = row.querySelector('.vc'), b = visitBadge(url);
         if (old) old.remove(); if (b) { const c = row.querySelector('.ctrl'); c ? row.insertBefore(b, c) : row.append(b); }
       });
     }).catch(() => {});
 }
-document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('.links a[data-u]'); if (a) countVisit(a); });
-document.addEventListener('auxclick', e => { if (e.button !== 1) return; const a = e.target.closest && e.target.closest('.links a[data-u]'); if (a) countVisit(a); });   // the middle button opens a new tab
+document.addEventListener('click', e => { const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u]'); if (a) countVisit(a); });
+document.addEventListener('auxclick', e => { if (e.button !== 1) return; const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u]'); if (a) countVisit(a); });   // the middle button opens a new tab
 
 function render() {
   if (drag && drag.started && !drag.allowRender) return; // redraw after the drop instead
@@ -810,7 +813,7 @@ function render() {
   if (!q && !cur.categories.length) grid.append(h('div', { class: 'nores first' },
     h('b', {}, S.editing ? 'This tab has no categories yet' : 'This tab is empty'),
     h('span', {}, S.editing ? 'Add one to any column below.' : 'Add a category, then your first links.'),
-    S.auth && !S.editing ? h('button', { class: 'btn primary', type: 'button', onclick: () => { const t = document.querySelector('[data-hub=toggle]'); if (t) t.click(); } }, 'Add Your First Links') : null));
+    S.auth && !S.editing ? h('button', { class: 'btn primary', type: 'button', onclick: () => { const t = /** @type {HTMLElement} */ (document.querySelector('[data-hub=toggle]')); if (t) t.click(); } }, 'Add Your First Links') : null));
   grid.append(board);
 }
 let lastCols = visibleCols();
@@ -1137,21 +1140,21 @@ for (const m of ['dark', 'light']) {
       h('input', { type: 'text', 'data-k': `${m}.${k}`, maxlength: 7, 'aria-label': `${m} ${label} hex` })),
     h('button', { type: 'button', class: 'crst', 'data-rst': `${m}.${k}`, title: 'Back to the default (follows the accent)', 'aria-label': `Reset ${label}` }, '↺')));
 }
-const colorInputs = () => [...document.querySelectorAll('#colorDlg input[data-k]')];
+const colorInputs = () => /** @type {HTMLInputElement[]} */ ([...document.querySelectorAll('#colorDlg input[data-k]')]);
 function fillColorInputs() {
   colorInputs().forEach(inp => { if (inp === document.activeElement && inp.type === 'text') return; const [m, k] = inp.dataset.k.split('.'); inp.value = colorsFor(m, draft)[k]; });
-  document.querySelectorAll('#colorDlg [data-p]').forEach(el => { const [m, k] = el.dataset.p.split('.'); el.style.color = colorsFor(m, draft)[k]; });
-  document.querySelectorAll('#colorDlg [data-rst]').forEach(b => { const [m, k] = b.dataset.rst.split('.'); b.style.visibility = draft[m] && isHex(draft[m][k]) ? 'visible' : 'hidden'; });
+  document.querySelectorAll('#colorDlg [data-p]').forEach((/** @type {HTMLElement} */ el) => { const [m, k] = el.dataset.p.split('.'); el.style.color = colorsFor(m, draft)[k]; });
+  document.querySelectorAll('#colorDlg [data-rst]').forEach((/** @type {HTMLElement} */ b) => { const [m, k] = b.dataset.rst.split('.'); b.style.visibility = draft[m] && isHex(draft[m][k]) ? 'visible' : 'hidden'; });
 }
 // one mode at a time: the one the page shows now first
 function colorMode(m) {
-  document.querySelectorAll('#colorDlg [data-cm]').forEach(b => b.setAttribute('aria-pressed', b.dataset.cm === m ? 'true' : 'false'));
-  document.querySelectorAll('#colorDlg .cpanel').forEach(p => { p.hidden = p.dataset.m !== m; });
+  document.querySelectorAll('#colorDlg [data-cm]').forEach((/** @type {HTMLElement} */ b) => b.setAttribute('aria-pressed', b.dataset.cm === m ? 'true' : 'false'));
+  document.querySelectorAll('#colorDlg .cpanel').forEach((/** @type {HTMLElement} */ p) => { p.hidden = p.dataset.m !== m; });
   $('#colorDlg').dataset.mode = m;
 }
-document.querySelectorAll('#colorDlg [data-cm]').forEach(b => b.onclick = () => colorMode(b.dataset.cm));
-document.querySelectorAll('#colorDlg [data-rst]').forEach(b => b.onclick = () => { const [m, k] = b.dataset.rst.split('.'); if (draft[m]) delete draft[m][k]; fillColorInputs(); applyLook(draft); });
-document.querySelectorAll('#colorDlg [data-same]').forEach(b => b.onclick = () => {
+document.querySelectorAll('#colorDlg [data-cm]').forEach((/** @type {HTMLElement} */ b) => b.onclick = () => colorMode(b.dataset.cm));
+document.querySelectorAll('#colorDlg [data-rst]').forEach((/** @type {HTMLElement} */ b) => b.onclick = () => { const [m, k] = b.dataset.rst.split('.'); if (draft[m]) delete draft[m][k]; fillColorInputs(); applyLook(draft); });
+document.querySelectorAll('#colorDlg [data-same]').forEach((/** @type {HTMLElement} */ b) => b.onclick = () => {
   const m = b.dataset.same, c0 = colorsFor(m, draft).c0; draft[m] ||= {};
   for (const k of ['c0', 'c1', 'c2', 'c3']) draft[m][k] = c0;
   fillColorInputs(); applyLook(draft);

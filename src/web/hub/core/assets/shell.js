@@ -79,6 +79,7 @@
   /* the theme button shows what it switches to: a sun in dark mode, a moon in light mode; its tooltip says the same */
   function themeIcon() { return svg(themeNow() === 'light' ? ICON.moon : ICON.sun); }
   var svg = function (d) { return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>'; };
+  var isHex = function (v) { return /^#[0-9a-f]{6}$/i.test(v || ''); };   // a color like #d9a85b (also shared as HUB.isHex)
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ls = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
              set: function (k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } };
@@ -164,7 +165,7 @@
     ['dark', 'light'].forEach(function (m) {
       var set = c[m] || {}, byScope = {};
       COLOR_KEYS.forEach(function (k) {
-        var v = set[k[0]]; if (!/^#[0-9a-f]{6}$/i.test(v || '')) return;
+        var v = set[k[0]]; if (!isHex(v)) return;
         Object.keys(COLOR_VARS[k[0]]).forEach(function (scope) {
           (byScope[scope] = byScope[scope] || []).push.apply(byScope[scope], COLOR_VARS[k[0]][scope].map(function (n) { return n + ':' + v + '!important'; }));
         });
@@ -178,7 +179,7 @@
     var pg = c.pg || {};
     PG_APPS.forEach(function (a) {
       ['dark', 'light'].forEach(function (m) {
-        var v = pg[a[0]] && pg[a[0]][m]; if (!/^#[0-9a-f]{6}$/i.test(v || '')) return;
+        var v = pg[a[0]] && pg[a[0]][m]; if (!isHex(v)) return;
         css += 'html[data-theme="' + m + '"][data-ix-app="' + a[0] + '"][data-ix-app][data-ix-app][data-ix-app]{' + COLOR_VARS.bg[a[0]].map(function (n) { return n + ':' + v + '!important'; }).join(';') + '}\n';
       });
     });
@@ -1486,7 +1487,7 @@
 
   window.HUB = {
     app: APP, state: function () { return S; }, login: login, logout: logout, settings: settings, toast: toast, undo: function (msg, run) { toast(msg, false, false, { label: 'Undo', run: run }); }, theme: themeNow, setTheme: setTheme,
-    isAdmin: function () { return !!S.admin; }, ready: function () { return refresh(); }, fetch: hubFetch, esc: esc,
+    isAdmin: function () { return !!S.admin; }, ready: function () { return refresh(); }, fetch: hubFetch, esc: esc, isHex: isHex,
     bufB64u: bufB64u, b64uBuf: b64uBuf, bookmarksHtml: bookmarksHtml,   // (1.61.0) for the passkey screens of Settings
     api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
