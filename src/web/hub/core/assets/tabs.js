@@ -72,7 +72,7 @@
         if (d < 5) return; start();
       }
       e.preventDefault();
-      if (!raf) raf = requestAnimationFrame(frame);
+      frame();   // at once, not on the next animation frame: a fast mouse (or a slow browser) must not skip the swap
     }, { passive: false });
     row.addEventListener('touchmove', function (e) { if (st && st.on) e.preventDefault(); }, { passive: false });
     // Slides a tab from where it was to where it now is.
@@ -82,8 +82,9 @@
       el.style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1)'; el.style.transform = '';
     }
     function isItem(x) { return !!x && x.matches(sel); }
-    function frame() {
-      raf = 0; if (!st || !st.on) return;
+    function frame(fromRaf) {
+      if (fromRaf) raf = 0;
+      if (!st || !st.on) return;
       var w = st.w, rr = row.getBoundingClientRect();
       // scroll the row when the pointer is near its edges
       var edge = 48, sp = st.x < rr.left + edge ? -(rr.left + edge - st.x) : st.x > rr.right - edge ? st.x - (rr.right - edge) : 0;
@@ -100,11 +101,13 @@
         tx = st.x - st.grab - slot();
       }
       w.style.transition = 'none'; w.style.transform = 'translateX(' + tx + 'px)';
-      if (sp) raf = requestAnimationFrame(frame);   // keep scrolling while held at an edge
+      if (sp && !raf) raf = requestAnimationFrame(function () { frame(true); });   // keep scrolling while held at an edge
     }
     function end(e) {
       if (!st || e.pointerId !== st.pid) return;
-      clearTimeout(st.timer); var d = st; st = null;
+      clearTimeout(st.timer); var d = st;
+      if (d.on) { d.x = e.clientX; frame(); }   // the last place the pointer reached counts, even if no frame ran since
+      st = null;
       if (!d.on) return;
       cancelAnimationFrame(raf); raf = 0;
       noClick = true; setTimeout(function () { noClick = false; }, 0);

@@ -50,6 +50,7 @@ try:
             pg.mouse.move(a[0] + a[2] / 3 + 12, a[1] + a[3] / 2, steps=4)
             pg.mouse.move(z[0] + z[2] * 0.75, z[1] + z[3] / 2, steps=14)
             pg.mouse.up()
+            pg.wait_for_timeout(300)
 
         # ---------------- Links ----------------
         pg.goto(s.base + '/web/links/'); wait_js(pg, "document.querySelectorAll('#tabs .tab').length >= 3", 20000)
