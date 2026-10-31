@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.62.6 | Behind the scenes only: one safe way to save shared files, the core split into smaller parts, and shared page helpers. Nothing looks different |
 | 1.62.5 | A cleanup: unused styles and code removed, the notes in your zip brought up to date, and every picture of the website retaken |
 | 1.62.2 | Settings: the on and off switches that had shrunk to a ring and a ball are switches again |
 | 1.62.1 | Passkeys: Remove now tells you what it needs, where you can see it |
@@ -97,6 +98,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.62.6
+
+### Behind the scenes
+
+Nothing on screen changes in this version. The code underneath is tidier.
+
+- Every file the site saves while two things might write at once (Tasks, Files, Home, Links visits, passkeys, notifications, approvals, activity, backups) now uses one shared way to wait its turn, instead of ten copies of it.
+- The core file `boot.php` is split into four smaller files: `boot`, `auth` (login, sessions, codes), `fetch` (safe downloads) and `settings` (site settings, time zone, alerts).
+- Home, Links, Info, Cards, Tasks and Files use one shared text-escaping and fetching helper from the shell instead of their own copies.
+- The Import Bookmarks script is now type-checked with the Files scripts.
+- New tests cover the lock helper, the split files and the shared helpers.
 
 ---
 
