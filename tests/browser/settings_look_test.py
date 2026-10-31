@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""1.61.6 and 1.61.9 in a real browser: the Settings windows (rows in cards, a hidden row joins its card, hints stay with their row, no empty
+"""1.61.6, 1.61.9 and 1.64.0 in a real browser: the Settings windows (rows in cards, a hidden row joins its card, hints stay with their row, no empty
 strip), Import and Export Bookmarks in the window frame, Home Settings' buttons on the right, Files Settings and Tasks Settings in
 rows, the main Settings page (a Save bar you can see, switches in Tabs, Health 3 + 3, the Passkeys card, one width, Reset beside
 Dark/Light, no backup reminder on Settings), the Files grid (pictures as small previews, a picked tile keeps its shape), and nothing
@@ -237,6 +237,61 @@ try:
         pg.goto(s.base + '/web/settings/#themes'); wait_js(pg, "!!document.getElementById('ix-pacc')", 20000)
         pacc = pg.evaluate("(() => { const r = document.getElementById('ix-pacc').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })()")
         check('L38 every switch in Settings is 44 x 26, also the older ones (Use the Preset\'s Accent Color, Show the Bar on the Home Page, the Telegram and Backup switches)', sw >= 6 and not bad and pacc == [44, 26], (sw, bad[:6], pacc))
+
+        # ---- 1.64.0: one look for every window, calmer tone, Visit Counts in Look ----
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.cat').length > 0", 20000)
+        pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]')
+        vis = pg.evaluate("""(() => { const d = document.getElementById('setDlg'), row = document.getElementById('sVisits').closest('.ix-srow'), grp = row.closest('.ix-grp');
+            const head = grp && grp.previousElementSibling; return [!!grp, head ? head.textContent.trim() : '', [...d.querySelectorAll('.ix-sb>h3,.ix-sb>h4')].map(h => h.textContent.trim())]; })()""")
+        check('L40 Links Settings: Show Visit Counts sits in the Look card, and there is no Visits section any more', vis[0] and vis[1].lower() == 'look' and 'Visits' not in vis[2], vis)
+        pg.keyboard.press('Escape')
+
+        pg.evaluate("document.getElementById('iconsBtn').click()"); pg.wait_for_selector('#iconDlg[open]'); pg.wait_for_timeout(300)
+        fi = pg.evaluate("""(() => { const d = document.getElementById('iconDlg'), rows = [...d.querySelectorAll('input[name=iconMode]')].map(r => r.closest('.ix-srow')), g = rows[0] && rows[0].closest('.ix-grp');
+            const r0 = rows[0].getBoundingClientRect(), rad = d.querySelector('input[name=iconMode]').getBoundingClientRect(), lab = rows[0].querySelector('span:not(.ix-rt)').getBoundingClientRect();
+            return [rows.length, !!g && rows.every(r => r.closest('.ix-grp') === g), rows.every(r => !!r.querySelector('.ix-rt')), rad.left > lab.right - 2 && Math.abs((rad.top + rad.bottom) / 2 - (r0.top + r0.bottom) / 2) < 30, !!document.activeElement.closest('.ix-sx')]; })()""")
+        check('L41 Fetch Icons: the two choices are rows in one card, each with its tile and the radio at the right; the close X does not hold the focus', fi == [2, True, True, True, False], fi)
+        pg.click('input[name=iconMode][value=all]'); ok = pg.evaluate("document.querySelector('input[name=iconMode][value=all]').checked && !document.querySelector('input[name=iconMode][value=missing]').checked")
+        check('L42 ...and picking the second choice works', ok)
+        pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('iconDlg').open"), 4000)
+
+        pg.evaluate("document.getElementById('colorsBtn').click()"); pg.wait_for_selector('#colorDlg[open]'); pg.wait_for_timeout(300)
+        co = pg.evaluate("""(() => { const d = document.getElementById('colorDlg'), rows = [...d.querySelectorAll('.cpanel:not([hidden]) .ix-srow')];
+            const hex = rows.map(r => r.querySelector('input[type=text]')).filter(Boolean), bodyTop = d.querySelector('.ix-sb').getBoundingClientRect().top, seg = d.querySelector('.cmodes').getBoundingClientRect().top;
+            const heads = [...d.querySelectorAll('.cpanel:not([hidden])>h4')].map(h => getComputedStyle(h).textTransform);
+            return [rows.length, rows.every(r => r.closest('.ix-grp')), hex.every(i => i.scrollWidth <= i.clientWidth + 1), seg >= bodyTop, heads, rows.some(r => r.querySelector('.ix-rt'))]; })()""")
+        check('L43 Colors: the Dark and Light choice is not cut off, section headings and cards like Settings, and every colour code (#ffd45c) fits its box', co[0] == 5 and co[1] and co[2] and co[3] and co[4] == ['uppercase', 'uppercase'] and not co[5], co)
+        pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('colorDlg').open"), 4000)
+
+        pg.evaluate("document.getElementById('textBtn').click()"); pg.wait_for_selector('#textDlg[open]'); pg.wait_for_timeout(300)
+        ts = pg.evaluate("""(() => { const d = document.getElementById('textDlg'), rows = [...d.querySelectorAll('#xSizes .ix-srow')], r = d.querySelector('#xSizes input[type=range]');
+            r.value = String(+r.value + 2); r.dispatchEvent(new Event('input', { bubbles: true })); return [rows.length, rows.every(x => !!x.querySelector('.ix-rt')), !!d.querySelector('#xSizes').closest('.ix-sb'), d.querySelector('#xSizes output').textContent]; })()""")
+        check('L44 Text Sizes: three slider rows with tiles in one card, and moving a slider shows its size', ts[0] == 3 and ts[1] and ts[2] and ts[3].endswith('px'), ts)
+        pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('textDlg').open"), 4000)
+
+        # the window cards follow Boxes and Cards (the colour a preset or Settings > Appearance > Colors sets), and the tiles are calmer
+        def card_bg(): return pg.evaluate("(() => { const g = document.querySelector('#setDlg .ix-grp'); return [getComputedStyle(g).backgroundColor, getComputedStyle(document.querySelector('#setDlg .ix-rt')).filter]; })()")
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin())", 20000)
+        pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]'); base_bg, tile_f = card_bg(); pg.keyboard.press('Escape')
+        r = pg.evaluate("""(() => { const st = JSON.parse(JSON.stringify(HUB.state())), send = {}; for (const k of ['siteName','nav','theme','accent','accentPg','look','homeBar','font','fontCustom','tools','backupEvery','pages','tz']) send[k] = st[k];
+            send.colors = { dark: { box: '#2d333b' }, light: { box: '#2d333b' } }; return HUB.api('settings', { settings: send }).then(j => !!j.ok); })()""")
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin())", 20000)
+        pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]'); new_bg, _ = card_bg(); pg.keyboard.press('Escape')
+        check('L45 the window cards take the Boxes and Cards colour: setting it to #2d333b changes the card colour', bool(r) and new_bg != base_bg, (r, base_bg, new_bg))
+        check('L46 the icon tiles are calmer for everyone (colours 28% less saturated)', 'saturate(0.72)' in tile_f, tile_f)
+        pg.evaluate("""(() => { const st = JSON.parse(JSON.stringify(HUB.state())), send = {}; for (const k of ['siteName','nav','theme','accent','accentPg','look','homeBar','font','fontCustom','tools','backupEvery','pages','tz']) send[k] = st[k]; send.colors = {}; return HUB.api('settings', { settings: send }); })()""")
+
+        # a window never opens with the close X selected, and a list nobody has filled yet is not drawn as an empty bar
+        pg.goto(s.base + '/web/cards/'); pg.wait_for_selector('#list .row.item', timeout=15000)
+        pg.evaluate("document.getElementById('bdlg').showModal()"); pg.wait_for_timeout(400)
+        eb = pg.evaluate("[document.activeElement && !!document.activeElement.closest('.ix-sx'), [...document.querySelectorAll('#bdlg .ix-grp')].filter(g => g.offsetParent).every(g => g.getBoundingClientRect().height > 30)]")
+        check('L47 Cards, Banks: the close X does not hold the focus, and no empty card is drawn', eb == [False, True], eb)
+        pg.keyboard.press('Escape')
+        pg.goto(s.base + '/web/tasks/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin())", 20000); pg.wait_for_timeout(500)
+        pg.evaluate("document.getElementById('dlg').showModal()"); pg.wait_for_timeout(400)
+        tf = pg.evaluate("document.activeElement && !!document.activeElement.closest('.dh')")
+        check('L48 Tasks, Add Task: the close X does not hold the focus either', not tf, tf)
+        pg.keyboard.press('Escape')
 
         # ---- phones: nothing wider than the screen ----
         ph = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=BROWSER != 'firefox', has_touch=True, storage_state=ctx.storage_state())

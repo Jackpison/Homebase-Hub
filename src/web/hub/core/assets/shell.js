@@ -484,10 +484,19 @@
 
   /* ---------- (1.61.0) one Settings window for every page ----------
      dialog.ix-sdlg: title + close X on top, a scrolling body, the buttons in a footer. The X does what Cancel does. */
+  /* (1.64.0) every window opens with its first text field ready to type in (a computer only: a phone would pop the keyboard),
+     and the focus never sits on the close X (it drew a yellow ring); with no field the window itself takes it */
+  function sdlgFocus(d, body, x) {
+    new MutationObserver(function () {
+      if (!d.open || (x && document.activeElement !== x)) return;
+      var f = matchMedia('(pointer:fine)').matches && body.querySelector('input:not([type=hidden]):not([disabled]):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),select:not([disabled]),textarea:not([disabled])');
+      if (f && f.offsetParent) f.focus(); else { d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); }
+    }).observe(d, { attributes: true, attributeFilter: ['open'] });
+  }
   function sdlgBuild(d) {
     if (d._ixS) return; d._ixS = true;
     var plain = d.classList.contains('ix-plain');   // (1.61.9) a page's own window (Add Link, Edit Card...): the frame only, its fields keep their own layout
-    if (d.querySelector('.dh,.ix-sh')) { if (!plain) sdlgDecorate(d.querySelector('.db'), '.sh3'); return; }
+    if (d.querySelector('.dh,.ix-sh')) { if (!plain) sdlgDecorate(d.querySelector('.db'), '.sh3'); sdlgFocus(d, d.querySelector('.db,.ix-sb') || d, d.querySelector('.dh [data-close],.dh .ib,.ix-sx')); return; }
     var c = d.querySelector(':scope>form') || (d.children.length === 1 && d.firstElementChild.tagName === 'DIV' ? d.firstElementChild : d), kids = [].slice.call(c.children);   // a form, a single wrapper (Info's Export) or the dialog itself
     var t = kids.filter(function (k) { return /^H[23]$/.test(k.tagName); })[0];
     var foot = kids.slice().reverse().filter(function (k) { return k.matches('.act,.actions'); })[0];
@@ -504,11 +513,7 @@
     kids.forEach(function (k) { if (k !== t && k !== foot) b.appendChild(k); });
     c.insertBefore(b, foot); foot.classList.add('ix-sf'); if (!plain) sdlgDecorate(b, 'h3,h4');
     d.setAttribute('aria-labelledby', t.id || (t.id = (d.id || 'sd') + '-t'));
-    // (1.61.9) a page's own window opens with its first field ready to type in, as before it had the frame (not on the X)
-    if (plain) new MutationObserver(function () {
-      if (!d.open || document.activeElement !== x) return;
-      var f = b.querySelector('input:not([type=hidden]):not([disabled]):not([type=checkbox]):not([type=radio]),select:not([disabled]),textarea:not([disabled])'); if (f && f.offsetParent) f.focus();
-    }).observe(d, { attributes: true, attributeFilter: ['open'] });
+    sdlgFocus(d, b, x);
   }
   /* (1.61.5) the look inside a Settings window: each section's rows in one rounded card, a small coloured tile in front of each row */
   var RT = [
@@ -542,6 +547,7 @@
     var kids = [].slice.call(body.children), grp = null;
     kids.forEach(function (k) {
       if (k.matches(headSel)) { grp = null; return; }
+      if (k.matches('.ix-sub')) { grp = null; return; }   // (1.64.0) a panel with its own headings and cards (Colors' Dark and Light sets): decorated below
       if (k.matches('.err,[id$=Err],.ix-sb-skip,.split,p:not(.hint)')) return;   // status lines and old leftovers stay outside the cards
       if (k.matches('p.hint,.hint') && !grp) return;
       // (1.61.6) a hidden row (Encrypt All Private Tabs) joins its card too, so it is not drawn loose once it shows; a hint stays with its row
@@ -549,9 +555,10 @@
       grp.appendChild(k);
     });
     [].forEach.call(body.querySelectorAll('.ix-srow,.g-row:not(.stack)'), function (r) {
-      var lab = r.querySelector('label,.g-label,span'); if (!lab || r.querySelector('.ix-rt')) return;
-      r.insertBefore(rowTile((lab.firstChild && lab.firstChild.textContent || lab.textContent || '')), r.firstChild);
+      var lab = r.querySelector('label,.g-label,span'); if (!lab || r.querySelector('.ix-rt') || r.classList.contains('ix-nt')) return;   // ix-nt: a row without a tile (a colour row has its own swatch)
+      r.insertBefore(rowTile(r.getAttribute('data-rt') || (lab.firstChild && lab.firstChild.textContent || lab.textContent || '')), r.firstChild);
     });
+    [].forEach.call(body.querySelectorAll(':scope>.ix-sub'), function (sub) { sdlgDecorate(sub, headSel); });
     [].forEach.call(body.querySelectorAll('.ix-grp'), function (g) { if (!g.children.length) g.remove(); });
   }
   function sdlgAll() { [].forEach.call(document.querySelectorAll('dialog.ix-sdlg'), sdlgBuild); [].forEach.call(document.querySelectorAll('dialog.sheet .sb'), function (b) { sdlgDecorateSheet(b); }); }

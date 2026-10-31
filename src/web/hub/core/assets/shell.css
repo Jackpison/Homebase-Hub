@@ -453,11 +453,11 @@ dialog.ix-sdlg>form{display:flex;flex-direction:column;min-height:0;flex:1;paddi
 .ix-sdlg .ix-sx:hover{opacity:1;background:color-mix(in srgb,currentColor 10%,transparent)}
 .ix-sdlg .ix-sx svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .ix-sdlg .ix-sb{flex:1;min-height:0;overflow-y:auto;padding:4px 20px 8px;overscroll-behavior:contain}
-.ix-sdlg .ix-sb>h3,.ix-sdlg .ix-sb>h4,.ix-sdlg .sh3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:20px 0 8px;color:color-mix(in srgb,currentColor 78%,transparent)}
-.ix-sdlg .ix-sb>h3:first-child,.ix-sdlg .ix-sb>h4:first-child{margin-top:8px}
+.ix-sdlg .ix-sb>h3,.ix-sdlg .ix-sb>h4,.ix-sdlg .ix-sub>h3,.ix-sdlg .ix-sub>h4,.ix-sdlg .sh3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:20px 0 8px;color:color-mix(in srgb,currentColor 78%,transparent)}
+.ix-sdlg .ix-sb>h3:first-child,.ix-sdlg .ix-sb>h4:first-child,.ix-sdlg .ix-sub>h4:first-child{margin-top:8px}
 .ix-sdlg .ix-sb input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]):not([type=range]),.ix-sdlg .ix-sb select:not(.ix-sgc-h){width:100%;font:inherit;font-size:15px;color:inherit;border-radius:10px;padding:10px 12px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
 .ix-sdlg .ix-sb input:focus,.ix-sdlg .ix-sb select:focus{outline:none;border-color:color-mix(in srgb,currentColor 55%,transparent);box-shadow:none}
-.ix-sdlg .ix-sb :not(.ix-srow)>label:not(.check):not(.chk):not(.swatch){display:block;font-size:13px;margin:0 0 12px}
+.ix-sdlg .ix-sb :not(.ix-srow)>label:not(.ix-srow):not(.check):not(.chk):not(.swatch){display:block;font-size:13px;margin:0 0 12px}
 .ix-sdlg .ix-sb label>input:not([type=checkbox]),.ix-sdlg .ix-sb label>select{margin-top:5px}
 .ix-sdlg .ix-sb .hint,.ix-sdlg .ix-sb p.hint{font-size:13px;color:color-mix(in srgb,currentColor 80%,transparent);margin:-6px 0 12px}
 .ix-sdlg .ix-sf,.ix-sdlg>form>.act,.ix-sdlg>form>.actions,.ix-sdlg .df{flex:none;display:flex;justify-content:flex-end;gap:10px;margin:0;padding:12px 20px 16px;border-top:1px solid color-mix(in srgb,currentColor 12%,transparent)}
@@ -503,9 +503,10 @@ kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7p
 #ix-chord{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483000;max-width:calc(100vw - 24px);padding:10px 16px;border-radius:12px;background:var(--ix-s2,#222);color:var(--ix-tx,#eee);border:1px solid var(--ix-line2,#444);box-shadow:0 12px 30px rgba(0,0,0,.4);font:500 14px system-ui,sans-serif}
 
 /* (1.61.5) Settings windows: style-B headings, rows in one rounded card, a coloured tile in front of each row */
-.ix-sdlg .ix-sb>h3,.ix-sdlg .ix-sb>h4,.ix-sdlg .sh3,dialog.sheet .sb h3{display:flex;align-items:center;gap:10px;color:color-mix(in srgb,var(--ix-accent,#ffc21a) 32%,currentColor)!important;opacity:1!important}
-.ix-sdlg .ix-sb>h3::after,.ix-sdlg .ix-sb>h4::after,.ix-sdlg .sh3::after,dialog.sheet .sb h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--ix-accent,#ffc21a) 55%,transparent),transparent)}
-.ix-grp{background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 12%,transparent);border-radius:14px;padding:2px 14px;margin:0 0 6px}
+.ix-sdlg .ix-sb>h3,.ix-sdlg .ix-sb>h4,.ix-sdlg .ix-sub>h3,.ix-sdlg .ix-sub>h4,.ix-sdlg .sh3,dialog.sheet .sb h3{display:flex;align-items:center;gap:10px;color:color-mix(in srgb,var(--ix-accent,#ffc21a) 32%,currentColor)!important;opacity:1!important}
+.ix-sdlg .ix-sb>h3::after,.ix-sdlg .ix-sb>h4::after,.ix-sdlg .ix-sub>h3::after,.ix-sdlg .ix-sub>h4::after,.ix-sdlg .sh3::after,dialog.sheet .sb h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--ix-accent,#ffc21a) 55%,transparent),transparent)}
+/* (1.64.0) the card is the page's Boxes and Cards colour (--ix-s1, set by a preset or Settings > Appearance > Colors), a little lifted by the text colour */
+.ix-grp,.ix-card{background:color-mix(in srgb,var(--ix-s1,#0e0e0e) 95%,var(--ix-tx,#f2f2f2));border:1px solid color-mix(in srgb,var(--ix-line,#262626) 70%,currentColor 8%);border-radius:14px;padding:2px 14px;margin:0 0 6px}
 .ix-grp>.ix-srow{margin:0;padding:12px 0}
 .ix-grp>:not([hidden])~.ix-srow:not([hidden]){border-top:1px solid color-mix(in srgb,currentColor 10%,transparent)}
 .ix-grp>.hint{margin:-6px 0 12px;font-size:12.5px}.ix-grp>.hint:empty{display:none}
@@ -513,7 +514,7 @@ kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7p
 .ix-grp>label,.ix-grp>.field,.ix-grp>.f,.ix-grp>.c2{padding-top:12px}
 .ix-grp>:last-child{margin-bottom:12px}
 .ix-grp>.ix-srow:last-child{margin-bottom:0}
-.ix-rt{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+.ix-rt{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;filter:saturate(.72)}   /* (1.64.0) calmer tiles for everyone */
 .ix-rt svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .ix-srow>.ix-rt+*{flex:1}
 .ix-sdlg .ix-sb .ix-srow>.ix-rt+label,.ix-sdlg .ix-sb .ix-srow>.ix-rt+span{margin:0}
@@ -533,6 +534,48 @@ dialog.sheet .sb h3{display:flex;align-items:center;gap:10px;color:color-mix(in 
 html .btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button{border-radius:12px;font-weight:700}
 html .btn:not(.ib):not(.sm),html .ix-sdlg .ix-sf button{min-height:38px;height:auto}
 /* (1.61.9) a page's own window keeps the main button last (Cancel, then Save), and a Delete on the far left */
-.ix-sdlg.ix-plain .ix-sf{flex-direction:row}
-.ix-sdlg.ix-plain .ix-sf .primary,.ix-sdlg.ix-plain .ix-sf .pri,.ix-sdlg.ix-plain .ix-sf [data-ix-save]{order:9}
-.ix-sdlg.ix-plain .ix-sf .left,.ix-sdlg.ix-plain .ix-sf .danger{order:-1;margin-right:auto}
+.ix-sdlg .ix-sf{flex-direction:row}
+.ix-sdlg .ix-sf .primary,.ix-sdlg .ix-sf .pri,.ix-sdlg .ix-sf [data-ix-save]{order:9}
+.ix-sdlg .ix-sf .left,.ix-sdlg .ix-sf .danger{order:-1;margin-right:auto}
+.ix-sdlg:focus{outline:0}
+
+/* ---------- (1.64.0) the window pieces every page uses, drawn here once from the shell colours ----------
+   A choice row (radio at the right), a colour row (swatch and code), a slider row, the Dark / Light choice, a list of versions,
+   a preview, a progress bar. They take the card colour (--ix-s1, so a preset or the Colors tab changes them), the line colour
+   and the accent, on every page. */
+label.ix-srow{cursor:pointer}
+.ix-srow>input[type=radio]{appearance:none;-webkit-appearance:none;flex:none;width:22px;height:22px;margin:0;border-radius:50%;border:2px solid color-mix(in srgb,currentColor 35%,transparent);background:transparent;cursor:pointer;display:grid;place-content:center}
+.ix-srow>input[type=radio]::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent,var(--ix-accent,#ffc21a));transform:scale(0);transition:transform .12s}
+.ix-srow>input[type=radio]:checked{border-color:var(--accent,var(--ix-accent,#ffc21a))}
+.ix-srow>input[type=radio]:checked::after{transform:scale(1)}
+.ix-srow>input[type=radio]:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.ix-srow>.cprev{flex:none;min-width:64px;text-align:right;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.ix-srow>.range{flex:none;width:min(230px,52%);display:flex;align-items:center;gap:12px}
+.ix-srow>.range input[type=range]{flex:1;min-width:0;accent-color:var(--accent,var(--ix-accent,#ffc21a));padding:0;border:0;background:none}
+.ix-srow>.range output{min-width:46px;text-align:right;color:var(--ix-mu,currentColor);font-variant-numeric:tabular-nums}
+.ix-sdlg .ix-sb label.swatch{display:flex;align-items:center;gap:6px;flex:none;width:136px;margin:0;padding:3px 8px 3px 3px;border-radius:10px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
+.ix-sdlg .ix-sb label.swatch>input[type=color]{width:30px;height:30px;margin:0;padding:0;border:0;background:none;cursor:pointer;flex:none}
+.ix-sdlg .ix-sb label.swatch>input[type=text]{width:100%!important;min-width:0;margin:0!important;padding:4px 0!important;border:0!important;background:none!important;border-radius:0!important;font-size:14px!important;font-variant-numeric:tabular-nums}
+.ix-sdlg .ix-sb label.swatch>input[type=text]:focus{box-shadow:none}
+.ix-srow>.crst{flex:none;border:0;background:none;color:inherit;opacity:.6;font-size:16px;cursor:pointer;width:28px;height:28px;border-radius:8px;padding:0}
+.ix-srow>.crst:hover{opacity:1;background:color-mix(in srgb,currentColor 10%,transparent)}
+.ix-sdlg .cmodes{display:inline-flex;gap:2px;padding:3px;border-radius:12px;margin:8px 0 12px;background:color-mix(in srgb,currentColor 7%,transparent);border:1px solid color-mix(in srgb,currentColor 12%,transparent)}
+.ix-sdlg .cmodes button{font:inherit;font-size:13.5px;font-weight:600;color:inherit;opacity:.85;background:transparent;border:0;border-radius:9px;padding:7px 14px;cursor:pointer;white-space:nowrap}
+.ix-sdlg .cmodes button[aria-pressed="true"]{opacity:1;background:color-mix(in srgb,currentColor 14%,transparent);box-shadow:0 1px 3px rgba(0,0,0,.28),inset 0 1px 0 color-mix(in srgb,currentColor 14%,transparent)}
+.ix-sdlg .clink{display:block;border:0;background:none;color:color-mix(in srgb,var(--accent,var(--ix-accent,#ffc21a)) 75%,currentColor);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;padding:8px 2px 4px}
+.ix-sdlg .ix-sb ul.versions,.ix-sdlg .ix-sb .sample{background:color-mix(in srgb,var(--ix-s1,#0e0e0e) 95%,var(--ix-tx,#f2f2f2));border:1px solid color-mix(in srgb,var(--ix-line,#262626) 70%,currentColor 8%);border-radius:14px}
+.ix-sdlg .ix-sb ul.versions{padding:0 14px;margin:0 0 6px;list-style:none;overflow:auto}
+.ix-sdlg .ix-sb ul.versions li{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid color-mix(in srgb,currentColor 10%,transparent)}
+.ix-sdlg .ix-sb ul.versions li:last-child{border-bottom:0}
+.ix-sdlg .ix-sb .prog{height:6px;border-radius:99px;background:color-mix(in srgb,currentColor 14%,transparent);overflow:hidden;margin:6px 0 4px}
+.ix-sdlg .ix-sb .prog i{display:block;height:100%;width:0;background:var(--accent,var(--ix-accent,#ffc21a));border-radius:99px;transition:width .25s ease}
+@media (max-width:520px){.ix-srow>.cprev{display:none}.ix-sdlg .ix-sb label.swatch{width:112px}}
+/* the colour swatch: the native picker shows only the colour, with a soft edge */
+.ix-sdlg .ix-sb label.swatch>input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+.ix-sdlg .ix-sb label.swatch>input[type=color]::-webkit-color-swatch{border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:7px}
+.ix-sdlg .ix-sb label.swatch>input[type=color]::-moz-color-swatch{border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:7px}
+.ix-sdlg .clink{margin:0 0 12px}
+.ix-sdlg .ix-sb .sample{margin:12px 0 6px;padding:12px 14px}
+/* (1.64.0) a card around a list the page has not filled yet is not drawn (Holders, Banks, Column Order) */
+.ix-grp:has(>div:empty:only-child),.ix-grp:has(>ul:empty:only-child){display:none}
+#bkdlg .bgrid,.ix-sdlg .bgrid{margin-bottom:10px}

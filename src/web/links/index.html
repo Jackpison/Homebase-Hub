@@ -47,15 +47,15 @@
   <button class="btn primary" id="doneBtn" data-hub="done">Done</button>
 </div>
 
-<dialog id="verDlg" class="ix-sdlg ix-plain"><form method="dialog">
+<dialog id="verDlg" class="ix-sdlg"><form method="dialog">
   <h3>Restore an Earlier Version</h3>
-  <p style="margin:0 0 12px;color:var(--muted);font-size:14px">Up to 40 copies, one every 10 minutes. Restoring keeps a copy first.</p>
-  <ul class="versions" id="verList"></ul>
+  <p class="hint">Up to 40 copies, one every 10 minutes. Restoring keeps a copy first.</p>
+  <ul class="versions ix-sb-skip" id="verList"></ul>
   <p class="err" id="verErr"></p>
   <div class="actions"><button class="btn" value="cancel" formnovalidate>Close</button></div>
 </form></dialog>
 
-<dialog id="linkDlg" class="ix-sdlg ix-plain"><form method="dialog">
+<dialog id="linkDlg" class="ix-sdlg"><form method="dialog">
   <h3 id="linkDlgTitle">Add Link</h3>
   <div class="field"><label for="lUrl">URL</label><input id="lUrl" required placeholder="https://"></div>
   <div class="field"><label for="lTitle">Name</label>
@@ -70,7 +70,7 @@
   <div class="actions"><button class="btn primary" id="linkSave">Save Link</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
 </form></dialog>
 
-<dialog id="nameDlg" class="ix-sdlg ix-plain"><form method="dialog">
+<dialog id="nameDlg" class="ix-sdlg"><form method="dialog">
   <h3 id="nameDlgTitle">Name</h3>
   <div class="field"><label for="nameInput">Name</label><input id="nameInput" required maxlength="60"></div>
   <div class="actions"><button class="btn primary" id="nameSave">Save</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
@@ -87,10 +87,8 @@
 
   <div class="ix-srow" id="sEncRow" hidden><span>Encrypt All Private Tabs<small id="sEncHint">Locks your private tabs in this browser.</small></span><button type="button" id="sEncAll">Encrypt All</button></div>
 
-  <h4>Visits</h4>
-  <div class="ix-srow"><label for="sVisits">Show Visit Counts<small>Shows how often each link was opened. Only you see it.</small></label><input type="checkbox" class="ix-sw" id="sVisits"></div>
-
   <h4>Look</h4>
+  <div class="ix-srow"><label for="sVisits">Show Visit Counts<small>Shows how often each link was opened. Only you see it.</small></label><input type="checkbox" class="ix-sw" id="sVisits"></div>
   <div class="ix-srow"><span>Text Sizes<small>Make the tabs, headings and links bigger or smaller.</small></span><button type="button" id="sTextBtn">Change</button></div>
   <div class="ix-srow"><label for="sEditBar">Edit Bar<small>Icons Only shows each name on hover.</small></label>
     <select id="sEditBar" data-ix-editbar><option value="icons">Icons Only</option><option value="text">Icons and Text</option></select></div>
@@ -108,27 +106,35 @@
   <div class="actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" id="setSave" data-ix-save>Save Settings</button></div>
 </form></dialog>
 
-<dialog id="colorDlg" class="ix-sdlg ix-plain"><form method="dialog">
+<dialog id="colorDlg" class="ix-sdlg"><form method="dialog">
   <h3>Colors</h3>
-  <div class="cmodes" role="group" aria-label="Mode"><button type="button" data-cm="dark">Dark Mode</button><button type="button" data-cm="light">Light Mode</button></div>
-  <div class="cpanel" data-m="dark">
-    <div class="cgrp"><div class="cgh"><b>Tab Ribbon</b><span>The marker on the tab bar. One tab can have its own: edit the tab.</span></div><div id="darkColors"></div></div>
-    <div class="cgrp"><div class="cgh"><b>Category Names</b><span>One color for each column of categories.</span></div><div id="darkColors4"></div>
-      <button type="button" class="clink" data-same="dark">Use Column 1's Color for Every Column</button></div>
+  <div class="cmodes ix-sb-skip" role="group" aria-label="Mode"><button type="button" data-cm="dark">Dark Mode</button><button type="button" data-cm="light">Light Mode</button></div>
+  <div class="cpanel ix-sub" data-m="dark">
+    <h4>Tab Ribbon</h4>
+    <p class="hint">The marker on the tab bar. One tab can have its own: edit the tab.</p>
+    <div class="ix-grp ix-sb-skip" id="darkColors"></div>
+    <h4>Category Names</h4>
+    <p class="hint">One color for each column of categories.</p>
+    <div class="ix-grp ix-sb-skip" id="darkColors4"></div>
+    <button type="button" class="clink ix-sb-skip" data-same="dark">Use Column 1's Color for Every Column</button>
   </div>
-  <div class="cpanel" data-m="light">
-    <div class="cgrp"><div class="cgh"><b>Tab Ribbon</b><span>The marker on the tab bar. One tab can have its own: edit the tab.</span></div><div id="lightColors"></div></div>
-    <div class="cgrp"><div class="cgh"><b>Category Names</b><span>One color for each column of categories.</span></div><div id="lightColors4"></div>
-      <button type="button" class="clink" data-same="light">Use Column 1's Color for Every Column</button></div>
+  <div class="cpanel ix-sub" data-m="light">
+    <h4>Tab Ribbon</h4>
+    <p class="hint">The marker on the tab bar. One tab can have its own: edit the tab.</p>
+    <div class="ix-grp ix-sb-skip" id="lightColors"></div>
+    <h4>Category Names</h4>
+    <p class="hint">One color for each column of categories.</p>
+    <div class="ix-grp ix-sb-skip" id="lightColors4"></div>
+    <button type="button" class="clink ix-sb-skip" data-same="light">Use Column 1's Color for Every Column</button>
   </div>
-  <p class="hint" style="font-size:12.5px;color:var(--faint);margin:2px 0 14px">Page, text and accent colors: Settings › Appearance › Colors.</p>
+  <p class="hint ix-sb-skip">Page, text and accent colors: Settings › Appearance › Colors.</p>
   <div class="actions"><button class="btn primary" id="colorSave">Save Colors</button><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn left" type="button" id="colorReset">Reset This Mode</button></div>
 </form></dialog>
 
-<dialog id="textDlg" class="ix-sdlg ix-plain"><form method="dialog">
+<dialog id="textDlg" class="ix-sdlg"><form method="dialog">
   <h3>Text Sizes</h3>
-  <div id="xSizes"></div>
-  <div class="sample" aria-hidden="true">
+  <div id="xSizes" class="ix-grp ix-sb-skip"></div>
+  <div class="sample ix-sb-skip" aria-hidden="true">
     <div class="s-tab"><svg viewBox="0 0 20 22" fill="currentColor"><path d="M3 0h14a2 2 0 0 1 2 2v19.2a.6.6 0 0 1-.95.49L10 16.5l-8.05 5.19A.6.6 0 0 1 1 21.2V2a2 2 0 0 1 2-2z"/></svg>Bookmarks</div>
     <div class="s-cat">Cloud, Server &amp; Hosting</div>
     <div class="s-link">Cloudflare, Porkbun, Racknerd</div>
@@ -137,17 +143,17 @@
   <div class="actions"><button class="btn primary" id="textSave">Save Sizes</button><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn left" type="button" id="textReset">Reset Sizes</button></div>
 </form></dialog>
 
-<dialog id="iconDlg" class="ix-sdlg ix-plain"><form method="dialog">
+<dialog id="iconDlg" class="ix-sdlg"><form method="dialog">
   <h3>Fetch Icons</h3>
-  <p class="hint" style="font-size:13.5px;color:var(--muted);margin:-6px 0 14px">Saves each site's icon on your server.</p>
-  <label class="check" style="margin-bottom:12px"><input type="radio" name="iconMode" value="missing" checked><span>Links Without an Icon<small id="iconCnt1"></small></span></label>
-  <label class="check" style="margin-bottom:14px"><input type="radio" name="iconMode" value="all"><span>Every link, replacing the current icons<small id="iconCnt2"></small></span></label>
-  <div class="prog" id="iconProg" hidden><i id="iconBar"></i></div>
-  <p class="hint" id="iconStat" role="status" aria-live="polite" style="font-size:13.5px;color:var(--muted);margin:10px 0 0;min-height:1.4em"></p>
+  <p class="hint">Saves each site's icon on your server.</p>
+  <label class="ix-srow" data-rt="icons"><span>Links Without an Icon<small id="iconCnt1"></small></span><input type="radio" name="iconMode" value="missing" checked></label>
+  <label class="ix-srow" data-rt="replace refresh"><span>Every link, replacing the current icons<small id="iconCnt2"></small></span><input type="radio" name="iconMode" value="all"></label>
+  <div class="prog ix-sb-skip" id="iconProg" hidden><i id="iconBar"></i></div>
+  <p class="hint ix-sb-skip" id="iconStat" role="status" aria-live="polite"></p>
   <div class="actions"><button class="btn primary" id="iconGo" type="button">Fetch Icons</button><button class="btn" value="cancel" formnovalidate>Close</button></div>
 </form></dialog>
 
-<dialog id="keyDlg" class="ix-sdlg ix-plain"><form method="dialog">
+<dialog id="keyDlg" class="ix-sdlg"><form method="dialog">
   <h3 id="keyTitle">Unlock Encrypted Tabs</h3>
   <p id="keyText"></p>
   <div class="field"><label for="keyPw" id="keyPwLbl">Encryption Passphrase</label><input type="password" id="keyPw" autocomplete="off"></div>

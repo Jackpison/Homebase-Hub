@@ -33,7 +33,7 @@ def lum(h):
     return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]
 def cr(a, b): x, y = lum(a), lum(b); return (max(x, y) + .05) / (min(x, y) + .05)
 
-check('R1 the two lists are read (dark and light)', len(P['dark']) == 89 and len(P['light']) == 52, (len(P['dark']), len(P['light'])))
+check('R1 the two lists are read (dark and light)', len(P['dark']) == 91 and len(P['light']) == 52, (len(P['dark']), len(P['light'])))
 KEEP = {'GitHub Light', 'GitHub Dark', 'Dracula', 'Nord', 'Solarized', 'Catppuccin Mocha', 'Catppuccin Latte', 'One Dark', 'One Light', 'Tokyo Night', 'Solarized Light', 'Gruvbox', 'Monokai'}
 LIMIT = {'dark': 5.6, 'light': 4.6}
 close = []
@@ -51,5 +51,9 @@ weak = [(n, [round(v, 1) for v in (cr(p['c']['text'], p['c']['bg']), cr(p['c']['
         for n, p in found.items() if not (cr(p['c']['text'], p['c']['bg']) >= 7 and cr(p['c']['text'], p['c']['box']) >= 7 and cr(p['c']['mute'], p['c']['box']) >= 4.5
                                           and cr(p['c']['mute'], p['c']['bg']) >= 4.5 and cr(p['c']['barText'], p['c']['bar']) >= 4.5 and cr(p['a'], p['c']['bg']) >= 3 and cr(p['a'], p['c']['box']) >= 3)]
 check('R3 the 14 vivid presets of 1.59 are there, in the Vivid group, and easy to read', len(found) == 14 and all(p['g'] == 'vivid' for p in found.values()) and not weak, (sorted(set(NEW) - set(found)), weak))
+soft = {p['n']: p for p in P['dark'] if p['n'] in ('Soft Dark', 'Soft Warm')}
+check('R4 Soft Dark and Soft Warm (1.64.0) are in Site Looks, dimmer than the default, and still easy to read (text 7:1, secondary text 4.5:1)',
+      set(soft) == {'Soft Dark', 'Soft Warm'} and all(p['g'] == 'site' and lum(p['c']['text']) < lum(DEF['dark']['text']) and cr(p['c']['text'], p['c']['panel']) >= 7 and cr(p['c']['mute'], p['c']['panel']) >= 4.5 and cr(p['c']['mute'], p['c']['box']) >= 4.5 for p in soft.values()),
+      {n: (round(cr(p['c']['text'], p['c']['panel']), 1), round(cr(p['c']['mute'], p['c']['panel']), 1)) for n, p in soft.items()})
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

@@ -473,6 +473,8 @@
   var PRESETS = {
     dark: [
       { n: 'AMOLED', g: 'site', c: {  }, a: '' },
+      { n: 'Soft Dark', g: 'site', c: { bg: '#1a1a1a', box: '#212121', panel: '#292929', line: '#363636', text: '#cdcdcd', mute: '#9a9a9a', bar: '#151515', barText: '#9a9a9a' }, a: '' },
+      { n: 'Soft Warm', g: 'site', c: { bg: '#1f160d', box: '#2a1f13', panel: '#342718', line: '#463524', text: '#dccfb6', mute: '#a39478', bar: '#1a120a', barText: '#a39478' }, a: '' },
       { n: 'Midnight', g: 'site', c: { bg: '#0a0f1d', box: '#111a2d', panel: '#172238', line: '#24304a', text: '#e8edf7', mute: '#97a3bd', bar: '#0d1426', barText: '#97a3bd' }, a: '' },
       { n: 'Dracula', g: 'classic', c: { bg: '#21222c', box: '#282a36', panel: '#2f3241', line: '#44475a', text: '#f8f8f2', mute: '#a4abd6', bar: '#191a21', barText: '#a4abd6' }, a: '#bd93f9' },
       { n: 'Monokai', g: 'classic', c: { bg: '#272822', box: '#2f302a', panel: '#3e3d32', line: '#49483e', text: '#f8f8f2', mute: '#a8a48e', bar: '#1e1f1c', barText: '#a8a48e' }, a: '#a6e22e' },

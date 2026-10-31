@@ -164,38 +164,11 @@ dialog h4{margin:20px 0 10px;font-size:14px;font-weight:600;color:var(--muted)}
 .iconrow .prev{width:38px;height:38px;flex:none;border:1px solid var(--line2);border-radius:7px;display:grid;place-items:center;background:var(--bg);font-size:20px;overflow:hidden}
 .iconrow .prev img{width:22px;height:22px;object-fit:contain}
 .iconrow input{flex:1;min-width:0}
-/* Colors dialog: one mode at a time, grouped by what the color paints */
-.cmodes{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--line2);border-radius:10px;margin:0 0 14px}
-.cmodes button{border:0;background:none;color:var(--muted);font:inherit;font-size:13.5px;padding:6px 14px;border-radius:7px;cursor:pointer}
-.cmodes button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:600}
-.cgrp{border:1px solid var(--line2);border-radius:12px;padding:2px 14px 4px;margin-bottom:12px}
-.cgh{padding:10px 0 8px}.cgh b{display:block;font-size:14px;font-weight:600}.cgh span{font-size:12.5px;color:var(--muted)}
-.crow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
-.crow .lbl{flex:1;margin:0;font-size:14px;color:var(--text)}
-.crow .cprev{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;min-width:72px;text-align:right}
-.crow .swatch{width:128px;flex:none}
-.crst{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;width:26px;height:26px;border-radius:6px;padding:0}
-.crst:hover{color:var(--accent)}
-.clink{border:0;background:none;color:var(--accent);font:inherit;font-size:13px;cursor:pointer;padding:6px 0 10px}
-@media (max-width:520px){.crow .cprev{display:none}.crow .swatch{width:112px}}
-.colors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 12px}
-.colors .field{margin-bottom:10px}
-.colors.four{grid-template-columns:repeat(4,minmax(0,1fr));gap:0 8px}
-.colors.four .swatch{padding-right:4px}
-.colors.four .swatch input[type=text]{font-size:13px}
-.swatch{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:4px 8px 4px 4px}
-.swatch input[type=color]{width:30px;height:30px;border:0;padding:0;background:none;cursor:pointer;flex:none}
-.swatch input[type=color]::-webkit-color-swatch-wrapper{padding:0}
-.swatch input[type=color]::-webkit-color-swatch{border:1px solid var(--line2);border-radius:5px}
-.swatch input[type=text]{border:0;background:none;padding:4px 0;font-variant-numeric:tabular-nums;width:100%}
-.split{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.colors.four .colors.four .split{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px;line-height:1.4}
 .check input{width:17px;height:17px;margin:1px 0 0;accent-color:var(--accent);flex:none}
 .check small{display:block;color:var(--faint);font-size:12.5px}
 .tab .lock{width:16px;height:16px;margin-left:-2px;flex:none;display:block}
-.versions{list-style:none;margin:0 0 12px;padding:0;max-height:50vh;overflow:auto;border:1px solid var(--line2);border-radius:8px}
-.versions li{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)}
-.versions li:last-child{border-bottom:0}
 .versions .when{flex:1;min-width:0}
 .versions .when small{display:block;color:var(--faint);font-size:12.5px}
 .versions button{font-size:13px;padding:5px 10px}
@@ -216,9 +189,6 @@ body.is-locked .search{display:none}
 #keyDlg #keyText{color:var(--muted);margin:0 0 14px}
 .prog{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .25s ease}
-.range{display:flex;align-items:center;gap:12px}
-.range input[type=range]{flex:1;accent-color:var(--accent);padding:0;border:0;background:none}
-.range output{min-width:48px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
 .sample{margin:4px 0 14px;padding:12px 14px;border:1px solid var(--line2);border-radius:8px;background:var(--bg);font-family:var(--font);display:grid;gap:8px}
 .sample .s-tab{font-size:var(--fs-tab);font-weight:700;text-transform:uppercase;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
 .sample .s-tab svg{width:15px;height:17px;color:var(--ribbon)}
@@ -250,8 +220,7 @@ body.is-locked .search{display:none}
   .search kbd{display:none}
   main{padding:10px 12px 140px}
   .col{gap:28px}
-  .colors,.colors.four{grid-template-columns:1fr 1fr}
-}
+  .colors,}
 @media (prefers-reduced-motion:reduce){.tab,.tip{transition:none}.ghost{transform:none}}
 
 /* Import Bookmarks (links-import.js) */

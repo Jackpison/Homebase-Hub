@@ -1121,7 +1121,7 @@ function commitDraft(dlg, msg) { const keepV = S.data.settings && S.data.setting
 
 /* colors */
 for (const m of ['dark', 'light']) {
-  for (const [k, label] of COLOR_KEYS.filter(c => c[0] !== 'bg' && c[0] !== 'accent')) $('#' + m + (k[0] === 'c' ? 'Colors4' : 'Colors')).append(h('div', { class: 'crow' },
+  for (const [k, label] of COLOR_KEYS.filter(c => c[0] !== 'bg' && c[0] !== 'accent')) $('#' + m + (k[0] === 'c' ? 'Colors4' : 'Colors')).append(h('div', { class: 'ix-srow ix-nt' },
     h('span', { class: 'lbl' }, k === 'ribbon' ? 'Ribbon' : label),
     h('span', { class: 'cprev', 'data-p': `${m}.${k}` }, k === 'ribbon' ? '▮ Tab' : 'Category'),
     h('label', { class: 'swatch' }, h('input', { type: 'color', 'data-k': `${m}.${k}` }),
@@ -1160,7 +1160,7 @@ $('#colorReset').onclick = () => { const m = $('#colorDlg').dataset.mode || mode
 $('#colorSave').onclick = e => { e.preventDefault(); commitDraft($('#colorDlg'), 'Colors saved'); };
 
 /* text: separate sizes for tabs, categories and links (the font is one site-wide setting in Settings > Appearance) */
-for (const [k, label, min, max] of SIZE_KEYS) $('#xSizes').append(h('div', { class: 'field' },
+for (const [k, label, min, max] of SIZE_KEYS) $('#xSizes').append(h('div', { class: 'ix-srow', 'data-rt': 'text size' },
   h('label', { for: 'xSize-' + k }, label),
   h('div', { class: 'range' }, h('input', { type: 'range', id: 'xSize-' + k, min, max, step: 1 }), h('output', { id: 'xOut-' + k }))));
 function fillTextForm() {
