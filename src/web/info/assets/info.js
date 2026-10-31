@@ -10,7 +10,7 @@ const MAXTAB=20;
 let TABS=[],REV=0,PAGE={title:"",icon:""},TIMER={every:7*86400,last:0},active="",locked=false,server=false,
     authed=false,EDIT=false,CLOSED=false,WAIT=false; // WAIT: logged in, waiting for the server to send private content // logged in? editing mode? whole page private and not logged in?
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const esc=HUB.esc;   // the shell's HTML escaper (shell.js, loaded first)
 const str=v=>typeof v==="string"?v:"";
 const status=t=>$("sync").textContent=t;
 const LS="info3",ATAB="info3-tab",ICONK="info3-icon",DRAFT=b=>"info3-draft-"+b.key;
@@ -26,7 +26,7 @@ function dSet(b,v){
 }
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
-const HF=(u,o)=>window.HUB?HUB.fetch(u,o):fetch(u,o);   // the site's fetch: longer timeout and a quiet retry on slow hosts
+const HF=HUB.fetch;   // the site's fetch: longer timeout and a quiet retry on slow hosts
 const api=body=>HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
 const when=t=>t?new Date(t*1000).toLocaleString(undefined,{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"";
 const savedMsg=()=>"Saved to your server"+(locked&&authed?". You're logged in.":".");

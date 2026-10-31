@@ -88,5 +88,12 @@ for f in site:
         for cl in sorted(css_classes(read(f))):
             if not DYNAMIC.match(cl) and not re.search(r'(?<![\w-])' + re.escape(cl) + r'(?![\w-])', nocss): dead_css.append('%s .%s' % (f.split('src/web/')[-1], cl))
 check('D6 every CSS class is named by a page or a script (or is built from pieces, see DYNAMIC)', not dead_css, dead_css)
+own = []
+for f in glob.glob(ROOT + '/src/web/*/assets/*.js'):
+    if f.endswith('/shell.js') or f.endswith('/shell-admin.js'): continue
+    for m in re.finditer(r'^(?:const|let|var) (esc|HF)\s*=\s*(.*)$', read(f), re.M):
+        if not re.match(r'HUB\.(esc|fetch);', m.group(2)): own.append('%s %s' % (f.split('src/web/')[-1], m.group(1)))
+check('D7 pages take esc and HF from the shell (HUB.esc, HUB.fetch) instead of keeping their own copy', not own, own)
+check('D7b the shell hands out HUB.esc', re.search(r'esc: esc,', read(ROOT + '/src/web/hub/core/assets/shell.js')) is not None, '')
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

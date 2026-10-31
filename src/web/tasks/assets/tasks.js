@@ -9,8 +9,8 @@
 "use strict";
 /* ---------- helpers ---------- */
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const HF=(u,o)=>window.HUB?HUB.fetch(u,o):fetch(u,o);
+const esc=HUB.esc;   // the shell's HTML escaper (shell.js, loaded first)
+const HF=HUB.fetch;
 const toast=m=>window.HUB?HUB.toast(m):alert(m);
 const uid=()=>{const a=new Uint8Array(5);crypto.getRandomValues(a);return [...a].map(b=>b.toString(16).padStart(2,"0")).join("")};
 const pad=n=>String(n).padStart(2,"0");

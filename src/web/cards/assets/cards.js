@@ -11,7 +11,7 @@ const SEED=[]; // no built-in cards: data only comes from the server after login
 let sort={k:null,d:1},B={},pw="",D=[],P=[],NOTES="",active="All",editing=null,armed=false,server=false,pt,pending=null;
 const $=id=>document.getElementById(id),dlg=$("dlg"),hdlg=$("hdlg"),idlg=$("idlg");
 const inr=n=>"₹"+Number(n).toLocaleString("en-IN");
-const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const esc=HUB.esc;   // the shell's HTML escaper (shell.js, loaded first)
 const cls=t=>t==="LTF"?"ltf":t==="Paid"?"paid":t==="NA"?"na":"fd";
 const normExp=v=>{v=String(v||"").trim();if(!v)return"";const m=/^(\d{1,2})\s*[\/\-.]\s*(\d{4})$/.exec(v)||/^(\d{2})(\d{4})$/.exec(v);if(!m||+m[1]<1||+m[1]>12)return null;return String(+m[1]).padStart(2,"0")+"/"+m[2]};
 const expKey=e=>{const m=/^(\d{2})\/(\d{4})$/.exec(e||"");return m?+m[2]*100+ +m[1]:null};
@@ -29,7 +29,7 @@ function apply(s){
   applySettings();
   renderInfo();
 }
-const HF=(u,o)=>window.HUB?HUB.fetch(u,o):fetch(u,o);   // the site's fetch: longer timeout and a quiet retry on slow hosts
+const HF=HUB.fetch;   // the site's fetch: longer timeout and a quiet retry on slow hosts
 const api=body=>HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
 const savedMsg=()=>"Saved to your server";
 /* 1.61.0: when encryption is on, the cards are locked in this browser with the site key (HubSite, shell.js) before they are sent, and no plain copy

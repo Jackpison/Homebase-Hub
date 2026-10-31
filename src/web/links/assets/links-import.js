@@ -9,6 +9,7 @@
    Reads a browser's bookmark export (the "Netscape bookmark file" every browser writes: Chrome, Edge, Firefox, Brave,
    Opera, Safari) in this browser with DOMParser. Nothing is uploaded except the normal Links save. Text from the file is
    only ever placed with textContent or as a form value, never as markup. */
+// @ts-check
 (function () {
   'use strict';
   const MAX_BYTES = 5 * 1048576, MAX_LINKS = 5000, MAX_SAVE = 2900000;   // the server takes saves up to 3 MB
@@ -53,6 +54,7 @@
     let root = first && first.parentElement;
     while (root && (root.tagName === 'P' || root.tagName === 'DIV')) root = root.parentElement;
     if (!root) throw new Error('That file is not a bookmarks export.');
+    /** @type {{cats: Map<string, any[]>, skipped: {scheme: number, dupFile: number}, links: number, folders: number, mapping: any[]}} */
     const out = { cats: new Map(), skipped: { scheme: 0, dupFile: 0 }, links: 0, folders: 0, mapping: [] };
     const seen = new Set();
     const cat = (name, from) => {
@@ -232,7 +234,7 @@
         const text = await f.text();
         plan = { parsed: parse(text, clean('Imported ' + today(), MAX_CAT)) };
         preview();
-      } catch (e) { $('#impErr').textContent = e && e.message ? e.message : 'That file could not be read.'; }
+      } catch (/** @type {any} */ e) { $('#impErr').textContent = e && e.message ? e.message : 'That file could not be read.'; }
     };
 
     $('#impGo').onclick = async e => {
@@ -280,7 +282,7 @@
         if (newTab) { const i = BM.tabs().indexOf(newTab); if (i >= 0) BM.tabs().splice(i, 1); }
       };
       try { await BM.save(apply, undo); }
-      catch (err) {
+      catch (/** @type {any} */ err) {
         $('#impPrev').textContent = ''; $('#impGo').disabled = false;
         $('#impErr').textContent = 'Nothing was imported: ' + (err && err.message ? err.message : 'the save failed.');
         return;

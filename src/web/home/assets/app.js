@@ -11,7 +11,7 @@
 
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=HUB.esc;   // the shell's HTML escaper (shell.js, loaded first)
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let PUB = window.PUB;      // what visitors see

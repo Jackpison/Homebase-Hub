@@ -18,7 +18,7 @@
 const $ = id => document.getElementById(id);
 /** @typedef {any} Loose */
 const why = e => (e instanceof Error ? e.message : String(e));
-const HF = (u, o) => window.HUB ? HUB.fetch(u, o) : fetch(u, o);
+const HF = HUB.fetch;
 const toast = (m, bad) => window.HUB ? HUB.toast(m, bad) : alert(m);
 const V = window.HubVault, SITE = window.HubSite;
 const PIECE = 2 * 1024 * 1024, OVER = 28;   // a piece is locked into iv (12) + the same bytes + tag (16)

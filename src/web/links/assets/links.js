@@ -214,7 +214,7 @@ $('#themeBtn').onclick = () => {
 };
 
 /* ---------- API ---------- */
-const HF=(u,o)=>window.HUB?HUB.fetch(u,o):fetch(u,o);   // the site's fetch: longer timeout and a quiet retry on slow hosts
+const HF = HUB.fetch;   // the site's fetch: longer timeout and a quiet retry on slow hosts
 /* ---------- encrypted tabs ----------
    An encrypted tab is stored as "enc1:" + base64(iv + AES-256-GCM ciphertext) of its categories (links, notes, icons), made here in the
    browser. The key is random; the server only keeps it wrapped with a key made from your encryption passphrase (PBKDF2-SHA256, 600,000 rounds),
