@@ -6,10 +6,13 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
+// @ts-check
 const SEED=[]; // no built-in cards: data only comes from the server after login
 
 let sort={k:null,d:1},B={},pw="",D=[],P=[],NOTES="",active="All",editing=null,armed=false,server=false,pt,pending=null;
-const $=id=>document.getElementById(id),dlg=$("dlg"),hdlg=$("hdlg"),idlg=$("idlg");
+/** @type {(id: string) => any} */   // (any: the page knows which element each id is)
+const $=id=>document.getElementById(id);
+const dlg=$("dlg"),hdlg=$("hdlg"),idlg=$("idlg");
 const inr=n=>"₹"+Number(n).toLocaleString("en-IN");
 const esc=HUB.esc;   // the shell's HTML escaper (shell.js, loaded first)
 const cls=t=>t==="LTF"?"ltf":t==="Paid"?"paid":t==="NA"?"na":"fd";
@@ -18,7 +21,7 @@ const expKey=e=>{const m=/^(\d{2})\/(\d{4})$/.exec(e||"");return m?+m[2]*100+ +m
 const feeTxt=c=>c.fee===0?"Free":c.fee?inr(c.fee)+"/yr":"—";
 const num=v=>{const n=parseInt(String(v).replace(/[^0-9]/g,""),10);return isNaN(n)?null:n};
 const snap=()=>({cards:D,people:P,notes:NOTES,banks:B,settings:ST});
-const status=t=>$("sync").textContent=t;
+const setStatus=t=>$("sync").textContent=t;
 
 function apply(s){
   D=s.cards.map((c,i)=>({remark:"",kind:"Credit",expiry:"",id:i,...c,type:c.type==="FD-Backed"?"FD":c.type}));
@@ -44,27 +47,27 @@ async function sendLocked(extra){
 function persist(){
   if(ENC){
     dropPlain();
-    status("Saving…");clearTimeout(pt);
+    setStatus("Saving…");clearTimeout(pt);
     pt=setTimeout(async()=>{
       try{
         const r=await sendLocked();
-        if(r.status===403){status("You were logged out. Log in again to save your change.");if(window.HUB)HUB.login("You were logged out. Log in to save your change.").then(()=>persist(),()=>{});return}
+        if(r.status===403){setStatus("You were logged out. Log in again to save your change.");if(window.HUB)HUB.login("You were logged out. Log in to save your change.").then(()=>persist(),()=>{});return}
         if(!r.ok)throw 0;
-        status("Saved to your server, locked");
-      }catch(e){status(e&&e.code==="cancel"?"Not saved: unlock Cards to save your change.":"Server save failed. Your change is not saved yet.")}
+        setStatus("Saved to your server, locked");
+      }catch(e){setStatus(e&&e.code==="cancel"?"Not saved: unlock Cards to save your change.":"Server save failed. Your change is not saved yet.")}
     },300);
     return;
   }
   try{localStorage.setItem("family4",JSON.stringify(snap()))}catch(e){}
-  if(!server){status("Saved in this browser only");return}
-  status("Saving…");clearTimeout(pt);
+  if(!server){setStatus("Saved in this browser only");return}
+  setStatus("Saving…");clearTimeout(pt);
   pt=setTimeout(async()=>{
     try{
       const r=await api({...snap(),pw});
-      if(r.status===403){status("You were logged out. Log in again; this change is kept on this device.");if(window.HUB)HUB.login("You were logged out. Log in to save your change.").then(()=>persist(),()=>{});return}
+      if(r.status===403){setStatus("You were logged out. Log in again; this change is kept on this device.");if(window.HUB)HUB.login("You were logged out. Log in to save your change.").then(()=>persist(),()=>{});return}
       if(!r.ok)throw 0;
-      status(savedMsg());
-    }catch(e){status("Server save failed. Kept in this browser.")}
+      setStatus(savedMsg());
+    }catch(e){setStatus("Server save failed. Kept in this browser.")}
   },300);
 }
 // Visitors (and logged-out browsers) see only this. The server sends no card data until you log in.
@@ -74,7 +77,7 @@ function privateScreen(j){
   document.body.innerHTML='<div id="ix-private"><div class="ix-ico"><svg viewBox="0 0 24 24"><path d="M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3"/></svg></div>'+
     '<h1></h1><p>This page is private. Log in to see it.</p><button type="button">Log In</button></div>';
   document.querySelector("#ix-private h1").textContent=t;
-  document.querySelector("#ix-private button").onclick=()=>window.HUB?HUB.login("Log in to see your cards.").then(()=>location.reload(),()=>{}):location.reload();
+  /** @type {HTMLElement} */ (document.querySelector("#ix-private button")).onclick=()=>window.HUB?HUB.login("Log in to see your cards.").then(()=>location.reload(),()=>{}):location.reload();
   if(window.HUB&&HUB.ready)HUB.ready();
 }
 async function load(){
@@ -96,15 +99,15 @@ async function load(){
     if(j.private&&!j.auth){privateScreen(j);return}     // visitors: no card data is ever sent
     if(typeof j.enc==="string"){   // locked in the browser: open it here (the passphrase is asked for once)
       ENC=true;
-      try{const data=await HubSite.openJson(j.enc);apply(data);lastN=D.length;dropPlain();status("Saved to your server, locked")}
+      try{const data=await HubSite.openJson(j.enc);apply(data);lastN=D.length;dropPlain();setStatus("Saved to your server, locked")}
       catch(e){lockedScreen(e);return}
     }
-    else if(Array.isArray(j.cards)&&Array.isArray(j.people)){apply(j);status(savedMsg());offerLock()}
-    else{apply({cards:[],people:[],notes:""});status(savedMsg());offerLock()}
+    else if(Array.isArray(j.cards)&&Array.isArray(j.people)){apply(j);setStatus(savedMsg());offerLock()}
+    else{apply({cards:[],people:[],notes:""});setStatus(savedMsg());offerLock()}
   }catch(e){
     // offline: only this device's own copy, which exists only while you're logged in here
     server=false;
-    if(local.cards.length){apply(local);status("Offline: showing this device's copy")}else{privateScreen({});return}
+    if(local.cards.length){apply(local);setStatus("Offline: showing this device's copy")}else{privateScreen({});return}
   }
   render();
 }
@@ -116,8 +119,8 @@ function lockedScreen(e){
     code==="insecure"?"Locked cards need a secure (https) connection to open.":"Type your encryption passphrase to open your cards. They are locked in this browser, so the server only holds scrambled data.";
   $("list").innerHTML='<div class="lockedbox"><h2>Your cards are locked</h2><p></p><button type="button" class="pri" id="unlockBtn">Unlock</button></div>';
   $("list").querySelector("p").textContent=msg;
-  const n=document.querySelector(".notes");if(n)n.hidden=true;
-  status("Locked");
+  const n=/** @type {HTMLElement | null} */ (document.querySelector(".notes"));if(n)n.hidden=true;
+  setStatus("Locked");
   $("unlockBtn").onclick=()=>{if(code==="nopass"&&window.HUB)HUB.settings("security/encryption");else location.reload()};
 }
 /* Encryption is on but these cards are still plain: say so, and lock them with one press (earlier readable copies are deleted) */
@@ -136,7 +139,7 @@ async function lockNow(){
     ENC=true;lastN=D.length;dropPlain();
     const r=await sendLocked({purgePlain:true});
     if(!r.ok)throw 0;
-    $("lockbar").hidden=true;status("Saved to your server, locked");
+    $("lockbar").hidden=true;setStatus("Saved to your server, locked");
     if(window.HUB)HUB.toast("Cards are locked. Readable earlier copies were deleted.");
   }catch(e){ENC=false;if(!e||e.code!=="cancel"){if(window.HUB)HUB.toast("Could not lock Cards. Nothing was changed.",true)}}
   b.disabled=false;
@@ -281,7 +284,7 @@ function render(){
   const g=grouped();
   $("list").classList.toggle("grouped",g);
   const head=`<div class="row head">`+HEADS.map(([k,l,c])=>`<span class="h-${k||"d"}${c?" "+c:""}">${k?`<button class="sh" data-k="${k}" data-on="${sort.k===k?1:0}" aria-label="Sort by ${l}">${l}${sort.k===k?(sort.d===1?" ▲":" ▼"):""}</button>`:l}</span>`).join("")+`<span></span></div>`;
-  if(!list.length){$("list").innerHTML=`<div class="empty">${hasF()?"No cards match these filters. Press Clear to show them all.":`<b>No cards yet</b><span>Add the cards you carry, with their fees and dates.</span><button type="button" class="btn pri" id="firstcard">Add Your First Card</button>`}</div>`;{const b=$("firstcard");if(b)b.onclick=()=>{const t=document.querySelector("[data-hub=toggle]");if(t)t.click()}}return}
+  if(!list.length){$("list").innerHTML=`<div class="empty">${hasF()?"No cards match these filters. Press Clear to show them all.":`<b>No cards yet</b><span>Add the cards you carry, with their fees and dates.</span><button type="button" class="btn pri" id="firstcard">Add Your First Card</button>`}</div>`;{const b=$("firstcard");if(b)b.onclick=()=>{const t=/** @type {HTMLElement | null} */ (document.querySelector("[data-hub=toggle]"));if(t)t.click()}}return}
   if(!g){$("list").innerHTML=head+list.map(rowHtml).join("");return}
   const owners=[...P,...uniq(list.map(c=>c.owner)).filter(o=>!P.includes(o))];
   $("list").innerHTML=head+owners.map(o=>{
@@ -358,18 +361,19 @@ const onPop=e=>{
 pop.addEventListener("click",onPop);pop2.addEventListener("click",onPop);
 
 document.addEventListener("click",e=>{
-  if(!e.target.closest(".menu"))closeMenu();
-  const h=e.target.closest(".sh");
+  const tg=/** @type {Element} */ (e.target);
+  if(!tg.closest(".menu"))closeMenu();
+  const h=/** @type {HTMLElement | null} */ (tg.closest(".sh"));
   if(h){
     const k=h.dataset.k;
     if(sort.k!==k)sort={k,d:1};else if(sort.d===1)sort.d=-1;else sort={k:null,d:1};
     saveSort();render();return;
   }
-  const fo=e.target.closest(".gh");
+  const fo=/** @type {HTMLElement | null} */ (tg.closest(".gh"));
   if(fo){const o=fo.dataset.fold;FOLD=FOLD.includes(o)?FOLD.filter(x=>x!==o):[...FOLD,o];try{localStorage.setItem("cards-fold",JSON.stringify(FOLD))}catch(x){}
-    render();const nb=[...document.querySelectorAll(".gh")].find(x=>x.dataset.fold===o);if(nb)nb.focus();return}
+    render();const nb=[.../** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll(".gh"))].find(x=>x.dataset.fold===o);if(nb)nb.focus();return}
   // a click anywhere on a card's row (not on its links) opens it, like its Edit button
-  const r=e.target.closest(".rowedit")||(!e.target.closest("a,button,input,select")&&e.target.closest(".row.item"));
+  const r=/** @type {HTMLElement | null} */ (tg.closest(".rowedit")||(!tg.closest("a,button,input,select")&&tg.closest(".row.item")));
   if(r){const c=D.find(x=>x.id===+r.dataset.id);if(c)guard(()=>openCard(c))}
 });
 $("cancel").onclick=()=>dlg.close();
@@ -468,6 +472,7 @@ function exportXlsx(){
   const tot=order.map((k,i)=>k==="limit"?(total||""):k==="fee"?(yearly||""):(i===0?"Totals":""));
   const rows=[order.map(k=>defOf(k).l),...l.map(c=>order.map(k=>EXV[k](c))),[],tot];
   const money=new Set(order.map((k,i)=>k==="limit"||k==="fee"?i:-1).filter(i=>i>=0));
+  /** @type {any[]} */
   const sheets=[{name:"Cards",rows,widths:order.map(k=>XW[k]),money,header:true}];
   if(NOTES.trim())sheets.push({name:"Information",rows:[["Information"],...NOTES.split(/\r?\n/).map(x=>[x])],widths:[110],header:true});
   saveBlob(XL.book(sheets),`cards-${slug()}-${stamp()}.xlsx`);
@@ -493,7 +498,7 @@ function drawBanks(){
 }
 function openBank(){
   const banks=[...new Set(D.map(c=>c.bank).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-  if(!banks.length){(window.HUB?HUB.toast:status)("Banks come from your cards. Add a card first.");return}
+  if(!banks.length){(window.HUB?HUB.toast:setStatus)("Banks come from your cards. Add a card first.");return}
   BD=banks.map(b=>({was:b,name:b,url:B[nk(b)]||""}));drawBanks();$("bmsg").textContent="";bdlg.showModal();
 }
 $("blist").addEventListener("input",e=>{const x=e.target.closest("[data-bi]");if(x){BD[+x.dataset.bi][x.dataset.bf]=x.value;$("bmsg").textContent=""}});

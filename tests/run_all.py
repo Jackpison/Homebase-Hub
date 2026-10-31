@@ -40,7 +40,7 @@ if not os.path.isfile(ZIP): sys.exit('No zip at %s: build it first (python3 scri
 b = ['--browser', BROWSER] if BROWSER else []
 
 run('ESLint', ['npx', 'eslint', 'src', 'tools-app'])
-run('TypeScript check', ['sh', '-c', 'npx tsc -p tsconfig.json && npx tsc -p tsconfig.links.json && npx tsc -p tsconfig.home.json'])
+run('TypeScript check', ['sh', '-c', 'npx tsc -p tsconfig.json && npx tsc -p tsconfig.links.json && npx tsc -p tsconfig.home.json && npx tsc -p tsconfig.cards.json && npx tsc -p tsconfig.tasks.json && npx tsc -p tsconfig.info.json'])
 run('Unit tests', ['php', 'tests/unit/run.php'])
 run('Version agrees everywhere', [PY, 'scripts/release.py', '--check'])
 for t in ('release_test', 'workflows_test', 'secrets_test', 'dead_code_test', 'parallel_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test', 'presets_test', 'tools_list_test', 'tscheck_test', 'build_test'):

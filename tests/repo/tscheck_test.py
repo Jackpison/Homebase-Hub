@@ -9,7 +9,7 @@ res = []
 def check(name, ok, extra=''):
     res.append(bool(ok)); print(('PASS ' if ok else 'FAIL ') + name + ('' if ok or not extra else '  -> ' + str(extra)[:400]))
 
-CONFIGS = ('tsconfig.json', 'tsconfig.links.json', 'tsconfig.home.json')   # the strict one, and one looser one for each page script
+CONFIGS = ('tsconfig.json', 'tsconfig.links.json', 'tsconfig.home.json', 'tsconfig.cards.json', 'tsconfig.tasks.json', 'tsconfig.info.json')   # the strict one, and one looser one for each page script
 listed = [f for c in CONFIGS for f in json.load(open(os.path.join(ROOT, c)))['files'] if f.endswith('.js')]
 flagged = []
 for base in ('src', 'tools-app/src'):

@@ -6,8 +6,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
+// @ts-check
 "use strict";
 /* ---------- helpers ---------- */
+/** @type {(id: string) => any} */   // (any: the page knows which element each id is)
 const $=id=>document.getElementById(id);
 const esc=HUB.esc;   // the shell's HTML escaper (shell.js, loaded first)
 const HF=HUB.fetch;
@@ -55,6 +57,7 @@ let T=[],LOG=[],SET={...SET_DEF},REV=0,loaded=false;
 const LOG_MAX=500;
 const VKEY="tasks-view4";
 const VDEF={view:"list",cal:true,range:"all",st:"",year:"",month:"",cat:"",rep:"",cur:"",price:"",where:"",sort:"due",group:"smart",q:"",day:"",calM:"",calV:"month",calSel:"",wk:0,ap:"n365",acur:"",dk:"",dyear:"",dq:""};
+/** @type {any} */
 let V={...VDEF};
 try{Object.assign(V,JSON.parse(localStorage.getItem(VKEY)||"{}")||{})}catch(e){}
 if(!["list","cal","an","done"].includes(V.view))V.view="list";
@@ -142,7 +145,7 @@ const addTo=(map,t,v)=>{if(v){const c=curOf(t);map[c]=(map[c]||0)+v}};
 function privateScreen(){
   document.body.innerHTML='<div id="ix-private"><div class="ix-ico"><svg viewBox="0 0 24 24"><path d="M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3"/></svg></div>'+
     '<h1>Tasks</h1><p>This page is private. Log in to see your tasks.</p><button type="button">Log In</button></div>';
-  document.querySelector("#ix-private button").onclick=()=>window.HUB?HUB.login("Log in to see your tasks.").then(()=>location.reload(),()=>{}):location.reload();
+  /** @type {HTMLElement} */ (document.querySelector("#ix-private button")).onclick=()=>window.HUB?HUB.login("Log in to see your tasks.").then(()=>location.reload(),()=>{}):location.reload();
   if(window.HUB&&HUB.ready)HUB.ready();
 }
 function take(j){T=Array.isArray(j.tasks)?j.tasks:[];LOG=Array.isArray(j.log)?j.log:[];SET={...SET_DEF,...(j.settings||{})};REV=j.rev|0;for(const k in NF)delete NF[k];loaded=true}
@@ -160,15 +163,15 @@ async function load(){
     const r=await HF("api.php",{cache:"no-store"});
     const j=await r.json();
     if(j.private&&!j.auth){privateScreen();return}
-    take(j);openWith();status("Saved on the server.");
+    take(j);openWith();setStatus("Saved on the server.");
   }catch(e){$("list").innerHTML='<div class="empty"><h2>Tasks Couldn\'t Load</h2><p>The server didn\'t answer. Check your connection, then reload the page.</p><button type="button" class="btn">Reload</button></div>';$("list").querySelector("button").onclick=()=>location.reload();return}
   drawFilters();render();fromHash();
 }
 /* Saving: the whole list goes to the server. `ver` counts changes made here, so an answer for an older list never
    replaces changes made while it was on its way. */
 let saveT=null,saving=false,again=false,ver=0;
-function status(m){$("status").textContent=m}
-function save(){ver++;clearTimeout(saveT);status("Saving…");saveT=setTimeout(push,350)}
+function setStatus(m){$("status").textContent=m}
+function save(){ver++;clearTimeout(saveT);setStatus("Saving…");saveT=setTimeout(push,350)}
 async function push(){
   if(saving){again=true;return}
   saving=true;
@@ -176,14 +179,14 @@ async function push(){
   try{
     const r=await HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save",rev:REV,tasks:T,log:LOG,settings:SET})});
     const j=await r.json().catch(()=>({}));
-    if(r.status===401){status("You were logged out. Your change is not saved yet.");if(window.HUB)HUB.login("Log in to save your change.").then(()=>push(),()=>{});return}
-    if(r.status===409&&j.data){take(j.data);render();toast("Tasks were changed in another window. Showing the latest version; make your change again.");status("Saved on the server.");return}
+    if(r.status===401){setStatus("You were logged out. Your change is not saved yet.");if(window.HUB)HUB.login("Log in to save your change.").then(()=>push(),()=>{});return}
+    if(r.status===409&&j.data){take(j.data);render();toast("Tasks were changed in another window. Showing the latest version; make your change again.");setStatus("Saved on the server.");return}
     if(!r.ok||!j.ok)throw new Error(j.error||"Save failed.");
     REV=j.rev;
     if(ver!==sent){again=true;return}   // changed meanwhile: send the newer list (finally below)
     if(Array.isArray(j.tasks)){T=j.tasks;if(Array.isArray(j.log))LOG=j.log;render()}
-    status("Saved on the server.");
-  }catch(e){status((e&&e.message)||"Save failed. Your change is kept on this page and will be saved with the next change.")}
+    setStatus("Saved on the server.");
+  }catch(e){setStatus((e&&e.message)||"Save failed. Your change is kept on this page and will be saved with the next change.")}
   finally{saving=false;if(again){again=false;push()}}
 }
 
@@ -296,8 +299,8 @@ function render(){
   $("vlist").hidden=V.view!=="list";$("vcal").hidden=V.view!=="cal";$("van").hidden=V.view!=="an";$("vdone").hidden=V.view!=="done";
   $("vsw").hidden=V.view!=="list"&&V.view!=="cal";
   $("qaf").style.visibility=V.view==="list"||V.view==="cal"?"":"hidden";   // Analytics and Completed add nothing
-  document.querySelectorAll("#views button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.view===V.view)));
-  document.querySelectorAll("#vsw button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===V.view)));
+  document.querySelectorAll("#views button").forEach((/** @type {HTMLElement} */ b)=>b.setAttribute("aria-pressed",String(b.dataset.view===V.view)));
+  document.querySelectorAll("#vsw button").forEach((/** @type {HTMLElement} */ b)=>b.setAttribute("aria-pressed",String(b.dataset.v===V.view)));
   drawStats();hideTip();
   if(V.view!=="list")drawHead([]);
   if(V.view==="cal")return drawCalView();
@@ -333,6 +336,7 @@ const TI={today:"M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M12 14v3",late:"M12 8v5M12 17
   all:"M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01",paused:"M8 5v14M16 5v14"};
 function drawStats(){
   const t0=todayS(),we=weekEnd(t0),me=monthEnd(t0),ye=addDays(t0,364);
+  /** @type {any} */
   const s={late:[0,{}],today:[0,{}],week:[0,{}],month:[0,{}],year:[0,{}],paused:[0,{}]},mon={};let all=0;
   for(const t of T){
     if(t.status==="done")continue;all++;const p=t.price||0;
@@ -371,7 +375,7 @@ function drawStats(){
   $("nv-done").title=dm?dm+" this month":"";
 }
 $("stats").onclick=e=>{
-  const b=e.target.closest("[data-s]");if(!b)return;const k=b.dataset.s,t0=todayS();
+  const b=/** @type {any} */ (e.target).closest("[data-s]");if(!b)return;const k=b.dataset.s,t0=todayS();
   if(k==="year")Object.assign(V,{view:"an",ap:"n365",anFocus:""});
   else if(k==="rep"){Object.assign(V,{view:"an",anFocus:"rep"});keepView();drawFilters();render();return}
   else{
@@ -501,14 +505,14 @@ function drawStrip(){
     }).join("")+'</div>';
 }
 $("cal").onclick=e=>{
-  const w=e.target.closest("[data-wk]");
+  const w=/** @type {any} */ (e.target).closest("[data-wk]");
   if(w){V.wk=w.dataset.wk==="0"?0:(V.wk|0)+(+w.dataset.wk);drawStrip();return}
-  const d=e.target.closest("[data-day]");if(!d)return;
+  const d=/** @type {any} */ (e.target).closest("[data-day]");if(!d)return;
   V.day=V.day===d.dataset.day?"":d.dataset.day;render();
   if(V.day)$("range").scrollIntoView({block:"nearest",behavior:"smooth"});
 };
 $("calbtn").onclick=()=>{V.cal=!V.cal;keepView();render()};
-$("vsw").onclick=e=>{const b=e.target.closest("[data-v]");if(b&&b.dataset.v!==V.view)setView("view",b.dataset.v)};
+$("vsw").onclick=e=>{const b=/** @type {any} */ (e.target).closest("[data-v]");if(b&&b.dataset.v!==V.view)setView("view",b.dataset.v)};
 
 /* ---------- Calendar: a month, a week or the whole year; the chosen day on the right ---------- */
 const calBase=()=>/^\d{4}-\d{2}$/.test(V.calM)?V.calM:todayS().slice(0,7);
@@ -529,7 +533,9 @@ function doneRowHtml(e){
 }
 function drawCalView(){
   const box=$("vcal"),t0=todayS(),mode=V.calV,sel=V.calSel||t0,base=calBase();
-  let title="",body="",from,to,on,scope="";
+  /** @type {any} */
+  let from,to,on;
+  let title="",body="",scope="";
   if(mode==="year"){
     const y=+base.slice(0,4);from=y+"-01-01";to=y+"-12-31";on=dayItems(from,to);title=String(y);scope=y+" at a Glance";
     // how much is due each day, in the page currency (or how many tasks, when nothing has a price)
@@ -610,18 +616,18 @@ function calMove(step){
   if(V.calV==="month"){const ds=V.calM===t0.slice(0,7)?t0:V.calM+"-01";V.calSel=ds===t0?"":ds}
 }
 $("vcal").onclick=e=>{
-  const cv=e.target.closest("[data-cv]");if(cv){calMove(+cv.dataset.cv);drawCalView();return}
-  const md=e.target.closest("[data-mode]");
+  const cv=/** @type {any} */ (e.target).closest("[data-cv]");if(cv){calMove(+cv.dataset.cv);drawCalView();return}
+  const md=/** @type {any} */ (e.target).closest("[data-mode]");
   if(md){const k=md.dataset.mode;if(k===V.calV)return;
     if(k==="week"&&!V.calSel&&calBase()!==todayS().slice(0,7))V.calSel=calBase()+"-01";
     if(k!=="week"&&V.calSel)V.calM=V.calSel.slice(0,7);
     V.calV=k;keepView();drawCalView();return}
-  const mh=e.target.closest("[data-month]");if(mh){V.calV="month";V.calM=mh.dataset.month;V.calSel=mh.dataset.month===todayS().slice(0,7)?"":mh.dataset.month+"-01";keepView();drawCalView();return}
-  const ad=e.target.closest("[data-addday]");if(ad){openEditor(null,false,ad.dataset.addday);return}
-  if(e.target.closest("#agenda"))return agendaClick(e);
-  const it=e.target.closest(".pl[data-id],.wc[data-id]");
+  const mh=/** @type {any} */ (e.target).closest("[data-month]");if(mh){V.calV="month";V.calM=mh.dataset.month;V.calSel=mh.dataset.month===todayS().slice(0,7)?"":mh.dataset.month+"-01";keepView();drawCalView();return}
+  const ad=/** @type {any} */ (e.target).closest("[data-addday]");if(ad){openEditor(null,false,ad.dataset.addday);return}
+  if(/** @type {any} */ (e.target).closest("#agenda"))return agendaClick(e);
+  const it=/** @type {any} */ (e.target).closest(".pl[data-id],.wc[data-id]");
   if(it){const t=find(it.dataset.id);if(t){openCard(t);return}}
-  const d=e.target.closest("[data-day]");if(!d)return;
+  const d=/** @type {any} */ (e.target).closest("[data-day]");if(!d)return;
   const ds=d.dataset.day;
   if(V.calV==="year"){V.calV="month";V.calM=ds.slice(0,7);V.calSel=ds;keepView();drawCalView()}
   else{   // only the highlight and the day on the right change, so a double-click still finds its day
@@ -631,25 +637,25 @@ $("vcal").onclick=e=>{
   }
   if(innerWidth<=980)$("agenda").scrollIntoView({block:"start",behavior:"smooth"});
 };
-$("vcal").ondblclick=e=>{if(e.target.closest("#agenda,.pl,.wc,[data-cv],[data-mode]"))return;const d=e.target.closest(".cd[data-day],.wcol[data-day]");if(d)openEditor(null,false,d.dataset.day)};
+$("vcal").ondblclick=e=>{if(/** @type {any} */ (e.target).closest("#agenda,.pl,.wc,[data-cv],[data-mode]"))return;const d=/** @type {any} */ (e.target).closest(".cd[data-day],.wcol[data-day]");if(d)openEditor(null,false,d.dataset.day)};
 $("vcal").onkeydown=e=>{
   if((e.key==="Enter"||e.key===" ")&&e.target.matches(".cd,.row")){e.preventDefault();e.target.click()}
 };
 $("vcal").onsubmit=e=>{if(e.target.id!=="agf")return;e.preventDefault();quickAdd($("agq"),V.calSel||todayS());setTimeout(()=>{const q=$("agq");if(q)q.focus()},30)};
 function agendaClick(e){
-  const b=e.target.closest("[data-a]"),row=e.target.closest(".row"),t=row&&find(row.dataset.id);if(!t)return;
+  const b=/** @type {any} */ (e.target).closest("[data-a]"),row=/** @type {any} */ (e.target).closest(".row"),t=row&&find(row.dataset.id);if(!t)return;
   if(!b)return openCard(t);
   if(b.dataset.a==="more")return moreMenu(b,t);
   act[b.dataset.a]&&act[b.dataset.a](t);
 }
 /* drag a task to another day: its due date moves there (repeats keep going from the new date) */
 let dragId="";
-$("vcal").addEventListener("dragstart",e=>{const p=e.target.closest&&e.target.closest("[draggable][data-id]");if(!p)return;dragId=p.dataset.id;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragId)}catch(x){}hideTip()});
+$("vcal").addEventListener("dragstart",e=>{const p=e.target.closest&&/** @type {any} */ (e.target).closest("[draggable][data-id]");if(!p)return;dragId=p.dataset.id;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragId)}catch(x){}hideTip()});
 $("vcal").addEventListener("dragend",()=>{dragId="";document.querySelectorAll("#vcal .drop").forEach(x=>x.classList.remove("drop"))});
-$("vcal").addEventListener("dragover",e=>{if(!dragId)return;const d=e.target.closest(".cd[data-day],.wcol[data-day]");if(!d)return;e.preventDefault();e.dataTransfer.dropEffect="move";
+$("vcal").addEventListener("dragover",e=>{if(!dragId)return;const d=/** @type {any} */ (e.target).closest(".cd[data-day],.wcol[data-day]");if(!d)return;e.preventDefault();e.dataTransfer.dropEffect="move";
   document.querySelectorAll("#vcal .drop").forEach(x=>{if(x!==d)x.classList.remove("drop")});d.classList.add("drop")});
 $("vcal").addEventListener("drop",e=>{
-  const d=e.target.closest(".cd[data-day],.wcol[data-day]"),t=find(dragId);dragId="";
+  const d=/** @type {any} */ (e.target).closest(".cd[data-day],.wcol[data-day]"),t=find(dragId);dragId="";
   document.querySelectorAll("#vcal .drop").forEach(x=>x.classList.remove("drop"));
   if(!d||!t)return;e.preventDefault();const to=d.dataset.day;if(to===t.due)return;
   withUndo('"'+t.name+'" Moved to '+fmtD(to)+".",()=>{t.due=to;t.day=+to.slice(8,10);t.updated=now()});
@@ -674,7 +680,7 @@ function drawChips(){
   if(V.q.trim())c.push(["q","“"+V.q.trim()+"”"]);
   $("chips").innerHTML=c.map(x=>'<button type="button" class="chip" data-rm="'+x[0]+'" aria-label="Remove filter: '+esc(x[1])+'">'+esc(x[1])+SVG(IC.x,"")+'</button>').join("")+
     (c.length>1?'<button type="button" class="clear" data-rm="*">Clear All</button>':"");
-  const n=["st","year","month","cat","rep","cur","price"].filter(k=>V[k]).length+(V.group!=="smart");
+  const n=["st","year","month","cat","rep","cur","price"].filter(k=>V[k]).length+Number(V.group!=="smart");
   $("fdot").textContent=n?" ("+n+")":"";
 }
 function drawFilters(){
@@ -691,19 +697,19 @@ function drawFilters(){
   const SUGG=["Subscription","Insurance","Bill","Domain","Hosting","Card Fee","Tax","Loan","Rent","Health","Vehicle","Membership","Warranty","Document"];
   $("cats").innerHTML=[...new Set([...cats,...SUGG])].map(c=>'<option value="'+esc(c)+'">').join("");
   $("fst").value=V.st;$("frep").value=V.rep;$("fprice").value=V.price;$("fsort").value=V.sort;$("fgroup").value=V.group;$("q").value=V.q;$("qx").hidden=!V.q;
-  document.querySelectorAll("#where button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.w===V.where)));
+  document.querySelectorAll("#where button").forEach((/** @type {HTMLElement} */ b)=>b.setAttribute("aria-pressed",String(b.dataset.w===V.where)));
 }
 function setView(k,v){V[k]=v;keepView();drawFilters();render()}
-$("views").onclick=e=>{const b=e.target.closest("[data-view]");if(b){V.anFocus="";setView("view",b.dataset.view)}};
-$("range").onclick=e=>{const b=e.target.closest("[data-r]");if(b){V.day="";setView("range",b.dataset.r)}};
-$("where").onclick=e=>{const b=e.target.closest("[data-w]");if(b)setView("where",b.dataset.w)};
+$("views").onclick=e=>{const b=/** @type {any} */ (e.target).closest("[data-view]");if(b){V.anFocus="";setView("view",b.dataset.view)}};
+$("range").onclick=e=>{const b=/** @type {any} */ (e.target).closest("[data-r]");if(b){V.day="";setView("range",b.dataset.r)}};
+$("where").onclick=e=>{const b=/** @type {any} */ (e.target).closest("[data-w]");if(b)setView("where",b.dataset.w)};
 $("q").oninput=e=>{V.q=e.target.value;$("qx").hidden=!V.q;render()};
 $("qx").onclick=()=>{V.q="";$("q").value="";$("qx").hidden=true;render();$("q").focus()};
 [["fst","st"],["fyear","year"],["fmonth","month"],["fcat","cat"],["frep","rep"],["fcur","cur"],["fprice","price"],["fsort","sort"],["fgroup","group"]].forEach(([id,k])=>$(id).onchange=e=>setView(k,e.target.value));
 $("fbtn").onclick=()=>{const f=$("filters"),open=f.hidden;f.hidden=!open;$("fbtn").setAttribute("aria-expanded",String(open))};
 const clearFilters=()=>Object.assign(V,{range:"all",st:"",year:"",month:"",cat:"",rep:"",cur:"",price:"",where:"",q:"",day:""});
 $("chips").onclick=e=>{
-  const b=e.target.closest("[data-rm]");if(!b)return;
+  const b=/** @type {any} */ (e.target).closest("[data-rm]");if(!b)return;
   if(b.dataset.rm==="*")clearFilters();else V[b.dataset.rm]="";
   keepView();drawFilters();render();
 };
@@ -720,9 +726,9 @@ function showTip(el){
   tipEl.style.top=(r.bottom+h+10>innerHeight?r.top-h-8:r.bottom+8)+"px";
 }
 function hideTip(){if(tipEl){tipEl.remove();tipEl=null}}
-document.addEventListener("mouseover",e=>{const n=e.target.closest&&e.target.closest("[data-tip]");if(n)showTip(n)});
-document.addEventListener("mouseout",e=>{const n=e.target.closest&&e.target.closest("[data-tip]");if(n&&!n.contains(e.relatedTarget))hideTip()});
-document.addEventListener("focusin",e=>{const n=e.target.closest&&e.target.closest("[data-tip]");if(n)showTip(n);else hideTip()});
+document.addEventListener("mouseover",e=>{const n=/** @type {any} */ (e.target).closest("[data-tip]");if(n)showTip(n)});
+document.addEventListener("mouseout",e=>{const n=/** @type {any} */ (e.target).closest("[data-tip]");if(n&&!n.contains(e.relatedTarget))hideTip()});
+document.addEventListener("focusin",e=>{const n=/** @type {any} */ (e.target).closest("[data-tip]");if(n)showTip(n);else hideTip()});
 addEventListener("scroll",hideTip,{passive:true});
 
 /* ---------- completed: the last 500 things you marked done or skipped ---------- */
@@ -730,7 +736,7 @@ function drawDone(){
   const q=V.dq.trim().toLowerCase(),years=[...new Set(LOG.map(e=>tsDay(e.t).slice(0,4)))].sort().reverse();
   if(V.dyear&&!years.includes(V.dyear))V.dyear="";
   $("dyear").innerHTML='<option value="">Any Year</option>'+years.map(y=>'<option'+(V.dyear===y?" selected":"")+'>'+y+'</option>').join("");
-  document.querySelectorAll("#dkind button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.k===V.dk)));
+  document.querySelectorAll("#dkind button").forEach((/** @type {HTMLElement} */ b)=>b.setAttribute("aria-pressed",String(b.dataset.k===V.dk)));
   const rows=LOG.filter(e=>(!V.dk||e.k===V.dk)&&(!V.dyear||tsDay(e.t).startsWith(V.dyear))&&(!q||(e.name+" "+e.cat).toLowerCase().includes(q))).slice().sort((a,b)=>b.t-a.t);
   if(!LOG.length){$("dcount").textContent="";$("dlist").innerHTML='<div class="empty"><h2>Nothing Completed Yet</h2><p>When you mark a task done (or skip a date), it shows up here with the date and price. The last 500 are kept.</p></div>';return}
   const paid={};rows.forEach(e=>{if(e.k==="paid"&&e.p!=null){const c=e.cur||SET.currency;paid[c]=(paid[c]||0)+e.p}});
@@ -754,12 +760,12 @@ function drawDone(){
   }).join("");
 }
 $("dq").oninput=e=>{V.dq=e.target.value;drawDone()};
-$("dkind").onclick=e=>{const b=e.target.closest("[data-k]");if(b)setView("dk",b.dataset.k)};
+$("dkind").onclick=e=>{const b=/** @type {any} */ (e.target).closest("[data-k]");if(b)setView("dk",b.dataset.k)};
 $("dyear").onchange=e=>setView("dyear",e.target.value);
 $("dlist").onclick=e=>{
-  const row=e.target.closest("[data-log]");if(!row)return;
+  const row=/** @type {any} */ (e.target).closest("[data-log]");if(!row)return;
   const en=LOG.find(x=>x.id===row.dataset.log);if(!en)return;
-  const b=e.target.closest("[data-a]");
+  const b=/** @type {any} */ (e.target).closest("[data-a]");
   if(!b){const t=find(en.task);if(t)openCard(t);return}
   const t=find(en.task);
   menu(b,[t?["open","Open Task",IC.open]:null,"-",["del","Delete This Entry",IC.trash,"danger"]],k=>{
@@ -804,7 +810,7 @@ function drawAnalytics(){
   const box=$("van"),curs=[...new Set([...T.map(curOf),...LOG.map(e=>e.cur||SET.currency)].filter(Boolean))].sort((a,b)=>a===SET.currency?-1:b===SET.currency?1:a.localeCompare(b));
   const cur=curs.includes(V.acur)?V.acur:(curs[0]||SET.currency);
   if(!T.length&&!LOG.length){box.innerHTML='<div class="empty"><h2>Nothing to Show Yet</h2><p>Add tasks with prices and your budget appears here, by category and by month.</p><button type="button" class="btn pri" id="anadd">Add Task</button></div>';$("anadd").onclick=()=>openEditor();return}
-  const pays=payments(V.ap,cur),[from,to,past]=periodRange(V.ap),t0=todayS(),f=v=>money(Math.round(v),cur),pct=v=>total?Math.round(v/total*100)+"%":"0%";
+  const pays=payments(V.ap,cur),[from,to,past]=/** @type {[string, string, boolean]} */ (periodRange(V.ap)),t0=todayS(),f=v=>money(Math.round(v),cur),pct=v=>total?Math.round(v/total*100)+"%":"0%";
   const total=pays.reduce((s,x)=>s+x.v,0),months=Math.max(1,Math.round(days(parse(to),parse(from))/30.44));
   const byCat={},byMonth={},split={online:0,offline:0,"":0},often={};
   const oftenKey=r=>!r?"Done Earlier":r.unit==="none"?"One-Time":repLabel(r);
@@ -874,7 +880,7 @@ function drawAnalytics(){
     '</div><p class="note">'+(past?"Last 12 Months counts what you marked Done, at the price recorded then.":"Repeating tasks count every date in the period; overdue tasks count once, as still to pay. Days before today count what you marked Done. Paused tasks are left out.")+'</p>';
   $("ap").onchange=e=>{V.anFocus="";setView("ap",e.target.value)};
   $("yrbtn").onclick=openYear;
-  const ac=$("acur");if(ac)ac.onclick=e=>{const b=e.target.closest("[data-c]");if(b)setView("acur",b.dataset.c)};
+  const ac=$("acur");if(ac)ac.onclick=e=>{const b=/** @type {any} */ (e.target).closest("[data-c]");if(b)setView("acur",b.dataset.c)};
   box.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{clearFilters();Object.assign(V,{view:"list",cat:b.dataset.cat,cur:cur===SET.currency?"":cur});keepView();drawFilters();render()});
   box.querySelectorAll(".an-tbl .r[data-id],.an-soon li[data-id],.top5 li[data-id]").forEach(r=>{const go=()=>{const t=find(r.dataset.id);if(t)openCard(t)};r.onclick=go;r.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}}});
   box.querySelectorAll(".col[data-month]").forEach(c=>c.onclick=()=>{V.calV="month";V.calM=c.dataset.month;V.calSel="";setView("view","cal")});
@@ -888,9 +894,9 @@ function anTip(el,ev){
   const r=el.getBoundingClientRect(),x=ev&&ev.clientX?ev.clientX:r.left+r.width/2,y=ev&&ev.clientY?ev.clientY:r.top;
   ttEl.style.left=Math.max(8,Math.min(innerWidth-ttEl.offsetWidth-8,x-ttEl.offsetWidth/2))+"px";ttEl.style.top=Math.max(8,y-ttEl.offsetHeight-12)+"px";
 }
-$("van").addEventListener("mousemove",e=>{const el=e.target.closest&&e.target.closest("[data-tt]");if(el)anTip(el,e);else if(ttEl)ttEl.hidden=true});
+$("van").addEventListener("mousemove",e=>{const el=e.target.closest&&/** @type {any} */ (e.target).closest("[data-tt]");if(el)anTip(el,e);else if(ttEl)ttEl.hidden=true});
 $("van").addEventListener("mouseleave",()=>{if(ttEl)ttEl.hidden=true});
-$("van").addEventListener("focusin",e=>{const el=e.target.closest&&e.target.closest("[data-tt]");if(el)anTip(el);else if(ttEl)ttEl.hidden=true});
+$("van").addEventListener("focusin",e=>{const el=e.target.closest&&/** @type {any} */ (e.target).closest("[data-tt]");if(el)anTip(el);else if(ttEl)ttEl.hidden=true});
 
 /* ---------- Year in Review: a PDF report of one year (what you marked Done), made in this browser ---------- */
 function yearData(y){
@@ -927,9 +933,9 @@ function openYear(){
 }
 let pdfLib=null;
 function loadPdf(){
-  if(window.jspdf)return Promise.resolve(window.jspdf.jsPDF);
+  if(/** @type {any} */ (window).jspdf)return Promise.resolve(/** @type {any} */ (window).jspdf.jsPDF);
   return pdfLib||(pdfLib=new Promise((ok,no)=>{const s=document.createElement("script");s.src="../hub/core/assets/vendor/jspdf.umd.min.js?v=4.2.1";
-    s.onload=()=>window.jspdf?ok(window.jspdf.jsPDF):no();s.onerror=()=>{pdfLib=null;no()};document.head.appendChild(s)}));
+    s.onload=()=>/** @type {any} */ (window).jspdf?ok(/** @type {any} */ (window).jspdf.jsPDF):no();s.onerror=()=>{pdfLib=null;no()};document.head.appendChild(s)}));
 }
 async function makePdf(y){
   const b=$("ygo");b.disabled=true;b.lastChild.textContent="Making PDF…";
@@ -981,7 +987,7 @@ async function makePdf(y){
       doc.text(pm(c.a)+"  to  "+pm(c.b),M+100,yy);doc.setTextColor(...(p>0?[198,40,40]:[31,122,77]));doc.setFont("helvetica","bold");doc.text((p>0?"+":"")+p+"%",W-M,yy,{align:"right"});doc.setFont("helvetica","normal");yy+=6.5})}
     else{doc.setFontSize(9.5);doc.setTextColor(...mute);doc.text("No task was paid at two different prices this year.",M,yy);yy+=7}
     yy+=6;head("Online or Offline");
-    const mt=D.total||1;[["Online",D.modes.online],["Offline",D.modes.offline],["Not Set",D.modes[""]]].forEach(([n,v])=>{doc.setFontSize(9.5);doc.setTextColor(...ink);doc.text(n,M,yy+3.2);
+    const mt=D.total||1;/** @type {[string, number][]} */ ([["Online",D.modes.online],["Offline",D.modes.offline],["Not Set",D.modes[""]]]).forEach(([n,v])=>{doc.setFontSize(9.5);doc.setTextColor(...ink);doc.text(n,M,yy+3.2);
       doc.setFillColor(...line);doc.rect(M+30,yy,104,4,"F");doc.setFillColor(...A);doc.rect(M+30,yy,Math.max(0.6,v/mt*104),4,"F");doc.text(pm(v)+"  ("+Math.round(v/mt*100)+"%)",W-M,yy+3.2,{align:"right"});yy+=7.5});
     yy+=6;head("Repeating Costs for the Next Year");
     const ny=D.nextYear.slice(0,14);
@@ -1029,11 +1035,11 @@ const act={
   del:t=>withUndo('"'+t.name+'" Deleted.',()=>{T=T.filter(x=>x!==t)})
 };
 $("list").onclick=e=>{
-  const gh=e.target.closest(".gh");if(gh){const k=gh.dataset.g;COLL.has(k)?COLL.delete(k):COLL.add(k);render();return}
-  const b=e.target.closest("[data-a]");
+  const gh=/** @type {any} */ (e.target).closest(".gh");if(gh){const k=gh.dataset.g;COLL.has(k)?COLL.delete(k):COLL.add(k);render();return}
+  const b=/** @type {any} */ (e.target).closest("[data-a]");
   if(b&&b.dataset.a==="new")return openEditor();
   if(b&&b.dataset.a==="clear"){clearFilters();keepView();drawFilters();render();return}
-  const row=e.target.closest(".row"),t=row&&find(row.dataset.id);if(!t)return;
+  const row=/** @type {any} */ (e.target).closest(".row"),t=row&&find(row.dataset.id);if(!t)return;
   if(!b)return openCard(t);
   if(b.dataset.a==="more")return moreMenu(b,t);
   act[b.dataset.a]&&act[b.dataset.a](t);
@@ -1061,7 +1067,7 @@ function menu(anchor,items,run){
     if(e.key==="ArrowUp"){e.preventDefault();bs[(i-1+bs.length)%bs.length].focus()}
   };
   popEl.onclick=e=>{
-    const b=e.target.closest("[data-k]");if(!b)return;
+    const b=/** @type {any} */ (e.target).closest("[data-k]");if(!b)return;
     if(b.classList.contains("danger")&&b.dataset.armed!=="1"){b.dataset.armed="1";b.querySelector("span").textContent="Click Again to Delete";return}
     closePop();run(b.dataset.k);
   };
@@ -1106,7 +1112,7 @@ function openCard(t){
   $("vfoot").querySelector(".pri,[data-c=edit]").focus();
 }
 $("vfoot").onclick=e=>{
-  const b=e.target.closest("[data-c]");if(!b||!cardT)return;const k=b.dataset.c,t=cardT;
+  const b=/** @type {any} */ (e.target).closest("[data-c]");if(!b||!cardT)return;const k=b.dataset.c,t=cardT;
   if(k==="del"&&b.dataset.armed!=="1"){b.dataset.armed="1";b.lastChild.textContent="Click Again to Delete";return}
   $("vdlg").close();act[k](t);
 };
@@ -1114,7 +1120,7 @@ $("vdlg").addEventListener("click",e=>{if(e.target===$("vdlg"))$("vdlg").close()
 
 /* ---------- add and edit ---------- */
 let editing=null,eMode="";
-const REP_PRESETS=[...document.querySelectorAll("#e-rep option")].map(o=>o.value);
+const REP_PRESETS=[.../** @type {NodeListOf<HTMLOptionElement>} */ (document.querySelectorAll("#e-rep option"))].map(o=>o.value);
 function repFromForm(){
   const v=$("e-rep").value;
   if(v==="none")return{n:1,unit:"none"};
@@ -1130,7 +1136,7 @@ function previewNext(){
   $("e-next").textContent="Dates: "+out.join(", ")+"…";
 }
 ["e-due","e-rep","e-n","e-unit"].forEach(id=>$(id).addEventListener("input",previewNext));
-$("e-mode").onclick=e=>{const b=e.target.closest("[data-m]");if(!b)return;eMode=b.dataset.m;document.querySelectorAll("#e-mode button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)))};
+$("e-mode").onclick=e=>{const b=/** @type {any} */ (e.target).closest("[data-m]");if(!b)return;eMode=b.dataset.m;document.querySelectorAll("#e-mode button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)))};
 function openEditor(t,copy,day){
   editing=t&&!copy?t:null;
   const x=t||{name:"",due:day||(V.view==="cal"&&V.calSel)||V.day||todayS(),time:"",repeat:{n:1,unit:"none"},price:null,cur:"",mode:"",cat:"",remind:-1,url:"",notes:""};
@@ -1141,7 +1147,7 @@ function openEditor(t,copy,day){
   $("e-price").value=x.price??"";
   $("e-cur").innerHTML='<option value="">Default ('+esc(SET.currency||"None")+')</option>'+CURS.map(c=>'<option value="'+c[0]+'">'+c[0]+'</option>').join("");
   $("e-cur").value=x.cur&&CURS.some(c=>c[0]===x.cur)?x.cur:"";
-  eMode=x.mode||"";document.querySelectorAll("#e-mode button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===eMode)));
+  eMode=x.mode||"";document.querySelectorAll("#e-mode button").forEach((/** @type {HTMLElement} */ b)=>b.setAttribute("aria-pressed",String(b.dataset.m===eMode)));
   $("e-cat").value=x.cat;
   $("e-remind").value=String([-1,0,1,3,7,14,30,60].includes(x.remind)?x.remind:-1);
   $("e-url").value=x.url;$("e-notes").value=x.notes;$("e-err").textContent="";
@@ -1173,7 +1179,7 @@ $("e-del").onclick=()=>{
   if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Click Again to Delete";return}
   const t=editing;$("dlg").close();act.del(t);
 };
-document.querySelectorAll("#dlg,#sdlg,#ydlg").forEach(d=>d.addEventListener("click",e=>{if(e.target.closest("[data-close]")||e.target===d)d.close()}));
+document.querySelectorAll("#dlg,#sdlg,#ydlg").forEach((/** @type {HTMLDialogElement} */ d)=>d.addEventListener("click",e=>{if(/** @type {any} */ (e.target).closest("[data-close]")||e.target===d)d.close()}));
 
 /* a link from the site search or Telegram: #task=<id> opens that task */
 function fromHash(){
@@ -1259,7 +1265,7 @@ $("add").onclick=$("addh").onclick=()=>openEditor();
 document.addEventListener("keydown",e=>{
   const k=e.key.toLowerCase();
   if(!["n","f","c"].includes(k)||e.ctrlKey||e.metaKey||e.altKey||document.querySelector("dialog[open]"))return;
-  const t=e.target;if(t.closest&&t.closest("input,textarea,select,[contenteditable]"))return;
+  const t=/** @type {any} */ (e.target);if(t.closest&&t.closest("input,textarea,select,[contenteditable]"))return;
   e.preventDefault();
   if(k==="n")openEditor();
   else if(k==="f"){$("q").focus();$("q").select()}

@@ -6,13 +6,15 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
+// @ts-check
 const MAXTAB=20;
 let TABS=[],REV=0,PAGE={title:"",icon:""},TIMER={every:7*86400,last:0},active="",locked=false,server=false,
     authed=false,EDIT=false,CLOSED=false,WAIT=false; // WAIT: logged in, waiting for the server to send private content // logged in? editing mode? whole page private and not logged in?
+/** @type {(id: string) => any} */   // (any: the page knows which element each id is)
 const $=id=>document.getElementById(id);
 const esc=HUB.esc;   // the shell's HTML escaper (shell.js, loaded first)
 const str=v=>typeof v==="string"?v:"";
-const status=t=>$("sync").textContent=t;
+const setStatus=t=>$("sync").textContent=t;
 const LS="info3",ATAB="info3-tab",ICONK="info3-icon",DRAFT=b=>"info3-draft-"+b.key;
 // Unsaved text of private tabs (or of a private page) is kept only for this browser session, never in permanent storage.
 const isPrivBox=b=>PAGE.private||!!(TABS.find(t=>t.id===b.tabId)||{}).private;
@@ -118,7 +120,7 @@ async function repairLayers(list){
       if(r.ok){intake(b,(await r.json()).box,true);done++}
     }catch(e){}finally{busy.delete(b.key)}
   }
-  if(done)status(`Repaired ${done} ${done===1?"box":"boxes"} that had been encrypted twice.`);
+  if(done)setStatus(`Repaired ${done} ${done===1?"box":"boxes"} that had been encrypted twice.`);
 }
 // Locked encrypted tabs show an Unlock card instead of their boxes; unlocked ones show a Lock now bar.
 function renderGates(){
@@ -126,7 +128,7 @@ function renderGates(){
     m.classList.toggle("lockd",!!t.enc&&!KEY);m.classList.toggle("unl",!!t.enc&&!!KEY)}
 }
 function lockEnc(){
-  if(TABS.some(t=>t.enc&&t.boxes.some(b=>b.editing||busy.has(b.key)))){status("Save or cancel the encrypted box you're editing first.");return false}
+  if(TABS.some(t=>t.enc&&t.boxes.some(b=>b.editing||busy.has(b.key)))){setStatus("Save or cancel the encrypted box you're editing first.");return false}
   KEY=null;DEC.clear();devClear();
   for(const t of TABS)if(t.enc)for(const b of t.boxes){b.title="Box "+(b.k+1);b.notes="";b.sealed=true;if(b.el)renderBox(b)}
   renderGates();if(HL)setHighlight(HL);return true;
@@ -198,8 +200,8 @@ function buildBox(b){
     else if(inTa&&!e.shiftKey&&keys[k]){e.preventDefault();fmt(b,keys[k])}
     else if(inTa&&e.shiftKey&&shift[k]){e.preventDefault();fmt(b,shift[k])}
   });
-  q(".tools").addEventListener("mousedown",e=>{if(e.target.closest("button"))e.preventDefault()}); // keep the text selected
-  q(".tools").addEventListener("click",e=>{const x=e.target.closest("[data-f]");if(x)fmt(b,x.dataset.f,x)});
+  q(".tools").addEventListener("mousedown",e=>{if(/** @type {any} */ (e.target).closest("button"))e.preventDefault()}); // keep the text selected
+  q(".tools").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest("[data-f]");if(x)fmt(b,x.dataset.f,x)});
   return n;
 }
 // Makes the page's tab panels match TABS (adds new ones, removes deleted ones, keeps the rest untouched).
@@ -242,11 +244,11 @@ function spyOutline(){
   const bx=[...m.querySelectorAll(".box")],y=window.innerHeight*0.3;let cur=0;
   bx.forEach((b,k)=>{if(b.getBoundingClientRect().top<=y)cur=k});
   if(bx.length&&window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-4)cur=bx.length-1;   // at the very bottom: the last section, even a short one
-  m.querySelectorAll(".outline button").forEach(x=>x.classList.toggle("on",+x.dataset.k===cur));
+  m.querySelectorAll(".outline button").forEach((/** @type {HTMLElement} */ x)=>x.classList.toggle("on",+x.dataset.k===cur));
 }
 addEventListener("scroll",()=>spyOutline(),{passive:true});
 $("panels").addEventListener("click",e=>{
-  const x=e.target.closest(".outline button");if(!x)return;
+  const x=/** @type {any} */ (e.target).closest(".outline button");if(!x)return;
   const m=x.closest(".boxes"),b=m.querySelectorAll(".box")[+x.dataset.k];
   m.querySelectorAll(".outline button").forEach(y=>y.classList.toggle("on",y===x));spyOff=Date.now()+1000;
   if(b)b.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
@@ -270,21 +272,22 @@ let idleJob=0;
 function renderSoon(){
   const now=TABS.find(t=>t.id===active);if(now)now.boxes.forEach(renderBox);
   const rest=TABS.filter(t=>t!==now).flatMap(t=>t.boxes);
+  /** @type {any} */
   const idle=window.requestIdleCallback||(f=>setTimeout(()=>f({timeRemaining:()=>8}),30));
   if(idleJob&&window.cancelIdleCallback)cancelIdleCallback(idleJob);
   const step=d=>{while(rest.length&&d.timeRemaining()>2){const b=rest.shift();if(b.el)renderBox(b)}if(rest.length)idleJob=idle(step);else idleJob=0};
   if(rest.length)idleJob=idle(step);
 }
 $("panels").addEventListener("click",e=>{
-  if(e.target.closest("[data-unlock]")){guard(()=>ensureKey(status));return}
-  if(e.target.closest("[data-lockenc]")){if(lockEnc())status("Encrypted tabs locked.");return}
-  const ck=e.target.closest(".ck>.mk");
+  if(/** @type {any} */ (e.target).closest("[data-unlock]")){guard(()=>ensureKey(setStatus));return}
+  if(/** @type {any} */ (e.target).closest("[data-lockenc]")){if(lockEnc())setStatus("Encrypted tabs locked.");return}
+  const ck=/** @type {any} */ (e.target).closest(".ck>.mk");
   if(ck&&!ck.closest(".prev")){const b=findBox(ck.closest(".box").dataset.key);if(b&&canTick())tick(b,+ck.parentElement.dataset.ln);return}
-  const cc=e.target.closest(".cbc");
+  const cc=/** @type {any} */ (e.target).closest(".cbc");
   if(cc){copyText(cc.previousElementSibling.textContent).then(ok=>{cc.textContent=ok?"Copied":"Copy failed";cc.classList.toggle("ok",ok);
     setTimeout(()=>{cc.textContent="Copy";cc.classList.remove("ok")},1500)});return}
-  const ab=e.target.closest("[data-addbox]");if(ab){addBox(TABS.find(t=>t.id===ab.closest(".boxes").dataset.tab));return}
-  const btn=e.target.closest("[data-r]");if(!btn)return;
+  const ab=/** @type {any} */ (e.target).closest("[data-addbox]");if(ab){addBox(TABS.find(t=>t.id===ab.closest(".boxes").dataset.tab));return}
+  const btn=/** @type {any} */ (e.target).closest("[data-r]");if(!btn)return;
   const b=findBox(btn.closest(".box").dataset.key);if(!b)return;
   const r=btn.dataset.r;
   if(r==="cfg"){if(!busy.has(b.key))guard(()=>openBoxDlg(b))}
@@ -334,6 +337,7 @@ function autoLabels(h){
   });
 }
 // Paired markers only count when the text inside doesn't start or end with a space, so "a == b" or "5 * 3" stay as they are.
+/** @type {[RegExp, string][]} */
 const PAIRS=[[/\*\*\*(?=\S)([^\n]*?\S)\*\*\*/g,"bi"],[/\*\*(?=\S)([^\n]*?\S)\*\*/g,"b"],[/~~(?=\S)([^\n]*?\S)~~/g,"s"],[/==(?=\S)([^\n]*?\S)==/g,"mark class=\"hl\""],
              [/(^|[^*\w])\*(?=[^\s*])([^*\n]*?[^\s*])\*(?![*\w])/g,"i"]];
 const LINK_MD=/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g;
@@ -487,11 +491,11 @@ async function tick(b,ln){
   try{
     const enc=tabOfBox(b).enc;if(enc&&!KEY)throw 0;
     const r=await api({action:"save",tab:b.tabId,box:b.id,title:enc?(b.ct||await seal(b.title)):b.title,notes:enc?await seal(notes):notes,rev:b.rev});
-    if(r.status===409){const j=await r.json();intake(b,j.box,enc);status("This box was changed elsewhere, so the newer version is shown. Check the item off again if needed.")}
-    else if(r.status===403){b.notes=prev;dropAuth();status("Log in to check off items.")}
+    if(r.status===409){const j=await r.json();intake(b,j.box,enc);setStatus("This box was changed elsewhere, so the newer version is shown. Check the item off again if needed.")}
+    else if(r.status===403){b.notes=prev;dropAuth();setStatus("Log in to check off items.")}
     else if(!r.ok)throw 0;
-    else{const j=await r.json();intake(b,j.box,enc);status(savedMsg())}
-  }catch(e){b.notes=prev;status("Couldn't reach the server, so the change wasn't saved.")}
+    else{const j=await r.json();intake(b,j.box,enc);setStatus(savedMsg())}
+  }catch(e){b.notes=prev;setStatus("Couldn't reach the server, so the change wasn't saved.")}
   finally{busy.delete(b.key);keepLocal();renderBox(b)}
 }
 function renderBox(b){
@@ -512,7 +516,7 @@ document.addEventListener("visibilitychange",async()=>{
   if(document.hidden||!loaded||!server)return;
   if(Date.now()-lastFetch<60000||openEdits()||document.querySelector("dialog[open]")||drag)return;
   lastFetch=Date.now();
-  try{const had=authed;takeData(await fetchData());if(had&&!authed){setEdit(false);status("You were logged out on this device.")}}catch(e){}
+  try{const had=authed;takeData(await fetchData());if(had&&!authed){setEdit(false);setStatus("You were logged out on this device.")}}catch(e){}
 }); // true once the server has answered (or is known to be unreachable)
 const sig=d=>JSON.stringify([d.rev|0,!!d.closed,d.tabs.map(t=>[t.id,t.name,t.color||"",t.hc||"",t.layout||"",!!t.private,t.boxes.map(b=>[b.id||"",b.w||"",b.h||"",b.title,b.notes,b.rev|0,b.saved|0])]),
   d.page&&[d.page.title,d.page.icon,d.page.colors,!!d.page.private],d.timer]);
@@ -556,17 +560,17 @@ async function load(){
     if(l&&Array.isArray(l.tabs)){local=l;if(local.page&&!local.page.icon)local.page.icon=savedIcon=lsGet(ICONK)||""}
   }catch(e){}
   // 1. Show the copy saved in this browser straight away, so the page appears instantly.
-  if(local&&(local.tabs.length||local.closed)){applyData(local);status("Checking for updates…")}
-  else if(local&&local.page){PAGE=normPage(local.page);renderPage();applyColors(PAGE.colors);status("Loading…")}
+  if(local&&(local.tabs.length||local.closed)){applyData(local);setStatus("Checking for updates…")}
+  else if(local&&local.page){PAGE=normPage(local.page);renderPage();applyColors(PAGE.colors);setStatus("Loading…")}
   // 2. Ask the server for the latest version.
   try{
     const j=await fetchData();
     WAIT=false;takeData(j);renderTabs();lastFetch=Date.now();
-    status(savedMsg());
+    setStatus(savedMsg());
   }catch(e){
     server=false;WAIT=false;
     if(!local||!local.tabs.length)applyData({tabs:[{name:"Information & Notes",boxes:[{title:"Information"},{title:"Notes"}]}],rev:0});
-    keepLocal();status("Saved in this browser only.");
+    keepLocal();setStatus("Saved in this browser only.");
   }
   loaded=true;
   // Edits that never reached the server are reopened so they aren't lost.
@@ -612,29 +616,29 @@ const busy=new Set(); // boxes with a save on its way to the server
 async function save(b,force){
   const e=b.el,text=e.ta.value,title=e.tin.value.trim().slice(0,80)||b.title;
   if(busy.has(b.key))return; // a second Ctrl+S while saving would look like a conflict
-  if(!server){Object.assign(b,{notes:text,title,saved:Math.floor(Date.now()/1000)});keepLocal();renderBox(b);closeEditor(b);status("Saved in this browser only.");return}
+  if(!server){Object.assign(b,{notes:text,title,saved:Math.floor(Date.now()/1000)});keepLocal();renderBox(b);closeEditor(b);setStatus("Saved in this browser only.");return}
   // Show the new text straight away; the server catches up in the background.
   // The draft stays in this browser until the server confirms, so nothing is lost if it fails.
   const prev={title:b.title,notes:b.notes};
   busy.add(b.key);
-  Object.assign(b,{notes:text,title});hideEditor(b);renderBox(b);status("Saving…");
+  Object.assign(b,{notes:text,title});hideEditor(b);renderBox(b);setStatus("Saving…");
   const back=msg=>{busy.delete(b.key);Object.assign(b,prev);renderBox(b);openEditor(b,text,title);e.msg.textContent=msg};
   try{
     const enc=tabOfBox(b).enc;
-    if(enc&&!KEY){back("This tab is locked. Unlock it, then save again.");status("Not saved yet.");return}
+    if(enc&&!KEY){back("This tab is locked. Unlock it, then save again.");setStatus("Not saved yet.");return}
     const r=await api({action:"save",tab:b.tabId,box:b.id,title:enc?await seal(title):title,notes:enc?await seal(text):text,rev:b.rev,force});
-    if(r.status===403){dropAuth();back("");status(savedMsg());guard(()=>save(b,force));return}
-    if(r.status===429){back("Too many wrong password tries. Wait a few minutes, then save again.");status(savedMsg());return}
-    if(r.status===409){const j=await r.json();back("");b.theirs=await openTheirs(b,j.box);e.conflict.hidden=false;status("Not saved yet. Choose which version to keep.");return}
-    if(r.status===404){back("This tab was removed on another device, so this text can't be saved here. Copy it before you leave the page.");status("Not saved");return}
+    if(r.status===403){dropAuth();back("");setStatus(savedMsg());guard(()=>save(b,force));return}
+    if(r.status===429){back("Too many wrong password tries. Wait a few minutes, then save again.");setStatus(savedMsg());return}
+    if(r.status===409){const j=await r.json();back("");b.theirs=await openTheirs(b,j.box);e.conflict.hidden=false;setStatus("Not saved yet. Choose which version to keep.");return}
+    if(r.status===404){back("This tab was removed on another device, so this text can't be saved here. Copy it before you leave the page.");setStatus("Not saved");return}
     if(!r.ok)throw 0;
     const j=await r.json();
     busy.delete(b.key);
     intake(b,j.box,tabOfBox(b).enc);
-    dSet(b,null);keepLocal();renderBox(b);status(savedMsg());
+    dSet(b,null);keepLocal();renderBox(b);setStatus(savedMsg());
   }catch(err){
     back("Couldn't reach the server. Your text is kept in this browser; try Save again.");
-    status("Not saved to the server.");
+    setStatus("Not saved to the server.");
   }finally{busy.delete(b.key)}
 }
 // The other device's version of a box, decrypted if needed, for "Load the newer version".
@@ -646,7 +650,7 @@ async function openTheirs(b,box){
 function loadTheirs(b){
   const e=b.el,t=b.theirs;if(!t)return;
   intake(b,t,tabOfBox(b).enc);b.theirs=null;
-  keepLocal();renderBox(b);e.ta.value=b.notes;e.tin.value=b.title;grow(e.ta);dSet(b,null);e.conflict.hidden=true;status(savedMsg());
+  keepLocal();renderBox(b);e.ta.value=b.notes;e.tin.value=b.title;grow(e.ta);dSet(b,null);e.conflict.hidden=true;setStatus(savedMsg());
 }
 
 /* copy: copies the box text without formatting marks (code stays exactly as typed) */
@@ -700,19 +704,19 @@ function showTab(id){
 let noClick=false; // set right after a drag so the drop doesn't also count as a click
 $("tabs").onclick=e=>{
   if(noClick)return;
-  const pen=e.target.closest(".pen");if(pen){guard(()=>openTabEditor(pen.parentElement.dataset.t));return}
-  const b=e.target.closest(".tab");if(!b)return;
+  const pen=/** @type {any} */ (e.target).closest(".pen");if(pen){guard(()=>openTabEditor(pen.parentElement.dataset.t));return}
+  const b=/** @type {any} */ (e.target).closest(".tab");if(!b)return;
   if(b.dataset.add)guard(()=>openTabEditor(null));else showTab(b.dataset.t);
 };
-$("tabs").addEventListener("contextmenu",e=>{if(EDIT&&e.target.closest(".tabi"))e.preventDefault()}); // no long-press menu while editing
+$("tabs").addEventListener("contextmenu",e=>{if(EDIT&&/** @type {any} */ (e.target).closest(".tabi"))e.preventDefault()}); // no long-press menu while editing
 const openEdits=()=>TABS.some(t=>t.boxes.some(b=>b.editing||busy.has(b.key)));
 
 /* drag tabs to reorder them (editing mode). The tab follows the pointer; the others glide aside.
    Mouse: start moving. Touch: press and hold briefly, then drag (a quick swipe still scrolls the row). */
 let drag=null,dragRaf=0;
 $("tabs").addEventListener("pointerdown",e=>{
-  if(!EDIT||e.button>0||e.target.closest(".pen"))return;
-  const w=e.target.closest(".tabi");if(!w)return;
+  if(!EDIT||e.button>0||/** @type {any} */ (e.target).closest(".pen"))return;
+  const w=/** @type {any} */ (e.target).closest(".tabi");if(!w)return;
   drag={w,pid:e.pointerId,x0:e.clientX,y0:e.clientY,x:e.clientX,touch:e.pointerType!=="mouse",on:false,timer:0};
   if(drag.touch)drag.timer=setTimeout(()=>{if(drag&&!drag.on)startDrag()},220);
 });
@@ -776,7 +780,7 @@ function endDrag(e){
   if(order.join()===TABS.map(t=>t.id).join())return;
   // Colors that come from the tab's position are fixed first, so tabs keep their colors when they move.
   const list=order.map(id=>{const i=TABS.findIndex(t=>t.id===id),t=TABS[i];return{id,name:t.name,color:tabColor(t,i),hc:t.hc,private:t.private}});
-  setTimeout(()=>saveTabsList(list,status,()=>status("Tab order saved.")),220);
+  setTimeout(()=>saveTabsList(list,setStatus,()=>setStatus("Tab order saved.")),220);
 }
 document.addEventListener("pointerup",endDrag);document.addEventListener("pointercancel",endDrag);
 
@@ -808,7 +812,7 @@ async function saveTabsList(list,say,done){
   }
   try{
     const r=await api({action:"save_tabs",tabs:list,rev:REV});
-    if(r.status===403){dropAuth();status(savedMsg());renderTabs();guard(()=>saveTabsList(list,say,done));return}
+    if(r.status===403){dropAuth();setStatus(savedMsg());renderTabs();guard(()=>saveTabsList(list,say,done));return}
     if(r.status===429){say("Too many wrong password tries. Wait a few minutes, then try again.");return}
     if(r.status===409){const j=await r.json();mergeTabs(j.data);say("The tabs were changed on another device. The latest tabs are shown now, so please make your change again.");return}
     if(r.status===422){say("This tab can't be put back any more.");return}
@@ -817,7 +821,7 @@ async function saveTabsList(list,say,done){
     // Text of removed tabs is gone, so their unsaved drafts go too.
     const keep=new Set(j.data.tabs.map(t=>t.id));
     TABS.filter(t=>!keep.has(t.id)).forEach(t=>t.boxes.forEach(b=>dSet(b,null)));
-    mergeTabs(j.data);showNew();status(savedMsg());if(done)done();
+    mergeTabs(j.data);showNew();setStatus(savedMsg());if(done)done();
   }catch(e){say("Couldn't reach the server, so the tabs weren't changed.");renderTabs()}
 }
 
@@ -832,20 +836,20 @@ async function saveBoxList(t,list,say,done){
   }
   try{
     const r=await api({action:"save_boxes",tab:t.id,boxes:list,rev:REV});
-    if(r.status===403){dropAuth();status(savedMsg());renderTabs();guard(()=>saveBoxList(t,list,say,done));return}
+    if(r.status===403){dropAuth();setStatus(savedMsg());renderTabs();guard(()=>saveBoxList(t,list,say,done));return}
     if(r.status===409){const j=await r.json();if(j.data)mergeTabs(j.data);say("This tab was changed on another device. The latest version is shown now, so please make your change again.");return}
     if(r.status===422){say("This box can't be put back here any more.");return}
     if(!r.ok)throw 0;
     const j=await r.json(),keep=new Set(j.data.tabs.flatMap(x=>x.boxes.map(b=>x.id+"-"+b.id)));
     t.boxes.forEach(b=>{if(!keep.has(b.key))dSet(b,null)});   // the text of a removed box is gone, so its unsaved draft goes too
-    mergeTabs(j.data);status(savedMsg());if(done)done(before);
+    mergeTabs(j.data);setStatus(savedMsg());if(done)done(before);
   }catch(e){say("Couldn't reach the server, so nothing was changed.")}
 }
 function addBox(t){
   if(!t||t.boxes.length>=MAXBOX)return;
   guard(()=>{
     const list=t.boxes.map(b=>({id:b.id,w:b.w,h:b.h}));list.push({id:null,w:"",h:""});
-    saveBoxList(t,list,status,before=>{
+    saveBoxList(t,list,setStatus,before=>{
       const nb=t.boxes.find(b=>!before.has(b.id));if(!nb)return;
       const n=boxNode(nb);if(n)n.scrollIntoView({behavior:"smooth",block:"center"});
       if(!(t.enc&&!KEY))openEditor(nb);   // a new box opens ready to type in
@@ -855,18 +859,18 @@ function addBox(t){
 const bxdlg=$("bxdlg");let BX=null;
 function openBoxDlg(b){
   const t=TABS.find(x=>x.id===b.tabId);if(!t)return;
-  if(b.editing){status("Save or cancel this box first.");return}
+  if(b.editing){setStatus("Save or cancel this box first.");return}
   BX={t,b,w:b.w,h:b.h,pos:t.boxes.indexOf(b),armed:false};
   $("bxname").textContent=b.sealed?"Locked box":b.title;
   $("bxmsg").textContent="";$("bxdel").textContent="Delete Box";$("bxdel").hidden=t.boxes.length<2;bxUI();bxdlg.showModal();
 }
 function bxUI(){
-  for(const [id,key] of [["bxw","w"],["bxh","h"]])document.querySelectorAll("#"+id+" .opt").forEach(x=>{const on=x.dataset.v===BX[key];x.classList.toggle("on",on);x.setAttribute("aria-checked",on)});
+  for(const [id,key] of [["bxw","w"],["bxh","h"]])document.querySelectorAll("#"+id+" .opt").forEach((/** @type {HTMLElement} */ x)=>{const on=x.dataset.v===BX[key];x.classList.toggle("on",on);x.setAttribute("aria-checked",String(on))});
   const n=BX.t.boxes.length;$("bxpos").textContent="Position "+(BX.pos+1)+" of "+n;$("bxleft").disabled=BX.pos<1;$("bxright").disabled=BX.pos>=n-1;
   $("bxwhint").textContent=BX.w?"":"Auto means "+(BX.t.layout==="doc"?"the full width of the page.":"half the width.");
 }
-$("bxw").addEventListener("click",e=>{const x=e.target.closest(".opt");if(x){BX.w=okW(x.dataset.v);bxUI()}});
-$("bxh").addEventListener("click",e=>{const x=e.target.closest(".opt");if(x){BX.h=okH(x.dataset.v);bxUI()}});
+$("bxw").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest(".opt");if(x){BX.w=okW(x.dataset.v);bxUI()}});
+$("bxh").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest(".opt");if(x){BX.h=okH(x.dataset.v);bxUI()}});
 $("bxleft").onclick=()=>{BX.pos=Math.max(0,BX.pos-1);bxUI()};
 $("bxright").onclick=()=>{BX.pos=Math.min(BX.t.boxes.length-1,BX.pos+1);bxUI()};
 $("bxcancel").onclick=()=>bxdlg.close();
@@ -884,16 +888,18 @@ $("bxdel").onclick=()=>{
 const rawBox=(b,enc)=>({id:b.id,w:b.w,h:b.h,title:enc?b.ct:b.title,notes:enc?b.cn:b.notes});
 function undoBox(tabId,gone,at){
   const t=TABS.find(x=>x.id===tabId);
-  if(!t){status("That tab is gone, so the box can't come back.");return}
-  if(t.boxes.length>=MAXBOX){status("This tab is full, so the box can't come back.");return}
+  if(!t){setStatus("That tab is gone, so the box can't come back.");return}
+  if(t.boxes.length>=MAXBOX){setStatus("This tab is full, so the box can't come back.");return}
   const list=t.boxes.map(b=>({id:b.id,w:b.w,h:b.h}));
   list.splice(Math.min(at,list.length),0,{id:gone.id,w:gone.w,h:gone.h,restore:{title:gone.title,notes:gone.notes}});
-  guard(()=>saveBoxList(t,list,status,()=>status("Box is back.")));
+  guard(()=>saveBoxList(t,list,setStatus,()=>setStatus("Box is back.")));
 }
 $("bxform").addEventListener("submit",e=>{e.preventDefault();saveBoxList(BX.t,bxList(false),x=>$("bxmsg").textContent=x,()=>bxdlg.close())});
 
 /* Edit tab dialog: name, color, private, position, delete. Also used for new tabs (id null). */
-const etdlg=$("etdlg");let ET=null;
+const etdlg=$("etdlg");
+/** @type {any} */
+let ET=null;
 const hasText=id=>{const t=TABS.find(x=>x.id===id);return!!t&&t.boxes.some(b=>b.notes.trim())};
 function nextTabName(){let n=TABS.length+1;const names=new Set(TABS.map(t=>t.name.trim().toLowerCase()));while(names.has("tab "+n))n++;return"Tab "+n}
 function etPos(){
@@ -918,12 +924,12 @@ function openTabEditor(id){
   $("etmsg").textContent="";etPos();hxSync();etdlg.showModal();$("etname").focus();$("etname").select();
 }
 // Layout of this tab: the three designs, chosen with buttons that show a little picture of each.
-function layUI(){document.querySelectorAll("#etlays .lay").forEach(b=>{const on=b.dataset.lay===ET.layout;b.setAttribute("aria-checked",on);b.classList.toggle("on",on)})}
-$("etlays").addEventListener("click",e=>{const b=e.target.closest(".lay");if(!b)return;ET.layout=okLay(b.dataset.lay);layUI()});
+function layUI(){document.querySelectorAll("#etlays .lay").forEach((/** @type {HTMLElement} */ b)=>{const on=b.dataset.lay===ET.layout;b.setAttribute("aria-checked",String(on));b.classList.toggle("on",on)})}
+$("etlays").addEventListener("click",e=>{const b=/** @type {any} */ (e.target).closest(".lay");if(!b)return;ET.layout=okLay(b.dataset.lay);layUI()});
 $("etlays").addEventListener("keydown",e=>{
   if(!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key))return;e.preventDefault();
   const i=LAYS.indexOf(ET.layout),n=(i+(e.key==="ArrowLeft"||e.key==="ArrowUp"?-1:1)+LAYS.length)%LAYS.length;
-  ET.layout=LAYS[n];layUI();document.querySelector(`#etlays .lay[data-lay="${ET.layout}"]`).focus();
+  ET.layout=LAYS[n];layUI();/** @type {HTMLElement} */ (document.querySelector(`#etlays .lay[data-lay="${ET.layout}"]`)).focus();
 });
 $("etcolor").addEventListener("input",e=>{ET.color=e.target.value.toLowerCase();hxSync()});
 $("ethc").addEventListener("input",e=>{ET.hc=e.target.value.toLowerCase();$("ethcdef").textContent="Use default";hxSync()});
@@ -965,10 +971,10 @@ $("etdel").onclick=()=>{
   saveTabsList(etList(true),x=>$("etmsg").textContent=x,()=>{etdlg.close();if(gone&&window.HUB&&HUB.undo)HUB.undo("Tab deleted.",()=>undoTab(gone,at))});
 };
 function undoTab(gone,at){
-  if(TABS.length>=MAXTAB){status("There are too many tabs, so the tab can't come back.");return}
+  if(TABS.length>=MAXTAB){setStatus("There are too many tabs, so the tab can't come back.");return}
   const {boxes,...head}=gone,list=TABS.map((t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,private:t.private,enc:t.enc}));
   list.splice(Math.min(at,list.length),0,{...head,restore:{boxes}});
-  guard(()=>saveTabsList(list,status,()=>status("Tab is back.")));
+  guard(()=>saveTabsList(list,setStatus,()=>setStatus("Tab is back.")));
 }
 $("etform").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -984,8 +990,8 @@ $("etform").addEventListener("submit",async e=>{
     etdlg.close();renderGates();
     if(want&&!was&&t){ // remove earlier versions that still hold this tab's unencrypted text
       try{await api({action:"clear_versions"})}catch(err){}
-      status("Tab encrypted. Earlier versions were deleted so no unencrypted copy stays on the server.");
-    }else if(!want&&was)status("Tab decrypted. It's still a private tab.");
+      setStatus("Tab encrypted. Earlier versions were deleted so no unencrypted copy stays on the server.");
+    }else if(!want&&was)setStatus("Tab decrypted. It's still a private tab.");
   });
 });
 // Rewrites a tab's two boxes encrypted (or back to plain text) on the server.
@@ -1054,7 +1060,7 @@ $("ulform").addEventListener("submit",async e=>{
   if($("ulkeep").checked)await devSave(raw);else devClear();
   KEY=await useKey(raw);raw.fill(0);$("ulin").value="";
   await queueDecrypt();renderGates();if(HL)setHighlight(HL);
-  status("Encrypted tabs unlocked.");uldlg.close();
+  setStatus("Encrypted tabs unlocked.");uldlg.close();
 });
 
 /* editing mode: the Edit button logs in (or offers to create a password) and shows the editing bar */
@@ -1064,21 +1070,21 @@ function setEdit(on){
 }
 function renderAuth(){$("eLogout").hidden=!(server&&locked&&authed)}
 $("editBtn").onclick=()=>{
-  if(!loaded){status("Still loading. Try again in a moment.");return}
+  if(!loaded){setStatus("Still loading. Try again in a moment.");return}
   if(server&&!locked){HUB.login().then(()=>location.reload(),()=>{});return}   // a new site: the login box sets the password
   guard(()=>setEdit(true));
 };
 $("closedLogin").onclick=()=>guard(()=>{});
 $("ebar").addEventListener("click",e=>{
-  const b=e.target.closest("[data-e]");if(!b)return;const k=b.dataset.e;
+  const b=/** @type {any} */ (e.target).closest("[data-e]");if(!b)return;const k=b.dataset.e;
   if(k==="colors")guard(openColors);
   else if(k==="settings")guard(openSettings);
   else if(k==="backup")guard(openBackup);
   else if(k==="logout")logout();
-  else if(k==="done"){if(openEdits()){status("Save or cancel the box you're editing first.");return}setEdit(false)}
+  else if(k==="done"){if(openEdits()){setStatus("Save or cancel the box you're editing first.");return}setEdit(false)}
 });
 async function logout(){
-  if(openEdits()){status("Save or cancel the box you're editing first.");return}
+  if(openEdits()){setStatus("Save or cancel the box you're editing first.");return}
   // Private tabs, their unsaved drafts, search results and export leftovers leave this device.
   TABS.filter(t=>t.private||PAGE.private).forEach(t=>t.boxes.forEach(b=>dSet(b,null)));
   try{sessionStorage.clear()}catch(e){}
@@ -1086,7 +1092,7 @@ async function logout(){
   KEY=null;DEC.clear();devClear();dropAuth();setEdit(false);
   try{const j=await fetchData();applyData(j);PAGE.iconHash=(j.page&&j.page.iconHash)||"";authed=!!j.auth;keepLocal()}
   catch(e){applyData({tabs:plainTabs().filter(t=>!t.private),rev:REV,page:PAGE,timer:TIMER});keepLocal()}
-  status("Logged out.");
+  setStatus("Logged out.");
 }
 
 /* dark / light mode, remembered in this browser */
@@ -1115,9 +1121,11 @@ function applyColors(c){
   el.textContent=block(":root",c.dark)+block(':root[data-theme="light"]',c.light);
 }
 const kdlg=$("kdlg"),kInputs=()=>[...kdlg.querySelectorAll("input[type=color]")];
-let KDRAFT=null,kSaved=false;
+/** @type {any} */
+let KDRAFT=null;
+let kSaved=false;
 function openColors(){
-  KDRAFT={};for(const m in DEF_COLORS){KDRAFT[m]={};for(const k in CVAR)KDRAFT[m][k]=PAGE.colors[m][k]||DEF_COLORS[m][k]}
+  KDRAFT={};for(const m in DEF_COLORS){KDRAFT[m]={};for(const k in CVAR)KDRAFT[m][k]=/** @type {any} */ (PAGE.colors)[m][k]||DEF_COLORS[m][k]}
   kInputs().forEach(x=>x.value=KDRAFT[x.dataset.m][x.dataset.k]);
   kSaved=false;$("kmsg").textContent="";kdlg.showModal();
 }
@@ -1134,11 +1142,11 @@ async function saveColors(){
   $("ksave").disabled=true;
   try{
     const r=await api({action:"save_colors",colors});
-    if(r.status===403){dropAuth();status(savedMsg());guard(saveColors);return}
+    if(r.status===403){dropAuth();setStatus(savedMsg());guard(saveColors);return}
     if(r.status===429){$("kmsg").textContent="Too many wrong password tries. Wait a few minutes, then try again.";return}
     if(!r.ok)throw 0;
     const j=await r.json();PAGE.colors=normColors(j.page.colors);keepLocal();
-    kSaved=true;applyColors(PAGE.colors);kdlg.close();status(savedMsg());
+    kSaved=true;applyColors(PAGE.colors);kdlg.close();setStatus(savedMsg());
   }catch(e){$("kmsg").textContent="Couldn't reach the server, so the colors weren't saved."}
   finally{$("ksave").disabled=false}
 }
@@ -1166,7 +1174,7 @@ function findAll(query){
     });
     if(nameAt>=0||count)out.push({t,ti,nameAt,first,count});
   });
-  return out.sort((a,b)=>(b.nameAt>=0)-(a.nameAt>=0)||a.ti-b.ti); // tabs whose name matches come first
+  return out.sort((a,b)=>+(b.nameAt>=0)-+(a.nameAt>=0)||a.ti-b.ti); // tabs whose name matches come first
 }
 function drawResults(){
   const query=q.value.trim();
@@ -1191,7 +1199,7 @@ function markText(root,query){
   for(const node of nodes){
     const v=node.nodeValue,low=v.toLowerCase(),f=document.createDocumentFragment();let i=0,j;
     while((j=low.indexOf(n,i))>=0){f.append(v.slice(i,j));const m=document.createElement("mark");m.textContent=v.slice(j,j+n.length);f.append(m);i=j+n.length}
-    f.append(v.slice(i));node.replaceWith(f);
+    f.append(v.slice(i));/** @type {Text} */ (node).replaceWith(f);
   }
 }
 function setHighlight(query){HL=query;TABS.forEach(t=>t.boxes.forEach(b=>{if(!b.editing)renderBox(b)}))}
@@ -1215,9 +1223,9 @@ q.addEventListener("keydown",e=>{
   else if(e.key==="Escape"){if(!sres.hidden){sres.hidden=true;q.setAttribute("aria-expanded","false")}else{q.value="";drawResults();setHighlight("");q.blur()}}
 });
 sres.addEventListener("mousedown",e=>e.preventDefault()); // keep focus in the box while clicking a result
-sres.addEventListener("click",e=>{const b=e.target.closest(".sr");if(b)pick(+b.dataset.i)});
+sres.addEventListener("click",e=>{const b=/** @type {any} */ (e.target).closest(".sr");if(b)pick(+b.dataset.i)});
 $("qclear").onclick=()=>{q.value="";drawResults();setHighlight("");q.focus()};
-document.addEventListener("click",e=>{if(!e.target.closest(".search")){sres.hidden=true;q.setAttribute("aria-expanded","false")}});
+document.addEventListener("click",e=>{if(!/** @type {any} */ (e.target).closest(".search")){sres.hidden=true;q.setAttribute("aria-expanded","false")}});
 // "/" or Ctrl+K jumps to search, unless you're typing somewhere
 document.addEventListener("keydown",e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)||document.querySelector("dialog[open]");
@@ -1228,7 +1236,7 @@ document.addEventListener("keydown",e=>{
 const DEFAULT_ICON=$("favIcon").getAttribute("href");
 const pageName=()=>PAGE.title.trim()||"Information";
 function renderPage(){
-  document.querySelector(".search").hidden=CLOSED;
+  /** @type {HTMLElement} */ (document.querySelector(".search")).hidden=CLOSED;
   $("ptitle").textContent=pageName();document.title=pageName();
   $("favIcon").href=DEFAULT_ICON;$("touchIcon").href=DEFAULT_ICON;   // the shell puts the site logo here when one is set
 }
@@ -1255,11 +1263,11 @@ async function saveSettings(){
   $("setsave").disabled=true;
   try{
     const r=await api({action:"save_page",...p});
-    if(r.status===403){dropAuth();status(savedMsg());guard(saveSettings);return}
+    if(r.status===403){dropAuth();setStatus(savedMsg());guard(saveSettings);return}
     if(r.status===429){m.textContent="Too many wrong password tries. Wait a few minutes, then try again.";return}
     if(r.status===400){m.textContent="That icon couldn't be saved. Try a different image.";return}
     if(!r.ok)throw 0;
-    const j=await r.json();PAGE=normPage(j.page);PAGE.iconHash="";keepLocal();renderPage();status(savedMsg());setdlg.close();
+    const j=await r.json();PAGE=normPage(j.page);PAGE.iconHash="";keepLocal();renderPage();setStatus(savedMsg());setdlg.close();
   }catch(e){m.textContent="Couldn't reach the server, so nothing was changed."}
   finally{$("setsave").disabled=false}
 }
@@ -1284,28 +1292,28 @@ function exportParts(all){   // [{tab, boxes:[{title, notes}]}], plus how many l
 const lockedNote=n=>n?n+(n===1?" locked box was":" locked boxes were")+" left out. Unlock the encrypted tab first to include "+(n===1?"it.":"them."):"";
 function exportText(all){
   const {tabs,locked}=exportParts(all),out=[];
-  if(!tabs.length){status("There is nothing to export.");return}
+  if(!tabs.length){setStatus("There is nothing to export.");return}
   for(const t of tabs){
     out.push(t.name,"=".repeat(Math.min(60,Math.max(3,t.name.length))),"");
     for(const b of t.boxes){out.push(b.title,"-".repeat(Math.min(60,Math.max(3,b.title.length))),b.notes||"(empty)","")}
   }
   if(locked)out.push("("+lockedNote(locked)+")");
   const name=exportName(all,"txt");saveFile(name,new Blob([out.join("\n")],{type:"text/plain;charset=utf-8"}));
-  bkdlg.close();status("Saved "+name+". "+lockedNote(locked));
+  bkdlg.close();setStatus("Saved "+name+". "+lockedNote(locked));
 }
 let pdfLoad=null;
 function loadPdfLib(){
   return pdfLoad||(pdfLoad=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="../hub/core/assets/vendor/jspdf.umd.min.js?v=4.2.1";
-    sc.onload=()=>window.jspdf&&window.jspdf.jsPDF?ok(window.jspdf.jsPDF):no(new Error("PDF library missing"));sc.onerror=()=>{pdfLoad=null;no(new Error("PDF library could not load"))};document.head.appendChild(sc)}));
+    sc.onload=()=>/** @type {any} */ (window).jspdf&&/** @type {any} */ (window).jspdf.jsPDF?ok(/** @type {any} */ (window).jspdf.jsPDF):no(new Error("PDF library missing"));sc.onerror=()=>{pdfLoad=null;no(new Error("PDF library could not load"))};document.head.appendChild(sc)}));
 }
 // The PDF uses a built-in font that only knows Western European letters: common symbols are spelled out, the rest becomes "?".
 const pdfSafe=s=>String(s).replace(/₹/g,"Rs ").replace(/[“”„]/g,'"').replace(/[‘’‚]/g,"'").replace(/[–—]/g,"-").replace(/…/g,"...").replace(/[•·▪●]/g,"-").replace(/→/g,"->").replace(/←/g,"<-").replace(/✓|✔/g,"v")
   .replace(/\*\*(.+?)\*\*/g,"$1").replace(/__(.+?)__/g,"$1").replace(/`([^`]+)`/g,"$1").replace(/~~(.+?)~~/g,"$1").replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,"$1 ($2)").replace(/[^\n\x20-\x7e\xa0-\xff]/g,"?");
 async function exportPdf(all){
   const {tabs,locked}=exportParts(all);
-  if(!tabs.length){status("There is nothing to export.");return}
-  status("Making the PDF…");
-  let jsPDF;try{jsPDF=await loadPdfLib()}catch(e){status("Couldn't load the PDF maker. Try Text instead.");return}
+  if(!tabs.length){setStatus("There is nothing to export.");return}
+  setStatus("Making the PDF…");
+  let jsPDF;try{jsPDF=await loadPdfLib()}catch(e){setStatus("Couldn't load the PDF maker. Try Text instead.");return}
   const doc=new jsPDF({unit:"mm",format:"a4"}),W=210,M=16,maxY=281;let y=M;
   const room=h=>{if(y+h>maxY){doc.addPage();y=M}};
   const para=(txt,size,style,gap,color)=>{doc.setFont("helvetica",style);doc.setFontSize(size);doc.setTextColor(color||20);
@@ -1320,14 +1328,14 @@ async function exportPdf(all){
   });
   if(locked)para("("+lockedNote(locked)+")",9,"italic",0,110);
   const name=exportName(all,"pdf");saveFile(name,doc.output("blob"));
-  status("Saved "+name+". "+lockedNote(locked));
+  setStatus("Saved "+name+". "+lockedNote(locked));
 }
 
 /* Backup panel: exports, full backup, reminder and earlier versions */
 const bkdlg=$("bkdlg");
 function openBackup(){bkdlg.showModal()}
 bkdlg.addEventListener("click",e=>{
-  const b=e.target.closest("[data-b]");if(!b)return;const k=b.dataset.b;
+  const b=/** @type {any} */ (e.target).closest("[data-b]");if(!b)return;const k=b.dataset.b;
   if(k==="close")bkdlg.close();
   else if(k==="pdf-all"||k==="pdf-cur"){bkdlg.close();exportPdf(k==="pdf-all")}
   else if(k==="txt-all"||k==="txt-cur")exportText(k==="txt-all");
@@ -1336,7 +1344,7 @@ bkdlg.addEventListener("click",e=>{
 function dropAuth(){authed=false;if(typeof renderAuth==="function")renderAuth()}
 // Runs fn now if editing is allowed; otherwise asks to log in first, then runs it.
 function guard(fn){
-  if(!loaded){status("Still loading. Try again in a moment.");return}
+  if(!loaded){setStatus("Still loading. Try again in a moment.");return}
   if(!server||!locked||authed){fn();return}
   // the site's one Welcome box logs in (same password and two-step code everywhere); the page then reloads with your private data
   HUB.login().then(pw=>unlockAfterLogin(pw)).then(()=>location.reload(),()=>{});

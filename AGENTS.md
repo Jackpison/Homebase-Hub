@@ -35,7 +35,7 @@ This file is for anyone changing the code, people and AI tools alike. Read it be
 ```
 npm ci --ignore-scripts
 npx eslint src tools-app
-npx tsc -p tsconfig.json && npx tsc -p tsconfig.links.json && npx tsc -p tsconfig.home.json && python3 tests/repo/tscheck_test.py
+npx tsc -p tsconfig.json && npx tsc -p tsconfig.links.json && npx tsc -p tsconfig.home.json && npx tsc -p tsconfig.cards.json && npx tsc -p tsconfig.tasks.json && npx tsc -p tsconfig.info.json && python3 tests/repo/tscheck_test.py
 php tests/unit/run.php
 python3 scripts/release.py --check
 python3 tests/repo/release_test.py
