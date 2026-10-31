@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.62.7 | Behind the scenes only: Links and Info share their "keep unlocked on this device" code and a colour check, and two more page scripts are type-checked. Nothing looks different |
 | 1.62.6 | Behind the scenes only: one safe way to save shared files, the core split into smaller parts, and shared page helpers. Nothing looks different |
 | 1.62.5 | A cleanup: unused styles and code removed, the notes in your zip brought up to date, and every picture of the website retaken |
 | 1.62.2 | Settings: the on and off switches that had shrunk to a ring and a ball are switches again |
@@ -98,6 +99,19 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.62.7
+
+### Behind the scenes
+
+Nothing on screen changes in this version. Each page keeps its own look, its own tab icons and its own way of moving tabs.
+
+- Links and Info now use one shared piece of code for "Keep unlocked on this device" (the switch, the kept key, and opening your encrypted tabs right after you log in), instead of two copies.
+- Both pages check a colour like `#d9a85b` with the same shared function.
+- The Links and Home page scripts are now type-checked, like Files and Import Bookmarks.
+- New tests cover the shared unlock code and the shared colour check.
 
 ---
 
