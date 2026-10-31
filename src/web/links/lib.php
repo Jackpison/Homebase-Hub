@@ -53,19 +53,19 @@ function visits_add(string $url, string $who, array $data, bool $public, ?int $n
     $now = $now ?? time();
     if ($url === '' || strlen($url) > VISIT_MAX_URL || !isset(visits_urls($data, $public)[$url])) return [null, 0];
     $f = visits_file(); @mkdir(dirname($f), 0700, true);
-    $lk = @fopen($f . '.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
-    $v = visits_read();
-    foreach ($v['seen'] as $k => $t) if ((int)$t < $now - VISIT_GAP) unset($v['seen'][$k]);   // forget old clicks
-    $key = substr(hash('sha256', $who . '|' . $url), 0, 24);
-    $counted = !isset($v['seen'][$key]);
-    if ($counted) { $v['counts'][$url] = (int)($v['counts'][$url] ?? 0) + 1; $v['seen'][$key] = $now; }
-    // keep only links that still exist (counts) and a bounded list of recent clicks
-    $all = visits_urls($data, false);
-    foreach ($v['counts'] as $u => $_) if (!isset($all[$u])) unset($v['counts'][$u]);
-    if (count($v['seen']) > 20000) $v['seen'] = array_slice($v['seen'], -20000, null, true);
-    if ($counted) hub_jput($f, json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
-    if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
-    return [$counted, (int)($v['counts'][$url] ?? 0)];
+    return hub_with_lock($f . '.lock', function () use ($f, $url, $who, $data, $now): array {
+        $v = visits_read();
+        foreach ($v['seen'] as $k => $t) if ((int)$t < $now - VISIT_GAP) unset($v['seen'][$k]);   // forget old clicks
+        $key = substr(hash('sha256', $who . '|' . $url), 0, 24);
+        $counted = !isset($v['seen'][$key]);
+        if ($counted) { $v['counts'][$url] = (int)($v['counts'][$url] ?? 0) + 1; $v['seen'][$key] = $now; }
+        // keep only links that still exist (counts) and a bounded list of recent clicks
+        $all = visits_urls($data, false);
+        foreach ($v['counts'] as $u => $_) if (!isset($all[$u])) unset($v['counts'][$u]);
+        if (count($v['seen']) > 20000) $v['seen'] = array_slice($v['seen'], -20000, null, true);
+        if ($counted) hub_jput($f, json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+        return [$counted, (int)($v['counts'][$url] ?? 0)];
+    });
 }
 
 /** After a save: forget the counts of addresses that are no longer readable links (deleted, changed, or now in an encrypted
@@ -73,9 +73,9 @@ function visits_add(string $url, string $who, array $data, bool $public, ?int $n
 function visits_prune(array $data): void
 {
     $f = visits_file(); if (!is_file(hub_jpath($f)) && !is_file($f)) return;
-    $lk = @fopen($f . '.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
-    $v = visits_read(); $all = visits_urls($data, false); $n = count($v['counts']);
-    foreach ($v['counts'] as $u => $_) if (!isset($all[$u])) unset($v['counts'][$u]);
-    if (count($v['counts']) !== $n) hub_jput($f, json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
-    if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
+    hub_with_lock($f . '.lock', function () use ($f, $data): void {
+        $v = visits_read(); $all = visits_urls($data, false); $n = count($v['counts']);
+        foreach ($v['counts'] as $u => $_) if (!isset($all[$u])) unset($v['counts'][$u]);
+        if (count($v['counts']) !== $n) hub_jput($f, json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+    });
 }

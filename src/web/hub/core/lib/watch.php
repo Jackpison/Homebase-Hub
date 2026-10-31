@@ -33,9 +33,7 @@ function wt_save(array $d): bool { return hub_jput(wt_file(), json_encode($d, JS
  * domain you add or delete meanwhile never undo each other. $fn(&$d) changes $d. Returns the saved data.
  */
 function wt_update(callable $fn): array {
-    $lk = @fopen(hub_dir('core') . '/watch-data.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
-    try { $d = wt_load(); $fn($d); wt_save($d); return $d; }
-    finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    return hub_with_lock(hub_dir('core') . '/watch-data.lock', function () use ($fn): array { $d = wt_load(); $fn($d); wt_save($d); return $d; });
 }
 /** "https://Shop.Example.co.uk/x" -> "shop.example.co.uk"; '' when it isn't a host name */
 function wt_host(string $s): string {

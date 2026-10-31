@@ -44,9 +44,7 @@ function nt_save(array $d): bool {
  * twice. $fn(&$d) changes $d. Returns the saved data.
  */
 function nt_update(callable $fn): array {
-    $lk = @fopen(hub_dir('core') . '/notify-data.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
-    try { $d = nt_load(); $fn($d); nt_save($d); return $d; }
-    finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    return hub_with_lock(hub_dir('core') . '/notify-data.lock', function () use ($fn): array { $d = nt_load(); $fn($d); nt_save($d); return $d; });
 }
 /** What Settings > Telegram changes (everything else is kept by the jobs themselves). */
 const NT_USER_KEYS = ['on', 'token', 'chat', 'chatName', 'hour', 'tasks', 'timed', 'backup', 'login', 'bkEvery', 'bkEnc', 'hook', 'hookKey', 'hookPath', 'url'];

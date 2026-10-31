@@ -462,15 +462,14 @@ function bk_info_vault_check(array $new, string $prev): string {
     return is_array($cur) && hash_equals((string)($cur['wrap'] ?? ''), $prev) ? '' : 'conflict';
 }
 function bk_info_vault_swap(array $new, string $prev): string {
-    $lk = @fopen(hub_dir('info') . '/info.lock', 'c'); if ($lk) flock($lk, LOCK_EX);   // the same lock Info's own saves use
-    try {
+    return hub_with_lock(hub_dir('info') . '/info.lock', function () use ($new, $prev): string {   // the same lock Info's own saves use
         if (($why = bk_info_vault_check($new, $prev)) !== '') return $why;
         $raw = hub_jraw(bk_info_file()); $all = json_decode($raw, true);
         if (!is_array($all)) return 'unreadable';
         $all['page']['vault'] = ['v' => 1, 'salt' => $new['salt'], 'iter' => (int)$new['iter'], 'wrap' => $new['wrap'], 'login' => true];
         $json = json_encode($all, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         return $json !== false && hub_jput(bk_info_file(), $json) ? '' : 'write';
-    } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    });
 }
 /**
  * Links' encrypted tabs: changing the website password re-wraps their key in the browser, like Info's. $new = {salt, iter, wrap},
@@ -482,8 +481,7 @@ function bk_links_vault_check(array $new, string $prev): string {
     return $cur && hash_equals($cur['wrap'], $prev) ? '' : 'conflict';
 }
 function bk_links_vault_swap(array $new, string $prev): string {
-    $lk = @fopen(hub_dir('links') . '/links.lock', 'c'); if ($lk) flock($lk, LOCK_EX);   // the same lock Links' own saves use
-    try {
+    return hub_with_lock(hub_dir('links') . '/links.lock', function () use ($new, $prev): string {   // the same lock Links' own saves use
         if (($why = bk_links_vault_check($new, $prev)) !== '') return $why;
         $v = hub_norm_vault($new);
         $all = hub_read_guarded(bk_links_file());
@@ -492,7 +490,7 @@ function bk_links_vault_swap(array $new, string $prev): string {
         $all['settings']['vault'] = $v;
         foreach (['dark', 'light', 'sizes'] as $k) if (array_key_exists($k, $all['settings']) && !$all['settings'][$k]) unset($all['settings'][$k]);   // an empty {} must not come back as []
         return hub_write_guarded(bk_links_file(), $all) ? '' : 'write';
-    } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    });
 }
 function bk_key_clear(): void { @unlink(hub_jpath(bk_key_file())); }
 /** Opens an encrypted backup file with the stored key (the browser does the same with your passphrase). Returns the JSON text, or null. */

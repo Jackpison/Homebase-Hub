@@ -97,16 +97,14 @@ function fl_save(array $d): bool {
  * save. Returns ['ok' => bool, 'error' => string, 'data' => the data after].
  */
 function fl_modify(callable $fn): array {
-    $lk = @fopen(fl_dir() . '/files.lock', 'c');
-    if (!$lk) return ['ok' => false, 'error' => 'Could not save (check the folder permissions).', 'data' => fl_load(), 'code' => 500];
-    flock($lk, LOCK_EX);
-    try {
+    $r = hub_with_lock_or(fl_dir() . '/files.lock', function () use ($fn): array {
         $d = fl_load();
         $res = $fn($d);
         if (is_array($res)) return ['ok' => false, 'error' => (string)($res[0] ?? 'Not possible.'), 'code' => (int)($res[1] ?? 400), 'data' => fl_load()];
         if (!fl_save($d)) return ['ok' => false, 'error' => 'Could not save (check the folder permissions).', 'code' => 500, 'data' => fl_load()];
         return ['ok' => true, 'error' => '', 'code' => 200, 'data' => $d];
-    } finally { flock($lk, LOCK_UN); fclose($lk); }
+    }, null);
+    return $r ?? ['ok' => false, 'error' => 'Could not save (check the folder permissions).', 'data' => fl_load(), 'code' => 500];   // null: the lock could not be taken
 }
 
 /* ---------- sizes ---------- */

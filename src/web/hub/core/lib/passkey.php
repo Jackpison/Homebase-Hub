@@ -120,8 +120,7 @@ function pk_save(array $keys): bool {
 /** What Settings is shown: no keys, only names, dates and the id (to remove one). */
 function pk_view(): array { return array_map(fn($k) => ['id' => $k['id'], 'name' => $k['name'], 'at' => $k['at'], 'last' => $k['last']], pk_keys()); }
 function pk_lock_run(callable $fn) {
-    $lk = @fopen(hub_dir('core') . '/passkeys.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
-    try { return $fn(); } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    return hub_with_lock(hub_dir('core') . '/passkeys.lock', $fn);
 }
 
 /* ---------- challenges: single-use, five minutes ---------- */

@@ -245,10 +245,7 @@ function tasks_snapshot(bool $force = false): void {
  * rev goes up (an open Tasks page sees the change instead of overwriting it).
  */
 function tasks_modify(callable $fn) {
-    $lk = @fopen(hub_dir('tasks') . '/tasks.lock', 'c');
-    if (!$lk) return false;
-    flock($lk, LOCK_EX);
-    try {
+    return hub_with_lock_or(hub_dir('tasks') . '/tasks.lock', function () use ($fn) {
         if (is_file(hub_jpath(tasks_file())) && hub_jread(tasks_file()) === null) return false;   // unreadable: never overwrite
         $data = tasks_read();
         $res = $fn($data);
@@ -257,7 +254,7 @@ function tasks_modify(callable $fn) {
         $rev = (int)$data['rev']; $data = tasks_clean($data); $data['rev'] = $rev + 1;
         if (!hub_jput(tasks_file(), json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE))) return false;
         return $res;
-    } finally { flock($lk, LOCK_UN); fclose($lk); }
+    }, false);
 }
 /** Marks the date $due of task $id done (or skipped), exactly like the Done button on the page. Returns a short result or ''. */
 function tasks_complete(array &$data, string $id, string $due, string $kind = 'paid'): string {

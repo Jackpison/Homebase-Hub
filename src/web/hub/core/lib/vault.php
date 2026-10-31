@@ -41,8 +41,7 @@ function sv_check(array $new, string $prev): string {
 
 /** Stores $new when it replaces $prev. Returns '' when done, or 'bad', 'conflict' or 'write'. */
 function sv_swap(array $new, string $prev): string {
-    $lk = @fopen(hub_dir('core') . '/site-vault.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
-    try {
+    return hub_with_lock(hub_dir('core') . '/site-vault.lock', function () use ($new, $prev): string {
         if (($why = sv_check($new, $prev)) !== '') return $why;
         $v = hub_norm_vault($new);
         $cur = sv_get();
@@ -52,7 +51,7 @@ function sv_swap(array $new, string $prev): string {
         if (!hub_jput(sv_file(), json_encode($v, JSON_UNESCAPED_SLASHES))) return 'write';
         @chmod(hub_jpath(sv_file()), 0600);
         return '';
-    } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    });
 }
 
 function sv_clear(): void { @unlink(hub_jpath(sv_file())); @unlink(sv_file()); }

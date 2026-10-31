@@ -132,6 +132,24 @@ function hub_lock_folder(string $d): void {
     if (!is_file("$d/index.html")) @file_put_contents("$d/index.html", '');
 }
 
+/* ======================= locks ======================= */
+
+/** Runs $fn while this process holds an exclusive lock on $lockFile, a file used only for locking (it is made when missing), and returns what
+ *  $fn returns. The lock is let go when $fn returns or throws. When the lock file cannot be opened $fn still runs, without a lock: the way every
+ *  caller behaved before there was one copy of this. */
+function hub_with_lock(string $lockFile, callable $fn)
+{
+    $lk = @fopen($lockFile, 'c'); if ($lk) flock($lk, LOCK_EX);
+    try { return $fn(); } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+}
+/** The same for a change that must not happen at all without the lock: when the lock file cannot be opened $fn does not run, and $failed is returned. */
+function hub_with_lock_or(string $lockFile, callable $fn, $failed)
+{
+    $lk = @fopen($lockFile, 'c'); if (!$lk) return $failed;
+    flock($lk, LOCK_EX);
+    try { return $fn(); } finally { flock($lk, LOCK_UN); fclose($lk); }
+}
+
 /* ======================= safe files ======================= */
 
 /** Writes a file completely or not at all (temp file + rename), so a crash can never leave half a file. */
@@ -978,12 +996,10 @@ function hub_clean_pages($in): array {
  * returns them changed.
  */
 function hub_settings_update(callable $fn): array {
-    $lk = @fopen(hub_dir('core') . '/settings.lock', 'c');
-    if ($lk) flock($lk, LOCK_EX);
-    unset($GLOBALS['__hub_settings']);   // read fresh
-    try { $s = hub_settings_save($fn(hub_settings())); }
-    finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
-    return $s;
+    return hub_with_lock(hub_dir('core') . '/settings.lock', function () use ($fn): array {
+        unset($GLOBALS['__hub_settings']);   // read fresh
+        return hub_settings_save($fn(hub_settings()));
+    });
 }
 function hub_settings_save(array $s): array {
     $s = hub_clean_settings($s);

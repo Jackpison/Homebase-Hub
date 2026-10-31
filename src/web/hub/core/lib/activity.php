@@ -28,13 +28,12 @@ function act_dfile(): string { return hub_dir('core') . '/devices.json'; }
 function act_rfile(): string { return hub_dir('core') . '/revoked.json'; }
 
 function act_update(string $file, callable $fn): void {
-    $lk = @fopen(hub_dir('core') . '/activity.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
-    try {
+    hub_with_lock(hub_dir('core') . '/activity.lock', function () use ($file, $fn): void {
         $d = hub_jread($file) ?? [];
         $d = $fn($d);
         if ($d === null) @unlink(hub_jpath($file));
         else hub_jput($file, json_encode($d, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
-    } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    });
 }
 /** "Chrome on Windows", read from the browser's own description of itself. */
 function act_browser(string $ua): string {

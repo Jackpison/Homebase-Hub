@@ -34,8 +34,7 @@ function ap_save(array $d): bool {
     return $ok;
 }
 function ap_update(callable $fn) {
-    $lk = @fopen(hub_dir('core') . '/login-approval.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
-    try { $d = ap_load(); $r = $fn($d); ap_save($d); return $r; } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    return hub_with_lock(hub_dir('core') . '/login-approval.lock', function () use ($fn) { $d = ap_load(); $r = $fn($d); ap_save($d); return $r; });
 }
 function ap_on(): bool { return is_file(hub_jpath(ap_file())) && !empty(ap_load()['on']); }
 function ap_cookie(string $name, string $value, int $until): void {

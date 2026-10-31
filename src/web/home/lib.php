@@ -925,15 +925,13 @@ function pool_load(): array
 function pool_update(callable $fn)
 {
     ensure_dir(DATA_DIR);
-    $lock = fopen(POOL_FILE . '.lock', 'c');
-    flock($lock, LOCK_EX);
-    $pool = pool_load();
-    $result = $fn($pool);
-    $pool['used'] = array_slice($pool['used'], -800);
-    write_json(POOL_FILE, $pool);
-    flock($lock, LOCK_UN);
-    fclose($lock);
-    return $result;
+    return hub_with_lock(POOL_FILE . '.lock', function () use ($fn) {
+        $pool = pool_load();
+        $result = $fn($pool);
+        $pool['used'] = array_slice($pool['used'], -800);
+        write_json(POOL_FILE, $pool);
+        return $result;
+    });
 }
 
 function pool_public(array $i): array
