@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.6 | If your web host's firewall blocks a save (a plain "403 Forbidden" page), the site now says so, keeps you logged in and keeps your change |
 | 1.64.5 | Home Settings closes at once; a steadier test |
 | 1.64.4 | Faster Info: typing in a big box no longer lags, Settings closes at once, big pages draw only what you see; a new Export window |
 | 1.64.3 | One look for every Settings window: Page Title under General, a clearer Encrypt row, controls that drop under their name, visible off switches, a simpler Add Link, and Save Settings dim until you change something |
@@ -108,6 +109,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.6
+
+### Fix
+
+- **A host firewall that says 403:** some web hosts block a request with their own plain "403 Forbidden" page before the site sees it. Every page took that as "you were logged out" and asked for the password. Now a message says your web host blocked the request (not Homebase Hub), you stay logged in, and the change stays in the browser. Homebase Hub's own 403 answers are unchanged.
+
+### Checked
+
+- The speed test now makes a host-style 403 page answer a Settings save and checks the message, no password box, and that the window comes back with the text still in it.
 
 ---
 

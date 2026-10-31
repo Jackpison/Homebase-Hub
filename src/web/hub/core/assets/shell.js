@@ -6,8 +6,26 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
+/* (1.64.6) A web host's firewall can answer a request with its own page, "403 Forbidden", before Homebase Hub sees it (a plain page, not our JSON).
+   Every page treated that as "you are logged out" and asked for the password. Now it says what happened, keeps the change in the browser, and
+   hands the page a "could not reach the server" answer, so nothing is logged out or lost. Our own 403 answers are always JSON and pass untouched. */
+(function () {
+  var f = window.fetch, said = 0; if (!f || f._ixHost) return;
+  window.fetch = function (input) {
+    return f.apply(this, arguments).then(function (r) {
+      try {
+        if (r.status === 403 && /\/api\.php(\?|$)/.test(r.url) && new URL(r.url, location.href).origin === location.origin && !/json/i.test(r.headers.get('content-type') || '')) {
+          if (Date.now() - said > 20000 && window.HUB && HUB.toast) { said = Date.now(); HUB.toast('Your web host blocked this request (403 Forbidden). It did not come from Homebase Hub, and you are still logged in. Your change is kept in this browser. Ask your host to allow your IP address.', true, true); }
+          return new Response('', { status: 503, statusText: 'Blocked by the host' });
+        }
+      } catch (e) { /* leave the answer as it is */ }
+      return r;
+    });
+  };
+  window.fetch._ixHost = true;
+})();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.64.5" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.64.6" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
