@@ -33,25 +33,11 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
-    # one job: lint and the unit tests on every supported PHP (8.5, 8.4, 8.3), then the rest of the checks on 8.3
-    name: build (PHP 8.3, 8.4 and 8.5)
+    # one job: the checks on PHP 8.3, then (last) the lint and unit tests on every supported PHP, worked out each time by tests/repo/php_matrix.py
+    name: build (every supported PHP)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false, fetch-depth: 50 }   # the secret check also reads the last 50 commit messages
-      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
-        with: { php-version: '8.5' }
-      - name: PHP 8.5 - lint and unit tests
-        run: |
-          php -v | head -1
-          find src -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
-          php tests/unit/run.php
-      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
-        with: { php-version: '8.4' }
-      - name: PHP 8.4 - lint and unit tests
-        run: |
-          php -v | head -1
-          find src -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
-          php tests/unit/run.php
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with: { php-version: '8.3' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -97,6 +83,8 @@ jobs:
           echo "$@"
           unzip -l "$1" | grep -q 'web/hub/docs/CHANGELOG.md'
           case "$1" in *_*) echo "the zip's name has an underscore"; exit 1 ;; esac
+      - name: Every supported PHP (the range is worked out, so a new PHP is added by itself; the next one is only a warning)
+        run: python3 tests/repo/php_matrix.py --install
 
   server:
     needs: changes
