@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.63.0 | Links and Info tabs: drag to reorder, 16 icons to choose from, and one new Edit Tab window; new-look Banks and Add Task windows; Tools list, grid and Markdown fixes |
 | 1.62.8 | Behind the scenes only: the Cards, Tasks and Info scripts are now type-checked too. Nothing looks different |
 | 1.62.7 | Behind the scenes only: Links and Info share their "keep unlocked on this device" code and a colour check, and two more page scripts are type-checked. Nothing looks different |
 | 1.62.6 | Behind the scenes only: one safe way to save shared files, the core split into smaller parts, and shared page helpers. Nothing looks different |
@@ -100,6 +101,34 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.63.0
+
+### Tabs in Links and Info
+
+- Tabs now work the same way on both pages. In editing mode, **drag a tab to move it** (on a phone: press and hold, then drag). The arrow buttons in Links are gone. From the keyboard, press Alt + Left or Right on a tab.
+- **Pick an icon for each tab.** Edit Tab has 16 icons to choose from, and Default keeps what each page showed before: the ribbon in Links and the document in Info.
+- **A new Edit Tab window** in the same look as Settings, with switches for Private Tab and Encrypted Tab. Delete Tab is in this window now, in both pages.
+- Each page keeps its own look. Links still shows its ribbon and Info its document icon until you pick another.
+
+### Windows in the new look
+
+- **Banks** (Cards): each bank has a letter badge, its name and link side by side, and the number of cards.
+- **Add Task** (Tasks): fields are grouped under Task, When, Payment and Notes.
+
+### Tools
+
+- **Markdown Editor:** a task list followed by a numbered list no longer splits each task into two lines, and a list inside a list no longer has big gaps.
+- **Hash Generator:** long hashes wrap inside the page instead of running off the right edge.
+- **Phones:** the Hash Generator and the SIP, Loan EMI and FD and RD calculators no longer scroll sideways.
+- Choice buttons (such as Text and File, or JPG and PNG) are only as wide as their buttons, not stretched across the page.
+
+### Behind the scenes
+
+- The tab code for Links and Info is now one shared file (`tabs.js`), with a test that the icon list matches on the server.
+- New tests for tab drag, icons and the Edit Tab window (`tabs_kit_test`), and for the Tools fixes.
 
 ---
 
