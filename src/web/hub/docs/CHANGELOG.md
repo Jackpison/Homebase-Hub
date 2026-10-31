@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.2 | The top bar fits on tablets and small laptops: tabs show icons only (the current one keeps its name); a sweep of every page and Settings tab found nothing else |
 | 1.64.1 | Edit Tab: the icons fold away until you open them; every window is now checked by one test; Tasks and Files windows fixed to match |
 | 1.64.0 | Calmer cards and tiles that follow your Boxes and Cards colour, two soft presets (Soft Dark, Soft Warm), one look for every window, Show Visit Counts in Look |
 | 1.63.1 | Fix: dragging a tab now always lands where you drop it, also with a fast mouse or a slow browser |
@@ -104,6 +105,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.2
+
+### Fix
+
+- **Top bar on tablets and small laptops (about 760 to 1180 px wide):** the last tab, Tools, slid under the buttons on the right. Now the tabs show only their icon (the page you are on keeps its name; hover shows the rest) and the site name steps aside. Phones and wide screens look as before.
+
+### Checked
+
+- Every page and every Settings tab, in dark and light, at phone, tablet and laptop width: no script error, no failed request, nothing wider than the screen. The window test now also checks that the top bar fits at seven widths.
 
 ---
 

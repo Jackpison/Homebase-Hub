@@ -145,6 +145,8 @@ html[data-ix-app="home"][data-ix-nav="dock"] .ix-pill{background:color-mix(in sr
   html[data-ix-nav="dock"] .ix-fab{border:2px solid var(--ix-accent)!important}
 }
 @media (max-width:480px){.ix-bname{display:none}}
+/* (1.64.2) between a phone and a laptop the top bar ran out of room (Tools slid under the buttons): the tabs show only their icon, the current one keeps its name, and the site name steps aside */
+@media (min-width:761px) and (max-width:1180px){html:not([data-ix-nav="side"]):not([data-ix-nav="dock"]) .ix-bname{display:none}html:not([data-ix-nav="side"]):not([data-ix-nav="dock"]) #ix-bar .ix-links a:not([aria-current="page"]) span{display:none}html:not([data-ix-nav="side"]):not([data-ix-nav="dock"]) #ix-bar .ix-links a{padding:0 11px}}
 @media (max-width:360px){html[data-ix-nav="dock"] #ix-bar .ix-links a[aria-current="page"] span{display:none}}
 /* ---------- the panel that slides in (pages on phones; the whole sidebar on phones) ---------- */
 #ix-drawer,#ix-sheet{position:fixed;inset:0;z-index:2147483001;display:none;font:16px var(--ix-font);color:var(--ix-tx);-webkit-font-smoothing:antialiased}

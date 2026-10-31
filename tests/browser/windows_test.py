@@ -118,11 +118,17 @@ try:
         # ---- Files and Home ----
         goto(pg, s.base, 'files', "!!window.__files && __files.state().started"); menu(pg, 'Files Settings'); audit('Files Settings', pg, 'dlg')
         pg.goto(s.base + '/'); wait_js(pg, "!!document.getElementById('settingsSheet')", 20000)
-        pg.evaluate("document.getElementById('settingsSheet').showModal()"); pg.wait_for_timeout(300)
+        pg.evaluate("document.getElementById('settingsSheet').showModal()")
+        wait_js(pg, "[...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 44; })", 5000)   # after the opening animation, not a fixed pause
         d = pg.evaluate("[document.getElementById('settingsSheet').open, [...document.querySelectorAll('#settingsSheet .group')].length, [...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 44 && Math.round(r.height) === 26; })]")
         check('W Home Settings: open, in groups, with 44 x 26 switches', d[0] and d[1] >= 3 and d[2], d)
         if SHEET:
             pg.evaluate(TALL); pg.query_selector('#settingsSheet').screenshot(path=os.path.join(SHEET, 'Home_Settings.png'))
+        # the top bar at tablet widths: the last tab must end before the buttons on the right (1.64.2: Tools slid under them at 820)
+        for w in (780, 820, 900, 960, 1100, 1180, 1280):
+            pg.set_viewport_size({'width': w, 'height': 700}); goto(pg, s.base, 'links', links_ready)
+            gap = pg.evaluate("(() => { const a = [...document.querySelectorAll('#ix-bar .ix-links a')].pop().getBoundingClientRect(), r = [...document.querySelectorAll('#ix-bar button, #ix-bar input, #ix-bar .ix-search')].filter(e => !e.closest('.ix-links') && e.getClientRects().length).map(e => e.getBoundingClientRect()).filter(x => x.width && x.left > a.left); return r.length ? Math.round(Math.min(...r.map(x => x.left)) - a.right) : 99; })()")
+            check('W top bar fits at %d px' % w, gap >= 0, gap)
         check('W no page error', not errs, errs)
         b.close()
 finally:
