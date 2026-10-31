@@ -186,7 +186,7 @@ try:
         hp.click('#wBody .wrow:has-text("Pay the gardener") input'); until(lambda: 'Pay the gardener' not in rows(), 10000); settle(hp)
         check('P22 ticking it in Today marks it done in Tasks', ['Pay the gardener', 'done'] in tasks(), tasks())
         hp.click('#wDock [data-w=calendar]'); hp.wait_for_selector('#wBody .wcal', timeout=5000)
-        cal = hp.evaluate("(() => { const d = new Date(), n = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); return [document.querySelectorAll('#wBody .wcal-d').length === n, document.querySelectorAll('#wBody .wcal-d.now').length] })()")
+        cal = hp.evaluate("(() => { const tz = (window.HUB && HUB.state && HUB.state().tz) || 'Asia/Kolkata', p = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date()).split('-').map(Number), n = new Date(p[0], p[1], 0).getDate();   /* the widget counts in the site's time zone, which is already in the next month for hours of the last day */ return [document.querySelectorAll('#wBody .wcal-d').length === n, document.querySelectorAll('#wBody .wcal-d.now').length] })()")
         hp.click('#wBody [data-cal=\"1\"]'); nxt = hp.evaluate("document.querySelectorAll('#wBody .wcal-d.now').length")
         check('P23 Month Calendar shows every day of the month with today marked, and moves to the next month', cal == [True, 1] and nxt == 0, (cal, nxt))
         hp.click('#wDock [data-w=tools]'); hp.wait_for_selector('#wBody .wtools a, #wBody .wmsg', timeout=5000); settle(hp)

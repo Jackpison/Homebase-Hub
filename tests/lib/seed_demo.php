@@ -23,7 +23,7 @@ $info = ['rev' => 3, 'tabs' => [
   ]],
 ]];
 hub_write_guarded(hub_dir('info') . '/info.php', $info);
-$soon = date('m/Y', strtotime('first day of +2 months'));   // one card expiring soon, so the warning shows
+$soon = (new DateTime('now', new DateTimeZone('UTC')))->modify('first day of +2 months')->format('m/Y');   // one card expiring soon, so the warning shows (the date of the computer the browser runs on: UTC, not the site's India time, which is a day ahead for half of every day)
 $cards = ['cards' => [
   ['bank' => 'Northwind Bank', 'name' => 'Everyday Rewards', 'network' => 'Visa', 'variant' => 'Signature', 'limit' => 250000, 'owner' => 'Alex', 'kind' => 'Credit', 'type' => 'LTF', 'fee' => 0, 'expiry' => '08/2029', 'remark' => '1% back on everything'],
   ['bank' => 'Contoso Bank', 'name' => 'Travel Plus', 'network' => 'Mastercard', 'variant' => 'World', 'limit' => 400000, 'owner' => 'Alex', 'kind' => 'Credit', 'type' => 'Paid', 'fee' => 2500, 'expiry' => '03/2028', 'remark' => 'Lounge access'],

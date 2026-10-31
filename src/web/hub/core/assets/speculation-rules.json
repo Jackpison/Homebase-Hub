@@ -1,1 +1,1 @@
-{"prerender":[{"where":{"selector_matches":".ix-links a[href], a.ix-brand[href]"},"eagerness":"moderate"}]}
+{"prefetch":[{"where":{"selector_matches":".ix-links a[href], a.ix-brand[href]"},"eagerness":"moderate"}],"prerender":[{"where":{"selector_matches":".ix-links a[href], a.ix-brand[href]"},"eagerness":"conservative"}]}

@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.7 | Far fewer requests: moving the mouse over the bar no longer loads whole pages in the background |
 | 1.64.6 | If your web host's firewall blocks a save (a plain "403 Forbidden" page), the site now says so, keeps you logged in and keeps your change |
 | 1.64.5 | Home Settings closes at once; a steadier test |
 | 1.64.4 | Faster Info: typing in a big box no longer lags, Settings closes at once, big pages draw only what you see; a new Export window |
@@ -109,6 +110,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.7
+
+### Fewer requests
+
+- **Hovering over the bar:** the bar's page links used to be PRERENDERED as soon as the mouse rested on them, so moving across the bar made your browser run Home, Links, Info, Cards, Tasks and more in the background (about 13 requests each) within a few seconds. Some web hosts' firewalls read that burst as an attack and block the visitor. Now a hover only fetches the page's HTML (one request), and a page is prerendered only when you press the link. Switching pages still feels instant.
+
+### Checked
+
+- A new test (`speculation_test`) fails if a page link is ever prerendered on hover again.
 
 ---
 
