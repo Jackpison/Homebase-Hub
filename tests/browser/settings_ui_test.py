@@ -84,6 +84,7 @@ try:
         pg.evaluate("document.querySelector('[data-open=settingsSheet]').click()"); pg.wait_for_selector('#settingsSheet[open]')
         check('U12 Home Settings has an Only Me switch, and calls the title "Page Title"', pg.evaluate("document.getElementById('sPrivate').classList.contains('switch')") and 'Page Title' in pg.inner_text('#settingsSheet'))
         pg.check('#sPrivate'); pg.click('#saveSettings'); until(lambda: not pg.evaluate("document.getElementById('settingsSheet').open"), 10000)
+        until(lambda: 'This Page Is Private' in visitor(s.base + '/web/home/')[1], 10000)   # (1.64.5) the window closes first and the server catches up
         code, html = visitor(s.base + '/web/home/')
         check('U13 with Only Me on, a visitor is sent a log-in screen and nothing of the page (no photos, no data)', code == 200 and 'This Page Is Private' in html and 'window.PUB' not in html and 'id="bg"' not in html and 'welcome' not in html.lower().replace('welcome-', ''), html[:300])
         pg.reload(); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.getElementById('stage')", 20000); pg.evaluate("document.getElementById('editBtn').click()"); pg.wait_for_selector('#ix-ebar:not([hidden])', timeout=15000)
@@ -91,6 +92,7 @@ try:
         pg.evaluate("document.querySelector('[data-open=settingsSheet]').click()"); pg.wait_for_selector('#settingsSheet[open]')
         check('U15 Only Me shows as on when you open Home Settings again', pg.is_checked('#sPrivate'))
         pg.uncheck('#sPrivate'); pg.click('#saveSettings'); until(lambda: not pg.evaluate("document.getElementById('settingsSheet').open"), 10000)
+        until(lambda: 'window.PUB' in visitor(s.base + '/web/home/')[1], 10000)
         check('U16 turning it off opens the page to visitors again', 'window.PUB' in visitor(s.base + '/web/home/')[1])
         pg.goto(s.base + '/web/cards/'); pg.wait_for_selector('#tdlg', state='attached'); pg.evaluate("document.getElementById('tdlg').showModal()")
         c = pg.evaluate("(() => { const e = document.getElementById('tonlyme'); return [e.checked, e.disabled]; })()")
