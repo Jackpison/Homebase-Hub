@@ -16,7 +16,7 @@ import json, os, re, shutil, subprocess, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BOOT = os.path.join(ROOT, 'src', 'web', 'hub', 'core', 'lib', 'boot.php')
-EXT = ['cli', 'curl', 'mbstring', 'xml', 'zip']   # what the site and its tests use besides the core
+EXT = ['cli', 'curl', 'mbstring', 'xml', 'zip', 'gd', 'intl']   # what the site and its tests use besides the core (the manifest test draws pictures with gd)
 res = []
 
 
