@@ -81,7 +81,6 @@ Names in **bold** are the names the screen shows.
 ## 8. Home (1.53.0)
 
 - [x] The **refresh** button swaps the background at once (the next one is fetched ahead); on a slow network the picture dims while the next one loads.
-- [x] The characters added in 1.52 were **removed** in 1.53. Checked in 1.59.1: no website page or guide text mentions them.
 
 ## 9. Settings Overview (1.53.1)
 
@@ -181,6 +180,6 @@ Take these with `python3 scripts/screenshots.py build/site-update-X.Y.Z.zip OUT`
 | `s-presets` | Presets with the Vivid group | Settings section, guide |
 | `m-links`, `m-home` | phone screenshots as an installed app (status bar on top) | On Your Phone page (retaken in a phone-sized browser; an installed-app shot with the status bar is **still to take**, on a real phone) |
 | `app-icon` *(new, by hand)* | the app icon on a phone's home screen | On Your Phone page (**still to take**, on a real phone) |
-| `home-1`, `home-2`, `home-3` | Home (no characters) | Home page |
+| `home-1`, `home-2`, `home-3` | Home | Home page |
 | `tools-emi`, `tools-invoice`, `tools-compare` *(new)* | EMI Calculator, Invoice Generator with its PDF, Text Compare | Tools page, guide chapter 9 |
 | `tools-tabs`, `tools-presets` *(new)* | Tabs on Top; Tools Settings with Presets | Tools page |
