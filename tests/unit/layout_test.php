@@ -72,3 +72,15 @@ foreach (explode("\n", $readme) as $l) if (strpos($l, 'PHP that other files load
 $missing = array_filter($libs, fn($n) => !preg_match('/(?<![a-z])' . preg_quote($n, '/') . '(?![a-z])/', $libLine));
 t('...and every PHP library in hub/core/lib (' . implode(', ', $libs) . ')', !$missing, implode(', ', $missing));
 t('...and its first line names the pages the site has', strpos(explode("\n", $readme)[0], 'Tasks') !== false && strpos(explode("\n", $readme)[0], 'Files') !== false);
+
+// 1.62.6: boot.php was split; it loads the three new files, each is guarded against being opened directly, and the functions are all still there
+$boot = (string)file_get_contents($site . '/web/hub/core/lib/boot.php');
+$loads = [];
+foreach (['auth', 'fetch', 'settings'] as $part) {
+    $src = (string)file_get_contents($site . '/web/hub/core/lib/' . $part . '.php');
+    $loads[$part] = substr_count($boot, "require_once __DIR__ . '/$part.php';") === 1 && strpos($src, "if (!defined('HUB'))") !== false && strpos($src, 'declare(strict_types=1);') !== false;
+}
+t('boot.php loads auth.php, fetch.php and settings.php once each, and each refuses a direct request', !in_array(false, $loads, true), json_encode($loads));
+$have = ['hub_fetch' => 0, 'hub_settings' => 0, 'hub_tz' => 0, 'hub_totp_at' => 0, 'hub_csrf_ok' => 0, 'hub_act' => 0, 'hub_norm_vault' => 0, 'hub_with_lock' => 0, 'hub_dir' => 0];
+$missing = array_filter(array_keys($have), fn($f) => !function_exists($f));
+t('the functions of every part are there after boot.php has loaded', !$missing, implode(', ', $missing));

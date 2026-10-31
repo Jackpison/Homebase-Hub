@@ -14,7 +14,7 @@ parameters:
           path: ../../src/web/home/lib.php
         # a list filled by the other requests of the same shutdown function (taken by reference), so it is not empty when it runs
         - message: '#^Empty array passed to foreach\.$#'
-          path: ../../src/web/hub/core/lib/boot.php
+          path: ../../src/web/hub/core/lib/settings.php
         # the update checker's $block and $st come from a by-reference helper and a state file the analyser cannot see into
         - message: '#^(If condition|Negated boolean expression) is always false\.$#'
           path: ../../src/web/hub/core/lib/update.php

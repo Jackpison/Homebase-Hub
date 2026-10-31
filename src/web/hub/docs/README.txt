@@ -9,7 +9,7 @@ FOLDERS
     hub/             the site's own engine, your pictures and these notes
       core/          the engine shared by every page
         api.php cron.php telegram.php   the only PHP files a browser calls: site API, schedule, Telegram replies
-        lib/         PHP that other files load: boot, backup, notify, approval, watch, health, update, ghupdate, overview, activity, passkey, vault, presets (blocked from the web)
+        lib/         PHP that other files load: boot (which loads auth, fetch, settings), backup, notify, approval, watch, health, update, ghupdate, overview, activity, passkey, vault, presets (blocked from the web)
         assets/      what every page loads: shell.js, shell.css, shell-admin.js, vendor/ (PDF, Excel and QR libraries)
         manifest.json  every file of this release with its fingerprint (made when the release is built; Updates uses it)
       media/         YOUR OWN FILES: brand (the site logo), home/photos, home/uploads, home/icons (start page) and links/icons

@@ -50,7 +50,7 @@ function fn_src(string $src, string $name): string {
 }
 $where = ['wt_update' => 'hub/core/lib/watch.php', 'nt_update' => 'hub/core/lib/notify.php', 'ap_update' => 'hub/core/lib/approval.php', 'act_update' => 'hub/core/lib/activity.php',
           'pk_lock_run' => 'hub/core/lib/passkey.php', 'sv_swap' => 'hub/core/lib/vault.php', 'bk_info_vault_swap' => 'hub/core/lib/backup.php', 'bk_links_vault_swap' => 'hub/core/lib/backup.php',
-          'hub_settings_update' => 'hub/core/lib/boot.php', 'pool_update' => 'home/lib.php', 'visits_add' => 'links/lib.php', 'visits_prune' => 'links/lib.php',
+          'hub_settings_update' => 'hub/core/lib/settings.php', 'pool_update' => 'home/lib.php', 'visits_add' => 'links/lib.php', 'visits_prune' => 'links/lib.php',
           'tasks_modify' => 'tasks/lib.php', 'fl_modify' => 'files/lib.php'];
 $bad = [];
 foreach ($where as $fn => $file) {
