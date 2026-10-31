@@ -62,10 +62,23 @@ def versions():
 def binary(v): return shutil.which('php' + v) or (shutil.which('php') if re.match(r'^PHP %s\.' % re.escape(v), subprocess.run(['php', '-v'], capture_output=True, text=True).stdout or '') else None)
 
 
+_apt = {'ready': False}
+
+
+def sh(cmd):
+    return subprocess.run(['sudo', '-n'] + cmd if os.geteuid() != 0 else cmd, capture_output=True, text=True)
+
+
 def install(v):
-    pk = ['php%s-%s' % (v, e) for e in EXT]
-    subprocess.run(['sudo', 'apt-get', 'update', '-qq'], capture_output=True)
-    r = subprocess.run(['sudo', 'apt-get', 'install', '-y', '-qq'] + pk, capture_output=True, text=True)
+    """Installs PHP v from the same package source setup-php uses (the ondrej/php archive). On failure it says why, so CI shows the reason."""
+    if not _apt['ready']:
+        _apt['ready'] = True
+        sh(['apt-get', 'install', '-y', '-qq', 'software-properties-common'])
+        sh(['add-apt-repository', '-y', 'ppa:ondrej/php'])
+        r = sh(['apt-get', 'update', '-qq'])
+        if r.returncode != 0: print('apt update: ' + (r.stderr or r.stdout).strip()[-300:])
+    r = sh(['apt-get', 'install', '-y', '-qq'] + ['php%s-%s' % (v, e) for e in EXT])
+    if r.returncode != 0: print('could not install PHP %s: %s' % (v, (r.stderr or r.stdout).strip().replace('\n', ' | ')[-400:]))
     return r.returncode == 0
 
 
