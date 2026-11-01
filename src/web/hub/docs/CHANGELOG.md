@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.67.1 | Faster Links edit mode, the dock shows every page and steps aside while you edit, no Home button where the logo already leads home, faster page changes, a stricter security scan |
 | 1.67.0 | A new top bar: a colour tile with an icon for each page, a glowing line under the current page, a search with a border in the page's colour, and the buttons on the right in one tray of small colour tiles |
 | 1.66.1 | Colour tiles with white icons in every Settings page and page Settings window; the Settings menu starts level with the page title again |
 | 1.66.0 | Files shows a card for each file type and per-file upload cards (stop, try again); one step bar for every step-by-step screen in Settings; a new Settings menu with colour tiles |
@@ -122,6 +123,29 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.67.1
+
+### The bar
+
+- **No Home button in the top bar and the sidebar.** The logo and the site name already take you to the start page, so the extra button is gone. On the start page the logo is marked as the page you are on. The dock keeps its Home button, because it has no logo.
+- **The dock shows every page again.** Only the current page showed; the other pages' colour tiles were hidden by mistake.
+- **The dock steps aside while you edit** a page, so the edit bar has the bottom to itself. It comes back when you press Done.
+- On a phone the dock shows the colour tiles only, so all seven pages fit beside the search button. The current page keeps its glowing line.
+
+### Faster
+
+- **Links: edit mode turns on two to three times faster** on a big page (600 links: from about 0.2 to 0.3 seconds down to about 0.1). Edit mode now draws about one screen of rows at once and the rest right after, each icon is read once instead of once per row, and categories below the screen are not laid out until you scroll to them.
+- **Page changes ask the server less.** Scripts, styles and pictures that carry a version in their address are kept by the browser for a year, so moving between pages no longer checks each of them again. A new version has a new address, so updates still arrive at once.
+- **Settings** no longer downloads its script and styles twice.
+- **Home** loads the next background only after the page has finished loading, so it never slows down the first picture.
+- The shell no longer searches the whole page on every change for dropdowns to turn into buttons; it looks only at what was just added.
+
+### Safer
+
+- The security scan (Semgrep) now uses the current version and gives big files enough time: before, two of its rules gave up on the Settings script and never checked it. Everything it found is fixed: the logo and site name in the bar are now built without pasting text into the page, and one line it could not read in Info was written more plainly. The same scan now runs in the local checks too.
 
 ---
 
