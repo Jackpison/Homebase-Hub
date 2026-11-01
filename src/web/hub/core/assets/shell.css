@@ -809,10 +809,10 @@ html.ix-editing[data-ix-nav="dock"] #ix-bar{opacity:0;visibility:hidden;pointer-
 
 /* ---------- (1.68.0) Bar Glass: Settings > Appearance > Bar Glass. The look of React Bits' GlassSurface (David Haz, MIT + Commons Clause;
    glass.js puts the classes on the top bar or the dock's pill). Chromium: an SVG filter bends what is under the edges (--svg);
-   Safari and Firefox: the component's frosted glass (--fallback). Clear glass on every page, as in the owner's mock-up (1.68.1: the
-   frost 1.68.0 added on pages other than the start page hid the bending; it is gone). ---------- */
+   Safari and Firefox: the component's frosted glass (--fallback). (1.68.3) By default a soft glass (3 px frost, 20% tint, set from the Glass tab);
+   the bending is the tab's Liquid pick. ---------- */
 .ix-glass-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
-#ix-bar.glass-surface,#ix-bar .glass-surface{--gt:var(--ix-gt,10%);--gb:var(--ix-gb,0px)}   /* (1.68.2) set from the Glass tab */
+#ix-bar.glass-surface,#ix-bar .glass-surface{--gt:var(--ix-gt,20%);--gb:var(--ix-gb,3px)}   /* (1.68.2) set from the Glass tab */
 #ix-bar.glass-surface--svg,#ix-bar .glass-surface--svg{background:color-mix(in srgb,var(--ix-barbg,var(--ix-bg)) var(--gt),transparent)!important;
   backdrop-filter:var(--filter-id) blur(var(--gb)) saturate(var(--ix-gs,1))!important;-webkit-backdrop-filter:var(--filter-id) blur(var(--gb)) saturate(var(--ix-gs,1))!important;border-color:transparent!important;
   box-shadow:0 0 2px 1px color-mix(in oklch,white,transparent 65%) inset,0 0 10px 4px color-mix(in oklch,white,transparent 85%) inset,0 4px 16px rgba(17,17,26,.05),0 8px 24px rgba(17,17,26,.05),0 16px 56px rgba(17,17,26,.05),

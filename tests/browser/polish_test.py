@@ -282,9 +282,9 @@ try:
         check('P50 the Bar Glass switch in Settings > Appearance shows it at once and saves it; the top bar is glass on the next page, with one glass.js (1.68.0)',
               pv['el'] == 'ix-bar' and saved == 'true' and g1['el'] == 'ix-bar' and kind in g1['cls'] and g1['js'] == 1 and g1['attr'], (pv, saved, g1))
         if BROWSER == 'chromium':
-            check('P51 Chromium: the bar bends what is under it through the SVG filter; its map is drawn at the bar\'s size and stretched over it (100%, as the component; 1.68.1)',
-                  'url(' in g1['bf'] and g1['map'] == ['data:image/svg+xml', True, True], g1)
-        check('P52 clear glass on every page, as in the mock-up: no frost on Links (1.68.1)', g1['gb'] == '0px', g1['gb'])
+            check('P51 Chromium: plain glass by default, with no SVG filter, so nothing is read (and mirrored) from outside the bar (1.68.3)',
+                  'url(' not in g1['bf'] and 'saturate(' in g1['bf'], g1)
+        check('P52 the default glass is Soft: a little frost (3 px) on every page (1.68.3)', g1['gb'] == '3px', g1['gb'])
         s.php("hub_settings_update(function ($x) { $x['homeBar'] = true; return $x; });")
         gp.goto(s.base + '/'); wait_js(gp, "!!document.querySelector('#ix-bar.glass-surface')", 20000)
         hb = gp.evaluate(GL)['gb']
@@ -297,7 +297,7 @@ try:
         dk = gp.evaluate("""(() => { const p = document.querySelector('#ix-bar .ix-pill'); return [p.classList.contains('glass-surface'), Math.round(p.getBoundingClientRect().height),
             getComputedStyle(document.getElementById('ix-bar')).viewTransitionName, getComputedStyle(p).viewTransitionName, document.documentElement.scrollWidth <= innerWidth]; })()""")
         check('P53 the dock\'s pill is glass and a little taller; the page-change name sits on the pill, so its glass and blur reach the page under it (1.68.0)',
-              hb == '0px' and dk[0] and dk[1] >= 60 and dk[2] == 'none' and dk[3] in ('ix-bar', None) and dk[4], (hb, dk))
+              hb == '3px' and dk[0] and dk[1] >= 60 and dk[2] == 'none' and dk[3] in ('ix-bar', None) and dk[4], (hb, dk))
         if BROWSER == 'chromium':
             rp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); browser_login(rp, s.base)
             rp.context.new_cdp_session(rp).send('Emulation.setEmulatedMedia', {'features': [{'name': 'prefers-reduced-transparency', 'value': 'reduce'}]})
@@ -321,15 +321,19 @@ try:
         s.php("hub_settings_update(function ($x) { $x['glass'] = true; $x['nav'] = 'top'; return $x; });")
         tp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); tp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(tp, s.base)
         tp.goto(s.base + '/web/settings/#glass'); wait_js(tp, "!!document.getElementById('ix-gx-bend') && !!document.querySelector('#ix-bar.glass-surface')", 20000); tp.wait_for_timeout(300)
-        GX = "[getComputedStyle(document.getElementById('ix-bar')).backdropFilter, (document.querySelector('#ix-glass-f feDisplacementMap') || {getAttribute: () => ''}).getAttribute('scale')]"
+        GX = """[getComputedStyle(document.getElementById('ix-bar')).backdropFilter, (document.querySelector('#ix-glass-f feDisplacementMap') || {getAttribute: () => ''}).getAttribute('scale'),
+            document.documentElement.style.getPropertyValue('--ix-gb'), !!document.querySelector('#ix-sf:not([hidden])')]"""
+        cr = BROWSER == 'chromium'   # Safari and Firefox (WebKit here) show the frosted glass: no SVG filter, only frost, tint and saturation
         t0 = tp.evaluate(GX)
-        tp.click('[data-seg=gpick] [data-v=frosted]'); until(lambda: 'blur(10px)' in tp.evaluate(GX)[0], 3000); t1 = tp.evaluate(GX)
-        tp.evaluate("(() => { const r = document.getElementById('ix-gx-bend'); r.value = 90; r.dispatchEvent(new Event('input', {bubbles: true})); })()"); tp.wait_for_timeout(200); t2 = tp.evaluate(GX)
+        tp.click('[data-seg=gpick] [data-v=frosted]'); until(lambda: tp.evaluate(GX)[2:] == ['10px', True], 3000); t1 = tp.evaluate(GX)   # the bar is shown just after the click (a 0 ms timer)
+        tp.click('[data-seg=gpick] [data-v=liquid]'); until(lambda: tp.evaluate(GX)[2] == '3px', 3000); tp.wait_for_timeout(200); t2 = tp.evaluate(GX)
+        tp.evaluate("(() => { const r = document.getElementById('ix-gx-bend'); r.value = 90; r.dispatchEvent(new Event('input', {bubbles: true})); })()"); tp.wait_for_timeout(200); t3 = tp.evaluate(GX)
         tp.click('#ix-save'); until(lambda: '"bend":90' in s.php("echo json_encode(hub_settings()['glassFx']);"), 8000)
         kept = s.php("echo json_encode(hub_settings()['glassFx']);").strip()
-        tp.goto(s.base + '/web/links/'); wait_js(tp, "!!document.querySelector('#ix-bar.glass-surface') && !!document.querySelector('#ix-glass-f')", 20000); tp.wait_for_timeout(300); t3 = tp.evaluate(GX)
-        check('P58 the Glass tab: a quick pick and a slider change the real bar at once (frost, bend), Save keeps them and every page uses them (1.68.2)',
-              t0 == ['url("#ix-glass-f") blur(0px) saturate(1)', '-180'] and 'blur(10px) saturate(1.2)' in t1[0] and t1[1] == '-90' and t2[1] == '-270' and json.loads(kept) == {'bend': 90, 'fringe': 4, 'frost': 10, 'tint': 30, 'sat': 120} and t3 == t2, (t0, t1, t2, kept, t3))
+        tp.goto(s.base + '/web/links/'); wait_js(tp, "!!document.querySelector('#ix-bar.glass-surface')", 20000); tp.wait_for_timeout(500); t4 = tp.evaluate(GX)
+        ok = t0[3] is False and t1[2] == '10px' and t1[3] is True and json.loads(kept) == {'bend': 90, 'fringe': 10} and t4[:3] == t3[:3]
+        if cr: ok = ok and 'url(' not in t0[0] and 'blur(10px)' in t1[0] and 'url("#ix-glass-f")' in t2[0] and t2[1] == '-180' and t3[1] == '-270'
+        check('P58 the Glass tab: no Save bar until a change; Frosted and Liquid change the real bar at once (Liquid turns the bending on), the slider too; Save keeps them for every page (1.68.3)', ok, (t0, t1, t2, t3, kept, t4))
         tp.goto(s.base + '/web/settings/#glass'); wait_js(tp, "!!document.getElementById('ix-gxr')", 20000)
         tp.click('#ix-gxr'); tp.click('#ix-save'); until(lambda: s.php("echo json_encode(hub_settings()['glassFx']);").strip() in ('[]', '{}'), 8000)
         check('P58b Reset to Default goes back to the built-in glass (nothing kept) (1.68.2)', s.php("echo json_encode(hub_settings()['glassFx']);").strip() in ('[]', '{}'))

@@ -22,8 +22,8 @@
   'use strict';
   var NS = 'http://www.w3.org/2000/svg';
   var O = { borderWidth: 0.07, brightness: 50, opacity: 0.93, blur: 11, displace: 0.5, saturation: 1,
-    distortionScale: -180, redOffset: 0, greenOffset: 10, blueOffset: 20, xChannel: 'R', yChannel: 'G', mixBlendMode: 'difference' };
-  var ID = 'ix-glass-f', svgEl = null, img = null, el = null, ro = null, last = '';
+    distortionScale: 0, redOffset: 0, greenOffset: 0, blueOffset: 0, xChannel: 'R', yChannel: 'G', mixBlendMode: 'difference' };
+  var ID = 'ix-glass-f', svgEl = null, img = null, el = null, ro = null, last = '', flat = true;
 
   /* The component's own test: Safari and Firefox can't use an SVG filter as a backdrop filter, so they get the frosted glass. */
   function svgOK() {
@@ -88,7 +88,7 @@
     el.classList.add('glass-surface', svg ? 'glass-surface--svg' : 'glass-surface--fallback');
     if (!svg) return;
     filter();
-    el.style.setProperty('--filter-id', 'url(#' + ID + ')');
+    el.style.setProperty('--filter-id', flat ? 'blur(0px)' : 'url(#' + ID + ')');
     last = ''; draw();
     if (window.ResizeObserver) { ro = new ResizeObserver(draw); ro.observe(el); }
   }
@@ -98,12 +98,16 @@
     el = null;
   }
   /* (1.68.2) Settings > Appearance > Glass: bend (0-100, 60 = the component's -180), edge (2-40 = 2-40% of the shorter side, 7 = 0.07)
-     and fringe (0-40: green bends that much more than red, blue twice that; 10 = the component's 10/20). Frost, tint and saturation are CSS. */
+     and fringe (0-40: green bends that much more than red, blue twice that; 10 = the component's 10/20). Frost, tint and saturation are CSS.
+     (1.68.3) Bend and fringe 0 (the default) use no SVG filter at all: plain glass, nothing read from outside the bar (Chrome mirrors the
+     page there, which showed as upside-down copies of the text). The bending is the "Liquid" pick. */
   function set(fx) {
     fx = fx || {};
     var num = function (v, d) { return typeof v === 'number' && isFinite(v) ? v : d; };
-    O.distortionScale = -3 * num(fx.bend, 60); O.borderWidth = num(fx.edge, 7) / 100;
-    O.greenOffset = num(fx.fringe, 10); O.blueOffset = 2 * O.greenOffset;
+    O.distortionScale = -3 * num(fx.bend, 0); O.borderWidth = num(fx.edge, 7) / 100;
+    O.greenOffset = num(fx.fringe, 0); O.blueOffset = 2 * O.greenOffset;
+    flat = !O.distortionScale && !O.greenOffset;
+    if (el && el.classList.contains('glass-surface--svg')) el.style.setProperty('--filter-id', flat ? 'blur(0px)' : 'url(#' + ID + ')');
     if (!svgEl) return;
     var off = { R: O.redOffset, G: O.greenOffset, B: O.blueOffset };
     svgEl.querySelectorAll('feDisplacementMap').forEach(function (d) { d.setAttribute('scale', String(O.distortionScale + off[d.getAttribute('data-c')])); });

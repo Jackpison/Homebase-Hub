@@ -54,7 +54,9 @@ try:
         check('K7 the login box offers a passkey now (the page state says so)', s.get('state').get('passkeys') is True)
 
         # ---- log out, log in with the passkey (no code) ----
-        pg.goto(L + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.logout)", 15000); pg.evaluate("HUB.logout()"); until(lambda: not pg.evaluate("HUB.isAdmin()"), 10000)
+        pg.goto(L + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.logout)", 15000)
+        with pg.expect_navigation(timeout=15000): pg.evaluate("HUB.logout()")   # logout reloads the page; going on before that ends raced it (ERR_ABORTED in CI)
+        wait_js(pg, "!!(window.HUB && HUB.isAdmin)", 15000); until(lambda: not pg.evaluate("HUB.isAdmin()"), 10000)
         pg.goto(L + '/web/links/', wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.login)", 15000); until(lambda: pg.evaluate("(HUB.state() || {}).passkeys === true"), 10000)
         pg.evaluate("void HUB.login()"); pg.wait_for_selector('#ix-pk')
         check('K8 the login box offers "Log In with a Passkey"', 'Passkey' in pg.inner_text('#ix-pk'))
@@ -67,7 +69,9 @@ try:
 
         # ---- a device that cannot verify the person ----
         cdp.send('WebAuthn.setUserVerified', {'authenticatorId': auth, 'isUserVerified': False})
-        pg.goto(L + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.logout)", 15000); pg.evaluate("HUB.logout()"); until(lambda: not pg.evaluate("HUB.isAdmin()"), 10000)
+        pg.goto(L + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.logout)", 15000)
+        with pg.expect_navigation(timeout=15000): pg.evaluate("HUB.logout()")   # logout reloads the page; going on before that ends raced it (ERR_ABORTED in CI)
+        wait_js(pg, "!!(window.HUB && HUB.isAdmin)", 15000); until(lambda: not pg.evaluate("HUB.isAdmin()"), 10000)
         pg.goto(L + '/web/links/', wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.login)", 15000); until(lambda: pg.evaluate("(HUB.state() || {}).passkeys === true"), 10000)
         pg.evaluate("void HUB.login()"); pg.wait_for_selector('#ix-pk'); pg.click('#ix-pk'); until(lambda: pg.inner_text('#ix-le').strip(), 20000)
         check('K11 when the device could not check the person (no fingerprint or PIN), the passkey is not accepted, and they are not logged in', not pg.evaluate("HUB.isAdmin()") and pg.inner_text('#ix-le').strip() != '', pg.inner_text('#ix-le'))

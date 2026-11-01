@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.68.2" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.68.3" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -170,7 +170,7 @@
     // (1.68.2) the Glass tab: tint, frost and saturation are CSS; bend, edge and fringe go to glass.js (gfx, read by glass())
     gfx = (S.glassFx && typeof S.glassFx === 'object' && !Array.isArray(S.glassFx)) ? S.glassFx : {};
     var gv = function (k, d) { return typeof gfx[k] === 'number' ? gfx[k] : d; };
-    H.style.setProperty('--ix-gt', gv('tint', 10) + '%'); H.style.setProperty('--ix-gb', gv('frost', 0) + 'px'); H.style.setProperty('--ix-gs', String(gv('sat', 100) / 100));
+    H.style.setProperty('--ix-gt', gv('tint', 20) + '%'); H.style.setProperty('--ix-gb', gv('frost', 3) + 'px');   // (1.68.3) the Soft default H.style.setProperty('--ix-gs', String(gv('sat', 100) / 100));
     // (1.68.2) Settings > Appearance > Hide the Bar While Scrolling (on unless switched off)
     if (S.barHide === false) { H.setAttribute('data-ix-nohide', ''); H.classList.remove('ix-hide', 'ix-scrolling'); } else H.removeAttribute('data-ix-nohide');
     var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Appearance > Colors)

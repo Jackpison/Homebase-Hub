@@ -102,10 +102,12 @@
     return out;
   }
   /* (1.68.2) the Glass tab: [key, name, what it does, min, max, built-in value, unit] (the server keeps the same ranges: hub_glass_ranges) */
-  var GFX = [['bend', 'Bend', 'How strongly the edges bend what is under them.', 0, 100, 60, ''], ['edge', 'Edge Width', 'How far in from the rim the bending reaches.', 2, 40, 7, '%'],
-    ['fringe', 'Colour Fringe', 'The red, green and blue split at the edges.', 0, 40, 10, ''], ['frost', 'Frost', 'Blur behind the glass.', 0, 12, 0, ' px'],
-    ['tint', 'Tint', 'How much of the bar colour sits over the glass.', 0, 80, 10, '%'], ['sat', 'Saturation', 'How vivid things look through the glass.', 50, 200, 100, '%']];
-  var GPICKS = [['clear', 'Clear', {}], ['frosted', 'Frosted', { bend: 30, fringe: 4, frost: 10, tint: 30, sat: 120 }], ['strong', 'Strong', { bend: 100, edge: 20, fringe: 20, tint: 5, sat: 130 }]];
+  // (1.68.3) Bend and Colour Fringe start at 0: the bending reads from just outside the bar, where Chrome mirrors the page, so over text it
+  // shows upside-down copies. It is the Liquid effect now (a quick pick), best over a photo; the plain glass is clean.
+  var GFX = [['bend', 'Liquid Bend', 'Bends what is under the edges, and mirrors it a little. 0 = off. Best over a photo.', 0, 100, 0, ''], ['edge', 'Edge Width', 'How far in from the rim the bending reaches.', 2, 40, 7, '%'],
+    ['fringe', 'Colour Fringe', 'The red, green and blue split at the bent edges.', 0, 40, 0, ''], ['frost', 'Frost', 'Blur behind the glass.', 0, 12, 3, ' px'],
+    ['tint', 'Tint', 'How much of the bar colour sits over the glass.', 0, 80, 20, '%'], ['sat', 'Saturation', 'How vivid things look through the glass.', 50, 200, 100, '%']];
+  var GPICKS = [['soft', 'Soft', {}], ['clear', 'Clear', { frost: 0, tint: 10 }], ['frosted', 'Frosted', { frost: 10, tint: 30, sat: 120 }], ['liquid', 'Liquid', { bend: 60, fringe: 10 }], ['strong', 'Strong Liquid', { bend: 100, edge: 20, fringe: 20, tint: 5, sat: 130 }]];
   /* only the values that differ from the built-in look, whole numbers inside their range, always in the same order */
   function canonGfx(o) {
     var out = {}; o = o && typeof o === 'object' ? o : {};
@@ -124,13 +126,11 @@
     var f = $('#ix-sfnote'); if (!f) return;
     var d = dirty(), sf = $('#ix-sf');
     f.textContent = d ? 'You have changes that are not saved yet.' : 'No changes yet.'; f.className = d ? 'ix-dirty' : '';
-    // (1.61.6) the tabs that are kept with Save Settings always show the bar (greyed until a change), so it is never missed;
-    // the others (Security, Telegram, Backup...) save at once and show it only if a change from elsewhere is waiting
-    if (sf) sf.hidden = !d && DRAFT_TABS.indexOf(curSub) < 0;
-    var b = $('#ix-save'), x = $('#ix-discard'); if (b && b.textContent !== 'Saving…') b.disabled = !d; if (x) x.disabled = !d;
+    // (1.68.3) the bar shows only once something has really changed (and while it is saving), on every tab; before, the tabs kept
+    // with Save Settings showed it greyed from the start ("No changes yet."), which looked like something needed saving
+    var b = $('#ix-save'), x = $('#ix-discard');
+    if (sf) sf.hidden = !d && !(b && b.textContent === 'Saving…'); if (b && b.textContent !== 'Saving…') b.disabled = !d; if (x) x.disabled = !d;
   }
-  var DRAFT_TABS = ['general', 'nav', 'look', 'themes', 'colors', 'glass'];
-  /* markDirty: the save bar sits at the bottom of the screen on the tabs above, and elsewhere while something is not saved yet */
   function mount(host, hash) {
     PAGE = host; host.classList.add('ix-pg'); host.id = 'ix-page';
     if (!S.admin) {
@@ -796,7 +796,7 @@
     var picked = GPICKS.filter(function (k) { return JSON.stringify(canonGfx(k[2])) === JSON.stringify(fx); })[0];
     p.innerHTML = '<h3>Bar Glass</h3><p>The top bar or the dock turns to glass that bends what is under its edges. Not for the sidebar.</p>' +
       '<label class="ix-tg"><span>Show the Glass<small>' + (draft.glass ? 'On: the bar shows each change as you make it.' : 'Off: switch it on to see the changes below on the bar.') + '</small></span><input type="checkbox" id="ix-glass2"' + (draft.glass ? ' checked' : '') + '></label>' +
-      '<h3>Quick Picks</h3><p>A starting point; the sliders below fine-tune it.</p>' + seg('gpick', GPICKS.map(function (k) { return [k[0], k[1]]; }), picked ? picked[0] : '') +
+      '<h3>Quick Picks</h3><p>Soft (the default), Clear and Frosted are plain glass. Liquid bends what is under the edges (as React Bits\' GlassSurface does); it looks best over a photo, over text it shows mirrored copies at the edges.</p>' + seg('gpick', GPICKS.map(function (k) { return [k[0], k[1]]; }), picked ? picked[0] : '') +
       '<h3>Fine-Tune</h3><p>' + (bends ? 'Every page, the top bar and the dock.' : 'This browser shows frosted glass: only Frost, Tint and Saturation change it. Chrome and Edge show the bending too.') + '</p>' +
       GFX.map(function (g) {
         return '<div class="ix-tsf ix-gxf"><label for="ix-gx-' + g[0] + '">' + g[1] + '<small>' + esc(g[2]) + '</small></label><div class="ix-tsr"><input type="range" id="ix-gx-' + g[0] + '" data-g="' + g[0] + '" min="' + g[3] + '" max="' + g[4] + '" step="1" value="' + val(g) + '"><output>' + val(g) + g[6] + '</output></div></div>';

@@ -104,7 +104,7 @@ try:
         # ---- the main Settings page ----
         pg.goto(s.base + '/web/settings/#nav'); wait_js(pg, "!!document.querySelector('#ix-tabl .ix-pgr')", 20000)
         sf = lambda: pg.evaluate("(() => { const f = document.getElementById('ix-sf'), b = document.getElementById('ix-save'); return [!f.hidden && !!f.offsetParent, b.disabled]; })()")
-        check('L10 Tabs: the Save Settings bar is there from the start, greyed out', sf() == [True, True], sf())
+        check('L10 Tabs: no Save Settings bar until something changes (1.68.3; it used to show greyed from the start)', sf() == [False, True], sf())
         sw = pg.evaluate("[...document.querySelectorAll('#ix-tabl [data-k=show]')].map(c => c.classList.contains('ix-sw') && c.offsetWidth)")
         check('L11 Tabs: Show is a switch on every row', len(sw) >= 6 and all(w == 52 for w in sw), sw)
         tl = pg.evaluate("[[...document.querySelectorAll('#ix-tabl .ix-pgr input[data-k=name]')].map(i => i.placeholder), document.querySelectorAll('#ix-tabl .ix-pgt svg').length, document.querySelectorAll('#ix-tabp .ix-tabc').length]")

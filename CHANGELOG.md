@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.68.3 | The Save Settings bar shows only when something changed; Bar Glass is a clean Soft glass by default, the bending is the Liquid pick; CI test fixes |
 | 1.68.2 | A Glass tab in Appearance (quick picks and sliders for Bar Glass), a switch to keep the bar in place while scrolling, no line over the current page in the dock |
 | 1.68.1 | Bar Glass looks like the mock-up (strong bend, clear on every page), shows even when Windows asks for less transparency, and stays on while the dock shrinks during scrolling |
 | 1.68.0 | Bar Glass: an option in Settings › Appearance that turns the top bar and the dock into glass (React Bits GlassSurface); the dock's own blur now reaches the page under it |
@@ -127,6 +128,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.68.3
+
+### Changed
+
+- **Save Settings bar:** it shows only once something has really changed (and while saving), on every Settings tab. Before, the tabs saved with Save Settings showed it greyed from the start ("No changes yet."), which looked as if something needed saving.
+- **Bar Glass is clean by default:** the bending read from just outside the bar, where Chrome mirrors the page, so over text it showed upside-down copies at the edges (any bend, even a small one). The default is now **Soft** glass (a little frost and tint, the rim), with no SVG filter at all. The bending is an effect you can pick: **Liquid** (the mock-up look, best over a photo) and **Strong Liquid**. Quick Picks: Soft, Clear, Frosted, Liquid, Strong Liquid; the Bend slider is now "Liquid Bend" (0 = off).
+
+### Fixed
+
+- **CI on 1.68.2:** the new Glass tab check (P58) waited for the Chromium-only filter, so it failed in WebKit (Safari's engine, which shows frosted glass); it now checks each browser for what it shows. passkey_test opened a page while the logout's own page reload was still running (ERR_ABORTED, now and then); it waits for that reload.
+
+### Checked
+
+- polish_test P51 (no SVG filter by default), P52 (Soft: 3 px frost), P58 (no Save bar until a change; Frosted and Liquid change the bar at once; Liquid turns the bending on; Save keeps them on every page). settings_look_test L10 (no Save bar until something changes). speed_test V32 measures the Liquid glass (the heavy path).
 
 ---
 
