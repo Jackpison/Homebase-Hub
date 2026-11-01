@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.65.0" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.65.1" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -67,6 +67,7 @@
     sun: 'M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41',
     moon: 'M20.99 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.78 9.79z',
     gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
+    keyboard: 'M3 6.5h18v11H3zM6.5 10h.01M9.5 10h.01M12.5 10h.01M15.5 10h.01M17.5 10h.01M7 13.8h10',   // (1.65.1) Keyboard Shortcuts
     key: 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM12 9.5a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6zM12 13v3',
     out: 'M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10',
     lock: 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3',
@@ -100,7 +101,6 @@
     back: 'M15 6l-6 6 6 6',
     grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z'
   };
-  /* the theme button shows what it switches to: a sun in dark mode, a moon in light mode; its tooltip says the same */
   var svg = function (d) { return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>'; };
   var isHex = function (v) { return /^#[0-9a-f]{6}$/i.test(v || ''); };   // a color like #d9a85b (also shared as HUB.isHex)
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
@@ -418,6 +418,12 @@
     });
     return out;
   }
+  /* (1.65.1) the edit bar's look comes from Uiverse.io by firemonste_8052, "lucky-catfish-97" (MIT; see web/hub/docs/THIRD-PARTY.md): round buttons
+     in a dark pill; on hover the button lifts a little, its icon takes the colour of what it does, and its name pops up above in a light bubble. */
+  function ebTone(label) {
+    return /delet|remov|clear|erase/i.test(label) ? 'red' : /^(add|new)\b|import|paste/i.test(label) ? 'green' : /export|backup|download|fetch|save/i.test(label) ? 'blue' :
+      /setting|color|colour|look|text size|theme/i.test(label) ? 'violet' : 'accent';
+  }
   function drawEditBar() {
     var el = document.getElementById('ix-ebar'), on = editing() && HAS_EDIT;
     if (on && !ebarWas) {   // editing just started: the page's hint, once per visit
@@ -440,7 +446,7 @@
     if (key !== ebarKey) {
       ebarKey = key; el.className = mode === 'text' ? 'ix-ebar-text' : '';
       el.innerHTML = ebarEnts.map(function (x, i) {
-        return '<button type="button" class="ix-eb" data-i="' + i + '" aria-label="' + esc(x.label) + '" data-tip="' + esc(x.label) + '">' + svg(x.icon || ICON.edit) +
+        return '<button type="button" class="ix-eb" data-i="' + i + '" data-c="' + ebTone(x.label) + '" aria-label="' + esc(x.label) + '" data-tip="' + esc(x.label) + '">' + svg(x.icon || ICON.edit) +
           '<span class="ix-ebl">' + esc(x.label) + '</span></button>';
       }).join('') + (ebarEnts.length ? '<span class="ix-ebsep" aria-hidden="true"></span>' : '') +
         '<button type="button" class="ix-eb ix-ebdone" data-ix-done aria-label="Done" data-tip="Done">' + svg(ICON.check) + '</button>';
@@ -659,27 +665,16 @@
     t.style.left = left + 'px';
     t.style.top = (below ? r.bottom + 10 : r.top - t.offsetHeight - 10) + 'px';
     t.style.setProperty('--ix-ax', Math.round(r.left + r.width / 2 - left) + 'px');
-    t.className = below ? 'below' : '';
+    t.className = (below ? 'below' : '') + (bt.closest('#ix-ebar') ? ' eb' : '');
   }
   ['mouseover', 'focusin'].forEach(function (k) { document.addEventListener(k, function (e) { tipShow(tipTarget(e.target)); }, true); });
   ['mouseout', 'focusout'].forEach(function (k) { document.addEventListener(k, function (e) { var to = tipTarget(e.relatedTarget); if (!to || to !== tipTarget(e.target)) tipShow(to); }, true); });
   ['scroll', 'pointerdown', 'keydown'].forEach(function (k) { addEventListener(k, function (e) { if (k !== 'keydown' || e.key === 'Escape') tipShow(null); }, true); });
   function tipNames(root) { [].forEach.call(root.querySelectorAll('[title]'), function (b) { var t = b.getAttribute('title'); if (!b.hasAttribute('aria-label')) b.setAttribute('aria-label', t); b.setAttribute('data-tip', t); b.removeAttribute('title'); }); }   // the name stays for screen readers
 
-  /* (1.65.0) The theme button is a day/night switch (adapted from Uiverse.io by JustCode14, "red-dingo-61", MIT: see web/hub/docs/THIRD-PARTY.md):
-     night sky with a moon and stars in dark mode, blue sky with the sun and a cloud in light mode. It is drawn in the mode it showed last and
-     moved to the new one a frame later, so a change slides instead of jumping. */
-  var shownTheme = '';
-  function themeKnob(mini) { return '<span class="ix-tsl' + (mini ? ' mini' : '') + '" aria-hidden="true"><i class="ix-ts1"></i><i class="ix-ts2"></i><i class="ix-ts3"></i><svg viewBox="0 0 16 16" class="ix-tcl"><path transform="matrix(.77976 0 0 .78395-299.99-418.63)" d="m391.84 540.91c-.421-.329-.949-.524-1.523-.524-1.351 0-2.451 1.084-2.485 2.435-1.395.526-2.388 1.88-2.388 3.466 0 1.874 1.385 3.423 3.182 3.667v.034h12.73v-.006c1.775-.104 3.182-1.584 3.182-3.395 0-1.747-1.309-3.186-2.994-3.379.007-.106.011-.214.011-.322 0-2.707-2.271-4.901-5.072-4.901-2.073 0-3.856 1.202-4.643 2.925"/></svg></span>'; }
-  function themeOn() { return (shownTheme || themeNow()) === 'light'; }
-  function themeSwitch() { return '<button type="button" class="ix-ib ix-tsw" data-ix="theme" role="switch" aria-checked="' + themeOn() + '" aria-label="Light Mode" title="' + themeLabel() + '">' + themeKnob() + '</button>'; }
-  function themeSettle(root) {
-    var now = themeNow() === 'light';
-    [].forEach.call((root || document).querySelectorAll('[data-ix="theme"][role="switch"]'), function (b) {
-      if (b.getAttribute('aria-checked') !== String(now)) requestAnimationFrame(function () { requestAnimationFrame(function () { b.setAttribute('aria-checked', String(now)); }); });
-    });
-    shownTheme = themeNow();
-  }
+  /* the theme button shows what it switches to: a sun in dark mode, a moon in light mode; its tooltip says the same.
+     (1.65.1) The day/night switch of 1.65.0 is gone again: the owner preferred the icon button. */
+  function themeIcon() { return svg(themeNow() === 'light' ? ICON.moon : ICON.sun); }
   function themeLabel() { var n = themeNow() === 'light' ? 'Dark' : 'Light'; return 'Switch to ' + n + ' Mode'; }
   /* Logged in: Backup (green, red with a dot while a backup is due) and the gear that opens Settings. Logged out: the key. */
   function acctButtons(adm) {
@@ -701,7 +696,7 @@
     var adm = isAdmin(), nav = NAV();
     var mark = '<img class="ix-logo" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt="">';   // your logo, or Homebase Hub's own
     var brand = '<a class="ix-brand" href="' + ROOT + '" aria-label="' + esc(S.siteName || 'Homebase Hub') + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>';
-    var theme = themeSwitch();
+    var theme = iconBtn('theme', themeLabel(), themeIcon());
     var edit = HAS_EDIT ? iconBtn('edit', 'Edit', svg(ICON.edit), '', 'ix-editb') : '';
     var me = acctButtons(adm), links = pageLinks();
     var html;
@@ -715,7 +710,7 @@
         '<button type="button" class="ix-fab" data-ix="sheet" aria-label="Search and Menu" title="Search and Menu">' + svg(ICON.search) + '</button>';
     } else {
       html = '<button type="button" class="ix-ib ix-menu" data-ix="menu" aria-label="Pages" title="Pages">' + svg(ICON.menu) + '</button>' + brand + links +
-        '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="Search" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
+        '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + (matchMedia('(hover:hover) and (pointer:fine)').matches ? 'Search · ? Shortcuts' : 'Search') + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
           '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
         '<div class="ix-tools">' + iconBtn('search', 'Search', svg(ICON.search), 'ix-sbtn') + theme + edit + me + '</div>';
     }
@@ -727,7 +722,6 @@
     if (qv && (q = document.getElementById('ix-q'))) { q.value = qv; if (had) q.focus(); }
     bindInlineSearch();
     markEditing();
-    themeSettle(bar);
     tipNames(bar);
   }
   /* Start page with the bar switched off: its corner shows reload and ONE gear button instead of Edit.
@@ -774,7 +768,7 @@
      Both are drawn fresh each time they open, so they always show the current login, theme and backup state. */
   function panelFoot(adm) {
     return (HAS_EDIT ? '<button type="button" class="ix-pbtn" data-ix="edit">' + svg(ICON.edit) + '<span>Edit</span></button>' : '') +
-      '<button type="button" class="ix-pbtn" data-ix="theme" role="switch" aria-checked="' + (themeNow() === 'light') + '">' + themeKnob(true) + '<span>Light Mode</span></button>' + acctButtons(adm);
+      '<button type="button" class="ix-pbtn" data-ix="theme">' + themeIcon() + '<span>' + (themeNow() === 'light' ? 'Dark' : 'Light') + '</span></button>' + acctButtons(adm);
   }
   function openPanel(id, open, build, from) {   // from: the button that opened it (Safari does not focus a clicked button)
     var d = document.getElementById(id);
@@ -804,7 +798,7 @@
       return '<div class="ix-scrim" data-ix="close"></div><div class="ix-shp" role="dialog" aria-modal="true" aria-label="Search and Menu"><span class="ix-grab" aria-hidden="true"></span>' +
         '<button type="button" class="ix-psearch" data-ix="search">' + svg(ICON.search) + '<span>Search everything</span></button><div class="ix-tiles6">' +
         (HAS_EDIT ? tile('edit', svg(ICON.edit), editing() ? 'Editing' : 'Edit') : '') +
-        tile('theme', themeKnob(true), 'Light Mode').replace('data-ix="theme"', 'data-ix="theme" role="switch" aria-checked="' + (themeNow() === 'light') + '"') +
+        tile('theme', themeIcon(), themeNow() === 'light' ? 'Dark Mode' : 'Light Mode') +
         (adm ? tile('backup', svg(ICON.box), due ? 'Backup Due' : 'Backup', due ? 'due' : '') + tile('account', svg(ICON.gear), 'Settings') + tile('logout', svg(ICON.out), 'Log Out', 'danger')
              : tile('login', svg(ICON.key), 'Log In')) + '</div></div>';
     }, from);
@@ -1014,8 +1008,10 @@
   function resultsHtml(p) {
     var r = searchResults(p), n = 0, h = '', q = p.q, ql = q.toLowerCase();
     var row = function (href, ext, lead, title, sub) {
-      return '<a class="ix-r" role="option" id="ix-r' + (n++) + '" href="' + esc(href) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + '>' + lead + '<span class="ix-rt"><b>' + title + '</b><span>' + sub + '</span></span></a>';
+      return '<a class="ix-r" role="option" id="ix-r' + (n++) + '" href="' + esc(href) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + '>' + lead + '<span class="ix-rx"><b>' + title + '</b><span>' + sub + '</span></span></a>';
     };
+    // (1.65.1) "?", "keys", "shortcuts", "keyboard" or "hotkeys": the list of keyboard shortcuts comes first
+    if (/^\s*\?\s*$|^keys?$|keyboard|shortcut|hotkey/i.test(q)) h += '<div class="ix-rh">Help</div>' + row('#ix-keys', false, '<i class="ix-d"></i>', 'Keyboard Shortcuts', 'Search, go to a page, edit: press ? on any page');
     if (r.links.length) h += '<div class="ix-rh">Links</div>' + r.links.map(function (l) {
       var ic = /^icons\//.test(l.icon) ? ROOT + 'web/hub/media/links/' + l.icon : /^https?:/.test(l.icon) ? l.icon : '';
       return row(safeHref(l.url), true, ic ? '<img src="' + esc(ic) + '" alt="" loading="lazy">' : '<i class="ix-d"></i>', snip(l.title, ql), esc(host(l.url)) + ' · ' + esc(l.where));
@@ -1045,7 +1041,8 @@
       if (!p.q && !forceOpen) { panel.hidden = true; panel.innerHTML = ''; return; }
       loadSearchData().then(function () {
         if (my !== token) return;
-        panel.innerHTML = filtersHtml() + (p.q ? resultsHtml(p) : '<div class="ix-none">Type to search links, notes and tools.</div>');
+        panel.innerHTML = filtersHtml() + (p.q ? resultsHtml(p) : '<div class="ix-none">Type to search links, notes and tools.</div>') +
+          (p.q || !matchMedia('(hover:hover) and (pointer:fine)').matches ? '' : '<a class="ix-khint" href="#ix-keys"><kbd>?</kbd> Keyboard Shortcuts</a>');   // (1.65.1) so the list can be found
         panel.hidden = false; idx = -1; if (p.q) mark(0);
         if (panel.id === 'ix-sres') placePanel(input, panel);
       });
@@ -1072,8 +1069,9 @@
         else if (f === 'reset') SF = { scope: 'all', tab: '' };
         saveSF(); forceOpen = true; show(); input.focus(); return;
       }
-      var a = e.target.closest('a.ix-r'); if (!a) return;
+      var a = e.target.closest('a.ix-r, a.ix-khint'); if (!a) return;
       panel.hidden = true; forceOpen = false; onPick && onPick();
+      if (a.getAttribute('href') === '#ix-keys') { e.preventDefault(); input.blur(); showKeys(); return; }
       if (a.href.indexOf('#hub-info=') >= 0 && a.href.split('#')[0] === location.href.split('#')[0]) {   // already on that page: no reload
         e.preventDefault(); location.hash = a.href.split('#')[1]; window.dispatchEvent(new HashChangeEvent('hashchange'));
       }
@@ -1140,7 +1138,7 @@
   function showKeys() {
     var go = goKeys(), row = function (k, t) { return '<div class="ix-krow"><span>' + esc(t) + '</span><span class="ix-kk">' + k + '</span></div>'; };
     var kbd = function (a) { return a.split(' ').map(function (x) { return x === 'then' ? ' then ' : '<kbd>' + esc(x) + '</kbd>'; }).join(''); };
-    openDlg('<div class="ix-ico">' + svg(ICON.key) + '</div><h2>Keyboard Shortcuts</h2>' +
+    openDlg('<div class="ix-ico">' + svg(ICON.keyboard) + '</div><h2>Keyboard Shortcuts</h2>' +
       '<div class="ix-keys" tabindex="0" role="region" aria-label="Keyboard shortcuts"><h3>Anywhere</h3>' + row(kbd('/') + ' or ' + kbd('Ctrl K'), 'Search the site') + row(kbd('?'), 'Show this list') + row(kbd('Esc'), 'Close a window') +
       (S.admin ? row(kbd('E'), 'Edit this page (the pencil)') : '') +
       '<h3>Go to a Page</h3>' + go.map(function (g) { return row(kbd('G') + ' then ' + kbd(g[0].toUpperCase()), g[1]); }).join('') +
@@ -1236,7 +1234,7 @@
         '<div id="ix-2s" hidden><label for="ix-code">Code from Your Authenticator App</label><input type="text" id="ix-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456 or a recovery code">' +
           '<label class="ix-chk"><input type="checkbox" id="ix-ltrust"> Trust this browser for 30 days (no code here next time)</label></div>' +
         '<p class="ix-err" id="ix-le" role="alert"></p><button class="ix-btn pri ix-wide" id="ix-lg">Log In</button>' +
-        (S.passkeys && window.PublicKeyCredential && window.isSecureContext ? '<button type="button" class="ix-btn ix-wide" id="ix-pk">' + svg(ICON.key) + ' Log In with a Passkey</button>' : '') +
+        (S.passkeys && window.PublicKeyCredential && window.isSecureContext ? '<div class="ix-lor" aria-hidden="true">or</div><button type="button" class="ix-btn ix-wide" id="ix-pk">' + svg(ICON.key) + ' Log In with a Passkey</button>' : '') +
         '<button type="button" class="ix-btn ix-quiet" data-ix="close">Cancel</button></form>');
       dlg.querySelector('.ix-box').classList.add('ix-login');
       $('#ix-eye').onclick = function () {
@@ -1602,6 +1600,14 @@
     isAdmin: function () { return !!S.admin; }, ready: function () { return refresh(); }, fetch: hubFetch, esc: esc, isHex: isHex,
     bufB64u: bufB64u, b64uBuf: b64uBuf, bookmarksHtml: bookmarksHtml,   // (1.61.0) for the passkey screens of Settings
     api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
+    /* (1.65.1) A page that needs the login (Settings when logged out): a card with the site's logo, a line and the Log In button, on a
+       faint dot grid. One copy for every such page, styled by shell.css, so it never falls back to the browser's own grey button. */
+    gate: function (host, title, text) {
+      host.innerHTML = '<div class="ix-gate"><div class="ix-gcard"><img class="ix-llogo" alt="" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '">' +
+        '<h1>' + esc(title) + '</h1><p>' + esc(text) + '</p><button type="button" class="ix-btn pri ix-wide" id="ix-glg">' + svg(ICON.key) + ' Log In</button></div></div>';
+      host.querySelector('#ix-glg').onclick = function () { login().then(function () { location.reload(); }, function () {}); };
+    },
+    showKeys: function () { showKeys(); },   // (1.65.1) Settings > General opens the list too
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
     tz: function () { return S.tz || 'Asia/Kolkata'; },   // the site's time zone (Settings > General)
     settingsWindow: function (d) { d.classList.add('ix-sdlg'); sdlgBuild(d); },

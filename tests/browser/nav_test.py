@@ -123,7 +123,7 @@ try:
                     lbl = pg.evaluate("[...document.querySelectorAll('#ix-bar .ix-links a span')].filter(s => s.getBoundingClientRect().width > 0).map(s => s.textContent)")
                     check('%s: only the current page shows its name' % L, lbl == ['Links'], lbl)
                     pg.click('#ix-bar .ix-fab'); until(lambda: pg.evaluate("!!document.querySelector('#ix-sheet.open')"), 3000); settle(pg)
-                    tiles = pg.evaluate("[...document.querySelectorAll('#ix-sheet.open .ix-stile > span:not(.ix-tsl)')].map(s => s.textContent)")
+                    tiles = pg.evaluate("[...document.querySelectorAll('#ix-sheet.open .ix-stile span')].map(s => s.textContent)")
                     check('%s: the sheet has search, Edit, the theme, Backup, Settings and Log Out' % L, visible(pg, '#ix-sheet .ix-psearch') and tiles == ['Edit', 'Light Mode', 'Backup', 'Settings', 'Log Out'], tiles)
                     if SHOTS: pg.screenshot(path=os.path.join(SHOTS, '%s-%s-sheet.png' % (nav, size_name)))
                     pg.keyboard.press('Escape'); settle(pg)   # the panel slides away
@@ -138,10 +138,11 @@ try:
                     vtn = pg.evaluate("getComputedStyle(document.querySelector('#ix-bar .ix-links a[aria-current=page]')).viewTransitionName")
                     check('%s: the current page carries the name its pill glides with (ix-cur)' % L, vtn in ('ix-cur', None), vtn)
                 if nav == 'top' and not phone:
-                    q = "(() => { const b = document.querySelector('#ix-bar [data-ix=theme]'); return [b.getAttribute('role'), b.getAttribute('aria-checked'), document.documentElement.dataset.theme]; })()"
-                    night = pg.evaluate(q); pg.click('#ix-bar [data-ix=theme]'); until(lambda: pg.evaluate(q)[1:] == ['true', 'light'], 3000); day = pg.evaluate(q)
-                    pg.click('#ix-bar [data-ix=theme]'); until(lambda: pg.evaluate(q)[1:] == ['false', 'dark'], 3000)
-                    check('%s: the theme button is a day/night switch: off (night) in dark mode, on (day) in light mode (1.65.0)' % L, night == ['switch', 'false', 'dark'] and day == ['switch', 'true', 'light'], (night, day))
+                    sun = pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M12 7.5')")
+                    pg.click('#ix-bar [data-ix=theme]'); until(lambda: pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M20.99')"), 3000); settle(pg)
+                    moon = pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M20.99')")
+                    pg.click('#ix-bar [data-ix=theme]'); until(lambda: pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M12 7.5')"), 3000); settle(pg)
+                    check('%s: the theme button shows a sun in dark mode and a moon in light mode' % L, sun and moon, (sun, moon))
                 if nav == 'side' and not phone:
                     w = rect(pg, '#ix-bar')['w']
                     check('%s: the rail is 80 px wide' % L, abs(w - 80) < 1, w)

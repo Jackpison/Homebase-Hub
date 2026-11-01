@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.65.1 | The theme button is the sun and moon again; a login card when logged out; search results no longer cut off; Keyboard Shortcuts in search and Settings › General; a new edit bar, Erase Everything button and hover glow |
 | 1.65.0 | New look for every page: white switches, a day/night theme switch, hold to delete, swipe in Tasks, tooltips, a bouncing loader, button hover, count-up numbers, and a new Presets screen with Surprise Me |
 | 1.64.12 | Links: an icon whose saved file is gone shows the first letter and is fetched again (when you start editing, or with Fetch Icons > Only Missing) |
 | 1.64.11 | Links and Cards draw big pages faster: the first screen shows at once, Links builds its edit buttons only while editing, Cards formats and sorts faster |
@@ -116,6 +117,33 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.65.1
+
+### Changed
+
+- **Theme button:** back to the sun and moon icon button of 1.64 (in the bar, the side panel and the phone menu). The day/night switch of 1.65.0 is gone.
+- **Edit bar:** the bar at the bottom while you edit (Links, Info, Home) is a dark pill of round buttons. Pointing at a button lifts it, its icon takes the colour of what it does (red for delete, green for add, blue for export or fetch, violet for settings and colours), and its name pops up above it in a light bubble. Icons and Text still shows the names in the bar. Adapted from Uiverse (firemonste_8052, MIT).
+- **Erase Everything** (Backup & Restore › Start Over): a red button with its words and an X; pointing at it slides the X across the whole button. It still needs ERASE typed and your password. Adapted from Uiverse (cssbuttons-io, MIT).
+- **Hover glow:** buttons that did not change when you pointed at them now glow softly in the accent colour: Cards' More Filters and holder chips, choices that are not picked (view buttons, filters), Presets, and the Backup button in the bar (green). Column headers and text links glow in their text. Idea from Uiverse (mrhyddenn, MIT), at about a third of its strength.
+- **What's New:** the card after an update has a calm border with one light that runs around it twice, instead of the heavy accent outline.
+- **Login:** behind the login window the page blurs over a faint dot grid, the password field glows when you type, and "or" comes before Log In with a Passkey.
+
+### New
+
+- **Settings when logged out** shows a card with your logo and a proper Log In button, instead of the browser's grey button.
+- **Keyboard Shortcuts are easy to find:** the bar's search box says "? Shortcuts"; typing ?, "keys" or "shortcuts" in search shows Keyboard Shortcuts first (Enter opens the list); Settings › General has a Keyboard Shortcuts card with View Shortcuts (hidden on touch-only phones and tablets). The ? key still opens the list on any page.
+
+### Fixed
+
+- **Search:** the result under "Tools" (and any result) was squeezed into a small square and cut off at the left, with the dot over the words. Its text used a class name that window tiles also use; it has its own name now.
+- **Settings:** right after a small window closed (for example Keyboard Shortcuts), going to another section left the page on the old one, and Backup & Restore could open the wrong tab. The page looked inside the closing window for its parts.
+
+### Checked
+
+- polish_test.py has nine new checks (26 in all): the logged-out card, the login window, full-width search results, Keyboard Shortcuts from search and from Settings › General (and changing section right after), Erase Everything, the hover glow, the What's New light and the edit bar. nav_test checks the sun and moon button again.
 
 ---
 

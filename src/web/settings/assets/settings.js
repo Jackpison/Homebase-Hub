@@ -14,8 +14,7 @@
     if (!window.HUB) return setTimeout(start, 30);
     window.HUB.ready().then(function () {
       if (!window.HUB.isAdmin()) {
-        host.innerHTML = '<div class="ix-gate"><h1>Settings</h1><p>Log in to change your site\'s settings.</p><button type="button" class="ix-btn pri" id="ix-lg">Log In</button></div>';
-        document.getElementById('ix-lg').onclick = function () { window.HUB.login().then(function () { location.reload(); }, function () {}); };
+        window.HUB.gate(host, 'Settings', 'Log in to change your site\'s settings.');
         return;
       }
       window.HUB.mountSettings(host);

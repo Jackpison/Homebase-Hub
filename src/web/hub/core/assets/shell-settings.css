@@ -266,8 +266,6 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-ph h2{font-size:30px;letter-spacing:-.015em;margin:0 0 6px}
 #ix-page .ix-ph p{font-size:15.5px;max-width:64ch;color:var(--ix-mu)}
 #ix-page .ix-back{display:none;align-items:center;height:40px;padding:0 4px;margin:0 0 6px -4px;background:none;border:0;color:var(--ix-accent-tx);font:inherit;font-weight:700;cursor:pointer}
-#ix-page .ix-gate{max-width:420px;margin:70px auto;text-align:center}
-#ix-page .ix-gate h1{margin:0 0 8px}
 /* the save bar: floats at the bottom of the content,only while something is not saved */
 #ix-page .ix-sf{grid-column:2;position:sticky;bottom:14px;z-index:5;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border:1px solid var(--ix-line2);border-radius:16px;background:color-mix(in srgb,var(--ix-s1) 90%,transparent);backdrop-filter:blur(14px);box-shadow:0 12px 40px rgba(0,0,0,.35)}
 #ix-page .ix-sf[hidden]{display:none}
@@ -524,7 +522,14 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-ec.ix-auto .ix-ec-b>.ix-tg:last-child{border-bottom:0;padding-bottom:0}
 #ix-page .ix-ec.ix-auto .ix-ec-b>.ix-note:last-child{margin-bottom:0}
 #ix-page .ix-ec.ix-auto .ix-ec-d{font-size:13.5px}
-#ix-page .ix-ec.ix-new{border-color:color-mix(in srgb,var(--ix-accent) 45%,var(--ix-line));max-width:880px}
+#ix-page .ix-ec.ix-new{max-width:880px;position:relative;isolation:isolate}
+/* (1.65.1) What's New: a calm border with one light that runs around it twice when the card appears (instead of the heavy accent outline) */
+@property --ix-beam{syntax:"<angle>";inherits:false;initial-value:0deg}
+#ix-page .ix-ec.ix-new::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;
+  background:conic-gradient(from var(--ix-beam),transparent 0 72%,color-mix(in srgb,var(--ix-accent) 90%,transparent) 88%,transparent 96%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:ix-beam 3.2s linear .3s 2 both}
+@keyframes ix-beam{from{--ix-beam:0deg;opacity:1}99%{opacity:1}to{--ix-beam:360deg;opacity:0}}
+@media (prefers-reduced-motion:reduce){#ix-page .ix-ec.ix-new::before{animation:none;opacity:0}}
 #ix-page .ix-newbody{max-height:340px;overflow:auto;padding:2px 14px 6px;border:1px solid var(--ix-line);border-radius:14px;background:var(--ix-bg)}
 #ix-page .ix-mypre{margin:0 0 12px}
 #ix-page .ix-mypre>summary{cursor:pointer;color:var(--ix-accent-tx);font-weight:700;padding:4px 0}

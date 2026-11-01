@@ -30,7 +30,9 @@
   var S = K.S, esc = K.esc, toast = K.toast, api = K.api, ICON = K.ICON, svg = K.svg, remember = K.remember, applySizes = K.applySizes, APP = K.APP, openDlg = K.openDlg, closeDlg = K.closeDlg, login = K.login, ROOT = K.ROOT, applyFont = K.applyFont, applyColors = K.applyColors, applyAttrs = K.applyAttrs, PG_APPS = K.PG_APPS, CORE = K.CORE, ASSETS = K.ASSETS, COLOR_DEFAULT = K.COLOR_DEFAULT, pageList = K.pageList, applyFavicon = K.applyFavicon, SIZE_SPEC = K.SIZE_SPEC, PAGE_DEF = K.PAGE_DEF, FONTS = K.FONTS, COLOR_KEYS = K.COLOR_KEYS, when = K.when, redraw = K.redraw;
   function D() { return document.getElementById('ix-dlg'); }
   /* element lookup: inside an open small dialog (Text Sizes) first, otherwise inside the Settings page */
-  function $(sel) { var ov = document.getElementById('ix-dlg'), h = ov && ov.classList.contains('open') ? ov : (PAGE || ov); return h ? h.querySelector(sel) : null; }
+  /* (1.65.1) a window that is closing (its 150 ms fade) no longer counts as open: right after the Keyboard Shortcuts window closed, a change of
+     section looked inside it, found no #ix-pane and stopped, so the page kept showing the old section */
+  function $(sel) { var ov = document.getElementById('ix-dlg'), h = ov && ov.classList.contains('open') && !ov.classList.contains('closing') ? ov : (PAGE || ov); return h ? h.querySelector(sel) : null; }
   /* ---------- 10. Settings ----------
      Five sections; General, Appearance and Health hold sub-tabs along the top. General and Appearance edit a draft that
      previews live and is kept with Save Settings; Telegram, Security and Health save each change at once. */
@@ -110,8 +112,7 @@
   function mount(host, hash) {
     PAGE = host; host.classList.add('ix-pg'); host.id = 'ix-page';
     if (!S.admin) {
-      host.innerHTML = '<div class="ix-gate"><h1>Settings</h1><p>Log in to change your site\'s settings.</p><button type="button" class="ix-btn pri" id="ix-lg">Log In</button></div>';
-      host.querySelector('#ix-lg').onclick = function () { K.login().then(function () { location.reload(); }, function () {}); };
+      window.HUB.gate(host, 'Settings', 'Log in to change your site\'s settings.');
       return;
     }
     draft = JSON.parse(JSON.stringify(S)); colorMode = '';
@@ -144,7 +145,7 @@
   function ovGet() { if (!ovP || Date.now() - ovAt > 3000) { ovAt = Date.now(); ovP = api('overview'); } return ovP; }
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
-    ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
+    ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'general', 'keys keyboard hotkeys shortcut question mark'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
     ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'look', 'home start page corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], 
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
@@ -246,7 +247,7 @@
   /* The plain panes (General, Tabs, Look) are written as "heading, one line, controls". Each heading with what follows it
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
   var CARDIFY = { general: 1, nav: 1, look: 1 };
-  var CARD_ICON = { 'install on your phone': ICON.down, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
+  var CARD_ICON = { 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
@@ -349,7 +350,10 @@
       '<details class="ix-how"><summary>How?</summary><div class="ix-steps"><h4>iPhone or iPad</h4><p>In Safari, tap Share, then Add to Home Screen.</p>' +
       '<h4>Android</h4><p>In Chrome, open the menu (the three dots), then Install App or Add to Home Screen.</p>' +
       '<h4>Computer</h4><p>In Chrome or Edge, click the install icon at the right end of the address bar, or open the menu and choose Install.</p></div></details>' +
-      '<button type="button" class="ix-btn pri" id="ix-inst" hidden>' + svg(ICON.down) + 'Install</button>';
+      '<button type="button" class="ix-btn pri" id="ix-inst" hidden>' + svg(ICON.down) + 'Install</button>' +
+      '<h3 id="ix-keyh" class="ix-kbonly">Keyboard Shortcuts</h3><p class="ix-kbonly">Search, go to a page and edit from the keyboard. Press <kbd>?</kbd> on any page to see them all.</p>' +
+      '<button type="button" class="ix-btn ix-kbonly" id="ix-keysb">' + svg(ICON.keyboard) + 'View Shortcuts</button>';
+    p.querySelector('#ix-keysb').onclick = function () { window.HUB.showKeys(); };
     // the Install button shows only when this browser offers it (settings.js keeps the offer: beforeinstallprompt)
     var ib = p.querySelector('#ix-inst');
     var offer = function () { ib.hidden = !window.__hubInstall; };
@@ -2359,7 +2363,7 @@
           '<p>Everything comes back by restoring a backup file (the Restore tab). <b>Download a full backup first.</b></p>' +
           '<label class="ix-fl2">Type ERASE<input type="text" id="ix-rsc" autocomplete="off" spellcheck="false"></label>' +
           '<label class="ix-fl2">Website Password<input type="password" id="ix-rsp" autocomplete="current-password"></label>' +
-          '<p class="ix-err" id="ix-rse"></p><div class="ix-row"><button type="button" class="ix-btn danger" id="ix-rsgo">Erase Everything</button></div></div></details>' +
+          '<p class="ix-err" id="ix-rse"></p><div class="ix-row"><button type="button" class="ix-btn danger ix-erase" id="ix-rsgo"><span class="ix-et">Erase Everything</span><span class="ix-ei" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/></svg></span></button></div></div></details>' +
         '<p class="ix-note">Moving the site? Copy the whole folder: your data is in <code>site-data</code>.</p>';
       p.querySelector('#ix-tgset').onclick = function (e) { e.preventDefault(); go('telegram'); };
       p.querySelector('#ix-rsgo').onclick = function () {

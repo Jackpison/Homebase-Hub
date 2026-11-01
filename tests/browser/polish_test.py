@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""The touches of 1.65.0, each on a real page: the on/off switches (white track, metal knob) everywhere, the day/night theme switch in the bar,
+"""The touches of 1.65.0 and 1.65.1, each on a real page: the on/off switches (white track, metal knob) everywhere, the theme button in the bar,
 the tooltip on icon-only buttons, the button hover, the loader, Hold to Delete (a click never deletes, a hold does, also by keyboard),
 swipe in Tasks (touch), the count-up numbers in Cards, and the Presets screen with Surprise Me (a new readable mix each time).
+1.65.1: the logged-out Settings card, the login window, search results at full width, Keyboard Shortcuts in search and in Settings > General,
+the What's New light, Erase Everything, the hover glow and the edit bar.
     python3 tests/browser/polish_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8979)"""
 import json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
@@ -23,6 +25,14 @@ try:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1280, 'height': 860}, color_scheme='dark'); pg = ctx.new_page()
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        # ---- (1.65.1) logged out: the Settings card and the login window ----
+        pg.goto(s.base + '/web/settings/'); wait_js(pg, "!!document.querySelector('.ix-gcard')", 20000)
+        gate = pg.evaluate("(() => { const b = document.getElementById('ix-glg'), t = document.createElement('i'); t.style.background = 'var(--ix-accent)'; document.body.appendChild(t); const acc = getComputedStyle(t).backgroundColor; t.remove(); return [!!document.querySelector('.ix-gcard .ix-llogo'), getComputedStyle(b).backgroundColor === acc, b.offsetHeight >= 44, getComputedStyle(document.querySelector('.ix-gate')).backgroundImage.includes('radial-gradient')]; })()")
+        check('P17 logged out, Settings shows a card with the logo and a full-width accent Log In button on a dot grid (not the grey browser button)', gate == [True, True, True, True], gate)
+        pg.click('#ix-glg'); pg.wait_for_selector('#ix-pw')
+        lw = pg.evaluate("(() => { const d = document.getElementById('ix-dlg'), st = getComputedStyle(d); return [st.backgroundImage.includes('radial-gradient'), (st.backdropFilter || st.webkitBackdropFilter || '').includes('blur'), !!document.getElementById('ix-eye'), document.querySelectorAll('#ix-lg').length]; })()")
+        check('P18 the login window: the page blurs behind a faint dot grid, the password can be shown, one Log In button', lw == [True, True, True, 1], lw)
+        pg.keyboard.press('Escape')
         why = browser_login(pg, s.base); check('P0 logged in', not why, why)
 
         # ---- switches and the theme switch ----
@@ -32,12 +42,11 @@ try:
         check('P1 the on/off switch is a real checkbox, 52 x 26, a white track and a metal knob', sw[:3] == ['checkbox', 52, 26] and sw[3] == 'rgb(255, 255, 255)' and sw[4], sw)
         pg.keyboard.press('Escape')
         t0 = pg.evaluate("document.documentElement.dataset.theme")
-        ts = pg.evaluate("(() => { const b = document.querySelector('#ix-bar [data-ix=theme]'); return [b.getAttribute('role'), b.getAttribute('aria-checked'), !!b.querySelector('.ix-tsl')]; })()")
-        check('P2 the bar\'s theme button is a day/night switch (role switch, off in dark mode)', ts == ['switch', 'false' if t0 == 'dark' else 'true', True], ts)
+        ts = pg.evaluate("(() => { const b = document.querySelector('#ix-bar [data-ix=theme]'); return [b.getAttribute('role'), !!b.querySelector('.ix-tsl'), !!b.querySelector('svg path')]; })()")
+        check('P2 the bar\'s theme button is the sun/moon icon button again, not the 1.65.0 day/night switch (1.65.1)', ts == [None, False, True], ts)
         pg.click('#ix-bar [data-ix=theme]')
         wait_js(pg, "document.documentElement.dataset.theme !== %r" % t0, 5000)
-        wait_js(pg, "document.querySelector('#ix-bar [data-ix=theme]').getAttribute('aria-checked') === String(document.documentElement.dataset.theme === 'light')", 5000)
-        check('P3 clicking it switches the theme and the switch follows', pg.evaluate("document.documentElement.dataset.theme") != t0)
+        check('P3 clicking it switches the theme', pg.evaluate("document.documentElement.dataset.theme") != t0)
         pg.click('#ix-bar [data-ix=theme]'); wait_js(pg, "document.documentElement.dataset.theme === %r" % t0, 5000)
 
         # ---- tooltip, button hover, loader ----
@@ -64,6 +73,10 @@ try:
         pg.focus('.row [data-hold]'); pg.keyboard.down('Enter'); pg.wait_for_timeout(1200); pg.keyboard.up('Enter')
         until(lambda: pg.evaluate("document.querySelectorAll('.cat .row').length") == n0 - 2, 5000)
         check('P9 holding Enter on it works the same (keyboard)', pg.evaluate("document.querySelectorAll('.cat .row').length") == n0 - 2)
+        bar = pg.evaluate("[...document.querySelectorAll('#ix-ebar .ix-eb:not(.ix-ebdone)')].map(x => x.dataset.c)")
+        pg.hover('#ix-ebar .ix-eb >> nth=0'); wait_js(pg, "!!document.querySelector('#ix-ebtip.eb')", 3000)
+        check('P25 the edit bar: round buttons coloured by what they do, and a light name bubble above on hover (1.65.1)', bar and all(c in ('accent', 'red', 'green', 'blue', 'violet') for c in bar), bar)
+        pg.mouse.move(5, 5)
         pg.keyboard.press('Escape')
 
         # ---- count-up (Cards) ----
@@ -91,6 +104,46 @@ try:
         check('P12 Tasks: swiping a repeating task far to the left marks it done (it moves to its next date)', after != due0 and 'Undo' in tp.evaluate("document.body.innerText"), (due0[:60], after[:60]))
         tctx.close()
 
+        # ---- (1.65.1) search: full-width results, and Keyboard Shortcuts from "?" ----
+        pg.goto(s.base + '/web/info/'); wait_js(pg, "!!document.getElementById('ix-q')", 20000)
+        ph = pg.evaluate("document.getElementById('ix-q').placeholder")
+        pg.fill('#ix-q', 'mail'); wait_js(pg, "!!document.querySelector('#ix-sres .ix-r')", 8000)
+        w = pg.evaluate("(() => { const t = document.querySelector('#ix-sres .ix-r .ix-rx'); return [t.getBoundingClientRect().width, t.querySelector('b').scrollWidth <= t.querySelector('b').clientWidth + 1]; })()")
+        check('P19 search results use the row\'s width (the Tools row was squeezed into a 34 px tile and cut off)', w[0] > 150 and w[1], w)
+        pg.fill('#ix-q', '?'); wait_js(pg, "[...document.querySelectorAll('#ix-sres .ix-r b')].some(b => b.textContent === 'Keyboard Shortcuts')", 8000)
+        first = pg.evaluate("document.querySelector('#ix-sres .ix-r b').textContent")
+        pg.keyboard.press('Enter'); wait_js(pg, "!!document.querySelector('#ix-dlg.open .ix-keys')", 5000)
+        check('P20 the search box says "? Shortcuts"; typing ? shows Keyboard Shortcuts first and Enter opens the list', 'Shortcuts' in ph and first == 'Keyboard Shortcuts', (ph, first))
+        pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+
+        # ---- (1.65.1) Settings > General: Keyboard Shortcuts; closing that window and changing section still works ----
+        pg.goto(s.base + '/web/settings/#general'); wait_js(pg, "!!document.getElementById('ix-keysb')", 20000)
+        pg.click('#ix-keysb'); wait_js(pg, "!!document.querySelector('#ix-dlg.open .ix-keys')", 5000)
+        pg.keyboard.press('Escape'); pg.evaluate("location.hash = 'backup'")
+        until(lambda: pg.evaluate("!!document.getElementById('ix-exp')"), 8000)
+        check('P21 Settings > General has View Shortcuts; right after its window closes, another section still opens (it stayed on General)', pg.evaluate("!!document.getElementById('ix-exp')"))
+
+        # ---- (1.65.1) Erase Everything ----
+        pg.wait_for_timeout(800); pg.click('.ix-tabbar button[data-tab=start-over]'); pg.wait_for_selector('#ix-rsgo', state='visible')
+        er0 = pg.evaluate("(() => { const b = document.getElementById('ix-rsgo'); return [getComputedStyle(b.querySelector('.ix-et')).color, b.querySelector('.ix-ei').offsetWidth < b.offsetWidth / 2]; })()")
+        pg.hover('#ix-rsgo'); pg.wait_for_timeout(450)
+        er1 = pg.evaluate("(() => { const b = document.getElementById('ix-rsgo'); return [b.querySelector('.ix-ei').offsetWidth >= b.offsetWidth - 2, getComputedStyle(b.querySelector('.ix-et')).color]; })()")
+        check('P22 Erase Everything: white words and an X; on hover the X fills the button and the words fade', er0 == ['rgb(255, 255, 255)', True] and er1 == [True, 'rgba(0, 0, 0, 0)'], (er0, er1))
+        pg.mouse.move(5, 5)
+
+        # ---- (1.65.1) hover glow ----
+        pg.goto(s.base + '/web/cards/'); wait_js(pg, "!!document.getElementById('fmore')", 20000); pg.wait_for_timeout(600)
+        g0 = pg.evaluate("getComputedStyle(document.getElementById('fmore')).boxShadow"); pg.hover('#fmore'); pg.wait_for_timeout(450)
+        g1 = pg.evaluate("getComputedStyle(document.getElementById('fmore')).boxShadow")
+        check('P23 a button that showed no change on hover (Cards: More Filters) now glows softly', g1 != g0 and g1 != 'none', (g0, g1))
+        pg.mouse.move(5, 5)
+
+        # ---- (1.65.1) What's New ----
+        pg.goto(s.base + '/web/settings/#overview'); pg.evaluate("localStorage.removeItem('ix-seen-ver')"); pg.reload()
+        wait_js(pg, "!!document.querySelector('.ix-ec.ix-new')", 20000)
+        bm = pg.evaluate("(() => { const st = getComputedStyle(document.querySelector('.ix-ec.ix-new'), '::before'); return [st.animationName, st.backgroundImage.includes('conic-gradient')]; })()")
+        check('P24 What\'s New: a light runs around a calm border (no heavy outline)', bm == ['ix-beam', True], bm)
+
         # ---- Presets and Surprise Me ----
         pg.goto(s.base + '/web/settings/#themes'); wait_js(pg, "!!document.getElementById('ix-sur') && !!document.getElementById('ix-surn').textContent", 20000)
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pgrid .ix-preset')].slice(0, 3).map(c => [!!c.querySelector('.ix-pv i em'), c.querySelectorAll('.ix-pv b').length, !!c.querySelector('.ix-pn'), !!c.querySelector('.ix-pgl')])")
@@ -104,7 +157,7 @@ try:
         check('P14 Surprise Me makes a new named mix each time, every one easy to read (text 7:1, muted 4.5:1 on the boxes)', len(set(names)) >= 3 and ok, names)
         pg.click('#ix-suru'); pg.wait_for_timeout(500)
         check('P15 Use It puts the mix on and waits for Save Settings', 'is on' in pg.evaluate("(document.getElementById('ix-toast') || {}).textContent || ''") and pg.evaluate("!!document.querySelector('#ix-sf') && !document.querySelector('#ix-sf').hidden"))
-        check('P16 no page error', not errs, errs)
+        check('P26 no page error', not errs, errs)
         b.close()
 finally:
     stop_all()
