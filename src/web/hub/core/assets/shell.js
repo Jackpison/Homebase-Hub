@@ -1602,10 +1602,14 @@
     api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
     /* (1.65.1) A page that needs the login (Settings when logged out): a card with the site's logo, a line and the Log In button, on a
        faint dot grid. One copy for every such page, styled by shell.css, so it never falls back to the browser's own grey button. */
-    gate: function (host, title, text) {
-      host.innerHTML = '<div class="ix-gate"><div class="ix-gcard"><img class="ix-llogo" alt="" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '">' +
-        '<h1>' + esc(title) + '</h1><p>' + esc(text) + '</p><button type="button" class="ix-btn pri ix-wide" id="ix-glg">' + svg(ICON.key) + ' Log In</button></div></div>';
-      host.querySelector('#ix-glg').onclick = function () { login().then(function () { location.reload(); }, function () {}); };
+    gate: function (host, title, text) {   // built from elements (textContent), so nothing is read as HTML
+      var el = function (tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; };
+      var wrap = el('div', 'ix-gate'), card = el('div', 'ix-gcard'), img = el('img', 'ix-llogo'), btn = el('button', 'ix-btn pri ix-wide');
+      img.alt = ''; img.src = S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png';
+      btn.type = 'button'; btn.id = 'ix-glg'; var NS = 'http://www.w3.org/2000/svg', ic = document.createElementNS(NS, 'svg'), pa = document.createElementNS(NS, 'path'); ic.setAttribute('viewBox', '0 0 24 24'); ic.setAttribute('aria-hidden', 'true'); pa.setAttribute('d', ICON.key); ic.appendChild(pa); btn.appendChild(ic); btn.appendChild(document.createTextNode(' Log In'));
+      btn.onclick = function () { login().then(function () { location.reload(); }, function () {}); };
+      card.append(img, el('h1', '', title), el('p', '', text), btn); wrap.appendChild(card);
+      host.replaceChildren(wrap);
     },
     showKeys: function () { showKeys(); },   // (1.65.1) Settings > General opens the list too
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
