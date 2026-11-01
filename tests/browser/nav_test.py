@@ -120,7 +120,7 @@ try:
                 elif nav == 'dock' and phone:
                     bar = rect(pg, '#ix-bar')
                     check('%s: one row (the pill and its round button), under 70 px tall' % L, bar and bar['h'] < 70 and visible(pg, '#ix-bar .ix-fab'), bar)
-                    lbl = pg.evaluate("[...document.querySelectorAll('#ix-bar .ix-links a span')].filter(s => s.getBoundingClientRect().width > 0).map(s => s.textContent)")
+                    lbl = pg.evaluate("[...document.querySelectorAll('#ix-bar .ix-links a span:not(.ix-pt)')].filter(s => s.getBoundingClientRect().width > 0).map(s => s.textContent)")
                     check('%s: only the current page shows its name' % L, lbl == ['Links'], lbl)
                     pg.click('#ix-bar .ix-fab'); until(lambda: pg.evaluate("!!document.querySelector('#ix-sheet.open')"), 3000); settle(pg)
                     tiles = pg.evaluate("[...document.querySelectorAll('#ix-sheet.open .ix-stile span')].map(s => s.textContent)")
@@ -135,8 +135,8 @@ try:
                     check('%s: the menu button opens the page list' % L, pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 7)
                     pg.keyboard.press('Escape'); settle(pg)   # the panel slides away
                 if not phone or nav == 'dock':
-                    vtn = pg.evaluate("getComputedStyle(document.querySelector('#ix-bar .ix-links a[aria-current=page]')).viewTransitionName")
-                    check('%s: the current page carries the name its pill glides with (ix-cur)' % L, vtn in ('ix-cur', None), vtn)
+                    vtn = pg.evaluate("(e => e && getComputedStyle(e).viewTransitionName)(document.querySelector('#ix-bar .ix-pline'))")
+                    check('%s: the line under the current page carries the name it glides with (ix-line)' % L, vtn in ('ix-line', None), vtn)
                 if nav == 'top' and not phone:
                     sun = pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M12 7.5')")
                     pg.click('#ix-bar [data-ix=theme]'); until(lambda: pg.evaluate("(document.querySelector('#ix-bar [data-ix=theme] path') || {getAttribute: () => ''}).getAttribute('d').startsWith('M20.99')"), 3000); settle(pg)
@@ -151,7 +151,7 @@ try:
                     check('%s: the Edit menu opens beside the rail' % L, pop and pop['x'] >= bar['r'], (pop, bar))
                     pg.keyboard.press('Escape')
                 if nav == 'dock' and not phone:
-                    lbl = pg.evaluate("[...document.querySelectorAll('#ix-bar .ix-links a span')].filter(s => s.getBoundingClientRect().width > 0).map(s => s.textContent)")
+                    lbl = pg.evaluate("[...document.querySelectorAll('#ix-bar .ix-links a span:not(.ix-pt)')].filter(s => s.getBoundingClientRect().width > 0).map(s => s.textContent)")
                     check('%s: only the current page shows its name in the pill' % L, lbl == ['Links'], lbl)
                 if nav == 'dock':
                     pad = pg.evaluate("parseFloat(getComputedStyle(document.body).paddingBottom)"); bar = rect(pg, '#ix-bar'); vh = pg.evaluate('innerHeight')

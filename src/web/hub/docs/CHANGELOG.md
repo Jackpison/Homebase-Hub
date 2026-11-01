@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.67.0 | A new top bar: a colour tile with an icon for each page, a glowing line under the current page, a search with a border in the page's colour, and the buttons on the right in one tray of small colour tiles |
 | 1.66.1 | Colour tiles with white icons in every Settings page and page Settings window; the Settings menu starts level with the page title again |
 | 1.66.0 | Files shows a card for each file type and per-file upload cards (stop, try again); one step bar for every step-by-step screen in Settings; a new Settings menu with colour tiles |
 | 1.65.3 | Settings › Appearance › Look: a new Accent Color picker, ten squares that swell around the mouse |
@@ -121,6 +122,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.67.0
+
+### Changed
+
+- **The top bar:** each page has its own colour tile with a white icon (Home amber, Links blue, Info purple, Files sky blue, Cards green, Tools orange, Tasks rose). A line in the current page's colour sits under its name at the foot of the bar, with a soft glow in light mode and a stronger one in dark mode, and slides to the new page where the browser can. The sidebar shows bigger tiles and the line at its left edge; the dock tints the current page in its colour with the line above it. The drawer on a phone uses the same tiles.
+- **The search box:** a dark field (white in light mode) inside a soft border in the current page's colour; pointing at it turns the border, clicking in spins it round once, with a faint glow behind it. The filter button has a slow turning edge. Adapted from Uiverse.io by Lakshay-art ("curvy-earwig-22", MIT).
+- **The right side of the bar:** the theme, Edit, Backup and Settings buttons sit in one rounded tray, each a small colour tile with a white icon (theme amber, Edit blue, Backup green or red while a backup is due, Settings grey), with a thin line before Settings.
+
+### Checked
+
+- polish_test P39 to P43: every page has its own tile with a white icon; the line sits under the current page in its colour with a stronger glow in dark mode; the search border turns when clicked in; the tray, its tiles and divider; no sideways scroll on a computer or a phone. nav_test now checks the line (not the old pill) and the page names beside the tiles; the page names in the bar keep the readable muted colour (a11y_test).
 
 ---
 

@@ -3,7 +3,7 @@
 the tooltip on icon-only buttons, the button hover, the loader, Hold to Delete (a click never deletes, a hold does, also by keyboard),
 swipe in Tasks (touch), the count-up numbers in Cards, and the Presets screen with Surprise Me (a new readable mix each time).
 1.65.1: the logged-out Settings card, the login window, search results at full width, Keyboard Shortcuts in search and in Settings > General,
-the What's New light, Erase Everything, the hover glow and the edit bar.
+the What's New light, Erase Everything, the hover glow and the edit bar. 1.67.0: the bar's colour tiles, line, search border and tray.
     python3 tests/browser/polish_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8979)"""
 import json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
@@ -202,6 +202,27 @@ try:
         check('P14 Surprise Me makes a new named mix each time, every one easy to read (text 7:1, muted 4.5:1 on the boxes)', len(set(names)) >= 3 and ok, names)
         pg.click('#ix-suru'); pg.wait_for_timeout(500)
         check('P15 Use It puts the mix on and waits for Save Settings', 'is on' in pg.evaluate("(document.getElementById('ix-toast') || {}).textContent || ''") and pg.evaluate("!!document.querySelector('#ix-sf') && !document.querySelector('#ix-sf').hidden"))
+        # ---- (1.67.0) the bar: page colour tiles, a glowing line under the current page, the search border, the tray of tiles ----
+        pg.goto(s.base + '/web/info/'); wait_js(pg, "!!document.querySelector('#ix-bar .ix-pline')", 20000)
+        pg.evaluate("document.documentElement.dataset.theme = 'dark'"); pg.wait_for_timeout(500)
+        pt = pg.evaluate("(() => { const a = [...document.querySelectorAll('#ix-bar .ix-links a[data-page]')]; return [a.length, a.every(x => !!x.querySelector('.ix-pt svg')), new Set(a.map(x => getComputedStyle(x).getPropertyValue('--c').trim())).size, getComputedStyle(document.querySelector('#ix-bar .ix-links a[aria-current=page] .ix-pt svg')).stroke]; })()")
+        check('P39 every page in the bar has its own colour tile with a white icon (1.67.0)', pt == [7, True, 7, 'rgb(255, 255, 255)'], pt)
+        ln = pg.evaluate("(() => { const l = document.querySelector('#ix-bar .ix-pline'), c = document.querySelector('#ix-bar .ix-links a[aria-current=page]').getBoundingClientRect(), r = l.getBoundingClientRect(), b = document.getElementById('ix-bar').getBoundingClientRect(), st = getComputedStyle(l); return [r.left >= c.left - 1 && r.right <= c.right + 1, r.width > 20, Math.abs(r.bottom - b.bottom) <= 2, st.backgroundColor, st.boxShadow.split('px').length]; })()")
+        pg.evaluate("document.documentElement.dataset.theme = 'light'"); pg.wait_for_timeout(500)
+        lite = pg.evaluate("getComputedStyle(document.querySelector('#ix-bar .ix-pline')).boxShadow.split('px').length")
+        check('P40 a line in the page\'s colour sits under the current page at the foot of the bar, with a stronger glow in dark mode than in light (1.67.0)', ln[:4] == [True, True, True, 'rgb(168, 85, 247)'] and ln[4] > lite, (ln, lite))
+        pg.evaluate("document.documentElement.dataset.theme = 'dark'"); pg.wait_for_timeout(300)
+        sb = pg.evaluate("(() => { const b = document.getElementById('ix-sbox'); return [!!b.querySelector('.ix-sring'), !!b.querySelector('.ix-sglow'), getComputedStyle(b).getPropertyValue('--g1').trim() !== '', getComputedStyle(b.querySelector('.ix-sring'), '::before').transform]; })()")
+        pg.click('#ix-q'); pg.wait_for_timeout(300)
+        sf = pg.evaluate("getComputedStyle(document.querySelector('#ix-sbox .ix-sring'), '::before').transform")
+        pg.keyboard.press('Escape')
+        check('P41 the search has a border and glow in the page\'s colour that turns when clicked in (1.67.0)', sb[:3] == [True, True, True] and sf != sb[3], (sb, sf))
+        tr = pg.evaluate("(() => { const t = document.querySelector('#ix-bar .ix-tools'), st = getComputedStyle(t); return [t.querySelectorAll('.ix-tt').length >= 3, !!t.querySelector('.ix-tdiv') && t.querySelector('.ix-tdiv').offsetWidth === 1, parseFloat(st.borderTopLeftRadius) >= 10, [...t.querySelectorAll('.ix-tt svg')].every(v => getComputedStyle(v).stroke === 'rgb(255, 255, 255)'), document.documentElement.scrollWidth <= innerWidth]; })()")
+        check('P42 the right side is one rounded tray of small colour tiles with a line before Settings, and the page never scrolls sideways (1.67.0)', tr == [True, True, True, True, True], tr)
+        pg.set_viewport_size({'width': 390, 'height': 800}); pg.wait_for_timeout(500)
+        ph = pg.evaluate("[document.documentElement.scrollWidth <= innerWidth, document.querySelectorAll('#ix-bar .ix-tools .ix-tt').length > 0]")
+        check('P43 on a phone the bar still fits, the tiles stay (1.67.0)', ph == [True, True], ph)
+        pg.set_viewport_size({'width': 1280, 'height': 860}); pg.wait_for_timeout(300)
         check('P36 no page error', not errs, errs)
         b.close()
 finally:

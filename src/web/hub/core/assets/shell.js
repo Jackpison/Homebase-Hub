@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.66.1" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.67.0" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -63,6 +63,19 @@
     ['files', 'Files', ROOT + 'web/files/', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],
     ['tools', 'Tools', ROOT + 'web/tools/', 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z']
   ];
+  /* (1.67.0) the pages in the bar as colour tiles with white Lucide icons (lucide.dev, ISC: see web/hub/docs/THIRD-PARTY.md): [colour, the icon's SVG inside] */
+  var PAGE_TILE = {
+    home: ['#f5a524', '<path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>'],
+    links: ['#3b82f6', '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'],
+    info: ['#a855f7', '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8"/>'],
+    files: ['#0ea5e9', '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>'],
+    cards: ['#22c55e', '<rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/>'],
+    tools: ['#f97316', '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'],
+    tasks: ['#f43f5e', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/>']
+  };
+  var TOOL_C = { theme: '#f5a524', edit: '#3b82f6', backup: '#22c55e', due: '#ef4444', account: '#71717a', login: '#f5a524', search: '#71717a' };
+  var pageColor = function (id) { return (PAGE_TILE[id] || ['#71717a'])[0]; };
+  var pageIcon = function (p) { var t = PAGE_TILE[p[0]]; return '<span class="ix-pt" aria-hidden="true">' + (t ? '<svg viewBox="0 0 24 24">' + t[1] + '</svg>' : svg(p[3])) + '</span>'; };
   var ICON = {
     sun: 'M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41',
     moon: 'M20.99 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.78 9.79z',
@@ -620,6 +633,8 @@
   function iconBtn(k, label, icon, cls, id) {
     return '<button type="button" class="ix-ib' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '"' : '') + ' data-ix="' + k + '" aria-label="' + label + '" title="' + label + '">' + icon + '</button>';
   }
+  /* (1.67.0) a button of the bar's right side: a small colour tile with a white icon (the colours in TOOL_C) */
+  function toolTile(k, icon) { return '<span class="ix-tt" style="--c:' + (TOOL_C[k] || TOOL_C.account) + '" aria-hidden="true">' + icon + '</span>'; }
   /* (1.65.0) Hold to Delete: a button with data-hold acts only after it is held for 0.9 s (a red fill runs across it); letting go early
      does nothing, and a plain click says to hold it. Works with a mouse, a finger and the keyboard (hold Enter or Space). The page's own
      click handler runs once the hold is complete, so each page keeps its own delete and Undo. */
@@ -678,15 +693,15 @@
   function themeLabel() { var n = themeNow() === 'light' ? 'Dark' : 'Light'; return 'Switch to ' + n + ' Mode'; }
   /* Logged in: Backup (green, red with a dot while a backup is due) and the gear that opens Settings. Logged out: the key. */
   function acctButtons(adm) {
-    if (!adm) return iconBtn('login', 'Log In', svg(ICON.key), 'ix-key');
+    if (!adm) return iconBtn('login', 'Log In', toolTile('login', svg(ICON.key)), 'ix-key');
     var due = backupDue();
     return '<button type="button" class="ix-ib ix-bk' + (due ? ' due' : '') + '" data-ix="backup" aria-label="' + (due ? 'Backup (a backup is due)' : 'Backup') + '" title="' +
-      (due ? 'A backup is due: open Backup' : 'Backup and Import') + '">' + svg(ICON.box) + '</button>' + iconBtn('account', 'Settings', svg(ICON.gear));
+      (due ? 'A backup is due: open Backup' : 'Backup and Import') + '">' + toolTile(due ? 'due' : 'backup', svg(ICON.box)) + '</button><span class="ix-tdiv" aria-hidden="true"></span>' + iconBtn('account', 'Settings', toolTile('account', svg(ICON.gear)));
   }
   function pageLinks() {
     return '<div class="ix-links">' + pages().map(function (p) {
-      return '<a href="' + p[2] + '" data-page="' + p[0] + '"' + (p[0] === APP ? ' aria-current="page"' : '') + ' title="' + esc(p[1]) + '">' + svg(p[3]) + '<span>' + esc(p[1]) + '</span></a>';
-    }).join('') + '</div>';
+      return '<a href="' + p[2] + '" data-page="' + p[0] + '" style="--c:' + pageColor(p[0]) + '"' + (p[0] === APP ? ' aria-current="page"' : '') + ' title="' + esc(p[1]) + '">' + pageIcon(p) + '<span>' + esc(p[1]) + '</span></a>';
+    }).join('') + '<span class="ix-pline" aria-hidden="true"></span></div>';
   }
   function drawBar() {
     var bar = document.getElementById('ix-bar');
@@ -696,8 +711,8 @@
     var adm = isAdmin(), nav = NAV();
     var mark = '<img class="ix-logo" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt="">';   // your logo, or Homebase Hub's own
     var brand = '<a class="ix-brand" href="' + ROOT + '" aria-label="' + esc(S.siteName || 'Homebase Hub') + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>';
-    var theme = iconBtn('theme', themeLabel(), themeIcon());
-    var edit = HAS_EDIT ? iconBtn('edit', 'Edit', svg(ICON.edit), '', 'ix-editb') : '';
+    var theme = iconBtn('theme', themeLabel(), toolTile('theme', themeIcon()));
+    var edit = HAS_EDIT ? iconBtn('edit', 'Edit', toolTile('edit', svg(ICON.edit)), '', 'ix-editb') : '';
     var me = acctButtons(adm), links = pageLinks();
     var html;
     if (nav === 'side') {
@@ -710,20 +725,35 @@
         '<button type="button" class="ix-fab" data-ix="sheet" aria-label="Search and Menu" title="Search and Menu">' + svg(ICON.search) + '</button>';
     } else {
       html = '<button type="button" class="ix-ib ix-menu" data-ix="menu" aria-label="Pages" title="Pages">' + svg(ICON.menu) + '</button>' + brand + links +
-        '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + (matchMedia('(hover:hover) and (pointer:fine)').matches ? 'Search · ? Shortcuts' : 'Search') + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
+        '<div class="ix-search" id="ix-sbox"><span class="ix-sglow" aria-hidden="true"></span><span class="ix-sring" aria-hidden="true"></span><span class="ix-spk" aria-hidden="true"></span>' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + (matchMedia('(hover:hover) and (pointer:fine)').matches ? 'Search · ? Shortcuts' : 'Search') + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
           '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
-        '<div class="ix-tools">' + iconBtn('search', 'Search', svg(ICON.search), 'ix-sbtn') + theme + edit + me + '</div>';
+        '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + theme + edit + me + '</div>';
     }
     if (html === lastBar && bar) return;
     lastBar = html;
     if (!bar) { bar = document.createElement('div'); bar.id = 'ix-bar'; bar.setAttribute('role', 'navigation'); bar.setAttribute('aria-label', 'Site'); document.body.prepend(bar); }
     var q = document.getElementById('ix-q'), qv = q ? q.value : '', had = q && document.activeElement === q;
     bar.innerHTML = html;
+    bar.style.setProperty('--hc', pageColor(APP));
+    placeLine();
     if (qv && (q = document.getElementById('ix-q'))) { q.value = qv; if (had) q.focus(); }
     bindInlineSearch();
     markEditing();
     tipNames(bar);
   }
+  /* (1.67.0) the line in the current page's colour: under it (top bar), beside it (sidebar) or above it (dock). It carries the view-transition
+     name, so on browsers that slide between pages it glides over from the page you came from. */
+  function placeLine() {
+    var bar = document.getElementById('ix-bar'), links = bar && bar.querySelector('.ix-links'), line = links && links.querySelector('.ix-pline'), a = links && links.querySelector('a[aria-current="page"]');
+    if (!line) return;
+    if (!a || !a.offsetParent) { line.hidden = true; return; }
+    line.hidden = false;
+    var L = links.getBoundingClientRect(), A = a.getBoundingClientRect(), B = bar.getBoundingClientRect(), nav = NAV(), pill = bar.querySelector('.ix-pill');
+    if (nav === 'side') { line.style.cssText = 'left:' + (B.left - L.left) + 'px;top:' + (A.top - L.top + 12) + 'px;width:3px;height:' + Math.max(8, A.height - 24) + 'px'; return; }
+    var top = nav === 'dock' ? (pill ? pill.getBoundingClientRect().top : A.top - 6) - L.top : B.bottom - L.top - 3;
+    line.style.cssText = 'left:' + (A.left - L.left + 10) + 'px;top:' + top + 'px;width:' + Math.max(8, A.width - 20) + 'px;height:3px';
+  }
+  addEventListener('resize', function () { placeLine(); });
   /* Start page with the bar switched off: its corner shows reload and ONE gear button instead of Edit.
      Logged out it opens the login; logged in it lists editing, the other sections and Settings. */
   function cornerButton() {
@@ -787,7 +817,7 @@
       return '<div class="ix-scrim" data-ix="close"></div><nav aria-label="Pages"><a class="ix-brand" href="' + ROOT + '"><img class="ix-logo" src="' +
         esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt=""><span>' + esc(S.siteName || 'Homebase Hub') + '</span></a>' +
         '<button type="button" class="ix-psearch" data-ix="search">' + svg(ICON.search) + '<span>Search</span></button>' +
-        pages().map(function (p) { return '<a href="' + p[2] + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + svg(p[3]) + esc(p[1]) + '</a>'; }).join('') +
+        pages().map(function (p) { return '<a href="' + p[2] + '" style="--c:' + pageColor(p[0]) + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + pageIcon(p) + esc(p[1]) + '</a>'; }).join('') +
         '<div class="ix-pfoot">' + panelFoot(adm) + '</div></nav>';
     }, from);
   }

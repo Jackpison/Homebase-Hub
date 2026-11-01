@@ -729,3 +729,72 @@ label.ix-srow{cursor:pointer}
 .ix-khint kbd,#ix-page .ix-kbonly kbd{font:600 11px/1 ui-monospace,Menlo,Consolas,monospace;padding:3px 6px;border:1px solid var(--ix-line2);border-bottom-width:2px;border-radius:5px;background:var(--ix-s2);color:var(--ix-tx)}
 @media not ((hover:hover) and (pointer:fine)){#ix-page .ix-kbonly{display:none!important}}
 #ix-q{text-overflow:ellipsis}   /* (1.66.0) the "? Shortcuts" hint fits a narrow bar */
+
+/* ---------- (1.67.0) the bar: the pages as colour tiles with a line in the current page's colour; search in that colour; the buttons on the
+   right as small colour tiles in one tray (owner's choice: A1 with a stronger glow in dark, search S3, right side R2's tray with R3's tiles) ---------- */
+#ix-bar .ix-pt,#ix-drawer .ix-pt{--c:#71717a;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none;color:#fff;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) 80%,#fff),var(--c) 55%,color-mix(in srgb,var(--c) 88%,#000));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.18),0 1px 2px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.3,1.4,.5,1),box-shadow .3s}
+#ix-bar a .ix-pt,#ix-drawer a .ix-pt{--c:inherit}
+#ix-bar .ix-links a,#ix-drawer a{--c:#71717a}
+#ix-bar .ix-pt svg,#ix-drawer .ix-pt svg{width:15px!important;height:15px!important;padding:0!important;background:none!important;box-sizing:border-box!important;stroke:#fff;stroke-width:2.1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+#ix-bar .ix-links{position:relative}
+#ix-bar .ix-links a{gap:8px;padding:0 11px;color:var(--ix-bartx,var(--ix-mu))!important}
+#ix-bar .ix-links a:hover,#ix-bar .ix-links a:focus-visible,#ix-bar .ix-links a[aria-current="page"]{background:none;color:var(--ix-bartx,var(--ix-tx))!important}
+#ix-bar .ix-links a[aria-current="page"]{view-transition-name:none}
+@media (hover:hover){#ix-bar .ix-links a:hover .ix-pt,#ix-drawer a:hover .ix-pt{transform:scale(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent),0 6px 16px -3px color-mix(in srgb,var(--c) 75%,transparent)}}
+#ix-bar .ix-links a[aria-current="page"] .ix-pt,#ix-drawer a[aria-current="page"] .ix-pt{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent),0 6px 16px -2px var(--c)}
+#ix-bar .ix-links a:focus-visible{outline:2px solid var(--c);outline-offset:1px}
+/* the line: a soft glow in light mode, a strong one in dark mode; it glides between pages where the browser can */
+#ix-bar .ix-pline{position:absolute;z-index:-1;border-radius:3px;background:var(--hc,var(--ix-accent));pointer-events:none;view-transition-name:ix-line;
+  box-shadow:0 0 6px 0 color-mix(in srgb,var(--hc,var(--ix-accent)) 55%,transparent);transition:left .4s cubic-bezier(.3,1.2,.4,1),width .4s,top .4s cubic-bezier(.3,1.2,.4,1),height .4s}
+#ix-bar .ix-pline[hidden]{display:none}
+html:not([data-theme="light"]) #ix-bar .ix-pline{box-shadow:0 0 10px 2px var(--hc,var(--ix-accent)),0 0 26px 4px color-mix(in srgb,var(--hc,var(--ix-accent)) 55%,transparent),0 -10px 26px -4px var(--hc,var(--ix-accent))}
+html.ix-vt #ix-bar .ix-pline{view-transition-name:none}
+::view-transition-group(ix-line){animation-duration:.4s;animation-timing-function:cubic-bezier(.3,1.1,.4,1)}
+/* sidebar: bigger tiles, the line on the left; dock: the current page tinted in its colour, the line above it */
+html[data-ix-nav="side"] #ix-bar .ix-links a .ix-pt{width:34px;height:34px;border-radius:10px}
+html[data-ix-nav="side"] #ix-bar .ix-links a .ix-pt svg{width:18px!important;height:18px!important}
+html[data-ix-nav="dock"] #ix-bar .ix-links a[aria-current="page"]{background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--ix-tx)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 28%,transparent)}
+#ix-drawer a .ix-pt{margin-right:2px}
+
+/* search: adapted from Uiverse.io by Lakshay-art, "curvy-earwig-22" (https://uiverse.io/Lakshay-art/curvy-earwig-22, MIT): a dark field in a soft
+   gradient border in the current page's colour; pointing at it turns the border, clicking in spins it round once; a soft glow behind it */
+#ix-bar #ix-sbox{--g1:var(--hc,var(--ix-accent));--g2:color-mix(in srgb,var(--hc,var(--ix-accent)) 55%,#fff);isolation:isolate;padding:2px;border-radius:13px}
+#ix-bar #ix-sbox .ix-sring,#ix-bar #ix-sbox .ix-sglow{position:absolute;inset:0;z-index:-1;border-radius:13px;overflow:hidden;pointer-events:none}
+#ix-bar #ix-sbox .ix-sglow{inset:-7px;border-radius:20px;filter:blur(14px);opacity:.45}
+html[data-theme="light"] #ix-bar #ix-sbox .ix-sglow{opacity:.18}
+#ix-bar #ix-sbox .ix-sring::before,#ix-bar #ix-sbox .ix-sglow::before{content:"";position:absolute;left:50%;top:50%;width:620px;height:620px;transform:translate(-50%,-50%) rotate(70deg);transition:transform 2s;
+  background:conic-gradient(var(--ix-s1),var(--g1) 5%,var(--ix-s1) 14%,var(--ix-s1) 50%,var(--g2) 60%,var(--ix-s1) 64%)}
+#ix-bar #ix-sbox .ix-sglow::before{background:conic-gradient(transparent,var(--g1) 5%,transparent 38%,transparent 50%,var(--g2) 60%,transparent 87%)}
+#ix-bar #ix-sbox:hover .ix-sring::before,#ix-bar #ix-sbox:hover .ix-sglow::before{transform:translate(-50%,-50%) rotate(-110deg)}
+#ix-bar #ix-sbox:focus-within .ix-sring::before,#ix-bar #ix-sbox:focus-within .ix-sglow::before{transform:translate(-50%,-50%) rotate(430deg);transition:transform 4s}
+#ix-bar #ix-sbox .ix-spk{position:absolute;left:8px;top:8px;width:26px;height:16px;background:var(--g2);filter:blur(14px);opacity:.55;pointer-events:none;transition:opacity 2s}
+html[data-theme="light"] #ix-bar #ix-sbox .ix-spk{opacity:.25}
+#ix-bar #ix-sbox:hover .ix-spk,#ix-bar #ix-sbox:focus-within .ix-spk{opacity:0}
+#ix-bar #ix-sbox input{height:38px;border:0;border-radius:11px;background:color-mix(in srgb,var(--ix-bg) 92%,#000);box-shadow:none}
+html[data-theme="light"] #ix-bar #ix-sbox input{background:#fff}
+#ix-bar #ix-sbox input:focus{border:0;box-shadow:none}
+#ix-bar #ix-sbox>svg{left:15px;z-index:1;color:color-mix(in srgb,var(--g1) 60%,var(--ix-mu))}
+#ix-bar #ix-sbox kbd{z-index:1}
+#ix-bar #ix-sbox .ix-fbtn{z-index:1;overflow:hidden;isolation:isolate;border-radius:8px}
+#ix-bar #ix-sbox .ix-fbtn::before{content:"";position:absolute;inset:-60%;z-index:-2;background:conic-gradient(transparent,color-mix(in srgb,var(--g1) 45%,#3d3a4f),transparent 50%,transparent 50%,color-mix(in srgb,var(--g1) 45%,#3d3a4f),transparent);animation:ix-fspin 4s linear infinite}
+#ix-bar #ix-sbox .ix-fbtn::after{content:"";position:absolute;inset:1px;z-index:-1;border-radius:7px;background:linear-gradient(180deg,color-mix(in srgb,var(--g1) 14%,#0b0b10),#000,color-mix(in srgb,var(--g1) 18%,#0b0b10))}
+html[data-theme="light"] #ix-bar #ix-sbox .ix-fbtn::after{background:linear-gradient(180deg,color-mix(in srgb,var(--g1) 8%,#fff),#fff,color-mix(in srgb,var(--g1) 10%,#fff))}
+@keyframes ix-fspin{to{transform:rotate(360deg)}}
+
+/* the right side: one tray of small colour tiles (theme amber, edit blue, backup green or red while due, settings grey) */
+#ix-bar .ix-tt{--c:#71717a;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none;color:#fff;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) 80%,#fff),var(--c) 55%,color-mix(in srgb,var(--c) 88%,#000));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.18),0 1px 2px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.3,1.4,.5,1),box-shadow .3s}
+#ix-bar .ix-tt svg{width:16px;height:16px;stroke:#fff;stroke-width:2.1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+#ix-bar .ix-tools .ix-ib,#ix-bar .ix-tools .ix-ib:hover{background:none}
+@media (hover:hover){#ix-bar .ix-ib:hover .ix-tt{transform:scale(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent),0 6px 16px -3px color-mix(in srgb,var(--c) 75%,transparent)}}
+#ix-bar .ix-ib.on .ix-tt{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 3px color-mix(in srgb,var(--c) 26%,transparent),0 6px 16px -2px var(--c)}
+#ix-bar .ix-ib:focus-visible{outline:2px solid var(--ix-accent);outline-offset:1px}
+#ix-bar .ix-tdiv{display:none}
+html[data-ix-nav="top"] #ix-bar .ix-tools{padding:3px;gap:0;border-radius:13px;background:color-mix(in srgb,var(--ix-bartx,var(--ix-tx)) 5%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ix-bartx,var(--ix-tx)) 9%,transparent)}
+html[data-ix-nav="top"] #ix-bar .ix-tools .ix-ib{width:38px;height:36px;border-radius:10px}
+html[data-ix-nav="top"] #ix-bar .ix-tdiv{display:block;width:1px;height:20px;margin:0 3px;background:color-mix(in srgb,var(--ix-bartx,var(--ix-tx)) 14%,transparent)}
+#ix-bar .ix-ib.ix-bk.due::after{top:3px;right:3px}
+@media (prefers-reduced-motion:reduce){#ix-bar .ix-pt,#ix-bar .ix-tt,#ix-bar .ix-pline{transition:none}#ix-bar #ix-sbox .ix-fbtn::before{animation:none}#ix-bar #ix-sbox .ix-sring::before,#ix-bar #ix-sbox .ix-sglow::before{transition:none}}

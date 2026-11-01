@@ -53,6 +53,7 @@ credited again in a comment where it is used (`hub/core/assets/shell.css`).
 | Erase button (X slides across) | Backup & Restore › Start Over (1.65.1) | https://uiverse.io/cssbuttons-io/stupid-impala-51 | cssbuttons-io |
 | Edit bar (round buttons, name bubble) | the edit bar of Links, Info and Home (1.65.1) | https://uiverse.io/firemonste_8052/lucky-catfish-97 | firemonste_8052 |
 | Accent Color picker (squares that swell around the mouse) | Settings › Appearance › Look (1.65.3) | https://uiverse.io/Cobp/horrible-quail-18 | Cobp |
+| Search box border (a gradient edge that turns and spins) | The top bar's search (1.67.0) | https://uiverse.io/Lakshay-art/curvy-earwig-22 | Lakshay-art |
 | Hover glow (toned down) | buttons that had no hover change (1.65.1) | https://uiverse.io/mrhyddenn/moody-badger-62 | mrhyddenn |
 
 ## MIT License (Uiverse elements)
@@ -85,7 +86,7 @@ DOM and CSS (no React or Tailwind), with extra kinds for audio and unknown file 
 
 ## Lucide icons (1.66.0)
 
-The section icons of the Settings menu (`web/hub/core/assets/shell-admin.js`, `SEC_TILE`) and its Log Out icon are from Lucide,
+The section icons of the Settings menu (`web/hub/core/assets/shell-admin.js`, `SEC_TILE`) and its Log Out icon, and (1.67.0) the page icons in the top bar (`web/hub/core/assets/shell.js`, `PAGE_TILE`), are from Lucide,
 https://lucide.dev , used under the ISC License:
 
 ISC License
