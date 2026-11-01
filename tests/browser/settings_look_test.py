@@ -179,7 +179,8 @@ try:
         check('L31 one button shape on Links, Cards, Tasks and Files (12 px corners)', all(v == ['12px'] for v in shapes.values() if v), shapes)
 
         pg.on('dialog', lambda d: d.accept())
-        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.querySelector('[aria-label=\"Delete link\"]')", 20000)
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.cat a').length > 0", 20000)
+        pg.keyboard.press('e'); wait_js(pg, "!!document.querySelector('[aria-label=\"Delete link\"]')", 10000)   # (1.64.11) the edit buttons exist only while editing, as for a person
         titles = lambda: pg.evaluate("[...document.querySelectorAll('.cat a')].map(a => a.textContent.trim()).filter(Boolean)")
         before = titles()
         pg.evaluate("document.querySelector('[aria-label=\"Delete link\"]').click()")

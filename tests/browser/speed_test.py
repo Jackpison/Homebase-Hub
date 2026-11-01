@@ -131,6 +131,27 @@ try:
         wait_js(sp, "document.querySelector('.cat[data-id=a0] li.row .t').textContent === 'A link 0 1'", 5000)
         same = sp.evaluate("[...document.querySelectorAll('.cat')].map((c, i) => c === window.__s[i])")
         check('V23 Links: moving a link redraws only its own category, and the move shows', same[0] is False and all(same[1:]), same)
+        # (1.64.11) Links builds its edit buttons only while editing, and a tab with many categories shows its top first; Cards adds long lists in steps
+        big = [{'id': 'tc', 'title': 'Many', 'categories': [{'id': 'm%d' % c, 'title': 'M %d' % c, 'col': c % 4, 'links': [{'title': 'M link %d %d' % (c, l), 'url': 'https://m%d-%d.example.com' % (c, l)} for l in range(6)]} for c in range(32)]}]
+        s.req(s.base + '/web/links/api.php?action=save', json.dumps({'data': {'tabs': big}}).encode(), 'POST', hdr)
+        sp.goto(s.base + '/web/links/?big=1#tc'); wait_js(sp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.cat').length === 32", 30000)
+        check('V24 Links: not editing, no edit buttons are built (they were hidden anyway)', sp.evaluate("document.querySelectorAll('.cat .ctrl, .cat .lgrip, .cat-add').length") == 0)
+        sp.keyboard.press('e'); wait_js(sp, "document.body.classList.contains('editing') && document.querySelectorAll('.cat-add').length === 32", 10000)
+        check('V25 ...and while editing every category has them', sp.evaluate("document.querySelectorAll('.cat-head .ctrl').length === 32 && document.querySelectorAll('.row .ctrl').length === 32 * 6"))
+        fp = b.new_context(viewport={'width': 1300, 'height': 800}).new_page(); browser_login(fp, s.base)
+        # count the categories at the moment the board first appears (before the next frame)
+        fp.add_init_script("new MutationObserver((m, o) => { const b = document.querySelector('#grid .board'); if (b && document.querySelectorAll('.cat').length) { window.__first = document.querySelectorAll('.cat').length; o.disconnect(); } }).observe(document, {childList: true, subtree: true})")
+        fp.goto(s.base + '/web/links/?big=2#tc'); wait_js(fp, "window.__first > 0", 30000); first = fp.evaluate('window.__first'); sp = fp
+        wait_js(sp, "document.querySelectorAll('.cat').length === 32", 5000)
+        order = sp.evaluate("[...document.querySelectorAll('.col')].map(c => [...c.querySelectorAll('.cat')].map(x => x.dataset.id).join(','))")
+        want = [','.join('m%d' % c for c in range(32) if c % 4 == k) for k in range(4)]
+        check('V26 Links: a tab with many categories shows the top of each column first (%d of 32), then all, each column in order' % first, first <= 12 and order == want, (first, order[:1]))
+        f = s.dir + '/site-data/cards/cards.php'; head_, body_ = open(f).read().split('\n', 1); cd = json.loads(body_)
+        cd['cards'] = [dict(cd['cards'][0], name='Card %d' % i, bank='Bank %d' % (i % 12), limit=250000) for i in range(300)]; open(f, 'w').write(head_ + '\n' + json.dumps(cd))
+        sp.goto(s.base + '/web/cards/'); wait_js(sp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('#list .row.item').length > 0", 30000)
+        n1 = sp.evaluate("(() => { render(); return document.querySelectorAll('#list .row.item').length; })()")
+        wait_js(sp, "document.querySelectorAll('#list .row.item').length === 300", 8000)
+        check('V27 Cards: 300 cards show 60 at once and then all 300, amounts in Indian digits as before', n1 == 60 and '₹2,50,000' in sp.inner_text('#list'), n1)
         check('Vend no page error', not errs, errs)
         b.close()
 finally:

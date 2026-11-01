@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.11 | Links and Cards draw big pages faster: the first screen shows at once, Links builds its edit buttons only while editing, Cards formats and sorts faster |
 | 1.64.10 | Links: going back to a tab is about three times quicker on big pages, and moving or editing a link redraws only its own category |
 | 1.64.9 | Save Settings in Links and Cards is quick on big pages: it no longer redraws every link or card when only the look or the title changed |
 | 1.64.8 | When the host's firewall answers with a CAPTCHA or a block page, the site says so and stops sending for a minute so the host does not count more |
@@ -113,6 +114,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.11
+
+### Quicker big pages
+
+- **Links, first visit to a tab:** the top of each column shows at once and the rest of the categories follow over the next frames, in order.
+- **Links, everyday use:** the edit buttons of each link (move, edit, delete, drag) are hidden unless you are editing, but were built for every link anyway. Now they are built only while editing. With 1,500 links and a 4 times slower processor, the script work of opening a tab for the first time went from about 0.34 s to about 0.17 s, and about 0.05 s for a tab seen before.
+- **Cards:** amounts are formatted and cards sorted with one formatter made once (it was made again for every amount and every comparison), and a long list shows its first 60 rows at once and adds the rest over the next frames. With 400 cards: a redraw went from about 0.37 s to about 0.07 s before the first rows show.
+
+### Checked
+
+- The speed test checks that Links builds no edit buttons outside edit mode and all of them inside it, that a tab with 32 categories first shows 12 (the top of each column) and then all in the right order, and that 300 cards show 60 rows at once and then all, with amounts written as before.
 
 ---
 

@@ -13,7 +13,7 @@ let sort={k:null,d:1},B={},pw="",D=[],P=[],NOTES="",active="All",editing=null,ar
 /** @type {(id: string) => any} */   // (any: the page knows which element each id is)
 const $=id=>document.getElementById(id);
 const dlg=$("dlg"),hdlg=$("hdlg"),idlg=$("idlg");
-const inr=n=>"₹"+Number(n).toLocaleString("en-IN");
+const INR=new Intl.NumberFormat("en-IN"),inr=n=>"₹"+INR.format(Number(n));   // (1.64.11) one number formatter, not a new one for every amount
 const esc=HUB.esc;   // the shell's HTML escaper (shell.js, loaded first)
 const cls=t=>t==="LTF"?"ltf":t==="Paid"?"paid":t==="NA"?"na":"fd";
 const normExp=v=>{v=String(v||"").trim();if(!v)return"";const m=/^(\d{1,2})\s*[\/\-.]\s*(\d{4})$/.exec(v)||/^(\d{2})(\d{4})$/.exec(v);if(!m||+m[1]<1||+m[1]>12)return null;return String(+m[1]).padStart(2,"0")+"/"+m[2]};
@@ -211,13 +211,14 @@ const holderColor=o=>hsl(HOLDERH[nk(o)]??hh(o));
 const favEl=$("fav"),touchEl=$("touch"),DEF_FAV=favEl.href,DEF_TOUCH=touchEl.href,DEF_TITLE="Cards";
 const pageTitle=()=>ST.title||DEF_TITLE;
 function applySettings(){const t=pageTitle();document.title=t;$("ptitle").textContent=t;favEl.href=DEF_FAV;touchEl.href=DEF_TOUCH}
+const SORTER=new Intl.Collator(undefined,{sensitivity:"base",numeric:true});   // (1.64.11) made once: localeCompare with options built a new one for every comparison
 function sorted(list){
   if(!sort.k)return list;
   const k=sort.k,d=sort.d;
   return [...list].sort((a,b)=>{
     const gv=c=>k==="expiry"?expKey(c.expiry):c[k];const x=gv(a),y=gv(b),nx=x==null||x==="",ny=y==null||y==="";
     if(nx&&ny)return 0;if(nx)return 1;if(ny)return -1;
-    const r=typeof x==="number"&&typeof y==="number"?x-y:String(x).localeCompare(String(y),undefined,{sensitivity:"base",numeric:true});
+    const r=typeof x==="number"&&typeof y==="number"?x-y:SORTER.compare(String(x),String(y));
     return r*d;
   });
 }
@@ -246,19 +247,21 @@ const pills=c=>[c.network?`<span class="pill" style="color:${netColor(c.network)
   c.type&&c.type!=="NA"?`<span class="pill ${cls(c.type)}">${esc(c.type)}</span>`:"",(c.kind||"Credit")==="Debit"?'<span class="pill">Debit</span>':""].join("");
 const HEADS=[["name","Card"],["owner","Holder"],["limit","Limit","num"],["fee","Charges","num"],["expiry","Expiry"],["","Details"]];
 function rowHtml(c){
-  const rem=c.remark?`<span class="rm"> · ${esc(c.remark)}</span>`:"";
+  const rem=c.remark?`<span class="rm"> · ${esc(c.remark)}</span>`:"",fee=feeCell(c),exp=expCell(c);
   return `<div class="row item" data-id="${c.id}">
     <div class="cn"><b>${linkTo(cardUrl(c),c.name)}</b><small>${linkTo(bankUrl(c),c.bank)}<span class="ho"> · ${dot(c.owner)}${esc(c.owner)}</span>${rem}</small></div>
     <div class="co">${dot(c.owner)}${esc(c.owner)}</div>
     <div class="num">${c.limit?inr(c.limit):"—"}</div>
-    <div class="num cf">${feeCell(c)}</div>
-    <div class="ce">${expCell(c)}</div>
+    <div class="num cf">${fee}</div>
+    <div class="ce">${exp}</div>
     <div class="cd">${pills(c)}</div>
-    <div class="ph2">${feeCell(c)} · ${expCell(c)}</div>
+    <div class="ph2">${fee} · ${exp}</div>
     <div class="ced"><button type="button" class="rowedit" data-id="${c.id}" aria-label="Edit ${esc(c.bank)} ${esc(c.name)}" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button></div>
   </div>`;
 }
+const ROW_BATCH=60;let cardJob=0;   // rows drawn per frame; a newer drawing stops an older one that is still adding rows
 function render(){
+  cardJob++;
   if(active!=="All"&&!P.includes(active))active="All";
   const list=view();
   const uniq=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y));
@@ -285,7 +288,12 @@ function render(){
   $("list").classList.toggle("grouped",g);
   const head=`<div class="row head">`+HEADS.map(([k,l,c])=>`<span class="h-${k||"d"}${c?" "+c:""}">${k?`<button class="sh" data-k="${k}" data-on="${sort.k===k?1:0}" aria-label="Sort by ${l}">${l}${sort.k===k?(sort.d===1?" ▲":" ▼"):""}</button>`:l}</span>`).join("")+`<span></span></div>`;
   if(!list.length){$("list").innerHTML=`<div class="empty">${hasF()?"No cards match these filters. Press Clear to show them all.":`<b>No cards yet</b><span>Add the cards you carry, with their fees and dates.</span><button type="button" class="btn pri" id="firstcard">Add Your First Card</button>`}</div>`;{const b=$("firstcard");if(b)b.onclick=()=>{const t=/** @type {HTMLElement | null} */ (document.querySelector("[data-hub=toggle]"));if(t)t.click()}}return}
-  if(!g){$("list").innerHTML=head+list.map(rowHtml).join("");return}
+  if(!g){   // (1.64.11) a long list shows its first rows at once and adds the rest over the next frames
+    const el=$("list"),rows=list.map(rowHtml),job=cardJob;
+    el.innerHTML=head+rows.slice(0,ROW_BATCH).join("");
+    let i=ROW_BATCH;const step=()=>{if(job!==cardJob||i>=rows.length)return;el.insertAdjacentHTML("beforeend",rows.slice(i,i+ROW_BATCH).join(""));i+=ROW_BATCH;requestAnimationFrame(step)};
+    if(i<rows.length)requestAnimationFrame(step);
+    return}
   const owners=[...P,...uniq(list.map(c=>c.owner)).filter(o=>!P.includes(o))];
   $("list").innerHTML=head+owners.map(o=>{
     const l=list.filter(c=>c.owner===o);if(!l.length)return"";

@@ -564,7 +564,7 @@ function openImport() {
   if (!S.auth) return toast('Log in to import bookmarks.', true);
   importer ||= new Promise((ok, no) => {
     const s = document.createElement('script');
-    s.src = 'assets/links-import.js?v=1.64.10';
+    s.src = 'assets/links-import.js?v=1.64.11';
     s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
     s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
     document.head.append(s);
@@ -672,6 +672,20 @@ function catSig(t, cat, multi) {
   return [oid(t), oid(cat), t.categories.indexOf(cat), same.indexOf(cat), same.length, t.encrypted ? 1 : 0, S.editing ? 1 : 0, multi ? 1 : 0,
     showVisits() ? 1 : 0, webIcons() ? 1 : 0, cat.links.map(oid).join(','), cat.links.map(l => vis[l.url] | 0).join(','), JSON.stringify(cat)].join('\u0001');
 }
+const FIRST_PER_COL = 3;   // about one screen
+let fillJob = 0;
+function isDrawn(t, cat, multi) { const hit = drawnCats.get(cat); return !!hit && hit.sig === catSig(t, cat, multi); }
+// Draws the rest of a tab a few categories at a time (about 12 ms of work per frame), in order, before each column's Add Category button.
+// A newer drawing of the page (another tab, an edit) stops it: its board is gone.
+function fillLater(list, job, multi) {
+  const step = () => {
+    if (job !== fillJob) return;
+    const t0 = performance.now();
+    while (list.length && performance.now() - t0 < 12) { const [col, t, cat] = list.shift(); col.insertBefore(drawnCategory(t, cat, multi), col.querySelector(':scope > .col-add')); }
+    if (list.length) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 function drawnCategory(t, cat, multi) {
   const sig = catSig(t, cat, multi), hit = drawnCats.get(cat);
   if (hit && hit.sig === sig) return hit.sec;
@@ -686,11 +700,12 @@ function renderCategory(t, cat, q, multi) {
   const count = linkCount(cat);
   const same = t.categories.filter(c => c.col === cat.col), pos = same.indexOf(cat);
 
+  const E = S.editing;   // (1.64.11) the edit controls (hidden unless editing) are only built while editing: most of the work of drawing a tab
   const head = h('div', { class: 'cat-head' },
-    h('span', { class: 'grip', html: ICONS.grip, 'aria-hidden': 'true' }),
+    E ? h('span', { class: 'grip', html: ICONS.grip, 'aria-hidden': 'true' }) : null,
     h('h2', {}, q && multi ? h('span', { class: 'from' }, t.title + ' / ') : null, cat.title),
     h('span', { class: 'count' }, String(count)),
-    h('div', { class: 'ctrl' },
+    !E ? null : h('div', { class: 'ctrl' },
       ib('left', 'Move to column on the left', () => { placeInCol(t, cat, cat.col - 1); persist('Moved'); }, '', cat.col === 0),
       ib('right', 'Move to column on the right', () => { placeInCol(t, cat, cat.col + 1); persist('Moved'); }, '', cat.col === COLS - 1),
       ib('up', 'Move up', () => moveWithinCol(t, cat, -1) && persist('Moved'), '', pos === 0),
@@ -701,17 +716,17 @@ function renderCategory(t, cat, q, multi) {
       }, 'del')));
 
   const ul = h('ul', { class: 'links', 'data-cat': cat.id });
-  const dragHandle = () => h('span', { class: 'lgrip', html: ICONS.lgrip, 'aria-hidden': 'true' });
+  const dragHandle = () => E ? h('span', { class: 'lgrip', html: ICONS.lgrip, 'aria-hidden': 'true' }) : null;
   for (const { l, i } of items) {
     if (drag && drag.started && drag.kind === 'link' && l === drag.link) continue; // in the user's hand
     let li;
     if (l.divider) {
       ul.append(li = h('li', { class: 'divider-row', 'data-i': i }, dragHandle(), h('div', { class: 'divider', role: 'separator' }),
-        h('div', { class: 'ctrl' },
+        !E ? null : h('div', { class: 'ctrl' },
           ib('up', 'Move divider up', () => move(cat.links, i, -1) && persist('Moved')),
           ib('down', 'Move divider down', () => move(cat.links, i, 1) && persist('Moved')),
           ib('del', 'Remove divider', () => { cat.links.splice(i, 1); persist('Divider removed'); }, 'del'))));
-      li.addEventListener('pointerdown', e => startLinkDrag(e, t, cat, l, li));
+      if (E) li.addEventListener('pointerdown', e => startLinkDrag(e, t, cat, l, li));
       continue;
     }
     ul.append(li = h('li', { class: 'row', 'data-i': i }, dragHandle(),
@@ -719,17 +734,17 @@ function renderCategory(t, cat, q, multi) {
         linkIcon(l, t.encrypted), h('span', { class: 't' }, l.title)),
       (l.extra || []).map(x => h('a', { class: 'extra', href: safeUrl(x.url), target: '_blank', rel: 'noopener noreferrer', title: x.url, 'data-u': t.encrypted ? null : x.url }, x.title)),
       t.encrypted ? null : visitBadge(l.url),   // at the end of the row, so the numbers line up (1.53.8)
-      h('div', { class: 'ctrl' },
+      !E ? null : h('div', { class: 'ctrl' },
         ib('up', 'Move up', () => move(cat.links, i, -1) && persist('Moved')),
         ib('down', 'Move Down', () => move(cat.links, i, 1) && persist('Moved')),
         ib('edit', 'Edit link', () => openLink(cat, i)),
         ib('del', 'Delete link', () => { if (confirm(`Delete "${l.title}"?`)) { cat.links.splice(i, 1); persist(''); undoable('Link deleted.', () => { cat.links.splice(Math.min(i, cat.links.length), 0, l); persist('Link restored'); }); } }, 'del'))));
-    li.addEventListener('pointerdown', e => startLinkDrag(e, t, cat, l, li));
+    if (E) li.addEventListener('pointerdown', e => startLinkDrag(e, t, cat, l, li));
   }
   if (!cat.links.length) ul.append(h('li', { class: 'empty-cat' }, S.editing ? 'No links yet. Add one below.' : 'No links yet.'));
 
   const sec = h('section', { class: 'cat', 'data-id': cat.id, style: `--cat:var(--c${cat.col})` }, head, ul,
-    q ? null : h('div', { class: 'cat-add' },
+    q || !E ? null : h('div', { class: 'cat-add' },
       h('button', { class: 'btn', type: 'button', onclick: () => openLink(cat, -1) }, 'Add link'),
       h('button', { class: 'btn', type: 'button', onclick: () => { cat.links.push({ divider: true }); persist('Divider added'); } }, 'Add divider')));
   head.addEventListener('pointerdown', e => startDrag(e, t, cat, sec));
@@ -798,14 +813,19 @@ function render() {
   const cols = Array.from({ length: n }, (_, i) => h('div', { class: 'col', 'data-col': i }));
   // On narrower screens, data columns fold together: 2 visible -> (0,2) and (1,3); 1 visible -> all in order
   let shown = 0;
+  // (1.64.11) A tab with many categories not drawn yet shows the top of each column at once and fills in the rest over the next frames.
+  const fresh = !q && !(drag && drag.started), job = ++fillJob, perCol = new Map(), later = [];
+  const quick = fresh && tabsShown.reduce((k, t) => k + t.categories.filter(c => !isDrawn(t, c, multi)).length, 0) > FIRST_PER_COL * 2;
   for (let c = 0; c < COLS; c++) {
     const target = cols[n === COLS ? c : n === 2 ? c % 2 : 0];
     for (const t of tabsShown) for (const cat of t.categories.filter(x => x.col === c)) {
       if (drag && drag.started && drag.kind === 'cat' && cat === drag.cat) continue; // it's in the user's hand
-      const sec = q || (drag && drag.started) ? renderCategory(t, cat, q, multi) : drawnCategory(t, cat, multi);   // (1.64.10) reused when nothing in it changed
-      if (sec) { target.append(sec); shown++; }
+      if (quick && (perCol.get(target) || 0) >= FIRST_PER_COL) { later.push([target, t, cat]); continue; }
+      const sec = fresh ? drawnCategory(t, cat, multi) : renderCategory(t, cat, q, multi);   // (1.64.10) reused when nothing in it changed
+      if (sec) { target.append(sec); shown++; perCol.set(target, (perCol.get(target) || 0) + 1); }
     }
   }
+  if (later.length) fillLater(later, job, multi);
   if (n === COLS) cols.forEach((col, i) => col.append(h('button', { class: 'col-add', type: 'button', onclick: () => addCategory(i) }, 'Add category')));
   else cols[0].append(h('button', { class: 'col-add', type: 'button', onclick: () => addCategory(null) }, 'Add category'));
   board.append(...cols);
