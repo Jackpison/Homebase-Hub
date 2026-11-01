@@ -139,10 +139,11 @@ try:
         pg.mouse.move(5, 5)
 
         # ---- (1.65.1) What's New ----
-        pg.goto(s.base + '/web/settings/#overview'); pg.evaluate("localStorage.removeItem('ix-seen-ver')"); pg.reload()
+        pg.evaluate("localStorage.removeItem('ix-seen-ver')"); pg.goto(s.base + '/web/settings/#overview')   # one load: a reload would cancel the Overview's own request (WebKit reports that as a page error)
         wait_js(pg, "!!document.querySelector('.ix-ec.ix-new')", 20000)
         bm = pg.evaluate("(() => { const st = getComputedStyle(document.querySelector('.ix-ec.ix-new'), '::before'); return [st.animationName, st.backgroundImage.includes('conic-gradient')]; })()")
         check('P24 What\'s New: a light runs around a calm border (no heavy outline)', bm == ['ix-beam', True], bm)
+        pg.wait_for_load_state('networkidle')
 
         # ---- Presets and Surprise Me ----
         pg.goto(s.base + '/web/settings/#themes'); wait_js(pg, "!!document.getElementById('ix-sur') && !!document.getElementById('ix-surn').textContent", 20000)
