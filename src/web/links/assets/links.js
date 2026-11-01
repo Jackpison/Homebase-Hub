@@ -564,7 +564,7 @@ function openImport() {
   if (!S.auth) return toast('Log in to import bookmarks.', true);
   importer ||= new Promise((ok, no) => {
     const s = document.createElement('script');
-    s.src = 'assets/links-import.js?v=1.64.9';
+    s.src = 'assets/links-import.js?v=1.64.10';
     s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
     s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
     document.head.append(s);
@@ -662,6 +662,21 @@ async function addCategory(col) {
   persist('Category added');
 }
 
+/* (1.64.10) A category's drawn section is kept and used again while nothing it shows has changed: its links (and which objects they are, since
+   its buttons act on them), its place in the columns, edit mode, Icons from Google, visit counts and the tab's lock. Switching back to a tab then
+   draws nothing, and moving or editing one link redraws only its own category. Search results and a drag in progress are always drawn fresh. */
+const drawnCats = new WeakMap(), objIds = new WeakMap(); let nextObjId = 1;
+const oid = o => { let v = objIds.get(o); if (!v) { v = nextObjId++; objIds.set(o, v); } return v; };
+function catSig(t, cat, multi) {
+  const same = t.categories.filter(c => c.col === cat.col), vis = S.visits || {};
+  return [oid(t), oid(cat), t.categories.indexOf(cat), same.indexOf(cat), same.length, t.encrypted ? 1 : 0, S.editing ? 1 : 0, multi ? 1 : 0,
+    showVisits() ? 1 : 0, webIcons() ? 1 : 0, cat.links.map(oid).join(','), cat.links.map(l => vis[l.url] | 0).join(','), JSON.stringify(cat)].join('\u0001');
+}
+function drawnCategory(t, cat, multi) {
+  const sig = catSig(t, cat, multi), hit = drawnCats.get(cat);
+  if (hit && hit.sig === sig) return hit.sec;
+  const sec = renderCategory(t, cat, '', multi); drawnCats.set(cat, { sig, sec }); return sec;
+}
 function renderCategory(t, cat, q, multi) {
   const ci = t.categories.indexOf(cat);
   let items = cat.links.map((l, i) => ({ l, i }));
@@ -787,7 +802,7 @@ function render() {
     const target = cols[n === COLS ? c : n === 2 ? c % 2 : 0];
     for (const t of tabsShown) for (const cat of t.categories.filter(x => x.col === c)) {
       if (drag && drag.started && drag.kind === 'cat' && cat === drag.cat) continue; // it's in the user's hand
-      const sec = renderCategory(t, cat, q, multi);
+      const sec = q || (drag && drag.started) ? renderCategory(t, cat, q, multi) : drawnCategory(t, cat, multi);   // (1.64.10) reused when nothing in it changed
       if (sec) { target.append(sec); shown++; }
     }
   }
@@ -1277,7 +1292,7 @@ window.addEventListener('hashchange', () => {
   const id = decodeURIComponent(location.hash.slice(1));
   if (S.data.tabs.some(t => t.id === id)) {
     S.tab = id; render();
-    const g = $('#grid'); g.classList.remove('swap'); void g.offsetWidth; g.classList.add('swap');   // the new tab eases in (only on a real switch)
+    const g = $('#grid'); g.classList.remove('swap'); requestAnimationFrame(() => requestAnimationFrame(() => g.classList.add('swap')));   // the new tab eases in (only on a real switch); (1.64.10) restarted on the next frame instead of forcing the whole page to be measured now
   }
 });
 const qi = $('#q');

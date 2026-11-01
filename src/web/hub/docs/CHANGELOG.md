@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.10 | Links: going back to a tab is about three times quicker on big pages, and moving or editing a link redraws only its own category |
 | 1.64.9 | Save Settings in Links and Cards is quick on big pages: it no longer redraws every link or card when only the look or the title changed |
 | 1.64.8 | When the host's firewall answers with a CAPTCHA or a block page, the site says so and stops sending for a minute so the host does not count more |
 | 1.64.7 | Far fewer requests: moving the mouse over the bar no longer loads whole pages in the background |
@@ -112,6 +113,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.10
+
+### Quicker Links
+
+- **Switching tabs:** each category's drawn links are kept and used again while nothing in them has changed, so going back to a tab you have already opened draws nothing new. With 1,500 links and a 4 times slower processor: about 0.3 s down to about 0.1 s. The first visit to a tab is as before.
+- **Editing:** moving, adding, renaming or deleting a link (or a divider) redraws only the category it is in, not the whole tab.
+- **The tab's ease-in** no longer makes the browser measure the whole page at once on every switch.
+
+### Checked
+
+- The speed test switches away from a tab and back and checks that the same categories are shown (not drawn again), and that moving a link redraws only its own category and shows the move.
 
 ---
 

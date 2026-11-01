@@ -116,6 +116,21 @@ try:
         sp.evaluate("[...document.querySelectorAll('[data-hub=item]')].find(e => e.getAttribute('data-hub-label') === 'Cards Settings').click()"); sp.wait_for_selector('#tdlg[open]')
         sp.fill('#ttl', 'My Cards'); sp.click('#tsave'); wait_js(sp, "!document.getElementById('tdlg').open", 5000)
         check('V21 Cards: saving the title changes it and keeps the rows as they are', sp.evaluate("document.title === 'My Cards' && document.contains(window.__r)"), sp.evaluate('document.title'))
+        # Links: switching back to a tab uses its drawn categories again; a change redraws only the category it is in (1.64.10)
+        tabs2 = [{'id': 'ta', 'title': 'First', 'categories': [{'id': 'a%d' % c, 'title': 'A %d' % c, 'col': c % 4, 'links': [{'title': 'A link %d %d' % (c, l), 'url': 'https://a%d-%d.example.com' % (c, l)} for l in range(5)]} for c in range(6)]},
+                 {'id': 'tb', 'title': 'Second', 'categories': [{'id': 'b0', 'title': 'B 0', 'col': 0, 'links': [{'title': 'B link', 'url': 'https://b.example.com'}]}]}]
+        s.req(s.base + '/web/links/api.php?action=save', json.dumps({'data': {'tabs': tabs2}}).encode(), 'POST', hdr)
+        sp.goto(s.base + '/web/links/#ta'); wait_js(sp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.cat').length === 6", 30000)
+        sp.evaluate("window.__s = [...document.querySelectorAll('.cat')]")
+        sp.evaluate("location.hash = 'tb'"); wait_js(sp, "document.querySelectorAll('.cat').length === 1", 5000)
+        sp.evaluate("location.hash = 'ta'"); wait_js(sp, "document.querySelectorAll('.cat').length === 6", 5000)
+        check('V22 Links: going back to a tab shows the same drawn categories (nothing drawn again)', sp.evaluate("[...document.querySelectorAll('.cat')].every((c, i) => c === window.__s[i])"))
+        sp.keyboard.press('e'); sp.wait_for_selector('#ix-ebar:not([hidden])', timeout=10000); wait_js(sp, "document.body.classList.contains('editing')", 5000)
+        sp.evaluate("window.__s = [...document.querySelectorAll('.cat')]")
+        sp.evaluate("document.querySelector('.cat[data-id=a0] li.row .ctrl [aria-label=\"Move Down\"]').click()")   # move the first link down
+        wait_js(sp, "document.querySelector('.cat[data-id=a0] li.row .t').textContent === 'A link 0 1'", 5000)
+        same = sp.evaluate("[...document.querySelectorAll('.cat')].map((c, i) => c === window.__s[i])")
+        check('V23 Links: moving a link redraws only its own category, and the move shows', same[0] is False and all(same[1:]), same)
         check('Vend no page error', not errs, errs)
         b.close()
 finally:
