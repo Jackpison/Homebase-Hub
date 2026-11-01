@@ -44,6 +44,7 @@ jobs:
       - name: Semgrep (a finding fails the run; metrics off)
         run: |
           python3 -m venv /tmp/sg
-          /tmp/sg/bin/pip install -q semgrep==1.99.0 "setuptools<81"
-          /tmp/sg/bin/semgrep scan --metrics=off --disable-version-check --error --config p/php --config p/javascript \
+          /tmp/sg/bin/pip install -q semgrep==1.183.0
+          # --timeout 60: the default (5 s a rule) gave up on shell-admin.js, so two rules never checked it (1.67.1)
+          /tmp/sg/bin/semgrep scan --metrics=off --disable-version-check --error --timeout 60 --config p/php --config p/javascript \
             --exclude node_modules --exclude src/web/tools --exclude build --exclude website .

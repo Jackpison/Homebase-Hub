@@ -444,6 +444,7 @@
       try { if (hn && !sessionStorage.getItem(hk)) { sessionStorage.setItem(hk, '1'); toast(hn.getAttribute('data-hub-hint')); } } catch (e) {}
     }
     ebarWas = on;
+    H.classList.toggle('ix-editing', on);   // (1.67.1) the dock steps aside while editing (shell.css)
     if (!on) { if (el) el.hidden = true; var tp = document.getElementById('ix-ebtip'); if (tp) tp.remove(); return; }
     if (!el) {
       el = document.createElement('div'); el.id = 'ix-ebar'; el.setAttribute('role', 'toolbar'); el.setAttribute('aria-label', 'Edit Tools');
@@ -490,7 +491,7 @@
      <select data-ix-seg> with 2 or 3 options becomes one row of buttons (role radiogroup). The select stays, hidden, and is the
      truth: a click sets it and fires "change"; code that sets select.value is followed on the next change or when the window opens. */
   function segBuild(sel) {
-    if (sel._ixSeg || sel.options.length > 3) return; sel._ixSeg = true;
+    if (sel._ixSeg || sel.options.length > 3 || !sel.options.length) return; sel._ixSeg = true;   // an empty one waits for its options
     var g = document.createElement('div'); g.className = 'ix-sgc'; g.setAttribute('role', 'radiogroup');
     var lab = sel.id && document.querySelector('label[for="' + sel.id + '"]'); if (lab) { if (!lab.id) lab.id = sel.id + '-l'; g.setAttribute('aria-labelledby', lab.id); } else if (sel.getAttribute('aria-label')) g.setAttribute('aria-label', sel.getAttribute('aria-label'));
     [].forEach.call(sel.options, function (o) {
@@ -510,8 +511,14 @@
     var pv = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');   // setting .value from a page's code repaints too
     Object.defineProperty(sel, 'value', { configurable: true, get: function () { return pv.get.call(sel); }, set: function (v) { pv.set.call(sel, v); paint(); } });
   }
-  function segAll() { [].forEach.call(document.querySelectorAll('select[data-ix-seg],select[data-ix-editbar]'), segBuild); }
-  whenBody(function () { segAll(); new MutationObserver(segAll).observe(document.body, { childList: true, subtree: true }); });
+  var SEG_SEL = 'select[data-ix-seg],select[data-ix-editbar]';
+  function segAll(root) { [].forEach.call((root || document).querySelectorAll(SEG_SEL), segBuild); }
+  // (1.67.1) only what was just added is looked at: before, every change anywhere on the page searched the whole page again
+  function segAdded(list) {
+    list.forEach(function (m) { if (m.target.nodeType === 1 && m.target.matches(SEG_SEL)) segBuild(m.target);   // options filled in later
+      [].forEach.call(m.addedNodes, function (n) { if (n.nodeType !== 1) return; if (n.matches(SEG_SEL)) segBuild(n); else if (n.firstElementChild) segAll(n); }); });
+  }
+  whenBody(function () { segAll(); new MutationObserver(segAdded).observe(document.body, { childList: true, subtree: true }); });
 
   /* ---------- (1.61.0) one Settings window for every page ----------
      dialog.ix-sdlg: title + close X on top, a scrolling body, the buttons in a footer. The X does what Cancel does. */
@@ -698,8 +705,20 @@
     return '<button type="button" class="ix-ib ix-bk' + (due ? ' due' : '') + '" data-ix="backup" aria-label="' + (due ? 'Backup (a backup is due)' : 'Backup') + '" title="' +
       (due ? 'A backup is due: open Backup' : 'Backup and Import') + '">' + toolTile(due ? 'due' : 'backup', svg(ICON.box)) + '</button><span class="ix-tdiv" aria-hidden="true"></span>' + iconBtn('account', 'Settings', toolTile('account', svg(ICON.gear)));
   }
+  /* (1.67.1) The logo and the site name lead to the start page, so the top bar and the sidebar leave Home out of the page list
+     (the dock has no logo: it keeps Home). On the start page the logo is the current page. Built with DOM calls, so no name is
+     ever pasted into markup. */
+  function brandEl(inBar) {
+    var a = document.createElement('a'), img = document.createElement('img'), name = document.createElement('span'), n = S.siteName || 'Homebase Hub';
+    a.className = 'ix-brand'; a.href = ROOT; if (inBar) a.setAttribute('aria-label', n); if (APP === 'home') a.setAttribute('aria-current', 'page');
+    img.className = 'ix-logo'; img.alt = ''; img.src = S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png';   // your logo, or Homebase Hub's own
+    if (inBar) name.className = 'ix-bname'; name.textContent = n;
+    a.append(img, name); return a;
+  }
+  function fillBrand(root, inBar) { [].forEach.call(root.querySelectorAll('span[data-ix-brand]'), function (s) { s.replaceWith(brandEl(inBar)); }); }
+  function listPages() { return pages().filter(function (p) { return p[0] !== 'home' || NAV() === 'dock'; }); }
   function pageLinks() {
-    return '<div class="ix-links">' + pages().map(function (p) {
+    return '<div class="ix-links">' + listPages().map(function (p) {
       return '<a href="' + p[2] + '" data-page="' + p[0] + '" style="--c:' + pageColor(p[0]) + '"' + (p[0] === APP ? ' aria-current="page"' : '') + ' title="' + esc(p[1]) + '">' + pageIcon(p) + '<span>' + esc(p[1]) + '</span></a>';
     }).join('') + '<span class="ix-pline" aria-hidden="true"></span></div>';
   }
@@ -709,8 +728,7 @@
     if (!H.hasAttribute('data-ix-bar')) { if (bar) bar.remove(); lastBar = ''; return; }
     if (!document.body) return whenBody(drawBar);
     var adm = isAdmin(), nav = NAV();
-    var mark = '<img class="ix-logo" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt="">';   // your logo, or Homebase Hub's own
-    var brand = '<a class="ix-brand" href="' + ROOT + '" aria-label="' + esc(S.siteName || 'Homebase Hub') + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>';
+    var brand = '<span data-ix-brand></span>';   // the logo and site name: brandEl() puts them in once the markup is in place
     var theme = iconBtn('theme', themeLabel(), toolTile('theme', themeIcon()));
     var edit = HAS_EDIT ? iconBtn('edit', 'Edit', toolTile('edit', svg(ICON.edit)), '', 'ix-editb') : '';
     var me = acctButtons(adm), links = pageLinks();
@@ -729,11 +747,13 @@
           '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
         '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + theme + edit + me + '</div>';
     }
-    if (html === lastBar && bar) return;
-    lastBar = html;
+    var key = html + '|' + (S.siteName || '') + '|' + (S.logo || '');   // a new name or logo draws the bar again too
+    if (key === lastBar && bar) return;
+    lastBar = key;
     if (!bar) { bar = document.createElement('div'); bar.id = 'ix-bar'; bar.setAttribute('role', 'navigation'); bar.setAttribute('aria-label', 'Site'); document.body.prepend(bar); }
     var q = document.getElementById('ix-q'), qv = q ? q.value : '', had = q && document.activeElement === q;
     bar.innerHTML = html;
+    fillBrand(bar, true);
     bar.style.setProperty('--hc', pageColor(APP));
     placeLine();
     if (qv && (q = document.getElementById('ix-q'))) { q.value = qv; if (had) q.focus(); }
@@ -809,15 +829,15 @@
     if (!d) { d = document.createElement('div'); d.id = id; document.body.appendChild(d); }
     d._from = from || document.activeElement;
     d.innerHTML = build(isAdmin());
+    fillBrand(d, false);
     d.classList.add('open');
     var f = d.querySelector('[aria-current="page"]') || d.querySelector('button,a'); if (f) setTimeout(function () { f.focus(); }, 30);
   }
   function drawer(open, from) {
     openPanel('ix-drawer', open, function (adm) {
-      return '<div class="ix-scrim" data-ix="close"></div><nav aria-label="Pages"><a class="ix-brand" href="' + ROOT + '"><img class="ix-logo" src="' +
-        esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt=""><span>' + esc(S.siteName || 'Homebase Hub') + '</span></a>' +
+      return '<div class="ix-scrim" data-ix="close"></div><nav aria-label="Pages"><span data-ix-brand></span>' +
         '<button type="button" class="ix-psearch" data-ix="search">' + svg(ICON.search) + '<span>Search</span></button>' +
-        pages().map(function (p) { return '<a href="' + p[2] + '" style="--c:' + pageColor(p[0]) + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + pageIcon(p) + esc(p[1]) + '</a>'; }).join('') +
+        listPages().map(function (p) { return '<a href="' + p[2] + '" style="--c:' + pageColor(p[0]) + '"' + (p[0] === APP ? ' aria-current="page"' : '') + '>' + pageIcon(p) + esc(p[1]) + '</a>'; }).join('') +
         '<div class="ix-pfoot">' + panelFoot(adm) + '</div></nav>';
     }, from);
   }
@@ -1056,8 +1076,9 @@
       var sub = [t.status === 'done' ? 'Done' : t.status === 'paused' ? 'Paused' : 'Due ' + d, t.cat, pr].filter(Boolean).map(esc).join(' · ');
       return row(ROOT + 'web/tasks/#task=' + encodeURIComponent(t.id), false, '<i class="ix-d"></i>', snip(t.name, ql), sub + (t.notes && t.notes.toLowerCase().indexOf(ql) >= 0 ? ' — ' + snip(t.notes, ql) : ''));
     }).join('');
-    if (p.scope === 'all' || p.scope === 'tools') h += '<div class="ix-rh">Tools</div>' + row(ROOT + 'web/tools/#/search/' + encodeURIComponent(q), false, '<i class="ix-d"></i>', 'Search Tools for “' + esc(q) + '”', 'Image, PDF and Utility Tools');
-    if (!n) h += '<div class="ix-none">No matches. Try “Everything” or fewer options.</div>';
+    // the search words are escaped (esc) before they go into the markup
+    if (p.scope === 'all' || p.scope === 'tools') h += '<div class="ix-rh">Tools</div>' + row(ROOT + 'web/tools/#/search/' + encodeURIComponent(q), false, '<i class="ix-d"></i>', 'Search Tools for “' + esc(q) + '”', 'Image, PDF and Utility Tools');   // nosemgrep: javascript.browser.security.raw-html-concat.raw-html-concat
+    if (!n) h += '<div class="ix-none">No matches. Try “Everything” or fewer options.</div>';   // nosemgrep: javascript.browser.security.raw-html-concat.raw-html-concat
     return h;
   }
 
@@ -1548,6 +1569,8 @@
     if ((S.admin || S.adm) && !thin && !document.querySelector('link[data-ix-admin]')) {
       var ver = ((me && /\?v=[^&#]+/.exec(me.src)) || [''])[0];
       [['script', 'shell-admin.js'], ['style', 'shell-settings.css']].forEach(function (f) {
+        // (1.67.1) not what this page already has (the Settings page links its styles and loads the script itself): it was fetched twice
+        if (f[0] === 'style' ? document.querySelector('link[data-ix-settings-css]') : (APP === 'settings' || window.__ixShell.impl || document.querySelector('script[src*="shell-admin.js"]'))) return;
         var pl = document.createElement('link'); pl.rel = 'prefetch'; pl.as = f[0]; pl.setAttribute('data-ix-admin', ''); pl.href = ASSETS + f[1] + ver; document.head.appendChild(pl);
       });
     }

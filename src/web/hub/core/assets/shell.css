@@ -112,7 +112,7 @@ html.ix-scrolling[data-ix-nav="dock"] #ix-bar{transform:translateX(-50%) scale(.
   backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--ix-line2);box-shadow:0 12px 40px rgba(0,0,0,.5)}
 html[data-theme="light"] .ix-pill,html[data-theme="light"] .ix-fab{box-shadow:0 10px 30px rgba(20,20,20,.14)}
 html[data-ix-nav="dock"] #ix-bar .ix-links a{height:44px;padding:0 13px;gap:8px}
-html[data-ix-nav="dock"] #ix-bar .ix-links a:not([aria-current="page"]) span{display:none}
+html[data-ix-nav="dock"] #ix-bar .ix-links a:not([aria-current="page"]) span:not(.ix-pt){display:none}
 html[data-ix-nav="dock"] #ix-bar .ix-links a[aria-current="page"]{background:var(--ix-accent);color:var(--ix-ink)!important;padding:0 18px}
 html[data-ix-nav="dock"] #ix-bar .ix-links a[aria-current="page"] span{max-width:120px;overflow:hidden;text-overflow:ellipsis}
 html[data-ix-nav="dock"] #ix-bar .ix-links a svg{width:20px;height:20px}
@@ -147,7 +147,7 @@ html[data-ix-app="home"][data-ix-nav="dock"] .ix-pill{background:color-mix(in sr
 @media (max-width:480px){.ix-bname{display:none}}
 /* (1.64.2) between a phone and a laptop the top bar ran out of room (Tools slid under the buttons): the tabs show only their icon, the current one keeps its name, and the site name steps aside */
 @media (min-width:761px) and (max-width:1180px){html:not([data-ix-nav="side"]):not([data-ix-nav="dock"]) .ix-bname{display:none}html:not([data-ix-nav="side"]):not([data-ix-nav="dock"]) #ix-bar .ix-links a:not([aria-current="page"]) span{display:none}html:not([data-ix-nav="side"]):not([data-ix-nav="dock"]) #ix-bar .ix-links a{padding:0 11px}}
-@media (max-width:360px){html[data-ix-nav="dock"] #ix-bar .ix-links a[aria-current="page"] span{display:none}}
+@media (max-width:430px){html[data-ix-nav="dock"] #ix-bar .ix-links a[aria-current="page"] span:not(.ix-pt){display:none}html[data-ix-nav="dock"] #ix-bar .ix-links a,html[data-ix-nav="dock"] #ix-bar .ix-links a[aria-current="page"]{width:38px;padding:0}}
 /* ---------- the panel that slides in (pages on phones; the whole sidebar on phones) ---------- */
 #ix-drawer,#ix-sheet{position:fixed;inset:0;z-index:2147483001;display:none;font:16px var(--ix-font);color:var(--ix-tx);-webkit-font-smoothing:antialiased}
 #ix-drawer.open,#ix-sheet.open{display:block}
@@ -798,3 +798,6 @@ html[data-ix-nav="top"] #ix-bar .ix-tools .ix-ib{width:38px;height:36px;border-r
 html[data-ix-nav="top"] #ix-bar .ix-tdiv{display:block;width:1px;height:20px;margin:0 3px;background:color-mix(in srgb,var(--ix-bartx,var(--ix-tx)) 14%,transparent)}
 #ix-bar .ix-ib.ix-bk.due::after{top:3px;right:3px}
 @media (prefers-reduced-motion:reduce){#ix-bar .ix-pt,#ix-bar .ix-tt,#ix-bar .ix-pline{transition:none}#ix-bar #ix-sbox .ix-fbtn::before{animation:none}#ix-bar #ix-sbox .ix-sring::before,#ix-bar #ix-sbox .ix-sglow::before{transition:none}}
+/* (1.67.1) while a page is in edit mode the dock steps aside (the edit bar takes its place at the bottom) and comes back on Done */
+html.ix-editing[data-ix-nav="dock"] #ix-bar{opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-50%) translateY(calc(100% + 28px));transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .2s,visibility 0s .26s}
+@media (max-width:760px){html.ix-editing[data-ix-nav="dock"] #ix-bar{transform:translateY(calc(100% + 28px))}}

@@ -206,7 +206,7 @@ try:
         pg.goto(s.base + '/web/info/'); wait_js(pg, "!!document.querySelector('#ix-bar .ix-pline')", 20000)
         pg.evaluate("document.documentElement.dataset.theme = 'dark'"); pg.wait_for_timeout(500)
         pt = pg.evaluate("(() => { const a = [...document.querySelectorAll('#ix-bar .ix-links a[data-page]')]; return [a.length, a.every(x => !!x.querySelector('.ix-pt svg')), new Set(a.map(x => getComputedStyle(x).getPropertyValue('--c').trim())).size, getComputedStyle(document.querySelector('#ix-bar .ix-links a[aria-current=page] .ix-pt svg')).stroke]; })()")
-        check('P39 every page in the bar has its own colour tile with a white icon (1.67.0)', pt == [7, True, 7, 'rgb(255, 255, 255)'], pt)
+        check('P39 every page in the bar has its own colour tile with a white icon (1.67.0; Home left out since 1.67.1: the logo leads there)', pt == [6, True, 6, 'rgb(255, 255, 255)'], pt)
         ln = pg.evaluate("(() => { const l = document.querySelector('#ix-bar .ix-pline'), c = document.querySelector('#ix-bar .ix-links a[aria-current=page]').getBoundingClientRect(), r = l.getBoundingClientRect(), b = document.getElementById('ix-bar').getBoundingClientRect(), st = getComputedStyle(l); return [r.left >= c.left - 1 && r.right <= c.right + 1, r.width > 20, Math.abs(r.bottom - b.bottom) <= 2, st.backgroundColor, st.boxShadow.split('px').length]; })()")
         pg.evaluate("document.documentElement.dataset.theme = 'light'"); pg.wait_for_timeout(500)
         lite = pg.evaluate("getComputedStyle(document.querySelector('#ix-bar .ix-pline')).boxShadow.split('px').length")
@@ -223,6 +223,43 @@ try:
         ph = pg.evaluate("[document.documentElement.scrollWidth <= innerWidth, document.querySelectorAll('#ix-bar .ix-tools .ix-tt').length > 0]")
         check('P43 on a phone the bar still fits, the tiles stay (1.67.0)', ph == [True, True], ph)
         pg.set_viewport_size({'width': 1280, 'height': 860}); pg.wait_for_timeout(300)
+        # ---- (1.67.1) Home: the logo and name lead there, so the top bar leaves it out; on the start page the logo is the current page ----
+        hm = pg.evaluate("(() => { const b = document.querySelector('#ix-bar .ix-brand'); return [!document.querySelector('#ix-bar .ix-links a[data-page=home]'), !!b && b.getAttribute('href') !== null, b && b.querySelector('.ix-bname').textContent.length > 0]; })()")
+        check('P44 the top bar has no Home link; the logo and site name link to the start page (1.67.1)', hm == [True, True, True], hm)
+        s.php("hub_settings_update(function ($x) { $x['homeBar'] = true; return $x; });")   # the start page shows the bar only when asked
+        pg.goto(s.base + '/'); wait_js(pg, "!!document.querySelector('#ix-bar .ix-brand')", 20000)
+        check('P44b ...and on the start page the logo is marked as the current page', pg.evaluate("document.querySelector('#ix-bar .ix-brand').getAttribute('aria-current')") == 'page')
+        s.php("hub_settings_update(function ($x) { $x['homeBar'] = false; return $x; });")
+        # ---- (1.67.1) Settings fetches its script and styles once (a prefetch used to fetch them a second time) ----
+        sp = b.new_context(viewport={'width': 1280, 'height': 860}).new_page(); browser_login(sp, s.base)
+        sp.goto(s.base + '/web/settings/#overview'); wait_js(sp, "!!document.querySelector('#ix-pc, #ix-page')", 20000); sp.wait_for_timeout(2500)
+        got = sp.evaluate("['shell-admin.js', 'shell-settings.css'].map(f => performance.getEntriesByType('resource').filter(r => r.name.includes(f)).length)")
+        check('P45 the Settings page loads shell-admin.js and shell-settings.css once each (1.67.1)', got == [1, 1], got)
+        sp.context.close()
+        # ---- (1.67.1) a dropdown added later, or filled later, still becomes buttons (the watcher now looks only at what was added) ----
+        sg = pg.evaluate("""async () => { const d = document.createElement('div'); d.innerHTML = '<label for=zz1>A</label><select id=zz1 data-ix-seg><option value=a>A</option><option value=b>B</option></select>';
+            document.body.append(d); const s2 = document.createElement('select'); s2.setAttribute('data-ix-seg', ''); d.append(s2);
+            await new Promise(r => setTimeout(r, 50)); s2.innerHTML = '<option value=x>X</option><option value=y>Y</option>'; await new Promise(r => setTimeout(r, 50));
+            const r = [!!d.querySelector('#zz1 + .ix-sgc'), !!(s2.nextElementSibling && s2.nextElementSibling.classList.contains('ix-sgc')), s2.nextElementSibling ? s2.nextElementSibling.children.length : 0]; d.remove(); return r; }""")
+        check('P46 a two-choice dropdown added later becomes buttons, also one whose choices are filled in later (1.67.1)', sg == [True, True, 2], sg)
+        # ---- (1.67.1) the dock: every page shows its tile, the dock fits on a phone, and it steps aside while editing ----
+        s.php("hub_settings_update(function ($x) { $x['nav'] = 'dock'; return $x; });")
+        dk = {}
+        for w, hgt in ((1440, 900), (390, 800)):
+            dp = b.new_context(viewport={'width': w, 'height': hgt}).new_page(); browser_login(dp, s.base)
+            dp.goto(s.base + '/web/links/'); wait_js(dp, "!!document.querySelector('#ix-bar .ix-pill') && !!(window.HUB && HUB.isAdmin())", 20000); dp.wait_for_timeout(600)
+            dk[w] = dp.evaluate("""(() => { const a = [...document.querySelectorAll('#ix-bar .ix-links a')], pill = document.querySelector('#ix-bar .ix-pill').getBoundingClientRect(), fab = document.querySelector('#ix-bar .ix-fab');
+                const fr = fab && fab.offsetParent ? fab.getBoundingClientRect() : null;
+                return [a.length, a.every(x => x.querySelector('.ix-pt').getBoundingClientRect().width > 20), a.every(x => { const r = x.getBoundingClientRect(); return r.right <= pill.right + 1 && (!fr || r.right <= fr.left); }), document.documentElement.scrollWidth <= innerWidth]; })()""")
+            if w == 1440:
+                dp.evaluate("document.querySelector('[data-hub=toggle]').click()"); wait_js(dp, "document.body.classList.contains('editing')", 10000); dp.wait_for_timeout(500)
+                hid = dp.evaluate("getComputedStyle(document.getElementById('ix-bar')).visibility")
+                dp.evaluate("document.querySelector('[data-hub=toggle]').click()"); wait_js(dp, "!document.body.classList.contains('editing')", 10000); dp.wait_for_timeout(500)
+                back = dp.evaluate("getComputedStyle(document.getElementById('ix-bar')).visibility")
+            dp.context.close()
+        s.php("hub_settings_update(function ($x) { $x['nav'] = 'top'; return $x; });")
+        check('P47 dock: all 7 pages show their colour tile (they were hidden), inside the pill, on a computer and a phone, nothing scrolls sideways (1.67.1)', dk[1440] == [7, True, True, True] and dk[390] == [7, True, True, True], dk)
+        check('P48 dock: it steps aside while a page is in edit mode and comes back on Done (1.67.1)', hid == 'hidden' and back == 'visible', (hid, back))
         check('P36 no page error', not errs, errs)
         b.close()
 finally:

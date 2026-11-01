@@ -195,13 +195,16 @@ const BG = {
     if (/** @type {any} */ (navigator).connection?.saveData) return;   // data saver: the next photo is fetched only when asked for
     const item = this.pick([current.url]);
     if (!item || item.url === current.url) return;
-    setTimeout(() => {
+    const go = () => {
       if (this.cur !== current.url) return;   // something else is on screen by now
       const p = this.load(item);
       this.preloading = { item, promise:p };
       p.then(node => { if (this.preloading?.promise !== p) return; this.preloading = null; if (this.cur !== item.url) this.nextUp = { item, node }; })
        .catch(() => { if (this.preloading?.promise === p) this.preloading = null; });
-    }, 600);
+    };
+    // (1.67.1) once the page has finished loading and the browser is idle, so the next photo never competes with the first one
+    const idle = () => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 4000 }) : go()), 600);
+    if (document.readyState === 'complete') idle(); else addEventListener('load', idle, { once: true });
   },
 
   /* The refresh button (and the timer): the ready one at once; the one on its way if it arrives within 6 seconds; otherwise

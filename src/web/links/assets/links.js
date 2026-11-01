@@ -32,12 +32,22 @@ const $ = s => document.querySelector(s);
 const root = document.documentElement;
 
 /* ---------- helpers ---------- */
+// (1.67.1) The icons (ICONS) are parsed once and copied after that: in edit mode every row has several, and parsing each one
+// again made turning edit mode on take about a quarter of a second with 600 links.
+let ICON_SET = null;
+const iconSet = () => ICON_SET || (ICON_SET = new Set(Object.values(ICONS)));
+const ICON_TPL = new Map();
+function iconNodes(s) {
+  let tp = ICON_TPL.get(s);
+  if (!tp) { tp = document.createElement('template'); tp.innerHTML = s; ICON_TPL.set(s, tp); }
+  return tp.content.cloneNode(true);
+}
 function h(tag, attrs, ...kids) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
     if (v == null || v === false) continue;
     if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'html') { if (iconSet().has(v)) el.append(iconNodes(v)); else el.innerHTML = v; }
     else el.setAttribute(k, v === true ? '' : v);
   }
   for (const c of kids.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(c));
@@ -673,7 +683,8 @@ function catSig(t, cat, multi) {
   return [oid(t), oid(cat), t.categories.indexOf(cat), same.indexOf(cat), same.length, t.encrypted ? 1 : 0, S.editing ? 1 : 0, multi ? 1 : 0,
     showVisits() ? 1 : 0, webIcons() ? 1 : 0, cat.links.map(oid).join(','), cat.links.map(l => vis[l.url] | 0).join(','), JSON.stringify(cat)].join('\u0001');
 }
-const FIRST_PER_COL = 3;   // about one screen
+const FIRST_ROWS = 24;   // (1.67.1) about one screen of rows in each column (it was 3 categories, which could be hundreds of links)
+const catRows = c => c.links.length + 2;   // its links and its heading
 let fillJob = 0;
 function isDrawn(t, cat, multi) { const hit = drawnCats.get(cat); return !!hit && hit.sig === catSig(t, cat, multi); }
 // Draws the rest of a tab a few categories at a time (about 12 ms of work per frame), in order, before each column's Add Category button.
@@ -816,14 +827,14 @@ function render() {
   let shown = 0;
   // (1.64.11) A tab with many categories not drawn yet shows the top of each column at once and fills in the rest over the next frames.
   const fresh = !q && !(drag && drag.started), job = ++fillJob, perCol = new Map(), later = [];
-  const quick = fresh && tabsShown.reduce((k, t) => k + t.categories.filter(c => !isDrawn(t, c, multi)).length, 0) > FIRST_PER_COL * 2;
+  const quick = fresh && tabsShown.reduce((k, t) => k + t.categories.filter(c => !isDrawn(t, c, multi)).reduce((r, c) => r + catRows(c), 0), 0) > FIRST_ROWS * 2;
   for (let c = 0; c < COLS; c++) {
     const target = cols[n === COLS ? c : n === 2 ? c % 2 : 0];
     for (const t of tabsShown) for (const cat of t.categories.filter(x => x.col === c)) {
       if (drag && drag.started && drag.kind === 'cat' && cat === drag.cat) continue; // it's in the user's hand
-      if (quick && (perCol.get(target) || 0) >= FIRST_PER_COL) { later.push([target, t, cat]); continue; }
+      if (quick && (perCol.get(target) || 0) >= FIRST_ROWS) { later.push([target, t, cat]); continue; }
       const sec = fresh ? drawnCategory(t, cat, multi) : renderCategory(t, cat, q, multi);   // (1.64.10) reused when nothing in it changed
-      if (sec) { target.append(sec); shown++; perCol.set(target, (perCol.get(target) || 0) + 1); }
+      if (sec) { target.append(sec); shown++; perCol.set(target, (perCol.get(target) || 0) + catRows(cat)); }
     }
   }
   if (later.length) fillLater(later, job, multi);

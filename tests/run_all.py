@@ -5,9 +5,10 @@
   options: --prev PREV.zip --old OLD.zip     zips for the update test (default: downloaded with tests/lib/releases.py)
            --browser firefox|webkit          browser tests in another engine (default chromium)
            --apache                          also the Apache test (needs sudo; installs Apache)
-Build the zip first: python3 scripts/build.py. PHPStan runs when phpstan.phar is in the repo folder (see AGENTS.md).
+Build the zip first: python3 scripts/build.py. PHPStan runs when phpstan.phar is in the repo folder (see AGENTS.md); Semgrep runs when
+the semgrep command is installed (SEMGREP=/path/to/semgrep also works), with the same rules and options as CI.
 Exit 0 only when every check passed."""
-import os, re, subprocess, sys, time
+import os, re, shlex, shutil, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'tests', 'lib'))
@@ -46,6 +47,11 @@ run('Version agrees everywhere', [PY, 'scripts/release.py', '--check'])
 for t in ('release_test', 'workflows_test', 'secrets_test', 'dead_code_test', 'parallel_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test', 'presets_test', 'tools_list_test', 'tscheck_test', 'root_test', 'speculation_test', 'php_matrix', 'build_test'):
     run('repo/' + t, [PY, 'tests/repo/%s.py' % t])
 run('Library check', [PY, 'tests/repo/check_libraries.py'])
+SG = os.environ.get('SEMGREP') or shutil.which('semgrep')
+if SG:   # the exact command CI runs (code-scanning.yml), so a finding here is a finding there
+    wf = open(os.path.join(ROOT, '.github', 'workflows', 'code-scanning.yml'), encoding='utf-8').read().replace('\\\n', ' ')
+    sg_args = shlex.split(re.search(r'/tmp/sg/bin/semgrep (scan [^\n]*)', wf).group(1))
+    run('Semgrep', [SG] + sg_args)
 if os.path.isfile(os.path.join(ROOT, 'phpstan.phar')):
     run('PHPStan', ['php', '-d', 'memory_limit=1G', 'phpstan.phar', 'analyse', '-c', 'tests/repo/phpstan.neon', '--no-progress'])
 

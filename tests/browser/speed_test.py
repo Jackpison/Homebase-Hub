@@ -162,6 +162,15 @@ try:
         check('V28 Links: a saved icon whose file is gone shows the first letter and asks for no missing file', ico == ['L', False] and not req404, (ico, req404))
         gp.evaluate("document.getElementById('iconsBtn').click()"); gp.wait_for_selector('#iconDlg[open]')
         check('V29 ...and Fetch Icons > Only Missing counts it', gp.inner_text('#iconCnt1').startswith('1 link'), gp.inner_text('#iconCnt1'))
+        # ---- (1.67.1) Links with 600 links: edit mode draws about one screen at once and the rest over the next frames ----
+        cats = ",".join("['id'=>'z%d','title'=>'Cat %d','col'=>%d,'links'=>[%s]]" % (c, c, c % 4, ",".join("['id'=>'z%d_%d','title'=>'Link %d %d','url'=>'https://ex%d.example/%d']" % (c, k, c, k, k, c) for k in range(30))) for c in range(20))
+        s.php("hub_write_guarded(hub_dir('links') . '/bookmarks.php', ['settings' => new stdClass, 'tabs' => [['id'=>'zb','title'=>'Big','categories'=>[%s]]]]);" % cats)
+        bp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); browser_login(bp, s.base)
+        bp.goto(s.base + '/web/links/'); wait_js(bp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('#grid a.main').length >= 600", 30000); bp.wait_for_timeout(500)
+        check('V30 Links: categories below the screen are not laid out (content-visibility)', bp.evaluate("getComputedStyle(document.querySelector('.cat')).contentVisibility") == 'auto')
+        first = bp.evaluate("(() => { document.querySelector('[data-hub=toggle]').click(); return document.querySelectorAll('#grid .lgrip').length; })()")
+        wait_js(bp, "document.querySelectorAll('#grid .lgrip').length >= 600", 15000)
+        check('V31 Links, 600 links: turning edit mode on draws about one screen at once (not hundreds of rows), then all of them', 0 < first < 200 and bp.evaluate("document.querySelectorAll('#grid .lgrip').length") >= 600, first)
         check('Vend no page error', not errs, errs)
         b.close()
 finally:

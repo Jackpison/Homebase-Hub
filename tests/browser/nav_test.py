@@ -101,7 +101,7 @@ try:
                 pg.evaluate("document.querySelectorAll('.ix-links').length")
                 n_links = pg.evaluate("document.querySelectorAll('#ix-bar .ix-links a').length")
                 cur = pg.evaluate("(document.querySelector('#ix-bar .ix-links a[aria-current=page]') || {}).dataset")
-                check('%s: the bar lists the 7 pages and marks Links as the current one' % L, n_links == 7 and cur and cur.get('page') == 'links', (n_links, cur))
+                check('%s: the bar lists the pages (without Home where the logo leads there; with it in the dock, which has no logo) and marks Links as the current one' % L, n_links == (7 if nav == 'dock' else 6) and cur and cur.get('page') == 'links', (n_links, cur))
                 sw = pg.evaluate("document.documentElement.scrollWidth - innerWidth")
                 check('%s: nothing scrolls sideways' % L, sw <= 1, sw)
                 if SHOTS: pg.screenshot(path=os.path.join(SHOTS, '%s-%s.png' % (nav, size_name)))
@@ -111,7 +111,7 @@ try:
                     check('%s: only the floating button shows; it opens the sidebar as a panel' % L, visible(pg, '#ix-bar .ix-fab') and not visible(pg, '#ix-bar .ix-links'))
                     pg.click('#ix-bar .ix-fab'); until(lambda: pg.evaluate("!!document.querySelector('#ix-drawer.open')"), 3000); settle(pg)
                     check('%s: the panel lists the pages and has search and Edit' % L,
-                          pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 7 and visible(pg, '#ix-drawer .ix-psearch') and visible(pg, '#ix-drawer [data-ix=edit]'))
+                          pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 6 and visible(pg, '#ix-drawer .ix-psearch') and visible(pg, '#ix-drawer [data-ix=edit]'))
                     if SHOTS: pg.screenshot(path=os.path.join(SHOTS, '%s-%s-panel.png' % (nav, size_name)))
                     backup_and_gear(pg, L, '#ix-drawer.open')
                     pg.keyboard.press('Escape'); settle(pg)   # the panel slides away
@@ -121,7 +121,8 @@ try:
                     bar = rect(pg, '#ix-bar')
                     check('%s: one row (the pill and its round button), under 70 px tall' % L, bar and bar['h'] < 70 and visible(pg, '#ix-bar .ix-fab'), bar)
                     lbl = pg.evaluate("[...document.querySelectorAll('#ix-bar .ix-links a span:not(.ix-pt)')].filter(s => s.getBoundingClientRect().width > 0).map(s => s.textContent)")
-                    check('%s: only the current page shows its name' % L, lbl == ['Links'], lbl)
+                    cur_t = pg.evaluate("(a => a ? [a.getAttribute('data-tip'), !document.querySelector('#ix-bar .ix-pline').hidden] : null)(document.querySelector('#ix-bar .ix-links a[aria-current=page]'))")
+                    check('%s: tiles only (1.67.1: all 7 pages fit beside the round button); the current page keeps its name as a tooltip and its line' % L, lbl == [] and cur_t == ['Links', True], (lbl, cur_t))
                     pg.click('#ix-bar .ix-fab'); until(lambda: pg.evaluate("!!document.querySelector('#ix-sheet.open')"), 3000); settle(pg)
                     tiles = pg.evaluate("[...document.querySelectorAll('#ix-sheet.open .ix-stile span')].map(s => s.textContent)")
                     check('%s: the sheet has search, Edit, the theme, Backup, Settings and Log Out' % L, visible(pg, '#ix-sheet .ix-psearch') and tiles == ['Edit', 'Light Mode', 'Backup', 'Settings', 'Log Out'], tiles)
@@ -132,7 +133,7 @@ try:
                     backup_and_gear(pg, L, '#ix-bar')
                 if nav == 'top' and phone:
                     pg.click('#ix-bar .ix-menu'); until(lambda: pg.evaluate("!!document.querySelector('#ix-drawer.open')"), 3000); settle(pg)
-                    check('%s: the menu button opens the page list' % L, pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 7)
+                    check('%s: the menu button opens the page list (Home is the logo at its top, 1.67.1)' % L, pg.evaluate("document.querySelectorAll('#ix-drawer.open nav > a:not(.ix-brand)').length") == 6 and pg.evaluate("!!document.querySelector('#ix-drawer.open nav > a.ix-brand')"))
                     pg.keyboard.press('Escape'); settle(pg)   # the panel slides away
                 if not phone or nav == 'dock':
                     vtn = pg.evaluate("(e => e && getComputedStyle(e).viewTransitionName)(document.querySelector('#ix-bar .ix-pline'))")

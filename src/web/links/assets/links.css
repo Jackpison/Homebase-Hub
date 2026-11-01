@@ -80,6 +80,8 @@ main{max-width:1500px;margin:0 auto;padding:14px 32px 120px}
 .board{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));gap:0 44px;align-items:start}
 .col{display:flex;flex-direction:column;gap:34px;min-height:40px}
 .cat{min-width:0}
+/* (1.67.1) categories below the screen are not laid out until you scroll to them: drawing a tab with hundreds of links, and turning edit mode on, got much faster */
+.cat{content-visibility:auto;contain-intrinsic-size:auto 320px}
 .cat-head{font-size:var(--fs-cat);position:relative;display:flex;align-items:center;gap:8px;padding:0 8px 8px;margin-bottom:6px;border-bottom:1px solid var(--line);min-height:32px}
 .cat-head h2{margin:0;font-size:1em;font-weight:700;text-transform:uppercase;color:var(--cat,var(--accent));letter-spacing:.05em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cat-head h2 .from{color:var(--muted);font-weight:500}

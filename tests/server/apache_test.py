@@ -60,5 +60,12 @@ check('A7b a picture in web/hub/media loads, with nosniff', st == 200 and (h.get
 st, _, body = get('/web/hub/media/home/photos/t.php')
 check('A7c a script put in web/hub/media is refused and never runs', st == 403 and b'ran' not in body, (st, body[:40]))
 check('A7d the pictures folder lists nothing', get('/web/hub/media/')[0] in (403, 404) and get('/web/hub/media/home/photos/')[0] in (403, 404) and get('/web/hub/')[0] in (403, 404))
+# (1.67.1) files asked for with their version are kept a year; without a version they are checked again as before
+st, h, _ = get('/web/hub/core/assets/shell.css?v=1.0.0')
+cc = h.get('Cache-Control') or ''
+st2, h2, _ = get('/web/hub/core/assets/shell.css')
+check('A9 a style asked for with ?v= is kept for a year (immutable); the same file without ?v= is not', st == 200 and 'immutable' in cc and 'max-age=31536000' in cc and st2 == 200 and 'immutable' not in (h2.get('Cache-Control') or ''), (cc, h2.get('Cache-Control')))
+st, h, _ = get('/web/links/index.html?v=1.0.0')
+check('A9b a page is never kept like that, even with ?v=', st == 200 and 'immutable' not in (h.get('Cache-Control') or ''), h.get('Cache-Control'))
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

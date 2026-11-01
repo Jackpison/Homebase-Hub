@@ -321,7 +321,7 @@ function readable(hex,bg,lighter){
   const toHex=L=>{const q=L<.5?L*(1+sat):L+sat-L*sat,p=2*L-q,k=t=>{t=(t+1)%1;return t<1/6?p+(q-p)*6*t:t<.5?q:t<2/3?p+(q-p)*(2/3-t)*6:p};
     return[k(h+1/3),k(h),k(h-1/3)].map(v=>Math.round(v*255).toString(16).padStart(2,"0")).join("")};
   const Lb=lum(bg),ok=x=>{const a=lum(x);return(Math.max(a,Lb)+.05)/(Math.min(a,Lb)+.05)>=4.5};
-  let out=hex;for(let i=0;i<60&&!ok(out);i++){l=Math.min(1,Math.max(0,l+(lighter?.02:-.02)));out=toHex(l)}
+  let out=hex;for(let i=0;i<60&&!ok(out);i++){l=Math.min(1,Math.max(0,l+(lighter ? 0.02 : -0.02)));out=toHex(l)}
   return"#"+out;
 }
 function labelColor(t){
