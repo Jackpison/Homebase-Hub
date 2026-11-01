@@ -53,8 +53,9 @@ try:
         check('I2 Import Bookmarks is in the Links menu, right after Fetch Icons', 'Import and Export' in items and items.index('Fetch Icons') + 1 == items.index('Import and Export'), items)
 
         def open_dlg():
-            pg.evaluate("document.querySelector('#importBmBtn').click()")
-            pg.wait_for_selector('#impDlg[open]', timeout=10000)
+            # right after a reload Links may not have wired the button yet (seen in WebKit on a busy CI machine): click again until it opens
+            ok = until(lambda: pg.evaluate("document.querySelector('#impDlg[open]') ? true : (document.querySelector('#importBmBtn').click(), false)") or pg.wait_for_timeout(400) or bool(pg.query_selector('#impDlg[open]')), 15000)
+            if not ok: pg.wait_for_selector('#impDlg[open]', timeout=1000)
 
         def choose(name):
             pg.set_input_files('#impFile', os.path.join(FX, name) if not os.path.isabs(name) else name)
