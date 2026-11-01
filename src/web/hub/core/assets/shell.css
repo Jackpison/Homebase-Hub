@@ -343,9 +343,14 @@ html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!impo
 #ix-dlg .ix-btn.pri.pulse{box-shadow:0 0 0 3px var(--ix-soft)}
 /* ---------- login: waiting for Approve in Telegram ---------- */
 #ix-dlg .ix-apw{display:flex;align-items:center;gap:10px;justify-content:center;padding:14px;border:1px solid var(--ix-line);border-radius:12px;margin:12px 0;font-weight:700;color:var(--ix-tx)}
-.ix-spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--ix-line2);border-top-color:var(--ix-accent);animation:ix-spin 0.9s linear infinite}
-@keyframes ix-spin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.ix-spin{animation:none}}
+/* (1.65.0) the loader: three bouncing dots with soft shadows, adapted from Uiverse.io by mobinkakei, "grumpy-turtle-41"
+   (https://uiverse.io/mobinkakei/grumpy-turtle-41, MIT), smaller and in the accent colour. Reduce motion: three still dots. */
+.ix-spin{position:relative;display:inline-block;flex:none;width:40px;height:22px;vertical-align:middle}
+.ix-spin::after{content:"";position:absolute;left:3px;right:3px;bottom:0;height:3px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.35),transparent)}   /* the ground the dots bounce on */
+.ix-spin i{position:absolute;left:4px;top:0;width:8px;height:8px;border-radius:50%;background:var(--ix-accent,#ffc21a);animation:ix-bounce .5s alternate infinite ease}
+.ix-spin i:nth-child(2){left:16px;animation-delay:.2s}.ix-spin i:nth-child(3){left:28px;animation-delay:.3s}
+@keyframes ix-bounce{0%{top:16px;height:3px;border-radius:50px 50px 25px 25px;transform:scaleX(1.6)}40%{height:8px;border-radius:50%;transform:scaleX(1)}100%{top:0}}
+@media (prefers-reduced-motion:reduce){.ix-spin i{animation:none;top:8px}}
 #ix-dlg .ix-chk{display:flex;align-items:center;gap:9px;margin:10px 0;font-size:14px;color:var(--ix-tx);cursor:pointer}
 #ix-dlg .ix-chk input{width:17px;height:17px;accent-color:var(--ix-accent);margin:0;flex:none}
 #ix-dlg details.ix-apc{margin:10px 0;font-size:14px}
@@ -409,8 +414,17 @@ html[data-ix-ebar] [data-hub-ebar]{display:none!important}
 #ix-ebar .ix-ebdone{width:44px;background:#F6F5F1;color:#0E1018}
 #ix-ebar .ix-ebdone:hover{background:#fff;color:#0E1018}
 /* the name on hover (icons only): drawn above the bar */
-#ix-ebtip{position:fixed;z-index:2147483001;padding:5px 10px;border-radius:8px;background:#1d1f24;color:#f2f2f2;font:500 12.5px var(--ix-font,system-ui,sans-serif);
-  box-shadow:0 6px 18px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
+/* (1.65.0) the tooltip: dark glass with a thin accent line, easing in after a moment (see tipShow in shell.js) */
+#ix-ebtip{position:fixed;z-index:2147483001;padding:7px 12px;border-radius:9px;color:#f2f2f2;font:600 12.5px/1.2 var(--ix-font,system-ui,sans-serif);white-space:nowrap;pointer-events:none;
+  background:rgba(28,28,30,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:2px solid var(--ix-accent,#ffc21a);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.08),0 10px 24px -8px rgba(0,0,0,.7);animation:ix-tipin .16s ease-out .35s both}
+#ix-ebtip::after{content:"";position:absolute;left:var(--ix-ax,50%);bottom:-6px;width:9px;height:9px;margin-left:-4.5px;background:inherit;border-right:2px solid var(--ix-accent,#ffc21a);border-bottom:2px solid var(--ix-accent,#ffc21a);transform:rotate(45deg);border-radius:0 0 2px 0}
+#ix-ebtip.below{border-bottom:0;border-top:2px solid var(--ix-accent,#ffc21a)}
+#ix-ebtip.below::after{bottom:auto;top:-6px;border:0;border-left:2px solid var(--ix-accent,#ffc21a);border-top:2px solid var(--ix-accent,#ffc21a);border-radius:2px 0 0 0}
+html[data-theme="light"] #ix-ebtip{background:rgba(250,249,247,.94);color:#1d1a16;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08),0 10px 24px -8px rgba(0,0,0,.35)}
+@keyframes ix-tipin{from{opacity:0;transform:translateY(3px)}}
+#ix-ebtip.below{animation-name:ix-tipdn}@keyframes ix-tipdn{from{opacity:0;transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){#ix-ebtip{animation:none}}
 body.boxedit #ix-ebar{display:none}
 @media (max-width:640px){#ix-ebar.ix-ebar-text .ix-ebl{display:none}#ix-ebar.ix-ebar-text .ix-eb:not(.ix-ebdone){padding:0}}
 @media (prefers-reduced-motion:reduce){#ix-ebar{animation:none}}
@@ -481,13 +495,20 @@ dialog.ix-sdlg>form{display:flex;flex-direction:column;min-height:0;flex:1;paddi
 .ix-sgc-h{display:none!important}
 .ix-srow>.ix-sgc{max-width:100%}
 @media (max-width:480px){.ix-srow>.ix-sgc{width:100%}.ix-sgc>button{flex:1}}
-input.ix-sw{appearance:none;-webkit-appearance:none;flex:none;position:relative;width:44px;height:26px;margin:0;border-radius:13px;cursor:pointer;background:color-mix(in srgb,currentColor 12%,transparent);border:1px solid color-mix(in srgb,currentColor 42%,transparent);transition:background .15s}
-input.ix-sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,currentColor 78%,transparent);transition:transform .15s,background .15s}
-input.ix-sw:checked{background:color-mix(in srgb,var(--accent,currentColor) 22%,transparent);border-color:color-mix(in srgb,var(--accent,currentColor) 55%,transparent)}
-input.ix-sw:checked::after{transform:translateX(18px);background:var(--accent,currentColor)}
-input.ix-sw:focus-visible{outline:2px solid currentColor;outline-offset:2px}
-input.ix-sw:disabled{opacity:.5;cursor:not-allowed}
-@media (prefers-reduced-motion:reduce){input.ix-sw,input.ix-sw::after{transition:none}}
+/* (1.65.0) The on/off switch everywhere (windows, the Settings page, Home's sheets): adapted from Uiverse.io by Yaya12085, "bright-dolphin-91"
+   (https://uiverse.io/Yaya12085/bright-dolphin-91, MIT; see web/hub/docs/THIRD-PARTY.md): a white recessed track and a metal knob that turns black when on
+   and tilts a little on hover. Scaled from 120 x 60 to 52 x 26; still a real checkbox (keyboard, screen readers, forms). */
+input.ix-sw,#ix-page .ix-tg input[type=checkbox],input.switch{appearance:none;-webkit-appearance:none;flex:none;position:relative;width:52px;height:26px;margin:0;padding:0;border:0;border-radius:13px;cursor:pointer;
+  background:#fff;box-shadow:inset 0 0 3px 2px #fff,inset 0 0 9px 1px rgba(0,0,0,.49),4px 8px 14px rgba(0,0,0,.1),inset 0 0 0 1.5px rgba(0,0,0,.3);transition:transform .4s}
+input.ix-sw::after,#ix-page .ix-tg input[type=checkbox]::after,input.switch::after{content:"";position:absolute;top:4px;left:4px;width:18px;height:18px;border-radius:50%;transform:none;
+  background-color:#000;background-image:linear-gradient(130deg,#757272 10%,#fff 11%,#726f6f 62%);box-shadow:0 1px 1px rgba(0,0,0,.3),4px 4px 5px rgba(0,0,0,.3);transition:left .4s,background .4s}
+input.ix-sw:checked,#ix-page .ix-tg input[type=checkbox]:checked,input.switch:checked{background:#fff}
+input.ix-sw:checked::after,#ix-page .ix-tg input[type=checkbox]:checked::after,input.switch:checked::after{left:30px;transform:none;background-color:#000;background-image:linear-gradient(315deg,#000 0%,#414141 70%)}
+input.ix-sw:hover:not(:disabled),#ix-page .ix-tg input[type=checkbox]:hover:not(:disabled),input.switch:hover:not(:disabled){transform:perspective(100px) rotateX(5deg) rotateY(-5deg)}
+input.ix-sw:checked:hover:not(:disabled),#ix-page .ix-tg input[type=checkbox]:checked:hover:not(:disabled),input.switch:checked:hover:not(:disabled){transform:perspective(100px) rotateX(-5deg) rotateY(5deg)}
+input.ix-sw:focus-visible,#ix-page .ix-tg input[type=checkbox]:focus-visible,input.switch:focus-visible{outline:2px solid var(--ix-accent,currentColor);outline-offset:3px}
+input.ix-sw:disabled,#ix-page .ix-tg input[type=checkbox]:disabled,input.switch:disabled{opacity:.5;cursor:not-allowed}
+@media (prefers-reduced-motion:reduce){input.ix-sw,input.ix-sw::after,#ix-page .ix-tg input[type=checkbox],#ix-page .ix-tg input[type=checkbox]::after,input.switch,input.switch::after{transition:none}input.ix-sw:hover,input.switch:hover,#ix-page .ix-tg input[type=checkbox]:hover{transform:none!important}}
 @media (max-width:480px){.ix-srow{flex-wrap:wrap}.ix-srow>select{width:100%}}
 
 /* ---------- the pages' own windows (dialogs): one look, set here (1.59) ----------
@@ -608,3 +629,45 @@ label.ix-srow{cursor:pointer}
 .ix-ob{padding:12px 0 2px}
 .ix-ob .hint{display:block;margin-top:6px}
 .ix-sdlg .ix-sb details.ix-opt+details.ix-opt{margin-top:12px;padding-top:12px;border-top:1px solid color-mix(in srgb,currentColor 9%,transparent)}
+
+/* ---------- (1.65.0) the day/night theme switch: adapted from Uiverse.io by JustCode14, "red-dingo-61" (https://uiverse.io/JustCode14/red-dingo-61, MIT) ---------- */
+#ix-bar .ix-tsw{width:auto!important;height:auto!important;padding:5px;background:none!important}
+.ix-tsl{position:relative;display:inline-block;flex:none;font-size:11px;width:4em;height:2.2em;border-radius:30px;background:#2a2a2a;overflow:hidden;
+  box-shadow:0 0 10px rgba(0,0,0,.1),inset 0 0 0 1px rgba(255,255,255,.1);transition:background-color .4s}
+.ix-tsl::before{content:"";position:absolute;height:1.2em;width:1.2em;border-radius:20px;left:.5em;bottom:.5em;transition:transform .4s,box-shadow .4s;
+  transition-timing-function:cubic-bezier(.81,-.04,.38,1.5);box-shadow:inset .5em -.25em 0 0 #fff}
+[aria-checked="true"]>.ix-tsl{background-color:#00a6ff}
+[aria-checked="true"]>.ix-tsl::before{transform:translateX(1.8em);box-shadow:inset 1em -.25em 0 1em #ffcf48}
+.ix-tsl i{position:absolute;width:.3em;height:.3em;border-radius:50%;background:#fff;transition:opacity .4s}
+.ix-ts1{left:2.5em;top:.5em}.ix-ts2{left:2.2em;top:1.2em}.ix-ts3{left:3em;top:.9em}
+[aria-checked="true"]>.ix-tsl i{opacity:0}
+#ix-bar svg.ix-tcl,#ix-drawer svg.ix-tcl,#ix-sheet svg.ix-tcl,svg.ix-tcl{position:absolute;width:3.5em;height:3.5em;bottom:-1.4em;left:-1.1em;opacity:0;fill:#fff!important;stroke:none!important;transition:opacity .4s}
+[aria-checked="true"]>.ix-tsl .ix-tcl{opacity:1}
+.ix-tsl.mini{font-size:10px}
+[data-ix="theme"][role="switch"]:focus-visible>.ix-tsl{outline:2px solid var(--ix-accent,#ffc21a);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.ix-tsl,.ix-tsl::before,.ix-tsl i,.ix-tcl{transition:none!important}}
+
+/* ---------- (1.65.0) the button hover: a slanted fill sweeps across and the text changes colour. Adapted from Uiverse.io by
+   CristianMontoya98, "nasty-fish-9" (https://uiverse.io/CristianMontoya98/nasty-fish-9, MIT). Every text button on every page (the same
+   list as the shared button look above); icon buttons, choice buttons and disabled ones keep theirs. Your accent fills a plain button,
+   white fills the main one, red a delete button. Only with a mouse (no hover on touch screens), and keyboard focus gets it too. ---------- */
+:where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn){position:relative;isolation:isolate;overflow:hidden}
+:where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold])::after{
+  content:"";position:absolute;z-index:-1;left:-34px;right:-34px;top:0;bottom:0;background:var(--ix-accent,#ffc21a);transform:skewX(-45deg) scale(0,1);transition:transform .45s;pointer-events:none}
+:where(html .btn.pri,html .btn.primary,html .ix-btn.pri,html .ix-sdlg .ix-sf button.pri,html .ix-sdlg .ix-sf [type=submit],html .ix-sdlg .act .pri,html .ix-sdlg .df .pri,html .ix-sdlg .df .primary)::after{background:#fff}
+:where(html .btn.danger,html .ix-btn.danger,html .ix-sdlg .danger)::after{background:#e5484d}
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+  :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold]):not(:disabled):is(:hover,:focus-visible)::after{transform:skewX(-45deg) scale(1,1)}
+  :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold]):not(:disabled):is(:hover,:focus-visible){color:var(--ix-ink,#000)!important;transition:color .45s}
+  :where(html .btn.pri,html .btn.primary,html .ix-btn.pri,html .ix-sdlg .ix-sf button.pri,html .ix-sdlg .ix-sf [type=submit],html .ix-sdlg .act .pri,html .ix-sdlg .df .pri,html .ix-sdlg .df .primary):not(:disabled):is(:hover,:focus-visible){color:#111!important}
+  :where(html .btn.danger,html .ix-btn.danger,html .ix-sdlg .danger):not(:disabled):is(:hover,:focus-visible){color:#fff!important}
+}
+
+/* ---------- (1.65.0) Hold to Delete: a red fill runs across the button (or fills an icon button's circle) while it is held ---------- */
+[data-hold]{position:relative;isolation:isolate;overflow:hidden;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+[data-hold]::before{content:"";position:absolute;z-index:-1;inset:0;background:rgba(229,72,77,.85);transform:scaleX(0);transform-origin:left center;pointer-events:none}
+[data-hold].ix-holding::before{transform:scaleX(1);transition:transform .9s linear}
+[data-hold].ix-holding{color:#fff!important}
+.ib[data-hold]::before,.ix-ib[data-hold]::before{border-radius:50%;transform:scale(0);transform-origin:center}
+.ib[data-hold].ix-holding::before,.ix-ib[data-hold].ix-holding::before{transform:scale(1)}
+@media (prefers-reduced-motion:reduce){[data-hold].ix-holding::before{transition:transform .5s linear}}

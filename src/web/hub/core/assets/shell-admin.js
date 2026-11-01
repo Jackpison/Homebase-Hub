@@ -643,18 +643,22 @@
     var grp = presetGroup !== 'all' && groups.some(function (g) { return g[0] === presetGroup; }) ? presetGroup : 'all';
     var card = function (pr) {
       var i = list.indexOf(pr), c = Object.assign({}, def, pr.c), acc = presetAccent && pr.a ? pr.a : acc0;
-      return '<button type="button" class="ix-preset" data-pre="' + i + '" data-g="' + pr.g + '" data-name="' + esc(pr.n.toLowerCase()) + '" aria-pressed="' + isOn(pr) + '" title="' + esc(pr.n) + (pr.a ? ' (accent ' + pr.a + ')' : '') + '"><span class="ix-pv" style="background:' + c.bg + ';border-color:' + c.line + '">' +
-        '<i style="background:' + c.bar + '"></i><b style="background:' + c.box + ';border-color:' + c.line + '"><em style="background:' + c.text + '"></em><em style="background:' + c.mute + '"></em></b><u style="background:' + acc + '"></u></span>' + esc(pr.n) + '</button>';
+      return '<button type="button" class="ix-preset" data-pre="' + i + '" data-g="' + pr.g + '" data-name="' + esc(pr.n.toLowerCase()) + '" aria-pressed="' + isOn(pr) + '" title="' + esc(pr.n) + (pr.a ? ' (accent ' + pr.a + ')' : '') + '">' +
+        miniPage(c, acc) + '<span class="ix-pn">' + esc(pr.n) + '</span><small class="ix-pgl">' + esc((PRESET_GROUPS.filter(function (g) { return g[0] === pr.g; })[0] || ['', ''])[1]) + '</small></button>';
     };
     var body = groups.map(function (g) { return '<span class="ix-psep" data-g="' + g[0] + '">' + g[1] + '</span>' + list.filter(function (pr) { return pr.g === g[0]; }).map(card).join(''); }).join('');
     return '<details class="ix-acc" id="ix-presets"' + '' + '><summary><span>Presets</span><small>' + (current ? 'Now: ' + esc(current.n) : Object.keys(set).length ? 'Now: Your Own Mix' : 'Now: Built-In') + ' · ' + list.length + ' looks for ' + (m === 'dark' ? 'dark' : 'light') + ' mode</small></summary><div class="ix-accb">' +
       '<p>One click fills the whole mode; fine-tune any color in the Colors tab afterwards.</p>' +
       '<label class="ix-tg" style="margin:0 0 10px"><span>Use the Preset\'s Accent Color<small>Presets like Dracula or Nord bring their own accent. Off keeps yours.</small></span><input type="checkbox" id="ix-pacc"' + (presetAccent ? ' checked' : '') + '></label>' +
-      '<div class="ix-ptools"><input type="search" id="ix-psearch" class="ix-psearch" placeholder="Search ' + list.length + ' Presets" aria-label="Search Presets" autocomplete="off" spellcheck="false"><button type="button" class="ix-btn" id="ix-prand">' + svg(ICON.sparkle) + 'Surprise Me</button></div>' +
+      '<div class="ix-sur" id="ix-sur" aria-live="polite"><div class="ix-surpv" id="ix-surpv"></div><div class="ix-surt"><h4>Surprise Me</h4><h3 id="ix-surn">A New Mix</h3>' +
+        '<p>A colour mix made just now for ' + (m === 'dark' ? 'dark' : 'light') + ' mode, checked to be easy to read. Not one of the presets.</p>' +
+        '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-sura">' + svg(ICON.sparkle) + 'Another One</button><button type="button" class="ix-btn" id="ix-suru">Use It</button><button type="button" class="ix-btn" id="ix-surs">Save to My Presets</button></div>' +
+        '<div class="ix-surw" id="ix-surw" hidden><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><small>Mixing…</small></div></div></div>' +
+      '<div class="ix-ptools"><input type="search" id="ix-psearch" class="ix-psearch" placeholder="Search ' + list.length + ' Presets" aria-label="Search Presets" autocomplete="off" spellcheck="false"></div>' +
       '<details class="ix-more ix-mypre" id="ix-mypre"' + ((S.myPresets || []).length ? ' open' : '') + '><summary>My Presets: Save, Share, Delete</summary>' +
         '<p>Save the colors and accent you have now (both dark and light) as a preset of your own. It appears under My Presets and is kept in your backups.</p>' +
         '<div class="ix-row"><input type="text" id="ix-mpn" maxlength="30" placeholder="Name This Look" aria-label="Name for this look" style="flex:1;min-width:180px"><button type="button" class="ix-btn pri" id="ix-mps">Save Current Look</button></div>' +
-        ((S.myPresets || []).length ? '<div class="ix-devs" style="margin-top:12px">' + S.myPresets.map(function (mp, i) { return '<div class="ix-dev"><span class="ix-dev-i" style="background:' + esc(mp.a || '#888') + '"></span><div class="ix-dev-b"><b>' + esc(mp.n) + '</b></div><button type="button" class="ix-btn danger" data-mpd="' + i + '">Delete</button></div>'; }).join('') + '</div>' : '') +
+        ((S.myPresets || []).length ? '<div class="ix-devs" style="margin-top:12px">' + S.myPresets.map(function (mp, i) { return '<div class="ix-dev"><span class="ix-dev-i" style="background:' + esc(mp.a || '#888') + '"></span><div class="ix-dev-b"><b>' + esc(mp.n) + '</b></div><button type="button" class="ix-btn danger" data-hold title="Hold to delete" data-mpd="' + i + '">Delete</button></div>'; }).join('') + '</div>' : '') +
         '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn" id="ix-mpx">' + svg(ICON.down) + 'Export My Presets</button><label class="ix-btn" for="ix-mpf">' + svg(ICON.upload) + 'Import Presets</label><input type="file" id="ix-mpf" accept=".json,application/json" hidden></div>' +
         '<p class="ix-err" id="ix-mpe"></p></details>' +
       '<div class="ix-pfilt" role="group" aria-label="Preset Groups"><button type="button" data-pg-f="all" aria-pressed="' + (grp === 'all') + '">All <small>' + list.length + '</small></button>' +
@@ -706,6 +710,39 @@
     p.querySelector('#ix-cres').onclick = function () { cur[m] = {}; PG_APPS.forEach(function (a) { delete cur.pg[a[0]][m]; }); preview(); pColors(p); };
   }
   /* Appearance > Presets: the whole gallery on its own tab, dark or light mode, one click fills every color */
+  /* (1.65.0) a preset card's picture: a small page in its colours (the bar with its pages, two boxes with text, an accent button) */
+  function miniPage(c, acc) {
+    return '<span class="ix-pv" style="background:' + c.bg + ';border-color:' + c.line + '"><i style="background:' + c.bar + '"><em style="background:' + c.mute + '"></em><em style="background:' + acc + '"></em><em style="background:' + c.mute + '"></em><em style="background:' + c.mute + '"></em></i>' +
+      '<b style="background:' + c.box + ';border-color:' + c.line + '"><em style="background:' + c.text + '"></em><em style="background:' + c.mute + '"></em><em style="background:' + c.mute + '"></em></b>' +
+      '<b style="background:' + c.box + ';border-color:' + c.line + '"><em style="background:' + c.text + '"></em><em style="background:' + c.mute + '"></em></b><u style="background:' + acc + '"></u></span>';
+  }
+  /* (1.65.0) Surprise Me: a new colour mix, not one of the presets. One hue for the page, another for the accent; tried again until the
+     text and the muted text are easy to read on the boxes (contrast 7 and 4.5, the rules the presets pass) and the accent stands out. */
+  function hslHex(h, s, l) {
+    s /= 100; l /= 100; var k = function (n) { return (n + h / 30) % 12; }, a = s * Math.min(l, 1 - l);
+    var f = function (n) { return Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))))).toString(16).padStart(2, '0'); };
+    return '#' + f(0) + f(8) + f(4);
+  }
+  function luminance(hex) { var v = [1, 3, 5].map(function (i) { var x = parseInt(hex.substr(i, 2), 16) / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; }
+  function contrastOf(a, b) { var x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  var MIX_HUE = [[15, 'Ember'], [35, 'Amber'], [55, 'Gold'], [80, 'Lime'], [120, 'Moss'], [160, 'Jade'], [180, 'Teal'], [195, 'Lagoon'], [215, 'Ocean'], [235, 'Indigo'], [260, 'Violet'], [285, 'Plum'], [315, 'Orchid'], [340, 'Rose'], [361, 'Ember']];
+  var MIX_MOOD = { dark: ['Dusk', 'Night', 'Haze', 'Deep', 'Midnight', 'Shadow', 'Velvet'], light: ['Morning', 'Mist', 'Paper', 'Cloud', 'Linen', 'Daylight', 'Breeze'] };
+  function mixColors(mode) {
+    var R = function (a, b) { return a + Math.random() * (b - a); };
+    for (var tries = 0; tries < 40; tries++) {
+      var h = Math.round(R(0, 360)), s = R(12, 32), ah = Math.round((h + R(120, 220)) % 360), c;
+      if (mode === 'dark') c = { bg: hslHex(h, s, R(5, 9)), bar: hslHex(h, s, R(3, 6)), box: hslHex(h, s, R(10, 14)), panel: hslHex(h, s, R(13, 17)), line: hslHex(h, s * .9, R(20, 26)),
+        text: hslHex(h, R(8, 20), R(87, 93)), mute: hslHex(h, R(6, 14), R(62, 70)), barText: hslHex(h, R(6, 14), R(62, 70)), accent: hslHex(ah, R(70, 90), R(60, 68)) };
+      else c = { bg: hslHex(h, s, R(94, 97)), bar: hslHex(h, s, R(90, 93)), box: hslHex(h, s * .6, R(98, 100)), panel: hslHex(h, s * .6, R(97, 99)), line: hslHex(h, s * .8, R(82, 87)),
+        text: hslHex(h, R(15, 30), R(10, 16)), mute: hslHex(h, R(8, 16), R(34, 40)), barText: hslHex(h, R(8, 16), R(34, 40)), accent: hslHex(ah, R(65, 85), R(38, 46)) };
+      if (contrastOf(c.text, c.box) >= 7 && contrastOf(c.mute, c.box) >= 4.5 && contrastOf(c.mute, c.bg) >= 4.5 && contrastOf(c.accent, c.bg) >= 3) {
+        var hn = MIX_HUE.filter(function (x) { return h < x[0]; })[0][1], md = MIX_MOOD[mode];
+        return { n: hn + ' ' + md[Math.floor(Math.random() * md.length)], c: c, a: c.accent };
+      }
+    }
+    return null;
+  }
+  var lastMix = { dark: null, light: null };
   function pThemes(p) {
     var cur = draft.colors = draft.colors || {};
     ['dark', 'light', 'pg'].forEach(function (k) { if (!cur[k] || Array.isArray(cur[k])) cur[k] = {}; });
@@ -734,9 +771,30 @@
       presetGroup = b.dataset.pgF; lsSet('ix-pgroup', presetGroup); grid.dataset.grp = presetGroup; search.value = '';
       p.querySelectorAll('[data-pg-f]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); applyFilter();
     }; });
-    p.querySelector('#ix-prand').onclick = function () {
-      var pool = cards.filter(function (c) { return !c.hidden && c.getAttribute('aria-pressed') !== 'true'; });
-      if (pool.length) pool[Math.floor(Math.random() * pool.length)].click();
+    /* Surprise Me: Another One mixes again (the loader shows for a moment), Use It fills this mode's colours and the accent like a preset
+       (Save Settings keeps them), Save to My Presets keeps the mix by its name. */
+    var showMix = function (mx) {
+      p.querySelector('#ix-surpv').innerHTML = miniPage(Object.assign({}, def, mx.c), mx.a);
+      p.querySelector('#ix-surn').textContent = mx.n;
+    };
+    if (!lastMix[m]) lastMix[m] = mixColors(m);
+    if (lastMix[m]) showMix(lastMix[m]);
+    p.querySelector('#ix-sura').onclick = function () {
+      var w = p.querySelector('#ix-surw'), bt = this; w.hidden = false; bt.disabled = true;
+      setTimeout(function () { var mx = mixColors(m); if (mx) { lastMix[m] = mx; showMix(mx); } w.hidden = true; bt.disabled = false; }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450);
+    };
+    p.querySelector('#ix-suru').onclick = function () {
+      var mx = lastMix[m]; if (!mx) return;
+      cur[m] = JSON.parse(JSON.stringify(mx.c)); delete cur[m].accent; draft.accent = mx.a;
+      var y = p.closest('.ix-pane').scrollTop; preview(); pThemes(p); p.closest('.ix-pane').scrollTop = y;
+      toast('"' + mx.n + '" is on. Save Settings keeps it.');
+    };
+    p.querySelector('#ix-surs').onclick = function () {
+      var mx = lastMix[m]; if (!mx) return;
+      var mine = (S.myPresets || []).filter(function (x) { return x.n !== mx.n; }), c = JSON.parse(JSON.stringify(mx.c)); delete c.accent;
+      var item = { n: mx.n, a: mx.a, dark: JSON.parse(JSON.stringify(cur.dark || {})), light: JSON.parse(JSON.stringify(cur.light || {})) }; item[m] = c;
+      mine.push(item);
+      saveMine(mine.slice(-40)).then(function () { toast('Saved as "' + mx.n + '" in My Presets.'); }, function (e) { mpe.textContent = e.message; });
     };
     applyFilter();
     p.querySelectorAll('[data-pre]').forEach(function (b) { b.onclick = function () {
@@ -756,7 +814,6 @@
       saveMine(mine.slice(-40)).then(function () { toast('Saved as "' + name + '".'); presetGroup = 'mine'; lsSet('ix-pgroup', 'mine'); again(); }, function (e) { mpe.textContent = e.message; });
     };
     p.querySelectorAll('[data-mpd]').forEach(function (b) { b.onclick = function () {
-      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Click Again to Delete'; return; }
       saveMine((S.myPresets || []).filter(function (x, i) { return i !== +b.dataset.mpd; })).then(function () { toast('Deleted.'); again(); }, function (e) { mpe.textContent = e.message; }); }; });
     p.querySelector('#ix-mpx').onclick = function () {
       if (!(S.myPresets || []).length) { mpe.textContent = 'You have no presets of your own to export yet.'; return; }
@@ -877,7 +934,7 @@
             return '<ol class="ix-stps">' +
               stp(1, d1, cur === 1, 'Make a Bot', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It then gives you a <b>token</b>: a long line of letters and numbers.</p>') +
               stp(2, d1, false, 'Paste Its Token', '<div class="ix-fd">' + '<label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
-                '<button type="button" class="ix-btn pri" id="nt-st">Save Token</button>' + (n.hasToken ? '<button type="button" class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div><small>It stays on your server and is only used to talk to Telegram.</small></div>') +
+                '<button type="button" class="ix-btn pri" id="nt-st">Save Token</button>' + (n.hasToken ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div><small>It stays on your server and is only used to talk to Telegram.</small></div>') +
               stp(3, d3, cur === 3, 'Connect Your Chat', '<p>Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.</p>' +
                 '<div class="ix-row"><button type="button" class="ix-btn" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button></div>' +
                 '<div class="ix-status">' + (n.chat ? '<span class="ix-ok">✓</span><span><b>Connected to</b> ' + esc(n.chatName || n.chat) + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '</span>' : '<span>!</span><span>No chat yet. Send <code>/start</code> to your bot first.</span>') + '</div>' +
@@ -947,7 +1004,6 @@
       };
       var rm = p.querySelector('#nt-rm');
       if (rm) rm.onclick = function () {
-        if (rm.dataset.armed !== '1') { rm.dataset.armed = '1'; rm.textContent = 'Click Again to Remove'; return; }
         call('notify_save', { clearToken: true }, rm).then(function (j) { if (j) draw(j, null, 'Bot removed. Reminders are off.'); });
       };
       p.querySelector('#nt-find').onclick = function () {
@@ -992,7 +1048,7 @@
   }
   /* Health > Server Check: why icons or titles can't be fetched, folder permissions, then PHP, limits and extensions. */
   function pCheck(p) {
-    p.innerHTML = '<p>What your hosting allows: outside connections, folder writes and PHP features.</p><div class="ix-row"><span class="ix-spin"></span><span>Running…</span></div>';
+    p.innerHTML = '<p>What your hosting allows: outside connections, folder writes and PHP features.</p><div class="ix-row"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><span>Running…</span></div>';
     Promise.all([api('diag'), api('health')]).then(function (r) {
       var j = r[0], h = r[1] || {};
       if (!j.ok) { p.innerHTML = '<p class="ix-err">' + esc(j.error || 'Could not run the check.') + '</p>'; return; }
@@ -1407,7 +1463,7 @@
       '<section class="ix-card"><div class="ix-cardh"><h3>Update the Site</h3><span class="ix-mu">Installed: <b>' + esc(st.version) + '</b>' + (last ? ' · ' + (last.how === 'back' ? 'went back to ' : 'updated to ') + esc(last.version) + ' ' + esc(ago(last.at)) : '') + '</span></div>' +
         problems.map(function (m) { return '<div class="ix-status"><span>!</span><span>' + m + '</span></div>'; }).join('') + stepsHtml + review + '</section>' +
       '<section class="ix-card"><div class="ix-cardh"><h3>Go Back</h3></div>' + (prev
-        ? '<p>Version <b>' + esc(prev.version) + '</b> was saved ' + esc(ago(prev.at)) + ' (' + size(prev.bytes) + '). Going back does not change your data.</p><div class="ix-apl"><label for="ix-bpw">Website Password</label><div class="ix-row"><input type="password" id="ix-bpw" autocomplete="current-password" style="max-width:340px"><button type="button" class="ix-btn" id="ix-ubk">Go Back to ' + esc(prev.version) + '</button></div></div><p class="ix-err" id="ix-be"></p>'
+        ? '<p>Version <b>' + esc(prev.version) + '</b> was saved ' + esc(ago(prev.at)) + ' (' + size(prev.bytes) + '). Going back does not change your data.</p><div class="ix-apl"><label for="ix-bpw">Website Password</label><div class="ix-row"><input type="password" id="ix-bpw" autocomplete="current-password" style="max-width:340px"><button type="button" data-hold class="ix-btn" id="ix-ubk">Go Back to ' + esc(prev.version) + '</button></div></div><p class="ix-err" id="ix-be"></p>'
         : '<p>Nothing is saved yet. The first update saves the version you have now, so you can come back to it in one click.</p>') + '</section>';
     if (!staged) ghWire(p, st);
     var dz = p.querySelector('#ix-udz');
@@ -1441,7 +1497,7 @@
       }, function () { btn.disabled = false; errEl.className = 'ix-err'; errEl.textContent = 'Lost the connection while updating. Wait a minute, reload, and look at the version shown in Overview.'; });
     };
     var ap = p.querySelector('#ix-uap'); if (ap) ap.onclick = function () { run(ap, false, p.querySelector('#ix-upw'), p.querySelector('#ix-ue'), 'Applying the update…'); };
-    var bk = p.querySelector('#ix-ubk'); if (bk) bk.onclick = function () { if (bk.dataset.armed !== '1') { bk.dataset.armed = '1'; bk.textContent = 'Click Again to Go Back'; return; } run(bk, true, p.querySelector('#ix-bpw'), p.querySelector('#ix-be'), 'Going back…'); };
+    var bk = p.querySelector('#ix-ubk'); if (bk) bk.onclick = function () { run(bk, true, p.querySelector('#ix-bpw'), p.querySelector('#ix-be'), 'Going back…'); };
   }
   function pFiles(p) {
     p.innerHTML = '<p class="ix-ld">Comparing your server with this version\'s file list…</p>';
@@ -1455,7 +1511,7 @@
         '<div class="ix-chgs">' + stat(j.matched, 'files match version ' + esc(j.version), 'new') + stat(j.changed.length, 'changed by hand', j.changed.length ? 'updated' : 'zero') + stat(j.missing.length, 'missing', j.missing.length ? 'removed' : 'zero') + stat(ex.length, 'not part of this version', ex.length ? 'updated' : 'zero') + '</div>' +
         (ex.length ? '<section class="ix-card"><div class="ix-cardh"><h3>Files That Do Not Belong</h3><span class="ix-mu"><a href="#" id="ix-fall">Select All</a> · <a href="#" id="ix-fnone">None</a></span></div>' +
           '<p>These are not part of any version of the site. You see the list first and nothing goes until you confirm with your password.</p><div class="ix-frl">' + list + '</div>' +
-          '<div class="ix-apl"><label for="ix-fpw">Website Password</label><div class="ix-row"><input type="password" id="ix-fpw" autocomplete="current-password" style="max-width:340px"><button type="button" class="ix-btn danger" id="ix-fdel">Delete Selected</button></div></div><p class="ix-err" id="ix-fe"></p></section>'
+          '<div class="ix-apl"><label for="ix-fpw">Website Password</label><div class="ix-row"><input type="password" id="ix-fpw" autocomplete="current-password" style="max-width:340px"><button type="button" data-hold class="ix-btn danger" id="ix-fdel">Delete Selected</button></div></div><p class="ix-err" id="ix-fe"></p></section>'
           : '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Nothing on your server is out of place.</b> Every file there belongs to version ' + esc(j.version) + '.</span></div>') +
         (j.changed.length ? '<section class="ix-card"><div class="ix-cardh"><h3>Changed by Hand</h3></div><p>These files differ from what version ' + esc(j.version) + ' ships. If you did not change them yourself, apply the same version again from the Update tab to put them back.</p><div class="ix-frl">' + j.changed.map(function (c) { return '<div class="ix-fr"><span class="ix-frp"><code>' + esc(c.path) + '</code></span><span class="ix-mu ix-frs">' + size(c.size) + '</span></div>'; }).join('') + '</div></section>' : '') +
         (j.missing.length ? '<section class="ix-card"><div class="ix-cardh"><h3>Missing</h3></div><p>These belong to this version but are not on your server. Apply the same version again from the Update tab to bring them back.</p><div class="ix-frl">' + j.missing.map(function (m) { return '<div class="ix-fr"><span class="ix-frp"><code>' + esc(m) + '</code></span></div>'; }).join('') + '</div></section>' : '') +
@@ -1468,7 +1524,6 @@
         var er = p.querySelector('#ix-fe'), pick = [].map.call(p.querySelectorAll('.ix-fr input:checked'), function (c) { return ex[+c.dataset.i].path; });
         if (!pick.length) { er.className = 'ix-err'; er.textContent = 'Tick at least one file.'; return; }
         var pw = p.querySelector('#ix-fpw').value; if (!pw) { er.className = 'ix-err'; er.textContent = 'Type your website password.'; return; }
-        if (del.dataset.armed !== '1') { del.dataset.armed = '1'; del.textContent = 'Click Again to Delete ' + pick.length; return; }
         del.disabled = true; er.className = 'ix-note'; er.textContent = 'Deleting…';
         api('files_delete', { paths: pick, password: pw }).then(function (r) {
           if (!r.ok) { del.disabled = false; del.dataset.armed = ''; del.textContent = 'Delete Selected'; er.className = 'ix-err'; er.textContent = r.error || 'Nothing was deleted.'; return; }
@@ -1521,7 +1576,7 @@
   function checkRow(cls, mark, title, text) {
     return '<div class="ix-chkrow ' + cls + '"><span>' + mark + '</span><div>' + (title ? '<b>' + title + '</b>' : '') + (text ? (title ? '<small>' : '<div>') + text + (title ? '</small>' : '</div>') : '') + '</div></div>';
   }
-  function spinRow(t) { return '<div class="ix-row"><span class="ix-spin"></span><span>' + (t || 'Loading…') + '</span></div>'; }
+  function spinRow(t) { return '<div class="ix-row"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><span>' + (t || 'Loading…') + '</span></div>'; }
   /* how strong a new password looks: length counts most, then mixing letters, digits and symbols */
   function pwScore(s) {
     var n = s.length, kinds = (/[a-z]/.test(s) ? 1 : 0) + (/[A-Z]/.test(s) ? 1 : 0) + (/\d/.test(s) ? 1 : 0) + (/[^A-Za-z0-9]/.test(s) ? 1 : 0);
@@ -1638,7 +1693,7 @@
       var when1 = function (t) { return t ? K.when(t) : 'never'; };
       var list = keys.length ? '<div class="ix-devs">' + keys.map(function (k) {
         return '<div class="ix-dev"><span class="ix-dev-i" aria-hidden="true">' + svg(ICON.key) + '</span><div class="ix-dev-b"><b>' + esc(k.name) + '</b><small>Added ' + esc(when1(k.at)) + ' · Last used ' + esc(when1(k.last)) + '</small></div>' +
-          '<button type="button" class="ix-btn" data-pkren="' + esc(k.id) + '">Rename</button><button type="button" class="ix-btn danger" data-pkdel="' + esc(k.id) + '">Remove</button></div>'; }).join('') + '</div>'
+          '<button type="button" class="ix-btn" data-pkren="' + esc(k.id) + '">Rename</button><button type="button" data-hold class="ix-btn danger" data-pkdel="' + esc(k.id) + '">Remove</button></div>'; }).join('') + '</div>'
         : '<p class="ix-note">No passkey yet. Add one below, on this device or with a security key.</p>';
       b.innerHTML = tabHead(ICON.device, 'Passkeys', 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in.') +
         ecCard(keys.length ? 'good' : '', ICON.shield, keys.length ? 'Passkeys On' : 'No Passkeys Yet', 'Your device must check that it is you (fingerprint, face or PIN) every time. Nothing a passkey leaves on your server can log anyone in.', list) +
@@ -1675,7 +1730,6 @@
           if (pwBox) { pwBox.scrollIntoView({ block: 'center', behavior: 'smooth' }); pwBox.focus(); }
           return;
         }
-        if (x.dataset.armed !== '1') { x.dataset.armed = '1'; x.textContent = 'Click Again: Remove'; return; }
         x.disabled = true; api('pk_delete', { id: x.dataset.pkdel, password: pw }).then(function (j) {
           if (!j.ok) { say(j._status === 401 ? 'That isn\'t your website password.' : j.error || 'Could not remove it.'); x.disabled = false; x.dataset.armed = ''; x.textContent = 'Remove'; return; }
           st.pk = j.keys; toast('Passkey removed.'); drawPk(); overview();
@@ -1726,13 +1780,13 @@
           '<div id="ix-rec">' + card('', ICON.box, 'Recovery Key', 'A spare way in. If you ever forget the passphrase, this code opens your Files, Cards, presets and locked tabs and lets you set a new passphrase. Keep it somewhere safe (print it, or put it in a password manager): anyone who has it can open them.',
             '<div class="ix-fgrid">' + fd('ix-rpp', 'Your Passphrase', 'off') + fd('ix-rpw', 'Website Password', 'current-password') + '</div>' +
             '<p class="ix-err" id="ix-re"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-rmk">' + (st.rec ? 'Make a New Recovery Key' : 'Create Recovery Key') + '</button>' +
-            (st.rec ? '<button type="button" class="ix-btn danger" id="ix-rdel">Remove Recovery Key</button>' : '') + '</div><div id="ix-rshow"></div>',
+            (st.rec ? '<button type="button" data-hold class="ix-btn danger" id="ix-rdel">Remove Recovery Key</button>' : '') + '</div><div id="ix-rshow"></div>',
             '<span class="ix-pill ' + (st.rec ? 'good' : '') + '">' + (st.rec ? (st.recGap ? 'Make a New One' : 'Created') : 'Not Created') + '</span>') +
           (st.recGap ? '<p class="ix-note">Your recovery key is older than Files and Cards. Make a new one below.</p>' : '') + '</div>' +
           '<form id="ix-ef">' + card('danger', ICON.out, 'Remove Encryption', 'Locked tabs turn back into normal private tabs (still hidden from visitors) and backup files stop being locked. To use a different passphrase, change it above instead.',
             '<div class="ix-fgrid">' + fd('ix-ecur', 'Your Passphrase', 'off') + fd('ix-epw', 'Website Password', 'current-password') + '</div>' +
             fd('ix-eold', 'Earlier Passphrase', 'off', 'The one your existing locked tabs use now.', 'ix-eoldw') +
-            '<p class="ix-err" id="ix-ee"></p><div class="ix-row"><button type="button" class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
+            '<p class="ix-err" id="ix-ee"></p><div class="ix-row"><button type="button" data-hold class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
       }
       b.innerHTML = tabHead(ICON.lock, 'Encryption', 'One passphrase locks your Files, Cards and saved presets, your private tabs in Info and Links, and your backup files. Only you can unlock them.') + html;
       var f = b.querySelector('#ix-ef'), er = b.querySelector('#ix-ee'), val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
@@ -1780,7 +1834,6 @@
       if (rdel) rdel.onclick = function () {
         var re = b.querySelector('#ix-re'), site = val('#ix-rpw');
         if (!site) { re.textContent = 'Type your website password first.'; return; }
-        if (rdel.dataset.armed !== '1') { rdel.dataset.armed = '1'; rdel.textContent = 'Click Again: Remove'; return; }
         rdel.disabled = true; re.textContent = 'Removing…';
         PP.dropRecovery({ site: site }).then(function () { toast('Recovery key removed.'); afterVaultChange(); drawEnc(); })
           .catch(function (x) { re.textContent = x && x.user ? x.message : "Can't reach the server. Nothing was changed."; rdel.dataset.armed = ''; rdel.textContent = 'Remove Recovery Key'; })
@@ -1790,8 +1843,6 @@
       if (rm) rm.onclick = function () {
         var pp = val('#ix-ecur'), site = val('#ix-epw');
         if (!pp || !site) { er.textContent = 'Type the passphrase and your website password first.'; return; }
-        var n = (st.vault ? st.tabs : 0) + (st.lvault ? st.lenc : 0);
-        if (rm.dataset.armed !== '1') { rm.dataset.armed = '1'; rm.textContent = 'Click Again: Remove' + (n ? ' and Decrypt ' + n + (n === 1 ? ' Tab' : ' Tabs') : ''); return; }
         run(rm, 'Decrypting…', function () { return PP.remove({ pp: pp, site: site, old: val('#ix-eold') }); }, 'Passphrase removed. Encrypted tabs are normal private tabs now.');
       };
     }
@@ -2378,10 +2429,9 @@
         var all = j.versions.filter(function (v) { return filt === 'all' || v.app === filt; }), list = all.slice(0, shown);
         vl.innerHTML = list.length ? list.map(function (v) {
           return '<div class="ix-ver"><span class="ix-tag">' + NAMES[v.app] + '</span><span>' + esc(ago(v.time)) + ' <small>' + esc(when(v.time)) + '</small></span><span style="color:var(--ix-mu2)">' + size(v.size) + '</span>' +
-            '<button type="button" class="ix-btn" data-app="' + v.app + '" data-id="' + esc(v.id) + '">Restore</button></div>'; }).join('') +
+            '<button type="button" data-hold class="ix-btn" data-app="' + v.app + '" data-id="' + esc(v.id) + '">Restore</button></div>'; }).join('') +
           (all.length > shown ? '<div class="ix-row"><button type="button" class="ix-btn" id="ix-vmore">Show More (' + (all.length - shown) + ')</button></div>' : '') : '<p>No earlier versions yet.</p>';
         vl.querySelectorAll('[data-id]').forEach(function (b) { b.onclick = function () {
-          if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Click Again to Restore'; return; }
           api('version_restore', { app: b.dataset.app, id: b.dataset.id }).then(function (k) {
             if (!k.ok) { toast(k.error); return; } toast(NAMES[b.dataset.app] + ' restored. Reloading…'); setTimeout(function () { location.reload(); }, 900); });
         }; });
@@ -2470,7 +2520,7 @@
   /* Settings > Health: Overview, Domains and Uptime, Server Check */
   function health(sub) { go(sub || 'health'); }
   function pHealth(p) {
-    p.innerHTML = '<div class="ix-row"><span class="ix-spin"></span><span>Checking…</span></div>';
+    p.innerHTML = '<div class="ix-row"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><span>Checking…</span></div>';
     Promise.all([api('health'), api('watch')]).then(function (r) {
       var h = r[0], w = r[1] || {};
       if (!h.ok) { p.innerHTML = '<p class="ix-err">' + esc(h.error || 'Could not load.') + '</p>'; return; }
@@ -2518,16 +2568,16 @@
         '<details class="ix-acc"' + (errLines || openLogs.length ? ' open' : '') + '><summary><span>PHP Errors</span><small>' + (openLogs.length ? 'A log is publicly readable' : errLines ? 'From your host\'s error_log files, newest last' : 'No Errors Logged') + '</small></summary><div class="ix-accb">' +
           (h.logs.length ? h.logs.map(function (l) {
             return (l.public === true ? '<div class="ix-status"><span>!</span><span><b>' + esc(l.file) + ' can be opened by anyone on the internet.</b> Error logs can show file paths. Add this to the <code>.htaccess</code> in your site\'s main folder: <code>&lt;FilesMatch "^error_log(\\.[0-9]+)?$"&gt; Require all denied &lt;/FilesMatch&gt;</code></span></div>' : '') + '<div class="ix-log"><div class="ix-row" style="justify-content:space-between"><b>' + esc(l.file) + '</b><span class="ix-note" style="margin:0">' + esc(size(l.size)) + ', changed ' + esc(ago(l.at)) + '</span>' +
-              (l.clear && l.size ? '<button type="button" class="ix-btn" data-clr="' + esc(l.file) + '">Clear</button>' : '') + '</div><pre>' + (l.lines.length ? esc(l.lines.join('\n')) : '(empty)') + '</pre></div>'; }).join('')
+              (l.clear && l.size ? '<button type="button" data-hold class="ix-btn" data-clr="' + esc(l.file) + '">Clear</button>' : '') + '</div><pre>' + (l.lines.length ? esc(l.lines.join('\n')) : '(empty)') + '</pre></div>'; }).join('')
             : '<p>No error_log files were found. That is good news.</p>') + '</div></details>' +
         '<p class="ix-note">PHP version, limits and extensions, and whether your hosting can reach other websites: <button type="button" class="ix-linkbtn" style="padding:0" data-go="check">Server Check</button>.</p>';
+      if (window.HUB && HUB.countUp) HUB.countUp([].filter.call(p.querySelectorAll('.ix-hcards .ix-hc b'), function (b) { return /^(Disk Used|PHP Errors|Domains)$/.test(b.parentNode.querySelector('small').textContent); }));   // (1.65.0) these numbers roll up; the version never does
       p.querySelectorAll('[data-clr]').forEach(function (b) { b.onclick = function () {
-        if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Click Again to Clear'; return; }
         api('health_log_clear', { file: b.dataset.clr }).then(function (j) { if (j.ok) { toast('Log cleared.'); pHealth(p); } else toast(j.error); });
       }; });
       var vb = p.querySelector('#ix-vbk');
       if (vb) vb.onclick = function () {
-        var box = p.querySelector('#ix-vres'); vb.disabled = true; box.innerHTML = '<div class="ix-row"><span class="ix-spin"></span><span>Testing…</span></div>';
+        var box = p.querySelector('#ix-vres'); vb.disabled = true; box.innerHTML = '<div class="ix-row"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><span>Testing…</span></div>';
         api('health_verify', {}).then(function (j) {
           vb.disabled = false;
           if (!j.ok) { box.innerHTML = '<p class="ix-err">' + esc(j.error || 'The test could not run.') + '</p>'; return; }
@@ -2543,7 +2593,7 @@
     });
   }
   function pDomains(p) {
-    p.innerHTML = '<p>Domain and SSL expiry, hosting renewals and uptime, with Telegram alerts and tasks.</p><div id="ix-wbox"><div class="ix-row"><span class="ix-spin"></span><span>Loading…</span></div></div>';
+    p.innerHTML = '<p>Domain and SSL expiry, hosting renewals and uptime, with Telegram alerts and tasks.</p><div id="ix-wbox"><div class="ix-row"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><span>Loading…</span></div></div>';
     api('watch').then(function (w) {
       var box = p.querySelector('#ix-wbox'); if (!box) return;
       if (!w || !w.ok) { box.innerHTML = '<p class="ix-err">' + esc((w && w.error) || 'Could not load.') + '</p>'; return; }
@@ -2563,7 +2613,7 @@
               '<div><small>Domain' + (s.dom && s.dom.name && s.dom.name !== s.host ? ' (' + esc(s.dom.name) + ')' : '') + '</small><b class="' + leftCls(dn, 30) + '">' + (s.dom && s.dom.exp ? esc(new Date(s.dom.exp + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })) : '—') + '</b><span>' + (s.dom && s.dom.exp ? esc(leftText(dn)) + (s.dom.registrar ? ', ' + esc(s.dom.registrar) : '') : esc((s.dom && s.dom.err) || 'Not checked yet')) + '</span></div>' +
               '<div><small>SSL Certificate</small><b class="' + leftCls(sn, 14) + '">' + (s.ssl && s.ssl.exp ? esc(new Date(s.ssl.exp + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })) : '—') + '</b><span>' + (s.ssl && s.ssl.exp ? esc(leftText(sn)) + (s.ssl.issuer ? ', ' + esc(s.ssl.issuer) : '') : esc((s.ssl && s.ssl.err) || 'Not checked yet')) + '</span></div>' +
               '<div><small>Hosting Renews</small><input type="date" data-hosting value="' + esc(s.hosting || '') + '" aria-label="Hosting renewal date for ' + esc(s.host) + '"><span>' + (s.hosting ? esc(leftText(hn)) : 'Your hosting\'s renewal date') + '</span></div>' +
-            '</div><div class="ix-row" style="margin-top:8px"><label class="ix-chk" style="margin:0"><input type="checkbox" data-up' + (s.up ? ' checked' : '') + '> Check Uptime Every 5 Minutes</label><span style="flex:1"></span><button type="button" class="ix-btn" data-del>Remove</button></div></div>';
+            '</div><div class="ix-row" style="margin-top:8px"><label class="ix-chk" style="margin:0"><input type="checkbox" data-up' + (s.up ? ' checked' : '') + '> Check Uptime Every 5 Minutes</label><span style="flex:1"></span><button type="button" data-hold class="ix-btn" data-del>Remove</button></div></div>';
         }).join('') : '<p class="ix-note" style="margin:14px 0">No domains yet. Add yours above: the expiry dates are looked up for you.</p>') +
         '<div class="ix-row" style="margin-top:10px"><button type="button" class="ix-btn" id="ix-wnow"' + (w.sites && w.sites.length ? '' : ' disabled') + '>Check Everything Now</button></div>' +
         '<h3>Renewal Tasks</h3><p>Expiry dates become tasks, so reminders cover them.</p>' +
@@ -2583,7 +2633,6 @@
         r.querySelector('[data-hosting]').onchange = function (e) { api('watch_set', { host: h, hosting: e.target.value }).then(function (j) { if (j.ok) { toast(e.target.value ? 'Hosting date saved.' : 'Hosting date removed.'); draw(j); } }); };
         r.querySelector('[data-up]').onchange = function (e) { api('watch_set', { host: h, up: e.target.checked }).then(function (j) { if (j.ok) draw(j); }); };
         r.querySelector('[data-del]').onclick = function () {
-          var b = this; if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Click Again to Remove'; return; }
           api('watch_del', { host: h }).then(function (j) { if (j.ok) { toast('Removed. Its tasks stay in Tasks.'); draw(j); } });
         };
       });

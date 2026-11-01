@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.64.12" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.65.0" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -101,7 +101,6 @@
     grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z'
   };
   /* the theme button shows what it switches to: a sun in dark mode, a moon in light mode; its tooltip says the same */
-  function themeIcon() { return svg(themeNow() === 'light' ? ICON.moon : ICON.sun); }
   var svg = function (d) { return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>'; };
   var isHex = function (v) { return /^#[0-9a-f]{6}$/i.test(v || ''); };   // a color like #d9a85b (also shared as HUB.isHex)
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
@@ -434,17 +433,6 @@
         if (b.hasAttribute('data-ix-done')) { closePop(); return doneEdit(); }
         var it = ebarEnts[+b.getAttribute('data-i')]; if (it) it.run(b);
       });
-      var tip = function (e) {   // the name above a button (Icons Only; with text, only where the text is hidden)
-        var t = document.getElementById('ix-ebtip'), bt = e.type === 'mouseout' || e.type === 'focusout' ? null : e.target.closest('.ix-eb');
-        var lb = bt && bt.querySelector('.ix-ebl');
-        if (!bt || (lb && lb.offsetWidth)) { if (t) t.remove(); return; }
-        if (!t) { t = document.createElement('div'); t.id = 'ix-ebtip'; t.setAttribute('aria-hidden', 'true'); document.body.appendChild(t); }
-        t.textContent = bt.getAttribute('data-tip');
-        var r = bt.getBoundingClientRect();
-        t.style.top = (r.top - t.offsetHeight - 10) + 'px';
-        t.style.left = Math.max(8, Math.min(innerWidth - t.offsetWidth - 8, r.left + r.width / 2 - t.offsetWidth / 2)) + 'px';
-      };
-      ['mouseover', 'mouseout', 'focusin', 'focusout'].forEach(function (k) { el.addEventListener(k, tip); });
       document.body.appendChild(el);
     }
     ebarEnts = barEntries();
@@ -626,6 +614,72 @@
   function iconBtn(k, label, icon, cls, id) {
     return '<button type="button" class="ix-ib' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '"' : '') + ' data-ix="' + k + '" aria-label="' + label + '" title="' + label + '">' + icon + '</button>';
   }
+  /* (1.65.0) Hold to Delete: a button with data-hold acts only after it is held for 0.9 s (a red fill runs across it); letting go early
+     does nothing, and a plain click says to hold it. Works with a mouse, a finger and the keyboard (hold Enter or Space). The page's own
+     click handler runs once the hold is complete, so each page keeps its own delete and Undo. */
+  var HOLD_MS = 900, holding = null;
+  function holdBtn(n) { return n && n.closest ? n.closest('[data-hold]') : null; }
+  function holdStart(b) {
+    if (holding || !b || b.disabled) return;
+    holding = b; b.classList.add('ix-holding'); b.setAttribute('aria-busy', 'true');
+    b._hold = setTimeout(function () { holdStop(); b._held = true; try { b.click(); } finally { b._held = false; } }, reduced() ? 500 : HOLD_MS);
+  }
+  function holdStop() { var b = holding; holding = null; if (!b) return; clearTimeout(b._hold); b.classList.remove('ix-holding'); b.removeAttribute('aria-busy'); }
+  document.addEventListener('pointerdown', function (e) { var b = holdBtn(e.target); if (b && e.button === 0) holdStart(b); }, true);
+  ['pointerup', 'pointercancel'].forEach(function (k) { addEventListener(k, holdStop, true); });
+  addEventListener('blur', function (e) { if (e.target === window) holdStop(); });   // the window lost focus (another app); not a field losing it to the button
+  document.addEventListener('pointerout', function (e) { if (holding && holdBtn(e.target) === holding && !holding.contains(e.relatedTarget)) holdStop(); }, true);
+  document.addEventListener('contextmenu', function (e) { if (holdBtn(e.target)) e.preventDefault(); }, true);   // a long press on a phone
+  document.addEventListener('keydown', function (e) { var b = holdBtn(e.target); if (b && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); if (!e.repeat) holdStart(b); } }, true);
+  document.addEventListener('keyup', function (e) { if (holdBtn(e.target) && (e.key === 'Enter' || e.key === ' ')) holdStop(); }, true);
+  document.addEventListener('click', function (e) {
+    var b = holdBtn(e.target); if (!b || b._held) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    toast('Hold the button down to confirm.');
+  }, true);
+
+  /* (1.65.0) One tooltip for every button that shows only an icon: the Edit Bar (Icons Only), the bar's buttons, and the page tabs when the bar
+     shows icons only. Dark glass with a thin accent line; it eases in after a moment, sits below a button in the top half of the screen and
+     above one in the bottom half, and stays on the screen. Buttons whose name is already visible get none. The names stay for screen readers
+     (aria-label); the browser's own title tooltip is moved into data-tip so two never show at once. */
+  function tipTarget(n) {
+    var bt = n && n.closest && n.closest('#ix-ebar .ix-eb, #ix-bar [data-tip], #ix-drawer [data-tip], [data-tip].ix-tipme');
+    if (!bt) return null;
+    var vis = (bt.innerText || '').trim();   // a visible name: no tooltip needed
+    return vis ? null : bt;
+  }
+  function tipShow(bt) {
+    var t = document.getElementById('ix-ebtip');
+    if (!bt) { if (t) t.remove(); return; }
+    if (!t) { t = document.createElement('div'); t.id = 'ix-ebtip'; t.setAttribute('aria-hidden', 'true'); document.body.appendChild(t); }
+    if (t._for === bt) return;
+    t._for = bt; t.textContent = bt.getAttribute('data-tip'); t.className = '';
+    var r = bt.getBoundingClientRect(), below = r.top + r.height / 2 < innerHeight / 2;
+    var left = Math.max(8, Math.min(innerWidth - t.offsetWidth - 8, r.left + r.width / 2 - t.offsetWidth / 2));
+    t.style.left = left + 'px';
+    t.style.top = (below ? r.bottom + 10 : r.top - t.offsetHeight - 10) + 'px';
+    t.style.setProperty('--ix-ax', Math.round(r.left + r.width / 2 - left) + 'px');
+    t.className = below ? 'below' : '';
+  }
+  ['mouseover', 'focusin'].forEach(function (k) { document.addEventListener(k, function (e) { tipShow(tipTarget(e.target)); }, true); });
+  ['mouseout', 'focusout'].forEach(function (k) { document.addEventListener(k, function (e) { var to = tipTarget(e.relatedTarget); if (!to || to !== tipTarget(e.target)) tipShow(to); }, true); });
+  ['scroll', 'pointerdown', 'keydown'].forEach(function (k) { addEventListener(k, function (e) { if (k !== 'keydown' || e.key === 'Escape') tipShow(null); }, true); });
+  function tipNames(root) { [].forEach.call(root.querySelectorAll('[title]'), function (b) { var t = b.getAttribute('title'); if (!b.hasAttribute('aria-label')) b.setAttribute('aria-label', t); b.setAttribute('data-tip', t); b.removeAttribute('title'); }); }   // the name stays for screen readers
+
+  /* (1.65.0) The theme button is a day/night switch (adapted from Uiverse.io by JustCode14, "red-dingo-61", MIT: see web/hub/docs/THIRD-PARTY.md):
+     night sky with a moon and stars in dark mode, blue sky with the sun and a cloud in light mode. It is drawn in the mode it showed last and
+     moved to the new one a frame later, so a change slides instead of jumping. */
+  var shownTheme = '';
+  function themeKnob(mini) { return '<span class="ix-tsl' + (mini ? ' mini' : '') + '" aria-hidden="true"><i class="ix-ts1"></i><i class="ix-ts2"></i><i class="ix-ts3"></i><svg viewBox="0 0 16 16" class="ix-tcl"><path transform="matrix(.77976 0 0 .78395-299.99-418.63)" d="m391.84 540.91c-.421-.329-.949-.524-1.523-.524-1.351 0-2.451 1.084-2.485 2.435-1.395.526-2.388 1.88-2.388 3.466 0 1.874 1.385 3.423 3.182 3.667v.034h12.73v-.006c1.775-.104 3.182-1.584 3.182-3.395 0-1.747-1.309-3.186-2.994-3.379.007-.106.011-.214.011-.322 0-2.707-2.271-4.901-5.072-4.901-2.073 0-3.856 1.202-4.643 2.925"/></svg></span>'; }
+  function themeOn() { return (shownTheme || themeNow()) === 'light'; }
+  function themeSwitch() { return '<button type="button" class="ix-ib ix-tsw" data-ix="theme" role="switch" aria-checked="' + themeOn() + '" aria-label="Light Mode" title="' + themeLabel() + '">' + themeKnob() + '</button>'; }
+  function themeSettle(root) {
+    var now = themeNow() === 'light';
+    [].forEach.call((root || document).querySelectorAll('[data-ix="theme"][role="switch"]'), function (b) {
+      if (b.getAttribute('aria-checked') !== String(now)) requestAnimationFrame(function () { requestAnimationFrame(function () { b.setAttribute('aria-checked', String(now)); }); });
+    });
+    shownTheme = themeNow();
+  }
   function themeLabel() { var n = themeNow() === 'light' ? 'Dark' : 'Light'; return 'Switch to ' + n + ' Mode'; }
   /* Logged in: Backup (green, red with a dot while a backup is due) and the gear that opens Settings. Logged out: the key. */
   function acctButtons(adm) {
@@ -647,7 +701,7 @@
     var adm = isAdmin(), nav = NAV();
     var mark = '<img class="ix-logo" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '" alt="">';   // your logo, or Homebase Hub's own
     var brand = '<a class="ix-brand" href="' + ROOT + '" aria-label="' + esc(S.siteName || 'Homebase Hub') + '">' + mark + '<span class="ix-bname">' + esc(S.siteName || 'Homebase Hub') + '</span></a>';
-    var theme = iconBtn('theme', themeLabel(), themeIcon());
+    var theme = themeSwitch();
     var edit = HAS_EDIT ? iconBtn('edit', 'Edit', svg(ICON.edit), '', 'ix-editb') : '';
     var me = acctButtons(adm), links = pageLinks();
     var html;
@@ -673,6 +727,8 @@
     if (qv && (q = document.getElementById('ix-q'))) { q.value = qv; if (had) q.focus(); }
     bindInlineSearch();
     markEditing();
+    themeSettle(bar);
+    tipNames(bar);
   }
   /* Start page with the bar switched off: its corner shows reload and ONE gear button instead of Edit.
      Logged out it opens the login; logged in it lists editing, the other sections and Settings. */
@@ -718,7 +774,7 @@
      Both are drawn fresh each time they open, so they always show the current login, theme and backup state. */
   function panelFoot(adm) {
     return (HAS_EDIT ? '<button type="button" class="ix-pbtn" data-ix="edit">' + svg(ICON.edit) + '<span>Edit</span></button>' : '') +
-      '<button type="button" class="ix-pbtn" data-ix="theme">' + themeIcon() + '<span>' + (themeNow() === 'light' ? 'Dark' : 'Light') + '</span></button>' + acctButtons(adm);
+      '<button type="button" class="ix-pbtn" data-ix="theme" role="switch" aria-checked="' + (themeNow() === 'light') + '">' + themeKnob(true) + '<span>Light Mode</span></button>' + acctButtons(adm);
   }
   function openPanel(id, open, build, from) {   // from: the button that opened it (Safari does not focus a clicked button)
     var d = document.getElementById(id);
@@ -748,7 +804,7 @@
       return '<div class="ix-scrim" data-ix="close"></div><div class="ix-shp" role="dialog" aria-modal="true" aria-label="Search and Menu"><span class="ix-grab" aria-hidden="true"></span>' +
         '<button type="button" class="ix-psearch" data-ix="search">' + svg(ICON.search) + '<span>Search everything</span></button><div class="ix-tiles6">' +
         (HAS_EDIT ? tile('edit', svg(ICON.edit), editing() ? 'Editing' : 'Edit') : '') +
-        tile('theme', themeIcon(), themeNow() === 'light' ? 'Dark Mode' : 'Light Mode') +
+        tile('theme', themeKnob(true), 'Light Mode').replace('data-ix="theme"', 'data-ix="theme" role="switch" aria-checked="' + (themeNow() === 'light') + '"') +
         (adm ? tile('backup', svg(ICON.box), due ? 'Backup Due' : 'Backup', due ? 'due' : '') + tile('account', svg(ICON.gear), 'Settings') + tile('logout', svg(ICON.out), 'Log Out', 'danger')
              : tile('login', svg(ICON.key), 'Log In')) + '</div></div>';
     }, from);
@@ -1260,7 +1316,7 @@
     var left = 300, timer = null, stopped = false;
     openDlg('<div class="ix-ico">' + svg(ICON.lock) + '</div><h2>Approve in Telegram</h2>' +
       '<p>Your bot sent a message. Tap <b>Approve</b> there and this page logs in by itself.</p>' +
-      '<div class="ix-apw"><span class="ix-spin" aria-hidden="true"></span><span id="ix-apt" aria-live="polite">Waiting… 5:00</span></div>' +
+      '<div class="ix-apw"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><span id="ix-apt" aria-live="polite">Waiting… 5:00</span></div>' +
       '<label class="ix-chk"><input type="checkbox" id="ix-trust"' + (trust === true ? ' checked' : '') + '> Trust this browser for 30 days (no code or tap here next time)</label>' +
       (rc ? '<details class="ix-apc"><summary>No phone? Use a recovery code instead</summary>' +
         '<form id="ix-apf"><label for="ix-apcode">One of your two-step recovery codes</label>' +
@@ -1549,6 +1605,26 @@
     mountSettings: function (host, hash) { return adminJs().then(function (m) { m.mount(host, hash); }); },   // the Settings page hands its element to the admin part
     tz: function () { return S.tz || 'Asia/Kolkata'; },   // the site's time zone (Settings > General)
     settingsWindow: function (d) { d.classList.add('ix-sdlg'); sdlgBuild(d); },
+    /* (1.65.0) Numbers roll up to their value when a page opens (about 0.6 s): the first number in each element, in its own format (Indian or
+       Western digit groups, decimals, a currency sign or a unit around it). Reduce motion, or a number that is not shown: no animation. */
+    countUp: function (els) {
+      if (reduced()) return;
+      [].forEach.call(els || [], function (el) {
+        var tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), n, m;
+        while ((n = tw.nextNode())) if ((m = /\d[\d,]*(?:\.\d+)?/.exec(n.nodeValue))) break;
+        if (!n || !m || !el.offsetParent) return;
+        var raw = m[0], to = parseFloat(raw.replace(/,/g, '')), dec = (raw.split('.')[1] || '').length;
+        var loc = /,/.test(raw) ? (/\d,\d{2},\d{3}/.test(raw) ? 'en-IN' : 'en-US') : null, pre = n.nodeValue.slice(0, m.index), post = n.nodeValue.slice(m.index + raw.length);
+        var fmt = function (v) { return loc ? v.toLocaleString(loc, { minimumFractionDigits: dec, maximumFractionDigits: dec }) : v.toFixed(dec); };
+        if (!(to > 0)) return;
+        var t0 = performance.now(), node = n;
+        (function step(t) {
+          var k = Math.min(1, (t - t0) / 600), e = 1 - Math.pow(1 - k, 3);
+          node.nodeValue = pre + fmt(k < 1 ? (dec ? to * e : Math.round(to * e)) : to) + post;
+          if (k < 1) requestAnimationFrame(step); else node.nodeValue = pre + raw + post;
+        })(t0);
+      });
+    },
     /* (1.64.3) the "Encrypt Private Tabs" row of Links and Info: a badge with how many wait, a short button, and "All encrypted" once done */
     watchSave: function (d) { sdlgWatch(d, function () { return d.querySelector('.ix-sf .pri,.act .pri'); }); },   // (1.64.3) Files draws its Settings window itself, each time it opens
     encRow: function (o) {

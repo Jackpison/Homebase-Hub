@@ -1034,7 +1034,42 @@ const act={
   open:t=>window.open(t.url,"_blank","noopener"),
   del:t=>withUndo('"'+t.name+'" Deleted.',()=>{T=T.filter(x=>x!==t)})
 };
+/* (1.65.0) On a touch screen a task can be swiped: to the left for Done, to the right for Skip (a repeating task; a one-off task only goes
+   left). Past about a third of the row it happens, with the usual Undo; less, the row springs back. Up and down still scrolls the page
+   (rows let the browser pan vertically), and a swipe never opens the task. */
+let swipe=null,swiped=0;
+$("list").addEventListener("pointerdown",e=>{
+  if(e.pointerType!=="touch")return;
+  const row=/** @type {any} */ (e.target).closest('.row[data-id]');if(!row||row.classList.contains("s-done"))return;
+  const t=T.find(x=>x.id===row.dataset.id);if(!t||t.status!=="active")return;
+  swipe={row,t,x:e.clientX,y:e.clientY,dx:0,on:false,id:e.pointerId,bg:null};
+},{passive:true});
+$("list").addEventListener("pointermove",e=>{
+  const w=swipe;if(!w||e.pointerId!==w.id)return;
+  const dx=e.clientX-w.x,dy=e.clientY-w.y;
+  if(!w.on){
+    if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+    if(Math.abs(dy)>=Math.abs(dx)){swipe=null;return}   // a scroll, not a swipe
+    w.on=true;const list=$("list"),r=w.row.getBoundingClientRect(),lr=list.getBoundingClientRect();
+    if(getComputedStyle(list).position==="static")list.style.position="relative";
+    w.bg=document.createElement("div");w.bg.className="swbg";w.bg.setAttribute("aria-hidden","true");
+    w.bg.style.cssText="top:"+(r.top-lr.top+list.scrollTop)+"px;left:"+(r.left-lr.left)+"px;width:"+r.width+"px;height:"+r.height+"px";
+    w.bg.innerHTML='<span class="d">'+SVG(IC.check,"")+'Done</span><span class="s">'+SVG(IC.skip,"")+'Skip</span>';
+    list.appendChild(w.bg);w.row.classList.add("swiping");
+  }
+  let d=dx;if(d>0&&w.t.repeat.unit==="none")d=Math.min(d,28);   // nothing to skip on a one-off task
+  w.dx=d;w.row.style.transform="translateX("+d+"px)";
+  w.bg.dataset.side=d<0?"done":"skip";w.bg.classList.toggle("go",Math.abs(d)>w.row.offsetWidth*.35&&!(d>0&&w.t.repeat.unit==="none"));
+});
+const swipeEnd=()=>{
+  const w=swipe;swipe=null;if(!w||!w.on)return;
+  swiped=Date.now();const go=w.bg.classList.contains("go"),left=w.dx<0;
+  w.row.style.transition="transform .22s ease";w.row.style.transform=go?"translateX("+(left?-1:1)*w.row.offsetWidth+"px)":"";
+  setTimeout(()=>{w.bg.remove();w.row.classList.remove("swiping");w.row.style.transition="";if(!go)w.row.style.transform="";if(go)(left?act.done:act.skip)(w.t)},go?220:230);
+};
+$("list").addEventListener("pointerup",swipeEnd);$("list").addEventListener("pointercancel",swipeEnd);
 $("list").onclick=e=>{
+  if(Date.now()-swiped<400)return;   // the end of a swipe is not a tap
   const gh=/** @type {any} */ (e.target).closest(".gh");if(gh){const k=gh.dataset.g;COLL.has(k)?COLL.delete(k):COLL.add(k);render();return}
   const b=/** @type {any} */ (e.target).closest("[data-a]");
   if(b&&b.dataset.a==="new")return openEditor();
@@ -1053,7 +1088,7 @@ function outside(e){if(popEl&&!popEl.contains(e.target))closePop()}
 function menu(anchor,items,run){
   closePop();items=items.filter(Boolean);
   popEl=document.createElement("div");popEl.className="pop";popEl.setAttribute("role","menu");
-  popEl.innerHTML=items.map(i=>i==="-"?"<hr>":'<button type="button" role="menuitem" data-k="'+i[0]+'"'+(i[3]?' class="'+i[3]+'"':"")+'>'+SVG(i[2])+'<span>'+esc(i[1])+'</span></button>').join("");
+  popEl.innerHTML=items.map(i=>i==="-"?"<hr>":'<button type="button" role="menuitem" data-k="'+i[0]+'"'+(i[3]?' class="'+i[3]+'"':"")+(i[3]==="danger"?' data-hold title="Hold to delete"':"")+'>'+SVG(i[2])+'<span>'+esc(i[1])+'</span></button>').join("");
   (anchor.closest("dialog")||document.body).appendChild(popEl);
   const r=anchor.getBoundingClientRect(),w=popEl.offsetWidth,h=popEl.offsetHeight;
   popEl.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+"px";
@@ -1068,7 +1103,6 @@ function menu(anchor,items,run){
   };
   popEl.onclick=e=>{
     const b=/** @type {any} */ (e.target).closest("[data-k]");if(!b)return;
-    if(b.classList.contains("danger")&&b.dataset.armed!=="1"){b.dataset.armed="1";b.querySelector("span").textContent="Click Again to Delete";return}
     closePop();run(b.dataset.k);
   };
 }
@@ -1103,7 +1137,7 @@ function openCard(t){
     (t.notes?'<p class="vh3">Notes</p><p class="vnotes">'+esc(t.notes)+'</p>':"")+
     (mine.length?'<p class="vh3">Completed ('+mine.length+')'+(sums(pm)?", "+esc(sums(pm))+" Paid":"")+'</p><table class="hist num">'+mine.slice(0,6).map(e=>'<tr><td>'+esc(fmtD(e.d))+'</td><td>'+(e.k==="skip"?"Skipped":"Done "+esc(fmtD(tsDay(e.t),{day:"numeric",month:"short"})))+'</td><td>'+esc(money(e.p,e.cur||SET.currency))+'</td></tr>').join("")+'</table>'+(mine.length>6?'<p class="hint" style="margin:6px 0 12px">The rest are in Completed.</p>':""):"");
   const B=(k,label,icon,cls)=>'<button type="button" class="btn '+(cls||"")+'" data-c="'+k+'">'+SVG(icon)+label+'</button>';
-  $("vfoot").innerHTML='<button type="button" class="btn left danger" data-c="del">'+SVG(IC.trash)+'Delete</button>'+
+  $("vfoot").innerHTML='<button type="button" class="btn left danger" data-c="del" data-hold title="Hold to delete">'+SVG(IC.trash)+'Delete</button>'+
     (t.status==="active"&&t.repeat.unit!=="none"?B("skip","Skip Date",IC.skip):"")+
     (t.status==="active"?B("pause","Pause",IC.pause):t.status==="paused"?B("resume","Resume",IC.play):"")+
     B("dup","Duplicate",IC.copy)+B("edit","Edit",IC.edit)+
@@ -1113,7 +1147,6 @@ function openCard(t){
 }
 $("vfoot").onclick=e=>{
   const b=/** @type {any} */ (e.target).closest("[data-c]");if(!b||!cardT)return;const k=b.dataset.c,t=cardT;
-  if(k==="del"&&b.dataset.armed!=="1"){b.dataset.armed="1";b.lastChild.textContent="Click Again to Delete";return}
   $("vdlg").close();act[k](t);
 };
 $("vdlg").addEventListener("click",e=>{if(e.target===$("vdlg"))$("vdlg").close()});
@@ -1151,7 +1184,7 @@ function openEditor(t,copy,day){
   $("e-cat").value=x.cat;
   $("e-remind").value=String([-1,0,1,3,7,14,30,60].includes(x.remind)?x.remind:-1);
   $("e-url").value=x.url;$("e-notes").value=x.notes;$("e-err").textContent="";
-  $("e-del").hidden=!editing;$("e-del").dataset.armed="";$("e-del").textContent="Delete";
+  $("e-del").hidden=!editing;
   previewNext();$("dlg").showModal();$("e-name").focus();
 }
 $("form").onsubmit=e=>{
@@ -1175,8 +1208,6 @@ $("form").onsubmit=e=>{
   touch();
 };
 $("e-del").onclick=()=>{
-  const b=$("e-del");
-  if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Click Again to Delete";return}
   const t=editing;$("dlg").close();act.del(t);
 };
 document.querySelectorAll("#dlg,#sdlg,#ydlg").forEach((/** @type {HTMLDialogElement} */ d)=>d.addEventListener("click",e=>{if(/** @type {any} */ (e.target).closest("[data-close]")||e.target===d)d.close()}));

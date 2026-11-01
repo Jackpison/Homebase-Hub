@@ -542,3 +542,16 @@ html[data-ix-bar][data-ix-nav="dock"] .snack{bottom:calc(var(--ix-dock,76px) + 2
 #sdlg .fl small{display:block;margin-top:5px;font-size:12px;font-weight:400;line-height:1.35;color:var(--mute)}
 #sdlg .hint{margin:-4px 0 4px}
 .df2{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+
+/* (1.65.0) swipe a task (touch screens): the row slides over a green Done or an amber Skip */
+#list .row[data-id]{touch-action:pan-y}
+#list .row.swiping{position:relative;z-index:1;background:var(--bg);box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.swbg{position:absolute;z-index:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-radius:14px;font-weight:700;font-size:14px;pointer-events:none;
+  background:color-mix(in srgb,currentColor 8%,transparent);transition:background .15s}
+.swbg span{display:inline-flex;align-items:center;gap:8px;opacity:0;transition:opacity .15s}
+.swbg svg{width:18px;height:18px}
+.swbg .s{order:-1}
+.swbg[data-side="done"] .d,.swbg[data-side="skip"] .s{opacity:.7}
+.swbg.go[data-side="done"]{background:#5fd68a;color:#08210f}.swbg.go[data-side="skip"]{background:#ffc21a;color:#2a1f00}
+.swbg.go span{opacity:1}
+@media (prefers-reduced-motion:reduce){.swbg,.swbg span{transition:none}}

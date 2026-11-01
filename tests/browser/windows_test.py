@@ -2,7 +2,7 @@
 """The window audit (1.64.1): every window of Links, Info, Cards, Tasks, Files and Home, opened with sample data, must use the
 shared pieces (src/web/hub/core/assets/shell.js and shell.css) and nothing of its own: the frame (title and X, scrolling body,
 buttons at the bottom), headings in capitals with the fading line, every field and switch inside a card, round 12 px buttons, round
-10 px fields, switches 44 x 26, nothing wider than the window, no empty card, and the focus not on the X. A window added later
+10 px fields, switches 52 x 26, nothing wider than the window, no empty card, and the focus not on the X. A window added later
 that skips them fails here, so the look cannot drift apart again. With HUB_SHEET=<folder> it also writes one picture of every
 window there (the contact sheet the owner looks at instead of opening each one).
     python3 tests/browser/windows_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8987)"""
@@ -30,7 +30,7 @@ AUDIT = """(id => {
       if (!vis(c) || c.type === 'file') continue;
       if (!inCard(c)) bad.push('a loose ' + c.tagName.toLowerCase() + (c.id ? '#' + c.id : ''));
       if (c.type === 'radio' && !c.closest('.ix-srow,.ix-sgc,[role=radiogroup]')) bad.push('a radio outside a row: ' + c.name);
-      if (c.classList.contains('ix-sw')) { const r = c.getBoundingClientRect(); if (Math.round(r.width) !== 44 || Math.round(r.height) !== 26) bad.push('switch ' + Math.round(r.width) + 'x' + Math.round(r.height) + ' ' + c.id); }
+      if (c.classList.contains('ix-sw')) { const r = c.getBoundingClientRect(); if (Math.round(r.width) !== 52 || Math.round(r.height) !== 26) bad.push('switch ' + Math.round(r.width) + 'x' + Math.round(r.height) + ' ' + c.id); }
       else if (['text', 'search', 'password', 'url', 'number', 'email', 'date', 'time', ''].includes(c.type) && !c.closest('.swatch') && getComputedStyle(c).borderRadius !== '10px') bad.push('field radius ' + getComputedStyle(c).borderRadius + ' ' + (c.id || c.name || c.type));
     }
     for (const g of body.querySelectorAll('.ix-grp')) if (vis(g) && g.getBoundingClientRect().height < 24) bad.push('an empty card');
@@ -127,9 +127,9 @@ try:
         goto(pg, s.base, 'files', "!!window.__files && __files.state().started"); menu(pg, 'Files Settings'); audit('Files Settings', pg, 'dlg')
         pg.goto(s.base + '/'); wait_js(pg, "!!document.getElementById('settingsSheet')", 20000)
         pg.evaluate("document.getElementById('settingsSheet').showModal()")
-        wait_js(pg, "[...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 44; })", 5000)   # after the opening animation, not a fixed pause
-        d = pg.evaluate("[document.getElementById('settingsSheet').open, [...document.querySelectorAll('#settingsSheet .group')].length, [...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 44 && Math.round(r.height) === 26; })]")
-        check('W Home Settings: open, in groups, with 44 x 26 switches', d[0] and d[1] >= 3 and d[2], d)
+        wait_js(pg, "[...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 52; })", 5000)   # after the opening animation, not a fixed pause
+        d = pg.evaluate("[document.getElementById('settingsSheet').open, [...document.querySelectorAll('#settingsSheet .group')].length, [...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 52 && Math.round(r.height) === 26; })]")
+        check('W Home Settings: open, in groups, with 52 x 26 switches', d[0] and d[1] >= 3 and d[2], d)
         if SHEET:
             pg.evaluate("(() => { const d = document.getElementById('settingsSheet'); d.style.maxHeight = 'none'; d.style.height = 'auto'; const b = d.querySelector('.sb'); b.style.maxHeight = 'none'; b.style.overflow = 'visible'; })()")
             pg.query_selector('#settingsSheet').screenshot(path=os.path.join(SHEET, 'Home_Settings.png'))

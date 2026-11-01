@@ -4,7 +4,7 @@ card, a browser that has not unlocked, the CSV export of locked cards, and Remov
     python3 tests/browser/lock_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8977)"""
 import csv, glob, json, os, re, subprocess, sys, tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, PW
+from helpers import SEED, PW, hold
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, browser_unlock, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -121,7 +121,7 @@ try:
 
         # ---- Remove Passphrase turns the cards back into plain cards ----
         pg.goto(s.base + '/web/settings/#security/encryption'); wait_js(pg, "!!document.querySelector('#ix-erm')", 20000)
-        pg.fill('#ix-ecur', PP); pg.fill('#ix-epw', PW); pg.click('#ix-erm'); pg.click('#ix-erm')
+        pg.fill('#ix-ecur', PP); pg.fill('#ix-epw', PW); hold(pg, '#ix-erm')
         until(lambda: s.get('sv_get').get('pp') is False, 40000)
         sv = s.get('sv_get'); d = cards_doc(s)
         check('L20 removing the passphrase turns the locked cards back into plain cards (all of them, with the one added)', sv.get('pp') is False and 'enc' not in d and any(c.get('name') == 'Vault Gold' for c in d.get('cards', [])) and len(d['cards']) == len(names) + 1, (sv, list(d.keys())))

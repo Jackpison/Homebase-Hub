@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.65.0 | New look for every page: white switches, a day/night theme switch, hold to delete, swipe in Tasks, tooltips, a bouncing loader, button hover, count-up numbers, and a new Presets screen with Surprise Me |
 | 1.64.12 | Links: an icon whose saved file is gone shows the first letter and is fetched again (when you start editing, or with Fetch Icons > Only Missing) |
 | 1.64.11 | Links and Cards draw big pages faster: the first screen shows at once, Links builds its edit buttons only while editing, Cards formats and sorts faster |
 | 1.64.10 | Links: going back to a tab is about three times quicker on big pages, and moving or editing a link redraws only its own category |
@@ -115,6 +116,31 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.65.0
+
+### New
+
+- **Switches:** every on/off switch on every page (Settings, page Settings windows, Home's sheets, Links, Info, Cards, Tasks, Files) now uses one look: a white track with a metal knob that turns dark when on. Keyboard focus shows an accent ring. Tools' tick boxes are choices in a list, not on/off settings, so they keep their look.
+- **Day/night theme switch:** the theme button in the top bar is now a small sky switch (moon and stars for dark, sun and cloud for light). The side panel and the phone dock use a smaller copy.
+- **Hold to Delete:** every delete button that used to ask for a second click (links, categories, tabs, boxes, cards, tasks, files, passkeys, saved versions, presets, Go Back, Remove Encryption) now fills with red while you hold it; let go early and nothing is deleted. On a keyboard, hold Enter or Space. A plain click shows "Hold the button down to confirm." Undo after delete still works.
+- **Swipe in Tasks:** on a phone or tablet, swipe a task left to mark it done, or right to skip a repeating task to its next date.
+- **Tooltips:** icon-only buttons show their name in a small dark label with an accent line when you point at them or move to them with the keyboard.
+- **Loader:** waiting screens (sign in, Health, Updates, Presets) show three bouncing dots in your accent colour.
+- **Button hover:** on a computer, buttons fill with the accent colour from the sides when you point at them.
+- **Count-up numbers:** the totals in Cards and the numbers on Settings > Health count up when they first show.
+- **Presets screen:** each preset is a card with a small picture of a page in its colours, grouped and filtered by one row of chips. **Surprise Me** makes a new palette every time (Another One), checked so text stays easy to read; Use It applies it and Save to My Presets keeps it.
+
+### Kept as it was
+
+- Nothing moves or animates when your device asks for reduced motion.
+- Credits for the four Uiverse designs (MIT) are in `web/hub/docs/THIRD-PARTY.md`.
+
+### Checked
+
+- A new browser test (polish_test.py, 17 checks) covers the switch size and colours, the theme switch, hold to delete with mouse and keyboard, a plain click not deleting, tooltips, the loader, button hover, count-up, swipe in Tasks, and Surprise Me palettes passing the contrast check. The tests that delete things now hold the button.
 
 ---
 

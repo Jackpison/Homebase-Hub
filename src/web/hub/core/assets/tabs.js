@@ -156,7 +156,7 @@
       '<div class="ix-srow"><label for="htPriv">Private Tab<small id="htPrivNote"></small></label><input type="checkbox" class="ix-sw" id="htPriv"></div>' +
       '<div class="ix-srow"><label for="htEnc">Encrypted Tab<small id="htEncNote"></small></label><input type="checkbox" class="ix-sw" id="htEnc"></div>' +
       '<p class="err" id="htErr" role="status"></p>' +
-      '<div class="actions act"><button type="button" class="btn left danger" id="htDel">Delete Tab</button><button class="btn" value="cancel" formnovalidate>Cancel</button><button type="submit" class="btn primary pri" id="htSave">Save Tab</button></div></form>';
+      '<div class="actions act"><button type="button" class="btn left danger" id="htDel" data-hold title="Hold to delete">Delete Tab</button><button class="btn" value="cancel" formnovalidate>Cancel</button><button type="submit" class="btn primary pri" id="htSave">Save Tab</button></div></form>';
     document.body.appendChild(dlg);
     if (window.HUB && HUB.settingsWindow) HUB.settingsWindow(dlg);
     wire();

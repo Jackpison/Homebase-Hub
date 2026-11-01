@@ -310,3 +310,17 @@ def wait_js(pg, expr, timeout=15000, step=200):
             pass
         if time.time() > end: raise TimeoutError('waited %d ms for: %s' % (timeout, expr))
         pg.wait_for_timeout(step)
+
+
+def hold(pg, selector, ms=1150, hover=None):
+    """(1.65.0) Holds a Hold-to-Delete button down with the mouse for a little over the 0.9 s it needs (hover: something to point at first,
+    for buttons that only show on hover). Falls back to the keyboard (focus, hold Enter) when the button has no box on the screen."""
+    if hover: pg.hover(hover); pg.wait_for_timeout(150)
+    loc = pg.locator(selector).first
+    try: loc.scroll_into_view_if_needed(timeout=3000)
+    except Exception: pass
+    bb = loc.bounding_box()
+    if bb and bb['width'] > 0:
+        pg.mouse.move(bb['x'] + bb['width'] / 2, bb['y'] + bb['height'] / 2); pg.mouse.down(); pg.wait_for_timeout(ms); pg.mouse.up()
+    else:
+        loc.focus(); pg.keyboard.down('Enter'); pg.wait_for_timeout(ms); pg.keyboard.up('Enter')

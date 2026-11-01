@@ -5,7 +5,7 @@ Runs in Chromium only: the virtual authenticator is Chromium's.
     python3 tests/browser/passkey_test.py build/site-update-X.Y.Z.zip   (port 8980; the site is opened as http://localhost:8980, a secure address for passkeys)"""
 import base64, hashlib, hmac, json, os, struct, sys, time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import PW
+from helpers import PW, hold
 from helpers import Site, Checks, stop_all, wait_js, browser_name, launch, until, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -92,15 +92,15 @@ try:
         # ---- remove it ----
         pg.goto(L + '/web/settings/#security/passkeys'); wait_js(pg, "!!document.querySelector('[data-pkdel]')", 20000)
         # 1.62.1: Remove used to say nothing near the button (its messages went to a line in the box below, out of sight)
-        pg.click('[data-pkdel]'); until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on')"), 5000)
+        hold(pg, '[data-pkdel]'); until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on')"), 5000)
         t1 = pg.evaluate("[document.getElementById('ix-toast').innerText, document.activeElement && document.activeElement.id]")
         check('K17b Remove with no password says so in a message on top and moves to the password box (nothing is removed)', 'website password' in t1[0] and t1[1] == 'ix-pkw' and len(s.get('pk_list').get('keys')) == 1, t1)
-        pg.wait_for_timeout(600); pg.fill('#ix-pkw', 'not the password'); pg.click('[data-pkdel]'); pg.click('[data-pkdel]')
+        pg.wait_for_timeout(600); pg.fill('#ix-pkw', 'not the password'); hold(pg, '[data-pkdel]')
         until(lambda: "isn't your website password" in pg.evaluate("document.getElementById('ix-toast').innerText"), 8000)
         t2 = pg.evaluate("[document.getElementById('ix-toast').innerText, document.querySelector('[data-pkdel]').textContent.trim(), document.querySelector('[data-pkdel]').disabled]")
         check('K17c a wrong password says so in a message on top too, the button is ready again, and nothing is removed', "isn't your website password" in t2[0] and t2[1] == 'Remove' and not t2[2] and len(s.get('pk_list').get('keys')) == 1, t2)
-        pg.fill('#ix-pkw', PW); pg.click('[data-pkdel]'); pg.click('[data-pkdel]'); until(lambda: not s.get('pk_list').get('keys'), 15000)
-        check('K18 Remove (asked twice, with the password) deletes it, and the file goes', s.get('pk_list').get('keys') == [] and not os.path.exists(s.dir + '/site-data/core/passkeys.php') and s.get('state').get('passkeys') is False)
+        pg.fill('#ix-pkw', PW); hold(pg, '[data-pkdel]'); until(lambda: not s.get('pk_list').get('keys'), 15000)
+        check('K18 Remove (held, with the password) deletes it, and the file goes', s.get('pk_list').get('keys') == [] and not os.path.exists(s.dir + '/site-data/core/passkeys.php') and s.get('state').get('passkeys') is False)
         check('K19 no page error', not errs, errs)
         b.close()
 finally:

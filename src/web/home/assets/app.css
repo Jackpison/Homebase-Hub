@@ -283,11 +283,6 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
 .g-label a.ext{color:var(--accent);font-weight:500}
 .src-tools{display:flex;align-items:center;gap:10px}
 
-.switch{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:13px;background:color-mix(in srgb,currentColor 12%,transparent);border:1px solid color-mix(in srgb,currentColor 42%,transparent);position:relative;cursor:pointer;transition:background .15s}
-.switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,currentColor 78%,transparent);transition:transform .15s,background .15s}
-.switch:checked{background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
-.switch:checked::after{transform:translateX(18px);background:var(--accent)}
-.switch:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 
 input[type=range]{width:100%;accent-color:var(--accent)}
 

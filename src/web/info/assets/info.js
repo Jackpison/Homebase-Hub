@@ -820,7 +820,6 @@ function bxList(remove){
   return list;
 }
 $("bxdel").onclick=()=>{
-  if((BX.b.sealed||BX.b.notes.trim())&&!BX.armed){BX.armed=true;$("bxdel").textContent="Delete Box and Its Text?";return}   // a box with text needs a second click
   const t=BX.t,gone=rawBox(BX.b,t.enc),at=t.boxes.indexOf(BX.b);
   saveBoxList(t,bxList(true),x=>$("bxmsg").textContent=x,()=>{bxdlg.close();if(window.HUB&&HUB.undo)HUB.undo("Box deleted.",()=>undoBox(t.id,gone,at))});
 };
@@ -837,7 +836,6 @@ function undoBox(tabId,gone,at){
 $("bxform").addEventListener("submit",e=>{e.preventDefault();saveBoxList(BX.t,bxList(false),x=>$("bxmsg").textContent=x,()=>bxdlg.close())});
 
 /* Edit Tab / New Tab: the window itself is shared with Links (tabs.js); what saving does is Info's own. */
-const hasText=id=>{const t=TABS.find(x=>x.id===id);return!!t&&t.boxes.some(b=>b.notes.trim())};
 function nextTabName(){let n=TABS.length+1;const names=new Set(TABS.map(t=>t.name.trim().toLowerCase()));while(names.has("tab "+n))n++;return"Tab "+n}
 // A tab as the server takes it. The colors that come from a tab's position are fixed first, so tabs keep their colors when positions change.
 const tabItem=(t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,icon:t.icon,private:t.private,enc:t.enc});
@@ -845,7 +843,6 @@ function openTabEditor(id){
   const i=id?TABS.findIndex(t=>t.id===id):-1,t=i>=0?TABS[i]:null;
   if(!t&&TABS.length>=MAXTAB)return;
   const pos=t?i:TABS.length,noPw=server&&!locked;
-  let armed=false;
   // Encrypt needs a password, a secure (https) page and the server; an encrypted tab is always private.
   const encWhy=!CAN_ENC?"Encryption needs the page to be opened over a secure (https) connection."
     :!server?"Encryption needs the server, which can't be reached right now."
@@ -884,7 +881,6 @@ function openTabEditor(id){
       });
     },
     onDelete(ctl){
-      if(hasText(id)&&!armed){armed=true;ctl.deleteLabel("Delete Tab and Its Text?");return} // tabs with text need a second click
       const at=TABS.indexOf(t),gone={...tabItem(t,at),boxes:t.boxes.map(b=>rawBox(b,t.enc))};
       saveTabsList(etList(true,null),ctl.say,()=>{ctl.close();if(window.HUB&&HUB.undo)HUB.undo("Tab deleted.",()=>undoTab(gone,at))});
     }

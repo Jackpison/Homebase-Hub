@@ -5,7 +5,7 @@ and what the server is left holding (nothing readable).
     python3 tests/browser/files_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8976)"""
 import glob, os, re, sys, tempfile, zipfile
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import FIX
+from helpers import FIX, hold
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, browser_unlock, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -97,7 +97,7 @@ try:
         check('B20 Restore brings it back where it was', 'big.bin' in names(pg))
         menu(pg, 'big.bin', 'Move to Trash'); until(lambda: 'big.bin' not in names(pg), 10000)
         pg.click('#tabs button[data-t=trash]'); wait_names(pg, ['big.bin'])
-        menu(pg, 'big.bin', 'Delete Forever'); pg.click('#dform .act .danger'); until(lambda: 'big.bin' not in names(pg), 10000)
+        menu(pg, 'big.bin', 'Delete Forever'); hold(pg, '#dform .act .danger'); until(lambda: 'big.bin' not in names(pg), 10000)
         check('B21 Delete Forever (after asking) removes it, and its three pieces from the server', 'big.bin' not in names(pg) and len(os.listdir(s.dir + '/site-data/files/blobs')) == 2, os.listdir(s.dir + '/site-data/files/blobs'))
         pg.click('#tabs button[data-t=files]')
 

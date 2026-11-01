@@ -215,7 +215,8 @@ function openDialog(title, body, buttons, o) {   // buttons: [{text, pri, danger
     const err = h("p", { class: "err", id: "derr", role: "alert" });
     const parts = framed ? [h("div", { class: "ix-sh" }, h("h2", { text: title, id: "dtitle" }), x), h("div", { class: "ix-sb" }, ...[].concat(body), err)] : [h("h2", { text: title, id: "dtitle" }), ...[].concat(body), err];
     dform.replaceChildren(...parts,
-      h("div", { class: framed ? "act ix-sf" : "act" }, ...buttons.map(b => h("button", { type: "button", class: "btn" + (b.pri ? " pri" : "") + (b.danger ? " danger" : "") + (b.left ? " left" : ""), text: b.text,
+      h("div", { class: framed ? "act ix-sf" : "act" }, ...buttons.map(b => h("button", { type: "button", class: "btn" + (b.pri ? " pri" : "") + (b.danger ? " danger" : "") + (b.left ? " left" : ""), text: b.text, "data-hold": b.danger ? "" : null, title: b.danger ? "Hold to delete" : null,   // (1.65.0) a danger button is held, not clicked
+
         onclick: async ev => { const btn = ev.currentTarget; btn.disabled = true; let keep = false; try { keep = (await b.run()) === false; } finally { btn.disabled = false; } if (!keep) { dlg.close(); resolve(b.text); } } }))));
     dlg.onclose = () => resolve(null);
     dform.onsubmit = ev => { ev.preventDefault(); const p = buttons.find(b => b.pri); if (p) dform.querySelector(".act .pri").click(); };

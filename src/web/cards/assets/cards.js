@@ -9,7 +9,7 @@
 // @ts-check
 const SEED=[]; // no built-in cards: data only comes from the server after login
 
-let sort={k:null,d:1},B={},pw="",D=[],P=[],NOTES="",active="All",editing=null,armed=false,server=false,pt,pending=null;
+let sort={k:null,d:1},B={},pw="",D=[],P=[],NOTES="",active="All",editing=null,server=false,pt,pending=null;
 /** @type {(id: string) => any} */   // (any: the page knows which element each id is)
 const $=id=>document.getElementById(id);
 const dlg=$("dlg"),hdlg=$("hdlg"),idlg=$("idlg");
@@ -259,7 +259,7 @@ function rowHtml(c){
     <div class="ced"><button type="button" class="rowedit" data-id="${c.id}" aria-label="Edit ${esc(c.bank)} ${esc(c.name)}" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button></div>
   </div>`;
 }
-const ROW_BATCH=60;let cardJob=0;   // rows drawn per frame; a newer drawing stops an older one that is still adding rows
+const ROW_BATCH=60;let cardJob=0,statsRolled=false;   // rows drawn per frame; a newer drawing stops an older one that is still adding rows
 function render(){
   cardJob++;
   if(active!=="All"&&!P.includes(active))active="All";
@@ -284,6 +284,7 @@ function render(){
     box("s-ltf","Lifetime Free",`${t.base("LTF")}<span class="of"> of ${t.n}</span>`,others||"No fee-based cards")+
     box("s-fee","Charges a Year",inr(t.fee),t.fee?plural(list.filter(c=>c.fee).length,"card has a fee","cards have a fee"):"Every card is free")+
     box(t.past?"s-exp bad":"s-exp","Expiring Soon",t.soon||"None",t.past?`${t.past} expired`:`Within ${SOON_MONTHS} months`);
+  if(!statsRolled&&D.length&&window.HUB&&HUB.countUp){statsRolled=true;HUB.countUp($("stats").querySelectorAll(".stat b"))}   // (1.65.0) the numbers roll up once, when the page opens
   const g=grouped();
   $("list").classList.toggle("grouped",g);
   const head=`<div class="row head">`+HEADS.map(([k,l,c])=>`<span class="h-${k||"d"}${c?" "+c:""}">${k?`<button class="sh" data-k="${k}" data-on="${sort.k===k?1:0}" aria-label="Sort by ${l}">${l}${sort.k===k?(sort.d===1?" ▲":" ▼"):""}</button>`:l}</span>`).join("")+`<span></span></div>`;
@@ -314,7 +315,7 @@ function openCard(c){
   $("bank").value=d.bank;$("name").value=d.name;$("network").value=d.network;$("variant").value=d.variant;
   $("kind").value=d.kind||"Credit";$("expiry").value=d.expiry||"";$("expiry").setCustomValidity("");$("type").value=d.type;$("limit").value=d.limit??"";$("fee").value=d.fee??"";
   $("owner").value=d.owner;$("remark").value=d.remark||"";$("url").value=d.url||"";
-  armed=false;$("del").textContent="Delete";$("del").hidden=!c;
+  $("del").hidden=!c;
   dlg.showModal();
 }
 /* Holders (1.53.6: adding and editing in one window). Changes are made on a copy and kept only with Save. */
@@ -398,8 +399,7 @@ $("form").addEventListener("submit",()=>{
 });
 $("expiry").addEventListener("input",()=>{const v=$("expiry").value;$("expiry").setCustomValidity(v.trim()===""||normExp(v)!==null?"":"Use MM/YYYY, for example 03/2033")});
 $("del").onclick=()=>{
-  if(!armed){armed=true;$("del").textContent="Tap again to confirm";return}
-  const gone=editing,at=D.indexOf(gone);D=D.filter(c=>c!==gone);armed=false;persist();dlg.close();render();
+  const gone=editing,at=D.indexOf(gone);D=D.filter(c=>c!==gone);persist();dlg.close();render();
   // (1.61.9) a deleted card can come back for 7 seconds: Undo puts it where it was and saves again
   if(window.HUB)HUB.undo("Card deleted.",()=>{if(!D.includes(gone))D.splice(Math.max(0,Math.min(at,D.length)),0,gone);persist();render()});
 };

@@ -4,7 +4,7 @@ server is left holding (no readable copy, earlier versions included).
     python3 tests/browser/tabs_lock_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8978)"""
 import glob, json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED
+from helpers import SEED, hold
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -81,8 +81,7 @@ try:
         trip_now = lambda: [t for t in json.loads(open(s.dir + '/site-data/info/info.php').read().split('\n', 1)[1])['tabs'] if t.get('name') == 'Trip Notes'][0]['boxes']
         tb = [(x['id'], x['title'], x['notes']) for x in trip_now()]
         pg.evaluate("[...document.querySelectorAll('.tabi')].find(x => x.textContent.includes('Trip Notes')).querySelector('.tab').click()"); pg.wait_for_timeout(800)
-        pg.evaluate("[...document.querySelectorAll('.box')].find(b => b.offsetParent).querySelector('[data-r=cfg]').click()"); pg.wait_for_selector('#bxdlg[open]'); pg.click('#bxdel')
-        if pg.evaluate("document.getElementById('bxdel').textContent.includes('Its Text')"): pg.click('#bxdel')
+        pg.evaluate("[...document.querySelectorAll('.box')].find(b => b.offsetParent).querySelector('[data-r=cfg]').click()"); pg.wait_for_selector('#bxdlg[open]'); hold(pg, '#bxdel')
         got = until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on .ix-tact')"), 10000)
         gone = len(trip_now()) == len(tb) - 1
         pg.click('#ix-toast .ix-tact'); until(lambda: len(trip_now()) == len(tb), 8000); pg.wait_for_timeout(800)

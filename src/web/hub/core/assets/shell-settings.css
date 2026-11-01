@@ -66,11 +66,6 @@
 #ix-page .ix-sw input[type=color]{width:42px;height:36px;border:1px solid var(--ix-line2);border-radius:8px;background:none;padding:2px;cursor:pointer}
 #ix-page .ix-tg{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--ix-line);font-size:14.5px;color:var(--ix-tx)}
 #ix-page .ix-tg small{display:block;color:var(--ix-mu2);font-size:12.5px;margin-top:2px}
-#ix-page .ix-tg input[type=checkbox]{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:13px;background:color-mix(in srgb,var(--ix-tx) 14%,transparent);border:1px solid var(--ix-line2);position:relative;flex:none;cursor:pointer;margin:0;transition:background .15s}
-#ix-page .ix-tg input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,var(--ix-tx) 62%,transparent);transition:transform .15s,background .15s}
-#ix-page .ix-tg input[type=checkbox]:checked{background:color-mix(in srgb,var(--ix-accent) 22%,transparent);border-color:color-mix(in srgb,var(--ix-accent) 55%,transparent)}
-#ix-page .ix-tg input[type=checkbox]:checked::after{transform:translateX(18px);background:var(--ix-accent)}
-#ix-page .ix-tg input[type=checkbox]:focus-visible{outline:2px solid var(--ix-tx);outline-offset:2px}
 #ix-page .ix-part{border:1px solid var(--ix-line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
 #ix-page .ix-part>label{display:flex;align-items:center;gap:10px;margin:0;color:var(--ix-tx);font-size:14.5px;cursor:pointer}
 #ix-page .ix-part>label small{color:var(--ix-mu2);margin-left:auto;font-size:12.5px;text-align:right}
@@ -86,7 +81,6 @@
 #ix-page .ix-status b{color:var(--ix-tx)}
 #ix-page .ix-qr{background:#fff;padding:10px;border-radius:10px;width:max-content;margin:8px 0}
 #ix-page .ix-qr img{display:block;width:180px;height:180px;image-rendering:pixelated}
-@media (prefers-reduced-motion:reduce){#ix-page .ix-tg input[type=checkbox]::after{transition:none}}
 #ix-page input.ix-hex{width:92px;height:34px;padding:0 8px;border-radius:8px;font:13px ui-monospace,Menlo,Consolas,monospace;text-align:center}
 #ix-page input.ix-hex.bad{border-color:var(--ix-err)}
 /* ---------- Settings > General > Tabs ---------- */
@@ -124,14 +118,6 @@
 #ix-page .ix-btn.pri.pulse{box-shadow:0 0 0 3px var(--ix-soft)}
 @media (max-width:700px){#ix-page .ix-snav hr{display:none}#ix-page .ix-snav button span{font-size:13.5px}}
 /* ---------- Settings > Colors ---------- */
-#ix-page .ix-presets{display:flex;flex-wrap:wrap;gap:8px}
-#ix-page .ix-preset{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 8px 7px;border:1px solid var(--ix-line2);border-radius:12px;background:none;color:var(--ix-tx);font:inherit;font-size:12.5px;cursor:pointer;width:96px}
-#ix-page .ix-preset:hover{border-color:var(--ix-accent)}
-#ix-page .ix-preset[aria-pressed="true"]{border-color:var(--ix-accent);background:var(--ix-soft);color:var(--ix-accent-tx);font-weight:700}
-#ix-page .ix-pv{position:relative;display:block;width:78px;height:48px;border-radius:8px;border:1px solid;overflow:hidden}
-#ix-page .ix-pv i{position:absolute;left:0;right:0;top:0;height:11px}
-#ix-page .ix-pv b{position:absolute;left:8px;right:8px;top:17px;bottom:7px;border-radius:4px;border:1px solid}
-#ix-page .ix-pv u{position:absolute;right:12px;bottom:12px;width:16px;height:6px;border-radius:3px}
 #ix-page .ix-cgrp{border:1px solid var(--ix-line);border-radius:14px;padding:12px 14px 6px;margin-top:14px;background:color-mix(in srgb,var(--ix-s2) 40%,transparent)}
 #ix-page .ix-cgrp h4{margin:0;font-size:14.5px;color:var(--ix-tx)}
 #ix-page .ix-cgrp>p{margin:2px 0 10px;font-size:12.5px;color:var(--ix-mu)}
@@ -166,10 +152,6 @@
 #ix-page .ix-dropz span{font-size:12.5px;color:var(--ix-mu);max-width:52ch}
 #ix-page .ix-ver small{color:var(--ix-mu2);font-size:12px;margin-left:4px}
 #ix-page .ix-psep{flex-basis:100%;font-size:12px;font-weight:700;color:var(--ix-mu);margin:6px 0 -2px}
-#ix-page .ix-pv b em{display:block;height:3px;border-radius:2px;margin:5px 6px 0;width:60%}
-#ix-page .ix-pv b em+em{width:40%;margin-top:3px}
-#ix-page .ix-preset{width:104px}
-#ix-page .ix-pfilt{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
 #ix-page .ix-pfilt button{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--ix-line2);background:none;color:var(--ix-mu);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 #ix-page .ix-pfilt button:hover{color:var(--ix-tx);border-color:var(--ix-accent)}
 #ix-page .ix-pfilt button[aria-pressed="true"]{background:var(--ix-accent);border-color:var(--ix-accent);color:#000}
@@ -633,3 +615,35 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 /* (1.61.6) phones: nothing inside a section may make the page wider than the screen (Firefox and WebKit measured 6 px on Presets and
    Domains, from nothing visible); clip, not hidden, so the page does not get a second scroll box and the Save bar stays sticky */
 @media (max-width:760px){#ix-page .ix-pane{overflow-x:clip;min-width:0}}
+
+/* ---------- (1.65.0) Presets: bigger cards with a small page in each preset's colours, one line of group chips, and Surprise Me ---------- */
+#ix-page .ix-presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+#ix-page .ix-presets .ix-psep{grid-column:1/-1}
+#ix-page .ix-preset{display:block;padding:0;border:0;background:none;color:var(--ix-tx);font:inherit;text-align:left;cursor:pointer;min-width:0}
+#ix-page .ix-pv{position:relative;display:block;height:92px;border-radius:12px;border:1px solid;overflow:hidden;box-shadow:0 8px 20px -10px rgba(0,0,0,.6);transition:transform .18s,box-shadow .18s}
+#ix-page .ix-preset:hover .ix-pv,#ix-page .ix-preset:focus-visible .ix-pv{transform:translateY(-2px)}
+#ix-page .ix-preset[aria-pressed="true"] .ix-pv{box-shadow:0 0 0 2px var(--ix-accent),0 10px 24px -10px color-mix(in srgb,var(--ix-accent) 60%,transparent)}
+#ix-page .ix-pv i{position:absolute;left:0;right:0;top:0;height:15px;display:flex;align-items:center;gap:4px;padding:0 7px}
+#ix-page .ix-pv i em{display:block;width:16px;height:4px;border-radius:2px;opacity:.8}
+#ix-page .ix-pv i em:nth-child(2){width:22px;opacity:1}
+#ix-page .ix-pv b{position:absolute;top:23px;bottom:8px;left:8px;right:52%;border-radius:7px;border:1px solid;padding:6px}
+#ix-page .ix-pv b+b{left:52%;right:8px}
+#ix-page .ix-pv b em{display:block;height:4px;border-radius:2px;margin-bottom:5px;width:70%}
+#ix-page .ix-pv b em+em{width:90%}#ix-page .ix-pv b em+em+em{width:55%}
+#ix-page .ix-pv u{position:absolute;right:13px;bottom:14px;width:24px;height:9px;border-radius:4px}
+#ix-page .ix-pn{display:block;margin:8px 2px 0;font-size:13.5px;font-weight:700}
+#ix-page .ix-preset[aria-pressed="true"] .ix-pn::after{content:" \2713";color:var(--ix-accent)}
+#ix-page .ix-pgl{display:block;margin:1px 2px 0;font-size:11.5px;color:var(--ix-mu)}
+#ix-page .ix-pfilt{display:flex;flex-wrap:nowrap;gap:6px;margin:4px 0 12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+#ix-page .ix-pfilt::-webkit-scrollbar{display:none}
+#ix-page .ix-pfilt button{flex:none}
+#ix-page .ix-sur{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:20px;align-items:center;padding:16px;margin:0 0 16px;border-radius:16px;
+  background:color-mix(in srgb,var(--ix-s1) 92%,var(--ix-tx));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ix-tx) 10%,transparent)}
+#ix-page .ix-sur .ix-pv{height:140px}
+#ix-page .ix-sur h4{margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--ix-accent) 75%,var(--ix-tx))}
+#ix-page .ix-sur h3{margin:0 0 4px;font-size:22px}
+#ix-page .ix-sur p{margin:0 0 12px;color:var(--ix-mu);font-size:13px}
+#ix-page .ix-surw{display:flex;align-items:center;gap:10px;margin-top:10px;color:var(--ix-mu)}
+#ix-page .ix-surw[hidden]{display:none}
+@media (max-width:620px){#ix-page .ix-sur{grid-template-columns:1fr}#ix-page .ix-presets{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){#ix-page .ix-pv{transition:none}}

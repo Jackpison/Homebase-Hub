@@ -46,7 +46,7 @@ try:
         pg.focus('#sEditBar + .ix-sgc [data-v=text]'); pg.keyboard.press('ArrowLeft')
         check('U3 the arrow keys move the choice', pg.evaluate("document.getElementById('sEditBar').value") == 'icons')
         sw = pg.evaluate("(() => { const c = document.getElementById('sPrivate'), r = c.getBoundingClientRect(); return [c.type, c.classList.contains('ix-sw'), Math.round(r.width), Math.round(r.height)]; })()")
-        check('U4 Only Me is an on/off switch over a real checkbox', sw == ['checkbox', True, 44, 26], sw)
+        check('U4 Only Me is an on/off switch over a real checkbox', sw == ['checkbox', True, 52, 26], sw)
         frame = pg.evaluate("(() => { const d = document.getElementById('setDlg'); return [!!d.querySelector('.ix-sh .ix-sx'), getComputedStyle(d.querySelector('.ix-sb')).overflowY, [...d.querySelectorAll('.ix-sf button')].map(x => x.textContent.trim()), d.querySelector('.ix-sh h3,.ix-sh h2').textContent]; })()")
         check('U5 the Settings window has its title and a close X on top, a scrolling body, and Cancel / Save Settings in the footer', frame == [True, 'auto', ['Cancel', 'Save Settings'], 'Links Settings'], frame)
         pg.click('#setDlg .ix-sx'); until(lambda: not pg.evaluate("document.getElementById('setDlg').open"), 5000)

@@ -38,3 +38,38 @@ Last checked 23 October 2026 with `npm audit` against the exact versions in the 
 | ONNX Runtime Web (Tools) | 1.31.1 | No advisory. Replaces 1.17.3, which could not be updated while Tools had no source. |
 | libheif-js (Tools) | 1.23.5 | No advisory. The newest release. |
 | jsPDF, @cantoo/pdf-lib, Tesseract.js, qpdf, JsBarcode | 4.2.1, 2.11.1, 7.0.0, 0.3.0, 3.12.3 | No advisory. `npm audit` on `tools-app/package-lock.json` finds nothing. React, JSZip, Sortable and framer-motion are no longer used. |
+
+## Uiverse elements (1.65.0)
+
+A few small pieces of the site's look are adapted from elements shared on [Uiverse](https://uiverse.io) under the MIT licence. They were
+rewritten for the site (its own class names, sizes, colours, keyboard and reduce-motion support; no React or other library). Each one is
+credited again in a comment where it is used (`hub/core/assets/shell.css`).
+
+| What | Where in the site | Original | Author |
+|---|---|---|---|
+| On/off switch (white track, metal knob) | every on/off switch | https://uiverse.io/Yaya12085/bright-dolphin-91 | Yaya12085 |
+| Day/night theme switch | the bar's theme button | https://uiverse.io/JustCode14/red-dingo-61 | JustCode14 |
+| Loader (three bouncing dots) | waiting states | https://uiverse.io/mobinkakei/grumpy-turtle-41 | mobinkakei |
+| Button hover (slanted fill) | text buttons | https://uiverse.io/CristianMontoya98/nasty-fish-9 | CristianMontoya98 |
+
+## MIT License (Uiverse elements)
+
+Copyright (c) 2023 Uiverse.io and the authors named above
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

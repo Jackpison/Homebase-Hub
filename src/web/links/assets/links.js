@@ -109,7 +109,7 @@ const ICONS = {
   sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',
   moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>',
 };
-const ib = (icon, label, fn, cls, disabled) => h('button', { class: 'ib ' + (cls || ''), type: 'button', title: label, 'aria-label': label, html: ICONS[icon], onclick: fn, disabled });
+const ib = (icon, label, fn, cls, disabled) => h('button', { class: 'ib ' + (cls || ''), type: 'button', title: cls === 'del' ? label + ' (hold)' : label, 'aria-label': label, html: ICONS[icon], onclick: fn, disabled, 'data-hold': cls === 'del' ? '' : null });   // (1.65.0) a delete button is held, not clicked
 const move = (arr, i, d) => { const j = i + d; if (j < 0 || j >= arr.length) return false; [arr[i], arr[j]] = [arr[j], arr[i]]; return true; };
 const curTab = () => S.data.tabs.find(t => t.id === S.tab) || S.data.tabs[0] || { id: '', title: '', categories: [] };
 const allCats = () => S.data.tabs.flatMap(t => t.categories);
@@ -566,7 +566,7 @@ function openImport() {
   if (!S.auth) return toast('Log in to import bookmarks.', true);
   importer ||= new Promise((ok, no) => {
     const s = document.createElement('script');
-    s.src = 'assets/links-import.js?v=1.64.12';
+    s.src = 'assets/links-import.js?v=1.65.0';
     s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
     s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
     document.head.append(s);
@@ -638,8 +638,7 @@ function editTab(t) {
       persist(t ? 'Tab saved' : 'Tab added');
     },
     onDelete(ctl) {
-      const tabs = S.data.tabs, ti = tabs.indexOf(t), n = t.categories.reduce((a, c) => a + linkCount(c), 0);
-      if (!confirm(`Delete the "${t.title}" tab with ${t.categories.length} categories and ${n} links?`)) return;
+      const tabs = S.data.tabs, ti = tabs.indexOf(t);   // (1.65.0) the Delete Tab button is held to confirm
       const gone = tabs.splice(ti, 1)[0]; S.tab = tabs[Math.max(0, ti - 1)].id; history.replaceState(null, '', '#' + S.tab); ctl.close(); persist('');
       undoable('Tab deleted.', () => { tabs.splice(Math.min(ti, tabs.length), 0, gone); S.tab = gone.id; history.replaceState(null, '', '#' + S.tab); persist('Tab restored'); });
     }
@@ -714,7 +713,7 @@ function renderCategory(t, cat, q, multi) {
       ib('down', 'Move Down', () => moveWithinCol(t, cat, 1) && persist('Moved'), '', pos === same.length - 1),
       ib('edit', 'Rename category', async () => { const n = await askName('Rename category', cat.title, 'Save category'); if (n) { cat.title = n; persist('Category renamed'); } }),
       ib('del', 'Delete category', () => {
-        if (confirm(`Delete "${cat.title}" and its ${count} links?`)) { t.categories.splice(ci, 1); persist(''); undoable('Category deleted.', () => { t.categories.splice(Math.min(ci, t.categories.length), 0, cat); persist('Category restored'); }); }
+        { /* (1.65.0) held to confirm */ t.categories.splice(ci, 1); persist(''); undoable('Category deleted.', () => { t.categories.splice(Math.min(ci, t.categories.length), 0, cat); persist('Category restored'); }); }
       }, 'del')));
 
   const ul = h('ul', { class: 'links', 'data-cat': cat.id });
@@ -740,7 +739,7 @@ function renderCategory(t, cat, q, multi) {
         ib('up', 'Move up', () => move(cat.links, i, -1) && persist('Moved')),
         ib('down', 'Move Down', () => move(cat.links, i, 1) && persist('Moved')),
         ib('edit', 'Edit link', () => openLink(cat, i)),
-        ib('del', 'Delete link', () => { if (confirm(`Delete "${l.title}"?`)) { cat.links.splice(i, 1); persist(''); undoable('Link deleted.', () => { cat.links.splice(Math.min(i, cat.links.length), 0, l); persist('Link restored'); }); } }, 'del'))));
+        ib('del', 'Delete link', () => { { /* (1.65.0) held to confirm */ cat.links.splice(i, 1); persist(''); undoable('Link deleted.', () => { cat.links.splice(Math.min(i, cat.links.length), 0, l); persist('Link restored'); }); } }, 'del'))));
     if (E) li.addEventListener('pointerdown', e => startLinkDrag(e, t, cat, l, li));
   }
   if (!cat.links.length) ul.append(h('li', { class: 'empty-cat' }, S.editing ? 'No links yet. Add one below.' : 'No links yet.'));

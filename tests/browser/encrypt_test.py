@@ -8,7 +8,7 @@
     python3 tests/browser/encrypt_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8975)"""
 import os, re, sys, glob, json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import PW
+from helpers import PW, hold
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
 from playwright.sync_api import sync_playwright
 
@@ -128,7 +128,7 @@ try:
 
         # ---- removing the passphrase ----
         pg.goto(base + '/web/settings/#security/encryption'); wait_js(pg, "!!document.querySelector('#ix-erm')", 20000)
-        pg.fill('#ix-ecur', PP2); pg.fill('#ix-epw', PW); pg.click('#ix-erm'); pg.click('#ix-erm')
+        pg.fill('#ix-ecur', PP2); pg.fill('#ix-epw', PW); hold(pg, '#ix-erm')
         until(lambda: s.get('sv_get').get('pp') is False, 30000)
         sv = s.get('sv_get')
         check('E20 removing the passphrase (nothing locked with the site key) clears the key and the mark', sv.get('pp') is False and sv.get('vault') is None, sv)

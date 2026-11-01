@@ -7,7 +7,7 @@ wider than a 390 px phone on Files, on every Settings section and on Home, Links
     python3 tests/browser/settings_look_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8985)"""
 import os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, Site, Checks, stop_all, browser_login, browser_set_passphrase, browser_unlock, wait_js, browser_name, launch, until, CSP_REPORTER
+from helpers import SEED, Site, Checks, stop_all, browser_login, browser_set_passphrase, browser_unlock, wait_js, browser_name, launch, until, CSP_REPORTER, hold
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -106,7 +106,7 @@ try:
         sf = lambda: pg.evaluate("(() => { const f = document.getElementById('ix-sf'), b = document.getElementById('ix-save'); return [!f.hidden && !!f.offsetParent, b.disabled]; })()")
         check('L10 Tabs: the Save Settings bar is there from the start, greyed out', sf() == [True, True], sf())
         sw = pg.evaluate("[...document.querySelectorAll('#ix-pgl [data-k=show]')].map(c => c.classList.contains('ix-sw') && Math.round(c.getBoundingClientRect().width))")
-        check('L11 Tabs: Show is a switch on every row', len(sw) >= 7 and all(w == 44 for w in sw), sw)
+        check('L11 Tabs: Show is a switch on every row', len(sw) >= 7 and all(w == 52 for w in sw), sw)
         pg.fill('#ix-pgl input[type=text] >> nth=1', 'My Links')
         check('L12 ...renaming a tab turns Save Settings on', until(lambda: sf() == [True, False], 4000), sf())
         pg.click('#ix-discard'); until(lambda: sf()[1], 4000)
@@ -183,7 +183,7 @@ try:
         pg.keyboard.press('e'); wait_js(pg, "!!document.querySelector('[aria-label=\"Delete link\"]')", 10000)   # (1.64.11) the edit buttons exist only while editing, as for a person
         titles = lambda: pg.evaluate("[...document.querySelectorAll('.cat a')].map(a => a.textContent.trim()).filter(Boolean)")
         before = titles()
-        pg.evaluate("document.querySelector('[aria-label=\"Delete link\"]').click()")
+        hold(pg, '[aria-label="Delete link"]', hover='.cat .row >> nth=0')
         got = until(lambda: pg.evaluate("(() => { const t = document.getElementById('ix-toast'); return !!(t && t.classList.contains('on') && t.querySelector('.ix-tact')); })()"), 5000)
         gone = len(titles()) == len(before) - 1
         pg.wait_for_timeout(800); pg.click('#ix-toast .ix-tact')
@@ -194,7 +194,7 @@ try:
         pg.goto(s.base + '/web/cards/'); pg.wait_for_selector('#list .row.item', timeout=15000)
         rows = lambda: pg.evaluate("document.querySelectorAll('#list .row.item').length")
         n0 = rows(); pg.click('#list .row.item[data-id] .cn small'); until(lambda: pg.evaluate("document.getElementById('dlg').open"), 5000)
-        pg.click('#del'); pg.click('#del'); until(lambda: rows() == n0 - 1, 5000)
+        hold(pg, '#del'); until(lambda: rows() == n0 - 1, 5000)
         got = until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on .ix-tact')"), 5000)
         pg.wait_for_timeout(800); pg.click('#ix-toast .ix-tact'); until(lambda: rows() == n0, 5000); pg.wait_for_timeout(1500)
         pg.reload(); pg.wait_for_selector('#list .row.item', timeout=15000)
@@ -206,8 +206,7 @@ try:
         n0 = names(); victim = n0[1]
         text0 = pg.evaluate("(n => [...document.querySelectorAll('.box')].find(b => b.querySelector('.nh h2').textContent.trim() === n).querySelector('.info').innerText)", victim)
         pg.evaluate("(n => [...document.querySelectorAll('.box')].find(b => b.querySelector('.nh h2').textContent.trim() === n).querySelector('[data-r=cfg]').click())", victim)
-        pg.wait_for_selector('#bxdlg[open]'); pg.click('#bxdel')
-        if pg.evaluate("document.getElementById('bxdel').textContent.includes('Its Text')"): pg.click('#bxdel')
+        pg.wait_for_selector('#bxdlg[open]'); hold(pg, '#bxdel')
         until(lambda: victim not in names(), 5000)
         got = until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on .ix-tact')"), 5000)
         pg.wait_for_timeout(800); pg.click('#ix-toast .ix-tact'); until(lambda: names() == n0, 5000); pg.wait_for_timeout(1500)
@@ -220,8 +219,7 @@ try:
         show = lambda: (pg.evaluate("(n => [...document.querySelectorAll('.tabi')].find(x => x.textContent.includes(n)).querySelector('.tab').click())", vt), pg.wait_for_timeout(600), pg.evaluate("document.querySelector('.boxes').innerText"))[-1]
         ttext0 = show()
         pg.evaluate("(n => [...document.querySelectorAll('.tabi')].find(x => x.textContent.includes(n)).querySelector('.pen').click())", vt)
-        pg.wait_for_selector('#hubTabDlg[open]'); pg.click('#htDel')
-        if pg.evaluate("document.getElementById('htDel').textContent.includes('Its Text')"): pg.click('#htDel')
+        pg.wait_for_selector('#hubTabDlg[open]'); hold(pg, '#htDel')
         until(lambda: vt not in tabs(), 5000)
         got = until(lambda: pg.evaluate("!!document.querySelector('#ix-toast.on .ix-tact')"), 5000)
         pg.wait_for_timeout(800); pg.click('#ix-toast .ix-tact'); until(lambda: tabs() == t0, 5000); pg.wait_for_timeout(1500)
@@ -229,15 +227,15 @@ try:
         ttext1 = show()
         check('L35 Info: a deleted tab offers Undo, and Undo brings it back in its place with all its boxes and their text (still there after a reload)', got and tabs() == t0 and ttext1 == ttext0 and len(ttext0) > 20, (got, t0, tabs(), ttext0[:80], ttext1[:80]))
 
-        # 1.62.2: every switch on the Settings page keeps its size (44 x 26); the older .ix-tg switches had shrunk to a ring and a ball since 1.61.6
+        # 1.62.2: every switch on the Settings page keeps its size (52 x 26 since 1.65.0); the older .ix-tg switches had shrunk to a ring and a ball since 1.61.6
         sw, bad = 0, []
         for sec in ('general', 'nav', 'look', 'themes', 'colors', 'security', 'telegram', 'backup', 'health', 'domains', 'updates'):
             pg.goto(s.base + '/web/settings/#' + sec); wait_js(pg, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); pg.wait_for_timeout(500)
             r = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => [e.id || e.dataset.k || e.dataset.t || e.dataset.grp || '?', Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
-            sw += len(r); bad += [(sec, x) for x in r if x[1] != 44 or x[2] != 26]
+            sw += len(r); bad += [(sec, x) for x in r if x[1] != 52 or x[2] != 26]
         pg.goto(s.base + '/web/settings/#themes'); wait_js(pg, "!!document.getElementById('ix-pacc')", 20000)
         pacc = pg.evaluate("(() => { const r = document.getElementById('ix-pacc').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })()")
-        check('L38 every switch in Settings is 44 x 26, also the older ones (Use the Preset\'s Accent Color, Show the Bar on the Home Page, the Telegram and Backup switches)', sw >= 6 and not bad and pacc == [44, 26], (sw, bad[:6], pacc))
+        check('L38 every switch in Settings is 52 x 26, also the older ones (Use the Preset\'s Accent Color, Show the Bar on the Home Page, the Telegram and Backup switches)', sw >= 6 and not bad and pacc == [52, 26], (sw, bad[:6], pacc))
 
         # ---- 1.64.0: one look for every window, calmer tone, Visit Counts in Look ----
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.cat').length > 0", 20000)
@@ -330,9 +328,9 @@ try:
                 tq.goto(s.base + '/web/settings/#' + sec); wait_js(tq, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); tq.wait_for_timeout(500)
                 got = tq.evaluate("[document.documentElement.dataset.theme || '', ...[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height))]")
                 seen.add(got[0])
-                if len(got) < 2 or any(x != '44x26' for x in got[1:]): small.append((theme, sec, got))
+                if len(got) < 2 or any(x != '52x26' for x in got[1:]): small.append((theme, sec, got))
             tc.close()
-        check('L39 phone, dark and light: every switch in Settings is 44 x 26, in Look, Presets and Backup', not small and {'dark', 'light'} <= seen, (small, seen))
+        check('L39 phone, dark and light: every switch in Settings is 52 x 26, in Look, Presets and Backup', not small and {'dark', 'light'} <= seen, (small, seen))
         check('L36 phone, Home, Links, Info, Cards, Tasks and Tools: nothing is wider than the screen', not wide, wide)
         check('L37 no page error', not errs, errs)
         b.close()
