@@ -185,6 +185,28 @@ function tab_slug($t, $secret) {
  * tab's folder and the link updated. Unused files older than an hour are removed.
  * Returns old path => new path so the page can update itself.
  */
+/**
+ * (1.64.12) The saved icons whose file is not in the icons folder (deleted, or never written): the page shows the link's first letter for them
+ * instead of asking for a file that is not there (a "file not found" each time, which some hosts' firewalls count), and Fetch Icons > Only
+ * Missing fetches them again. Encrypted tabs keep their icons inside their locked text and are not looked at.
+ * @param array<string, mixed> $data
+ * @return list<string>
+ */
+function missing_icons(array $data, string $iconDir): array {
+    $out = [];
+    foreach ((array)($data['tabs'] ?? []) as $t) {
+        if (!is_array($t) || !is_array($t['categories'] ?? null)) continue;
+        foreach ($t['categories'] as $c) {
+            if (!is_array($c) || !is_array($c['links'] ?? null)) continue;
+            foreach ($c['links'] as $l) {
+                $ic = is_array($l) && is_string($l['icon'] ?? null) ? $l['icon'] : '';
+                if (!preg_match('~^icons/((?:[a-z0-9-]+/)?[A-Za-z0-9._-]+)(?:\?[^#]*)?$~', $ic, $m)) continue;
+                if (!is_file($iconDir . '/' . $m[1])) $out[$ic] = true;
+            }
+        }
+    }
+    return array_keys($out);
+}
 function organize_icons(&$data, $iconDir, $secret) {
     $map = []; $used = []; $slugs = [];
     foreach ($data['tabs'] as &$t) {
@@ -476,7 +498,8 @@ case 'get':
     if ($AUTH) {
         $vd = json_decode($raw, true);
         $visits = json_encode((object)(is_array($vd) ? visits_for($vd) : []), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
-        echo '{"auth":true,"setup":false,"rev":"' . md5($raw) . '","data":' . $raw . ',"visits":' . $visits . '}';   // only you see the counts
+        $gone = json_encode(is_array($vd) ? missing_icons($vd, $iconDir) : [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        echo '{"auth":true,"setup":false,"rev":"' . md5($raw) . '","data":' . $raw . ',"visits":' . $visits . ',"missingIcons":' . $gone . '}';   // only you see the counts
         exit;
     }
     $d = json_decode($raw, true);
@@ -491,7 +514,7 @@ case 'get':
     $d['tabs'] = array_values(array_filter($d['tabs'] ?? [], function ($t) { return empty($t['private']) && empty($t['enc']); }));
     if (is_array($d['settings'] ?? null)) unset($d['settings']['vault']);
     fix_objects($d);
-    hub_json(200, ['auth' => false, 'setup' => $setup, 'data' => $d]);
+    hub_json(200, ['auth' => false, 'setup' => $setup, 'data' => $d, 'missingIcons' => missing_icons($d, $iconDir)]);
 
 case 'visit':   // a click on a link, from anyone who can see it: {url}. Counted once per browser per link every 30 seconds.
     need_post();

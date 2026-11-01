@@ -152,6 +152,16 @@ try:
         n1 = sp.evaluate("(() => { render(); return document.querySelectorAll('#list .row.item').length; })()")
         wait_js(sp, "document.querySelectorAll('#list .row.item').length === 300", 8000)
         check('V27 Cards: 300 cards show 60 at once and then all 300, amounts in Indian digits as before', n1 == 60 and '₹2,50,000' in sp.inner_text('#list'), n1)
+        # (1.64.12) a saved icon whose file is gone shows the letter (no request for a missing file) and counts as missing for Fetch Icons
+        gone = [{'id': 'tm', 'title': 'Media', 'categories': [{'id': 'g0', 'title': 'G', 'col': 0, 'links': [{'title': 'Lost Icon', 'url': 'https://lost.example.com', 'icon': 'icons/media/www.lost.example.com.png'}]}]}]
+        s.req(s.base + '/web/links/api.php?action=save', json.dumps({'data': {'tabs': gone}}).encode(), 'POST', hdr)
+        req404 = []; gp = b.new_context(viewport={'width': 1300, 'height': 800}).new_page(); browser_login(gp, s.base)
+        gp.on('response', lambda r: r.status == 404 and 'lost.example' in r.url and req404.append(r.url))
+        gp.goto(s.base + '/web/links/?gone=1#tm'); wait_js(gp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.cat a').length > 0", 30000); gp.wait_for_timeout(800)
+        ico = gp.evaluate("(() => { const b = document.querySelector('.cat a .ico'); return [b.textContent, !!b.querySelector('img')]; })()")
+        check('V28 Links: a saved icon whose file is gone shows the first letter and asks for no missing file', ico == ['L', False] and not req404, (ico, req404))
+        gp.evaluate("document.getElementById('iconsBtn').click()"); gp.wait_for_selector('#iconDlg[open]')
+        check('V29 ...and Fetch Icons > Only Missing counts it', gp.inner_text('#iconCnt1').startswith('1 link'), gp.inner_text('#iconCnt1'))
         check('Vend no page error', not errs, errs)
         b.close()
 finally:

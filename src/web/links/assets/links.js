@@ -403,7 +403,8 @@ async function load() {
   }
   S.auth = !!j.auth; S.setup = !!j.setup; S.locked = !!j.locked; S.rev = j.rev || '';
   S.data = normalize(j.data, !S.auth);
-  S.visits = S.auth && j.visits && typeof j.visits === 'object' ? j.visits : {};   // visit counts: only you get them
+  S.visits = S.auth && j.visits && typeof j.visits === 'object' ? j.visits : {};
+  noFile = new Set(Array.isArray(j.missingIcons) ? j.missingIcons : []);   // (1.64.12) saved icons whose file is gone: show the letter, and Fetch Icons > Only Missing gets them again   // visit counts: only you get them
   const enc = markEnc(), mine = S.data;
   try {
     if (!S.auth && !S.locked) localStorage.setItem('bm-cache', JSON.stringify(j.data));
@@ -456,8 +457,9 @@ const isFallbackIcon = v => /^https:\/\/www\.google\.com\/s2\/favicons/.test(v |
 // Links Settings > Icons from Google (1.51, off at first): only then does the browser ask Google's favicon service for an icon.
 // Off, a link without an icon saved on your server shows its first letter, and Google never learns which sites are in your Links.
 const webIcons = () => !!(S.data && S.data.settings && S.data.settings.webIcons);
+let noFile = new Set();
 function iconSrc(l, noWeb) {
-  if (l.icon && (webIcons() || !isFallbackIcon(l.icon))) return DATA_ICON.test(l.icon) ? l.icon : mediaUrl(safeUrl(l.icon));
+  if (l.icon && !noFile.has(l.icon) && (webIcons() || !isFallbackIcon(l.icon))) return DATA_ICON.test(l.icon) ? l.icon : mediaUrl(safeUrl(l.icon));
   if (l.noIcon || noWeb || !webIcons()) return '';   // noWeb: in an encrypted tab the browser doesn't ask a favicon service about your sites
   const d = isWeb(l.url) ? host(l.url) : '';
   return d ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=64` : '';
@@ -483,7 +485,7 @@ const fetchIcon = url => api('icon', { url: safeUrl(url) }).then(j => j.icon).ca
 });
 
 let bulkRunning = false, iconStop = false;
-const iconTargets = (mode, auto) => allLinks().filter(l => isWeb(l.url) && (mode === 'all' || !l.icon || isFallbackIcon(l.icon)) && !(auto && (l.noIcon || isFallbackIcon(l.icon))));
+const iconTargets = (mode, auto) => allLinks().filter(l => isWeb(l.url) && (mode === 'all' || !l.icon || isFallbackIcon(l.icon) || noFile.has(l.icon)) && !(auto && (l.noIcon || isFallbackIcon(l.icon))));
 // Fetches icons for the links picked by mode ("missing" or "all"). ui(done, total) reports progress. Returns the counts, or null if one run is already going.
 async function fetchIcons(mode, auto, ui) {
   if (bulkRunning) return null;
@@ -564,7 +566,7 @@ function openImport() {
   if (!S.auth) return toast('Log in to import bookmarks.', true);
   importer ||= new Promise((ok, no) => {
     const s = document.createElement('script');
-    s.src = 'assets/links-import.js?v=1.64.11';
+    s.src = 'assets/links-import.js?v=1.64.12';
     s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
     s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
     document.head.append(s);
