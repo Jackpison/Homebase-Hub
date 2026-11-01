@@ -55,7 +55,9 @@ try:
         pg = ctx.new_page(); errs = []; bad = []
         why = browser_login(pg, B, PW)
         check('P0 the browser logs in through the login dialog', why == '', why)
-        pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        # WebKit reports a request of the page it is leaving, cut off by the navigation, as an error "... due to access control checks";
+        # the site makes no request to another origin, so on its own address that message only means a cancelled request
+        pg.on('pageerror', lambda e: None if ('due to access control checks' in str(e) and '/api.php?action=' in str(e)) else errs.append(str(e)[:200]))
         refused = []; tools_main = set()
         pg.on('console', lambda m: refused.append(m.text[:160]) if m.type in ('error', 'warning') and ('Content Security Policy' in m.text or 'Content-Security-Policy' in m.text or 'Refused to' in m.text or 'React error' in m.text) else None)
         pg.on('request', lambda r: tools_main.add(r.url.replace(B, '')) if '/tools/assets/app-' in r.url and r.url.split('?')[0].endswith('.js') else None)
