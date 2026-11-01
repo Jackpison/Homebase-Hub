@@ -437,6 +437,7 @@ body.boxedit #ix-ebar{display:none}
 @media (hover:hover){#ix-ebar .ix-eb:not(.ix-ebdone):hover{color:var(--eb,#fff);background:rgba(255,255,255,.08);transform:translateY(-3px) scale(1.06);box-shadow:0 8px 18px rgba(0,0,0,.4)}
   #ix-ebar .ix-ebdone:hover{transform:translateY(-3px) scale(1.06);box-shadow:0 8px 18px rgba(0,0,0,.4),0 0 0 3px rgba(63,209,122,.35)}}
 #ix-ebar .ix-eb:not(.ix-ebdone):focus-visible{color:var(--eb,#fff)}
+#ix-ebar .ix-ebdone{color:#0E1018}#ix-ebar .ix-ebdone svg{stroke-width:2.4}   /* (1.65.2) the tick stays dark on its light circle (the 1.65.1 rule above made it white) */
 #ix-ebar .ix-eb:active{transform:scale(.94)}
 #ix-ebtip.eb{background:#fff;color:#000;font-weight:800;border:0;border-radius:7px;padding:7px 11px;box-shadow:0 8px 22px rgba(0,0,0,.35);animation:ix-ebup .3s cubic-bezier(.3,1.3,.5,1) .1s both}
 #ix-ebtip.eb::after{border:0;width:8px;height:8px;margin-left:-4px;bottom:-4px;border-radius:1px}

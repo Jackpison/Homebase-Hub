@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.65.2 | The edit bar's Done tick shows again; Health's Disk Used no longer shows the server's free space |
 | 1.65.1 | The theme button is the sun and moon again; a login card when logged out; search results no longer cut off; Keyboard Shortcuts in search and Settings › General; a new edit bar, Erase Everything button and hover glow |
 | 1.65.0 | New look for every page: white switches, a day/night theme switch, hold to delete, swipe in Tasks, tooltips, a bouncing loader, button hover, count-up numbers, and a new Presets screen with Surprise Me |
 | 1.64.12 | Links: an icon whose saved file is gone shows the first letter and is fetched again (when you start editing, or with Fetch Icons > Only Missing) |
@@ -117,6 +118,19 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.65.2
+
+### Fixed
+
+- **Edit bar:** the Done button's tick was white on its white circle (since 1.65.1), so it looked empty. It is dark again.
+- **Health › Disk Used:** no longer shows "… free on the server". On shared hosting that number is the whole server's disk, not space you can use. The card now says what the size counts: your pages, pictures, icons and backups.
+
+### Checked
+
+- polish_test P27: the Done tick is dark on its light circle. settings_look_test L18: Disk Used shows no free-space line.
 
 ---
 

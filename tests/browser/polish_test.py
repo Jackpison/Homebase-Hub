@@ -76,6 +76,8 @@ try:
         bar = pg.evaluate("[...document.querySelectorAll('#ix-ebar .ix-eb:not(.ix-ebdone)')].map(x => x.dataset.c)")
         pg.hover('#ix-ebar .ix-eb >> nth=0'); wait_js(pg, "!!document.querySelector('#ix-ebtip.eb')", 3000)
         check('P25 the edit bar: round buttons coloured by what they do, and a light name bubble above on hover (1.65.1)', bar and all(c in ('accent', 'red', 'green', 'blue', 'violet') for c in bar), bar)
+        tick = pg.evaluate("(() => { const d = document.querySelector('#ix-ebar .ix-ebdone'); return [getComputedStyle(d).color, getComputedStyle(d).backgroundColor]; })()")
+        check('P27 the edit bar\'s Done tick is dark on its light circle, not white on white (1.65.2)', tick[0] == 'rgb(14, 16, 24)' and tick[1] != tick[0], tick)
         pg.mouse.move(5, 5)
         pg.keyboard.press('Escape')
 

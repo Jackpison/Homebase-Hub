@@ -2547,7 +2547,7 @@
           hCard('Schedule', cronOk ? 'Running' : h.cron ? 'Stopped' : 'Not Set Up', h.cron ? 'Last run ' + esc(ago(h.cron)) : 'Add the cron job (Settings › Telegram)', cronOk ? 'good' : 'warn', 'telegram') +
           hCard('Last Backup', h.backup.last ? esc(ago(h.backup.last)) : 'Never', (h.backup.encrypted ? '🔒 Encrypted' : 'Not Encrypted') + (h.backup.tgEvery ? ', Telegram on' : ''), !h.backup.last || (h.backup.every && (Date.now() / 1000 - h.backup.last) / 86400 >= h.backup.every) ? 'warn' : 'good', 'backup') +
           hCard('Domains', (w.sites || []).length ? (w.sites.length + (w.sites.length === 1 ? ' Site' : ' Sites')) : 'None Yet', down ? down + ' down right now' : soon ? esc(soon.what + ' ' + leftText(soon.n)) : 'Add one to watch its expiry', down || (soon && soon.n <= 14) ? (down || soon.n < 0 ? 'bad' : 'warn') : (w.sites || []).length ? 'good' : '', 'domains') +
-          hCard('Disk Used', esc(size(h.total)), h.free ? esc(size(h.free)) + ' free on the server' : 'Free Space Not Reported', '') +
+          hCard('Disk Used', esc(size(h.total)), 'Your pages, pictures, icons and backups', '') +   /* (1.65.2) no "free on the server": on shared hosting that is the whole disk, not what you may use */
           hCard('PHP Errors', errLines ? errLines + ' lines' : 'None', openLogs.length ? 'A log is publicly readable' : h.logs.length ? h.logs.length + ' log file' + (h.logs.length > 1 ? 's' : '') : 'No error_log files', errLines || openLogs.length ? 'warn' : 'good') +
         '</div>' +
         '<details class="ix-acc"' + (h.leftovers.length || up.newer ? ' open' : '') + '><summary><span>Updates</span><small>Version ' + esc(h.version) + (up.newer ? ', ' + esc(up.version) + ' available' : '') + '</small></summary><div class="ix-accb">' +

@@ -124,10 +124,8 @@ try:
 
         pg.goto(s.base + '/web/settings/#health'); until(lambda: pg.evaluate("document.querySelectorAll('.ix-hcards.six .ix-hc').length") == 6, 20000)
         hc = pg.evaluate("[...new Set([...document.querySelectorAll('.ix-hcards.six .ix-hc')].map(c => Math.round(c.getBoundingClientRect().top)))].length")
-        free = pg.evaluate("[...document.querySelectorAll('.ix-hc')].map(c => c.textContent).find(t => /free on the server/.test(t)) || ''")
-        import re
-        big = re.search(r'([\d.]+) MB free', free)
-        check('L18 Health: the six cards are two rows of three, and free space over 1 GB is shown in GB', hc == 2 and not (big and float(big.group(1)) >= 1024), (hc, free))
+        free = pg.evaluate("[...document.querySelectorAll('.ix-hc')].map(c => c.textContent).filter(t => /free|Free Space/.test(t))")
+        check('L18 Health: the six cards are two rows of three, and Disk Used does not show the server\'s free space (a shared host\'s whole disk, not yours; 1.65.2)', hc == 2 and not free, (hc, free))
 
         widths = {}
         for sec in ('general', 'look', 'backup', 'updates', 'security'):
