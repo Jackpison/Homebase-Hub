@@ -166,6 +166,7 @@ try:
 
         # ---- (1.66.0) the Settings menu: colour tiles with icons, a highlight that glides to the chosen section in its colour ----
         pg.goto(s.base + '/web/settings/#security'); wait_js(pg, "!!document.querySelector('.ix-snav [data-sec=security][aria-current=page]')", 20000); pg.wait_for_timeout(700)
+        until(lambda: pg.evaluate("(() => { const n = document.querySelector('.ix-snav'), on = n.querySelector('[aria-current=page]'), hl = n.querySelector('.ix-shl'); return !!hl && Math.round(hl.getBoundingClientRect().top) === Math.round(on.getBoundingClientRect().top); })()"), 4000)   # the highlight glides there (slower in WebKit)
         mn = pg.evaluate("(() => { const nav = document.querySelector('.ix-snav'), on = nav.querySelector('[aria-current=page]'), hl = nav.querySelector('.ix-shl'); return [nav.querySelectorAll('[data-sec] .ix-sti svg path, [data-sec] .ix-sti svg rect').length > 15, Math.round(hl.getBoundingClientRect().top) === Math.round(on.getBoundingClientRect().top), getComputedStyle(nav).getPropertyValue('--hc').trim(), [...nav.querySelectorAll('.ix-sgl')].map(e => e.textContent), !!nav.querySelector('.ix-scard .ix-out[data-ix=logout]')]; })()")
         check('P31 Settings menu: every section has a colour tile with its icon; the highlight sits on the chosen one in its colour; Web, Data, System; Log Out in the site card', mn == [True, True, '#22c55e', ['Web', 'Data', 'System'], True], mn)
         pg.click('.ix-snav [data-sec=health]'); pg.wait_for_timeout(700)
@@ -252,10 +253,11 @@ try:
                 const fr = fab && fab.offsetParent ? fab.getBoundingClientRect() : null;
                 return [a.length, a.every(x => x.querySelector('.ix-pt').getBoundingClientRect().width > 20), a.every(x => { const r = x.getBoundingClientRect(); return r.right <= pill.right + 1 && (!fr || r.right <= fr.left); }), document.documentElement.scrollWidth <= innerWidth]; })()""")
             if w == 1440:
-                dp.evaluate("document.querySelector('[data-hub=toggle]').click()"); wait_js(dp, "document.body.classList.contains('editing')", 10000); dp.wait_for_timeout(500)
-                hid = dp.evaluate("getComputedStyle(document.getElementById('ix-bar')).visibility")
-                dp.evaluate("document.querySelector('[data-hub=toggle]').click()"); wait_js(dp, "!document.body.classList.contains('editing')", 10000); dp.wait_for_timeout(500)
-                back = dp.evaluate("getComputedStyle(document.getElementById('ix-bar')).visibility")
+                vis = "getComputedStyle(document.getElementById('ix-bar')).visibility"
+                dp.evaluate("document.querySelector('[data-hub=toggle]').click()"); wait_js(dp, "document.body.classList.contains('editing')", 10000)
+                until(lambda: dp.evaluate(vis) == 'hidden', 3000); hid = dp.evaluate(vis)   # it hides once it has slid away (0.26 s; slower on a busy machine)
+                dp.evaluate("document.querySelector('[data-hub=toggle]').click()"); wait_js(dp, "!document.body.classList.contains('editing')", 10000)
+                until(lambda: dp.evaluate(vis) == 'visible', 3000); back = dp.evaluate(vis)
             dp.context.close()
         s.php("hub_settings_update(function ($x) { $x['nav'] = 'top'; return $x; });")
         check('P47 dock: all 7 pages show their colour tile (they were hidden), inside the pill, on a computer and a phone, nothing scrolls sideways (1.67.1)', dk[1440] == [7, True, True, True] and dk[390] == [7, True, True, True], dk)

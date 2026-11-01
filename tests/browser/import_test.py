@@ -7,7 +7,7 @@ import os, re, sys, tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX
-from helpers import Site, Checks, stop_all, browser_name, launch, browser_login, wait_js, CSP_REPORTER
+from helpers import Site, Checks, stop_all, browser_name, launch, browser_login, wait_js, CSP_REPORTER, until
 from playwright.sync_api import sync_playwright
 
 BROWSER = browser_name()
@@ -84,7 +84,9 @@ try:
                 'Work / Projects': [('Team Repo', 'https://git.example.com/team/repo')], 'Other bookmarks': [('Recipes', 'https://recipes.example.org/'), ('Old FTP', 'ftp://files.example.org/pub/')]}
         check('I9 Links saved exactly those links in those categories (no icons, no extra fields)', t and cats(t) == want and all(set(l) == {'title', 'url'} for c in t['categories'] for l in c['links']), t and cats(t))
         check('I10 the new tab is not private (nobody asked)', t and not t.get('private'), t and t.get('private'))
-        check('I11 the page shows the new tab', pg.evaluate("location.hash.slice(1)") == (t or {}).get('id') and 'Team Repo' in pg.inner_text('#grid'))
+        # textContent, not innerText: categories below the screen are not laid out (content-visibility, 1.67.1), and WebKit leaves them out of innerText
+        until(lambda: 'Team Repo' in pg.evaluate("document.getElementById('grid').textContent"), 5000)
+        check('I11 the page shows the new tab', pg.evaluate("location.hash.slice(1)") == (t or {}).get('id') and 'Team Repo' in pg.evaluate("document.getElementById('grid').textContent"))
         close()
 
         # undo: Backup & Restore > Earlier Versions holds the version kept just before
