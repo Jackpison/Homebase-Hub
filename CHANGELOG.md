@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.67.2 | A clearer Tabs section in Settings (colour tiles, a preview of the bar, no Home), Save Settings turns on after a drag, a softer line under the current page |
 | 1.67.1 | Faster Links edit mode, the dock shows every page and steps aside while you edit, no Home button where the logo already leads home, faster page changes, a stricter security scan |
 | 1.67.0 | A new top bar: a colour tile with an icon for each page, a glowing line under the current page, a search with a border in the page's colour, and the buttons on the right in one tray of small colour tiles |
 | 1.66.1 | Colour tiles with white icons in every Settings page and page Settings window; the Settings menu starts level with the page title again |
@@ -123,6 +124,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.67.2
+
+### Settings > General > Tabs
+
+- **Home is no longer in the list.** Your logo and site name are Home in the bar (the dock still shows Home first).
+- **Save Settings turns on as soon as you drag a tab.** Before, it stayed grey until you clicked something else, such as Basics.
+- **A clearer list:** each tab shows its colour tile from the bar, a handle to drag it and a switch to hide it; a hidden tab turns grey and says Hidden. A strip above the list shows the bar as it will look. The up and down arrows are gone: drag a tab, or press Alt + Up or Down on its name.
+- The list had borrowed a style meant for the Presets page, which squeezed its rows together; it has its own now.
+
+### The bar
+
+- The glowing line under the current page is softer in dark mode.
 
 ---
 
