@@ -749,7 +749,7 @@ label.ix-srow{cursor:pointer}
 #ix-bar .ix-pline{position:absolute;z-index:-1;border-radius:3px;background:var(--hc,var(--ix-accent));pointer-events:none;view-transition-name:ix-line;
   box-shadow:0 0 6px 0 color-mix(in srgb,var(--hc,var(--ix-accent)) 55%,transparent);transition:left .4s cubic-bezier(.3,1.2,.4,1),width .4s,top .4s cubic-bezier(.3,1.2,.4,1),height .4s}
 #ix-bar .ix-pline[hidden]{display:none}
-html:not([data-theme="light"]) #ix-bar .ix-pline{box-shadow:0 0 10px 2px var(--hc,var(--ix-accent)),0 0 26px 4px color-mix(in srgb,var(--hc,var(--ix-accent)) 55%,transparent),0 -10px 26px -4px var(--hc,var(--ix-accent))}
+html:not([data-theme="light"]) #ix-bar .ix-pline{box-shadow:0 0 6px 1px var(--hc,var(--ix-accent)),0 0 14px 2px color-mix(in srgb,var(--hc,var(--ix-accent)) 40%,transparent),0 -6px 14px -5px color-mix(in srgb,var(--hc,var(--ix-accent)) 70%,transparent)}   /* (1.67.2) softer */
 html.ix-vt #ix-bar .ix-pline{view-transition-name:none}
 ::view-transition-group(ix-line){animation-duration:.4s;animation-timing-function:cubic-bezier(.3,1.1,.4,1)}
 /* sidebar: bigger tiles, the line on the left; dock: the current page tinted in its colour, the line above it */

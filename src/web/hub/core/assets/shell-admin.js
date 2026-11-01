@@ -870,43 +870,57 @@
     };
   }
   function pNav(p) {
-    p.innerHTML = '<h3>Tabs</h3><p>Rename, reorder (drag or arrows) or hide tabs.</p>' +
-      '<div class="ix-pgl" id="ix-pgl"></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-pgr">Reset Names and Order</button></div>';
-    tabEditor(p.querySelector('#ix-pgl'));
-    p.querySelector('#ix-pgr').onclick = function () { draft.pages = []; tabEditor(p.querySelector('#ix-pgl')); preview(); };
+    p.innerHTML = '<h3>Tabs</h3><p>Drag a tab to move it (or Alt + Up and Down on its name), rename it, or switch it off to hide it. Home is your logo and site name in the bar.</p>' +
+      '<div class="ix-tabp" id="ix-tabp" aria-hidden="true"></div><div class="ix-tabl" id="ix-tabl"></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-tabreset">Reset Names and Order</button></div>';
+    tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp'));
+    p.querySelector('#ix-tabreset').onclick = function () { draft.pages = []; tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp')); preview(); markDirty(true); };
   }
-  /* Settings > General > Tabs: one row per page (name, up/down, show/hide), drag a row to move it. */
-  function tabEditor(box) {
-    var list = pageList(draft).map(function (q) { var d = PAGE_DEF.filter(function (x) { return x[0] === q[0]; })[0];
+  /* Settings > General > Tabs (1.67.2): one row per page with its colour tile (as in the bar), its name and a switch; drag a row to move it.
+     A strip above shows the bar as it will look. Home is not listed: the logo and site name lead there (the dock shows it first). */
+  var GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg>';
+  function tabEditor(box, strip) {
+    var all = pageList(draft).map(function (q) { var d = PAGE_DEF.filter(function (x) { return x[0] === q[0]; })[0];
       return { id: q[0], name: q[1] === d[1] ? '' : q[1], hide: q[4], def: d[1], icon: d[3] }; });
-    var keep = function () { draft.pages = list.map(function (x) { return { id: x.id, name: x.name, hide: x.hide }; }); preview(); };
+    var home = all.filter(function (x) { return x.id === 'home'; })[0], list = all.filter(function (x) { return x.id !== 'home'; });
+    // every change marks the window as changed at once: a drag ends without a click, so Save Settings stayed grey until another click (1.67.2)
+    var keep = function () { draft.pages = (home ? [home] : []).concat(list).map(function (x) { return { id: x.id, name: x.name, hide: x.hide }; }); preview(); markDirty(true); drawStrip(); };
+    var tile = function (x) { return '<span class="ix-pgt" style="--c:' + K.pageColor(x.id) + '" aria-hidden="true">' + (K.pageTile(x.id) || svg(x.icon)) + '</span>'; };
     var dragFrom = -1;
+    function drawStrip() {
+      if (!strip) return;
+      strip.innerHTML = list.filter(function (x) { return !x.hide; }).map(function (x) { return '<span class="ix-tabc">' + tile(x) + '<b>' + esc(x.name || x.def) + '</b></span>'; }).join('');
+    }
     function draw() {
       box.innerHTML = list.map(function (x, i) {
-        return '<div class="ix-pgr' + (x.hide ? ' off' : '') + '" draggable="true" data-i="' + i + '"><span class="ix-pgi" aria-hidden="true">' + svg(x.icon) + '</span>' +
-          '<input type="text" maxlength="20" value="' + esc(x.name) + '" placeholder="' + esc(x.def) + '" aria-label="Name of the ' + esc(x.def) + ' tab" data-k="name">' +
-          '<button type="button" class="ix-ib" data-k="up" aria-label="Move ' + esc(x.def) + ' up" title="Move up"' + (i === 0 ? ' disabled' : '') + '>' + svg(ICON.up) + '</button>' +
-          '<button type="button" class="ix-ib" data-k="down" aria-label="Move ' + esc(x.def) + ' down" title="Move Down"' + (i === list.length - 1 ? ' disabled' : '') + '>' + svg(ICON.down) + '</button>' +
+        return '<div class="ix-pgr' + (x.hide ? ' off' : '') + '" draggable="true" data-i="' + i + '"><span class="ix-pgg" title="Drag to move">' + GRIP + '</span>' + tile(x) +
+          '<input type="text" maxlength="20" value="' + esc(x.name) + '" placeholder="' + esc(x.def) + '" aria-label="Name of the ' + esc(x.def) + ' tab (Alt + Up or Down moves it)" data-k="name">' +
+          '<span class="ix-pgh">' + (x.hide ? 'Hidden' : '') + '</span>' +
           '<label class="ix-pgs" title="Show This Tab"><input type="checkbox" class="ix-sw" data-k="show" aria-label="Show the ' + esc(x.def) + ' tab"' + (x.hide ? '' : ' checked') + '></label></div>';
       }).join('');
+      drawStrip();
     }
-    function move(i, j) { if (j < 0 || j >= list.length || i === j) return; var x = list.splice(i, 1)[0]; list.splice(j, 0, x); draw(); keep(); }
+    function move(i, j) { if (j < 0 || j >= list.length || i === j) return false; var x = list.splice(i, 1)[0]; list.splice(j, 0, x); draw(); keep(); return true; }
     box.oninput = function (e) { var r = e.target.closest('.ix-pgr'); if (r && e.target.dataset.k === 'name') { list[+r.dataset.i].name = e.target.value.trim(); keep(); } };
     box.onchange = function (e) {
       var r = e.target.closest('.ix-pgr'); if (!r || e.target.dataset.k !== 'show') return;
       var x = list[+r.dataset.i];
       if (!e.target.checked && list.filter(function (y) { return !y.hide; }).length === 1) { e.target.checked = true; toast('Keep at least one tab.'); return; }
-      x.hide = !e.target.checked; r.classList.toggle('off', x.hide); keep();
+      x.hide = !e.target.checked; r.classList.toggle('off', x.hide); r.querySelector('.ix-pgh').textContent = x.hide ? 'Hidden' : ''; keep();
     };
-    box.onclick = function (e) {
-      var b = e.target.closest('button[data-k]'), r = b && b.closest('.ix-pgr'); if (!r) return;
-      var i = +r.dataset.i; move(i, b.dataset.k === 'up' ? i - 1 : i + 1);
-      var nb = box.querySelector('.ix-pgr[data-i="' + (b.dataset.k === 'up' ? i - 1 : i + 1) + '"] [data-k="' + b.dataset.k + '"]'); if (nb && !nb.disabled) nb.focus();
+    // from the keyboard: Alt + Up or Down on a tab's name moves it one place, and the name keeps the focus
+    box.onkeydown = function (e) {
+      if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+      var r = e.target.closest('.ix-pgr'); if (!r) return;
+      var i = +r.dataset.i, j = i + (e.key === 'ArrowUp' ? -1 : 1);
+      e.preventDefault(); if (move(i, j)) { var n = box.querySelector('.ix-pgr[data-i="' + j + '"] input[data-k=name]'); if (n) n.focus(); }
     };
-    box.ondragstart = function (e) { var r = e.target.closest && e.target.closest('.ix-pgr'); if (!r || e.target.tagName === 'INPUT') return; dragFrom = +r.dataset.i; r.classList.add('drag'); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', r.dataset.i); } catch (x) {} };
-    box.ondragover = function (e) { if (dragFrom >= 0) e.preventDefault(); };
+    box.ondragstart = function (e) { var r = e.target.closest && e.target.closest('.ix-pgr'); if (!r || e.target.tagName === 'INPUT') return; dragFrom = +r.dataset.i; r.classList.add('drag'); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', r.dataset.i); } catch (er) {} };
+    box.ondragover = function (e) {
+      if (dragFrom < 0) return; e.preventDefault();
+      var r = e.target.closest('.ix-pgr'); box.querySelectorAll('.over').forEach(function (x) { if (x !== r) x.classList.remove('over'); }); if (r && +r.dataset.i !== dragFrom) r.classList.add('over');
+    };
     box.ondrop = function (e) { var r = e.target.closest('.ix-pgr'); if (dragFrom >= 0 && r) { e.preventDefault(); move(dragFrom, +r.dataset.i); } dragFrom = -1; };
-    box.ondragend = function () { dragFrom = -1; box.querySelectorAll('.drag').forEach(function (x) { x.classList.remove('drag'); }); };
+    box.ondragend = function () { dragFrom = -1; box.querySelectorAll('.drag,.over').forEach(function (x) { x.classList.remove('drag'); x.classList.remove('over'); }); };
     draw();
   }
   /* Settings > Telegram: task and backup reminders through your own Telegram bot. Saved straight away (not with Save settings). */

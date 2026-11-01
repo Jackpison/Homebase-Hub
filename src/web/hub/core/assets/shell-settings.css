@@ -110,20 +110,28 @@
 #ix-page input.ix-hex{width:92px;height:34px;padding:0 8px;border-radius:8px;font:13px ui-monospace,Menlo,Consolas,monospace;text-align:center}
 #ix-page input.ix-hex.bad{border-color:var(--ix-err)}
 /* ---------- Settings > General > Tabs ---------- */
-#ix-page .ix-pgl{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-#ix-page .ix-pgr{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--ix-line);border-radius:12px;background:var(--ix-s1);cursor:grab}
+/* Settings > General > Tabs (1.67.2): the bar as it will look, then one row per page: grip, colour tile, name, switch */
+#ix-page .ix-tabp{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:12px 14px;margin:0 0 12px;border:1px solid var(--ix-line);border-radius:14px;background:var(--ix-bg)}
+#ix-page .ix-tabp:empty{display:none}
+#ix-page .ix-tabc{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--ix-tx);white-space:nowrap}
+#ix-page .ix-tabc .ix-pgt{width:22px;height:22px;border-radius:6px}
+#ix-page .ix-tabc .ix-pgt svg{width:13px;height:13px}
+#ix-page .ix-tabl{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+#ix-page .ix-pgr{display:flex;align-items:center;gap:10px;padding:7px 10px 7px 6px;border:1px solid var(--ix-line);border-radius:12px;background:var(--ix-s1);cursor:grab;transition:border-color .15s,opacity .15s}
+#ix-page .ix-pgr:hover{border-color:var(--ix-line2)}
 #ix-page .ix-pgr.drag{opacity:.45}
-#ix-page .ix-pgr.off input[type=text]{opacity:.5;text-decoration:line-through}
-#ix-page .ix-pgr input[type=text]{flex:1;min-width:0;height:36px}
-#ix-page .ix-pgr .ix-ib{width:34px;height:34px;flex:none}
-#ix-page .ix-pgr .ix-ib:disabled{opacity:.3;cursor:default}
-#ix-page .ix-pgi{display:grid;place-items:center;width:28px;color:var(--ix-mu);flex:none}
-#ix-page .ix-pgi svg{width:18px;height:18px}
-#ix-page .ix-pgs{display:flex;align-items:center;gap:6px;margin:0 2px 0 4px;font-size:13px;color:var(--ix-mu);cursor:pointer;white-space:nowrap}
-#ix-page .ix-pgs input:not(.ix-sw){accent-color:var(--ix-accent);width:16px;height:16px;margin:0}
-#ix-page .ix-pgr svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#ix-page .ix-pgr .ix-ib{border:0;background:none;cursor:pointer}
-#ix-page .ix-pgr .ix-ib:not(:disabled):hover{color:var(--ix-accent-tx)!important;background:var(--ix-soft)}
+#ix-page .ix-pgr.over{border-color:var(--ix-accent);box-shadow:0 0 0 2px var(--ix-soft)}
+#ix-page .ix-pgr.off .ix-pgt{filter:grayscale(1);opacity:.5}
+#ix-page .ix-pgr.off input[type=text]{opacity:.55}
+#ix-page .ix-pgr input[type=text]{flex:1;min-width:0;height:38px;font-weight:600}
+#ix-page .ix-pgg{display:grid;place-items:center;width:20px;color:var(--ix-mu2);flex:none}
+#ix-page .ix-pgg svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round}
+#ix-page .ix-pgt{--c:#71717a;display:grid;place-items:center;width:32px;height:32px;border-radius:9px;flex:none;color:#fff;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--c) 82%,#fff),var(--c));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 3px 10px -3px color-mix(in srgb,var(--c) 70%,transparent)}
+#ix-page .ix-pgt svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+#ix-page .ix-pgh{flex:none;font-size:12px;font-weight:700;color:var(--ix-mu)}
+#ix-page .ix-pgh:empty{display:none}
+#ix-page .ix-pgs{display:flex;align-items:center;margin:0 0 0 2px;cursor:pointer}
 /* ---------- Settings > Reminders ---------- */
 #ix-page .ix-steps{margin:0 0 14px;padding-left:22px;color:var(--ix-mu);font-size:14px;line-height:1.55}
 #ix-page .ix-steps li{margin:3px 0}

@@ -95,7 +95,7 @@ try:
                   ('#colors', 'Appearance', 'Colors'), ('#nav', 'General', 'Tabs'), ('#pages', 'General', 'Tabs')]
         bad = [h for h, t, u in places if not at(h, h2 + " === %s && %s === %s" % (json.dumps(t), sel, json.dumps(u)))]
         check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages, removed in 1.48.5, opens Tabs)', not bad, bad)
-        ok = at('#nav', tabs + " === 'Basics|Tabs' && !!document.querySelector('#ix-pc #ix-pgl .ix-pgr') && !document.querySelector('#ix-pc .ix-navpick')")
+        ok = at('#nav', tabs + " === 'Basics|Tabs' && !!document.querySelector('#ix-pc #ix-tabl .ix-pgr') && !document.querySelector('#ix-pc .ix-navpick')")
         check('S11 General has Basics and Tabs; Tabs holds the tab list and no longer the Navigation Style', ok, pg.evaluate(tabs))
         ok = at('#look', tabs + " === 'Look|Presets|Colors' && !!document.querySelector('#ix-font')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
