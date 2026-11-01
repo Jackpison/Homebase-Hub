@@ -40,6 +40,8 @@ try:
         pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]')
         sw = pg.evaluate("(() => { const c = document.querySelector('#setDlg input.ix-sw'), r = {width: c.offsetWidth, height: c.offsetHeight}, st = getComputedStyle(c), k = getComputedStyle(c, '::after'); return [c.type, Math.round(r.width), Math.round(r.height), st.backgroundColor, k.backgroundImage.includes('gradient')]; })()")
         check('P1 the on/off switch is a real checkbox, 52 x 26, a white track and a metal knob', sw[:3] == ['checkbox', 52, 26] and sw[3] == 'rgb(255, 255, 255)' and sw[4], sw)
+        rt = pg.evaluate("(() => { const t = document.querySelector('#setDlg .ix-rt'), st = getComputedStyle(t); return [st.backgroundImage.includes('gradient'), getComputedStyle(t.querySelector('svg')).stroke]; })()")
+        check('P38 the rows of a page Settings window have solid colour tiles with a white icon, like the Settings menu (1.66.1)', rt == [True, 'rgb(255, 255, 255)'], rt)
         pg.keyboard.press('Escape')
         t0 = pg.evaluate("document.documentElement.dataset.theme")
         ts = pg.evaluate("(() => { const b = document.querySelector('#ix-bar [data-ix=theme]'); return [b.getAttribute('role'), !!b.querySelector('.ix-tsl'), !!b.querySelector('svg path')]; })()")
@@ -169,6 +171,9 @@ try:
         pg.click('.ix-snav [data-sec=health]'); pg.wait_for_timeout(700)
         hc = pg.evaluate("(() => { const nav = document.querySelector('.ix-snav'), on = nav.querySelector('[aria-current=page]'), hl = nav.querySelector('.ix-shl'); return [on.dataset.sec, Math.round(hl.getBoundingClientRect().top) === Math.round(on.getBoundingClientRect().top), getComputedStyle(nav).getPropertyValue('--hc').trim()]; })()")
         check('P32 choosing another section moves the highlight there and takes its colour', hc == ['health', True, '#f43f5e'], hc)
+        pg.click('.ix-snav [data-sec=security]'); wait_js(pg, "!!document.querySelector('#ix-pane .ix-tile-i')", 15000)
+        lay = pg.evaluate("(() => { const n = document.querySelector('.ix-snav'), t = document.querySelector('#ix-pane .ix-ph h2'); return [getComputedStyle(n).position, Math.abs(n.getBoundingClientRect().top - t.getBoundingClientRect().top) < 12, getComputedStyle(document.querySelector('.ix-snh')).display, getComputedStyle(document.querySelector('#ix-pane .ix-ec-i, #ix-pane .ix-th-i, #ix-pane .ix-tile-i, #ix-pane .ix-hero-i')).backgroundImage.includes('gradient')]; })()")
+        check('P37 the menu stays in place while scrolling and starts level with the page title, without a small "Settings" label; the page tiles are solid colour (1.66.1)', lay == ['sticky', True, 'none', True], lay)
 
         # ---- (1.66.0) one step bar: Guided Setup (one step at a time, Next), Telegram Setup (one card at a time), Updates (not clickable) ----
         pg.goto(s.base + '/web/settings/#setup'); wait_js(pg, "!!document.querySelector('.ix-sbar .ix-sbi.now')", 20000)

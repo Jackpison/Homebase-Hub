@@ -215,6 +215,7 @@
     var tabs = subTabs(subs, sub);
     P().querySelectorAll('[data-sec]').forEach(function (b) { if (b.dataset.sec === sec) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     navGlide();
+    P().style.setProperty('--sc', (SEC_TILE[sec] || ['#71717a'])[0]);   // (1.66.1) the section's colour for the tiles on its pages
     curSub = sub; P().setAttribute('data-view', 'detail');
     try { sessionStorage.setItem('ix-sec', sub); if (location.hash !== '#' + sub) history.replaceState(null, '', '#' + sub); } catch (e) {}
     var box = $('#ix-pane'); box.scrollTop = 0; window.scrollTo(0, 0);

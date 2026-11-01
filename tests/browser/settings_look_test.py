@@ -267,7 +267,7 @@ try:
         pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('textDlg').open"), 4000)
 
         # the window cards follow Boxes and Cards (the colour a preset or Settings > Appearance > Colors sets), and the tiles are calmer
-        def card_bg(): return pg.evaluate("(() => { const g = document.querySelector('#setDlg .ix-grp'); return [getComputedStyle(g).backgroundColor, getComputedStyle(document.querySelector('#setDlg .ix-rt')).filter]; })()")
+        def card_bg(): return pg.evaluate("(() => { const g = document.querySelector('#setDlg .ix-grp'); return [getComputedStyle(g).backgroundColor, getComputedStyle(document.querySelector('#setDlg .ix-rt')).backgroundImage]; })()")
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin())", 20000)
         pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]'); base_bg, tile_f = card_bg(); pg.keyboard.press('Escape')
         r = pg.evaluate("""(() => { const st = JSON.parse(JSON.stringify(HUB.state())), send = {}; for (const k of ['siteName','nav','theme','accent','accentPg','look','homeBar','font','fontCustom','tools','backupEvery','pages','tz']) send[k] = st[k];
@@ -275,7 +275,7 @@ try:
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin())", 20000)
         pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]'); new_bg, _ = card_bg(); pg.keyboard.press('Escape')
         check('L45 the window cards take the Boxes and Cards colour: setting it to #2d333b changes the card colour', bool(r) and new_bg != base_bg, (r, base_bg, new_bg))
-        check('L46 the icon tiles are calmer for everyone (colours 28% less saturated)', 'saturate(0.72)' in tile_f, tile_f)
+        check('L46 the icon tiles are solid colour tiles (1.66.1, replaces the calmer tiles of 1.64.0)', 'gradient' in tile_f, tile_f)
         pg.evaluate("""(() => { const st = JSON.parse(JSON.stringify(HUB.state())), send = {}; for (const k of ['siteName','nav','theme','accent','accentPg','look','homeBar','font','fontCustom','tools','backupEvery','pages','tz']) send[k] = st[k]; send.colors = {}; return HUB.api('settings', { settings: send }); })()""")
 
         # a window never opens with the close X selected, and a list nobody has filled yet is not drawn as an empty bar

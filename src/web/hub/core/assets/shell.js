@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.66.0" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.66.1" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -575,7 +575,7 @@
   function rowTile(text) {
     var hit = RT.filter(function (r) { return r[0].test(text); })[0] || [0, 'M4 7h10M18 7h2M4 17h2M10 17h10M14 5v4M8 15v4', '170,170,170'];
     var t = document.createElement('span'); t.className = 'ix-rt'; t.setAttribute('aria-hidden', 'true');
-    t.style.cssText = 'background:rgba(' + hit[2] + ',.18);color:rgb(' + hit[2] + ')';
+    t.style.setProperty('--c', 'rgb(' + hit[2] + ')');   // (1.66.1) a solid colour tile with a white icon, like the Settings menu
     t.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + hit[1] + '"/></svg>'; return t;
   }
   function sdlgDecorate(body, headSel) {

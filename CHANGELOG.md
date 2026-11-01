@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.66.1 | Colour tiles with white icons in every Settings page and page Settings window; the Settings menu starts level with the page title again |
 | 1.66.0 | Files shows a card for each file type and per-file upload cards (stop, try again); one step bar for every step-by-step screen in Settings; a new Settings menu with colour tiles |
 | 1.65.3 | Settings › Appearance › Look: a new Accent Color picker, ten squares that swell around the mouse |
 | 1.65.2 | The edit bar's Done tick shows again; Health's Disk Used no longer shows the server's free space |
@@ -120,6 +121,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.66.1
+
+### Changed
+
+- **The colour tiles everywhere:** the tiles in front of the rows of every page's Settings window (Links, Info, Cards, Tasks, Files, Home) and the icons on the Settings pages (cards, the big icons, the Security tiles) are now solid colour tiles with a white icon, like the Settings menu of 1.66.0. On a Settings page they take that section's colour (blue on General, green on Security...); a card that is fine is green, one in trouble red. Pointing at a row in a Settings window makes its tile grow a little and glow.
+- **The Settings menu:** the small "Settings" label above the search is gone on computers (phones keep it as the page title).
+
+### Fixed
+
+- **The Settings menu** started 76 px lower than the page title and no longer stayed in place while you scrolled (since 1.66.0): one of its new styles had switched off its "sticky" position. It starts level with the title and stays in place again.
+
+### Checked
+
+- polish_test P37 (the menu is sticky, level with the title, no label; the page tiles are solid) and P38 (a page Settings window's tiles are solid with a white icon). settings_look_test L46 now checks the solid tiles.
 
 ---
 

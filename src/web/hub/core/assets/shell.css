@@ -576,8 +576,12 @@ kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7p
 .ix-grp>label,.ix-grp>.field,.ix-grp>.f,.ix-grp>.c2{padding-top:12px}
 .ix-grp>:last-child{margin-bottom:12px}
 .ix-grp>.ix-srow:last-child{margin-bottom:0}
-.ix-rt{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;filter:saturate(.72)}   /* (1.64.0) calmer tiles for everyone */
-.ix-rt svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ix-rt{--c:#71717a;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) 80%,#fff),var(--c) 55%,color-mix(in srgb,var(--c) 88%,#000));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.18),0 1px 2px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.3,1.4,.5,1),box-shadow .3s}   /* (1.66.1) the Settings menu's colour tiles everywhere */
+.ix-rt svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+@media (hover:hover){:is(.ix-srow,.g-row):hover>.ix-rt{transform:scale(1.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent),0 6px 16px -3px color-mix(in srgb,var(--c) 75%,transparent)}}
+@media (prefers-reduced-motion:reduce){.ix-rt{transition:none}:is(.ix-srow,.g-row):hover>.ix-rt{transform:none}}
 .ix-srow>.ix-rt+*{flex:1}
 .ix-sdlg .ix-sb .ix-srow>.ix-rt+label,.ix-sdlg .ix-sb .ix-srow>.ix-rt+span{margin:0}
 .ix-srow>span.ix-rt,.g-row>span.ix-rt{flex:0 0 34px;width:34px;min-width:34px;max-width:34px}

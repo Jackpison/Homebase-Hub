@@ -680,7 +680,8 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
    tile grow a little and glow in its colour; the chosen one glows stronger and a highlight in its colour glides to it (navGlide in
    shell-admin.js). Group names Web, Data, System with a fading line; the status is a small glowing dot with quiet text; the site card at
    the bottom holds Log Out. Phones: the same rows, no hover; reduced motion: nothing glides or grows. */
-#ix-page .ix-snav{position:relative;isolation:isolate}
+#ix-page .ix-snav{isolation:isolate}   /* stays sticky (a sticky box already holds the highlight); (1.66.1) setting it to relative pushed the menu 76 px down */
+@media (min-width:860px){#ix-page .ix-snh{display:none}}   /* (1.66.1) no small "Settings" label above the search: the menu starts level with the page title */
 #ix-page .ix-snav .ix-sgl{display:flex;align-items:center;gap:10px;padding:14px 12px 6px;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ix-mu2)}
 #ix-page .ix-snav .ix-sgl::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--ix-line),transparent)}
 #ix-page .ix-snav [data-sec]{--c:#71717a;position:relative;color:color-mix(in srgb,var(--ix-tx) 80%,transparent);font-weight:500;transition:color .2s,background-color .2s}
@@ -739,3 +740,18 @@ html[data-theme="light"] #ix-page .ix-snav .ix-sp.warn{color:#8a3a06}html[data-t
 #ix-page .ix-sbnav .ix-btn:disabled{opacity:.45}
 #ix-page .ix-btn.ix-quiet2{background:none;border-color:transparent;color:var(--ix-mu)}
 @media (prefers-reduced-motion:reduce){#ix-page .ix-sbi i::after{transition:none}#ix-page .ix-stps.ix-one>li.ix-sin{animation:none}}
+
+/* ---------- (1.66.1) the colour tiles of the Settings menu on every Settings page: the card, hero and tile icons are solid tiles in the
+   section's colour (--sc, set by pane()) with a white icon; a card that is fine is green, one in trouble red */
+#ix-page :is(.ix-ec-i,.ix-th-i,.ix-hero-i,.ix-tile-i,.ix-dev-i,.ix-empty-i,.ix-ico){--tc:var(--sc,var(--ix-accent));color:#fff;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--tc) 80%,#fff),var(--tc) 55%,color-mix(in srgb,var(--tc) 88%,#000));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.18),0 6px 16px -8px color-mix(in srgb,var(--tc) 80%,transparent)}
+#ix-page :is(.ix-ec-i,.ix-th-i,.ix-hero-i,.ix-tile-i,.ix-dev-i,.ix-empty-i,.ix-ico) svg{stroke:#fff;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+#ix-page .ix-ec.good .ix-ec-i,#ix-page .ix-tile.good .ix-tile-i{--tc:#22c55e}
+#ix-page .ix-ec.danger .ix-ec-i{--tc:#ef4444}
+#ix-page .ix-tile.warn .ix-tile-i{--tc:#f5a524}
+#ix-page .ix-tile:not(.good):not(.warn) .ix-tile-i,#ix-page .ix-dev-i,#ix-page .ix-empty-i{--tc:#71717a}
+/* the older state rules name the card too, so they are stronger: give them the tile look again */
+#ix-page .ix-ec.good .ix-ec-i,#ix-page .ix-ec.danger .ix-ec-i,#ix-page .ix-tile.good .ix-tile-i,#ix-page .ix-tile.warn .ix-tile-i{color:#fff;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--tc) 80%,#fff),var(--tc) 55%,color-mix(in srgb,var(--tc) 88%,#000))}
+#ix-page .ix-mypre .ix-dev-i{box-shadow:none}
