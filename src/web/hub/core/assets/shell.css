@@ -724,3 +724,4 @@ label.ix-srow{cursor:pointer}
 .ix-khint:hover,.ix-khint:focus-visible{background:var(--ix-s3);color:var(--ix-tx)!important}
 .ix-khint kbd,#ix-page .ix-kbonly kbd{font:600 11px/1 ui-monospace,Menlo,Consolas,monospace;padding:3px 6px;border:1px solid var(--ix-line2);border-bottom-width:2px;border-radius:5px;background:var(--ix-s2);color:var(--ix-tx)}
 @media not ((hover:hover) and (pointer:fine)){#ix-page .ix-kbonly{display:none!important}}
+#ix-q{text-overflow:ellipsis}   /* (1.66.0) the "? Shortcuts" hint fits a narrow bar */

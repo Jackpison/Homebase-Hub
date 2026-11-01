@@ -162,6 +162,28 @@ try:
         check('P30 the arrow keys move along the row (one Tab stop) and Enter chooses', kb == ['#0ea5e9', '#0ea5e9', 1], kb)
         pg.click('#ix-discard') if pg.query_selector('#ix-discard:not([disabled])') else None
 
+        # ---- (1.66.0) the Settings menu: colour tiles with icons, a highlight that glides to the chosen section in its colour ----
+        pg.goto(s.base + '/web/settings/#security'); wait_js(pg, "!!document.querySelector('.ix-snav [data-sec=security][aria-current=page]')", 20000); pg.wait_for_timeout(700)
+        mn = pg.evaluate("(() => { const nav = document.querySelector('.ix-snav'), on = nav.querySelector('[aria-current=page]'), hl = nav.querySelector('.ix-shl'); return [nav.querySelectorAll('[data-sec] .ix-sti svg path, [data-sec] .ix-sti svg rect').length > 15, Math.round(hl.getBoundingClientRect().top) === Math.round(on.getBoundingClientRect().top), getComputedStyle(nav).getPropertyValue('--hc').trim(), [...nav.querySelectorAll('.ix-sgl')].map(e => e.textContent), !!nav.querySelector('.ix-scard .ix-out[data-ix=logout]')]; })()")
+        check('P31 Settings menu: every section has a colour tile with its icon; the highlight sits on the chosen one in its colour; Web, Data, System; Log Out in the site card', mn == [True, True, '#22c55e', ['Web', 'Data', 'System'], True], mn)
+        pg.click('.ix-snav [data-sec=health]'); pg.wait_for_timeout(700)
+        hc = pg.evaluate("(() => { const nav = document.querySelector('.ix-snav'), on = nav.querySelector('[aria-current=page]'), hl = nav.querySelector('.ix-shl'); return [on.dataset.sec, Math.round(hl.getBoundingClientRect().top) === Math.round(on.getBoundingClientRect().top), getComputedStyle(nav).getPropertyValue('--hc').trim()]; })()")
+        check('P32 choosing another section moves the highlight there and takes its colour', hc == ['health', True, '#f43f5e'], hc)
+
+        # ---- (1.66.0) one step bar: Guided Setup (one step at a time, Next), Telegram Setup (one card at a time), Updates (not clickable) ----
+        pg.goto(s.base + '/web/settings/#setup'); wait_js(pg, "!!document.querySelector('.ix-sbar .ix-sbi.now')", 20000)
+        g0 = pg.evaluate("[document.querySelectorAll('.ix-sbar .ix-sbi').length, document.querySelector('.ix-sbar .ix-sbi.now b').textContent, document.querySelectorAll('.ix-steps.ix-one > .ix-step.open').length, [...document.querySelectorAll('.ix-steps.ix-one > .ix-step')].filter(e => e.checkVisibility()).length]")
+        pg.click('.ix-sbnav [data-open] >> text=Next'); wait_js(pg, "document.querySelector('.ix-sbar .ix-sbi.now b').textContent !== %r" % g0[1], 8000)
+        g1 = pg.evaluate("document.querySelector('.ix-sbar .ix-sbi.now b').textContent")
+        check('P33 Guided Setup: a bar of five steps, one step on screen, Next moves the bar on', g0[0] == 5 and g0[2] == 1 and g0[3] == 1 and g1 != g0[1], (g0, g1))
+        pg.goto(s.base + '/web/settings/#telegram/setup'); wait_js(pg, "!!document.querySelector('.ix-stps.ix-one')", 20000)
+        t0 = pg.evaluate("[[...document.querySelectorAll('.ix-stps.ix-one > li')].filter(e => !e.hidden).length, document.querySelector('.ix-sbar .ix-sbi.now b').textContent]")
+        pg.click('.ix-sbar [data-stp=\"3\"]'); t1 = pg.evaluate("[[...document.querySelectorAll('.ix-stps.ix-one > li')].filter(e => !e.hidden).map(e => e.querySelector('.ix-stt').textContent), document.querySelector('.ix-sbar .ix-sbi.now b').textContent]")
+        check('P34 Telegram Setup: the bar shows one step card at a time; clicking a step in the bar shows that one', t0[0] == 1 and t1 == [['Send a Test'], 'Send a Test'], (t0, t1))
+        pg.goto(s.base + '/web/settings/#updates'); wait_js(pg, "!!document.querySelector('.ix-sbar.locked')", 20000)
+        u0 = pg.evaluate("[document.querySelectorAll('.ix-sbar.locked .ix-sbi').length, document.querySelectorAll('.ix-sbar.locked button').length, document.querySelector('.ix-sbar.locked .ix-sbi.now b').textContent]")
+        check('P35 Updates: the same bar shows where an update is, with no clickable steps', u0 == [4, 0, 'Upload the Zip'], u0)
+
         # ---- Presets and Surprise Me ----
         pg.goto(s.base + '/web/settings/#themes'); wait_js(pg, "!!document.getElementById('ix-sur') && !!document.getElementById('ix-surn').textContent", 20000)
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pgrid .ix-preset')].slice(0, 3).map(c => [!!c.querySelector('.ix-pv i em'), c.querySelectorAll('.ix-pv b').length, !!c.querySelector('.ix-pn'), !!c.querySelector('.ix-pgl')])")
@@ -175,7 +197,7 @@ try:
         check('P14 Surprise Me makes a new named mix each time, every one easy to read (text 7:1, muted 4.5:1 on the boxes)', len(set(names)) >= 3 and ok, names)
         pg.click('#ix-suru'); pg.wait_for_timeout(500)
         check('P15 Use It puts the mix on and waits for Save Settings', 'is on' in pg.evaluate("(document.getElementById('ix-toast') || {}).textContent || ''") and pg.evaluate("!!document.querySelector('#ix-sf') && !document.querySelector('#ix-sf').hidden"))
-        check('P26 no page error', not errs, errs)
+        check('P36 no page error', not errs, errs)
         b.close()
 finally:
     stop_all()

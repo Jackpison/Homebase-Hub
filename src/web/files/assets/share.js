@@ -38,7 +38,9 @@ async function main() {
   try { const w = ub64(m.sm.slice(5)); info = JSON.parse(td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: w.subarray(0, 12) }, fk, w.subarray(12)))); }
   catch (e) { return fail("This link's key does not open the file. Ask for the link again."); }
   const name = String(info.n || "file"), size = +info.s || Math.max(0, m.z - m.c * 28);
-  $("name").textContent = name; document.title = name; $("info").textContent = fmt(size) + (m.exp ? " · link ends " + new Date(m.exp * 1000).toLocaleDateString() : "");
+  $("name").textContent = name; document.title = name;
+  const FC = /** @type {any} */ (window).FileCard, ic = document.querySelector("#app > .ico");   // (1.66.0) the file's type card instead of a plain page icon
+  if (FC && ic) { ic.replaceChildren(FC.make(name, "l")); ic.classList.add("fc"); } $("info").textContent = fmt(size) + (m.exp ? " · link ends " + new Date(m.exp * 1000).toLocaleDateString() : "");
   const get = async onBytes => {
     const parts = [];
     for (let i = 0; i < m.c; i++) {

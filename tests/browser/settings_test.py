@@ -82,7 +82,7 @@ try:
         menu = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav [data-sec] span')].map(e => e.textContent)")
         groups = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav .ix-sgl')].map(e => e.textContent)")
         check('S9 the Settings menu: Web Setting (General, Appearance), Data Setting (Security, Telegram, Backup & Restore), System Setting (Health, Updates, Changelog)',
-              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Health', 'Updates', 'Changelog'] and groups == ['Web Setting', 'Data Setting', 'System Setting'], (menu, groups))
+              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Health', 'Updates', 'Changelog'] and groups == ['Web', 'Data', 'System'], (menu, groups))
         def at(h, expr):
             pg.goto(s.base + '/web/settings/' + h)
             try: wait_js(pg, expr, 10000); return True

@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.66.0 | Files shows a card for each file type and per-file upload cards (stop, try again); one step bar for every step-by-step screen in Settings; a new Settings menu with colour tiles |
 | 1.65.3 | Settings › Appearance › Look: a new Accent Color picker, ten squares that swell around the mouse |
 | 1.65.2 | The edit bar's Done tick shows again; Health's Disk Used no longer shows the server's free space |
 | 1.65.1 | The theme button is the sun and moon again; a login card when logged out; search results no longer cut off; Keyboard Shortcuts in search and Settings › General; a new edit bar, Erase Everything button and hover glow |
@@ -119,6 +120,30 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.66.0
+
+### New
+
+- **File type cards (Files):** every file shows a small page with a coloured label for its type (PDF, XLSX, ZIP, MD, MP4...) and a drawing of its kind: text lines, a sheet grid for spreadsheets, a zipper for archives, a slide, braces for JSON and CSS, tags for code, a picture or a play button, a sound wave for audio, and a plain page with the file's own extension for anything else. In the list (small), the grid (pictures keep their real thumbnail), the details panel, the Share window, and on the page a share link opens. Look from "file-card-collections" by urmauur (21st.dev), rebuilt in the site's own CSS.
+- **Uploads, one card per file (Files):** every file you pick or drop shows at once: waiting ("Ready to upload"), locking in your browser, uploading with its % and a thin bar, failed (red, with the reason and a try-again button), or done ("Uploaded · 1.8 MB"). × takes a waiting file off the list, or stops one that is going (the half file is thrown away on the server). At the top: "Uploading 2 of 5", one bar for all of them, Stop All and Clear Done. Done cards stay until you clear them. Downloads and zips use the same cards.
+- **One step bar for every step-by-step screen (Settings):** thin bars with the step names under them: done steps fill with your accent, the current one is bright, skipped ones are dashed.
+  - Overview › Guided Setup: one step on screen at a time, with Back, Skip for Now and Next; click any step in the bar to jump to it.
+  - Telegram › Setup: one step card at a time; click a step in the bar, or use Back and Next.
+  - Updates › Update the Site: the bar shows where the update is (its steps can't be clicked: Apply only comes after the review).
+  - Security › Two-Step Login, while you turn it on: Get an App, Scan the Code, Type the Code, Save Recovery Codes.
+  - On a phone only the current step's name shows under the bars ("2 of 5 · Encryption Passphrase").
+
+### Changed
+
+- **The Settings menu:** each section has a solid colour tile with a white icon (like the settings of a phone): Overview, General, Appearance, Security, Telegram, Backup & Restore, Health, Updates, Changelog. Pointing at one makes its tile grow a little and glow in its colour; the chosen one glows and a highlight in its colour glides to it. The groups are called Web, Data and System. A status is a small glowing dot with quiet text (amber when something waits). Your site's logo, name, address and version sit in a card at the bottom, with Log Out as its button. Icons from Lucide (ISC).
+- The bar's search box shortens its "? Shortcuts" hint with "…" when the bar is narrow.
+
+### Checked
+
+- files_test: B7b the type card in the list, B7c the Transfers card "Uploaded · 38 B", B8b a failed upload shows a red card and its try-again button uploads the file. polish_test P31 to P35: the Settings menu tiles, highlight and colour; Guided Setup, Telegram Setup and Updates step bars. settings_test: the menu groups Web, Data, System.
 
 ---
 

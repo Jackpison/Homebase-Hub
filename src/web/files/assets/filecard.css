@@ -1,0 +1,38 @@
+/*! Homebase Hub - https://github.com/Jackpison/Homebase-Hub - GPL-3.0-only */
+/* (1.66.0) File type cards (filecard.js): a small page with a coloured label at its corner and a drawing of its kind.
+   Look from "file-card-collections" by urmauur, 21st.dev (https://21st.dev/@urmauur/components/file-card-collections), rebuilt in plain CSS.
+   Sizes: .s (list rows, about 26 x 34), .m (56 x 72), .l (84 x 108). Colours follow the page's own text colour, so dark and light both work. */
+.fcd{--fct:var(--fg,var(--ix-tx,#ededed));position:relative;display:inline-block;flex:none;width:56px;height:72px;vertical-align:middle}
+.fcd .fcpg{position:absolute;inset:0;display:flex;flex-direction:column;gap:5px;padding:8px;border-radius:7px;overflow:hidden;
+  background:color-mix(in srgb,var(--fct) 7%,var(--panel,var(--box,var(--ix-s1,#151517))));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--fct) 14%,transparent)}
+.fcd .fclb{position:absolute;right:-8px;bottom:6px;z-index:1;padding:2px 6px;border-radius:4px;color:#fff;font:700 8px/1.25 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.fcd i{display:block;height:2px;border-radius:2px;background:color-mix(in srgb,var(--fct) 12%,transparent)}
+.fcd i.h{background:color-mix(in srgb,var(--fct) 24%,transparent)}
+.fcd .r{display:flex;gap:3px}.fcd .r i{flex:1}.fcd .r.in{padding-left:5px;gap:3px}
+.fcd i.c{height:5px}.fcd i.t{height:3px}.fcd .o{visibility:hidden}
+.fcd .hash{display:flex;align-items:center;gap:3px;font:800 9px/1 system-ui,sans-serif;color:color-mix(in srgb,var(--fct) 34%,transparent)}
+.fcd .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.fcd .grid b{height:7px;background:color-mix(in srgb,var(--fct) 7%,transparent)}.fcd .grid b.h{background:color-mix(in srgb,var(--fct) 24%,transparent)}
+.fcd .zip{display:flex;flex-direction:column;margin:auto}
+.fcd .zip span{display:flex;border-radius:9px;overflow:hidden}
+.fcd .zip b{width:6px;height:6px;background:color-mix(in srgb,var(--fct) 7%,transparent)}.fcd .zip b.h{background:color-mix(in srgb,var(--fct) 26%,transparent)}
+.fcd .pic{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 4px;border-radius:4px;background:color-mix(in srgb,var(--fct) 5%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--fct) 12%,transparent)}
+.fcd .pic i{width:70%}
+.fcd .pic u{width:11px;height:11px;border-radius:50%;background:rgba(250,204,21,.5)}.fcd .pic u.o{visibility:visible;border-radius:3px;background:rgba(251,146,60,.5)}
+.fcd .pic u.p{width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent rgba(74,222,128,.75)}
+.fcd .code{display:flex;align-items:center;gap:2px;font:700 6px/1 ui-monospace,Menlo,monospace;color:color-mix(in srgb,var(--fct) 34%,transparent)}
+.fcd .code.in{padding-left:3px}
+.fcd s{display:block;flex:none;width:12px;height:3px;border-radius:2px;text-decoration:none}
+.fcd s.g{background:rgba(52,211,153,.65)}.fcd s.b{background:rgba(56,189,248,.65)}.fcd s.s{width:6px}.fcd s.l{width:16px}
+.fcd .wave{display:flex;align-items:center;justify-content:center;gap:2px;height:30px;margin-top:6px}
+.fcd .wave b{width:3px;border-radius:2px;background:rgba(236,72,153,.6)}
+/* sizes: the drawing is made at 56 x 72 and scaled, so it looks the same everywhere */
+.fcd.s{width:26px;height:34px}.fcd.s .fcpg,.fcd.s .fclb{transform-origin:top left}
+.fcd.s .fcpg{width:56px;height:72px;inset:auto;left:0;top:0;transform:scale(.4643)}
+.fcd.s .fclb{right:-5px;bottom:3px;padding:1px 3px;font-size:6px;border-radius:3px;transform:none}
+.fcd.l{width:84px;height:108px}.fcd.l .fcpg{width:56px;height:72px;inset:auto;left:0;top:0;transform:scale(1.5);transform-origin:top left}
+.fcd.l .fclb{right:-10px;bottom:10px;padding:3px 8px;font-size:11px;border-radius:5px}
+/* widths and heights for the drawings (classes, not inline styles: the share page's security policy allows no inline style) */
+.fcd .w22{width:22px}.fcd .w30{width:30%}.fcd .w33{width:33%}.fcd .w35{width:35%}.fcd .w40{width:40%}.fcd .w50{width:50%}.fcd .w60{width:60%}.fcd .w70{width:70%}
+.fcd .r i.f5{flex:.5}.fcd .r i.f7{flex:.7}.fcd i.mb{margin:auto auto 0}
+.fcd .wave .h30{height:30%}.fcd .wave .h40{height:40%}.fcd .wave .h55{height:55%}.fcd .wave .h65{height:65%}.fcd .wave .h70{height:70%}.fcd .wave .h80{height:80%}.fcd .wave .h100{height:100%}

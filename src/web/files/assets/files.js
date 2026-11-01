@@ -263,6 +263,9 @@ function shown() {
   return list;
 }
 const icoOf = i => i.t === "d" ? "d" : kindOf(nameOf(i));
+/** (1.66.0) a file's type card (filecard.js); folders keep the folder icon */
+const FC = /** @type {any} */ (window).FileCard;
+const icoBody = (i, size) => i.t === "d" || !FC ? svg(icoName(i)) : FC.make(nameOf(i), size);
 const icoName = i => i.t === "d" ? "folder" : ({ image: "image", video: "video", audio: "audio", pdf: "pdf", text: "text", zip: "zip" }[kindOf(nameOf(i))] || "file");
 
 function render() {
@@ -312,7 +315,7 @@ function row(i) {
   const sub = tab === "trash" ? "Removed for good in " + left + (left === 1 ? " day" : " days") : (isD ? "Folder" : fmt(sz)) + " · " + when(at) + (where ? " · in " + where : "");
   const ck = h("input", { type: "checkbox", class: "ck", "aria-label": "Pick " + name, checked: sel.has(i.id), onchange: e => { e.target.checked ? sel.add(i.id) : sel.delete(i.id); row.sync(); } });
   const open = h("button", { type: "button", class: "nm", title: name, onclick: () => { if (i.t === "d" || tab === "trash") return openItem(i); pick1(i.id); } },
-    h("span", { class: "ico " + icoOf(i) }, svg(icoName(i))), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
+    h("span", { class: "ico " + icoOf(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, D.settings.view === "grid" ? "m" : "s")), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
   const more = h("button", { type: "button", class: "ib more", "aria-label": "More for " + name, "aria-haspopup": "menu", onclick: e => menu(e.currentTarget, i) }, svg("more"));
   const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : ""), "data-id": i.id, ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); menu(more, i); } },
     ck, open, h("span", { class: "cell sz num", text: isD ? "" : fmt(sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), more, h("span", { class: "cell meta", text: sub }));
@@ -350,7 +353,7 @@ function details() {
   const shares = D.shares.filter(x => x.id === i.id).length;
   det.replaceChildren(
     h("div", { class: "dh" }, h("b", { text: "Details" }), h("button", { type: "button", class: "ib", "aria-label": "Close details", onclick: () => { sel.clear(); row.sync(); } }, svg("x"))),
-    (() => { const pv = h("div", { class: "pv " + icoOf(i) }, svg(icoName(i))); queueMicrotask(() => thumbWatch(pv, i)); return pv; })(),
+    (() => { const pv = h("div", { class: "pv " + icoOf(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, "l")); queueMicrotask(() => thumbWatch(pv, i)); return pv; })(),
     h("h3", { text: name }), acts,
     h("div", { class: "locknote" }, svg("lock"), "Locked in your browser. The server can't read it."),
     h("dl", {}, h("dt", { text: "Type" }), h("dd", { text: isD ? "Folder" : (KIND[kindOf(name)] || (/\.([A-Za-z0-9]{1,8})$/.exec(name) || [, "File"])[1].toUpperCase() + " file") }),
@@ -488,7 +491,7 @@ async function download(ids) {
   const items = ids.map(id => byId.get(id)).filter(Boolean);
   try {
     if (items.length === 1 && items[0].t === "f") {
-      const i = items[0], p = progress("Downloading " + nameOf(i));
+      const i = items[0], p = progress("Downloading " + nameOf(i), nameOf(i), sizeOf(i));
       try { const r = await readFile(i, "application/octet-stream", n => p.add(n, sizeOf(i))); save(r.blob, nameOf(i)); p.done("Downloaded"); } catch (e) { p.fail(why(e)); }
       return;
     }
@@ -499,7 +502,7 @@ async function download(ids) {
     const total = files.reduce((a, f) => a + (sizeOf(f.i) || 0), 0);
     if (!files.length) return toast("There is nothing in there to download.");
     if (total > 3.5 * 1024 * 1024 * 1024) return toast("That is too much for one zip (" + fmt(total) + "). Download the folders inside it one at a time.", true);
-    const p = progress("Making a zip of " + files.length + (files.length === 1 ? " file" : " files"));
+    const p = progress("Making a zip of " + files.length + (files.length === 1 ? " file" : " files"), "", total);
     try {
       const out = []; let done = 0;
       for (const f of files) { const r = await readFile(f.i, "application/octet-stream", n => { done += n; p.add(done, total, true); }); out.push({ path: f.path, blob: r.blob, crc: r.crc, size: r.size, mt: dateOf(f.i) }); }
@@ -529,28 +532,80 @@ async function preview(i) {
   } catch (e) { const pv = $("pv"); if (pv) pv.textContent = why(e); }
 }
 
-/* ---------- uploads ---------- */
-const ups = $("ups"); let upList = null;
-function progress(label) {
-  if (!upList) { ups.replaceChildren(h("h2", {}, "Transfers", h("button", { type: "button", class: "ib", "aria-label": "Hide", onclick: () => { ups.hidden = true; } }, svg("x"))), upList = h("div")); }
-  ups.hidden = false;
-  const bar = h("i"), sm = h("small", { text: "Starting…" }), el = h("div", { class: "up" }, h("div", { class: "l" }, h("span", { text: label }), sm), h("div", { class: "pb" }, bar));
-  upList.prepend(el); let sum = 0;
-  const api = {
-    add(n, total, absolute) { sum = absolute ? n : sum + n; if (total) bar.style.width = Math.min(100, sum / total * 100) + "%"; sm.textContent = total ? Math.round(Math.min(100, sum / total * 100)) + "%" : fmt(sum); },
-    done(t) { bar.style.width = "100%"; sm.textContent = t || "Done"; setTimeout(() => { if (el.parentNode) { el.remove(); if (!upList.children.length) ups.hidden = true; } }, 4000); },
-    fail(t) { el.classList.add("bad"); sm.textContent = t || "Failed"; sm.title = t || ""; }
-  };
-  return api;
+/* ---------- uploads (and downloads): the Transfers box ----------
+   (1.66.0) One card per file, shown as soon as it is picked or dropped: Waiting (dashed, "Ready to upload"), Locking (encrypted in this
+   browser), Uploading with its % and a thin bar, Failed (red, with ↻ to try again), Done ("Uploaded · 1.8 MB", stays until Clear Done or the
+   box is closed). × takes a waiting file off the list, or stops one that is going (the half file is thrown away on the server: put_abort).
+   At the top: "Uploading 2 of 5", one overall bar, Stop All and Clear Done. Downloads and zips use the same cards. */
+const ups = $("ups"); let upList = null, upHead = null, upAll = null;
+/** @type {any[]} every card in the box, oldest first */
+const xfers = [];
+const XI = { wait: "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z", bad: "M12 8v5M12 16.5h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z", done: "M5 12.5l4.5 4.5L19 7",
+  re: "M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4", x: "M6 6l12 12M18 6 6 18", stop: "M8 8h8v8H8z" };
+const xsvg = d => { const v = document.createElementNS("http://www.w3.org/2000/svg", "svg"), pa = document.createElementNS("http://www.w3.org/2000/svg", "path"); v.setAttribute("viewBox", "0 0 24 24"); v.setAttribute("aria-hidden", "true"); pa.setAttribute("d", d); v.append(pa); return v; };
+function upBox() {
+  if (upList) return;
+  upHead = h("b", { class: "uht", "aria-live": "polite" });
+  const clear = h("button", { type: "button", class: "ubtn", text: "Clear Done", onclick: () => { for (const x of xfers.slice()) if (x.state === "done" || x.state === "stop") x.drop(); upSync(); } });
+  const stopAll = h("button", { type: "button", class: "ubtn", text: "Stop All", onclick: () => { for (const x of xfers) if (x.state === "wait" || x.state === "lock" || x.state === "go") x.stop(); upSync(); } });
+  const hide = h("button", { type: "button", class: "ib", "aria-label": "Close Transfers", onclick: () => { for (const x of xfers.slice()) if (x.state === "done" || x.state === "stop" || x.state === "bad") x.drop(); upSync(); if (!xfers.length) ups.hidden = true; } }, svg("x"));
+  upAll = h("i");
+  ups.replaceChildren(h("div", { class: "uph" }, upHead, clear, stopAll, hide), h("div", { class: "upbar" }, upAll), upList = h("div", { class: "upl" }));
+  /** @type {any} */ (ups)._clear = clear; /** @type {any} */ (ups)._stop = stopAll;
 }
+function upSync() {
+  if (!upList) return;
+  const going = xfers.filter(x => x.state === "go" || x.state === "lock"), waiting = xfers.filter(x => x.state === "wait"), done = xfers.filter(x => x.state === "done");
+  const ups1 = xfers.filter(x => x.up), cur = ups1.findIndex(x => x.state === "go" || x.state === "lock");
+  upHead.textContent = cur >= 0 ? "Uploading " + (cur + 1) + " of " + ups1.length : going.length ? xfers.find(x => x.state === "go" || x.state === "lock").label : waiting.length ? waiting.length + " waiting" : done.length ? "Transfers · " + done.length + " done" : "Transfers";
+  const tot = xfers.reduce((a, x) => a + (x.total || 0), 0), got = xfers.reduce((a, x) => a + (x.state === "done" ? (x.total || 0) : x.state === "go" ? (x.total || 0) * x.frac : 0), 0);
+  upAll.style.width = tot ? Math.round(got / tot * 100) + "%" : (done.length && !going.length && !waiting.length ? "100%" : "0%");
+  /** @type {any} */ (ups)._clear.hidden = !xfers.some(x => x.state === "done" || x.state === "stop");
+  /** @type {any} */ (ups)._stop.hidden = !(going.length + waiting.length);
+  if (!xfers.length) ups.hidden = true;
+}
+/** One card. name: the file's name (its type card shows while it waits or is done); up: an upload (retry runs again) */
+function xfer(label, name, total, up) {
+  upBox(); ups.hidden = false;
+  const ic = h("span", { class: "uic" }), nm = h("b", { text: name || label }), sub = h("small"), bar = h("span", { class: "upb" });
+  const re = h("button", { type: "button", class: "ib re", "aria-label": "Try " + (name || label) + " again", title: "Try again", hidden: true }, xsvg(XI.re));
+  const x = h("button", { type: "button", class: "ib", "aria-label": "Remove " + (name || label) });
+  const el = h("div", { class: "uc" }, ic, h("span", { class: "ut" }, nm, sub), re, x, bar);
+  upList.append(el);
+  const card = { label, name, total: total || 0, frac: 0, got: 0, up, state: "", stopped: false, retry: /** @type {any} */ (null),
+    set(st, text) {
+      card.state = st; el.className = "uc " + st; sub.textContent = text;
+      if (st === "go" || st === "lock") { if (!ic.querySelector(".ix-spin")) ic.replaceChildren(h("span", { class: "ix-spin", "aria-hidden": "true" }, h("i"), h("i"), h("i"))); }
+      else ic.replaceChildren(st === "bad" ? xsvg(XI.bad) : st === "stop" ? xsvg(XI.stop) : name && FC ? FC.make(name, "s") : xsvg(st === "done" ? XI.done : XI.wait));
+      re.hidden = st !== "bad" || !card.retry;
+      x.setAttribute("aria-label", (st === "go" || st === "lock" ? "Stop " : "Remove ") + (name || label)); x.replaceChildren(xsvg(XI.x));
+      bar.style.width = st === "go" ? Math.round(card.frac * 100) + "%" : "0";
+      upSync();
+    },
+    add(n, tot, absolute) { const t = tot || card.total; if (tot) card.total = tot; const done = absolute ? n : (card.got || 0) + n; card.got = done; card.frac = t ? Math.min(1, done / t) : 0;
+      card.set("go", (up ? "Uploading" : label.startsWith("Making") ? "Making the zip" : "Downloading") + " · " + (t ? Math.round(card.frac * 100) + "%" : fmt(done))); },
+    done(t) { card.frac = 1; card.set("done", t || "Done"); },
+    fail(t) { card.set("bad", t || "Failed. Try again."); x.title = t || ""; },
+    stop() { card.stopped = true; if (card.state === "wait") card.set("stop", "Not uploaded"); },
+    drop() { el.remove(); xfers.splice(xfers.indexOf(card), 1); }
+  };
+  x.onclick = () => { if (card.state === "go" || card.state === "lock") { card.stopped = true; sub.textContent = "Stopping…"; } else if (card.state === "wait") { card.stop(); } else { card.drop(); upSync(); } };
+  re.onclick = () => { if (card.retry) card.retry(); };
+  xfers.push(card); card.set("wait", up ? "Ready to upload" : "Waiting");
+  return card;
+}
+/* downloads and zips: a card that starts at once */
+function progress(label, name, total) { const c = xfer(label, name, total, false); c.set("go", label.startsWith("Making") ? "Making the zip" : "Downloading · 0%"); return c; }
 let queue = Promise.resolve();
 function uploadAll(entries) {   // [{file, parts: [folder names]}]
   if (!entries.length) return;
-  queue = queue.then(() => doUploads(entries)).catch(e => toast(e.message || "Upload stopped.", true));
+  const base = cwd;   // the folder the files were dropped into, even if you open another one while they wait
+  const jobs = entries.map(e => ({ e, card: e.file ? xfer("Uploading " + e.file.name, e.file.name, e.file.size, true) : null }));
+  queue = queue.then(() => doUploads(jobs, base)).catch(e => toast(e.message || "Upload stopped.", true));
 }
-async function doUploads(entries) {
-  if (!await ensureKey()) return;
-  const base = cwd, made = new Map([["", base]]);
+async function doUploads(jobs, base) {
+  if (!await ensureKey()) { for (const j of jobs) if (j.card && j.card.state === "wait") j.card.set("stop", "Not uploaded (locked)"); return; }
+  const made = new Map([["", base]]);
   const folderFor = async parts => {
     let parent = base, key = "";
     for (const nm of parts) {
@@ -571,11 +626,18 @@ async function doUploads(entries) {
     return parent;
   };
   let okN = 0;
-  for (const e of entries) {
-    const p = progress("Uploading " + e.file.name);
-    try { const parent = await folderFor(e.parts); await uploadOne(e.file, parent, p); okN++; p.done("Done"); }
-    catch (x) { p.fail(why(x) || "Failed"); }
-  }
+  const one = async j => {
+    const c = j.card;
+    if (!c) { await folderFor(j.e.parts); return; }   // an empty folder that was dropped
+    if (c.stopped || c.state !== "wait") return;
+    c.retry = () => { c.stopped = false; c.frac = 0; c.got = 0; c.set("wait", "Ready to upload"); queue = queue.then(() => one(j)).then(() => refresh()).catch(e => toast(e.message || "Upload stopped.", true)); };
+    try {
+      c.set("lock", "Locking in your browser");
+      const parent = await folderFor(j.e.parts); await uploadOne(j.e.file, parent, c); okN++;
+      c.done("Uploaded · " + fmt(j.e.file.size));
+    } catch (x) { if (c.stopped) c.set("stop", "Stopped. Nothing was kept."); else c.fail(why(x) || "Upload failed. Try again."); }
+  };
+  for (const j of jobs) await one(j);
   await refresh();
   if (okN) toast(okN === 1 ? "Uploaded." : "Uploaded " + okN + " files.");
 }
@@ -596,6 +658,7 @@ async function uploadOne(file, parent, p) {
       for (let t = 0; t < 3 && !(r && r.ok); t++) { r = await HF("api.php?action=put_chunk&id=" + id + "&n=" + i, { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body }).catch(() => null); if (r && !r.ok && r.status !== 502 && r.status !== 504) break; }
       if (!r || !r.ok) { const j = r ? await r.json().catch(() => ({})) : {}; throw new Error(j.error || "A piece did not arrive."); }
       sent += plain.byteLength; p.add(sent, file.size || 1, true);
+      if (p.stopped) throw new Error("Stopped");   // (1.66.0) × on its card: the half file is thrown away below
     }
     const dn = await post("put_done", { id }); if (!dn.ok) throw new Error(dn.error || "The file did not finish.");
   } catch (e) { await post("put_abort", { id }); throw e; }
@@ -641,7 +704,7 @@ async function shareBox(i) {
     if (!j.ok) { derr(j.error); return false; }
     await refresh(); draw(); toast("Link made."); return false;
   };
-  await openDialog("Share " + nameOf(i), [h("p", { text: "Anyone with the link can open this one file. The key to unlock it is in the link itself (after the #), so it never reaches your server, and the file stays locked there." }), box,
+  await openDialog("Share " + nameOf(i), [FC ? h("div", { class: "shfc" }, FC.make(nameOf(i), "m"), h("b", { text: nameOf(i) })) : null, h("p", { text: "Anyone with the link can open this one file. The key to unlock it is in the link itself (after the #), so it never reaches your server, and the file stays locked there." }), box,
     h("label", { for: "dexp", text: "New link ends" }), exp], [{ text: "Make a New Link", pri: true, left: true, run: make }, { text: "Done", run: () => {} }]);
   raw.fill(0);
 }

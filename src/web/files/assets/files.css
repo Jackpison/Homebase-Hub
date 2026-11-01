@@ -105,15 +105,6 @@ html[data-ix-bar] .sync{display:none}
 
 /* uploads */
 .ups{position:fixed;right:16px;bottom:16px;width:min(360px,calc(100vw - 32px));max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:0 12px 40px rgba(0,0,0,.45);z-index:30;padding:6px}
-.ups h2{margin:6px 8px;font-size:14px;display:flex;align-items:center;justify-content:space-between}
-.up{padding:7px 8px;border-radius:9px;font-size:13.5px}
-.up .l{display:flex;justify-content:space-between;gap:8px}
-.up .l span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.up .pb{height:5px;border-radius:9px;background:color-mix(in srgb,var(--fg) 12%,transparent);margin-top:5px;overflow:hidden}
-.up .pb i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
-.up.bad .pb i{background:var(--late)}
-.up small{color:var(--mute)}
-.up.bad small{color:var(--late)}
 
 /* dialogs */
 dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--fg);padding:20px 22px;width:min(520px,calc(100vw - 28px));max-height:calc(100vh - 40px);overflow:auto}
@@ -235,3 +226,38 @@ html[data-ix-nav="side"] .fdet{top:16px}
 /* (1.61.6) Files Settings: a number box and a dropdown at the end of a row keep their own small width */
 #dlg .ix-srow>input[type=number]{width:96px;flex:none}
 #dlg .ix-srow>select{width:auto;flex:none}
+
+/* (1.66.0) file type cards (filecard.css) in the list, the grid, the details panel and the Share window */
+.ico.fc{background:none;border-radius:0}
+.list.grid .ico.fc{background:color-mix(in srgb,var(--fg) 4%,transparent);border-radius:10px;padding-right:8px}
+.list.grid .ico.fc.hasth{padding:0}
+.fdet .pv.fc{background:color-mix(in srgb,var(--fg) 4%,var(--panel))}
+.fdet .pv.fc .fcd{margin-right:10px}
+.shfc{display:flex;align-items:center;gap:18px;margin:2px 0 12px}
+.shfc b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shfc .fcd{margin-right:8px}
+
+/* (1.66.0) the Transfers box: one card per file with its state (files.js xfer) */
+.ups{width:min(440px,calc(100vw - 32px));max-height:min(70vh,560px);display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:18px}
+.uph{display:flex;align-items:center;gap:4px;padding:12px 10px 8px 16px}
+.uph .uht{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ubtn{height:30px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--mute);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.ubtn:hover{background:color-mix(in srgb,var(--fg) 8%,transparent);color:var(--fg)}
+.upbar{height:3px;margin:0 16px 10px;border-radius:3px;background:color-mix(in srgb,var(--fg) 10%,transparent);overflow:hidden}
+.upbar i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+.upl{display:flex;flex-direction:column;gap:8px;padding:0 10px 10px;overflow:auto}
+.uc{position:relative;display:flex;align-items:center;gap:12px;padding:9px 8px 9px 9px;border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;transition:border-color .2s,background-color .2s}
+.uc.wait{border-style:dashed}
+.uc.bad{border-color:color-mix(in srgb,var(--late) 55%,transparent);background:color-mix(in srgb,var(--late) 7%,var(--panel))}
+.uc .uic{width:44px;height:44px;flex:none;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--fg) 6%,transparent);color:var(--fg)}
+.uc .uic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.uc.done .uic{color:var(--good)}.uc.bad .uic{background:color-mix(in srgb,var(--late) 15%,transparent);color:var(--late)}.uc.stop .uic{color:var(--mute)}
+.uc .uic .fcd{margin-right:4px}.uc.wait .uic .fcd{opacity:.65}
+.uc .ut{flex:1;min-width:0;display:flex;flex-direction:column}
+.uc .ut b{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uc .ut small{font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uc.bad .ut small{color:var(--late)}
+.uc .ib{width:30px;height:30px;flex:none}.uc .ib[hidden]{display:none}.uc .ib.re{color:var(--late)}
+.uc .ib svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.uc .upb{position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--acc);transition:width .25s}
+@media (prefers-reduced-motion:reduce){.upbar i,.uc .upb{transition:none}}

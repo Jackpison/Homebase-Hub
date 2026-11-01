@@ -18,6 +18,7 @@
   },
   "files": [
     "../tests/types/hub-globals.d.ts",
+    "../src/web/files/assets/filecard.js",
     "../src/web/files/assets/share.js",
     "../src/web/files/assets/files.js",
     "../src/web/links/assets/links-import.js"

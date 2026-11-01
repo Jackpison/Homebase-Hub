@@ -61,18 +61,29 @@
     ['health', 'Health', ICON.pulse, 'Version, speed, errors and domains.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
     ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, or go back.', [['updates', 'Update'], ['files', 'Files']], 'System Setting'],
     ['changelog', 'Changelog', ICON.log, 'What changed in every version of your site, newest first.', [['changelog', 'Versions'], ['chmap', 'Version Map'], ['chnotes', 'Notes']], 'System Setting']];
-  /* (1.61.5) the left panel: a coloured tile and a redrawn icon for each section */
+  /* (1.66.0) the left panel in the "System tiles" look: a solid colour tile with a white icon for each section (icons from Lucide,
+     lucide.dev, ISC licence: see web/hub/docs/THIRD-PARTY.md). [colour, the icon's SVG inside] */
   var SEC_TILE = {
-    overview: ['255,194,26', 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],
-    general: ['91,141,255', 'M4 11l8-7 8 7M6 10v9h12v-9M10 19v-5h4v5'],
-    look: ['179,146,240', 'M12 3a9 9 0 1 0 0 18c1.4 0 2-.9 2-1.8 0-1.2-1-1.6-1-2.6s.9-1.6 2-1.6h2a4 4 0 0 0 4-4c0-4.4-4-8-9-8zM8 11h.01M12 7.5h.01M16 11h.01'],
-    security: ['80,200,140', 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM12 9.5a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6zM12 13v3'],
-    telegram: ['76,201,240', 'M21 4 3 11l6 2 2 6 3-4 4 3zM9 13l12-9'],
-    backup: ['255,138,92', 'M12 4v11m-4-4 4 4 4-4M5 20h14'],
-    health: ['255,107,129', 'M3 12h4l2.5-6 4 12 2.5-6H21'],
-    updates: ['95,214,138', 'M12 20V8m-4 4 4-4 4 4M5 4h14'],
-    changelog: ['170,170,170', 'M7 3h8l4 4v14H7zM15 3v4h4M10 12h6M10 16h6']
+    overview: ['#f5a524', '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'],
+    general: ['#3b82f6', '<path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>'],
+    look: ['#a855f7', '<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/><circle cx="13.5" cy="6.5" r=".8" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".8" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".8" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".8" fill="currentColor"/>'],
+    security: ['#22c55e', '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>'],
+    telegram: ['#0ea5e9', '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>'],
+    backup: ['#f97316', '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="m9.5 14.5 2.5 2.5 2.5-2.5M12 11v6"/>'],
+    health: ['#f43f5e', '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>'],
+    updates: ['#14b8a6', '<path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"/><path d="M12 21v-9M8 16l4-4 4 4"/>'],
+    changelog: ['#71717a', '<path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/><path d="M15 8h-5M15 12h-5"/>']
   };
+  var LOGOUT_ICON = '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>';
+  var tileSvg = function (inner) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + inner + '</svg>'; };
+  /* the highlight glides to the chosen section and takes its colour */
+  function navGlide() {
+    var nav = PAGE && PAGE.querySelector('.ix-snav'), hl = nav && nav.querySelector('.ix-shl'), on = nav && nav.querySelector('[data-sec][aria-current="page"]');
+    if (!hl) return;
+    if (!on || !on.offsetParent) { hl.style.opacity = '0'; return; }
+    hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
+    nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
+  }
   var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
   var SUB_OF = {};   // sub-tab -> its section (nav -> general, colors -> look)
   SECTIONS.forEach(function (x) { (x[4] || [[x[0]]]).forEach(function (t) { SUB_OF[t[0]] = x[0]; }); });
@@ -118,9 +129,11 @@
     draft = JSON.parse(JSON.stringify(S)); colorMode = '';
     var gl = null;
     host.innerHTML = '<aside class="ix-snav" aria-label="Settings Sections"><div class="ix-snh">Settings</div><div class="ix-ssearch"><input type="search" id="ix-ss" placeholder="Search Settings" aria-label="Search settings" autocomplete="off" spellcheck="false"><div class="ix-sres" id="ix-sres" hidden></div></div>' + SECTIONS.map(function (x) {
-        var head = x[5] !== gl ? (gl = x[5], x[5] ? '<div class="ix-sgl">' + x[5] + '</div>' : '') : '';
-        return head + '<button type="button" data-sec="' + x[0] + '"><i class="ix-sti" style="--c:' + (SEC_TILE[x[0]] || ['170,170,170'])[0] + '">' + svg((SEC_TILE[x[0]] || [0, x[2]])[1]) + '</i><span>' + x[1] + '</span><em class="ix-sp" data-pill="' + x[0] + '"></em></button>'; }).join('') +
-        '<button type="button" class="ix-out" data-ix="logout"><i class="ix-sti">' + svg(ICON.out) + '</i><span>Log Out</span></button></aside>' +
+        var head = x[5] !== gl ? (gl = x[5], x[5] ? '<div class="ix-sgl">' + x[5].replace(/ Setting$/, '') + '</div>' : '') : '';
+        var t = SEC_TILE[x[0]];
+        return head + '<button type="button" data-sec="' + x[0] + '" style="--c:' + (t ? t[0] : '#71717a') + '"><i class="ix-sti">' + (t ? tileSvg(t[1]) : svg(x[2])) + '</i><span>' + x[1] + '</span><em class="ix-sp" data-pill="' + x[0] + '"></em></button>'; }).join('') +
+        '<div class="ix-scard"><img class="ix-sclogo" alt="" src="' + esc(S.logo ? ROOT + S.logo : CORE + 'assets/brand/logo-192.png') + '"><div><b>' + esc(S.siteName || 'Homebase Hub') + '</b><small>' + esc(location.host) + '<span data-sver></span></small></div>' +
+          '<button type="button" class="ix-out" data-ix="logout" aria-label="Log Out" title="Log Out">' + tileSvg(LOGOUT_ICON) + '</button></div><span class="ix-shl" aria-hidden="true"></span></aside>' +
       '<section class="ix-pane" id="ix-pane"></section>' +
       '<div class="ix-sf" id="ix-sf" hidden><span id="ix-sfnote"></span><span class="ix-err" id="ix-sferr"></span><button type="button" class="ix-btn" id="ix-discard">Discard</button><button type="button" class="ix-btn pri" id="ix-save">Save Settings</button></div>';
     host.querySelectorAll('[data-sec]').forEach(function (b) { b.onclick = function () { go(b.dataset.sec); }; });
@@ -133,6 +146,7 @@
     host.addEventListener('click', function () { setTimeout(function () { markDirty(false); }, 0); });
     window.addEventListener('beforeunload', function (e) { if (PAGE && dirty()) { e.preventDefault(); e.returnValue = ''; } });
     window.addEventListener('hashchange', function () { if (PAGE) go(location.hash); });
+    window.addEventListener('resize', navGlide);
     var h = String(hash || location.hash || '').replace(/^#/, '');
     var narrow = window.matchMedia && window.matchMedia('(max-width: 859px)').matches;
     if (h) go(h);
@@ -200,6 +214,7 @@
     var subs = s[4] || [[sec, s[1]]], sub = subs.some(function (t) { return t[0] === id; }) ? id : subs[0][0];
     var tabs = subTabs(subs, sub);
     P().querySelectorAll('[data-sec]').forEach(function (b) { if (b.dataset.sec === sec) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    navGlide();
     curSub = sub; P().setAttribute('data-view', 'detail');
     try { sessionStorage.setItem('ix-sec', sub); if (location.hash !== '#' + sub) history.replaceState(null, '', '#' + sub); } catch (e) {}
     var box = $('#ix-pane'); box.scrollTop = 0; window.scrollTo(0, 0);
@@ -945,7 +960,7 @@
             var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on, cur = !d1 ? 1 : !d3 ? 3 : !d4 ? 4 : 0;
             var stp = function (num, done, now, title, body) {
               return '<li class="ix-stp' + (done ? ' done' : now ? ' now' : '') + '"><span class="ix-stn">' + (done ? '✓' : num) + '</span><div class="ix-stb"><div class="ix-stt">' + title + '</div>' + body + '</div></li>'; };
-            return '<ol class="ix-stps">' +
+            return stepBar(['Make a Bot', 'Paste Its Token', 'Connect Your Chat', 'Send a Test'], cur ? cur - 1 : 3, { show: true, done: [d1, d1, d3, d4] }) + '<ol class="ix-stps ix-one">' +
               stp(1, d1, cur === 1, 'Make a Bot', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It then gives you a <b>token</b>: a long line of letters and numbers.</p>') +
               stp(2, d1, false, 'Paste Its Token', '<div class="ix-fd">' + '<label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
                 '<button type="button" class="ix-btn pri" id="nt-st">Save Token</button>' + (n.hasToken ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div><small>It stays on your server and is only used to talk to Telegram.</small></div>') +
@@ -955,7 +970,7 @@
                 (chats && chats.length > 1 ? '<div class="ix-row">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '')) +
               stp(4, d4, cur === 4, 'Send a Test', '<p>You should get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' +
                 '<div class="ix-row"><button type="button" class="ix-btn" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div>') +
-              '</ol>' +
+              '</ol><div class="ix-row ix-sbnav"><button type="button" class="ix-btn" data-sb="back">Back</button><span></span><button type="button" class="ix-btn" data-sb="next">Next</button></div>' +
               ecCard('', ICON.clock, 'Keep It on Schedule', 'Messages and reminders are sent by a scheduled job (a cron job). Without one they only go out while one of your pages is open.',
                 '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +
                 '<div class="ix-code"><code id="nt-cmd">' + esc(n.cronCmd) + '</code><button type="button" class="ix-btn" data-copy="nt-cmd">' + svg(ICON.copy) + 'Copy</button></div>' +
@@ -1012,6 +1027,7 @@
         });
       };
       var tok = p.querySelector('#nt-tok');
+      var sl = p.querySelector('.ix-stps.ix-one'); if (sl) bindStepBar(sl.parentNode, sl);   // (1.66.0) one step at a time
       p.querySelector('#nt-st').onclick = function () {
         if (!tok.value.trim()) { tok.focus(); return; }
         call('notify_save', { token: tok.value.trim() }, this).then(function (j) { if (j) draw(j, null, 'Token saved. Now send /start to your bot and click Find My Chat.'); });
@@ -1097,6 +1113,7 @@
     pill('look', S.theme === 'auto' ? 'Auto' : S.theme === 'light' ? 'Light' : 'Dark', '');
     pill('health', OV.https ? 'OK' : 'No HTTPS', OV.https ? 'good' : 'warn');
     pill('changelog', 'v' + OV.version, '');
+    var sv = PAGE.querySelector('[data-sver]'); if (sv) sv.textContent = ' · v' + OV.version;
   }
   /* ---------- Guided Setup: the protection steps one after another, using the same flows as Security and Backup ---------- */
   var WZ = { open: '', pp: '', site: '', rec: '', skipped: {} };   // what you typed stays here only while Settings is open, never saved
@@ -1109,6 +1126,38 @@
       { key: 'twostep', title: 'Two-Step Login', done: on('twostep'), icon: ICON.device, text: 'A 6-digit code from your phone on top of the password.' },
       { key: 'backup', title: 'First Backup', done: !!(j.backup && j.backup.last), icon: ICON.box, text: 'One file with everything, kept somewhere safe.' }
     ];
+  }
+  /* (1.66.0) One step bar for every step-by-step screen: thin bars with the step names under them. Done steps fill with the accent, the
+     current one is bright, the ones to come are dim, a skipped one is dashed. o.keys: a data-open key per step (Guided Setup) or o.show (the
+     step whose card shows; bindStepBar switches it); o.locked: the bar only shows where you are (Updates, Two-Step Login). Phones show
+     only "2 of 4 · Name" under the bars. */
+  function stepBar(names, at, o) {
+    o = o || {};
+    return '<div class="ix-sbar' + (o.locked ? ' locked' : '') + '" role="list" aria-label="Steps">' + names.map(function (n, i) {
+      var st = (o.done && o.done[i] ? ' done' : '') + (o.skip && o.skip[i] ? ' skip' : '') + (i === at ? ' now' : '');
+      var lab = 'Step ' + (i + 1) + ' of ' + names.length + ', ' + n + (i === at ? ', current' : o.done && o.done[i] ? ', done' : '');
+      var attr = o.keys ? ' data-open="' + o.keys[i] + '"' : o.show ? ' data-stp="' + i + '"' : '';
+      return o.locked ? '<span role="listitem" class="ix-sbi' + st + '" aria-label="' + esc(lab) + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><b>' + esc(n) + '</b></span>'
+        : '<button type="button" role="listitem" class="ix-sbi' + st + '"' + attr + ' aria-label="' + esc(lab) + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><b>' + esc(n) + '</b></button>';
+    }).join('') + '</div><div class="ix-sbph">' + (at + 1) + ' of ' + names.length + ' · ' + esc(names[Math.max(0, at)] || '') + '</div>';
+  }
+  /* Telegram Setup: the bar shows one step's card at a time (no redraw); Back and Next under it */
+  function bindStepBar(root, list, start) {
+    var bar = root.querySelector('.ix-sbar'), items = [].slice.call(list.children), ph = root.querySelector('.ix-sbph');
+    if (!bar || !items.length) return;
+    var names = [].map.call(bar.querySelectorAll('.ix-sbi b'), function (b) { return b.textContent; });
+    var show = function (n) {
+      n = Math.max(0, Math.min(items.length - 1, n));
+      items.forEach(function (li, i) { li.hidden = i !== n; if (i === n) li.classList.add('ix-sin'); });
+      [].forEach.call(bar.querySelectorAll('.ix-sbi'), function (b, i) { b.classList.toggle('now', i === n); if (i === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
+      if (ph) ph.textContent = (n + 1) + ' of ' + names.length + ' · ' + names[n];
+      list.dataset.at = String(n);
+      var bk = root.querySelector('[data-sb="back"]'), nx = root.querySelector('[data-sb="next"]');
+      if (bk) bk.disabled = n === 0; if (nx) nx.disabled = n === items.length - 1;
+    };
+    bar.addEventListener('click', function (e) { var b = e.target.closest('[data-stp]'); if (b) show(+b.dataset.stp); });
+    root.addEventListener('click', function (e) { var b = e.target.closest('[data-sb]'); if (b) show(+list.dataset.at + (b.dataset.sb === 'next' ? 1 : -1)); });
+    show(start == null ? Math.max(0, [].indexOf.call(bar.querySelectorAll('.ix-sbi'), bar.querySelector('.ix-sbi.now'))) : start);
   }
   function pSetup(p) {
     p.innerHTML = spinRow('Checking your setup…');
@@ -1156,18 +1205,24 @@
           '<div class="ix-hero"><div class="ix-ring ' + (done === steps.length ? 'ok' : '') + '" style="--p:' + Math.round(done / steps.length * 100) + '"><b>' + done + '</b><small>of ' + steps.length + '</small></div>' +
             '<div class="ix-hero-t"><div class="ix-hero-h">' + (done === steps.length ? 'Your Site Is Set Up' : next ? 'Next: ' + next.title : 'Skipped Steps Are Waiting') + '</div><p>' +
             (done === steps.length ? 'Every recommended protection is on. Telegram alerts are optional, and below if you want them.' : 'You can skip a step and come back to it. Nothing is changed until you press the step\'s own button.') + '</p></div></div>' +
-          '<div class="ix-steps">' + steps.map(function (s, i) {
+          stepBar(steps.map(function (s) { return s.title; }), Math.max(0, steps.findIndex(function (s) { return s.key === act; })), { keys: steps.map(function (s) { return s.key; }),
+            done: steps.map(function (s) { return s.done; }), skip: steps.map(function (s) { return !s.done && !!WZ.skipped[s.key]; }) }) +
+          '<div class="ix-steps ix-one">' + steps.map(function (s, i) {
             var open = s.key === act, skipped = !s.done && WZ.skipped[s.key];
             return '<section class="ix-ec ix-step' + (s.done ? ' done' : '') + (open ? ' open' : '') + '"><button type="button" class="ix-ec-h ix-steph" data-open="' + s.key + '" aria-expanded="' + open + '">' +
               '<span class="ix-stepn' + (s.done ? ' done' : '') + '" data-stepn="' + s.key + '">' + (s.done ? '✓' : i + 1) + '</span><div><div class="ix-ec-t">' + esc(s.title) + '</div><div class="ix-ec-d">' + esc(s.text) + '</div></div>' +
               '<span class="ix-pill ' + (s.done ? 'good' : skipped ? '' : open ? 'warn' : '') + '">' + (s.done ? 'Done' : skipped ? 'Skipped' : open ? 'Now' : 'To Do') + '</span></button>' +
-              (open ? '<div class="ix-ec-b">' + bodies[s.key] + (s.done || s.key === 'pw' ? '' : '<div class="ix-row" style="margin-top:14px"><button type="button" class="ix-btn" data-skip="' + s.key + '">Skip for Now</button></div>') + '</div>' : '') + '</section>'; }).join('') + '</div>' +
+              (open ? '<div class="ix-ec-b">' + bodies[s.key] + '<div class="ix-row ix-sbnav">' + (i ? '<button type="button" class="ix-btn" data-open="' + steps[i - 1].key + '">Back</button>' : '') + '<span></span>' +
+                (s.done || s.key === 'pw' ? '' : '<button type="button" class="ix-btn ix-quiet2" data-skip="' + s.key + '">Skip for Now</button>') +
+                (i < steps.length - 1 ? '<button type="button" class="ix-btn' + (s.done ? ' pri' : '') + '" data-open="' + steps[i + 1].key + '">Next</button>' : '') + '</div></div>' : '') + '</section>'; }).join('') + '</div>' +
           (done === steps.length ? '<div class="ix-row" style="margin-top:6px"><button type="button" class="ix-btn pri" data-go2="overview">Back to Overview</button></div>' : '') +
           ecCard('', ICON.send, 'Optional: Telegram', 'Reminders, login alerts, instant approval of new logins, and automatic backups on your phone. It takes about two minutes.', '<div class="ix-row"><button type="button" class="ix-btn" data-go2="telegram/setup">Open Telegram Setup</button></div>');
         // wiring
         p.querySelectorAll('[data-go2]').forEach(function (b) { b.onclick = function () { go(b.dataset.go2); }; });
         p.querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { WZ.open = WZ.open === b.dataset.open && b.classList.contains('ix-steph') ? '' : b.dataset.open; draw(); }; });
-        p.querySelectorAll('[data-skip]').forEach(function (b) { b.onclick = function () { WZ.skipped[b.dataset.skip] = true; WZ.open = ''; draw(); }; });
+        p.querySelectorAll('[data-skip]').forEach(function (b) { b.onclick = function () {
+          WZ.skipped[b.dataset.skip] = true; var k = steps.findIndex(function (s) { return s.key === b.dataset.skip; }), nx = steps.slice(k + 1).filter(function (s) { return !s.done; })[0];
+          WZ.open = nx ? nx.key : ''; draw(); }; });
         var er = function () { return p.querySelector('#ix-wzerr'); }, v = function (id) { var x = p.querySelector(id); return x ? x.value : ''; };
         var f1 = p.querySelector('#ix-wze');
         if (f1) f1.onsubmit = function (e) {
@@ -1451,7 +1506,7 @@
     if (st.unwritable && st.unwritable.length) problems.push('The site is not allowed to change files in <code>' + st.unwritable.map(esc).join('</code>, <code>') + '</code>. Ask your host to allow it, or update with the File Manager.');
     if (!st.hasManifest) problems.push('This copy of the site has no file list yet, so it cannot tell which files are its own. Update once with the File Manager; after that the site can update itself.');
     var steps = ['Upload the Zip', 'Check it', 'Review the Changes', 'Apply'], at = staged ? 3 : 1;
-    var stepsHtml = '<ol class="ix-steps">' + steps.map(function (t, i) { var n = i + 1; return '<li class="' + (n < at ? 'done' : n === at ? 'now' : '') + '"><span>' + (n < at ? '✓' : n) + '</span>' + t + '</li>'; }).join('') + '</ol>';
+    var stepsHtml = stepBar(steps, at - 1, { locked: true, done: steps.map(function (t, i) { return i + 1 < at; }) });   // (1.66.0) the shared step bar
     var changes = function (k, label) { var l = (plan && plan[k]) || []; return '<div class="ix-chg ' + k + '"><b>' + l.length + '</b><small>' + label + '</small></div>'; };
     var review = '';
     if (staged) {
@@ -2215,23 +2270,25 @@
       return;
     }
     var how = function (n, t, d) { return '<div class="ix-mini"><span class="ix-num">' + n + '</span><b>' + t + '</b><p>' + d + '</p></div>'; };
-    box.innerHTML = head + ecCard('', ICON.lock, 'Add a Second Step', 'Your password alone is no longer enough: a thief would also need your phone.',
+    var tsBar = function (at) { return stepBar(['Get an App', 'Scan the Code', 'Type the Code', 'Save Recovery Codes'], at, { locked: true, done: [0, 1, 2, 3].map(function (i) { return i < at; }) }); };   // (1.66.0)
+    box.innerHTML = head + tsBar(0) + ecCard('', ICON.lock, 'Add a Second Step', 'Your password alone is no longer enough: a thief would also need your phone.',
         '<div class="ix-trio" style="margin:0 0 14px">' + how(1, 'Get an App', 'Any authenticator app works: Google Authenticator, Microsoft Authenticator, Aegis, 1Password.') + how(2, 'Scan the Code', 'Point the app at the code on the next screen.') + how(3, 'Save Your Codes', 'Keep the recovery codes somewhere safe, for the day you lose your phone.') + '</div>' +
         '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-on">Set Up Two-Step Login</button></div>');
     box.querySelector('#ix-on').onclick = function () {
       api('twostep_begin', {}).then(function (j) {
         if (!j.ok) { toast(j.error); return; }
-        box.innerHTML = head + ecCard('', ICON.device, 'Step 1: Scan the Code', 'Scan this with your authenticator app, or on your phone tap <a href="' + esc(j.uri) + '">open in app</a>. You can also type the key by hand.',
+        box.innerHTML = head + tsBar(1) + ecCard('', ICON.device, 'Step 1: Scan the Code', 'Scan this with your authenticator app, or on your phone tap <a href="' + esc(j.uri) + '">open in app</a>. You can also type the key by hand.',
             '<div class="ix-qr" id="ix-qr"></div><p>Key: <span class="ix-mono">' + esc(j.secret.replace(/(.{4})/g, '$1 ').trim()) + '</span></p>') +
           ecCard('', ICON.check, 'Step 2: Type the 6-Digit Code', 'The app now shows a code that changes every 30 seconds. Type the current one to finish.',
             '<div class="ix-fd"><label for="ix-tc">6-Digit Code</label><input type="text" id="ix-tc" inputmode="numeric" autocomplete="one-time-code" maxlength="7" style="max-width:220px"></div>' +
             '<p class="ix-err" id="ix-te2"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-en">Turn On</button></div>') + '<div id="ix-rcs"></div>';
         qr(box.querySelector('#ix-qr'), j.uri);
+        box.querySelector('#ix-tc').addEventListener('focus', function () { [].forEach.call(box.querySelectorAll('.ix-sbi'), function (x, k) { x.classList.toggle('now', k === 2); x.classList.toggle('done', k < 2); }); });
         box.querySelector('#ix-en').onclick = function () {
           api('twostep_enable', { code: box.querySelector('#ix-tc').value }).then(function (k) {
             if (!k.ok) { box.querySelector('#ix-te2').textContent = k.error; return; }
             S.twoStep = true; S.recoveryLeft = k.recovery.length; if (secRefresh) secRefresh();
-            box.innerHTML = head + ecCard('good', ICON.shield, 'Two-Step Login Is On', 'From now on, logins ask for the 6-digit code. Save your recovery codes below before you leave this page.', '') + '<div id="ix-rcs"></div>'; showCodes(box.querySelector('#ix-rcs'), k.recovery);
+            box.innerHTML = head + tsBar(3) + ecCard('good', ICON.shield, 'Two-Step Login Is On', 'From now on, logins ask for the 6-digit code. Save your recovery codes below before you leave this page.', '') + '<div id="ix-rcs"></div>'; showCodes(box.querySelector('#ix-rcs'), k.recovery);
           });
         };
       });

@@ -52,10 +52,26 @@ try:
               and TXT not in open(s.dir + '/site-data/files/blobs/' + blobs[0], 'rb').read(), (blobs, items))
         stored = open(s.dir + '/site-data/files/files.php').read()
         check('B7 the list the server keeps holds no name', 'hello' not in stored and stored.startswith('<?php'))
+        fc = pg.evaluate("(() => { const r = [...document.querySelectorAll('#list .row')].find(r => r.querySelector('.nm[title=\"hello.txt\"]')); const c = r && r.querySelector('.fcd'); return c ? [c.className, c.querySelector('.fclb').textContent] : null; })()")
+        check('B7b the file shows its type card (TXT) in the list (1.66.0)', fc is not None and 'k-txt' in fc[0] and fc[1] == 'txt', fc)
+        up = pg.evaluate("[...document.querySelectorAll('#ups .uc')].map(c => c.className + '|' + c.querySelector('small').textContent)")
+        check('B7c the Transfers box keeps a card for it: "Uploaded · 38 B" (1.66.0)', any('done' in u and 'Uploaded · 38 B' in u for u in up), up)
 
         # ---- a big file in three pieces ----
         upload(pg, 'big.bin', BIG)
         check('B8 a file of 5 MB is uploaded in three pieces', wait_names(pg, ['big.bin'], 60000) and len(os.listdir(s.dir + '/site-data/files/blobs')) == 4, os.listdir(s.dir + '/site-data/files/blobs'))
+        # ---- (1.66.0) a failed upload: a red card with try-again, which uploads it ----
+        fails = {'on': True}
+        def flaky(route):
+            if fails['on']: return route.fulfill(status=500, body='{"ok":false,"error":"A piece did not arrive."}', headers={'Content-Type': 'application/json'})
+            route.continue_()
+        pg.route('**/api.php?action=put_chunk*', flaky)
+        upload(pg, 'retry.txt', b'try me again')
+        until(lambda: pg.evaluate("!!document.querySelector('#ups .uc.bad .re:not([hidden])')"), 20000)
+        bad = pg.evaluate("(() => { const c = document.querySelector('#ups .uc.bad'); return c ? [c.querySelector('b').textContent, c.querySelector('small').textContent, c.querySelector('.re').getAttribute('aria-label')] : null; })()")
+        fails['on'] = False; pg.click('#ups .uc.bad .re'); ok = wait_names(pg, ['retry.txt'], 20000)
+        pg.unroute('**/api.php?action=put_chunk*')
+        check('B8b a failed upload shows a red card with its reason and a try-again button; pressing it uploads the file', bad is not None and bad[0] == 'retry.txt' and 'did not arrive' in bad[1] and bad[2] == 'Try retry.txt again' and ok, (bad, ok))
         with pg.expect_download(timeout=60000) as d:
             menu(pg, 'big.bin', 'Download')
         out = os.path.join(tempfile.mkdtemp(), 'big.bin'); d.value.save_as(out)
@@ -98,7 +114,7 @@ try:
         menu(pg, 'big.bin', 'Move to Trash'); until(lambda: 'big.bin' not in names(pg), 10000)
         pg.click('#tabs button[data-t=trash]'); wait_names(pg, ['big.bin'])
         menu(pg, 'big.bin', 'Delete Forever'); hold(pg, '#dform .act .danger'); until(lambda: 'big.bin' not in names(pg), 10000)
-        check('B21 Delete Forever (after asking) removes it, and its three pieces from the server', 'big.bin' not in names(pg) and len(os.listdir(s.dir + '/site-data/files/blobs')) == 2, os.listdir(s.dir + '/site-data/files/blobs'))
+        check('B21 Delete Forever (after asking) removes it, and its three pieces from the server (hello.txt, retry.txt and one more stay)', 'big.bin' not in names(pg) and len(os.listdir(s.dir + '/site-data/files/blobs')) == 3, os.listdir(s.dir + '/site-data/files/blobs'))
         pg.click('#tabs button[data-t=files]')
 
         # ---- preview ----

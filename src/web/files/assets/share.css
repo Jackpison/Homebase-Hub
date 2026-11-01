@@ -25,3 +25,5 @@ p{margin:0 0 14px;color:var(--mute)}
 .pv pre{margin:0;padding:12px;text-align:left;white-space:pre-wrap;word-break:break-word;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;width:100%}
 .foot{font-size:12.5px;margin:10px 0 0}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* (1.66.0) the file's type card */
+.ico.fc{width:auto;height:auto;background:none;margin-bottom:14px;padding-right:10px}
