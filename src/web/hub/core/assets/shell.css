@@ -43,6 +43,10 @@ html[data-ix-app="home"][data-ix-bar] body{padding:0!important}
 #ix-bar,#ix-bar *{box-sizing:border-box}
 #ix-bar{position:fixed;z-index:2147483000;font:15px/1.2 var(--ix-font);color:var(--ix-tx);-webkit-font-smoothing:antialiased;view-transition-name:ix-bar}
 html.ix-vt #ix-bar{view-transition-name:none}
+/* (1.68.0) the dock: the page-change name sits on the pill, not on the dock's outer box. A box with that name is a "backdrop root", so the
+   pill inside it could only see the empty box: its blur (and Bar Glass) never reached the page under it. The pill still stays put between pages. */
+html[data-ix-nav="dock"] #ix-bar{view-transition-name:none}
+html[data-ix-nav="dock"]:not(.ix-vt) #ix-bar .ix-pill{view-transition-name:ix-bar}
 #ix-bar a,#ix-bar button{font:inherit;color:inherit;text-decoration:none;background:none;border:0;cursor:pointer}
 #ix-bar svg,#ix-pop svg,#ix-spot svg,#ix-sres svg,#ix-drawer svg,#ix-sheet svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #ix-bar svg circle,#ix-drawer svg circle,#ix-sheet svg circle{fill:none}
@@ -801,3 +805,31 @@ html[data-ix-nav="top"] #ix-bar .ix-tdiv{display:block;width:1px;height:20px;mar
 /* (1.67.1) while a page is in edit mode the dock steps aside (the edit bar takes its place at the bottom) and comes back on Done */
 html.ix-editing[data-ix-nav="dock"] #ix-bar{opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-50%) translateY(calc(100% + 28px));transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .2s,visibility 0s .26s}
 @media (max-width:760px){html.ix-editing[data-ix-nav="dock"] #ix-bar{transform:translateY(calc(100% + 28px))}}
+
+/* ---------- (1.68.0) Bar Glass: Settings > Appearance > Bar Glass. The look of React Bits' GlassSurface (David Haz, MIT + Commons Clause;
+   glass.js puts the classes on the top bar or the dock's pill). Chromium: an SVG filter bends what is under the edges (--svg);
+   Safari and Firefox: the component's frosted glass (--fallback). The start page shows the photo through clear glass; the other pages
+   add a faint frost (a little blur and tint) so the glass stays visible and its text readable over what scrolls under it. ---------- */
+.ix-glass-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+#ix-bar.glass-surface,#ix-bar .glass-surface{--gt:10%;--gb:0px}
+html:not([data-ix-app="home"]) #ix-bar.glass-surface,html:not([data-ix-app="home"]) #ix-bar .glass-surface{--gt:50%;--gb:5px}
+#ix-bar.glass-surface--svg,#ix-bar .glass-surface--svg{background:color-mix(in srgb,var(--ix-barbg,var(--ix-bg)) var(--gt),transparent)!important;
+  backdrop-filter:var(--filter-id) blur(var(--gb)) saturate(1)!important;-webkit-backdrop-filter:var(--filter-id) blur(var(--gb)) saturate(1)!important;border-color:transparent!important;
+  box-shadow:0 0 2px 1px color-mix(in oklch,white,transparent 65%) inset,0 0 10px 4px color-mix(in oklch,white,transparent 85%) inset,0 4px 16px rgba(17,17,26,.05),0 8px 24px rgba(17,17,26,.05),0 16px 56px rgba(17,17,26,.05),
+    0 4px 16px rgba(17,17,26,.05) inset,0 8px 24px rgba(17,17,26,.05) inset,0 16px 56px rgba(17,17,26,.05) inset!important}
+html[data-theme="light"] #ix-bar.glass-surface--svg,html[data-theme="light"] #ix-bar .glass-surface--svg{
+  box-shadow:0 0 2px 1px color-mix(in oklch,black,transparent 85%) inset,0 0 10px 4px color-mix(in oklch,black,transparent 90%) inset,0 4px 16px rgba(17,17,26,.05),0 8px 24px rgba(17,17,26,.05),0 16px 56px rgba(17,17,26,.05),
+    0 4px 16px rgba(17,17,26,.05) inset,0 8px 24px rgba(17,17,26,.05) inset,0 16px 56px rgba(17,17,26,.05) inset!important}
+#ix-bar.glass-surface--fallback,#ix-bar .glass-surface--fallback{background:color-mix(in srgb,var(--ix-barbg,var(--ix-bg)) var(--gt),hsl(0 0% 100% / .07))!important;
+  backdrop-filter:blur(12px) saturate(1.4) brightness(1.04)!important;-webkit-backdrop-filter:blur(12px) saturate(1.4) brightness(1.04)!important;border-color:transparent!important;
+  box-shadow:inset 0 1px 0 0 hsl(0 0% 100% / .3),inset 0 -1px 0 0 hsl(0 0% 100% / .08),0 0 2px 1px color-mix(in oklch,white,transparent 72%) inset,0 0 12px 3px color-mix(in oklch,white,transparent 90%) inset,
+    0 4px 16px rgba(17,17,26,.06),0 8px 24px rgba(17,17,26,.06),0 16px 56px rgba(17,17,26,.06)!important}
+html[data-theme="light"] #ix-bar.glass-surface--fallback,html[data-theme="light"] #ix-bar .glass-surface--fallback{background:color-mix(in srgb,var(--ix-barbg,var(--ix-bg)) var(--gt),hsl(0 0% 100% / .2))!important;
+  box-shadow:inset 0 1px 0 0 hsl(0 0% 100% / .85),inset 0 -1px 0 0 hsl(0 0% 100% / .35),0 0 2px 1px color-mix(in oklch,black,transparent 88%) inset,0 0 12px 3px color-mix(in oklch,white,transparent 72%) inset,
+    0 4px 16px rgba(17,17,26,.06),0 8px 24px rgba(17,17,26,.06),0 16px 56px rgba(17,17,26,.06)!important}
+/* the dock grows a little with glass, so the bend at its round ends has room (12 px more; phones keep their width) */
+@media (min-width:431px){
+  html[data-ix-glass][data-ix-nav="dock"]{--ix-dock:70px}
+  html[data-ix-glass][data-ix-nav="dock"] #ix-bar .ix-pill.glass-surface{padding:12px 16px;gap:6px}
+}
+@media (max-width:430px){html[data-ix-glass][data-ix-nav="dock"] #ix-bar .ix-pill.glass-surface{padding-block:10px}}

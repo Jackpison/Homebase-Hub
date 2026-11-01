@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.68.0 | Bar Glass: an option in Settings › Appearance that turns the top bar and the dock into glass (React Bits GlassSurface); the dock's own blur now reaches the page under it |
 | 1.67.2 | A clearer Tabs section in Settings (colour tiles, a preview of the bar, no Home), Save Settings turns on after a drag, a softer line under the current page |
 | 1.67.1 | Faster Links edit mode, the dock shows every page and steps aside while you edit, no Home button where the logo already leads home, faster page changes, a stricter security scan |
 | 1.67.0 | A new top bar: a colour tile with an icon for each page, a glowing line under the current page, a search with a border in the page's colour, and the buttons on the right in one tray of small colour tiles |
@@ -124,6 +125,22 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.68.0
+
+### Added
+
+- **Bar Glass** (Settings › Appearance › Look, off by default): the top bar, or the dock, turns to glass that bends what is under its edges, with a faint coloured fringe. It is GlassSurface from React Bits by David Haz, ported to plain JavaScript (`glass.js`, loaded only when the option is on). Chrome and Edge show the full glass; Safari and Firefox show the component's frosted glass. The start page shows its photo through clear glass; the other pages add a faint frost (a little blur and tint) so the bar stays readable over what scrolls under it. With glass the dock is a little taller (70 px on computers) so the bend at its round ends has room. Not for the sidebar, and not when the device asks for less see-through.
+
+### Fixed
+
+- **The dock's blur never reached the page:** the dock's outer box carried the name that keeps the bar still between pages, and a box with that name hides the page from anything inside it, so the pill's blur only saw an empty box (on Info, text under the dock showed through). The pill carries the name now; the dock still stays still between pages.
+
+### Checked
+
+- polish_test P49 to P55 (off by default and glass.js not loaded; the switch previews and saves; the SVG filter and its map in Chromium, frosted glass elsewhere; the faint frost on plain pages, clear on the start page; the dock's pill is glass, taller, and the page-change name sits on the pill; the sidebar stays as it is; switching off takes the glass away). speed_test V32 (scrolling 600 links under the glass bar costs at most twice the plain bar per frame). nav_settings_test.php (Bar Glass is on only for a real true; every page receives it).
 
 ---
 

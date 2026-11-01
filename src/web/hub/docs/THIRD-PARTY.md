@@ -101,3 +101,15 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
 WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+## GlassSurface from React Bits (1.68.0)
+
+Bar Glass (Settings › Appearance › Look) uses **GlassSurface** from React Bits by David Haz (https://reactbits.dev ,
+https://github.com/DavidHDev/react-bits), ported to plain JavaScript in `web/hub/core/assets/glass.js` (no React). Its look is in
+`web/hub/core/assets/shell.css` ("Bar Glass"). That file is **not** under this project's GPL: it keeps the React Bits licence, written
+out in full at the top of the file:
+
+MIT + Commons Clause License Condition v1.0. Copyright (c) 2026 David Haz. Use, copying, changing, merging, publishing and distributing
+are allowed **as part of an application, website, or product**, with the copyright and permission notice kept. **Commons Clause:** the
+components themselves may not be sold, sublicensed or redistributed, alone, in a bundle, or as a ported version. Provided "as is",
+without warranty of any kind.

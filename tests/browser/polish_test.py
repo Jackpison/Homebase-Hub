@@ -262,6 +262,49 @@ try:
         s.php("hub_settings_update(function ($x) { $x['nav'] = 'top'; return $x; });")
         check('P47 dock: all 7 pages show their colour tile (they were hidden), inside the pill, on a computer and a phone, nothing scrolls sideways (1.67.1)', dk[1440] == [7, True, True, True] and dk[390] == [7, True, True, True], dk)
         check('P48 dock: it steps aside while a page is in edit mode and comes back on Done (1.67.1)', hid == 'hidden' and back == 'visible', (hid, back))
+        # ---- (1.68.0) Bar Glass: off by default; Settings > Appearance turns it on; the top bar and the dock's pill become glass ----
+        kind = 'glass-surface--svg' if BROWSER == 'chromium' else 'glass-surface--fallback'   # Safari and Firefox get the frosted glass
+        GL = """(() => { const e = document.querySelector('.glass-surface'), f = document.querySelector('#ix-glass-f feImage'), c = e && getComputedStyle(e);
+            return { el: e ? (e.id || e.className.split(' ')[0]) : null, cls: e ? e.className : '', bf: c ? c.backdropFilter : '', gb: c ? c.getPropertyValue('--gb').trim() : '',
+              map: f && e ? [f.getAttribute('href').slice(0, 18), +f.getAttribute('width') === Math.round(e.offsetWidth), +f.getAttribute('height') === Math.round(e.offsetHeight)] : null,
+              js: [...document.scripts].filter(x => /glass\.js/.test(x.src)).length, attr: document.documentElement.hasAttribute('data-ix-glass') }; })()"""
+        gp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); gp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(gp, s.base)
+        gp.goto(s.base + '/web/links/'); wait_js(gp, "!!document.querySelector('#ix-bar .ix-links') && !!(window.HUB && HUB.isAdmin())", 20000); gp.wait_for_timeout(500)
+        g0 = gp.evaluate(GL)
+        check('P49 Bar Glass is off by default: no glass and glass.js is not even loaded (1.68.0)', g0['el'] is None and g0['js'] == 0 and not g0['attr'], g0)
+        gp.goto(s.base + '/web/settings/#look'); wait_js(gp, "!!document.getElementById('ix-glass')", 20000)
+        gp.click('#ix-glass'); wait_js(gp, "!!document.querySelector('#ix-bar.glass-surface')", 8000)
+        pv = gp.evaluate(GL)
+        gp.click('#ix-save'); until(lambda: s.php("echo json_encode(hub_settings()['glass']);").strip() == 'true', 8000)
+        saved = s.php("echo json_encode(hub_settings()['glass']);").strip()
+        gp.goto(s.base + '/web/links/'); wait_js(gp, "!!document.querySelector('#ix-bar.glass-surface')", 20000); gp.wait_for_timeout(400)
+        g1 = gp.evaluate(GL)
+        check('P50 the Bar Glass switch in Settings > Appearance shows it at once and saves it; the top bar is glass on the next page, with one glass.js (1.68.0)',
+              pv['el'] == 'ix-bar' and saved == 'true' and g1['el'] == 'ix-bar' and kind in g1['cls'] and g1['js'] == 1 and g1['attr'], (pv, saved, g1))
+        if BROWSER == 'chromium':
+            check('P51 Chromium: the bar bends what is under it through the SVG filter, its map a data: picture the bar\'s own size in pixels (1.68.0)',
+                  'url(' in g1['bf'] and g1['map'] == ['data:image/svg+xml', True, True], g1)
+        check('P52 a plain page adds a faint frost (a little blur) so the bar stays readable; the start page shows its photo through clear glass (1.68.0)', g1['gb'] == '5px', g1['gb'])
+        s.php("hub_settings_update(function ($x) { $x['homeBar'] = true; return $x; });")
+        gp.goto(s.base + '/'); wait_js(gp, "!!document.querySelector('#ix-bar.glass-surface')", 20000)
+        hb = gp.evaluate(GL)['gb']
+        s.php("hub_settings_update(function ($x) { $x['nav'] = 'dock'; return $x; });")
+        gp.goto(s.base + '/web/info/'); wait_js(gp, "!!document.querySelector('#ix-bar .ix-pill.glass-surface')", 20000); gp.wait_for_timeout(400)
+        dk = gp.evaluate("""(() => { const p = document.querySelector('#ix-bar .ix-pill'); return [p.classList.contains('glass-surface'), Math.round(p.getBoundingClientRect().height),
+            getComputedStyle(document.getElementById('ix-bar')).viewTransitionName, getComputedStyle(p).viewTransitionName, document.documentElement.scrollWidth <= innerWidth]; })()""")
+        check('P53 the dock\'s pill is glass and a little taller; the page-change name sits on the pill, so its glass and blur reach the page under it (1.68.0)',
+              hb == '0px' and dk[0] and dk[1] >= 60 and dk[2] == 'none' and dk[3] in ('ix-bar', None) and dk[4], (hb, dk))
+        s.php("hub_settings_update(function ($x) { $x['nav'] = 'side'; return $x; });")
+        gp.goto(s.base + '/web/info/'); wait_js(gp, "!!document.querySelector('#ix-bar .ix-links')", 20000); gp.wait_for_timeout(600)
+        sd = gp.evaluate(GL)['el']
+        check('P54 the sidebar stays as it is with Bar Glass on (1.68.0)', sd is None, sd)
+        s.php("hub_settings_update(function ($x) { $x['nav'] = 'top'; $x['homeBar'] = false; return $x; });")
+        gp.goto(s.base + '/web/settings/#look'); wait_js(gp, "!!document.getElementById('ix-glass') && !!document.querySelector('#ix-bar.glass-surface')", 20000)
+        gp.click('#ix-glass'); wait_js(gp, "!document.querySelector('.glass-surface')", 8000)
+        off = gp.evaluate(GL)
+        check('P55 switching Bar Glass off takes the glass away at once (1.68.0)', off['el'] is None and not off['attr'], off)
+        s.php("hub_settings_update(function ($x) { $x['glass'] = false; return $x; });")
+        gp.context.close()
         check('P36 no page error', not errs, errs)
         b.close()
 finally:

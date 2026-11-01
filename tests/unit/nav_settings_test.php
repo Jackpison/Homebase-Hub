@@ -28,3 +28,8 @@ t('the new-site look keeps everything else (time zone, page backgrounds)', $look
 t('the fallback for sites that never saved keeps the old gold and no colors', hub_clean_settings([])['accent'] === '#ffc21a' && hub_clean_settings([])['colors']['dark'] === []);
 $shell = file_get_contents($site . '/web/hub/core/assets/shell.js');
 t('the setup dialog sends the browser\'s time zone and Follow Device', strpos($shell, "tz: tz, theme: 'auto' }") !== false);
+
+// (1.68.0) Bar Glass: off unless it is exactly true; visitors' pages get it in the public state
+t('Bar Glass is off for sites that never saved it', hub_clean_settings([])['glass'] === false);
+t('Bar Glass is on only for a real true (not "1", 1 or "yes")', hub_clean_settings(['glass' => true])['glass'] === true && hub_clean_settings(['glass' => '1'])['glass'] === false && hub_clean_settings(['glass' => 1])['glass'] === false && hub_clean_settings(['glass' => 'yes'])['glass'] === false);
+t('the public state carries Bar Glass, so every page can draw it', array_key_exists('glass', hub_public_state()));

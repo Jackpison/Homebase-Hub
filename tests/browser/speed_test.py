@@ -171,6 +171,20 @@ try:
         first = bp.evaluate("(() => { document.querySelector('[data-hub=toggle]').click(); return document.querySelectorAll('#grid .lgrip').length; })()")
         wait_js(bp, "document.querySelectorAll('#grid .lgrip').length >= 600", 15000)
         check('V31 Links, 600 links: turning edit mode on draws about one screen at once (not hundreds of rows), then all of them', 0 < first < 200 and bp.evaluate("document.querySelectorAll('#grid .lgrip').length") >= 600, first)
+        # (1.68.0) Bar Glass: the bar's SVG filter is worked out again while the page scrolls under it; scrolling must stay smooth
+        SCROLL = """async () => { document.documentElement.style.scrollBehavior = 'auto'; scrollTo(0, 0); await new Promise(r => setTimeout(r, 200));
+            const t = []; let last = performance.now();
+            for (let i = 0; i < 90; i++) { scrollBy(0, i % 30 < 15 ? 60 : -60); await new Promise(r => requestAnimationFrame(r)); const n = performance.now(); t.push(n - last); last = n; }
+            t.sort((a, b) => a - b); return Math.round(t[Math.floor(t.length * .9)]); }"""
+        sc = {}
+        for on in (False, True):
+            s.php("hub_settings_update(function ($x) { $x['glass'] = %s; return $x; });" % ('true' if on else 'false'))
+            gl = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); browser_login(gl, s.base)
+            gl.goto(s.base + '/web/links/'); wait_js(gl, "document.querySelectorAll('#grid a.main').length >= 600 && (%s)" % ("!!document.querySelector('#ix-bar.glass-surface')" if on else 'true'), 30000); gl.wait_for_timeout(600)
+            sc[on] = gl.evaluate(SCROLL); gl.context.close()
+        s.php("hub_settings_update(function ($x) { $x['glass'] = false; return $x; });")
+        print('    scroll frame (90th percentile): plain %d ms, glass %d ms' % (sc[False], sc[True]))
+        check('V32 Links, 600 links, Bar Glass on: scrolling under the glass bar costs at most twice the plain bar per frame (90th percentile; headless Chromium draws without a GPU, so only the ratio means something)', sc[True] <= 2 * sc[False] + 20, sc)
         check('Vend no page error', not errs, errs)
         b.close()
 finally:
