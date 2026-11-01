@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.8 | When the host's firewall answers with a CAPTCHA or a block page, the site says so and stops sending for a minute so the host does not count more |
 | 1.64.7 | Far fewer requests: moving the mouse over the bar no longer loads whole pages in the background |
 | 1.64.6 | If your web host's firewall blocks a save (a plain "403 Forbidden" page), the site now says so, keeps you logged in and keeps your change |
 | 1.64.5 | Home Settings closes at once; a steadier test |
@@ -110,6 +111,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.8
+
+### Fix
+
+- **A host firewall that asks for a CAPTCHA or blocks you:** some hosts blacklist an address after a number of blocked or CAPTCHA requests (one counts 101). When the site's data call (api.php) gets a web page back instead of its own answer, the site now says your host's firewall answered, keeps your change in the browser, and stops sending requests for a minute, so the count does not climb while you solve the CAPTCHA in another tab. Nothing is logged out. This covers the 403 page of 1.64.6 too.
+
+### Checked
+
+- The speed test answers a save with a CAPTCHA page (status 200) and checks the message, that the page gets a "could not reach the server" answer, and that the next requests are not sent for a minute.
 
 ---
 

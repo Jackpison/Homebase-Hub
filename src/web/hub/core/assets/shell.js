@@ -6,17 +6,23 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
-/* (1.64.6) A web host's firewall can answer a request with its own page, "403 Forbidden", before Homebase Hub sees it (a plain page, not our JSON).
-   Every page treated that as "you are logged out" and asked for the password. Now it says what happened, keeps the change in the browser, and
-   hands the page a "could not reach the server" answer, so nothing is logged out or lost. Our own 403 answers are always JSON and pass untouched. */
+/* (1.64.6, 1.64.8) A web host's firewall can answer a request with its own page (a plain "403 Forbidden", or a CAPTCHA) before Homebase Hub sees it.
+   Our own answers from api.php are always JSON (or a file), never a web page. So when api.php answers with a web page, the host spoke, not the site:
+   say so, keep the change in the browser, hand the page a "could not reach the server" answer (nothing is logged out or lost), and PAUSE sending for a
+   minute. Some hosts count every request a blocked visitor makes (one host blacklists the address after 101), so piling on makes it worse. */
 (function () {
-  var f = window.fetch, said = 0; if (!f || f._ixHost) return;
+  var f = window.fetch, said = 0, pausedUntil = 0; if (!f || f._ixHost) return;
+  var API = /\/api\.php(\?|$)/, held = function () { return new Response('', { status: 503, statusText: 'Blocked by the host' }); };
   window.fetch = function (input) {
+    var url = '', own = false;
+    try { url = new URL(typeof input === 'string' ? input : (input && input.url) || '', location.href); own = url.origin === location.origin && API.test(url.pathname + url.search); } catch (e) { /* not a plain address */ }
+    if (own && Date.now() < pausedUntil) return Promise.resolve(held());
     return f.apply(this, arguments).then(function (r) {
       try {
-        if (r.status === 403 && /\/api\.php(\?|$)/.test(r.url) && new URL(r.url, location.href).origin === location.origin && !/json/i.test(r.headers.get('content-type') || '')) {
-          if (Date.now() - said > 20000 && window.HUB && HUB.toast) { said = Date.now(); HUB.toast('Your web host blocked this request (403 Forbidden). It did not come from Homebase Hub, and you are still logged in. Your change is kept in this browser. Ask your host to allow your IP address.', true, true); }
-          return new Response('', { status: 503, statusText: 'Blocked by the host' });
+        if (own && (r.status === 403 || r.status === 200 || r.status === 429 || r.status === 503) && /html/i.test(r.headers.get('content-type') || '') && !/json/i.test(r.headers.get('content-type') || '')) {
+          pausedUntil = Date.now() + 60000;
+          if (Date.now() - said > 20000 && window.HUB && HUB.toast) { said = Date.now(); HUB.toast('Your web host\'s firewall answered instead of the site (a block or a CAPTCHA). It did not come from Homebase Hub, and you are still logged in. Your change is kept in this browser. Open this site in a new tab, solve the CAPTCHA if it asks, then reload. Sending is paused for a minute so it does not make the block worse.', true, true); }
+          return held();
         }
       } catch (e) { /* leave the answer as it is */ }
       return r;
@@ -25,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.64.7" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.64.8" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
