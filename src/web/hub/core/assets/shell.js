@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.68.0" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.68.1" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -764,11 +764,12 @@
     glass();
   }
   /* (1.68.0) Bar Glass: the top bar, or the dock's pill, turns to glass (React Bits GlassSurface, glass.js, loaded only when it is on).
-     Not for the sidebar, and not when the device asks for less see-through (prefers-reduced-transparency). */
+     Not for the sidebar. (1.68.1) It shows whenever it is switched on: Windows with Transparency effects off tells the browser to reduce
+     transparency, and 1.68.0 then left the glass off although the owner had switched it on. */
   var glassP = null;
   function glass() {
     var bar = document.getElementById('ix-bar'), nav = NAV();
-    var on = H.hasAttribute('data-ix-glass') && !!bar && nav !== 'side' && !matchMedia('(prefers-reduced-transparency: reduce)').matches;
+    var on = H.hasAttribute('data-ix-glass') && !!bar && nav !== 'side';
     var el = on ? (nav === 'dock' ? bar.querySelector('.ix-pill') : bar) : null;
     if (!el) { if (window.HubGlass) window.HubGlass.off(); return; }
     if (window.HubGlass) return window.HubGlass.apply(el);

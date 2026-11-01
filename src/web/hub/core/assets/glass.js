@@ -16,7 +16,7 @@
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* What changed from the React component: no React (one filter, kept and re-pointed when the bar is drawn again); only the props the bar uses;
-   the displacement map's size is set in pixels (Chromium reads "100%" wrongly inside a backdrop filter); the look lives in shell.css
+   the look lives in shell.css
    ("Bar Glass"). Loaded by shell.js only when Settings > Appearance > Bar Glass is on. The map is built from numbers only, never page text. */
 (function () {
   'use strict';
@@ -56,7 +56,7 @@
     if (svgEl && document.body.contains(svgEl)) return;
     svgEl = node('svg', { 'aria-hidden': 'true', focusable: 'false', 'class': 'ix-glass-defs' });
     var f = node('filter', { id: ID, 'color-interpolation-filters': 'sRGB', x: '0', y: '0', width: '100%', height: '100%' }, node('defs', {}, svgEl));
-    img = node('feImage', { x: '0', y: '0', width: '1', height: '1', preserveAspectRatio: 'none', result: 'map' }, f);
+    img = node('feImage', { x: '0', y: '0', width: '100%', height: '100%', preserveAspectRatio: 'none', result: 'map' }, f);   // as the component (1.68.1: 1.68.0 set pixels, which made the bend much weaker)
     var M = { R: '1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0', G: '0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0', B: '0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0' };
     [['R', O.redOffset], ['G', O.greenOffset], ['B', O.blueOffset]].forEach(function (c) {
       node('feDisplacementMap', { 'in': 'SourceGraphic', in2: 'map', result: 'd' + c[0], scale: String(O.distortionScale + c[1]), xChannelSelector: O.xChannel, yChannelSelector: O.yChannel }, f);
@@ -76,7 +76,6 @@
     var r = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, h / 2), k = w + 'x' + h + 'r' + r;
     if (k === last) return;
     last = k;
-    img.setAttribute('width', String(w)); img.setAttribute('height', String(h));
     img.setAttribute('href', map(w, h, r));
   }
   /* Puts the glass on one element (the bar, or the dock's pill); a new element takes it over from the old one. */

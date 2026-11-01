@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.68.1 | Bar Glass looks like the mock-up (strong bend, clear on every page), shows even when Windows asks for less transparency, and stays on while the dock shrinks during scrolling |
 | 1.68.0 | Bar Glass: an option in Settings › Appearance that turns the top bar and the dock into glass (React Bits GlassSurface); the dock's own blur now reaches the page under it |
 | 1.67.2 | A clearer Tabs section in Settings (colour tiles, a preview of the bar, no Home), Save Settings turns on after a drag, a softer line under the current page |
 | 1.67.1 | Faster Links edit mode, the dock shows every page and steps aside while you edit, no Home button where the logo already leads home, faster page changes, a stricter security scan |
@@ -125,6 +126,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.68.1
+
+### Fixed
+
+- **Bar Glass did not show on Windows with Transparency effects off:** the browser then asks sites for less transparency and 1.68.0 left the glass off, although it was switched on. The switch decides now.
+- **The bend was much weaker than the mock-up:** the glass map was set in pixels; it is stretched over the bar again (100%), as in the React Bits component, so the edges bend with the coloured fringe again.
+- **Blurred glass:** the faint frost 1.68.0 put on pages other than the start page hid the bending. Clear glass on every page now, as in the mock-up.
+- **The dock's glass and blur went clear while scrolling:** the dock faded a little as it shrank, and a faded box cuts what is inside it off from the page. It still shrinks, but no longer fades.
+
+### Checked
+
+- polish_test P51 (map stretched over the bar at its size), P52 (no frost), P56 (glass shows with "reduce transparency" on), P57 (the dock does not fade while scrolling).
 
 ---
 

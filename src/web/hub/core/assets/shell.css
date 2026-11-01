@@ -111,7 +111,8 @@ html[data-ix-app="home"][data-ix-nav="side"] #ix-bar{background:rgba(0,0,0,.55);
 /* ---------- Bottom Dock: one floating pill ---------- */
 html[data-ix-nav="dock"] #ix-bar{left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:8px;transform-origin:50% 100%;
   transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .26s}
-html.ix-scrolling[data-ix-nav="dock"] #ix-bar{transform:translateX(-50%) scale(.9);opacity:.85}
+/* (1.68.1) it shrinks while you scroll but no longer fades: a faded box cuts the pill off from the page, so its blur and glass went clear while scrolling */
+html.ix-scrolling[data-ix-nav="dock"] #ix-bar{transform:translateX(-50%) scale(.9)}
 .ix-pill{display:flex;align-items:center;gap:2px;padding:6px;border-radius:999px;background:color-mix(in srgb,var(--ix-barbg,var(--ix-s1)) 95%,transparent);
   backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--ix-line2);box-shadow:0 12px 40px rgba(0,0,0,.5)}
 html[data-theme="light"] .ix-pill,html[data-theme="light"] .ix-fab{box-shadow:0 10px 30px rgba(20,20,20,.14)}
@@ -808,11 +809,10 @@ html.ix-editing[data-ix-nav="dock"] #ix-bar{opacity:0;visibility:hidden;pointer-
 
 /* ---------- (1.68.0) Bar Glass: Settings > Appearance > Bar Glass. The look of React Bits' GlassSurface (David Haz, MIT + Commons Clause;
    glass.js puts the classes on the top bar or the dock's pill). Chromium: an SVG filter bends what is under the edges (--svg);
-   Safari and Firefox: the component's frosted glass (--fallback). The start page shows the photo through clear glass; the other pages
-   add a faint frost (a little blur and tint) so the glass stays visible and its text readable over what scrolls under it. ---------- */
+   Safari and Firefox: the component's frosted glass (--fallback). Clear glass on every page, as in the owner's mock-up (1.68.1: the
+   frost 1.68.0 added on pages other than the start page hid the bending; it is gone). ---------- */
 .ix-glass-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
 #ix-bar.glass-surface,#ix-bar .glass-surface{--gt:10%;--gb:0px}
-html:not([data-ix-app="home"]) #ix-bar.glass-surface,html:not([data-ix-app="home"]) #ix-bar .glass-surface{--gt:50%;--gb:5px}
 #ix-bar.glass-surface--svg,#ix-bar .glass-surface--svg{background:color-mix(in srgb,var(--ix-barbg,var(--ix-bg)) var(--gt),transparent)!important;
   backdrop-filter:var(--filter-id) blur(var(--gb)) saturate(1)!important;-webkit-backdrop-filter:var(--filter-id) blur(var(--gb)) saturate(1)!important;border-color:transparent!important;
   box-shadow:0 0 2px 1px color-mix(in oklch,white,transparent 65%) inset,0 0 10px 4px color-mix(in oklch,white,transparent 85%) inset,0 4px 16px rgba(17,17,26,.05),0 8px 24px rgba(17,17,26,.05),0 16px 56px rgba(17,17,26,.05),

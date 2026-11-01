@@ -266,7 +266,7 @@ try:
         kind = 'glass-surface--svg' if BROWSER == 'chromium' else 'glass-surface--fallback'   # Safari and Firefox get the frosted glass
         GL = """(() => { const e = document.querySelector('.glass-surface'), f = document.querySelector('#ix-glass-f feImage'), c = e && getComputedStyle(e);
             return { el: e ? (e.id || e.className.split(' ')[0]) : null, cls: e ? e.className : '', bf: c ? c.backdropFilter : '', gb: c ? c.getPropertyValue('--gb').trim() : '',
-              map: f && e ? [f.getAttribute('href').slice(0, 18), +f.getAttribute('width') === Math.round(e.offsetWidth), +f.getAttribute('height') === Math.round(e.offsetHeight)] : null,
+              map: f && e ? [f.getAttribute('href').slice(0, 18), f.getAttribute('width') === '100%' && f.getAttribute('height') === '100%', f.getAttribute('href').includes('width%3D%22' + Math.round(e.offsetWidth) + '%22')] : null,
               js: [...document.scripts].filter(x => /glass\.js/.test(x.src)).length, attr: document.documentElement.hasAttribute('data-ix-glass') }; })()"""
         gp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); gp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(gp, s.base)
         gp.goto(s.base + '/web/links/'); wait_js(gp, "!!document.querySelector('#ix-bar .ix-links') && !!(window.HUB && HUB.isAdmin())", 20000); gp.wait_for_timeout(500)
@@ -282,18 +282,30 @@ try:
         check('P50 the Bar Glass switch in Settings > Appearance shows it at once and saves it; the top bar is glass on the next page, with one glass.js (1.68.0)',
               pv['el'] == 'ix-bar' and saved == 'true' and g1['el'] == 'ix-bar' and kind in g1['cls'] and g1['js'] == 1 and g1['attr'], (pv, saved, g1))
         if BROWSER == 'chromium':
-            check('P51 Chromium: the bar bends what is under it through the SVG filter, its map a data: picture the bar\'s own size in pixels (1.68.0)',
+            check('P51 Chromium: the bar bends what is under it through the SVG filter; its map is drawn at the bar\'s size and stretched over it (100%, as the component; 1.68.1)',
                   'url(' in g1['bf'] and g1['map'] == ['data:image/svg+xml', True, True], g1)
-        check('P52 a plain page adds a faint frost (a little blur) so the bar stays readable; the start page shows its photo through clear glass (1.68.0)', g1['gb'] == '5px', g1['gb'])
+        check('P52 clear glass on every page, as in the mock-up: no frost on Links (1.68.1)', g1['gb'] == '0px', g1['gb'])
         s.php("hub_settings_update(function ($x) { $x['homeBar'] = true; return $x; });")
         gp.goto(s.base + '/'); wait_js(gp, "!!document.querySelector('#ix-bar.glass-surface')", 20000)
         hb = gp.evaluate(GL)['gb']
         s.php("hub_settings_update(function ($x) { $x['nav'] = 'dock'; return $x; });")
         gp.goto(s.base + '/web/info/'); wait_js(gp, "!!document.querySelector('#ix-bar .ix-pill.glass-surface')", 20000); gp.wait_for_timeout(400)
+        gp.evaluate("document.documentElement.classList.add('ix-scrolling')"); gp.wait_for_timeout(400)
+        scr = gp.evaluate("[getComputedStyle(document.getElementById('ix-bar')).opacity, getComputedStyle(document.getElementById('ix-bar')).transform !== 'none']")
+        gp.evaluate("document.documentElement.classList.remove('ix-scrolling')"); gp.wait_for_timeout(400)
+        check('P57 while scrolling the dock shrinks but does not fade (a faded dock turned its glass and blur clear) (1.68.1)', scr == ['1', True], scr)
         dk = gp.evaluate("""(() => { const p = document.querySelector('#ix-bar .ix-pill'); return [p.classList.contains('glass-surface'), Math.round(p.getBoundingClientRect().height),
             getComputedStyle(document.getElementById('ix-bar')).viewTransitionName, getComputedStyle(p).viewTransitionName, document.documentElement.scrollWidth <= innerWidth]; })()""")
         check('P53 the dock\'s pill is glass and a little taller; the page-change name sits on the pill, so its glass and blur reach the page under it (1.68.0)',
               hb == '0px' and dk[0] and dk[1] >= 60 and dk[2] == 'none' and dk[3] in ('ix-bar', None) and dk[4], (hb, dk))
+        if BROWSER == 'chromium':
+            rp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); browser_login(rp, s.base)
+            rp.context.new_cdp_session(rp).send('Emulation.setEmulatedMedia', {'features': [{'name': 'prefers-reduced-transparency', 'value': 'reduce'}]})
+            rp.goto(s.base + '/web/links/'); wait_js(rp, "!!document.querySelector('#ix-bar .ix-pill')", 20000)
+            until(lambda: rp.evaluate("!!document.querySelector('.glass-surface')"), 5000)
+            rt = rp.evaluate("[matchMedia('(prefers-reduced-transparency: reduce)').matches, !!document.querySelector('#ix-bar .ix-pill.glass-surface')]")
+            rp.context.close()
+            check('P56 the glass shows also when the system asks for less transparency (Windows with Transparency effects off); the switch decides (1.68.1)', rt == [True, True], rt)
         s.php("hub_settings_update(function ($x) { $x['nav'] = 'side'; return $x; });")
         gp.goto(s.base + '/web/info/'); wait_js(gp, "!!document.querySelector('#ix-bar .ix-links')", 20000); gp.wait_for_timeout(600)
         sd = gp.evaluate(GL)['el']
