@@ -54,7 +54,7 @@
   var SECTIONS = [
     ['overview', 'Overview', ICON.grid, 'How your site stands right now, and what to look at next.', [['overview', 'Overview'], ['setup', 'Guided Setup']], ''],
     ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and the tabs in the bar.', [['general', 'Basics'], ['nav', 'Tabs']], 'Web Setting'],
-    ['look', 'Appearance', ICON.palette, 'The bar, theme, font and colors.', [['look', 'Look'], ['themes', 'Presets'], ['colors', 'Colors']], 'Web Setting'],
+    ['look', 'Appearance', ICON.palette, 'The bar, theme, font and colors.', [['look', 'Look'], ['themes', 'Presets'], ['colors', 'Colors'], ['glass', 'Glass']], 'Web Setting'],
     ['security', 'Security', ICON.shield, 'Login, passkeys and encryption.', null, 'Data Setting'],
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and backups, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over.', null, 'Data Setting'],
@@ -84,7 +84,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
+  var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
   var SUB_OF = {};   // sub-tab -> its section (nav -> general, colors -> look)
   SECTIONS.forEach(function (x) { (x[4] || [[x[0]]]).forEach(function (t) { SUB_OF[t[0]] = x[0]; }); });
   var PAGE = null;                       // the page's own element when Settings runs as a page (web/settings/)
@@ -92,7 +92,7 @@
   var OV = null;                         // what the Overview last learned: the little status labels in the menu come from it
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
   var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Back Up' };   // sections whose accordions become tabs, and the name of their first tab
-  var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
+  var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
   var draft;
   /* what Save Settings would send, written the same way every time (empty color sets and their order don't count) */
   function canonColors(c) {
@@ -101,10 +101,21 @@
     var pg = c.pg || {}; Object.keys(pg).sort().forEach(function (a) { ['dark', 'light'].forEach(function (m) { if (pg[a] && pg[a][m]) out['pg.' + a + '.' + m] = pg[a][m]; }); });
     return out;
   }
+  /* (1.68.2) the Glass tab: [key, name, what it does, min, max, built-in value, unit] (the server keeps the same ranges: hub_glass_ranges) */
+  var GFX = [['bend', 'Bend', 'How strongly the edges bend what is under them.', 0, 100, 60, ''], ['edge', 'Edge Width', 'How far in from the rim the bending reaches.', 2, 40, 7, '%'],
+    ['fringe', 'Colour Fringe', 'The red, green and blue split at the edges.', 0, 40, 10, ''], ['frost', 'Frost', 'Blur behind the glass.', 0, 12, 0, ' px'],
+    ['tint', 'Tint', 'How much of the bar colour sits over the glass.', 0, 80, 10, '%'], ['sat', 'Saturation', 'How vivid things look through the glass.', 50, 200, 100, '%']];
+  var GPICKS = [['clear', 'Clear', {}], ['frosted', 'Frosted', { bend: 30, fringe: 4, frost: 10, tint: 30, sat: 120 }], ['strong', 'Strong', { bend: 100, edge: 20, fringe: 20, tint: 5, sat: 130 }]];
+  /* only the values that differ from the built-in look, whole numbers inside their range, always in the same order */
+  function canonGfx(o) {
+    var out = {}; o = o && typeof o === 'object' ? o : {};
+    GFX.forEach(function (g) { var v = o[g[0]]; if (typeof v === 'number' && isFinite(v)) { v = Math.max(g[3], Math.min(g[4], Math.round(v))); if (v !== g[5]) out[g[0]] = v; } });
+    return out;
+  }
   function canonAccents(a) { var out = {}; Object.keys(a || {}).sort().forEach(function (k) { if (a[k]) out[k] = a[k]; }); return out; }
   function pick(o) {
     var r = {};
-    SAVED_KEYS.forEach(function (k) { r[k] = k === 'colors' ? canonColors(o.colors) : k === 'accentPg' ? canonAccents(o.accentPg) : k === 'pages' ? (o.pages || []) : (o[k] === undefined ? null : o[k]); });
+    SAVED_KEYS.forEach(function (k) { r[k] = k === 'colors' ? canonColors(o.colors) : k === 'accentPg' ? canonAccents(o.accentPg) : k === 'glassFx' ? canonGfx(o.glassFx) : k === 'barHide' ? o.barHide !== false : k === 'pages' ? (o.pages || []) : (o[k] === undefined ? null : o[k]); });
     return JSON.stringify(r);
   }
   function dirty() { return !!draft && pick(draft) !== pick(S); }
@@ -118,7 +129,7 @@
     if (sf) sf.hidden = !d && DRAFT_TABS.indexOf(curSub) < 0;
     var b = $('#ix-save'), x = $('#ix-discard'); if (b && b.textContent !== 'Saving…') b.disabled = !d; if (x) x.disabled = !d;
   }
-  var DRAFT_TABS = ['general', 'nav', 'look', 'themes', 'colors'];
+  var DRAFT_TABS = ['general', 'nav', 'look', 'themes', 'colors', 'glass'];
   /* markDirty: the save bar sits at the bottom of the screen on the tabs above, and elsewhere while something is not saved yet */
   function mount(host, hash) {
     PAGE = host; host.classList.add('ix-pg'); host.id = 'ix-page';
@@ -160,7 +171,7 @@
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'general', 'keys keyboard hotkeys shortcut question mark'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
-    ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'look', 'home start page corner'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
+    ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'look', 'home start page corner'], ['Hide the Bar While Scrolling', 'look', 'auto hide slide away stay put fixed scroll dock shrink'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], 
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
@@ -262,9 +273,9 @@
   var tabObs = null;
   /* The plain panes (General, Tabs, Look) are written as "heading, one line, controls". Each heading with what follows it
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
-  var CARDIFY = { general: 1, nav: 1, look: 1 };
+  var CARDIFY = { general: 1, nav: 1, look: 1, glass: 1 };
   var CARD_ICON = { 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
-    'navigation style': ICON.menu, 'tabs': ICON.pages };
+    'navigation style': ICON.menu, 'tabs': ICON.pages, 'bar glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
     var groups = [], cur = null;
@@ -405,9 +416,10 @@
       '<input type="text" id="ix-fontc" maxlength="40" placeholder="A font installed on your device, like Calibri" value="' + esc(draft.fontCustom || '') + '" aria-label="Font Name"' + (draft.font === 'custom' ? '' : ' hidden') + '>' +
       '<h3>Theme</h3><p>The default look. The sun/moon button in the bar changes it just for you.</p>' +
       seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
-      '<h3>Navigation Style</h3><p>For every page. The Top Bar hides while you scroll.</p>' +
+      '<h3>Navigation Style</h3><p>For every page.</p>' +
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
       '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
+      '<label class="ix-tg"><span>Hide the Bar While Scrolling<small>The top bar slides away as you scroll down and comes back as you scroll up; the dock shrinks a little. Off keeps the bar in place.</small></span><input type="checkbox" id="ix-bh"' + (draft.barHide !== false ? ' checked' : '') + '></label>' +
       '<label class="ix-tg"><span>Bar Glass<small>The top bar and the dock turn to glass that bends what is under their edges. Chrome and Edge show the full glass; Safari and Firefox show frosted glass. Not for the sidebar.</small></span><input type="checkbox" id="ix-glass"' + (draft.glass ? ' checked' : '') + '></label>' +
       '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw"><div class="ix-apk" role="group" aria-label="Accent Color">' + sw.map(function (c, i) {
         var on = draft.accent === c, first = sw.indexOf(draft.accent) < 0 ? i === 0 : on;
@@ -427,6 +439,7 @@
       draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
     p.querySelector('#ix-hb').onchange = function (e) { draft.homeBar = e.target.checked; preview(); };
     p.querySelector('#ix-glass').onchange = function (e) { draft.glass = e.target.checked; preview(); };
+    p.querySelector('#ix-bh').onchange = function (e) { draft.barHide = e.target.checked; preview(); };
     p.querySelector('#ix-font').onchange = function (e) { draft.font = e.target.value; p.querySelector('#ix-fontc').hidden = draft.font !== 'custom'; if (draft.font === 'custom') p.querySelector('#ix-fontc').focus(); preview(); };
     p.querySelector('#ix-fontc').oninput = function (e) { draft.fontCustom = e.target.value; preview(); };
     function setAcc(c, fromText) {
@@ -775,6 +788,34 @@
     return null;
   }
   var lastMix = { dark: null, light: null };
+  /* (1.68.2) Appearance > Glass: quick picks and sliders for Bar Glass; the real bar or dock follows each move (preview), Save keeps it. */
+  function pGlass(p) {
+    draft.glassFx = canonGfx(draft.glassFx);
+    var fx = draft.glassFx, val = function (g) { return typeof fx[g[0]] === 'number' ? fx[g[0]] : g[5]; };
+    var ua = navigator.userAgent, bends = !((/Safari/.test(ua) && !/Chrome/.test(ua)) || /Firefox/.test(ua));
+    var picked = GPICKS.filter(function (k) { return JSON.stringify(canonGfx(k[2])) === JSON.stringify(fx); })[0];
+    p.innerHTML = '<h3>Bar Glass</h3><p>The top bar or the dock turns to glass that bends what is under its edges. Not for the sidebar.</p>' +
+      '<label class="ix-tg"><span>Show the Glass<small>' + (draft.glass ? 'On: the bar shows each change as you make it.' : 'Off: switch it on to see the changes below on the bar.') + '</small></span><input type="checkbox" id="ix-glass2"' + (draft.glass ? ' checked' : '') + '></label>' +
+      '<h3>Quick Picks</h3><p>A starting point; the sliders below fine-tune it.</p>' + seg('gpick', GPICKS.map(function (k) { return [k[0], k[1]]; }), picked ? picked[0] : '') +
+      '<h3>Fine-Tune</h3><p>' + (bends ? 'Every page, the top bar and the dock.' : 'This browser shows frosted glass: only Frost, Tint and Saturation change it. Chrome and Edge show the bending too.') + '</p>' +
+      GFX.map(function (g) {
+        return '<div class="ix-tsf ix-gxf"><label for="ix-gx-' + g[0] + '">' + g[1] + '<small>' + esc(g[2]) + '</small></label><div class="ix-tsr"><input type="range" id="ix-gx-' + g[0] + '" data-g="' + g[0] + '" min="' + g[3] + '" max="' + g[4] + '" step="1" value="' + val(g) + '"><output>' + val(g) + g[6] + '</output></div></div>';
+      }).join('') +
+      '<div class="ix-acts"><button type="button" class="ix-btn" id="ix-gxr">Reset to Default</button></div>';
+    p.querySelector('#ix-glass2').onchange = function (e) { draft.glass = e.target.checked; preview(); pGlass(p); };
+    bindSeg(p, function (k, v) { if (k !== 'gpick') return; var pk = GPICKS.filter(function (x) { return x[0] === v; })[0]; draft.glassFx = canonGfx(pk ? pk[2] : {}); preview(); pGlass(p); });
+    p.querySelectorAll('[data-g]').forEach(function (r) {
+      var g = GFX.filter(function (x) { return x[0] === r.dataset.g; })[0];
+      r.oninput = function () {
+        var o = Object.assign({}, draft.glassFx); o[g[0]] = +r.value; draft.glassFx = canonGfx(o);
+        r.nextElementSibling.textContent = r.value + g[6];
+        var pk = GPICKS.filter(function (k) { return JSON.stringify(canonGfx(k[2])) === JSON.stringify(draft.glassFx); })[0];
+        p.querySelectorAll('[data-seg="gpick"] button').forEach(function (b) { b.setAttribute('aria-pressed', pk && b.dataset.v === pk[0] ? 'true' : 'false'); });
+        preview();
+      };
+    });
+    p.querySelector('#ix-gxr').onclick = function () { draft.glassFx = {}; preview(); pGlass(p); };
+  }
   function pThemes(p) {
     var cur = draft.colors = draft.colors || {};
     ['dark', 'light', 'pg'].forEach(function (k) { if (!cur[k] || Array.isArray(cur[k])) cur[k] = {}; });
@@ -1622,7 +1663,7 @@
   function saveSettings() {
     var b = $('#ix-save'); if (b.disabled) return; b.disabled = true; b.textContent = 'Saving…';
     var fail = function (msg) { b.disabled = false; b.textContent = 'Save Settings'; $('#ix-sferr').textContent = msg; };
-    var send = { siteName: draft.siteName, nav: draft.nav, theme: draft.theme, accent: draft.accent, accentPg: canonAccents(draft.accentPg), look: draft.look, homeBar: draft.homeBar, glass: draft.glass === true, font: draft.font, fontCustom: draft.fontCustom, colors: draft.colors, tools: draft.tools, backupEvery: draft.backupEvery, pages: draft.pages || [], tz: draft.tz || 'Asia/Kolkata' };
+    var send = { siteName: draft.siteName, nav: draft.nav, theme: draft.theme, accent: draft.accent, accentPg: canonAccents(draft.accentPg), look: draft.look, homeBar: draft.homeBar, glass: draft.glass === true, glassFx: canonGfx(draft.glassFx), barHide: draft.barHide !== false, font: draft.font, fontCustom: draft.fontCustom, colors: draft.colors, tools: draft.tools, backupEvery: draft.backupEvery, pages: draft.pages || [], tz: draft.tz || 'Asia/Kolkata' };
     api('settings', { settings: send }).then(function (j) {
       if (!j.ok || !j.state) {
         return fail(j._status === 401 ? 'You were logged out. Log in again, then save.' : j._status === 403 ? 'Security check failed. Reload the page, then save again.' : (j.error || 'Could not save (server answered ' + (j._status || 'nothing') + ').'));

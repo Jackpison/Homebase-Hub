@@ -97,9 +97,9 @@ try:
         check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages, removed in 1.48.5, opens Tabs)', not bad, bad)
         ok = at('#nav', tabs + " === 'Basics|Tabs' && !!document.querySelector('#ix-pc #ix-tabl .ix-pgr') && !document.querySelector('#ix-pc .ix-navpick')")
         check('S11 General has Basics and Tabs; Tabs holds the tab list and no longer the Navigation Style', ok, pg.evaluate(tabs))
-        ok = at('#look', tabs + " === 'Look|Presets|Colors' && !!document.querySelector('#ix-font')")
+        ok = at('#look', tabs + " === 'Look|Presets|Colors|Glass' && !!document.querySelector('#ix-font')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
-        check('S13 Appearance has Look, Presets and Colors; Look shows Font, Theme, Navigation Style (with the start-page bar switch) and Accent Color (the "Same Look on Every Page" switch is gone)',
+        check('S13 Appearance has Look, Presets, Colors and Glass (1.68.2); Look shows Font, Theme, Navigation Style (with the start-page bar switch) and Accent Color (the "Same Look on Every Page" switch is gone)',
               ok and cards == ['Font', 'Theme', 'Navigation Style', 'Accent Color'] and pg.evaluate("!!document.querySelector('#ix-pc .ix-navpick') && !!document.querySelector('#ix-hb')") and pg.evaluate("!document.querySelector('#ix-look')"), (pg.evaluate(tabs), cards))
         check('S14 Look offers 10 accent colors (the 1.65.3 picker) and your own', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 10 and pg.evaluate("!!document.querySelector('#ix-acc')"))
         pg.click('#ix-pane .ix-subt [data-grp="themes"]')

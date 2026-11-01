@@ -59,7 +59,7 @@
     img = node('feImage', { x: '0', y: '0', width: '100%', height: '100%', preserveAspectRatio: 'none', result: 'map' }, f);   // as the component (1.68.1: 1.68.0 set pixels, which made the bend much weaker)
     var M = { R: '1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0', G: '0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0', B: '0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0' };
     [['R', O.redOffset], ['G', O.greenOffset], ['B', O.blueOffset]].forEach(function (c) {
-      node('feDisplacementMap', { 'in': 'SourceGraphic', in2: 'map', result: 'd' + c[0], scale: String(O.distortionScale + c[1]), xChannelSelector: O.xChannel, yChannelSelector: O.yChannel }, f);
+      node('feDisplacementMap', { 'in': 'SourceGraphic', in2: 'map', result: 'd' + c[0], scale: String(O.distortionScale + c[1]), xChannelSelector: O.xChannel, yChannelSelector: O.yChannel, 'data-c': c[0] }, f);
       node('feColorMatrix', { 'in': 'd' + c[0], type: 'matrix', values: M[c[0]], result: 'c' + c[0] }, f);
     });
     node('feBlend', { 'in': 'cR', in2: 'cG', mode: 'screen', result: 'rg' }, f);
@@ -97,5 +97,17 @@
     if (el) { el.classList.remove('glass-surface', 'glass-surface--svg', 'glass-surface--fallback'); el.style.removeProperty('--filter-id'); }
     el = null;
   }
-  window.HubGlass = { apply: apply, off: off, svgOK: svgOK };
+  /* (1.68.2) Settings > Appearance > Glass: bend (0-100, 60 = the component's -180), edge (2-40 = 2-40% of the shorter side, 7 = 0.07)
+     and fringe (0-40: green bends that much more than red, blue twice that; 10 = the component's 10/20). Frost, tint and saturation are CSS. */
+  function set(fx) {
+    fx = fx || {};
+    var num = function (v, d) { return typeof v === 'number' && isFinite(v) ? v : d; };
+    O.distortionScale = -3 * num(fx.bend, 60); O.borderWidth = num(fx.edge, 7) / 100;
+    O.greenOffset = num(fx.fringe, 10); O.blueOffset = 2 * O.greenOffset;
+    if (!svgEl) return;
+    var off = { R: O.redOffset, G: O.greenOffset, B: O.blueOffset };
+    svgEl.querySelectorAll('feDisplacementMap').forEach(function (d) { d.setAttribute('scale', String(O.distortionScale + off[d.getAttribute('data-c')])); });
+    last = ''; draw();
+  }
+  window.HubGlass = { apply: apply, off: off, svgOK: svgOK, set: set };
 })();

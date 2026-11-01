@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.68.1" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.68.2" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -160,12 +160,19 @@
   function syncThemeKeys(t) {
     ls.set('bm-theme', t); ls.set('info3-theme', t); ls.set('theme4', t);
   }
+  var gfx = {};
   function applyAttrs() {
     H.setAttribute('data-ix-app', APP);
     H.setAttribute('data-ix-nav', S.nav || 'top');
     if (S.look !== false) H.setAttribute('data-ix-look', ''); else H.removeAttribute('data-ix-look');
     if (APP !== 'home' || S.homeBar === true) H.setAttribute('data-ix-bar', ''); else H.removeAttribute('data-ix-bar');
     if (S.glass === true) H.setAttribute('data-ix-glass', ''); else H.removeAttribute('data-ix-glass');   // (1.68.0) Settings > Appearance > Bar Glass
+    // (1.68.2) the Glass tab: tint, frost and saturation are CSS; bend, edge and fringe go to glass.js (gfx, read by glass())
+    gfx = (S.glassFx && typeof S.glassFx === 'object' && !Array.isArray(S.glassFx)) ? S.glassFx : {};
+    var gv = function (k, d) { return typeof gfx[k] === 'number' ? gfx[k] : d; };
+    H.style.setProperty('--ix-gt', gv('tint', 10) + '%'); H.style.setProperty('--ix-gb', gv('frost', 0) + 'px'); H.style.setProperty('--ix-gs', String(gv('sat', 100) / 100));
+    // (1.68.2) Settings > Appearance > Hide the Bar While Scrolling (on unless switched off)
+    if (S.barHide === false) { H.setAttribute('data-ix-nohide', ''); H.classList.remove('ix-hide', 'ix-scrolling'); } else H.removeAttribute('data-ix-nohide');
     var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Appearance > Colors)
     H.style.setProperty('--ix-accent', acc);
     H.style.setProperty('--ix-ink', inkFor(acc));
@@ -342,7 +349,7 @@
     if (!sticky) toastT = setTimeout(function () { t.classList.remove('on'); }, bad ? 6000 : act ? 7000 : 3200);
   }
   function remember(st) {
-    var keep = {}; ['siteName', 'logo', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'editBar', 'colors', 'font', 'fontCustom', 'sizes', 'pages', 'backupEvery', 'backupLast', 'tz'].forEach(function (k) { if (k in st) keep[k] = st[k]; });
+    var keep = {}; ['siteName', 'logo', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'editBar', 'colors', 'font', 'fontCustom', 'sizes', 'pages', 'backupEvery', 'backupLast', 'tz'].forEach(function (k) { if (k in st) keep[k] = st[k]; });
     keep.adm = !!st.admin;   // only a hint so the bar draws the right icons straight away; the server decides what is allowed
     ls.set('hub-state', JSON.stringify(keep));
   }
@@ -772,7 +779,7 @@
     var on = H.hasAttribute('data-ix-glass') && !!bar && nav !== 'side';
     var el = on ? (nav === 'dock' ? bar.querySelector('.ix-pill') : bar) : null;
     if (!el) { if (window.HubGlass) window.HubGlass.off(); return; }
-    if (window.HubGlass) return window.HubGlass.apply(el);
+    if (window.HubGlass) { window.HubGlass.apply(el); window.HubGlass.set(gfx); return; }
     glassP = glassP || new Promise(function (ok) {
       var s = document.createElement('script'), ver = ((me && /\?v=[^&#]+/.exec(me.src)) || [''])[0];
       s.src = ASSETS + 'glass.js' + ver; s.onload = ok; s.onerror = function () { glassP = null; };
@@ -898,7 +905,7 @@
     if (H.classList.contains('ix-hide') !== on) H.classList.toggle('ix-hide', on);
   }
   document.addEventListener('scroll', function (e) {
-    if (!H.hasAttribute('data-ix-bar')) return;
+    if (!H.hasAttribute('data-ix-bar') || H.hasAttribute('data-ix-nohide')) return;   // (1.68.2) the bar can be set to stay put
     var t = e.target, el = (t === document || t === H || t === document.body) ? null : t;
     if (el && (el.nodeType !== 1 || el.clientHeight < innerHeight * 0.5 || el.closest('#ix-bar,#ix-pop,#ix-drawer,#ix-sheet,#ix-spot,.ix-panel,#ix-dlg,dialog'))) return;
     var box = el || window, y = el ? el.scrollTop : (window.scrollY || 0), prev = box.__ixY == null ? y : box.__ixY;
@@ -1556,7 +1563,7 @@
   function refreshNow() {
     return api('state').then(function (st) {
       if (!st || !('admin' in st)) return;
-      var changed = st.nav !== S.nav || st.look !== S.look || st.accent !== S.accent || st.homeBar !== S.homeBar || st.glass !== S.glass || st.font !== S.font || st.fontCustom !== S.fontCustom || JSON.stringify(st.colors) !== JSON.stringify(S.colors);
+      var changed = st.nav !== S.nav || st.look !== S.look || st.accent !== S.accent || st.homeBar !== S.homeBar || st.glass !== S.glass || st.barHide !== S.barHide || JSON.stringify(st.glassFx) !== JSON.stringify(S.glassFx) || st.font !== S.font || st.fontCustom !== S.fontCustom || JSON.stringify(st.colors) !== JSON.stringify(S.colors);
       // the site theme was changed in Settings (on any device) since this browser last looked: follow it
       var seen = ls.get('hub-theme-site');
       if (st.theme && seen !== st.theme) { if (seen) applyTheme(resolveTheme(st.theme)); ls.set('hub-theme-site', st.theme); }

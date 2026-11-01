@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.68.2 | A Glass tab in Appearance (quick picks and sliders for Bar Glass), a switch to keep the bar in place while scrolling, no line over the current page in the dock |
 | 1.68.1 | Bar Glass looks like the mock-up (strong bend, clear on every page), shows even when Windows asks for less transparency, and stays on while the dock shrinks during scrolling |
 | 1.68.0 | Bar Glass: an option in Settings › Appearance that turns the top bar and the dock into glass (React Bits GlassSurface); the dock's own blur now reaches the page under it |
 | 1.67.2 | A clearer Tabs section in Settings (colour tiles, a preview of the bar, no Home), Save Settings turns on after a drag, a softer line under the current page |
@@ -126,6 +127,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.68.2
+
+### Added
+
+- **Settings › Appearance › Glass:** a tab of its own for Bar Glass. Quick Picks (Clear, the mock-up look and the default; Frosted; Strong) and sliders: Bend, Edge Width, Colour Fringe, Frost, Tint and Saturation, with Reset to Default. The real bar or dock follows each move; Save Settings keeps it for every page. Safari and Firefox show frosted glass, so there only Frost, Tint and Saturation change it (the tab says so). The server keeps every value inside its range.
+- **Hide the Bar While Scrolling** (Settings › Appearance › Look, on by default): off keeps the top bar in place and the dock from shrinking while you scroll.
+
+### Changed
+
+- **The dock** no longer shows the line over the current page; its tinted pill already marks it. The top bar and the sidebar keep the line.
+
+### Checked
+
+- polish_test P58 and P58b (a quick pick and a slider change the real bar at once; Save keeps them on every page; Reset goes back to the built-in look), P59 (no line in the dock, the top bar keeps it), P60 (the bar slides away while scrolling, or stays when switched off). nav_settings_test.php (Glass values kept inside their ranges; Hide the Bar on unless switched off). settings_test S13 now expects the Glass tab.
 
 ---
 

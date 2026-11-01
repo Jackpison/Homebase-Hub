@@ -33,3 +33,11 @@ t('the setup dialog sends the browser\'s time zone and Follow Device', strpos($s
 t('Bar Glass is off for sites that never saved it', hub_clean_settings([])['glass'] === false);
 t('Bar Glass is on only for a real true (not "1", 1 or "yes")', hub_clean_settings(['glass' => true])['glass'] === true && hub_clean_settings(['glass' => '1'])['glass'] === false && hub_clean_settings(['glass' => 1])['glass'] === false && hub_clean_settings(['glass' => 'yes'])['glass'] === false);
 t('the public state carries Bar Glass, so every page can draw it', array_key_exists('glass', hub_public_state()));
+
+// (1.68.2) the Glass tab's values and Hide the Bar While Scrolling
+$g = hub_clean_settings(['glassFx' => ['bend' => 500, 'edge' => -3, 'fringe' => '12', 'frost' => 4.6, 'tint' => 'lots', 'sat' => 150, 'evil' => 9]])['glassFx'];
+t('Glass values are kept inside their ranges, as whole numbers; unknown keys and words are dropped', $g === ['bend' => 100, 'edge' => 2, 'fringe' => 12, 'frost' => 5, 'sat' => 150], json_encode($g));
+t('no Glass values (or not a list) means the built-in look', hub_clean_settings([])['glassFx'] === [] && hub_clean_settings(['glassFx' => 'x'])['glassFx'] === []);
+t('Hide the Bar While Scrolling is on unless switched off', hub_clean_settings([])['barHide'] === true && hub_clean_settings(['barHide' => false])['barHide'] === false && hub_clean_settings(['barHide' => 0])['barHide'] === true);
+$ps = hub_public_state();
+t('the public state carries the Glass values and Hide the Bar', array_key_exists('glassFx', $ps) && array_key_exists('barHide', $ps));

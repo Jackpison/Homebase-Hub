@@ -317,6 +317,41 @@ try:
         check('P55 switching Bar Glass off takes the glass away at once (1.68.0)', off['el'] is None and not off['attr'], off)
         s.php("hub_settings_update(function ($x) { $x['glass'] = false; return $x; });")
         gp.context.close()
+        # ---- (1.68.2) Appearance > Glass tab; no line over the current page in the dock; Hide the Bar While Scrolling ----
+        s.php("hub_settings_update(function ($x) { $x['glass'] = true; $x['nav'] = 'top'; return $x; });")
+        tp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); tp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(tp, s.base)
+        tp.goto(s.base + '/web/settings/#glass'); wait_js(tp, "!!document.getElementById('ix-gx-bend') && !!document.querySelector('#ix-bar.glass-surface')", 20000); tp.wait_for_timeout(300)
+        GX = "[getComputedStyle(document.getElementById('ix-bar')).backdropFilter, (document.querySelector('#ix-glass-f feDisplacementMap') || {getAttribute: () => ''}).getAttribute('scale')]"
+        t0 = tp.evaluate(GX)
+        tp.click('[data-seg=gpick] [data-v=frosted]'); until(lambda: 'blur(10px)' in tp.evaluate(GX)[0], 3000); t1 = tp.evaluate(GX)
+        tp.evaluate("(() => { const r = document.getElementById('ix-gx-bend'); r.value = 90; r.dispatchEvent(new Event('input', {bubbles: true})); })()"); tp.wait_for_timeout(200); t2 = tp.evaluate(GX)
+        tp.click('#ix-save'); until(lambda: '"bend":90' in s.php("echo json_encode(hub_settings()['glassFx']);"), 8000)
+        kept = s.php("echo json_encode(hub_settings()['glassFx']);").strip()
+        tp.goto(s.base + '/web/links/'); wait_js(tp, "!!document.querySelector('#ix-bar.glass-surface') && !!document.querySelector('#ix-glass-f')", 20000); tp.wait_for_timeout(300); t3 = tp.evaluate(GX)
+        check('P58 the Glass tab: a quick pick and a slider change the real bar at once (frost, bend), Save keeps them and every page uses them (1.68.2)',
+              t0 == ['url("#ix-glass-f") blur(0px) saturate(1)', '-180'] and 'blur(10px) saturate(1.2)' in t1[0] and t1[1] == '-90' and t2[1] == '-270' and json.loads(kept) == {'bend': 90, 'fringe': 4, 'frost': 10, 'tint': 30, 'sat': 120} and t3 == t2, (t0, t1, t2, kept, t3))
+        tp.goto(s.base + '/web/settings/#glass'); wait_js(tp, "!!document.getElementById('ix-gxr')", 20000)
+        tp.click('#ix-gxr'); tp.click('#ix-save'); until(lambda: s.php("echo json_encode(hub_settings()['glassFx']);").strip() in ('[]', '{}'), 8000)
+        check('P58b Reset to Default goes back to the built-in glass (nothing kept) (1.68.2)', s.php("echo json_encode(hub_settings()['glassFx']);").strip() in ('[]', '{}'))
+        s.php("hub_settings_update(function ($x) { $x['glass'] = false; $x['nav'] = 'dock'; return $x; });")
+        tp.goto(s.base + '/web/links/'); wait_js(tp, "!!document.querySelector('#ix-bar .ix-pill')", 20000); tp.wait_for_timeout(300)
+        dl = tp.evaluate("getComputedStyle(document.querySelector('#ix-bar .ix-pline')).display")
+        s.php("hub_settings_update(function ($x) { $x['nav'] = 'top'; return $x; });")
+        tp.goto(s.base + '/web/links/'); wait_js(tp, "!!document.querySelector('#ix-bar .ix-pline')", 20000); tp.wait_for_timeout(300)
+        tl = tp.evaluate("getComputedStyle(document.querySelector('#ix-bar .ix-pline')).display")
+        check('P59 the dock has no line over the current page; the top bar keeps it (1.68.2)', dl == 'none' and tl != 'none', (dl, tl))
+        HID = """async () => { document.documentElement.style.scrollBehavior = 'auto'; document.body.style.minHeight = '4000px'; scrollTo(0, 0); await new Promise(r => setTimeout(r, 150));
+            for (let i = 1; i <= 8; i++) { scrollTo(0, i * 60); await new Promise(r => setTimeout(r, 40)); } await new Promise(r => setTimeout(r, 300));
+            const h = document.documentElement.classList.contains('ix-hide'); scrollTo(0, 0); return h; }"""
+        hid_on = tp.evaluate(HID)
+        s.php("hub_settings_update(function ($x) { $x['barHide'] = false; return $x; });")
+        tp.goto(s.base + '/web/links/'); wait_js(tp, "document.documentElement.hasAttribute('data-ix-nohide') && !!document.getElementById('ix-bar')", 20000); tp.wait_for_timeout(300)
+        hid_off = tp.evaluate(HID)
+        s.php("hub_settings_update(function ($x) { $x['barHide'] = true; return $x; });")
+        tp.goto(s.base + '/web/settings/#look'); wait_js(tp, "!!document.getElementById('ix-bh')", 20000)
+        sw = tp.evaluate("document.getElementById('ix-bh').checked")
+        check('P60 Hide the Bar While Scrolling: on, the top bar slides away as you scroll down; off, it stays; the switch is in Appearance > Look (1.68.2)', hid_on is True and hid_off is False and sw is True, (hid_on, hid_off, sw))
+        tp.context.close()
         check('P36 no page error', not errs, errs)
         b.close()
 finally:

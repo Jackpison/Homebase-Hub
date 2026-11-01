@@ -81,6 +81,8 @@ function hub_settings_default(): array {
         'look'     => true,         // true = unified AMOLED + gold on every page; false = each page uses its own colours
         'homeBar'  => false,        // show the shared bar on the start page
         'glass'    => false,        // (1.68.0) Bar Glass: the top bar and the dock turn to glass (React Bits GlassSurface)
+        'glassFx'  => [],           // (1.68.2) Settings > Appearance > Glass: {bend, edge, fringe, frost, tint, sat}; missing = the built-in look
+        'barHide'  => true,         // (1.68.2) the top bar slides away while you scroll down (and the dock shrinks); false = it stays
         'editBar'  => [],           // the edit bar per page: {links: 'text'} = icons and text; missing = icons only (1.53.5)
         'font'     => 'default',    // site-wide font: default | trebuchet | system | verdana | tahoma | segoe | arial | georgia | palatino | mono | custom
         'fontCustom' => '',         // a font installed on the visitor's device, used when font = custom
@@ -135,6 +137,8 @@ function hub_clean_settings(array $in): array {
     $o['look']     = true;   // (1.61.0) the "Same Look on Every Page" switch is gone: every site uses the shared colours
     $o['homeBar']  = (bool)($in['homeBar'] ?? false);
     $o['glass']    = ($in['glass'] ?? false) === true;
+    $o['glassFx']  = hub_clean_glass($in['glassFx'] ?? []);
+    $o['barHide']  = ($in['barHide'] ?? true) !== false;
     $o['editBar']  = [];
     foreach (['home', 'links', 'info', 'cards', 'tasks'] as $app) if (($in['editBar'][$app] ?? '') === 'text') $o['editBar'][$app] = 'text';
     $o['font']     = in_array($in['font'] ?? '', ['default', 'trebuchet', 'system', 'verdana', 'tahoma', 'segoe', 'arial', 'georgia', 'palatino', 'mono', 'custom'], true) ? $in['font'] : 'default';
@@ -151,6 +155,19 @@ function hub_clean_settings(array $in): array {
     return $o;
 }
 /** The bar's tabs: every known page exactly once, in your order, with your name (empty = the default name). At least one stays visible. */
+/** (1.68.2) The Glass tab's values: whole numbers, each kept inside its range; anything else is left out (the built-in value is used). */
+function hub_glass_ranges(): array {
+    return ['bend' => [0, 100], 'edge' => [2, 40], 'fringe' => [0, 40], 'frost' => [0, 12], 'tint' => [0, 80], 'sat' => [50, 200]];
+}
+function hub_clean_glass($in): array {
+    $o = [];
+    if (!is_array($in)) return $o;
+    foreach (hub_glass_ranges() as $k => [$lo, $hi]) {
+        $v = $in[$k] ?? null;
+        if (is_int($v) || is_float($v) || (is_string($v) && is_numeric($v))) $o[$k] = max($lo, min($hi, (int)round((float)$v)));
+    }
+    return $o;
+}
 function hub_clean_pages($in): array {
     $out = []; $seen = [];
     foreach (is_array($in) ? $in : [] as $p) {
@@ -191,7 +208,7 @@ function hub_public_state(): array {
     $s = hub_settings(); $admin = hub_admin();
     $o = ['v' => HUB, 'admin' => $admin, 'setup' => hub_auth() === null, 'passkeys' => is_file(hub_jpath(hub_dir('core') . '/passkeys.json')),   // the login box offers a passkey when one is set up
           'tz' => $s['tz'] ?? 'Asia/Kolkata', 'siteName' => $s['siteName'], 'logo' => $s['logo'], 'nav' => $s['nav'], 'theme' => $s['theme'], 'accent' => $s['accent'], 'accentPg' => (object)$s['accentPg'],
-          'look' => $s['look'], 'homeBar' => $s['homeBar'], 'glass' => $s['glass'], 'editBar' => (object)$s['editBar'], 'font' => $s['font'], 'fontCustom' => $s['fontCustom'], 'colors' => ['dark' => (object)$s['colors']['dark'], 'light' => (object)$s['colors']['light'], 'pg' => (object)array_map(function ($a) { return (object)$a; }, $s['colors']['pg'])],
+          'look' => $s['look'], 'homeBar' => $s['homeBar'], 'glass' => $s['glass'], 'glassFx' => (object)$s['glassFx'], 'barHide' => $s['barHide'], 'editBar' => (object)$s['editBar'], 'font' => $s['font'], 'fontCustom' => $s['fontCustom'], 'colors' => ['dark' => (object)$s['colors']['dark'], 'light' => (object)$s['colors']['light'], 'pg' => (object)array_map(function ($a) { return (object)$a; }, $s['colors']['pg'])],
           'sizes' => (object)array_map(function ($a) { return (object)$a; }, $s['sizes']), 'pages' => $s['pages']];
     if ($o['setup']) {   // brand-new site: make sure the one-time code file exists, and say where it is
         hub_setup_code();

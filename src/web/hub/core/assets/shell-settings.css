@@ -763,3 +763,7 @@ html[data-theme="light"] #ix-page .ix-snav .ix-sp.warn{color:#8a3a06}html[data-t
 #ix-page .ix-ec.good .ix-ec-i,#ix-page .ix-ec.danger .ix-ec-i,#ix-page .ix-tile.good .ix-tile-i,#ix-page .ix-tile.warn .ix-tile-i{color:#fff;
   background:linear-gradient(180deg,color-mix(in srgb,var(--tc) 80%,#fff),var(--tc) 55%,color-mix(in srgb,var(--tc) 88%,#000))}
 #ix-page .ix-mypre .ix-dev-i{box-shadow:none}
+
+/* (1.68.2) Appearance > Glass: each slider's name with what it does on a line under it */
+#ix-page .ix-gxf label small{display:block;margin-top:2px;color:var(--ix-mu);font-size:12.5px;font-weight:400}
+#ix-page .ix-gxf{margin-bottom:16px}
