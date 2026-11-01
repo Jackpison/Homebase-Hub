@@ -105,7 +105,7 @@ try:
         pg.goto(s.base + '/web/settings/#nav'); wait_js(pg, "!!document.querySelector('#ix-pgl .ix-pgr')", 20000)
         sf = lambda: pg.evaluate("(() => { const f = document.getElementById('ix-sf'), b = document.getElementById('ix-save'); return [!f.hidden && !!f.offsetParent, b.disabled]; })()")
         check('L10 Tabs: the Save Settings bar is there from the start, greyed out', sf() == [True, True], sf())
-        sw = pg.evaluate("[...document.querySelectorAll('#ix-pgl [data-k=show]')].map(c => c.classList.contains('ix-sw') && Math.round(c.getBoundingClientRect().width))")
+        sw = pg.evaluate("[...document.querySelectorAll('#ix-pgl [data-k=show]')].map(c => c.classList.contains('ix-sw') && c.offsetWidth)")
         check('L11 Tabs: Show is a switch on every row', len(sw) >= 7 and all(w == 52 for w in sw), sw)
         pg.fill('#ix-pgl input[type=text] >> nth=1', 'My Links')
         check('L12 ...renaming a tab turns Save Settings on', until(lambda: sf() == [True, False], 4000), sf())
@@ -231,7 +231,7 @@ try:
         sw, bad = 0, []
         for sec in ('general', 'nav', 'look', 'themes', 'colors', 'security', 'telegram', 'backup', 'health', 'domains', 'updates'):
             pg.goto(s.base + '/web/settings/#' + sec); wait_js(pg, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); pg.wait_for_timeout(500)
-            r = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => [e.id || e.dataset.k || e.dataset.t || e.dataset.grp || '?', Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
+            r = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => [e.id || e.dataset.k || e.dataset.t || e.dataset.grp || '?', e.offsetWidth, e.offsetHeight])")
             sw += len(r); bad += [(sec, x) for x in r if x[1] != 52 or x[2] != 26]
         pg.goto(s.base + '/web/settings/#themes'); wait_js(pg, "!!document.getElementById('ix-pacc')", 20000)
         pacc = pg.evaluate("(() => { const r = document.getElementById('ix-pacc').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })()")
@@ -326,7 +326,7 @@ try:
             tc.add_init_script("try { localStorage.setItem('hub-theme', '%s'); } catch (e) {}" % theme); tq = tc.new_page()
             for sec in ('look', 'themes', 'backup'):
                 tq.goto(s.base + '/web/settings/#' + sec); wait_js(tq, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); tq.wait_for_timeout(500)
-                got = tq.evaluate("[document.documentElement.dataset.theme || '', ...[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height))]")
+                got = tq.evaluate("[document.documentElement.dataset.theme || '', ...[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => e.offsetWidth + 'x' + e.offsetHeight)]")
                 seen.add(got[0])
                 if len(got) < 2 or any(x != '52x26' for x in got[1:]): small.append((theme, sec, got))
             tc.close()

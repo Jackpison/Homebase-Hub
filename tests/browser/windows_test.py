@@ -30,7 +30,7 @@ AUDIT = """(id => {
       if (!vis(c) || c.type === 'file') continue;
       if (!inCard(c)) bad.push('a loose ' + c.tagName.toLowerCase() + (c.id ? '#' + c.id : ''));
       if (c.type === 'radio' && !c.closest('.ix-srow,.ix-sgc,[role=radiogroup]')) bad.push('a radio outside a row: ' + c.name);
-      if (c.classList.contains('ix-sw')) { const r = c.getBoundingClientRect(); if (Math.round(r.width) !== 52 || Math.round(r.height) !== 26) bad.push('switch ' + Math.round(r.width) + 'x' + Math.round(r.height) + ' ' + c.id); }
+      if (c.classList.contains('ix-sw')) { const w = c.offsetWidth, h = c.offsetHeight; if (w !== 52 || h !== 26) bad.push('switch ' + w + 'x' + h + ' ' + c.id); }   // the switch's own size: the hover tilt (1.65.0) changes only the drawn box
       else if (['text', 'search', 'password', 'url', 'number', 'email', 'date', 'time', ''].includes(c.type) && !c.closest('.swatch') && getComputedStyle(c).borderRadius !== '10px') bad.push('field radius ' + getComputedStyle(c).borderRadius + ' ' + (c.id || c.name || c.type));
     }
     for (const g of body.querySelectorAll('.ix-grp')) if (vis(g) && g.getBoundingClientRect().height < 24) bad.push('an empty card');
@@ -128,7 +128,7 @@ try:
         pg.goto(s.base + '/'); wait_js(pg, "!!document.getElementById('settingsSheet')", 20000)
         pg.evaluate("document.getElementById('settingsSheet').showModal()")
         wait_js(pg, "[...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 52; })", 5000)   # after the opening animation, not a fixed pause
-        d = pg.evaluate("[document.getElementById('settingsSheet').open, [...document.querySelectorAll('#settingsSheet .group')].length, [...document.querySelectorAll('#settingsSheet .switch')].every(c => { const r = c.getBoundingClientRect(); return Math.round(r.width) === 52 && Math.round(r.height) === 26; })]")
+        d = pg.evaluate("[document.getElementById('settingsSheet').open, [...document.querySelectorAll('#settingsSheet .group')].length, [...document.querySelectorAll('#settingsSheet .switch')].every(c => c.offsetWidth === 52 && c.offsetHeight === 26)]")
         check('W Home Settings: open, in groups, with 52 x 26 switches', d[0] and d[1] >= 3 and d[2], d)
         if SHEET:
             pg.evaluate("(() => { const d = document.getElementById('settingsSheet'); d.style.maxHeight = 'none'; d.style.height = 'auto'; const b = d.querySelector('.sb'); b.style.maxHeight = 'none'; b.style.overflow = 'visible'; })()")
