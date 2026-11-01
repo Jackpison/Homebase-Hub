@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.64.9 | Save Settings in Links and Cards is quick on big pages: it no longer redraws every link or card when only the look or the title changed |
 | 1.64.8 | When the host's firewall answers with a CAPTCHA or a block page, the site says so and stops sending for a minute so the host does not count more |
 | 1.64.7 | Far fewer requests: moving the mouse over the bar no longer loads whole pages in the background |
 | 1.64.6 | If your web host's firewall blocks a save (a plain "403 Forbidden" page), the site now says so, keeps you logged in and keeps your change |
@@ -111,6 +112,19 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.64.9
+
+### Quicker
+
+- **Links: Save Settings, Colors and Text Sizes** redraw the links only when a setting changes what is drawn (Icons from Google, Show Visit Counts, Only Me). Colors, text sizes and the title change at once without it. With 1,500 links and a 4 times slower processor: about 0.6 s down to about 0.13 s.
+- **Cards: Save Settings** changes the title without redrawing every card. With 400 cards: the longest pause went from about 0.8 s to about 0.3 s.
+
+### Checked
+
+- The speed test saves only the title in Links and Cards and checks that the links and rows are the same as before (not drawn again), and that turning Show Visit Counts on or off still redraws.
 
 ---
 

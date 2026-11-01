@@ -421,9 +421,9 @@ async function load() {
 
 // Saving: changes made while a save is running are sent together right after it.
 let saving = Promise.resolve(), inFlight = false, again = false, pendingMsg = null;
-function persist(msg = 'Saved') {
+function persist(msg = 'Saved', redraw = true) {   // redraw false: only the look changed (colors, text sizes, the title), which the CSS variables already show
   if (msg) pendingMsg = msg;
-  render();
+  if (redraw) render(); else renderTabs();
   if (inFlight) { again = true; return saving; }
   inFlight = true;
   saving = (async () => {
@@ -564,7 +564,7 @@ function openImport() {
   if (!S.auth) return toast('Log in to import bookmarks.', true);
   importer ||= new Promise((ok, no) => {
     const s = document.createElement('script');
-    s.src = 'assets/links-import.js?v=1.64.8';
+    s.src = 'assets/links-import.js?v=1.64.9';
     s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
     s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
     document.head.append(s);
@@ -1115,7 +1115,10 @@ $('#linkSave').onclick = e => {
 /* ---------- settings + colors (each dialog edits a draft, previews live, reverts on cancel) ---------- */
 let draft = null, draftSaved = false;
 const openDraft = () => { draft = JSON.parse(JSON.stringify(S.data.settings || {})); draftSaved = false; };
-function commitDraft(dlg, msg) { const keepV = S.data.settings && S.data.settings.vault; S.data.settings = draft; if (keepV) S.data.settings.vault = keepV; else delete S.data.settings.vault; draftSaved = true; dlg.close(); applyLook(); persist(msg); }
+// (1.64.9) Saving Settings, Colors or Text Sizes redraws every link only when a setting changes what is drawn (icons from Google, visit counts,
+// Only Me). Colors, text sizes and the title are CSS variables and the browser tab's name: with 1,500 links the full redraw took about a second.
+const drawnBy = s => [!!(s && s.webIcons), !(s && s.visitCounts === false), !!(s && s.private)].join();
+function commitDraft(dlg, msg) { const redraw = drawnBy(S.data.settings) !== drawnBy(draft); const keepV = S.data.settings && S.data.settings.vault; S.data.settings = draft; if (keepV) S.data.settings.vault = keepV; else delete S.data.settings.vault; draftSaved = true; dlg.close(); applyLook(); persist(msg, redraw); }
 ['#setDlg', '#colorDlg', '#textDlg'].forEach(id => $(id).addEventListener('close', () => { if (!draftSaved) applyLook(); }));
 
 /* colors */

@@ -4,7 +4,7 @@
 compression would: gzip). The limits below are about twice the numbers measured at 1.61.0 (the first paint near 1.3 to 1.8 s, loaded under 2 s); a change that makes a page much slower or
 heavier fails here, so it is noticed before a release, not after.
     python3 tests/browser/speed_test.py build/site-update-X.Y.Z.zip   (port 8983; Chromium only: it uses the DevTools throttling)"""
-import gzip, os, sys
+import gzip, json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import SEED
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch
@@ -98,6 +98,24 @@ try:
         r2 = cp_.evaluate("fetch('api.php', {method: 'POST', body: '{}'}).then(r => r.status)"); r3 = cp_.evaluate("fetch('api.php?action=get').then(r => r.status)")
         check('V17 a CAPTCHA page from the host is told apart, and answered as "could not reach"', r1 == 503 and n1 == 1 and cp_.evaluate("/CAPTCHA if it asks/.test(document.body.innerText)"), (r1, n1))
         check('V18 ...and the next requests are not sent at all for a minute (so the host does not count more)', r2 == 503 and r3 == 503 and len(hits) == 1, (r2, r3, len(hits)))
+        # Save Settings does not redraw every link or card when only the look or the title changed (1.64.9)
+        sp = b.new_context(viewport={'width': 1300, 'height': 800}).new_page(); browser_login(sp, s.base)
+        hdr = {'Content-Type': 'application/json', 'X-Hub-CSRF': s.csrf, 'X-Requested-With': 'bookmarks'}
+        tabs = [{'id': 'tk', 'title': 'Big', 'categories': [{'id': 'c%d' % c, 'title': 'Category %d' % c, 'links': [{'title': 'Site %d %d' % (c, l), 'url': 'https://s%d-%d.example.com' % (c, l)} for l in range(10)]} for c in range(12)]}]
+        s.req(s.base + '/web/links/api.php?action=save', json.dumps({'data': {'tabs': tabs}}).encode(), 'POST', hdr)
+        sp.goto(s.base + '/web/links/'); wait_js(sp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.cat').length > 0", 30000)
+        sp.evaluate("window.__a = document.querySelector('.cat a')")
+        sp.evaluate("document.getElementById('settingsBtn').click()"); sp.wait_for_selector('#setDlg[open]'); sp.fill('#sTitle', 'Quick Title'); sp.click('#setSave')
+        wait_js(sp, "document.title === 'Quick Title' && !document.getElementById('setDlg').open", 5000)
+        check('V19 Links: saving only the title keeps the links as they are (no full redraw)', sp.evaluate("document.contains(window.__a) && window.__a === document.querySelector('.cat a')"))
+        sp.evaluate("document.getElementById('settingsBtn').click()"); sp.wait_for_selector('#setDlg[open]'); sp.click('#sVisits'); sp.click('#setSave')
+        wait_js(sp, "!document.getElementById('setDlg').open", 5000); sp.wait_for_timeout(300)
+        check('V20 Links: a setting that changes what is drawn (visit counts) still redraws', sp.evaluate("!document.contains(window.__a)"))
+        sp.goto(s.base + '/web/cards/'); wait_js(sp, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('#list .row.item').length > 0", 30000)
+        sp.evaluate("window.__r = document.querySelector('#list .row.item')")
+        sp.evaluate("[...document.querySelectorAll('[data-hub=item]')].find(e => e.getAttribute('data-hub-label') === 'Cards Settings').click()"); sp.wait_for_selector('#tdlg[open]')
+        sp.fill('#ttl', 'My Cards'); sp.click('#tsave'); wait_js(sp, "!document.getElementById('tdlg').open", 5000)
+        check('V21 Cards: saving the title changes it and keeps the rows as they are', sp.evaluate("document.title === 'My Cards' && document.contains(window.__r)"), sp.evaluate('document.title'))
         check('Vend no page error', not errs, errs)
         b.close()
 finally:

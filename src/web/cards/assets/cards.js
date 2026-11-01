@@ -544,7 +544,7 @@ $("tsave").onclick=()=>{
   const t=$("ttl").value.trim();
   ST.title=(t&&t!==DEF_TITLE)?t:"";
   delete ST.icon;   // page icons are gone: one logo for the whole site
-  persist();applySettings();render();tdlg.close();
+  persist();applySettings();tdlg.close();   // (1.64.9) only the title changed: no need to redraw every card
 };
 
 /* login: the site's one login box */
