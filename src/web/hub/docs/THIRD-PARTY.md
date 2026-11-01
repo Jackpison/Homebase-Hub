@@ -39,7 +39,7 @@ Last checked 23 October 2026 with `npm audit` against the exact versions in the 
 | libheif-js (Tools) | 1.23.5 | No advisory. The newest release. |
 | jsPDF, @cantoo/pdf-lib, Tesseract.js, qpdf, JsBarcode | 4.2.1, 2.11.1, 7.0.0, 0.3.0, 3.12.3 | No advisory. `npm audit` on `tools-app/package-lock.json` finds nothing. React, JSZip, Sortable and framer-motion are no longer used. |
 
-## Uiverse elements (1.65.0 and 1.65.1)
+## Uiverse elements (1.65.0 to 1.65.3)
 
 A few small pieces of the site's look are adapted from elements shared on [Uiverse](https://uiverse.io) under the MIT licence. They were
 rewritten for the site (its own class names, sizes, colours, keyboard and reduce-motion support; no React or other library). Each one is
@@ -52,6 +52,7 @@ credited again in a comment where it is used (`hub/core/assets/shell.css`).
 | Button hover (slanted fill) | text buttons | https://uiverse.io/CristianMontoya98/nasty-fish-9 | CristianMontoya98 |
 | Erase button (X slides across) | Backup & Restore › Start Over (1.65.1) | https://uiverse.io/cssbuttons-io/stupid-impala-51 | cssbuttons-io |
 | Edit bar (round buttons, name bubble) | the edit bar of Links, Info and Home (1.65.1) | https://uiverse.io/firemonste_8052/lucky-catfish-97 | firemonste_8052 |
+| Accent Color picker (squares that swell around the mouse) | Settings › Appearance › Look (1.65.3) | https://uiverse.io/Cobp/horrible-quail-18 | Cobp |
 | Hover glow (toned down) | buttons that had no hover change (1.65.1) | https://uiverse.io/mrhyddenn/moody-badger-62 | mrhyddenn |
 
 ## MIT License (Uiverse elements)

@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.65.3 | Settings › Appearance › Look: a new Accent Color picker, ten squares that swell around the mouse |
 | 1.65.2 | The edit bar's Done tick shows again; Health's Disk Used no longer shows the server's free space |
 | 1.65.1 | The theme button is the sun and moon again; a login card when logged out; search results no longer cut off; Keyboard Shortcuts in search and Settings › General; a new edit bar, Erase Everything button and hover glow |
 | 1.65.0 | New look for every page: white switches, a day/night theme switch, hold to delete, swipe in Tasks, tooltips, a bouncing loader, button hover, count-up numbers, and a new Presets screen with Surprise Me |
@@ -118,6 +119,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.65.3
+
+### Changed
+
+- **Accent Color** (Settings › Appearance › Look): the eight round dots are now a row of ten squares. On a computer, the square under the mouse grows and its neighbours grow a little, and a small bubble shows its colour code. A click chooses it: it gets a ring and a tick, the bubble says "✓ Chosen", and the site shows the colour at once (Save Settings keeps it, as before). The arrow keys move along the row and Enter or Space chooses. On a phone a tap chooses and nothing grows; nothing grows either when your device asks for reduced motion. Your Own Color and the hex box stay after the row. An accent you already saved that is not one of the ten keeps working and shows in the hex box. Adapted from Uiverse (Cobp, MIT).
+
+### Checked
+
+- polish_test P28 to P30: ten squares, the hovered one and its neighbours grow (1.5, 1.3, 1.15), a click chooses (screen readers hear "chosen", the site takes the colour), the arrow keys and Enter. settings_test S14 counts ten colours.
 
 ---
 

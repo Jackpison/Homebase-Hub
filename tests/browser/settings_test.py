@@ -101,7 +101,7 @@ try:
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
         check('S13 Appearance has Look, Presets and Colors; Look shows Font, Theme, Navigation Style (with the start-page bar switch) and Accent Color (the "Same Look on Every Page" switch is gone)',
               ok and cards == ['Font', 'Theme', 'Navigation Style', 'Accent Color'] and pg.evaluate("!!document.querySelector('#ix-pc .ix-navpick') && !!document.querySelector('#ix-hb')") and pg.evaluate("!document.querySelector('#ix-look')"), (pg.evaluate(tabs), cards))
-        check('S14 Look offers 8 accent colors and your own', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 8 and pg.evaluate("!!document.querySelector('#ix-acc')"))
+        check('S14 Look offers 10 accent colors (the 1.65.3 picker) and your own', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 10 and pg.evaluate("!!document.querySelector('#ix-acc')"))
         pg.click('#ix-pane .ix-subt [data-grp="themes"]')
         wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)
         n = pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # the dark-mode list
@@ -113,9 +113,9 @@ try:
         at('#look', "!!document.querySelector('#ix-font')")
         pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); until(lambda: s.get('state').get('font') == 'georgia', 5000)
         at('#look', "!!document.querySelector('#ix-font')")
-        pg.click('#ix-pc .ix-sw [data-c="#4cc9f0"]'); pg.click('#ix-save'); until(lambda: s.get('state').get('accent') == '#4cc9f0', 5000)
+        pg.click('#ix-pc .ix-sw [data-c="#0ea5e9"]'); pg.click('#ix-save'); until(lambda: s.get('state').get('accent') == '#0ea5e9', 5000)
         st = s.get('state')
-        check('S16 a later save keeps the font chosen earlier', st.get('font') == 'georgia' and st.get('accent') == '#4cc9f0', (st.get('font'), st.get('accent')))
+        check('S16 a later save keeps the font chosen earlier', st.get('font') == 'georgia' and st.get('accent') == '#0ea5e9', (st.get('font'), st.get('accent')))
         s.post('settings', {'settings': {'font': 'default', 'accent': '#ffc21a'}})
         # the site search: where to look, and one tab; no field checkboxes or "Whole Words Only"
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!document.querySelector('#ix-q')", 15000)

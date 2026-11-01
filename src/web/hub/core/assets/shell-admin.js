@@ -380,7 +380,10 @@
     };
   }
   function pLook(p) {
-    var sw = ['#ffc21a', '#ffd45c', '#ff6a3d', '#ff2d95', '#b392f0', '#2d8cff', '#4cc9f0', '#5fd68a'];
+    // (1.65.3) the Accent Color picker, adapted from Uiverse.io by Cobp, "horrible-quail-18" (MIT; see web/hub/docs/THIRD-PARTY.md): ten squares in a row that
+    // swell around the mouse, the hex code in a bubble; a click chooses (the original copies), the arrow keys move along the row
+    var sw = ['#ffc21a', '#fb923c', '#e11d48', '#f472b6', '#a78bfa', '#8b5cf6', '#3b82f6', '#0ea5e9', '#10b981', '#84cc16'];
+    var tickOn = function (c) { var n = parseInt(c.slice(1), 16); return ((n >> 16) * 299 + (n >> 8 & 255) * 587 + (n & 255) * 114) / 1000 > 140 ? '#111' : '#fff'; };
     p.innerHTML = '<h3>Font</h3><p>One font for every page.</p><select id="ix-font" class="ix-sel" aria-label="Font">' +
         FONTS.map(function (f) { return '<option value="' + f[0] + '"' + (draft.font === f[0] || (!draft.font && f[0] === 'default') ? ' selected' : '') + '>' + esc(f[1]) + '</option>'; }).join('') + '</select>' +
       '<input type="text" id="ix-fontc" maxlength="40" placeholder="A font installed on your device, like Calibri" value="' + esc(draft.fontCustom || '') + '" aria-label="Font Name"' + (draft.font === 'custom' ? '' : ' hidden') + '>' +
@@ -389,11 +392,18 @@
       '<h3>Navigation Style</h3><p>For every page. The Top Bar hides while you scroll.</p>' +
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
       '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
-      '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw">' + sw.map(function (c) { return '<button type="button" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (draft.accent === c) + '"></button>'; }).join('') +
+      '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw"><div class="ix-apk" role="group" aria-label="Accent Color">' + sw.map(function (c, i) {
+        var on = draft.accent === c, first = sw.indexOf(draft.accent) < 0 ? i === 0 : on;
+        return '<button type="button" data-c="' + c + '" data-hex="' + c + '" style="--c:' + c + '" aria-label="Accent color ' + c + (on ? ', chosen' : '') + '" aria-pressed="' + on + '" tabindex="' + (first ? 0 : -1) + '">' +
+          '<svg class="ix-apt" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" stroke="' + tickOn(c) + '"/></svg></button>'; }).join('') + '</div>' +
       '<label class="ix-swc" title="Your Own Color"><input type="color" id="ix-acc" value="' + esc(draft.accent) + '" aria-label="Your Own Color"></label><input type="text" class="ix-hex" id="ix-acch" maxlength="7" value="' + esc(draft.accent) + '" aria-label="Accent Color Hex" spellcheck="false"></div>' +
       '<p class="ix-note">More colors: the Colors tab. Ready-made looks: the Presets tab.</p>';
     bindSeg(p, function (k, v) { draft[k] = v; if (k === 'theme') K.previewTheme(v); });
     p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { setAcc(b.dataset.c); }; });
+    var apk = [].slice.call(p.querySelectorAll('.ix-apk [data-c]'));   // the arrow keys move along the row (one stop for Tab)
+    apk.forEach(function (b, i) { b.onkeydown = function (e) {
+      var d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!d) return; e.preventDefault();
+      var n = apk[(i + d + apk.length) % apk.length]; apk.forEach(function (x) { x.tabIndex = -1; }); n.tabIndex = 0; n.focus(); }; });
     p.querySelector('#ix-acc').oninput = function (e) { setAcc(e.target.value); };
     p.querySelector('#ix-acch').oninput = function (e) { var h = hexOf(e.target.value); e.target.classList.toggle('bad', !h); if (h) setAcc(h, true); };
     p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
@@ -403,7 +413,7 @@
     p.querySelector('#ix-fontc').oninput = function (e) { draft.fontCustom = e.target.value; preview(); };
     function setAcc(c, fromText) {
       draft.accent = c.toLowerCase(); if (!fromText) p.querySelector('#ix-acch').value = draft.accent; p.querySelector('#ix-acc').value = draft.accent;
-      p.querySelectorAll('[data-c]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.c === draft.accent ? 'true' : 'false'); });
+      p.querySelectorAll('[data-c]').forEach(function (b) { var on = b.dataset.c === draft.accent; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.setAttribute('aria-label', 'Accent color ' + b.dataset.c + (on ? ', chosen' : '')); });
       preview();
     }
   }

@@ -147,6 +147,21 @@ try:
         check('P24 What\'s New: a light runs around a calm border (no heavy outline)', bm == ['ix-beam', True], bm)
         pg.wait_for_load_state('networkidle')
 
+        # ---- (1.65.3) the Accent Color picker ----
+        pg.goto(s.base + '/web/settings/#look'); wait_js(pg, "document.querySelectorAll('.ix-apk [data-c]').length === 10", 20000); pg.wait_for_timeout(400)
+        n = pg.evaluate("document.querySelectorAll('.ix-apk [data-c]').length")
+        pg.hover('.ix-apk [data-c="#3b82f6"]'); pg.wait_for_timeout(700)
+        sc = pg.evaluate("[...document.querySelectorAll('.ix-apk [data-c]')].map(b => { const m = getComputedStyle(b).transform; return m === 'none' ? 1 : Math.round(parseFloat(m.split('(')[1]) * 100) / 100; })")
+        bub = pg.evaluate("getComputedStyle(document.querySelector('.ix-apk [data-c=\"#3b82f6\"]'), '::before').opacity")
+        check('P28 Accent Color: ten squares; the one under the mouse grows 1.5x, its neighbours 1.3x and 1.15x, and its code shows in a bubble', n == 10 and sc[6] == 1.5 and sc[5] == 1.3 and sc[7] == 1.3 and sc[4] == 1.15 and sc[8] == 1.15 and sc[0] == 1 and float(bub) > .9, (n, sc, bub))
+        pg.click('.ix-apk [data-c="#3b82f6"]'); pg.mouse.move(5, 5); pg.wait_for_timeout(300)
+        ch = pg.evaluate("(() => { const b = document.querySelector('.ix-apk [data-c=\"#3b82f6\"]'); return [b.getAttribute('aria-pressed'), b.getAttribute('aria-label'), document.getElementById('ix-acch').value, getComputedStyle(document.documentElement).getPropertyValue('--ix-accent').trim().toLowerCase()]; })()")
+        check('P29 a click chooses it: marked chosen (for screen readers too), the hex box follows and the site previews the colour', ch == ['true', 'Accent color #3b82f6, chosen', '#3b82f6', '#3b82f6'], ch)
+        pg.focus('.ix-apk [data-c="#3b82f6"]'); pg.keyboard.press('ArrowRight'); pg.keyboard.press('Enter'); pg.wait_for_timeout(200)
+        kb = pg.evaluate("[document.activeElement.dataset.c, document.getElementById('ix-acch').value, [...document.querySelectorAll('.ix-apk [data-c]')].filter(b => b.tabIndex === 0).length]")
+        check('P30 the arrow keys move along the row (one Tab stop) and Enter chooses', kb == ['#0ea5e9', '#0ea5e9', 1], kb)
+        pg.click('#ix-discard') if pg.query_selector('#ix-discard:not([disabled])') else None
+
         # ---- Presets and Surprise Me ----
         pg.goto(s.base + '/web/settings/#themes'); wait_js(pg, "!!document.getElementById('ix-sur') && !!document.getElementById('ix-surn').textContent", 20000)
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pgrid .ix-preset')].slice(0, 3).map(c => [!!c.querySelector('.ix-pv i em'), c.querySelectorAll('.ix-pv b').length, !!c.querySelector('.ix-pn'), !!c.querySelector('.ix-pgl')])")
