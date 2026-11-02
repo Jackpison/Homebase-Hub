@@ -31,7 +31,7 @@ AUDIT = """(id => {
       if (!inCard(c)) bad.push('a loose ' + c.tagName.toLowerCase() + (c.id ? '#' + c.id : ''));
       if (c.type === 'radio' && !c.closest('.ix-srow,.ix-sgc,[role=radiogroup]')) bad.push('a radio outside a row: ' + c.name);
       if (c.classList.contains('ix-sw')) { const w = c.offsetWidth, h = c.offsetHeight; if (w !== 52 || h !== 26) bad.push('switch ' + w + 'x' + h + ' ' + c.id); }   // the switch's own size: the hover tilt (1.65.0) changes only the drawn box
-      else if (['text', 'search', 'password', 'url', 'number', 'email', 'date', 'time', ''].includes(c.type) && !c.closest('.swatch') && getComputedStyle(c).borderRadius !== '10px') bad.push('field radius ' + getComputedStyle(c).borderRadius + ' ' + (c.id || c.name || c.type));
+      else if (['text', 'search', 'password', 'url', 'number', 'email', 'date', 'time', ''].includes(c.type) && !c.closest('.swatch') && getComputedStyle(c.closest('.ix-uf') || c).borderRadius !== (c.closest('.ix-uf') ? '12px' : '10px')) bad.push('field radius ' + getComputedStyle(c).borderRadius + ' ' + (c.id || c.name || c.type));   // (1.69.1) a link field: its frame is 12 px round
     }
     for (const g of body.querySelectorAll('.ix-grp')) if (vis(g) && g.getBoundingClientRect().height < 24) bad.push('an empty card');
     if (body.scrollWidth > body.clientWidth + 1) bad.push('wider than the window (' + body.scrollWidth + ' > ' + body.clientWidth + ')');

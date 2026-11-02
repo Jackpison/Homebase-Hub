@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.69.1 | The link field (Uiverse): a label in front and a copy icon for Links' Address, Files' Share Link, Health › Domains, the Telegram cron lines and the recovery and two-step keys |
 | 1.69.0 | Step-by-step boxes (React Bits' Stepper) for New Site Setup, Links Import, the first Encryption Passphrase, Restore, Start Over, Files Share Link and Add a Passkey, and a new Home Tour |
 | 1.68.5 | Glass windows, menus and search results let the page show through: a much lighter layer behind a glass window and a brighter rim |
 | 1.68.4 | One glass for the whole site: the bar, the dock and the Home widgets share Settings › Appearance › Glass, with Solid, Tone, Rim Light, Shadow, Liquid only over photos, glass in more places and a live preview |
@@ -131,6 +132,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.69.1
+
+### Added
+
+- **The link field** (the idea of Uiverse "itchy-dodo-49" by Bodyhc, MIT, redone in plain HTML and CSS on the site's colours; credited in THIRD-PARTY.md): a label in front, the field, and a copy icon whose tip says COPY, then COPIED. The edge lights up in the accent colour while you type. One shared piece (shell.js `HUB.linkField`), used in:
+  - **Links › Add or Edit Link › Address:** https:// sits in front (a tap gives http://). A typed or pasted https:// or http:// moves into it; an address with another scheme (mailto:, ftp://) hides it. An arrow opens the link in a new tab; the copy icon copies the whole address. What is saved is the whole address, as before.
+  - **Files › Share Link:** "Link" in front, read-only, with the copy icon (it replaces the Copy button).
+  - **Settings › Health › Domains and Uptime:** https:// in front of the add field; a pasted https:// is dropped, as only the host is kept.
+  - **Settings › Telegram › Setup › Keep It on Schedule:** the two cron lines ("Cron" and "curl"). The key in the web address shows as dots; Copy gives the whole line with the real key.
+  - **Security › Recovery Key** (also in the first-passphrase steps and the Security Checklist) and **Two-Step Login's key:** "Key" in front, read-only, with the copy icon.
+
+### Changed
+
+- Where the browser can't copy (a page opened over plain http), the field is selected and a note says to press Ctrl+C.
 
 ---
 

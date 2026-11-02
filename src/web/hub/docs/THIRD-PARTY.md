@@ -39,7 +39,7 @@ Last checked 23 October 2026 with `npm audit` against the exact versions in the 
 | libheif-js (Tools) | 1.23.5 | No advisory. The newest release. |
 | jsPDF, @cantoo/pdf-lib, Tesseract.js, qpdf, JsBarcode | 4.2.1, 2.11.1, 7.0.0, 0.3.0, 3.12.3 | No advisory. `npm audit` on `tools-app/package-lock.json` finds nothing. React, JSZip, Sortable and framer-motion are no longer used. |
 
-## Uiverse elements (1.65.0 to 1.65.3)
+## Uiverse elements (1.65.0 to 1.69.1)
 
 A few small pieces of the site's look are adapted from elements shared on [Uiverse](https://uiverse.io) under the MIT licence. They were
 rewritten for the site (its own class names, sizes, colours, keyboard and reduce-motion support; no React or other library). Each one is
@@ -55,6 +55,7 @@ credited again in a comment where it is used (`hub/core/assets/shell.css`).
 | Accent Color picker (squares that swell around the mouse) | Settings › Appearance › Look (1.65.3) | https://uiverse.io/Cobp/horrible-quail-18 | Cobp |
 | Search box border (a gradient edge that turns and spins) | The top bar's search (1.67.0) | https://uiverse.io/Lakshay-art/curvy-earwig-22 | Lakshay-art |
 | Hover glow (toned down) | buttons that had no hover change (1.65.1) | https://uiverse.io/mrhyddenn/moody-badger-62 | mrhyddenn |
+| Link field (a label in front, a copy icon with a COPY tip) | Links › Address, Files › Share Link, Health › Domains, Telegram › Setup, the recovery and two-step keys (1.69.1) | https://uiverse.io/Bodyhc/itchy-dodo-49 | Bodyhc |
 
 ## MIT License (Uiverse elements)
 

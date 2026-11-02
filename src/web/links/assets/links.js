@@ -576,7 +576,7 @@ function openImport() {
   if (!S.auth) return toast('Log in to import bookmarks.', true);
   importer ||= new Promise((ok, no) => {
     const s = document.createElement('script');
-    s.src = 'assets/links-import.js?v=1.69.0';
+    s.src = 'assets/links-import.js?v=1.69.1';
     s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
     s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
     document.head.append(s);
@@ -1072,12 +1072,15 @@ function showIconPreview() {
   const v = $('#lIcon').value.trim(), p = $('#lIconPrev'); p.innerHTML = '';
   if (v) { const img = h('img', { src: mediaUrl(safeUrl(v)), alt: '' }); img.onerror = () => img.remove(); p.append(img); }
 }
+// (1.69.1) the Address field keeps https:// (or http://) in front of the box: these give and take the whole address
+const urlNow = () => window.HUB && HUB.linkValue ? HUB.linkValue($('#lUrl')) : $('#lUrl').value.trim();
+const linkSet = u => { if (window.HUB && HUB.linkSet) HUB.linkSet($('#lUrl'), u); else $('#lUrl').value = u; };
 function openLink(cat, i) {
   const l = i >= 0 ? cat.links[i] : {};
   linkCtx = { cat, i, oldHost: host(l.url || ''), oldIcon: l.icon || '' };
   $('#linkDlgTitle').textContent = i >= 0 ? 'Edit link' : `Add link to ${cat.title}`;
   $('#lTitle').value = l.title || '';
-  $('#lUrl').value = l.url || '';
+  linkSet(l.url || '');
   $('#lIcon').value = l.icon || ''; showIconPreview();
   $('#lExtra').value = (l.extra || []).map(x => `${x.title} | ${x.url}`).join('\n');
   const sel = $('#lCat'); sel.innerHTML = '';
@@ -1096,7 +1099,7 @@ const nameGuess = url => { const d = host(url).replace(/^www\./, ''); return d ?
 const fetchTitle = url => api('title', { url: safeUrl(url) }).then(j => j.title);
 let titleSeq = 0, titleUrl = ''; // the box stays empty while loading, so your typing is never mixed in
 function autoTitle(force) {
-  const url = $('#lUrl').value.trim(), name = $('#lTitle');
+  const url = urlNow(), name = $('#lTitle');
   if (!url || !isWeb(safeUrl(url))) return;
   if (!force && (name.value.trim() || titleUrl === url)) return; // has a name, or already on its way
   const seq = ++titleSeq, btn = $('#lTitleFetch');
@@ -1118,7 +1121,7 @@ $('#lUrl').addEventListener('change', () => autoTitle(false));
 $('#lUrl').addEventListener('paste', () => setTimeout(() => autoTitle(false)));
 $('#lTitleFetch').onclick = () => { $('#linkErr').textContent = ''; autoTitle(true); };
 $('#lIconFetch').onclick = async e => {
-  const btn = e.currentTarget, url = $('#lUrl').value.trim();
+  const btn = e.currentTarget, url = urlNow();
   if (!url) { $('#linkErr').textContent = 'Enter the URL first.'; return; }
   btn.disabled = true; btn.textContent = 'Fetching…'; $('#linkErr').textContent = '';
   try { $('#lIcon').value = await fetchIcon(url); showIconPreview(); }
@@ -1127,7 +1130,7 @@ $('#lIconFetch').onclick = async e => {
 };
 $('#linkSave').onclick = e => {
   e.preventDefault();
-  const url = $('#lUrl').value.trim();
+  const url = urlNow();
   if (!url) { $('#linkErr').textContent = 'Enter the URL.'; return; }
   // saved before the page title arrived: keep the quick guess now, swap in the real title when it comes
   const typed = $('#lTitle').value.trim();

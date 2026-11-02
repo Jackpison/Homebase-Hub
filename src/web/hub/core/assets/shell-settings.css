@@ -138,8 +138,6 @@
 #ix-page .ix-steps b,#ix-page .ix-steps code{color:var(--ix-tx)}
 #ix-page .ix-fl2{display:block;margin:12px 0;font-size:13px;color:var(--ix-mu)}
 #ix-page .ix-fl2 .ix-row{margin-top:6px}
-#ix-page .ix-code{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;border:1px solid var(--ix-line);border-radius:10px;background:var(--ix-s1);margin-bottom:10px}
-#ix-page .ix-code code{flex:1;min-width:0;overflow-x:auto;white-space:nowrap;font-size:12.5px;color:var(--ix-tx)}
 #ix-page .ix-status small{color:var(--ix-mu2)}
 /* ---------- Settings: section header,unsaved changes,grouped nav ---------- */
 #ix-page .ix-ph{margin:-2px 0 6px}

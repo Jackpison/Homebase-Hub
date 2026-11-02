@@ -27,7 +27,7 @@
 (function (K) {
   'use strict';
   if (!K || K.impl) return;
-  var S = K.S, esc = K.esc, toast = K.toast, api = K.api, ICON = K.ICON, svg = K.svg, remember = K.remember, applySizes = K.applySizes, APP = K.APP, openDlg = K.openDlg, closeDlg = K.closeDlg, login = K.login, ROOT = K.ROOT, applyFont = K.applyFont, applyColors = K.applyColors, applyAttrs = K.applyAttrs, PG_APPS = K.PG_APPS, CORE = K.CORE, ASSETS = K.ASSETS, COLOR_DEFAULT = K.COLOR_DEFAULT, pageList = K.pageList, applyFavicon = K.applyFavicon, SIZE_SPEC = K.SIZE_SPEC, PAGE_DEF = K.PAGE_DEF, FONTS = K.FONTS, COLOR_KEYS = K.COLOR_KEYS, when = K.when, redraw = K.redraw, stepper = K.stepper;
+  var S = K.S, esc = K.esc, toast = K.toast, api = K.api, ICON = K.ICON, svg = K.svg, remember = K.remember, applySizes = K.applySizes, APP = K.APP, openDlg = K.openDlg, closeDlg = K.closeDlg, login = K.login, ROOT = K.ROOT, applyFont = K.applyFont, applyColors = K.applyColors, applyAttrs = K.applyAttrs, PG_APPS = K.PG_APPS, CORE = K.CORE, ASSETS = K.ASSETS, COLOR_DEFAULT = K.COLOR_DEFAULT, pageList = K.pageList, applyFavicon = K.applyFavicon, SIZE_SPEC = K.SIZE_SPEC, PAGE_DEF = K.PAGE_DEF, FONTS = K.FONTS, COLOR_KEYS = K.COLOR_KEYS, when = K.when, redraw = K.redraw, stepper = K.stepper, linkField = K.linkField;
   function D() { return document.getElementById('ix-dlg'); }
   /* element lookup: inside an open small dialog (Text Sizes) first, otherwise inside the Settings page */
   /* (1.65.1) a window that is closing (its 150 ms fade) no longer counts as open: right after the Keyboard Shortcuts window closed, a change of
@@ -1061,9 +1061,11 @@
               '</ol><div class="ix-row ix-sbnav"><button type="button" class="ix-btn" data-sb="back">Back</button><span></span><button type="button" class="ix-btn" data-sb="next">Next</button></div>' +
               ecCard('', ICON.clock, 'Keep It on Schedule', 'Messages and reminders are sent by a scheduled job (a cron job). Without one they only go out while one of your pages is open.',
                 '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +
-                '<div class="ix-code"><code id="nt-cmd">' + esc(n.cronCmd) + '</code><button type="button" class="ix-btn" data-copy="nt-cmd">' + svg(ICON.copy) + 'Copy</button></div>' +
+                linkField({ id: 'nt-cmd', value: n.cronCmd, prefix: 'Cron', readonly: true, label: 'Cron job command', cls: 'ix-uf-gap' }) +   // (1.69.1) the link field
                 '<p>If your host only accepts a web address, use this one instead and keep it private:</p>' +
-                '<div class="ix-code"><code id="nt-url">curl -s "' + esc(n.cronUrl) + '"</code><button type="button" class="ix-btn" data-copy="nt-url">' + svg(ICON.copy) + 'Copy</button></div>');
+                // the key in the address shows as dots; Copy gives the whole line
+                linkField({ id: 'nt-url', value: n.cronUrl, show: String(n.cronUrl).replace(/([?&]key=)[^&]+/, '$1•••••'), prefix: 'curl', readonly: true,
+                  copyText: 'curl -s "' + n.cronUrl + '"', label: 'Cron job web address', cls: 'ix-uf-gap' }));
           })()) +
 
         acc('bk', 'Backups', n.bkEvery ? bkTxt + (n.bkLast ? ' · last ' + esc(ago(n.bkLast)) : '') : 'Have Telegram send you a full backup file regularly. Off for now.',
@@ -1157,10 +1159,6 @@
         call('notify_backup', {}, b, { timeout: 240000 }).then(function (j) { if (j) { S.backupLast = j.backupLast || S.backupLast; remember(S); redraw(); draw(j, null, 'Backup sent. Check Telegram.'); } else b.textContent = 'Send Backup Now'; });
       };
       p.querySelector('#nt-hour').onchange = function (e) { call('notify_save', { hour: +e.target.value }).then(function (j) { if (j) { n = j; draw(j, null); toast('Daily messages at ' + hourLabel(j.hour) + '.'); } }); };
-      p.querySelectorAll('[data-copy]').forEach(function (b) { b.onclick = function () {
-        var t = p.querySelector('#' + b.dataset.copy).textContent;
-        (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast('Copied.'); }, function () { toast('Select the text and copy it.'); });
-      }; });
     }
     api('notify').then(function (n) { if (!n || !n.ok) { p.innerHTML = '<p class="ix-err">' + esc((n && n.error) || 'Could not load.') + '</p>'; return; } draw(n); });
   }
@@ -1277,8 +1275,8 @@
             fd('ix-wpw', 'Website Password', 'password', 'current-password') +
             '<label class="ix-chk"><input type="checkbox" id="ix-wack"> I understand the passphrase can\'t be recovered, only replaced with a recovery key.</label>' +
             '<p class="ix-err" id="ix-wzerr"></p><div class="ix-row"><button class="ix-btn pri" id="ix-wzgo">Set Passphrase</button></div></form>',
-          recovery: WZ.rec ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Your recovery key. It is shown only now.</b></span></div><div class="ix-codes"><span class="ix-mono" id="ix-wzrk">' + esc(WZ.rec) + '</span></div>' +
-              '<div class="ix-row"><button type="button" class="ix-btn" id="ix-wzcp">' + svg(ICON.copy) + 'Copy</button><button type="button" class="ix-btn pri" id="ix-wzsaved">I Saved It, Continue</button></div>' +
+          recovery: WZ.rec ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Your recovery key. It is shown only now.</b></span></div>' + linkField({ id: 'ix-wzrk', value: WZ.rec, prefix: 'Key', readonly: true, copyId: 'ix-wzcp', label: 'Recovery key', cls: 'ix-uf-key' }) +
+              '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-wzsaved">I Saved It, Continue</button></div>' +
               '<p class="ix-note">Save it somewhere safe, apart from this server. A key made earlier no longer works.</p>' :
             steps[2].done ? '<div class="ix-status"><span class="ix-ok">✓</span><span>A recovery key exists. Make a new one any time in Security › Encryption.</span></div>' :
             !encOn ? '<p class="ix-note" style="margin-top:0">Set the passphrase first (the step above), then the recovery key is one click.</p><div class="ix-row"><button type="button" class="ix-btn" data-open="enc">Go to the Passphrase</button></div>' :
@@ -1331,7 +1329,6 @@
           PP.makeRecovery({ pp: pp, site: site }).then(function (code) { WZ.rec = code; WZ.open = 'recovery'; draw(); })
             .catch(function (x) { er().textContent = errOf(x); b.disabled = false; });
         };
-        var cp = p.querySelector('#ix-wzcp'); if (cp) cp.onclick = function () { navigator.clipboard && navigator.clipboard.writeText(WZ.rec).then(function () { toast('Copied.'); }); };
         var sv = p.querySelector('#ix-wzsaved'); if (sv) sv.onclick = function () { WZ.rec = ''; WZ.open = 'twostep'; draw(); };
         var tb = p.querySelector('#ix-wz2'); if (tb) twoStep(tb);
         var bk = p.querySelector('#ix-wzbk');
@@ -1987,8 +1984,7 @@
                   mk.disabled = true; mk.textContent = 'Making it…'; c.err(''); c.block(3, true);
                   PP.makeRecovery({ pp: val('#ix-en1'), site: val('#ix-epw') }).then(function (code) {
                     recCode = code; st.rec = true;
-                    p.querySelector('#ix-ercode').innerHTML = '<div class="ix-codes"><span class="ix-mono" id="ix-rcode">' + esc(code) + '</span></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-ercopy">Copy</button></div>';
-                    p.querySelector('#ix-ercopy').onclick = function () { navigator.clipboard && navigator.clipboard.writeText(code).then(function () { toast('Copied.'); }); };
+                    p.querySelector('#ix-ercode').innerHTML = linkField({ id: 'ix-rcode', value: code, prefix: 'Key', readonly: true, copyId: 'ix-ercopy', label: 'Recovery key', cls: 'ix-uf-key' });
                     p.querySelector('#ix-erackw').hidden = false; c.block(3, false);
                   }, function (x) { mk.disabled = false; mk.textContent = 'Make My Recovery Key'; c.err(recFail(x)); c.block(3, false); });
                 };
@@ -2016,9 +2012,8 @@
         rmk.disabled = true; re.textContent = 'Making it…';
         PP.makeRecovery({ pp: pp, site: site }).then(function (code) {
           re.textContent = ''; st.rec = true;
-          b.querySelector('#ix-rshow').innerHTML = '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Your recovery key. It is shown only now.</b></span></div><div class="ix-codes"><span class="ix-mono" id="ix-rcode">' + esc(code) + '</span></div>' +
-            '<div class="ix-row"><button type="button" class="ix-btn" id="ix-rcopy">Copy</button></div><p class="ix-note">Save it before you close this. A key made earlier no longer works.</p>';
-          b.querySelector('#ix-rcopy').onclick = function () { navigator.clipboard && navigator.clipboard.writeText(code).then(function () { toast('Copied.'); }); };
+          b.querySelector('#ix-rshow').innerHTML = '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Your recovery key. It is shown only now.</b></span></div>' + linkField({ id: 'ix-rcode', value: code, prefix: 'Key', readonly: true, copyId: 'ix-rcopy', label: 'Recovery key', cls: 'ix-uf-key' }) +
+            '<p class="ix-note">Save it before you close this. A key made earlier no longer works.</p>';
           toast('Recovery key created.');
         }).catch(function (x) { re.textContent = x && x.user ? x.message : "Can't reach the server. Nothing was changed."; })
           .finally(function () { rmk.disabled = false; });
@@ -2401,7 +2396,7 @@
       api('twostep_begin', {}).then(function (j) {
         if (!j.ok) { toast(j.error); return; }
         box.innerHTML = head + tsBar(1) + ecCard('', ICON.device, 'Step 1: Scan the Code', 'Scan this with your authenticator app, or on your phone tap <a href="' + esc(j.uri) + '">open in app</a>. You can also type the key by hand.',
-            '<div class="ix-qr" id="ix-qr"></div><p>Key: <span class="ix-mono">' + esc(j.secret.replace(/(.{4})/g, '$1 ').trim()) + '</span></p>') +
+            '<div class="ix-qr" id="ix-qr"></div>' + linkField({ value: j.secret.replace(/(.{4})/g, '$1 ').trim(), copyText: j.secret, prefix: 'Key', readonly: true, label: 'Two-step key', cls: 'ix-uf-key' })) +
           ecCard('', ICON.check, 'Step 2: Type the 6-Digit Code', 'The app now shows a code that changes every 30 seconds. Type the current one to finish.',
             '<div class="ix-fd"><label for="ix-tc">6-Digit Code</label><input type="text" id="ix-tc" inputmode="numeric" autocomplete="one-time-code" maxlength="7" style="max-width:220px"></div>' +
             '<p class="ix-err" id="ix-te2"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-en">Turn On</button></div>') + '<div id="ix-rcs"></div>';
@@ -2813,7 +2808,7 @@
   function watchBox(box, w) {
     var draw = function (w) {
       var t = w.tasks || {};
-      box.innerHTML = '<form class="ix-row" id="ix-wadd"><input type="text" id="ix-whost" placeholder="example.com or shop.example.com" autocomplete="off" style="flex:1;min-width:200px">' +
+      box.innerHTML = '<form class="ix-row ix-uf-row" id="ix-wadd">' + linkField({ id: 'ix-whost', prefix: 'https://', strip: true, copy: false, placeholder: 'example.com or shop.example.com', label: 'Domain' }) +
           '<label class="ix-chk" style="margin:0"><input type="checkbox" id="ix-wup" checked> Uptime</label><button class="ix-btn pri">Add and Check</button></form>' +
         (w.sites && w.sites.length ? w.sites.map(function (s) {
           var st = s.st || {}, dn = daysLeft(s.dom && s.dom.exp), sn = daysLeft(s.ssl && s.ssl.exp), hn = daysLeft(s.hosting);

@@ -428,9 +428,36 @@ try:
               so[0] == [3, False, True] and so[1] == [True, 'step'] and 'Type ERASE' in so[2], so)
         why = browser_set_passphrase(sp, s.base, 'stepper passphrase 1')
         sp.wait_for_selector('#ix-ermk', state='visible'); sp.click('#ix-ermk')   # (1.69.0) the recovery key is made on a click (slow work)
-        rc = until(lambda: sp.evaluate("(document.getElementById('ix-rcode') || {}).textContent || ''"), 30000)
-        rk = sp.evaluate("[(document.getElementById('ix-rcode') || {}).textContent || '', !document.getElementById('ix-rcode').closest('.ix-st-pane').hidden]")
+        rc = until(lambda: sp.evaluate("(document.getElementById('ix-rcode') || {}).value || ''"), 30000)
+        rk = sp.evaluate("[(document.getElementById('ix-rcode') || {}).value || '', !document.getElementById('ix-rcode').closest('.ix-st-pane').hidden]")
         check('P68 the first passphrase is a Stepper: it is set on step 2; step 3 makes the recovery key on a click and shows it (1.69.0)', not why and rk[0] and rk[1], (why, rk))
+        # ---- (1.69.1) the link field (Uiverse itchy-dodo-49, shell.js linkField): a label in front, the field, a copy icon (COPY, then COPIED) ----
+        CLIP = "(() => { window.__cp = null; const w = t => { window.__cp = t; return Promise.resolve(); }; try { navigator.clipboard.writeText = w; } catch (e) {} if (!navigator.clipboard || navigator.clipboard.writeText !== w) Object.defineProperty(navigator, 'clipboard', { value: { writeText: w }, configurable: true }); })()"
+        rf = sp.evaluate("(() => { const i = document.getElementById('ix-rcode'), f = i.closest('.ix-uf'); return [f.querySelector('.ix-uf-px').textContent, i.readOnly, !!f.querySelector('#ix-ercopy.ix-uf-cp')]; })()")
+        sp.evaluate(CLIP); sp.click('#ix-ercopy'); sp.wait_for_timeout(150)
+        rf += sp.evaluate("[window.__cp === document.getElementById('ix-rcode').value, document.querySelector('#ix-ercopy .ix-uf-tip').textContent, document.getElementById('ix-ercopy').classList.contains('done')]")
+        check('P70 the recovery key sits in the link field: "Key" in front, read-only, and its copy icon copies the key and says COPIED (1.69.1)', rf == ['Key', True, True, True, 'COPIED', True], rf)
+        sp.goto(s.base + '/web/settings/#telegram/setup'); wait_js(sp, "!!document.getElementById('nt-url')", 20000); sp.evaluate(CLIP)
+        tg = sp.evaluate("['nt-cmd', 'nt-url'].map(id => { const i = document.getElementById(id); return [i.closest('.ix-uf').querySelector('.ix-uf-px').textContent, i.value]; })")
+        sp.locator('#nt-url').locator('xpath=..').locator('.ix-uf-cp').click(); sp.wait_for_timeout(150); cp = sp.evaluate('window.__cp') or ''
+        check('P71 Telegram > Setup: the two cron lines are link fields ("Cron", "curl"); the key in the address shows as dots, and Copy gives the whole curl line with the real key (1.69.1)',
+              tg[0][0] == 'Cron' and 'cron.php' in tg[0][1] and tg[1][0] == 'curl' and 'key=•••••' in tg[1][1] and cp.startswith('curl -s "http') and 'key=' in cp and '•' not in cp and cp.endswith('"'), (tg, len(cp)))
+        sp.goto(s.base + '/web/settings/#domains'); wait_js(sp, "!!document.getElementById('ix-whost')", 20000)
+        sp.fill('#ix-whost', 'https://shop.example.com')
+        dm = sp.evaluate("(() => { const i = document.getElementById('ix-whost'), f = i.closest('.ix-uf'); return [f.querySelector('.ix-uf-px').textContent, i.value, !!f.querySelector('.ix-uf-cp')]; })()")
+        check('P72 Health > Domains and Uptime: the add field has https:// in front, and a pasted https:// is dropped (only the host is kept) (1.69.1)', dm == ['https://', 'shop.example.com', False], dm)
+        sp.goto(s.base + '/web/links/'); wait_js(sp, "document.querySelectorAll('.cat').length > 0", 20000); sp.evaluate(CLIP)
+        sp.evaluate("document.querySelector('[data-hub=toggle]').click()"); sp.wait_for_selector('body.editing', timeout=10000)
+        sp.evaluate("document.querySelector('.cat .ctrl .ib[aria-label=\\'Edit link\\']').click()"); sp.wait_for_selector('#linkDlg[open]')   # its buttons show on hover
+        lk = [sp.evaluate("[document.querySelector('#linkDlg .ix-uf-px').textContent, document.getElementById('lUrl').value]")]
+        sp.fill('#lUrl', 'http://Plain.example.com/a'); lk.append(sp.evaluate("[document.querySelector('#linkDlg .ix-uf-px').textContent, document.getElementById('lUrl').value]"))
+        sp.click('#linkDlg .ix-uf-px'); sp.click('#linkDlg .ix-uf-cp'); sp.wait_for_timeout(150)
+        lk.append(sp.evaluate("[document.querySelector('#linkDlg .ix-uf-px').textContent, window.__cp, document.querySelector('#linkDlg .ix-uf-tip').textContent]"))
+        sp.fill('#lUrl', 'mailto:me@example.com'); lk.append(sp.evaluate("getComputedStyle(document.querySelector('#linkDlg .ix-uf-px')).display"))
+        sp.fill('#lUrl', 'https://Plain.example.com/a'); sp.fill('#lTitle', 'Plain'); sp.click('#linkSave')
+        saved = until(lambda: [l.get('url') for t in s.req(s.base + '/web/links/api.php?action=get').get('data', {}).get('tabs', []) for c in t.get('categories', []) for l in c.get('links', []) if l.get('title') == 'Plain'], 10000)
+        check('P73 Links > Edit Link: the Address field has https:// in front (a tap gives http://), a typed http:// moves into it, another scheme hides it, Copy gives the whole address, and Save keeps the whole address (1.69.1)',
+              lk[0][0] == 'https://' and lk[0][1] and not lk[0][1].startswith('http') and lk[1] == ['http://', 'Plain.example.com/a'] and lk[2] == ['https://', 'https://Plain.example.com/a', 'COPIED'] and lk[3] == 'none' and saved == ['https://Plain.example.com/a'], (lk, saved))
         sp.context.close()
         ns = Site(ZIP, 8974, setup=False)
         try:

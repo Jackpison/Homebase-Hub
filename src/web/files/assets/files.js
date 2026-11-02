@@ -690,9 +690,12 @@ async function shareBox(i) {
   const draw = () => {
     const mine = D.shares.filter(s => s.id === i.id);
     box.replaceChildren(...(mine.length ? mine.map(s => {
-      const url = linkFor(s.token), inp = h("input", { type: "text", readonly: true, value: url, "aria-label": "Share link", onfocus: e => e.target.select() });
+      // (1.69.1) the link field: "Link" in front, the address, the copy icon (COPY, then COPIED); shell.js does the copying
+      const url = linkFor(s.token), fld = h("div", { class: "uf-host" });
+      fld.innerHTML = HUB.linkField({ value: url, prefix: "Link", readonly: true, label: "Share link" });
+      fld.querySelector("input").addEventListener("focus", e => e.target.select());
       return h("div", { class: "lk" }, h("div", { class: "meta", text: "Made " + when(s.at * 1000) + (s.exp ? " · ends " + when(s.exp * 1000) : " · never ends") }),
-        h("div", { class: "linkbox" }, inp, h("button", { type: "button", class: "btn", text: "Copy", onclick: async () => { try { await navigator.clipboard.writeText(url); toast("Link copied."); } catch (e) { inp.select(); toast("Press Ctrl+C to copy."); } } }),
+        h("div", { class: "linkbox" }, fld,
           h("button", { type: "button", class: "btn danger", text: "Remove", onclick: async () => { const j = await post("share_delete", { token: s.token }); if (!j.ok) return derr(j.error); await refresh(); draw(); } })));
     }) : [h("p", { text: "No link yet. Make one, and send it to the person who should have this file." })]));
   };

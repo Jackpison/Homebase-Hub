@@ -143,6 +143,8 @@ try:
         link = pg.locator('#dform .linkbox input').first.input_value()
         check('B25 Share Link makes an address with the token in the query and the key after the #', re.search(r'/web/files/share\.html\?t=[A-Za-z0-9_-]{32}#[A-Za-z0-9_-]{43}$', link), link)
         key = link.split('#')[1]; tok = re.search(r't=([A-Za-z0-9_-]{32})', link).group(1)
+        lf = pg.evaluate("(() => { const f = document.querySelector('#dform .linkbox .ix-uf'); return f ? [f.querySelector('.ix-uf-px').textContent, f.querySelector('input').readOnly, !!f.querySelector('.ix-uf-cp .ix-uf-tip')] : null; })()")
+        check('B25b the share link sits in the link field: "Link" in front, read-only, a copy icon with its COPY tip (1.69.1)', lf == ['Link', True, True], lf)
         pg.click('#dform .ix-st-next:has-text("Done")')   # (1.69.0) the Share window is a Stepper: Done is its last button
         vctx = b.new_context(viewport={'width': 1000, 'height': 800}, accept_downloads=True); vctx.add_init_script(CSP_REPORTER)
         vp = vctx.new_page(); seen = []; vp.on('request', lambda r: seen.append(r.url)); verrs = []

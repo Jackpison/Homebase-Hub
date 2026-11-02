@@ -126,6 +126,7 @@ dialog input:focus,dialog select:focus{outline:0;border-color:var(--acc)}
 .pick button:hover,.pick button[aria-pressed="true"]{background:color-mix(in srgb,var(--acc) 12%,transparent)}
 .linkbox{display:flex;gap:8px;margin:6px 0}
 .linkbox input{flex:1;min-width:0;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--field);padding:0 10px;font-size:13px}
+.linkbox .uf-host{flex:1;min-width:0;display:flex}   /* (1.69.1) the link field (shell.css .ix-uf) */
 .links{display:flex;flex-direction:column;gap:8px;margin:10px 0}
 .lk{border:1px solid var(--line);border-radius:10px;padding:10px}
 .lk .meta{color:var(--mute);font-size:12.5px;margin-bottom:6px}

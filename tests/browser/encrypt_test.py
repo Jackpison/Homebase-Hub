@@ -90,7 +90,7 @@ try:
         # ---- recovery key ----
         pg.goto(base + '/web/settings/#security/encryption'); wait_js(pg, "!!document.querySelector('#ix-rmk')", 20000)
         pg.fill('#ix-rpp', PP1); pg.fill('#ix-rpw', PW); pg.click('#ix-rmk')
-        code = until(lambda: pg.evaluate("(document.querySelector('#ix-rcode') || {}).textContent || ''"), 30000)
+        code = until(lambda: pg.evaluate("(document.querySelector('#ix-rcode') || {}).value || ''"), 30000)
         check('E12 the recovery key is shown once (four letters and digits at a time)', re.fullmatch(r'([A-Z2-9]{4}-){4}[A-Z2-9]{4}', code or ''), code)
         sv = s.get('sv_get'); v = sv['vault']
         check('E13 the site key now also has a recovery wrap, and keeps its id', 'rec' in v and v['kid'] == kid1, v)

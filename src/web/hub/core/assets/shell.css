@@ -913,3 +913,35 @@ html[data-theme="light"] .ix-st-glider{background:linear-gradient(180deg,#fff,#f
 .ix-st-foot .ix-btn:disabled{opacity:.45;cursor:not-allowed}
 @media (hover:hover){.ix-st-foot .ix-btn:not(:disabled):hover{filter:brightness(1.08)}}
 .ix-st-foot .ix-btn:not(:disabled):active{transform:scale(.97)}
+
+/* ---------- (1.69.1) Link field (shell.js linkField()): a label in front, the field, a copy icon with a COPY / COPIED tip.
+   Idea from Uiverse "itchy-dodo-49" by Bodyhc (MIT), redone in plain CSS on the site's colours. :not(#\#) lifts the rules above the
+   pages' own field styles (Settings, Links and Files style every input); twice on the field itself. ---------- */
+.ix-uf:not(#\#){position:relative;display:flex;align-items:stretch;min-height:44px;width:100%;box-sizing:border-box;border-radius:12px;border:1.5px solid var(--ix-line2);
+  background:var(--ix-field);box-shadow:0 2px 4px rgba(0,0,0,.1);transition:border-color .2s,box-shadow .2s;color:var(--ix-tx)}
+.ix-uf:not(#\#):focus-within{border-color:var(--ix-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--ix-accent) 22%,transparent)}
+.ix-uf:not(#\#) .ix-uf-px{display:flex;align-items:center;flex:none;margin:0;padding:0 12px;border:0;border-right:1px solid var(--ix-line);border-radius:10px 0 0 10px;
+  background:var(--ix-s2);color:var(--ix-mu);font:600 14px var(--ix-font);white-space:nowrap;min-height:0;height:auto;box-shadow:none}
+.ix-uf:not(#\#) button.ix-uf-px{cursor:pointer}.ix-uf:not(#\#) button.ix-uf-px:hover{color:var(--ix-tx)}
+.ix-uf-raw:not(#\#) .ix-uf-px{display:none}
+.ix-uf:not(#\#) input:not(#\#){flex:1;min-width:0;width:auto;height:auto;margin:0;border:0;outline:0;border-radius:0;background:none;box-shadow:none;color:var(--ix-tx);padding:10px 12px;font:500 14.5px var(--ix-font)}
+.ix-uf:not(#\#) input:not(#\#):focus{outline:0;box-shadow:none;border:0}
+.ix-uf-mono:not(#\#) input:not(#\#){font:500 13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em}
+.ix-uf:not(#\#) :is(.ix-uf-cp,.ix-uf-open){position:relative;display:grid;place-items:center;flex:none;width:44px;min-height:0;height:auto;margin:0;padding:0;border:0;
+  border-left:1px solid var(--ix-line);border-radius:0;background:none;box-shadow:none;color:var(--ix-mu);cursor:pointer;transition:color .2s,background .2s}
+.ix-uf:not(#\#) > :last-child:is(.ix-uf-cp,.ix-uf-open){border-radius:0 10px 10px 0}
+.ix-uf:not(#\#) :is(.ix-uf-cp,.ix-uf-open):hover{color:var(--ix-tx);background:color-mix(in srgb,var(--ix-tx) 6%,transparent)}
+.ix-uf:not(#\#) :is(.ix-uf-cp,.ix-uf-open):focus-visible{outline:2px solid var(--ix-accent);outline-offset:-3px}
+.ix-uf:not(#\#) :is(.ix-uf-cp,.ix-uf-open) svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ix-uf:not(#\#) .ix-uf-open svg{width:16px;height:16px}
+.ix-uf:not(#\#) .ix-uf-cp.done{color:var(--ix-good)}
+.ix-uf-tip{position:absolute;bottom:calc(100% + 10px);right:2px;z-index:3;padding:5px 10px;border-radius:7px;background:var(--ix-tx);color:var(--ix-bg);
+  font:700 11px/1.2 var(--ix-font);letter-spacing:.06em;opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap}
+.ix-uf-tip::after{content:"";position:absolute;right:16px;bottom:-4px;width:9px;height:9px;background:inherit;transform:rotate(45deg)}
+.ix-uf-cp:hover .ix-uf-tip,.ix-uf-cp:focus-visible .ix-uf-tip,.ix-uf-cp.done .ix-uf-tip{opacity:1;transform:none}
+.ix-uf-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ix-uf-row > .ix-uf{flex:1 1 220px;width:auto}
+@media (prefers-reduced-motion:reduce){.ix-uf:not(#\#),.ix-uf-tip{transition:none}}
+.ix-uf-gap:not(#\#){margin:8px 0 14px}
+.ix-uf-key:not(#\#){max-width:460px;margin:12px 0}
+.ix-uf-key:not(#\#) input:not(#\#){font-size:15px;letter-spacing:.08em;font-weight:700}
+@media (max-width:480px){.ix-uf-key:not(#\#) input:not(#\#){font-size:13px;letter-spacing:.02em;padding:10px 8px}.ix-uf:not(#\#) .ix-uf-px{padding:0 9px}}
