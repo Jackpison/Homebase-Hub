@@ -125,7 +125,7 @@ function fl_below(array $d, string $id): array {
     foreach ($d['items'] as $i) $kids[$i['p']][] = $i['id'];
     $out = []; $stack = [$id];
     while ($stack) { $x = array_pop($stack); foreach ($kids[$x] ?? [] as $k) { if (isset($out[$k])) continue; $out[$k] = 1; $stack[] = $k; } }
-    return array_keys($out);
+    return array_map('strval', array_keys($out));   // (1.69.1) keys that are all digits come back as numbers
 }
 /** A live (not in Trash) folder, or '' for the top. Returns '' when fine, else why not. */
 function fl_parent_check(array $d, string $p): string {
@@ -134,7 +134,8 @@ function fl_parent_check(array $d, string $p): string {
     if (fl_depth($d, $p) >= FL_MAX_DEPTH) return 'Folders can be ' . FL_MAX_DEPTH . ' levels deep at most.';
     return '';
 }
-function fl_new_id(array $d): string { do { $id = bin2hex(random_bytes(8)); } while (isset($d['items'][$id])); return $id; }
+// (1.69.1) never all digits: PHP turns such an array key into a number, and a number is not a string id (it broke a purge, about 1 in 1,800 ids)
+function fl_new_id(array $d): string { do { $id = bin2hex(random_bytes(8)); } while (isset($d['items'][$id]) || ctype_digit($id)); return $id; }
 
 /* ---------- blobs ---------- */
 function fl_blob_drop(string $id): void { foreach (glob(fl_blob_dir() . '/' . $id . '_*') ?: [] as $f) @unlink($f); }
@@ -145,7 +146,7 @@ function fl_pieces_bytes(string $id, int $c): int { $n = 0; for ($i = 0; $i < $c
 function fl_purge(array &$d, array $ids): int {
     $all = [];
     foreach ($ids as $id) { if (!isset($d['items'][$id])) continue; $all[$id] = 1; foreach (fl_below($d, $id) as $k) $all[$k] = 1; }
-    foreach (array_keys($all) as $id) { if ($d['items'][$id]['t'] === 'f') fl_blob_drop($id); unset($d['items'][$id]); }
+    foreach (array_keys($all) as $id) { $id = (string)$id; if ($d['items'][$id]['t'] === 'f') fl_blob_drop($id); unset($d['items'][$id]); }   // (1.69.1) an all-digit id (made before 1.69.1) is a number as a key
     foreach ($d['shares'] as $tok => $s) if (isset($all[$s['id']])) unset($d['shares'][$tok]);
     return count($all);
 }

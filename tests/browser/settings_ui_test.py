@@ -69,9 +69,14 @@ try:
         pg.set_input_files('#impFile', f2); wait_js(pg, "document.querySelector('#impPrev').textContent || document.querySelector('#impErr').textContent", 10000)
         pv = pg.inner_text('#impPrev')
         check('U9 Links\' own importer reads the file back: 3 links, the folders as tabs and categories', 'Found 3 links' in pv and 'Daily' in pv and 'Money' in pv, pv)
-        pg.click('#impDlg .ix-st-next'); pg.fill('#impName', 'Round Trip'); pg.click('#impDlg .ix-st-next'); pg.click('#impGo');   # (1.69.0) Preview -> Where -> Import wait_js(pg, "!document.querySelector('#impDone').hidden || document.querySelector('#impErr').textContent", 20000)
+        # (1.69.0) Preview -> Where -> Import; (1.69.1) each step is waited for (CI clicked on while the step was still sliding in)
+        pg.click('#impDlg .ix-st-next'); wait_js(pg, "!document.querySelector('#impWhere').closest('.ix-st-pane').hidden", 5000)
+        pg.fill('#impName', 'Round Trip')
+        if not pg.query_selector('#impGo'): pg.click('#impDlg .ix-st-next'); pg.wait_for_selector('#impGo')
+        pg.click('#impGo'); wait_js(pg, "!document.querySelector('#impDone').hidden || document.querySelector('#impErr').textContent", 20000)
         d = s.req(s.base + '/web/links/api.php?action=get').get('data', {})
-        rt = [t for t in d.get('tabs', []) if t.get('title') == 'Round Trip'][0]
+        rt = ([t for t in d.get('tabs', []) if t.get('title') == 'Round Trip'] or [{'categories': []}])[0]
+        if not rt['categories']: print('    import said:', pg.evaluate("[document.querySelector('#impErr').textContent, (document.querySelector('#impDone') || {}).textContent]"))
         got = sorted((l['title'], l['url']) for c in rt['categories'] for l in c['links'])
         want = sorted([('Public "Daily" Link', 'https://example.com/daily?a=1&b=2'), ('Mail', 'https://mail.example.com/'), ('Hidden Bank Login', 'https://bank.example.com/login')])
         check('U10 the import holds the same titles and addresses that went out (the importer reads every link)', set(want) <= set(got), (got, want))

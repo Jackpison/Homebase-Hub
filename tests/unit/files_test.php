@@ -98,6 +98,16 @@ t('a file restored while its folder is in Trash goes to the top', $d['items'][$i
 fl_op_restore($d, [$docs], 'bad' === 'x' ? '' : null);
 t('restore refuses what is not in the Trash', fl_op_restore($d, [$other], null)[1] === 404);
 
+// ---- (1.69.1) an id of 16 digits is a number as an array key (PHP): purge and moves still work, and new ids are never all digits ----
+$x = $d; $num = '1234567890123456'; $num2 = '2234567890123456';
+$x['items'][$num] = ['id' => $num, 't' => 'd', 'p' => '', 'del' => 0] + $x['items'][$docs];
+$x['items'][$num2] = ['id' => $num2, 't' => 'f', 'p' => $num, 'del' => 0] + $x['items'][$id];
+$below = fl_below($x, $num); $threw = false;
+try { $gone = fl_purge($x, [$num]); } catch (Throwable $e) { $threw = $e->getMessage(); $gone = 0; }
+t('an all-digit id (a number as an array key) is purged with what is inside it, and fl_below gives strings', $below === [$num2] && !$threw && $gone === 2 && !isset($x['items'][$num]) && !isset($x['items'][$num2]), (string)$threw);
+$digits = 0; for ($i = 0; $i < 3000; $i++) if (ctype_digit(fl_new_id($d))) $digits++;
+t('new ids are never all digits (3,000 made)', $digits === 0);
+
 // ---- share links ----
 $out = [];
 t('a share link needs the file to exist and the right shape of text', fl_op_share_create($d, $id, 'plain', 0, $out)[1] === 400 && fl_op_share_create($d, bin2hex(random_bytes(8)), $enc(), 0, $out)[1] === 404);

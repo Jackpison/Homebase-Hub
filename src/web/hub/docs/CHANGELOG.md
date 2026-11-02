@@ -150,6 +150,10 @@ Nothing to migrate by hand unless an entry says so.
 
 - Where the browser can't copy (a page opened over plain http), the field is selected and a note says to press Ctrl+C.
 
+### Fixed
+
+- **Files:** a file or folder whose id came out as 16 digits (about 1 in 1,800) could not be removed for good from the Trash: PHP turns such an id into a number, and the clean-up stopped with an error. New ids are never all digits, and ids made before are handled.
+
 ---
 
 ## 1.69.0
