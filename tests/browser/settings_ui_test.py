@@ -133,8 +133,8 @@ try:
 
         # ---- Colors: shorter ----
         pg.goto(s.base + '/web/settings/#colors'); wait_js(pg, "!!document.querySelector('#ix-pgc')", 20000)
-        col = pg.evaluate("(() => { const d = document.getElementById('ix-pgc'); return [d.open, [...document.querySelectorAll('.ix-cr')].filter(e => e.checkVisibility()).length, document.body.innerText.includes('Same Look on Every Page'), !!document.querySelector('[data-sa]')]; })()")
-        check('U18 the Colors tab shows 9 rows (the colors and one Accent), with the per-page colors folded away', col == [False, 9, False, True], col)
+        col = pg.evaluate("(() => { const d = document.getElementById('ix-pgc'); return [d.open, [...document.querySelectorAll('.ix-cr')].filter(e => e.checkVisibility()).length, document.body.innerText.includes('Same Look on Every Page'), !document.querySelector('[data-sa]') && document.querySelectorAll('.ix-apk [data-c]').length === 10]; })()")
+        check('U18 the Colors tab shows Accent Color (the ten-color picker, 1.70.0) and 8 color rows, with the per-page colors folded away', col == [False, 8, False, True], col)
         pg.click('#ix-pgc summary')
         check('U19 Different Colors per Page holds the page backgrounds and accents', pg.evaluate("document.querySelectorAll('#ix-pgc .ix-cr').length") >= 10)
 

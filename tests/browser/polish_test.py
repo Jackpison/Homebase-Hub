@@ -120,12 +120,12 @@ try:
         check('P20 the search box says "? Shortcuts"; typing ? shows Keyboard Shortcuts first and Enter opens the list', 'Shortcuts' in ph and first == 'Keyboard Shortcuts', (ph, first))
         pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
 
-        # ---- (1.65.1) Settings > General: Keyboard Shortcuts; closing that window and changing section still works ----
-        pg.goto(s.base + '/web/settings/#general'); wait_js(pg, "!!document.getElementById('ix-keysb')", 20000)
+        # ---- (1.65.1) Settings > Start Here (General before 1.70.0): Keyboard Shortcuts; closing that window and changing section still works ----
+        pg.goto(s.base + '/web/settings/#setup'); wait_js(pg, "!!document.getElementById('ix-keysb')", 20000)
         pg.click('#ix-keysb'); wait_js(pg, "!!document.querySelector('#ix-dlg.open .ix-keys')", 5000)
         pg.keyboard.press('Escape'); pg.evaluate("location.hash = 'backup'")
         until(lambda: pg.evaluate("!!document.getElementById('ix-exp')"), 8000)
-        check('P21 Settings > General has View Shortcuts; right after its window closes, another section still opens (it stayed on General)', pg.evaluate("!!document.getElementById('ix-exp')"))
+        check('P21 Settings > Start Here has View Shortcuts; right after its window closes, another section still opens (it stayed on Start Here)', pg.evaluate("!!document.getElementById('ix-exp')"))
 
         # ---- (1.65.1) Erase Everything ----
         pg.wait_for_timeout(800); pg.click('.ix-tabbar button[data-tab=start-over]'); pg.click('#ix-rsst .ix-st-next'); pg.click('#ix-rsst .ix-st-next'); pg.wait_for_selector('#ix-rsgo', state='visible'); pg.mouse.move(5, 5); pg.wait_for_timeout(500)   # (1.69.0) a Stepper: two steps before the button (the mouse leaves the spot of Continue)
@@ -149,8 +149,8 @@ try:
         check('P24 What\'s New: a light runs around a calm border (no heavy outline)', bm == ['ix-beam', True], bm)
         pg.wait_for_load_state('networkidle')
 
-        # ---- (1.65.3) the Accent Color picker ----
-        pg.goto(s.base + '/web/settings/#look'); wait_js(pg, "document.querySelectorAll('.ix-apk [data-c]').length === 10", 20000); pg.wait_for_timeout(400)
+        # ---- (1.65.3) the Accent Color picker (Appearance > Colors since 1.70.0) ----
+        pg.goto(s.base + '/web/settings/#colors'); wait_js(pg, "document.querySelectorAll('.ix-apk [data-c]').length === 10", 20000); pg.wait_for_timeout(400)
         n = pg.evaluate("document.querySelectorAll('.ix-apk [data-c]').length")
         pg.hover('.ix-apk [data-c="#3b82f6"]'); pg.wait_for_timeout(700)
         sc = pg.evaluate("[...document.querySelectorAll('.ix-apk [data-c]')].map(b => { const m = getComputedStyle(b).transform; return m === 'none' ? 1 : Math.round(parseFloat(m.split('(')[1]) * 100) / 100; })")
@@ -272,8 +272,8 @@ try:
         gp.goto(s.base + '/web/links/'); wait_js(gp, "!!document.querySelector('#ix-bar .ix-links') && !!(window.HUB && HUB.isAdmin())", 20000); gp.wait_for_timeout(500)
         g0 = gp.evaluate(GL)
         check('P49 Bar Glass is off by default: no glass and glass.js is not even loaded (1.68.0)', g0['el'] is None and g0['js'] == 0 and not g0['attr'], g0)
-        gp.goto(s.base + '/web/settings/#look'); wait_js(gp, "!!document.getElementById('ix-glass')", 20000)
-        gp.click('#ix-glass'); wait_js(gp, "!!document.querySelector('#ix-bar.glass-surface')", 8000)
+        gp.goto(s.base + '/web/settings/#glass'); wait_js(gp, "!!document.getElementById('ix-glass2')", 20000)   # (1.70.0) the switch is on the Glass tab only
+        gp.click('#ix-glass2'); wait_js(gp, "!!document.querySelector('#ix-bar.glass-surface')", 8000)
         pv = gp.evaluate(GL)
         gp.click('#ix-save'); until(lambda: s.php("echo json_encode(hub_settings()['glass']);").strip() == 'true', 8000)
         saved = s.php("echo json_encode(hub_settings()['glass']);").strip()
@@ -311,8 +311,8 @@ try:
         sd = gp.evaluate(GL)['el']
         check('P54 the sidebar stays as it is with Bar Glass on (1.68.0)', sd is None, sd)
         s.php("hub_settings_update(function ($x) { $x['nav'] = 'top'; $x['homeBar'] = false; return $x; });")
-        gp.goto(s.base + '/web/settings/#look'); wait_js(gp, "!!document.getElementById('ix-glass') && !!document.querySelector('#ix-bar.glass-surface')", 20000)
-        gp.click('#ix-glass'); wait_js(gp, "!document.querySelector('.glass-surface')", 8000)
+        gp.goto(s.base + '/web/settings/#glass'); wait_js(gp, "!!document.getElementById('ix-glass2') && !!document.querySelector('#ix-bar.glass-surface')", 20000)
+        gp.click('#ix-glass2'); wait_js(gp, "!document.querySelector('.glass-surface')", 8000)
         off = gp.evaluate(GL)
         check('P55 switching Bar Glass off takes the glass away at once (1.68.0)', off['el'] is None and not off['attr'], off)
         s.php("hub_settings_update(function ($x) { $x['glass'] = false; return $x; });")
@@ -352,9 +352,9 @@ try:
         tp.goto(s.base + '/web/links/'); wait_js(tp, "document.documentElement.hasAttribute('data-ix-nohide') && !!document.getElementById('ix-bar')", 20000); tp.wait_for_timeout(300)
         hid_off = tp.evaluate(HID)
         s.php("hub_settings_update(function ($x) { $x['barHide'] = true; return $x; });")
-        tp.goto(s.base + '/web/settings/#look'); wait_js(tp, "!!document.getElementById('ix-bh')", 20000)
+        tp.goto(s.base + '/web/settings/#nav'); wait_js(tp, "!!document.getElementById('ix-bh')", 20000)
         sw = tp.evaluate("document.getElementById('ix-bh').checked")
-        check('P60 Hide the Bar While Scrolling: on, the top bar slides away as you scroll down; off, it stays; the switch is in Appearance > Look (1.68.2)', hid_on is True and hid_off is False and sw is True, (hid_on, hid_off, sw))
+        check('P60 Hide the Bar While Scrolling: on, the top bar slides away as you scroll down; off, it stays; the switch is in Appearance > Bar (1.68.2; Look before 1.70.0)', hid_on is True and hid_off is False and sw is True, (hid_on, hid_off, sw))
         tp.context.close()
         # ---- (1.68.4) one glass for the whole site: the Home widgets, Liquid only over photos, Where, Tone / Rim / Saturation ----
         s.php("hub_settings_update(function ($x) { $x['glass'] = true; $x['nav'] = 'top'; $x['homeBar'] = true; $x['glassFx'] = ['frost' => 14, 'tint' => 35, 'sat' => 120]; return $x; });")

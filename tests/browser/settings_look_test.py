@@ -236,7 +236,7 @@ try:
 
         # 1.62.2: every switch on the Settings page keeps its size (52 x 26 since 1.65.0); the older .ix-tg switches had shrunk to a ring and a ball since 1.61.6
         sw, bad = 0, []
-        for sec in ('general', 'nav', 'look', 'themes', 'colors', 'security', 'telegram', 'backup', 'health', 'domains', 'updates'):
+        for sec in ('setup', 'general', 'nav', 'look', 'themes', 'colors', 'glass', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates'):
             pg.goto(s.base + '/web/settings/#' + sec); wait_js(pg, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); pg.wait_for_timeout(500)
             r = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => [e.id || e.dataset.k || e.dataset.t || e.dataset.grp || '?', e.offsetWidth, e.offsetHeight])")
             sw += len(r); bad += [(sec, x) for x in r if x[1] != 52 or x[2] != 26]
@@ -309,7 +309,7 @@ try:
         fp = q.evaluate("[Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.round(document.getElementById('det').getBoundingClientRect().height), getComputedStyle(document.getElementById('det')).overflowY]")
         check('L25 phone, Files: nothing wider than the screen; the details sheet takes at most half the screen and scrolls inside', fp[0] <= 0 and fp[1] <= 844 // 2 + 2 and fp[2] == 'auto', fp)
         wide = []
-        for sec in ('overview', 'general', 'nav', 'look', 'themes', 'colors', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates', 'files', 'changelog'):
+        for sec in ('overview', 'setup', 'general', 'nav', 'look', 'themes', 'colors', 'glass', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates', 'changelog', 'chmap'):
             q.goto(s.base + '/web/settings/#' + sec); wait_js(q, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); q.wait_for_timeout(300)
             r = q.evaluate("[Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.max(0, ...[...document.querySelectorAll('.ix-subt button')].map(b => Math.round(b.getBoundingClientRect().right)))]")
             if r[0] > 0 or r[1] > 390:   # name what sticks out, so a failure in Firefox or WebKit (CI only) says where to look
@@ -331,13 +331,13 @@ try:
         for theme in ('dark', 'light'):
             tc = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=BROWSER != 'firefox', has_touch=True, storage_state=ctx.storage_state())   # one context per theme: the order of several init scripts is not defined
             tc.add_init_script("try { localStorage.setItem('hub-theme', '%s'); } catch (e) {}" % theme); tq = tc.new_page()
-            for sec in ('look', 'themes', 'backup'):
+            for sec in ('nav', 'themes', 'backup'):   # (1.70.0) the bar switches are on Appearance > Bar
                 tq.goto(s.base + '/web/settings/#' + sec); wait_js(tq, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); tq.wait_for_timeout(500)
                 got = tq.evaluate("[document.documentElement.dataset.theme || '', ...[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => e.offsetWidth + 'x' + e.offsetHeight)]")
                 seen.add(got[0])
                 if len(got) < 2 or any(x != '52x26' for x in got[1:]): small.append((theme, sec, got))
             tc.close()
-        check('L39 phone, dark and light: every switch in Settings is 52 x 26, in Look, Presets and Backup', not small and {'dark', 'light'} <= seen, (small, seen))
+        check('L39 phone, dark and light: every switch in Settings is 52 x 26, in Bar, Presets and Backup', not small and {'dark', 'light'} <= seen, (small, seen))
         check('L36 phone, Home, Links, Info, Cards, Tasks and Tools: nothing is wider than the screen', not wide, wide)
         check('L37 no page error', not errs, errs)
         b.close()

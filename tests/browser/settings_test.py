@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Small things in Settings and Home, in a real browser:
-  * Telegram > Backups > Send Backup Now: the button waits as long as the server may take (4 minutes, not 30 seconds), and never stays stuck on
+  * Backup & Restore > Send Backups to Telegram > Send Backup Now (Telegram > Backups before 1.70.0): the button waits as long as the server may take (4 minutes, not 30 seconds), and never stays stuck on
     "Sending…": when the answer does not come it frees itself and says the backup may still arrive in Telegram
   * Settings > Updates has a link to the project on GitHub
   * Home takes uploads of up to 128 MB
@@ -43,23 +43,30 @@ try:
         a = pg.locator('.ix-card a[href^="https://github.com/"]').first
         check('S4 Settings > Updates > Update From GitHub links to the project on GitHub (in a new tab, safely)', a.get_attribute('href') == 'https://github.com/Jackpison/Homebase-Hub' and a.get_attribute('target') == '_blank' and 'noopener' in a.get_attribute('rel'), a.get_attribute('href'))
 
+        h2x = "(document.querySelector('#ix-pane .ix-ph h2') || {}).textContent"
         def open_backups():
-            pg.goto(s.base + '/web/settings/#telegram'); wait_js(pg, "document.querySelectorAll('#ix-pc [role=tab], #ix-pc .ix-tab, #ix-pc summary').length > 0", 20000)
-            pg.get_by_text('Backups', exact=True).first.click(); wait_js(pg, "!!document.querySelector('#nt-bknow')", 10000)
+            pg.goto(s.base + '/web/settings/#backup'); wait_js(pg, "!!document.querySelector('#ix-tgbk #ix-tgbknow')", 20000)
         # a quick answer: the button waits for the long time, then goes back to normal and says it was sent
         view = {k: v for k, v in s.post('notify_save', {}).items() if not k.startswith('_')}   # what the real answer carries: the whole Telegram state
         body = json.dumps({**view, 'ok': True, 'note': 'Backup sent. Check Telegram.', 'backupLast': 1893456000})
         pg.route('**/api.php?action=notify_backup*', lambda route: route.fulfill(status=200, content_type='application/json', body=body))
-        open_backups(); pg.click('#nt-bknow')
-        until(lambda: 240000 in (pg.evaluate('window.__waits') or []) and pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return !!b && !b.disabled && b.textContent === 'Send Backup Now'; })()"), 5000)   # the answer has been handled: S5 and S6 read it
+        open_backups(); pg.click('#ix-tgbknow')
+        until(lambda: 240000 in (pg.evaluate('window.__waits') or []) and pg.evaluate("(() => { const b = document.querySelector('#ix-tgbknow'); return !!b && !b.disabled && b.textContent === 'Send Backup Now'; })()"), 5000)   # the answer has been handled: S5 and S6 read it
         waits = pg.evaluate('window.__waits')
         check('S5 Send Backup Now waits up to 4 minutes for the site (the usual 30 seconds is too short for a big backup)', 240000 in waits, waits)
-        check('S6 ...and when it is done the button is back to "Send Backup Now" and ready', pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return !!b && !b.disabled && b.textContent === 'Send Backup Now'; })()"))
+        check('S6 ...and when it is done the button is back to "Send Backup Now" and ready', pg.evaluate("(() => { const b = document.querySelector('#ix-tgbknow'); return !!b && !b.disabled && b.textContent === 'Send Backup Now'; })()"))
         # no answer at all (the connection drops): the button must not stay stuck
         pg.unroute('**/api.php?action=notify_backup*'); pg.route('**/api.php?action=notify_backup*', lambda route: route.abort('connectionreset'))
-        open_backups(); pg.click('#nt-bknow'); wait_js(pg, "((document.getElementById('ix-toast') || {}).textContent || '').includes('did not answer in time')", 20000)   # the helper retries a dropped connection twice first
-        state = pg.evaluate("(() => { const b = document.querySelector('#nt-bknow'); return [!!b, b && !b.disabled, b && b.textContent, (document.querySelector('#ix-pc .ix-err') || {}).textContent.includes('look there before you try again')]; })()")
-        check('S7 with no answer, the button is free again, and a message (and the Status tab) say the backup may still arrive in Telegram', state == [True, True, 'Send Backup Now', True], state)
+        open_backups(); pg.click('#ix-tgbknow'); wait_js(pg, "((document.getElementById('ix-toast') || {}).textContent || '').includes('did not answer in time')", 20000)   # the helper retries a dropped connection twice first
+        state = pg.evaluate("(() => { const b = document.querySelector('#ix-tgbknow'); return [!!b, b && !b.disabled, b && b.textContent, (document.getElementById('ix-toast') || {}).textContent.includes('look there before you try again')]; })()")
+        check('S7 with no answer, the button is free again, and a message says the backup may still arrive in Telegram', state == [True, True, 'Send Backup Now', True], state)
+        # (1.70.0) Telegram no longer has a Backups tab: its Backups card opens Backup & Restore; Send Today's Tasks is in Messages
+        pg.goto(s.base + '/web/settings/#telegram'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-tabbar [role=tab]').length >= 4", 20000)
+        ttabs = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-tabbar [role=tab]')].map(e => e.textContent)")
+        today = pg.evaluate("(() => { const b = document.getElementById('nt-today'); return b ? b.closest('.ix-tpane').dataset.tab : ''; })()")
+        pg.click('#ix-pc .ix-tile[data-go="bk"]'); wait_js(pg, "!!document.querySelector('#ix-tgbk')", 10000)
+        check("S7b Telegram's tabs are Status, Setup, Messages and Instant Replies; Send Today's Tasks is in Messages; the Backups card opens Backup & Restore",
+              ttabs == ['Status', 'Setup', 'Messages', 'Instant Replies'] and today == 'messages' and pg.evaluate(h2x) == 'Backup & Restore', (ttabs, today, pg.evaluate(h2x)))
         # Security > Overview: each card keeps its icon inside the card (the phone sheet's tiles once shared the class name and squashed them)
         pg.goto(s.base + '/web/settings/#security'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-tile').length >= 6", 15000)
         until(lambda: pg.evaluate("""[...document.querySelectorAll('#ix-pc .ix-tile')].filter(t => t.getBoundingClientRect().width > 0).every(t => {
@@ -77,12 +84,12 @@ try:
             const r = t.getBoundingClientRect(), i = t.querySelector('.ix-tile-i').getBoundingClientRect();
             return i.top >= r.top - 1 && i.bottom <= r.bottom + 1 && r.height >= 80 ? '' : t.textContent.slice(0, 30); }).filter(Boolean)""")
         check('S20 Telegram > Status: every card holds its icon and text', not bad, bad)
-        # the Settings menu of 1.48.5: Web Setting, Data Setting, System Setting (Health first)
+        # the Settings menu of 1.48.5: Web Setting, Data Setting, System Setting (Health first); 1.70.0: the Changelog is part of Updates
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "document.querySelectorAll('#ix-page .ix-snav [data-sec]').length > 0", 20000)
         menu = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav [data-sec] span')].map(e => e.textContent)")
         groups = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav .ix-sgl')].map(e => e.textContent)")
-        check('S9 the Settings menu: Web Setting (General, Appearance), Data Setting (Security, Telegram, Backup & Restore), System Setting (Health, Updates, Changelog)',
-              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Health', 'Updates', 'Changelog'] and groups == ['Web', 'Data', 'System'], (menu, groups))
+        check('S9 the Settings menu: Web Setting (General, Appearance), Data Setting (Security, Telegram, Backup & Restore), System Setting (Health, Updates)',
+              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Health', 'Updates'] and groups == ['Web', 'Data', 'System'], (menu, groups))
         def at(h, expr):
             pg.goto(s.base + '/web/settings/' + h)
             try: wait_js(pg, expr, 10000); return True
@@ -90,18 +97,42 @@ try:
         tabs = "[...document.querySelectorAll('#ix-pane .ix-subt [role=tab]')].map(e => e.textContent).join('|')"
         sel = "(document.querySelector('#ix-pane .ix-subt [aria-selected=true]') || {}).textContent"
         h2 = "(document.querySelector('#ix-pane .ix-ph h2') || {}).textContent"
-        places = [('#updates', 'Updates', 'Update'), ('#files', 'Updates', 'Files'), ('#health', 'Health', 'Overview'), ('#domains', 'Health', 'Domains and Uptime'), ('#check', 'Health', 'Server Check'),
-                  ('#changelog', 'Changelog', 'Versions'), ('#chmap', 'Changelog', 'Version Map'), ('#system', 'Updates', 'Update'), ('#look', 'Appearance', 'Look'), ('#themes', 'Appearance', 'Presets'),
-                  ('#colors', 'Appearance', 'Colors'), ('#nav', 'General', 'Tabs'), ('#pages', 'General', 'Tabs')]
+        sub = "[...document.querySelectorAll('#ix-pane .ix-subseg [aria-selected=true]')].map(e => e.textContent).join('')"
+        places = [('#updates', 'Updates', 'Update'), ('#files', 'Health', 'Server Check'), ('#health', 'Health', 'Overview'), ('#domains', 'Health', 'Domains and Uptime'), ('#check', 'Health', 'Server Check'),
+                  ('#changelog', 'Updates', "What's New"), ('#chmap', 'Updates', "What's New"), ('#system', 'Updates', 'Update'), ('#look', 'Appearance', 'Look'), ('#themes', 'Appearance', 'Presets'),
+                  ('#colors', 'Appearance', 'Colors'), ('#glass', 'Appearance', 'Glass'), ('#nav', 'Appearance', 'Bar'), ('#pages', 'Appearance', 'Bar'), ('#setup', 'Overview', 'Start Here'),
+                  ('#telegram/backups', 'Backup & Restore', 'Back Up')]
         bad = [h for h, t, u in places if not at(h, h2 + " === %s && %s === %s" % (json.dumps(t), sel, json.dumps(u)))]
-        check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages, removed in 1.48.5, opens Tabs)', not bad, bad)
-        ok = at('#nav', tabs + " === 'Basics|Tabs' && !!document.querySelector('#ix-pc #ix-tabl .ix-pgr') && !document.querySelector('#ix-pc .ix-navpick')")
-        check('S11 General has Basics and Tabs; Tabs holds the tab list and no longer the Navigation Style', ok, pg.evaluate(tabs))
-        ok = at('#look', tabs + " === 'Look|Presets|Colors|Glass' && !!document.querySelector('#ix-font')")
+        check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages and #nav open Appearance > Bar; 1.70.0: #files opens Server Check, #changelog What\'s New, #telegram/backups Backup & Restore)', not bad, bad)
+        ok = at('#chmap', sub + " === 'Version Map' && " + tabs + " === \"Update|What's New\"")
+        check("S10b Updates > What's New holds Versions, Version Map and Notes", ok and pg.evaluate("[...document.querySelectorAll('#ix-pane .ix-subseg [role=tab]')].map(e => e.textContent).join('|')") == 'Versions|Version Map|Notes', pg.evaluate(sub))
+        ok = at('#general', "!!document.querySelector('#ix-name')")
+        gen = pg.evaluate("[[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent), document.querySelectorAll('#ix-pane .ix-subt').length]")
+        check('S10c General is one page: Site Name, Site Logo and Time Zone, no tabs', ok and gen == [['Site Name', 'Site Logo', 'Time Zone'], 0], gen)
+        ok = at('#nav', tabs + " === 'Look|Bar|Colors|Presets|Glass' && !!document.querySelector('#ix-pc #ix-tabl .ix-pgr') && !!document.querySelector('#ix-pc .ix-navpick')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
-        check('S13 Appearance has Look, Presets, Colors and Glass (1.68.2); Look shows Font, Theme, Navigation Style (with the start-page bar switch) and Accent Color (the "Same Look on Every Page" switch is gone)',
-              ok and cards == ['Font', 'Theme', 'Navigation Style', 'Accent Color'] and pg.evaluate("!!document.querySelector('#ix-pc .ix-navpick') && !!document.querySelector('#ix-hb')") and pg.evaluate("!document.querySelector('#ix-look')"), (pg.evaluate(tabs), cards))
-        check('S14 Look offers 10 accent colors (the 1.65.3 picker) and your own', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 10 and pg.evaluate("!!document.querySelector('#ix-acc')"))
+        check('S11 Appearance > Bar holds Navigation Style (with the two bar switches) and the Tabs list', ok and cards == ['Navigation Style', 'Tabs'] and pg.evaluate("!!document.querySelector('#ix-hb') && !!document.querySelector('#ix-bh')"), (pg.evaluate(tabs), cards))
+        ok = at('#look', "!!document.querySelector('#ix-font')")
+        cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
+        check('S13 Look shows Theme, Font and Text Sizes; the bar, the accent and the glass switch are on their own tabs',
+              ok and cards == ['Theme', 'Font', 'Text Sizes'] and pg.evaluate("!document.querySelector('#ix-pc .ix-navpick, #ix-glass, #ix-pc .ix-apk, #ix-look')"), cards)
+        pg.click('#ix-pc [data-ts="cards"]'); wait_js(pg, "!!document.querySelector('#ix-dlg.open #ix-tzs')", 5000)
+        tsz = pg.evaluate("[document.querySelector('#ix-dlg.open h2').textContent, document.querySelectorAll('#ix-dlg.open input[type=range]').length, !!document.querySelector('#ix-dlg.open .ix-tss-cards')]")
+        pg.evaluate("(() => { const r = document.querySelector('#ix-dlg.open input[type=range]'); r.value = r.max; r.dispatchEvent(new Event('input')); })()")
+        rk = pg.evaluate("document.querySelector('#ix-dlg.open input[type=range]').dataset.k"); rmax = pg.evaluate("+document.querySelector('#ix-dlg.open input[type=range]').max")
+        pg.click('#ix-tzs'); until(lambda: ((s.get('state').get('sizes') or {}).get('cards') or {}).get(rk) == rmax, 5000)
+        check('S13b Look > Cards Text Sizes opens the Cards sizes (title, sliders, sample) and saves them for Cards', tsz[0] == 'Cards Text Sizes' and tsz[1] >= 2 and tsz[2] and ((s.get('state').get('sizes') or {}).get('cards') or {}).get(rk) == rmax, (tsz, s.get('state').get('sizes')))
+        wait_js(pg, "!document.querySelector('#ix-dlg.open')", 5000)   # the window has closed before the next section opens
+        s.post('settings', {'settings': {'sizes': {}}})
+        at('#colors', "!!document.querySelector('#ix-pc .ix-apk')")
+        check('S14 Colors holds Accent Color: 10 colors (the 1.65.3 picker) and your own, and no second Accent row', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 10 and pg.evaluate("!!document.querySelector('#ix-acc') && !document.querySelector('[data-sa]')"))
+        ok = at('#glass', "!!document.querySelector('#ix-glass2')")
+        check('S14b the glass on/off switch is on the Glass tab (Glass on the Bar)', ok)
+        ok = at('#setup', "!!document.querySelector('#ix-pc .ix-wzhost') && !!document.querySelector('#ix-pc .ix-help #ix-inst') && !!document.querySelector('#ix-pc .ix-help #ix-keysb')")
+        check('S14c Overview > Start Here: Guided Setup, then Install on Your Phone and Keyboard Shortcuts', ok)
+        ok = at('#check', "!!document.querySelector('#ix-pc .ix-scbox .ix-checks') && !!document.querySelector('#ix-pc #ix-fnb') && !!document.querySelector('#ix-pc .ix-fls .ix-chgs, #ix-pc .ix-fls .ix-status')")
+        check('S14d Health > Server Check ends with Files That Do Not Belong', ok)
+        at('#look', "!!document.querySelector('#ix-font')")
         pg.click('#ix-pane .ix-subt [data-grp="themes"]')
         wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)
         n = pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # the dark-mode list
@@ -112,7 +143,7 @@ try:
         # a font chosen in Look survives a later save made after changing only the accent
         at('#look', "!!document.querySelector('#ix-font')")
         pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); until(lambda: s.get('state').get('font') == 'georgia', 5000)
-        at('#look', "!!document.querySelector('#ix-font')")
+        at('#colors', "!!document.querySelector('#ix-pc .ix-apk')")
         pg.click('#ix-pc .ix-sw [data-c="#0ea5e9"]'); pg.click('#ix-save'); until(lambda: s.get('state').get('accent') == '#0ea5e9', 5000)
         st = s.get('state')
         check('S16 a later save keeps the font chosen earlier', st.get('font') == 'georgia' and st.get('accent') == '#0ea5e9', (st.get('font'), st.get('accent')))

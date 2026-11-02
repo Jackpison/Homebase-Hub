@@ -80,7 +80,7 @@ And around the pages:
 |---|---|
 | ⚙️&nbsp;**Settings** | Guided Setup for protection, 141 looks and your own colours, backup and restore, updates and health checks |
 | ✈️&nbsp;**[Telegram](#telegram)** | A daily digest, Due Now messages with Done, Skip and Snooze buttons, and backup files sent to your chat |
-| 📱&nbsp;**On your phone** | Add the site to the home screen of a phone or computer and it opens like an app, with its own icon and no browser bars (Settings > General > Install on Your Phone). Swipe between pages. Nothing is kept offline: your data always comes from your server |
+| 📱&nbsp;**On your phone** | Add the site to the home screen of a phone or computer and it opens like an app, with its own icon and no browser bars (Settings > Overview > Start Here > Install on Your Phone). Swipe between pages. Nothing is kept offline: your data always comes from your server |
 | 🛡️&nbsp;**[Security](#security-in-short)** | One password, optional two-step login, encrypted tabs and backups, and checked updates you can undo |
 
 <p align="right"><a href="#readme-top">↑ Back to top</a></p>

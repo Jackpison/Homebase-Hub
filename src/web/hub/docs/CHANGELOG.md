@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.70.0 | Settings sorted: Bar tab in Appearance, Accent Color in Colors, Text Sizes in Look, Start Here in Overview, Telegram backups in Backup, Files in Server Check, What's New in Updates |
 | 1.69.1 | The link field (Uiverse): a label in front and a copy icon for Links' Address, Files' Share Link, Health › Domains, the Telegram cron lines and the recovery and two-step keys |
 | 1.69.0 | Step-by-step boxes (React Bits' Stepper) for New Site Setup, Links Import, the first Encryption Passphrase, Restore, Start Over, Files Share Link and Add a Passkey, and a new Home Tour |
 | 1.68.5 | Glass windows, menus and search results let the page show through: a much lighter layer behind a glass window and a brighter rim |
@@ -132,6 +133,26 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.70.0
+
+### Changed
+
+Settings is sorted so each thing sits where you would look for it. Nothing is lost and no setting changes; old links open the new place.
+
+- **Appearance › Bar** (new tab): Navigation Style, Show the Bar on the Home Page, Hide the Bar While Scrolling, and the Tabs list (rename, reorder, hide), which was General › Tabs.
+- **Appearance › Look:** Theme, Font and **Text Sizes**. Text Sizes opens Info's or Cards' sizes from here too (Links keeps its own in Links Settings).
+- **Appearance › Colors:** holds **Accent Color** (the picker with ten colors). It was in Look and again as a plain row in Colors.
+- **Appearance › Glass:** the only place for the glass switch (Glass on the Bar). Look had a second one.
+- **General** is one page: Site Name, Site Logo and Time Zone.
+- **Overview › Start Here** (was Guided Setup): the setup steps, then **Install on Your Phone** and **Keyboard Shortcuts** (they were in General).
+- **Backup & Restore › Back Up:** **Send Backups to Telegram** (how often, Send Backup Now) moved here from Telegram › Backups. Telegram's Backups card opens it.
+- **Telegram:** four tabs (Status, Setup, Messages, Instant Replies). **Send Today's Tasks** is in Messages.
+- **Health › Server Check** ends with **Files That Do Not Belong** (was Updates › Files).
+- **Updates › What's New:** Versions, Version Map and Notes (the Changelog was a section of its own). The menu has eight sections instead of nine.
+- The Settings search knows the new places.
 
 ---
 

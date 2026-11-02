@@ -584,7 +584,7 @@ case 'pp_check':   // the website password, checked like a login (before the bro
     need_password((string)(body()['password'] ?? ''));
     hub_json(200, ['ok' => true]);
 
-case 'changelog':   // Settings > Changelog: the history of every version (docs/ is closed to browsers, so it is read here, for you only)
+case 'changelog':   // Settings > Updates > What's New: the history of every version (docs/ is closed to browsers, so it is read here, for you only)
     need_admin(false);
     $cl = HUB_DOCS . '/CHANGELOG.md';
     if (!is_file($cl)) hub_json(200, ['ok' => false, 'error' => 'The changelog file is not on your server (web/hub/docs/CHANGELOG.md).']);

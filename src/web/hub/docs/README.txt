@@ -71,7 +71,7 @@ afterwards. If it cannot answer, the saved version comes back by itself, and "Go
 Never touched: site-data (all your data), web/hub/media (pictures and logo), web/hub/core/config.php, and the Tools settings (made from yours).
 From 1.38.0 Settings > Updates can also fetch the update from GitHub: "Check Now" looks for a newer release, "Download and Check" downloads it, compares its size and SHA-256 with the list the project publishes, and runs the same checks as an uploaded zip. Nothing changes until you type your password. The daily check is off by default; while it is off the site never contacts GitHub unless you press Check Now.
 The very first time (when the site does not have this tab yet), upload and extract the zip with the File Manager, as below;
-after that the site can update itself. Settings > Updates > Files compares the server with the version's file list
+after that the site can update itself. Settings > Health > Server Check (Files That Do Not Belong) compares the server with the version's file list
 (web/hub/core/manifest.json) and shows files that do not belong, which you can delete from there.
 By hand, if you ever need to: upload and extract the new zip over the site folder. Everything in site-data is left alone.
 Every update zip contains web/hub/docs/CHANGELOG.md with the full history, so you can see what each version changed.
@@ -80,8 +80,8 @@ Keep these folders if you replace files by hand: web/hub/media (home/photos, hom
 
 THE BAR
 -------
-Three styles (Settings > Appearance > Look), each with its own layout. The pages are Home, Links, Info, Cards, Tasks
-and Tools (rename, reorder or hide them in Settings > General > Tabs).
+Three styles (Settings > Appearance > Bar), each with its own layout. The pages are Home, Links, Info, Cards, Tasks
+and Tools (rename, reorder or hide them in Settings > Appearance > Bar).
   Top Bar (the default): logo, pages, search, then Theme / Edit (pencil) / Backup / Settings (gear). It slides away while you
     scroll down and comes back on any scroll up, at the top of the page, when you press / or move the mouse to the top
     edge. Phones: a menu button opens the pages; search, pencil, Backup and the gear stay in the bar.
@@ -106,9 +106,9 @@ and Tools (rename, reorder or hide them in Settings > General > Tabs).
 - Search covers Links, Info, Tasks (while logged in) and Tools; Cards keeps its own search. Press / or Ctrl+K anywhere. The sliders button in
   the search box chooses where to look: Everything or only Links / Info / Tasks / Tools, and one tab. Names, web addresses
   and note text are always searched. Shortcut: type  links: text  or  info: text.
-- Settings is a page of its own (web/settings/, the gear in the bar). A menu on the left: Overview, then three groups: Web Setting (General:
-  Basics, Tabs; Appearance: Look, Presets, Colors), Data Setting (Security, Telegram, Backup & Restore) and System Setting
-  (Health, Updates, Changelog). A search box at the top of the menu jumps to any setting (press /). Overview › Guided Setup walks through the protection steps in order. Overview comes first: how things stand and what to look at next. Security, Telegram and Backup &
+- Settings is a page of its own (web/settings/, the gear in the bar). A menu on the left: Overview, then three groups: Web Setting (General;
+  Appearance: Look, Bar, Colors, Presets, Glass), Data Setting (Security, Telegram, Backup & Restore) and System Setting
+  (Health, Updates with What's New). A search box at the top of the menu jumps to any setting (press /). Overview › Start Here walks through the protection steps in order (Guided Setup), with Install on Your Phone and Keyboard Shortcuts below. Overview comes first: how things stand and what to look at next. Security, Telegram and Backup &
   Restore are tabs, one part on screen at a time; every tab has a link (settings/#security/encryption). On a phone the menu is shown
   first and each section opens with a back button.
   General and Appearance preview live and are kept with Save Settings (a bar at the bottom appears while something is unsaved;
@@ -116,20 +116,21 @@ and Tools (rename, reorder or hide them in Settings > General > Tabs).
 - Settings > Appearance > Colors: one mode at a time (Dark or Light), in groups: Menu Bar (bar background, tabs and icons), Page
   (background, boxes, menus, borders) and Text. Presets (166 looks, a search box, a Surprise Me button, and your own saved looks that can be exported and imported) fill a whole mode in one click; Colors also holds a separate accent for each page; the arrow next to a color puts it
   back to the default. Page Backgrounds gives one page its own background. Tab colors in Links and Info are set on each tab.
-- Text sizes: Links, Info and Cards each have "Change Text Sizes" inside their own Page Settings (pencil > the page's Settings).
-- Install on Your Phone (Settings > General > Basics): add the site to the home screen of a phone or computer and it opens
+- Text sizes: Links, Info and Cards each have "Change Text Sizes" inside their own Page Settings (pencil > the page's Settings);
+  Info's and Cards' also open from Settings > Appearance > Look.
+- Install on Your Phone (Settings > Overview > Start Here): add the site to the home screen of a phone or computer and it opens
   like an app (its own icon, no browser bars). The steps are under "How?". iPhone: Safari, Share, Add to Home Screen. Android: Chrome menu, Install App.
   Computer: the install icon in Chrome's or Edge's address bar. The site describes itself to the phone through
   web/hub/core/api.php?action=manifest (public: the site name, icons, colours and the pages' names). There is no offline
   mode: pages and data always come from your server.
-- Start page without the bar (Settings > Appearance > Look): a gear button in its corner opens editing, the other
+- Start page without the bar (Settings > Appearance > Bar): a gear button in its corner opens editing, the other
   sections and Settings once you are logged in.
 
 
 BACKUP
 ------
 Settings > Backup & Restore (the Backup icon in the bar opens it too) has four tabs:
-- Back Up: when the last full backup was, the reminder interval, whether Telegram sends backups for you, the parts to include, and
+- Back Up: when the last full backup was, the reminder interval, Send Backups to Telegram (how often, Send Backup Now), the parts to include, and
   Download Backup (one file for everything, locked with your passphrase when you have set one).
 - Restore: drop or choose a backup file (.json or .json.gz). Choose "Replace everything" or "Add or update these tabs only". What is
   there now is kept as an earlier version first. Earlier Versions (click to open) lists every page's saved versions, with Restore.

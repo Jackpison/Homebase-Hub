@@ -26,7 +26,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 
 if (defined('HUB')) return;
-define('HUB', '1.69.1');
+define('HUB', '1.70.0');
 const HUB_MIN_PHP = '8.3';   // the oldest PHP this version supports and is tested on; an update zip carries it as "minPhp" in its file list
 
 /** When each PHP branch stops getting security fixes (https://www.php.net/supported-versions, checked 2026-10-23). Branches not listed are newer than this table. Add a row each November. */
@@ -322,7 +322,7 @@ function hub_manifest(array $s, string $root, string $public): array {
     if ($own !== '') { $sz = getimagesize($public . '/' . $own); $icons[1]['sizes'] = $sz[0] . 'x' . $sz[1]; }
     $names = ['links' => 'Links', 'info' => 'Info', 'cards' => 'Cards', 'tasks' => 'Tasks', 'tools' => 'Tools'];
     $order = array_keys($names); $hidden = [];
-    foreach ((array)($s['pages'] ?? []) as $pg) {   // the bar's own names, order and hidden pages (Settings > General > Tabs)
+    foreach ((array)($s['pages'] ?? []) as $pg) {   // the bar's own names, order and hidden pages (Settings > Appearance > Bar)
         $id = (string)($pg['id'] ?? '');
         if (!isset($names[$id])) continue;
         if (trim((string)($pg['name'] ?? '')) !== '') $names[$id] = mb_substr(trim(strip_tags((string)$pg['name'])), 0, 30);

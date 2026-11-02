@@ -345,7 +345,7 @@ def phone():
 <div class="tabs" role="tablist" aria-label="Your device">{tabs}</div>{panels}</div>
 <div class="hart"><div class="phones"><img src="img/m-links.webp" alt="Links on a phone" width="390" height="844" loading="lazy"><img src="img/m-info.webp" alt="Info on a phone" width="390" height="844" loading="lazy"><img src="img/m-tasks.webp" alt="Tasks on a phone" width="390" height="844" loading="lazy"></div></div></div></section>
 <section class="s a-home"><div class="in"><span class="eyebrow">What you get</span><h2>Like an app, still your site.</h2><div class="cards c4">{perks}</div>
-<p class="intro mt">The same steps are in Settings, General, Install on Your Phone, where an Install button also appears when your browser offers one. It works in a sub-folder too.</p></div></section>{band()}'''
+<p class="intro mt">The same steps are in Settings, Overview, Start Here, where an Install button also appears when your browser offers one. It works in a sub-folder too.</p></div></section>{band()}'''
     return dict(slug='phone', title='On your phone: Homebase Hub', cls='a-home', desc='Add Homebase Hub to the home screen of an iPhone, an Android phone or a computer and it opens like an app. Nothing is kept offline.', body=body)
 
 

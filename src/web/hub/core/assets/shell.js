@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.69.1" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.70.0" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -53,7 +53,7 @@
   var ASSETS = new URL('.', me ? me.src : location.href).href;        // .../web/hub/core/assets/
   var CORE = new URL('../', ASSETS).href;                             // .../web/hub/core/
   var ROOT = new URL('../../../', CORE).href;                            // site root
-  /* every page of the site: [id, default name, address, icon]. Names, order and hidden tabs come from Settings > General > Tabs. */
+  /* every page of the site: [id, default name, address, icon]. Names, order and hidden tabs come from Settings > Appearance > Bar. */
   var PAGE_DEF = [
     ['home', 'Home', ROOT, 'M3 11l9-7 9 7M5 10v10h14V10'],
     ['links', 'Links', ROOT + 'web/links/', 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'],

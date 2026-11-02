@@ -13,12 +13,13 @@
 /* Map of this file (search for the names; line numbers would go stale). One closure, in this order:
  *   frame      SECTIONS, PANES, mount(), go(), pane(), tabify(), cardify(), the draft and "Save Settings" (saveSettings)
  *   search     SEARCH: add a line here for every new setting
- *   General    pGeneral, textSizes        Appearance  pLook, pColors, PRESETS / PRESET_GROUPS (data), pThemes
- *   Tabs       pNav, tabEditor
- *   Telegram   pRemind                    Health      pCheck (Server Check), pDomains
- *   Overview   pOverview, whatsNew, decorateNav, pSetup (Guided Setup, WZ, setupSteps)
- *   Changelog  mdInline, mdBlocks, clParse, pChangelog, pChMap, pChNotes
- *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles
+ *   General    helpCards (Start Here), pGeneral, textSizes
+ *   Appearance pLook, barHtml, accentHtml, pColors, PRESETS / PRESET_GROUPS (data), pThemes, pGlass
+ *   Bar        pNav (bar settings and tabs), tabEditor
+ *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles), pDomains
+ *   Overview   pOverview, whatsNew, decorateNav, pStart (Start Here: pSetup, Guided Setup, WZ, setupSteps)
+ *   What's New mdInline, mdBlocks, clParse, pChangelog, pChMap, pChNotes (tabs of Updates)
+ *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles (shown in Health > Server Check)
  *   building blocks (used by every pane)  ecCard, ecField, ecChip, tabHead, tile, checkRow, spinRow
  *   Security   pSecurity, VK (devices), PP (password and encryption flows)
  *   Backup     NAMES, pBackup           Health  pHealth
@@ -34,7 +35,7 @@
      section looked inside it, found no #ix-pane and stopped, so the page kept showing the old section */
   function $(sel) { var ov = document.getElementById('ix-dlg'), h = ov && ov.classList.contains('open') && !ov.classList.contains('closing') ? ov : (PAGE || ov); return h ? h.querySelector(sel) : null; }
   /* ---------- 10. Settings ----------
-     Five sections; General, Appearance and Health hold sub-tabs along the top. General and Appearance edit a draft that
+     Eight sections (1.70.0); Overview, Appearance, Health and Updates hold sub-tabs along the top. General and Appearance edit a draft that
      previews live and is kept with Save Settings; Telegram, Security and Health save each change at once. */
   ICON.send = 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z';
   ICON.home = 'M3 11l9-7 9 7M5 10v10h14V10';
@@ -52,15 +53,15 @@
   ICON.users = 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 7.5M22 21a7 7 0 0 0-5-6.7';
   // [id, name, icon, what it is for (shown under the title), sub-tabs [[id, name]], menu group]
   var SECTIONS = [
-    ['overview', 'Overview', ICON.grid, 'How your site stands right now, and what to look at next.', [['overview', 'Overview'], ['setup', 'Guided Setup']], ''],
-    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and the tabs in the bar.', [['general', 'Basics'], ['nav', 'Tabs']], 'Web Setting'],
-    ['look', 'Appearance', ICON.palette, 'The bar, theme, font and colors.', [['look', 'Look'], ['themes', 'Presets'], ['colors', 'Colors'], ['glass', 'Glass']], 'Web Setting'],
+    ['overview', 'Overview', ICON.grid, 'How your site stands right now, and what to look at next.', [['overview', 'Overview'], ['setup', 'Start Here']], ''],
+    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone.', null, 'Web Setting'],
+    ['look', 'Appearance', ICON.palette, 'The theme, font, bar, colors and glass.', [['look', 'Look'], ['nav', 'Bar'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
     ['security', 'Security', ICON.shield, 'Login, passkeys and encryption.', null, 'Data Setting'],
-    ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and backups, sent to your phone.', null, 'Data Setting'],
-    ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over.', null, 'Data Setting'],
-    ['health', 'Health', ICON.pulse, 'Version, speed, errors and domains.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
-    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, or go back.', [['updates', 'Update'], ['files', 'Files']], 'System Setting'],
-    ['changelog', 'Changelog', ICON.log, 'What changed in every version of your site, newest first.', [['changelog', 'Versions'], ['chmap', 'Version Map'], ['chnotes', 'Notes']], 'System Setting']];
+    ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
+    ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
+    ['health', 'Health', ICON.pulse, 'Version, speed, errors, domains and a check of your server.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
+    // (1.70.0) the Changelog is the What's New tab of Updates: one tab along the top, with Versions, Version Map and Notes below it
+    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Versions', 'What\'s New'], ['chmap', 'Version Map', 'What\'s New'], ['chnotes', 'Notes', 'What\'s New']], 'System Setting']];
   /* (1.66.0) the left panel in the "System tiles" look: a solid colour tile with a white icon for each section (icons from Lucide,
      lucide.dev, ISC licence: see web/hub/docs/THIRD-PARTY.md). [colour, the icon's SVG inside] */
   var SEC_TILE = {
@@ -72,7 +73,6 @@
     backup: ['#f97316', '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="m9.5 14.5 2.5 2.5 2.5-2.5M12 11v6"/>'],
     health: ['#f43f5e', '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>'],
     updates: ['#14b8a6', '<path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"/><path d="M12 21v-9M8 16l4-4 4 4"/>'],
-    changelog: ['#71717a', '<path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/><path d="M15 8h-5M15 12h-5"/>']
   };
   var LOGOUT_ICON = '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>';
   var tileSvg = function (inner) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + inner + '</svg>'; };
@@ -84,7 +84,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { overview: pOverview, setup: pSetup, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, files: pFiles, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
+  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
   var SUB_OF = {};   // sub-tab -> its section (nav -> general, colors -> look)
   SECTIONS.forEach(function (x) { (x[4] || [[x[0]]]).forEach(function (t) { SUB_OF[t[0]] = x[0]; }); });
   var PAGE = null;                       // the page's own element when Settings runs as a page (web/settings/)
@@ -181,20 +181,21 @@
   function ovGet() { if (!ovP || Date.now() - ovAt > 3000) { ovAt = Date.now(); ovP = api('overview'); } return ovP; }
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
-    ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'general', 'keys keyboard hotkeys shortcut question mark'], ['Install on Your Phone', 'general', 'app home screen phone install add to home screen iphone android'],
-    ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'look', 'home start page corner'], ['Hide the Bar While Scrolling', 'look', 'auto hide slide away stay put fixed scroll dock shrink'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
-    ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Accent Color', 'look', 'gold buttons highlight'], 
+    ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'setup', 'keys keyboard hotkeys shortcut question mark help'], ['Install on Your Phone', 'setup', 'app home screen phone install add to home screen iphone android help'],
+    ['Guided Setup', 'setup', 'start here wizard steps protect'],
+    ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'nav', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'nav', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
+    ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
     ['Passkeys', 'security/passkeys', 'passkey fingerprint face pin webauthn security key log in without password'], ['Two-Step Login', 'security/two-step-login', '2fa authenticator totp recovery codes'], ['Login Approval', 'security/login-approval', 'telegram approve tap'],
     ['Trusted Browsers', 'security/trusted-browsers', 'skip code remember'], ['Devices and Login History', 'security/devices', 'log out sessions activity wrong password ip'],
-    ['Telegram Bot Setup', 'telegram/setup', 'token botfather chat cron schedule connect'], ['Telegram Backups', 'telegram/backups', 'send backup'],
+    ['Telegram Bot Setup', 'telegram/setup', 'token botfather chat cron schedule connect'], ['Send Backups to Telegram', 'backup', 'telegram send backup schedule daily weekly'],
     ['Telegram Messages', 'telegram/messages', 'digest reminders alerts daily hour due'], ['Instant Replies', 'telegram/instant-replies', 'webhook commands bot'],
     ['Back Up', 'backup/overview', 'download backup file locked passphrase'], ['Restore a Backup', 'backup/restore', 'import'], ['Export', 'backup/export', 'csv json spreadsheet links cards tasks'],
     ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
-    ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'files', 'extra changed missing leftover'],
+    ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'check', 'extra changed missing leftover files'],
     ['Health', 'health', 'disk speed errors log'], ['Domains and Uptime', 'domains', 'expiry ssl hosting renewal'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
-    ['Changelog', 'changelog', 'versions history what changed new'], ['Version Map', 'chmap', 'all versions']
+    ['What\'s New', 'changelog', 'changelog versions history what changed new'], ['Version Map', 'chmap', 'all versions changelog'], ['Version Notes', 'chnotes', 'notes changelog']
   ];
   function bindSearch(host) {
     var q = host.querySelector('#ix-ss'), box = host.querySelector('#ix-sres'); if (!q) return;
@@ -223,6 +224,9 @@
     if (id === 'remind') id = 'telegram';
     if (id === 'system') id = 'updates';   // the System section of 1.48 is Updates, Health and Changelog again
     if (id === 'pages') id = 'nav';        // General > Pages was removed in 1.48.5: its old links open Tabs
+    // (1.70.0) the moves: Updates > Files is part of Health > Server Check; Telegram > Backups is part of Backup & Restore
+    if (id === 'files') id = 'check';
+    if (id === 'telegram' && parts[1] === 'backups') { id = 'backup'; parts = ['backup']; }
     if (!PAGE) { location.href = K.ROOT + 'web/settings/#' + target; return; }
     if (!SUB_OF[id]) id = 'overview';
     if (id === 'backup' && parts[1]) parts[1] = { 'back-up': 'overview', 'export-data': 'export', 'earlier-versions': 'restore' }[parts[1]] || parts[1];   // the tabs of 1.60 and before
@@ -248,7 +252,7 @@
     mountPane(sub); subMark(); markDirty();
   }
   /* The tabs along the top of a section. A tab can hold a few tabs of its own when its third field names a group: each group is
-     then one tab, and a group with more than one part gets a small row of its own below. (No section uses groups at the moment.) */
+     then one tab, and a group with more than one part gets a small row of its own below. (Updates uses one: What's New.) */
   function grpOf(t) { return t[2] || t[1]; }
   function subTabs(subs, sub) {
     var cur = subs.filter(function (t) { return t[0] === sub; })[0] || subs[0], cg = grpOf(cur), groups = [];
@@ -285,7 +289,7 @@
   /* The plain panes (General, Tabs, Look) are written as "heading, one line, controls". Each heading with what follows it
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
   var CARDIFY = { general: 1, nav: 1, look: 1, glass: 1 };
-  var CARD_ICON = { 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
+  var CARD_ICON = { 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages, 'glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear, 'liquid': ICON.sparkle, 'where': ICON.grid };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
@@ -376,15 +380,9 @@
     return '<optgroup label="Saved and This Device">' + top.map(function (z) { return opt(z, z === 'Asia/Kolkata' ? 'India Standard Time, IST' : ''); }).join('') + '</optgroup><optgroup label="All Time Zones">' +
       all.filter(function (z) { return top.indexOf(z) < 0; }).map(function (z) { return opt(z); }).join('') + '</optgroup>';
   }
-  function pGeneral(p) {
-    p.innerHTML = '<h3>Site Name</h3><p>Shown in the bar, Telegram messages and backup names.</p><input type="text" id="ix-name" maxlength="30" value="' + esc(draft.siteName) + '" aria-label="Site Name">' +
-      '<h3>Site Logo</h3><p>Shown in the bar and the browser tab. PNG, JPG, WebP or GIF.</p>' +
-      '<div class="ix-row"><span class="ix-logoprev" id="ix-lp">' + (S.logo ? '<img src="' + esc(ROOT + S.logo) + '" alt="">' : '<span>' + esc((S.siteName || 'M').charAt(0).toUpperCase()) + '</span>') + '</span>' +
-      '<button type="button" class="ix-btn" id="ix-lu">' + svg(ICON.image) + 'Change Logo</button><button type="button" class="ix-btn" id="ix-lx"' + (S.logo ? '' : ' hidden') + '>Remove</button>' +
-      '<input type="file" id="ix-lf2" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>' +
-      '<h3>Time Zone</h3><p>Today, due times, backups and Telegram all follow it.</p>' +
-      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>' +
-      '<h3 id="ix-install">Install on Your Phone</h3><p>Opens like an app, with its own icon.</p>' +
+  /* (1.70.0) Overview > Start Here: under Guided Setup, Install on Your Phone and Keyboard Shortcuts (they were in General; they are help, not settings) */
+  function helpCards(p) {
+    p.innerHTML = '<h3 id="ix-install">Install on Your Phone</h3><p>Opens like an app, with its own icon.</p>' +
       '<details class="ix-how"><summary>How?</summary><div class="ix-steps"><h4>iPhone or iPad</h4><p>In Safari, tap Share, then Add to Home Screen.</p>' +
       '<h4>Android</h4><p>In Chrome, open the menu (the three dots), then Install App or Add to Home Screen.</p>' +
       '<h4>Computer</h4><p>In Chrome or Edge, click the install icon at the right end of the address bar, or open the menu and choose Install.</p></div></details>' +
@@ -401,6 +399,16 @@
       window.__hubInstall = null; ib.hidden = true; ev.prompt();
       Promise.resolve(ev.userChoice).then(function (r) { if (r && r.outcome === 'accepted') toast('Installed.'); }, function () {});
     };
+    cardify(p);
+  }
+  function pGeneral(p) {
+    p.innerHTML = '<h3>Site Name</h3><p>Shown in the bar, Telegram messages and backup names.</p><input type="text" id="ix-name" maxlength="30" value="' + esc(draft.siteName) + '" aria-label="Site Name">' +
+      '<h3>Site Logo</h3><p>Shown in the bar and the browser tab. PNG, JPG, WebP or GIF.</p>' +
+      '<div class="ix-row"><span class="ix-logoprev" id="ix-lp">' + (S.logo ? '<img src="' + esc(ROOT + S.logo) + '" alt="">' : '<span>' + esc((S.siteName || 'M').charAt(0).toUpperCase()) + '</span>') + '</span>' +
+      '<button type="button" class="ix-btn" id="ix-lu">' + svg(ICON.image) + 'Change Logo</button><button type="button" class="ix-btn" id="ix-lx"' + (S.logo ? '' : ' hidden') + '>Remove</button>' +
+      '<input type="file" id="ix-lf2" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>' +
+      '<h3>Time Zone</h3><p>Today, due times, backups and Telegram all follow it.</p>' +
+      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>';
     p.querySelector('#ix-tz').onchange = function (e) { draft.tz = e.target.value; };
     p.querySelector('#ix-name').oninput = function (e) { draft.siteName = e.target.value; };
     p.querySelector('#ix-lu').onclick = function () { p.querySelector('#ix-lf2').click(); };
@@ -417,47 +425,59 @@
       api('logo', { remove: true }).then(function (j) { if (j.ok) { S.logo = draft.logo = ''; remember(S); redraw(); subPane('general'); toast('Logo removed.'); } });
     };
   }
+  /* Appearance > Look (1.70.0): the theme, the font and the text sizes. The bar's settings are on the Bar tab, Accent Color on Colors, the glass switch on Glass. */
   function pLook(p) {
-    // (1.65.3) the Accent Color picker, adapted from Uiverse.io by Cobp, "horrible-quail-18" (MIT; see web/hub/docs/THIRD-PARTY.md): ten squares in a row that
-    // swell around the mouse, the hex code in a bubble; a click chooses (the original copies), the arrow keys move along the row
-    var sw = ['#ffc21a', '#fb923c', '#e11d48', '#f472b6', '#a78bfa', '#8b5cf6', '#3b82f6', '#0ea5e9', '#10b981', '#84cc16'];
-    var tickOn = function (c) { var n = parseInt(c.slice(1), 16); return ((n >> 16) * 299 + (n >> 8 & 255) * 587 + (n & 255) * 114) / 1000 > 140 ? '#111' : '#fff'; };
-    p.innerHTML = '<h3>Font</h3><p>One font for every page.</p><select id="ix-font" class="ix-sel" aria-label="Font">' +
+    p.innerHTML = '<h3>Theme</h3><p>The default look. The sun/moon button in the bar changes it just for you.</p>' +
+      seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
+      '<h3>Font</h3><p>One font for every page.</p><select id="ix-font" class="ix-sel" aria-label="Font">' +
         FONTS.map(function (f) { return '<option value="' + f[0] + '"' + (draft.font === f[0] || (!draft.font && f[0] === 'default') ? ' selected' : '') + '>' + esc(f[1]) + '</option>'; }).join('') + '</select>' +
       '<input type="text" id="ix-fontc" maxlength="40" placeholder="A font installed on your device, like Calibri" value="' + esc(draft.fontCustom || '') + '" aria-label="Font Name"' + (draft.font === 'custom' ? '' : ' hidden') + '>' +
-      '<h3>Theme</h3><p>The default look. The sun/moon button in the bar changes it just for you.</p>' +
-      seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
-      '<h3>Navigation Style</h3><p>For every page.</p>' +
+      '<h3>Text Sizes</h3><p>Make the text on Info or Cards bigger or smaller. Links has its own, in Links Settings.</p>' +
+      '<div class="ix-row"><button type="button" class="ix-btn" data-ts="info">' + svg(ICON.type) + 'Info Text Sizes</button><button type="button" class="ix-btn" data-ts="cards">' + svg(ICON.type) + 'Cards Text Sizes</button></div>';
+    bindSeg(p, function (k, v) { draft[k] = v; if (k === 'theme') K.previewTheme(v); });
+    p.querySelector('#ix-font').onchange = function (e) { draft.font = e.target.value; p.querySelector('#ix-fontc').hidden = draft.font !== 'custom'; if (draft.font === 'custom') p.querySelector('#ix-fontc').focus(); preview(); };
+    p.querySelector('#ix-fontc').oninput = function (e) { draft.fontCustom = e.target.value; preview(); };
+    p.querySelectorAll('[data-ts]').forEach(function (b) { b.onclick = function () { textSizes(b.dataset.ts); }; });
+  }
+  /* Appearance > Bar (1.70.0): how the bar looks and acts, then its tabs (pNav). */
+  function barHtml() {
+    return '<h3>Navigation Style</h3><p>For every page.</p>' +
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
       '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
       '<label class="ix-tg"><span>Hide the Bar While Scrolling<small>The top bar slides away as you scroll down and comes back as you scroll up; the dock shrinks a little. Off keeps the bar in place.</small></span><input type="checkbox" id="ix-bh"' + (draft.barHide !== false ? ' checked' : '') + '></label>' +
-      '<label class="ix-tg"><span>Bar Glass<small>The top bar and the dock turn to glass that bends what is under their edges. Chrome and Edge show the full glass; Safari and Firefox show frosted glass. Not for the sidebar.</small></span><input type="checkbox" id="ix-glass"' + (draft.glass ? ' checked' : '') + '></label>' +
-      '<h3>Accent Color</h3><p>Buttons, the current page, links and highlights.</p><div class="ix-sw"><div class="ix-apk" role="group" aria-label="Accent Color">' + sw.map(function (c, i) {
-        var on = draft.accent === c, first = sw.indexOf(draft.accent) < 0 ? i === 0 : on;
-        return '<button type="button" data-c="' + c + '" data-hex="' + c + '" style="--c:' + c + '" aria-label="Accent color ' + c + (on ? ', chosen' : '') + '" aria-pressed="' + on + '" tabindex="' + (first ? 0 : -1) + '">' +
-          '<svg class="ix-apt" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" stroke="' + tickOn(c) + '"/></svg></button>'; }).join('') + '</div>' +
-      '<label class="ix-swc" title="Your Own Color"><input type="color" id="ix-acc" value="' + esc(draft.accent) + '" aria-label="Your Own Color"></label><input type="text" class="ix-hex" id="ix-acch" maxlength="7" value="' + esc(draft.accent) + '" aria-label="Accent Color Hex" spellcheck="false"></div>' +
-      '<p class="ix-note">More colors: the Colors tab. Ready-made looks: the Presets tab.</p>';
-    bindSeg(p, function (k, v) { draft[k] = v; if (k === 'theme') K.previewTheme(v); });
-    p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { setAcc(b.dataset.c); }; });
-    var apk = [].slice.call(p.querySelectorAll('.ix-apk [data-c]'));   // the arrow keys move along the row (one stop for Tab)
-    apk.forEach(function (b, i) { b.onkeydown = function (e) {
-      var d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!d) return; e.preventDefault();
-      var n = apk[(i + d + apk.length) % apk.length]; apk.forEach(function (x) { x.tabIndex = -1; }); n.tabIndex = 0; n.focus(); }; });
-    p.querySelector('#ix-acc').oninput = function (e) { setAcc(e.target.value); };
-    p.querySelector('#ix-acch').oninput = function (e) { var h = hexOf(e.target.value); e.target.classList.toggle('bad', !h); if (h) setAcc(h, true); };
+      '<p class="ix-note">Glass for the bar: the Glass tab.</p>';
+  }
+  function bindBar(p) {
     p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
       draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
     p.querySelector('#ix-hb').onchange = function (e) { draft.homeBar = e.target.checked; preview(); };
-    p.querySelector('#ix-glass').onchange = function (e) { draft.glass = e.target.checked; preview(); };
     p.querySelector('#ix-bh').onchange = function (e) { draft.barHide = e.target.checked; preview(); };
-    p.querySelector('#ix-font').onchange = function (e) { draft.font = e.target.value; p.querySelector('#ix-fontc').hidden = draft.font !== 'custom'; if (draft.font === 'custom') p.querySelector('#ix-fontc').focus(); preview(); };
-    p.querySelector('#ix-fontc').oninput = function (e) { draft.fontCustom = e.target.value; preview(); };
+  }
+  /* Accent Color (on the Colors tab since 1.70.0). (1.65.3) The picker is adapted from Uiverse.io by Cobp, "horrible-quail-18" (MIT; see web/hub/docs/THIRD-PARTY.md):
+     ten squares in a row that swell around the mouse, the hex code in a bubble; a click chooses (the original copies), the arrow keys move along the row */
+  var ACC_SW = ['#ffc21a', '#fb923c', '#e11d48', '#f472b6', '#a78bfa', '#8b5cf6', '#3b82f6', '#0ea5e9', '#10b981', '#84cc16'];
+  function accentHtml() {
+    var tickOn = function (c) { var n = parseInt(c.slice(1), 16); return ((n >> 16) * 299 + (n >> 8 & 255) * 587 + (n & 255) * 114) / 1000 > 140 ? '#111' : '#fff'; };
+    return '<div class="ix-cgrp"><h4>Accent Color</h4><p>Buttons, the current page, links and highlights, on every page, in dark and light mode.</p><div class="ix-sw"><div class="ix-apk" role="group" aria-label="Accent Color">' + ACC_SW.map(function (c, i) {
+        var on = draft.accent === c, first = ACC_SW.indexOf(draft.accent) < 0 ? i === 0 : on;
+        return '<button type="button" data-c="' + c + '" data-hex="' + c + '" style="--c:' + c + '" aria-label="Accent color ' + c + (on ? ', chosen' : '') + '" aria-pressed="' + on + '" tabindex="' + (first ? 0 : -1) + '">' +
+          '<svg class="ix-apt" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" stroke="' + tickOn(c) + '"/></svg></button>'; }).join('') + '</div>' +
+      '<label class="ix-swc" title="Your Own Color"><input type="color" id="ix-acc" value="' + esc(draft.accent) + '" aria-label="Your Own Color"></label><input type="text" class="ix-hex" id="ix-acch" maxlength="7" value="' + esc(draft.accent) + '" aria-label="Accent Color Hex" spellcheck="false"></div></div>';
+  }
+  function bindAccent(p) {
     function setAcc(c, fromText) {
       draft.accent = c.toLowerCase(); if (!fromText) p.querySelector('#ix-acch').value = draft.accent; p.querySelector('#ix-acc').value = draft.accent;
-      p.querySelectorAll('[data-c]').forEach(function (b) { var on = b.dataset.c === draft.accent; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.setAttribute('aria-label', 'Accent color ' + b.dataset.c + (on ? ', chosen' : '')); });
+      p.querySelectorAll('.ix-apk [data-c]').forEach(function (b) { var on = b.dataset.c === draft.accent; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.setAttribute('aria-label', 'Accent color ' + b.dataset.c + (on ? ', chosen' : '')); });
       preview();
     }
+    var apk = [].slice.call(p.querySelectorAll('.ix-apk [data-c]'));   // the arrow keys move along the row (one stop for Tab)
+    apk.forEach(function (b, i) {
+      b.onclick = function () { setAcc(b.dataset.c); };
+      b.onkeydown = function (e) {
+        var d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!d) return; e.preventDefault();
+        var n = apk[(i + d + apk.length) % apk.length]; apk.forEach(function (x) { x.tabIndex = -1; }); n.tabIndex = 0; n.focus(); }; });
+    p.querySelector('#ix-acc').oninput = function (e) { setAcc(e.target.value); };
+    p.querySelector('#ix-acch').oninput = function (e) { var h = hexOf(e.target.value); e.target.classList.toggle('bad', !h); if (h) setAcc(h, true); };
   }
   /* A color swatch with an editable hex box beside it (#1a1a1a, 1a1a1a or #fff). Typing a valid color applies it; clearing the box means "default".
      set(value) gets a #rrggbb string, or '' for default. */
@@ -476,39 +496,42 @@
     });
     tx.addEventListener('blur', function () { var h = hexOf(tx.value); if (h) tx.value = h; });
   }
-  /* "Text sizes" for Info and Cards: sliders that preview live; the sizes are saved with the site settings. */
-  function textSizes() {
-    var spec = SIZE_SPEC[APP]; if (!spec) return;
-    if (!S.admin) { login().then(function () { textSizes(); }, function () {}); return; }
-    var cur = ((S.sizes || {})[APP]) || {}, val = {};
+  /* "Text sizes" for Info and Cards: sliders that preview live; the sizes are saved with the site settings. app: the page whose sizes
+     these are (1.70.0: Settings > Appearance > Look opens them for Info or Cards; on those pages it is the page itself). The page
+     itself follows the sliders only when it is that page; the sample in the window always does. */
+  function textSizes(app) {
+    app = typeof app === 'string' && SIZE_SPEC[app] ? app : APP;
+    var spec = SIZE_SPEC[app], here = app === APP; if (!spec) return;
+    if (!S.admin) { login().then(function () { textSizes(app); }, function () {}); return; }
+    var cur = ((S.sizes || {})[app]) || {}, val = {};
     spec.forEach(function (k) { var v = +cur[k[0]]; val[k[0]] = v >= k[2] && v <= k[3] ? v : k[4]; });
     // the same layout as Links' Text sizes: a labelled slider per size, then a sample that follows the sliders
     var SAMPLE = {
       info: [['tab', 'Notes'], ['head', 'Box Title'], ['text', 'Your notes, lists and links read like this.']],
       cards: [['title', 'Cards'], ['box', '₹1,24,000'], ['text', 'HDFC Regalia · Visa · due 12 Nov']]
-    }[APP] || [];
-    openDlg('<h2 style="margin:0 0 16px">Text Sizes</h2>' +
+    }[app] || [];
+    openDlg('<h2 style="margin:0 0 16px">' + (here ? '' : esc(app.charAt(0).toUpperCase() + app.slice(1)) + ' ') + 'Text Sizes</h2>' +
       spec.map(function (k) {
         return '<div class="ix-tsf"><label for="ix-ts-' + k[0] + '">' + k[1] + '</label><div class="ix-tsr"><input type="range" id="ix-ts-' + k[0] + '" data-k="' + k[0] + '" min="' + k[2] + '" max="' + k[3] + '" step="1" value="' + val[k[0]] + '"><output>' + val[k[0]] + ' px</output></div></div>';
       }).join('') +
-      '<div class="ix-tss ix-tss-' + APP + '" aria-hidden="true">' + SAMPLE.map(function (x) { return '<div data-s="' + x[0] + '">' + esc(x[1]) + '</div>'; }).join('') + '</div>' +
+      '<div class="ix-tss ix-tss-' + app + '" aria-hidden="true">' + SAMPLE.map(function (x) { return '<div data-s="' + x[0] + '">' + esc(x[1]) + '</div>'; }).join('') + '</div>' +
       '<p class="ix-err" id="ix-tze"></p>' +
       '<div class="ix-acts"><button class="ix-btn" id="ix-tzr" style="margin-right:auto">Reset Sizes</button><button class="ix-btn" data-ix="close">Cancel</button><button class="ix-btn pri" id="ix-tzs">Save Sizes</button></div>');
     var saved = false;
     var sample = function () { D().querySelectorAll('[data-s]').forEach(function (el) { el.style.fontSize = val[el.dataset.s] + 'px'; }); };
     D().querySelectorAll('input[type=range]').forEach(function (r) {
-      r.oninput = function () { val[r.dataset.k] = +r.value; r.nextElementSibling.textContent = r.value + ' px'; sample(); applySizes(null, val); };
+      r.oninput = function () { val[r.dataset.k] = +r.value; r.nextElementSibling.textContent = r.value + ' px'; sample(); if (here) applySizes(null, val); };
     });
     sample();
     $('#ix-tzr').onclick = function () {
       spec.forEach(function (k) { val[k[0]] = k[4]; });
       D().querySelectorAll('input[type=range]').forEach(function (r) { r.value = val[r.dataset.k]; r.nextElementSibling.textContent = r.value + ' px'; });
-      sample(); applySizes(null, {});
+      sample(); if (here) applySizes(null, {});
     };
     $('#ix-tzs').onclick = function () {
       var mine = {}; spec.forEach(function (k) { if (val[k[0]] !== k[4]) mine[k[0]] = val[k[0]]; });
       var all = JSON.parse(JSON.stringify(S.sizes || {})); if (Array.isArray(all)) all = {};
-      if (Object.keys(mine).length) all[APP] = mine; else delete all[APP];
+      if (Object.keys(mine).length) all[app] = mine; else delete all[app];
       var b = $('#ix-tzs'); b.disabled = true;
       api('settings', { settings: { sizes: all } }).then(function (j) {
         b.disabled = false;
@@ -516,7 +539,7 @@
         saved = true; S.sizes = j.state.sizes; remember(S); applySizes(); closeDlg(); toast('Text sizes saved.');
       }).catch(function () { b.disabled = false; $('#ix-tze').textContent = "Can't reach the server."; });
     };
-    new MutationObserver(function (m, o) { if (!D().classList.contains('open') || !D().querySelector('#ix-tzs')) { o.disconnect(); if (!saved) applySizes(); } }).observe(D(), { attributes: true, childList: true });
+    new MutationObserver(function (m, o) { if (!D().classList.contains('open') || !D().querySelector('#ix-tzs')) { o.disconnect(); if (!saved && here) applySizes(); } }).observe(D(), { attributes: true, childList: true });
   }
   /* Colors: one mode at a time (the site switches to it, so changes show live), grouped by what they paint. Empty = the built-in color. */
   var COLOR_GROUPS = [
@@ -736,13 +759,12 @@
     };
     p.innerHTML = '<div class="ix-row" style="gap:10px">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +
       '<button type="button" class="ix-btn" id="ix-cres">Reset ' + (m === 'dark' ? 'Dark' : 'Light') + ' Mode</button></div>' +
-      '<p class="ix-note" style="margin:0 0 12px">Ready-made looks live in the <b>Presets</b> tab.</p>' +
+      '<p class="ix-note" style="margin:0 0 12px">Ready-made looks live in the <b>Presets</b> tab.</p>' + accentHtml() +
       COLOR_GROUPS.map(function (g) {
         return '<div class="ix-cgrp"><h4>' + g[0] + '</h4><p>' + g[1] + '</p>' + g[2].map(function (k) {
           return row(k[0], k[1], set[k[0]], set[k[0]] || def[k[0]], 'data-k="' + k[0] + '"');
         }).join('') + '</div>';
       }).join('') +
-      '<div class="ix-cgrp"><h4>Accent</h4><p>Buttons, the current page, links and highlights, on every page.</p>' + row('', 'Accent', draft.accent, draft.accent || '#ffc21a', 'data-sa="1"') + '</div>' +
       '<details class="ix-acc" id="ix-pgc"' + (anyPg ? ' open' : '') + '><summary><span>Different Colors per Page</span><small>' + (anyPg ? 'Some pages have their own colors' : 'Every page uses the colors above') + '</small></summary><div class="ix-accb">' +
         '<div class="ix-cgrp"><h4>Page Backgrounds</h4><p>A different background for one page, for example a lighter tone for Info. Replaces the page background there.</p>' +
         PG_APPS.map(function (a) { var v = cur.pg[a[0]][m]; return row('', a[1], v, v || set.bg || def.bg, 'data-pg="' + a[0] + '"'); }).join('') + '</div>' +
@@ -754,8 +776,7 @@
     p.querySelectorAll('.ix-cr').forEach(function (r) {
       var sw = r.querySelector('input[type=color]'), tx = r.querySelector('.ix-hex'), x = r.querySelector('.ix-crx');
       var put = function (v) {
-        if (sw.dataset.sa) { draft.accent = (v || '#ffc21a').toLowerCase(); }
-        else if (sw.dataset.ap) { draft.accentPg = draft.accentPg || {}; if (v) draft.accentPg[sw.dataset.ap] = v; else delete draft.accentPg[sw.dataset.ap]; }
+        if (sw.dataset.ap) { draft.accentPg = draft.accentPg || {}; if (v) draft.accentPg[sw.dataset.ap] = v; else delete draft.accentPg[sw.dataset.ap]; }
         else if (sw.dataset.pg) { if (v) cur.pg[sw.dataset.pg][m] = v; else delete cur.pg[sw.dataset.pg][m]; }
         else { if (v) set[sw.dataset.k] = v; else delete set[sw.dataset.k]; }
         x.hidden = !v; preview();
@@ -763,6 +784,7 @@
       bindHex(sw, tx, put, true);
       x.onclick = function () { tx.value = ''; sw.value = tx.placeholder; put(''); };
     });
+    bindAccent(p);
     p.querySelector('#ix-cres').onclick = function () { cur[m] = {}; PG_APPS.forEach(function (a) { delete cur.pg[a[0]][m]; }); preview(); pColors(p); };
   }
   /* Appearance > Presets: the whole gallery on its own tab, dark or light mode, one click fills every color */
@@ -943,12 +965,13 @@
     };
   }
   function pNav(p) {
-    p.innerHTML = '<h3>Tabs</h3><p>Drag a tab to move it (or Alt + Up and Down on its name), rename it, or switch it off to hide it. Home is your logo and site name in the bar.</p>' +
+    p.innerHTML = barHtml() + '<h3>Tabs</h3><p>Drag a tab to move it (or Alt + Up and Down on its name), rename it, or switch it off to hide it. Home is your logo and site name in the bar.</p>' +
       '<div class="ix-tabp" id="ix-tabp" aria-hidden="true"></div><div class="ix-tabl" id="ix-tabl"></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-tabreset">Reset Names and Order</button></div>';
+    bindBar(p);
     tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp'));
     p.querySelector('#ix-tabreset').onclick = function () { draft.pages = []; tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp')); preview(); markDirty(true); };
   }
-  /* Settings > General > Tabs (1.67.2): one row per page with its colour tile (as in the bar), its name and a switch; drag a row to move it.
+  /* Settings > Appearance > Bar, the Tabs part (1.67.2; it was General > Tabs before 1.70.0): one row per page with its colour tile (as in the bar), its name and a switch; drag a row to move it.
      A strip above shows the bar as it will look. Home is not listed: the logo and site name lead there (the dock shows it first). */
   var GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg>';
   function tabEditor(box, strip) {
@@ -1068,17 +1091,6 @@
                   copyText: 'curl -s "' + n.cronUrl + '"', label: 'Cron job web address', cls: 'ix-uf-gap' }));
           })()) +
 
-        acc('bk', 'Backups', n.bkEvery ? bkTxt + (n.bkLast ? ' · last ' + esc(ago(n.bkLast)) : '') : 'Have Telegram send you a full backup file regularly. Off for now.',
-          tabHead(ICON.box, 'Backups', 'Have Telegram send you a full backup file regularly. Restore it any time with Backup & Restore › Import.') +
-          ecCard('', ICON.clock, 'How Often', 'The whole site as one file, sent at your daily message hour.',
-            seg('nbk', [[0, 'Off'], [1, 'Daily'], [3, 'Every 3 Days'], [7, 'Weekly'], [14, 'Every 2 Weeks'], [30, 'Monthly']], n.bkEvery || 0) +
-            '<p class="ix-note">Last backup sent: ' + (n.bkLast ? when(n.bkLast) : 'none yet') + '.' + (n.bkError ? ' <span class="ix-err">Last problem: ' + esc(n.bkError) + '</span>' : '') + '</p>') +
-          ecCard(n.encReady ? 'good' : '', ICON.lock, n.encReady ? 'Backup Files Are Encrypted' : 'Backup Files Are Not Encrypted',
-            n.encReady ? 'Files open with your ' + (n.encMode === 'login' ? 'website password' : 'encryption passphrase') + '. Anyone who gets into your Telegram still cannot read them.' :
-            'Anyone who gets into your Telegram could open them. <a href="#" id="nt-encgo">Set an encryption passphrase in Settings › Security</a>.', '') +
-          ecCard('', ICON.send, 'Send Today\'s Tasks', 'The daily list, sent to your chat right now.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="nt-today"' + (ready ? '' : ' disabled') + '>Send Today\'s Tasks Now</button></div>') +
-          ecCard('', ICON.send, 'Send One Now', 'Sends a backup file to your chat right away, without waiting for the schedule.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="nt-bknow"' + (ready ? '' : ' disabled') + '>Send Backup Now</button></div>')) +
-
         acc('msg', 'Messages', !ready ? 'Finish Setup first, then choose what you want to hear about.' : n.on ? 'A daily message at ' + hourLabel(n.hour) + ', plus the alerts you pick below.' : 'Daily messages are off.',
           tabHead(ICON.bell, 'Messages', 'Choose what your bot tells you, and when.') +
           ecCard(n.on && ready ? 'good' : '', ICON.bell, 'Messages', 'The main switch. Messages go to the chat connected in Setup.', toggle('on', 'Messages On', ready ? 'Turn everything below on or off at once.' : 'Set up the bot and chat first.', n.on, !ready)) +
@@ -1091,7 +1103,8 @@
           ecCard('', ICON.clock, 'Delivery Time', 'When the daily message goes out.',
             '<div class="ix-row"><select id="nt-hour" style="width:auto">' + Array.apply(null, Array(24)).map(function (x, h) { return '<option value="' + h + '"' + (n.hour === h ? ' selected' : '') + '>' + hourLabel(h) + '</option>'; }).join('') + '</select>' +
             '<span class="ix-note" style="margin:0">' + esc(String(n.tz).replace(/_/g, ' ')) + ' time</span><button type="button" class="ix-btn" id="nt-now"' + (ready ? '' : ' disabled') + '>Send Now</button></div>' +
-            '<p class="ix-note">Last checked: ' + (n.lastRun ? when(n.lastRun) : 'never') + '. Last message: ' + (n.lastSent ? when(n.lastSent) : 'none yet') + '.' + (n.lastError ? ' <span class="ix-err">Last problem: ' + esc(n.lastError) + '</span>' : '') + '</p>')) +
+            '<p class="ix-note">Last checked: ' + (n.lastRun ? when(n.lastRun) : 'never') + '. Last message: ' + (n.lastSent ? when(n.lastSent) : 'none yet') + '.' + (n.lastError ? ' <span class="ix-err">Last problem: ' + esc(n.lastError) + '</span>' : '') + '</p>') +
+          ecCard('', ICON.send, 'Send Today\'s Tasks', 'The daily list, sent to your chat right now.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="nt-today"' + (ready ? '' : ' disabled') + '>Send Today\'s Tasks Now</button></div>')) +
 
         acc('two', 'Instant Replies', (n.hook ? 'On: the bot answers your commands within a second.' : 'Off: the bot answers within a few minutes.') + ' It understands 8 commands.',
           tabHead(ICON.pulse, 'Instant Replies', 'Tap Done or Snooze under reminders, or send commands. Only your own chat is answered.') +
@@ -1103,8 +1116,7 @@
             '<div class="ix-cmds"><code>/today</code><span>Overdue and today, with Done buttons</span><code>/week</code><span>The next 7 days</span><code>/next</code><span>The next 10 tasks</span>' +
             '<code>/add Netflix 649 monthly 5 Nov</code><span>A new task</span><code>/done Netflix</code><span>Mark one done</span><code>/snooze Netflix 2h</code><span>Pause its reminders</span>' +
             '<code>/backup</code><span>A backup file now</span><code>/status</code><span>A quick health check</span></div>'));
-      p.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { var d = p.querySelector('details[data-tg="' + x.dataset.go + '"]'); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
-      var eg = p.querySelector('#nt-encgo'); if (eg) eg.onclick = function (e) { e.preventDefault(); go('security'); };
+      p.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { if (x.dataset.go === 'bk') { go('backup'); return; } var d = p.querySelector('details[data-tg="' + x.dataset.go + '"]'); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
       var call = function (action, body, btn, wait) {
         if (btn) btn.disabled = true;
         return api(action, body || {}, null, wait).then(function (j) {
@@ -1146,24 +1158,21 @@
         var c = e.target; c.disabled = true;
         api('tg_hook', { on: c.checked }).then(function (j) { c.disabled = false; if (!j.ok) { c.checked = !c.checked; toast(j.error || 'Telegram refused.'); return; } draw(j, null, j.hook ? 'Instant replies are on. Send /help to your bot to try it.' : 'Instant replies are off; the site checks every few minutes.'); });
       };
-      bindSeg(p, function (k, v) {
-        if (k !== 'nbk') return;
-        call('notify_save', { bkEvery: +v }).then(function (j) { if (j) { n = j; draw(j, null); toast(j.bkEvery ? 'Backups will be sent ' + (BK_TXT[j.bkEvery] || 'regularly').toLowerCase() + '.' : 'Backups to Telegram are off.'); } });
-      });
       p.querySelector('#nt-today').onclick = function () {
         var b = this; b.textContent = 'Sending…';
         call('notify_today', {}, b, { timeout: 30000 }).then(function (j) { b.textContent = 'Send Today\'s Tasks Now'; if (j) toast('Sent. Check Telegram.'); });
-      };
-      p.querySelector('#nt-bknow').onclick = function () {
-        var b = this; b.textContent = 'Sending…';
-        call('notify_backup', {}, b, { timeout: 240000 }).then(function (j) { if (j) { S.backupLast = j.backupLast || S.backupLast; remember(S); redraw(); draw(j, null, 'Backup sent. Check Telegram.'); } else b.textContent = 'Send Backup Now'; });
       };
       p.querySelector('#nt-hour').onchange = function (e) { call('notify_save', { hour: +e.target.value }).then(function (j) { if (j) { n = j; draw(j, null); toast('Daily messages at ' + hourLabel(j.hour) + '.'); } }); };
     }
     api('notify').then(function (n) { if (!n || !n.ok) { p.innerHTML = '<p class="ix-err">' + esc((n && n.error) || 'Could not load.') + '</p>'; return; } draw(n); });
   }
-  /* Health > Server Check: why icons or titles can't be fetched, folder permissions, then PHP, limits and extensions. */
+  /* Health > Server Check: why icons or titles can't be fetched, folder permissions, then PHP, limits and extensions; (1.70.0) below them
+     Files That Do Not Belong (pFiles, the Files tab of Updates before). */
   function pCheck(p) {
+    p.innerHTML = '<div class="ix-scbox"></div><h3 class="ix-h3" id="ix-fnb">Files That Do Not Belong</h3><p>Your server\'s files compared with this version\'s list: extra, changed by hand or missing.</p><div class="ix-fls"></div>';
+    checkInto(p.querySelector('.ix-scbox')); pFiles(p.querySelector('.ix-fls'));
+  }
+  function checkInto(p) {
     p.innerHTML = '<p>What your hosting allows: outside connections, folder writes and PHP features.</p><div class="ix-row"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><span>Running…</span></div>';
     Promise.all([api('diag'), api('health')]).then(function (r) {
       var j = r[0], h = r[1] || {};
@@ -1179,7 +1188,7 @@
         (h.ok ? '<h3>PHP Extensions</h3><div class="ix-exts">' + Object.keys(h.ext).map(function (e) { return '<span class="' + (h.ext[e] ? 'on' : 'off') + '">' + (h.ext[e] ? '✓ ' : '✗ ') + esc(e) + '</span>'; }).join('') + '</div>' +
           '<p class="ix-note">Time zone ' + esc(String(h.tz || '').replace(/_/g, ' ')) + '.</p>' : '') +
         '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn" id="ix-rc2">Run Again</button></div>';
-      p.querySelector('#ix-rc2').onclick = function () { pCheck(p); };
+      p.querySelector('#ix-rc2').onclick = function () { checkInto(p); };
     });
   }
   /* ---------- Overview: where things stand ---------- */
@@ -1198,8 +1207,12 @@
     pill('overview', al ? al + ' to see' : '', al ? 'warn' : '');
     pill('look', S.theme === 'auto' ? 'Auto' : S.theme === 'light' ? 'Light' : 'Dark', '');
     pill('health', OV.https ? 'OK' : 'No HTTPS', OV.https ? 'good' : 'warn');
-    pill('changelog', 'v' + OV.version, '');
     var sv = PAGE.querySelector('[data-sver]'); if (sv) sv.textContent = ' · v' + OV.version;
+  }
+  /* (1.70.0) Overview > Start Here: Guided Setup, then Install on Your Phone and Keyboard Shortcuts */
+  function pStart(p) {
+    p.innerHTML = '<div class="ix-wzhost"></div><div class="ix-help"></div>';
+    pSetup(p.querySelector('.ix-wzhost')); helpCards(p.querySelector('.ix-help'));
   }
   /* ---------- Guided Setup: the protection steps one after another, using the same flows as Security and Backup ---------- */
   var WZ = { open: '', pp: '', site: '', rec: '', skipped: {} };   // what you typed stays here only while Settings is open, never saved
@@ -1381,7 +1394,7 @@
       var chips = '<div class="ix-jchips" role="navigation" aria-label="Jump to">' +
         chip('security', 'Security', pr.on >= pr.total ? 'good' : 'warn') + chip('telegram', 'Telegram', tg.ready ? (run ? 'good' : 'warn') : '') +
         chip('backup', 'Backup', bk.last ? 'good' : 'warn') + chip('look', 'Appearance', '') + chip('updates', 'Updates', up.staged || up.newer || n ? 'warn' : 'good') +
-        chip('health', 'Health', j.https ? 'good' : 'warn') + chip('changelog', 'Changelog', '') + '</div>';
+        chip('health', 'Health', j.https ? 'good' : 'warn') + chip('changelog', 'What\'s New', '') + '</div>';
       var banner = stDone < stp.length ? '<div class="ix-hero ix-setupb"><div class="ix-ring" style="--p:' + Math.round(stDone / stp.length * 100) + '"><b>' + stDone + '</b><small>of ' + stp.length + '</small></div>' +
         '<div class="ix-hero-t"><div class="ix-hero-h">Protect Your Site Step by Step</div><p>' + stDone + ' of ' + stp.length + ' steps are done. Next: <b>' + esc(stp.filter(function (x) { return !x.done; })[0].title) + '</b>.</p>' +
         '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn pri" data-go="setup">' + (stDone > 1 ? 'Continue Setup' : 'Start Guided Setup') + '</button></div></div></div>' : '';
@@ -2503,6 +2516,7 @@
       var parts = j.parts, last = +S.backupLast || 0, every = +S.backupEvery || 0;
       var due = every > 0 && (!last || (Date.now() / 1000 - last) / 86400 >= every);
       var tg = n.ok && n.hasToken && n.chat ? (n.bkEvery ? 'Sends a backup ' + ({ 1: 'every day', 3: 'every 3 days', 7: 'every week', 14: 'every 2 weeks', 30: 'every month' }[n.bkEvery] || 'regularly') + (n.bkLast ? '. Last: ' + ago(n.bkLast) : '. None sent yet') : 'Connected, Automatic Backups Off') : 'Not Set Up';
+      var tgOn = !!(n.ok && n.hasToken && n.chat);
       var newest = j.versions.length ? j.versions.reduce(function (a, v) { return v.time > a ? v.time : a; }, 0) : 0;
       p.innerHTML =
         '<div class="ix-bkstat' + (due ? ' due' : '') + '">' +
@@ -2515,6 +2529,13 @@
           '<p>One file that brings back your pages and settings, on this server or any other.' + (enc.set ? ' It is locked with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + '.' : '') + '</p><small id="ix-bksum" class="ix-mu"></small></div>' +
         '<div class="ix-status">' + (enc.set ? '<span class="ix-ok">🔒</span><span><b>Backup Files Are Locked</b> and open only with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + '. '
           : '<span>!</span><span><b>Backup files are not locked.</b> Set an encryption passphrase and every backup is locked. ') + '<a href="#" id="ix-encgo2">' + (enc.set ? 'Change' : 'Set one') + ' in Settings › Security</a></span></div>' +
+        // (1.70.0) moved here from Telegram > Backups
+        '<div id="ix-tgbk">' + ecCard(tgOn && n.bkEvery ? 'good' : '', ICON.send, 'Send Backups to Telegram', 'The whole site as one file, sent to your Telegram chat at your daily message hour. ' +
+            (enc.set ? 'Locked like the files you download.' : 'Not locked: anyone who gets into your Telegram could open it.'),
+          tgOn ? seg('nbk', [[0, 'Off'], [1, 'Daily'], [3, 'Every 3 Days'], [7, 'Weekly'], [14, 'Every 2 Weeks'], [30, 'Monthly']], n.bkEvery || 0) +
+            '<p class="ix-note">Last backup sent: ' + (n.bkLast ? esc(when(n.bkLast)) : 'none yet') + '.' + (n.bkError ? ' <span class="ix-err">Last problem: ' + esc(n.bkError) + '</span>' : '') + '</p>' +
+            '<div class="ix-row"><button type="button" class="ix-btn" id="ix-tgbknow">' + svg(ICON.send) + 'Send Backup Now</button></div>'
+            : '<p class="ix-note">Connect a Telegram bot first.</p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-tgsetup">Set Up Telegram</button></div>') + '</div>' +
         '<details class="ix-more" id="ix-choose"><summary>Choose What to Include</summary>' +
           [['pages', 'Pages', 'Links, Info, Cards, Tasks, Home and Tools presets.'], ['site', 'Site', 'Your settings, Telegram and the domain watch list.']].concat(parts.files ? [['files', 'Files', 'The files you keep on the Files page. Can be big, so it is off unless you want it.']] : []).map(function (g) {
             return '<label class="ix-tg"><span>' + g[1] + '<small>' + g[2] + '</small></span><input type="checkbox" data-grp="' + g[0] + '"></label>'; }).join('') +
@@ -2544,7 +2565,26 @@
         '<details class="ix-acc ix-danger" id="ix-reset"><summary><span>Start Over</span><small>Erase all data and settings, like a new site</small></summary><div class="ix-accb">' +
           '<div id="ix-rsst"></div></div></details>' +
         '<p class="ix-note">Moving the site? Copy the whole folder: your data is in <code>site-data</code>.</p>';
-      p.querySelector('#ix-tgset').onclick = function (e) { e.preventDefault(); go('telegram'); };
+      p.querySelector('#ix-tgset').onclick = function (e) { e.preventDefault(); if (tgOn) p.querySelector('#ix-tgbk').scrollIntoView({ block: 'center', behavior: 'smooth' }); else go('telegram/setup'); };
+      var tgb = p.querySelector('#ix-tgbk');
+      if (!tgOn) tgb.querySelector('#ix-tgsetup').onclick = function () { go('telegram/setup'); };
+      else {
+        bindSeg(tgb, function (k, v) {
+          if (k !== 'nbk') return;
+          api('notify_save', { bkEvery: +v }).then(function (r2) {
+            if (!r2 || !r2.ok) { toast((r2 && r2.error) || 'Could not save.'); pBackup(p); return; }
+            toast(r2.bkEvery ? 'Backups will be sent ' + ({ 1: 'every day', 3: 'every 3 days', 7: 'every week', 14: 'every 2 weeks', 30: 'every month' }[r2.bkEvery] || 'regularly') + '.' : 'Backups to Telegram are off.'); pBackup(p);
+          }, function () { toast("Can't reach the server."); });
+        });
+        tgb.querySelector('#ix-tgbknow').onclick = function () {
+          var b = this; b.disabled = true; b.lastChild.textContent = 'Sending…';
+          api('notify_backup', {}, null, { timeout: 240000 }).then(function (r2) {
+            b.disabled = false; b.lastChild.textContent = 'Send Backup Now';
+            if (!r2 || !r2.ok) { toast((r2 && r2.error) || 'Something went wrong.'); return; }
+            S.backupLast = r2.backupLast || S.backupLast; remember(S); redraw(); toast('Backup sent. Check Telegram.'); pBackup(p);
+          }, function () { b.disabled = false; b.lastChild.textContent = 'Send Backup Now'; toast('The site did not answer in time. A backup can still arrive in Telegram: look there before you try again.'); });
+        };
+      }
       /* (1.69.0) Start Over is a Stepper: What Gets Erased -> Back Up First -> Type ERASE. The last button keeps the Erase Everything look (#ix-rsgo). */
       stepper(p.querySelector('#ix-rsst'), { kind: 'numbers', linear: true, danger: true, lastId: 'ix-rsgo', lastClass: 'ix-erase',
         lastHtml: '<span class="ix-et">Erase Everything</span><span class="ix-ei" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/></svg></span>',
