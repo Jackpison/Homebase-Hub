@@ -41,7 +41,9 @@ try:
         ctx.route('**/*', lambda r: r.continue_() if r.request.url.startswith(s.host) or r.request.url.startswith(('data:', 'blob:')) else r.abort())
         pg = ctx.new_page()
         errs, refused, loads = [], [], []
-        pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        # "ResizeObserver loop completed with undelivered notifications" is the browser saying it put off a resize callback to the next
+        # frame (WebKit, now and then, in CI): a notice by design, not an error of the page, so it is not counted
+        pg.on('pageerror', lambda e: None if 'ResizeObserver loop' in str(e) else errs.append(str(e)[:200]))
         pg.on('console', lambda m: refused.append(m.text[:200]) if m.type == 'error' and 'Refused' in m.text else None)
         pg.on('request', lambda r: loads.append(r.url) if 'links-import' in r.url else None)
         why = browser_login(pg, s.base)
