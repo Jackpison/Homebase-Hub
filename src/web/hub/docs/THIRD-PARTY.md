@@ -113,3 +113,12 @@ MIT + Commons Clause License Condition v1.0. Copyright (c) 2026 David Haz. Use, 
 are allowed **as part of an application, website, or product**, with the copyright and permission notice kept. **Commons Clause:** the
 components themselves may not be sold, sublicensed or redistributed, alone, in a bundle, or as a ported version. Provided "as is",
 without warranty of any kind.
+
+## Stepper from React Bits (1.69.0)
+
+The step-by-step boxes (New Site Setup, Links › Import, the first Encryption Passphrase, Backup › Restore and Start Over, Files › Share
+Link, Add a Passkey and the Home Tour) use **Stepper** from React Bits by David Haz (https://reactbits.dev/c/components/stepper),
+ported to plain JavaScript as `stepper()` in `web/hub/core/assets/shell.js` (no React, no icon package: the site's own icons), with its
+look in `web/hub/core/assets/shell.css` ("Stepper"). Same licence as GlassSurface above: MIT + Commons Clause, Copyright (c) 2026
+David Haz; use as part of an application, website or product is allowed with the notice kept; the component itself may not be sold,
+sublicensed or redistributed, alone, in a bundle, or as a ported version. Provided "as is", without warranty of any kind.

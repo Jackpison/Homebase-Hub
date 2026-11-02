@@ -42,10 +42,12 @@ try:
         until(lambda: pg.evaluate("HUB.isAdmin()"), 15000); check('K3 logged in with the password and a code', pg.evaluate("HUB.isAdmin()"))
 
         # ---- add a passkey ----
-        pg.goto(L + '/web/settings/#security/passkeys'); wait_js(pg, "!!document.querySelector('#ix-pkadd')", 20000)
-        pg.fill('#ix-pkn', 'Test Phone'); pg.fill('#ix-pkw', 'wrong password'); pg.click('#ix-pkadd'); until(lambda: 'website password' in pg.inner_text('#ix-pke'), 10000)
-        check('K4 a wrong website password refuses to add a passkey', "isn't your website password" in pg.inner_text('#ix-pke'), pg.inner_text('#ix-pke'))
-        pg.fill('#ix-pkw', PW); pg.click('#ix-pkadd'); pg.wait_for_selector('.ix-dev:has-text("Test Phone")', timeout=20000)
+        pg.goto(L + '/web/settings/#security/passkeys'); wait_js(pg, "!!document.querySelector('#ix-pkst .ix-st-next')", 20000)
+        # (1.69.0) a Stepper: Name -> Your Device (#ix-pkadd asks the device); a wrong password goes back to the first step
+        pg.fill('#ix-pkn', 'Test Phone'); pg.fill('#ix-pkw', 'wrong password'); pg.click('#ix-pkst .ix-st-next'); pg.click('#ix-pkadd')
+        until(lambda: 'website password' in pg.inner_text('#ix-pkst'), 10000)
+        check('K4 a wrong website password refuses to add a passkey (and goes back to its first step, 1.69.0)', "isn't your website password" in pg.inner_text('#ix-pkst') and pg.is_visible('#ix-pkw'), pg.inner_text('#ix-pkst'))
+        pg.fill('#ix-pkw', PW); pg.click('#ix-pkst .ix-st-next'); pg.click('#ix-pkadd'); pg.wait_for_selector('.ix-dev:has-text("Test Phone")', timeout=20000)
         keys = s.get('pk_list').get('keys', [])
         check('K5 Add a Passkey asks the device, and the passkey is listed with its name', len(keys) == 1 and keys[0]['name'] == 'Test Phone' and 'key' not in keys[0], keys)
         raw = open(s.dir + '/site-data/core/passkeys.php').read()

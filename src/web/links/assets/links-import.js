@@ -137,18 +137,17 @@
   const plural = (n, one, many) => n + ' ' + (n === 1 ? one : (many || one + 's'));
   const today = () => new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
-  let dlg = null;
+  let dlg = null, parts = null;
+  /* (1.69.0) Import is a flow of four steps in the Stepper (shell.js): File -> Preview -> Where -> Import. Export stays below it. */
   function build() {
     dlg = el('dialog', { id: 'impDlg', 'aria-labelledby': 'impH' });
     const form = el('form', { method: 'dialog' });
-    form.append(
-      el('h3', { id: 'impH', text: 'Import and Export Bookmarks' }),
-      el('h4', { text: 'Import' }),
+    parts = {
       // (1.61.6) one short line and a button; the file input itself stays (hidden) so the browser's own picker is used
-      el('div', { class: 'ix-srow' }, el('span', {}, 'Bookmarks File', el('small', { id: 'impFileName', text: 'Export bookmarks from your browser (.html), then pick the file.' })),
+      file: el('div', { class: 'ix-srow' }, el('span', {}, 'Bookmarks File', el('small', { id: 'impFileName', text: 'Export bookmarks from your browser (.html), then pick the file.' })),
         el('button', { class: 'btn', type: 'button', id: 'impPick', text: 'Choose File' }), el('input', { id: 'impFile', type: 'file', accept: '.html,.htm,text/html', hidden: true })),
-      el('div', { id: 'impPrev', class: 'imp-prev', role: 'status', 'aria-live': 'polite' }),
-      el('fieldset', { id: 'impWhere', class: 'imp-where', hidden: true },
+      prev: el('div', { id: 'impPrev', class: 'imp-prev', role: 'status', 'aria-live': 'polite' }),
+      where: el('fieldset', { id: 'impWhere', class: 'imp-where' },
         el('legend', { text: 'Where They Go' }),
         el('label', { class: 'check' }, el('input', { type: 'radio', name: 'impTo', value: 'new', id: 'impToNew', checked: true }), el('span', { text: 'A New Tab' })),
         el('div', { class: 'field imp-sub' }, el('label', { for: 'impName', text: 'Tab Name' }), el('input', { id: 'impName', maxlength: '40' })),
@@ -156,26 +155,42 @@
         el('label', { class: 'check' }, el('input', { type: 'radio', name: 'impTo', value: 'tab', id: 'impToTab' }), el('span', { text: 'An Existing Tab' })),
         el('div', { class: 'field imp-sub' }, el('label', { for: 'impTab', text: 'Tab' }), el('select', { id: 'impTab' })),
         el('p', { id: 'impTabNote', class: 'hint', style: 'font-size:12.5px;color:var(--muted);margin:4px 0 0' })),
+      sum: el('p', { id: 'impSum', class: 'imp-sum', role: 'status' }),
+      done: el('div', { id: 'impDone', class: 'imp-done', role: 'status', 'aria-live': 'polite', hidden: true })
+    };
+    form.append(
+      el('h3', { id: 'impH', text: 'Import and Export Bookmarks' }),
+      el('h4', { text: 'Import' }),
+      el('div', { id: 'impSt' }),
+      el('p', { class: 'err', id: 'impErr', role: 'alert' }),
       el('h4', { text: 'Export' }),
       el('div', { class: 'ix-srow' }, el('span', {}, 'Export Bookmarks', el('small', { text: 'A file any browser can import.' })), el('button', { class: 'btn', type: 'button', id: 'impExport', text: 'Export' })),
       el('div', { class: 'ix-srow' }, el('label', { for: 'impExPriv' }, 'Include Private Tabs', el('small', { text: 'Keep that file safe.' })), el('input', { type: 'checkbox', class: 'ix-sw', id: 'impExPriv' })),
       el('p', { class: 'hint', id: 'impExNote', role: 'status', 'aria-live': 'polite' }),
-      el('p', { class: 'err', id: 'impErr', role: 'alert' }),
-      el('div', { id: 'impDone', class: 'imp-done', role: 'status', 'aria-live': 'polite', hidden: true }),
       el('div', { class: 'actions' },
-        el('button', { class: 'btn', value: 'cancel', formnovalidate: true, id: 'impClose', text: 'Cancel' }),
-        el('button', { class: 'btn primary', id: 'impGo', type: 'button', disabled: true, text: 'Import' })));
+        el('button', { class: 'btn', value: 'cancel', formnovalidate: true, id: 'impClose', text: 'Cancel' })));
     dlg.append(form);
     document.body.append(dlg);
-    if (window.HUB && HUB.settingsWindow) HUB.settingsWindow(dlg);   // the Settings window look: title and X, cards, Cancel and Import at the bottom
-    dlg.querySelector('#impPick').onclick = () => dlg.querySelector('#impFile').click();
+    if (window.HUB && HUB.settingsWindow) HUB.settingsWindow(dlg);   // the Settings window look: title and X, cards, Cancel at the bottom
+    parts.file.querySelector('#impPick').onclick = () => parts.file.querySelector('#impFile').click();
   }
 
   function open(BM) {
     if (!dlg) build();
-    const $ = s => dlg.querySelector(s);
+    const $ = s => dlg.querySelector(s) || Object.values(parts).map(p => p.matches(s) ? p : p.querySelector(s)).find(Boolean);
     let plan = null;
     const plain = () => BM.tabs().filter(t => !t.encrypted && !t.enc);
+    const where = () => $('#impToNew').checked ? 'new' : 'tab';
+    // the four steps; the nodes above are moved into them (so their handlers and ids stay)
+    const st = window.HUB.stepper($('#impSt'), { kind: 'numbers', linear: true, lastId: 'impGo', complete: 'Import',
+      steps: [
+        { title: 'File' },
+        { title: 'Preview' },
+        { title: 'Where', next: () => { if (where() === 'tab' && !$('#impTab').value) { $('#impErr').textContent = 'Pick a tab.'; return false; } } },
+        { title: 'Import', enter: () => summary(), next: () => doImport() }],
+      onDone: c => { c.fin.textContent = ''; c.fin.append(parts.done); } });
+    st.pane(1).prepend(parts.file); st.pane(2).prepend(parts.prev); st.pane(3).prepend(parts.where); st.pane(4).prepend(parts.sum);
+    st.block(1, true); st.block(2, true);
     $('#impExport').onclick = () => {   // Export Bookmarks: the standard bookmark file, made here from what the page holds
       const withPriv = $('#impExPriv').checked, tabs = BM.tabs(), locked = tabs.filter(t => t.encrypted && (t.locked || t.bad)).length;
       const pick = tabs.filter(t => !(t.encrypted && (t.locked || t.bad)) && (withPriv || !t.private));
@@ -188,8 +203,7 @@
       note.textContent = 'Exported ' + n + ' bookmark' + (n === 1 ? '' : 's') + (locked ? '. ' + locked + ' locked tab' + (locked === 1 ? ' was' : 's were') + ' left out.' : '.');
     };
     $('#impFile').value = ''; $('#impFileName').textContent = 'Export bookmarks from your browser (.html), then pick the file.'; $('#impPrev').textContent = ''; $('#impErr').textContent = '';
-    $('#impWhere').hidden = true; $('#impDone').hidden = true; $('#impDone').textContent = '';
-    $('#impGo').disabled = true; $('#impGo').hidden = false; $('#impClose').textContent = 'Cancel';
+    $('#impDone').hidden = true; $('#impDone').textContent = ''; $('#impClose').textContent = 'Cancel';
     $('#impName').value = 'Imported ' + today(); $('#impPrivate').checked = false;
     const sel = $('#impTab'); sel.textContent = '';
     for (const t of plain()) sel.append(el('option', { value: t.id, text: t.title || 'Untitled' }));
@@ -197,7 +211,6 @@
     $('#impToNew').disabled = full; $('#impToTab').disabled = none;
     $('#impToNew').checked = !full; $('#impToTab').checked = full && !none;
     $('#impTabNote').textContent = full ? 'Links already has ' + BM.maxTabs + ' tabs, the most it holds, so the links go into an existing tab.' : (BM.tabs().length > plain().length ? 'Encrypted tabs are not listed: an import never writes into them.' : '');
-    const where = () => $('#impToNew').checked ? 'new' : 'tab';
     const sync = () => { const n = where() === 'new'; $('#impName').disabled = !n; $('#impPrivate').disabled = !n; sel.disabled = n; preview(); };
     $('#impToNew').onchange = $('#impToTab').onchange = sel.onchange = sync;
 
@@ -221,29 +234,39 @@
       const ul = el('ul', { 'aria-label': 'Folders and the categories they become' });
       for (const [from, to] of p.mapping) ul.append(el('li', { text: from === to ? to : from + ' → ' + to }));
       box.append(ul);
-      $('#impWhere').hidden = false;
-      $('#impGo').disabled = !p.links || (where() === 'tab' && !sel.value);
+      st.block(2, !p.links);
+    }
+    // Step 4: what will happen, in one line
+    function summary() {
+      if (!plan) return;
+      const toNew = where() === 'new', tab = toNew ? null : plain().find(t => t.id === sel.value), have = existingKeys(tab);
+      const links = [...plan.parsed.cats.values()].flat(), fresh = links.filter(l => !have.has(l.key)).length;
+      $('#impSum').textContent = plural(fresh, 'link') + ' in ' + plural(plan.parsed.cats.size, 'category', 'categories') + ' will go into ' +
+        (toNew ? 'a new tab "' + (clean($('#impName').value, 40) || 'Imported ' + today()) + '"' + ($('#impPrivate').checked ? ' (private)' : '') : '"' + ((tab && tab.title) || 'the tab') + '"') +
+        (links.length - fresh ? '. ' + plural(links.length - fresh, 'link is', 'links are') + ' already there and stay as they are.' : '.');
     }
 
     $('#impFile').onchange = async () => {
-      plan = null; $('#impErr').textContent = ''; $('#impPrev').textContent = ''; $('#impWhere').hidden = true; $('#impGo').disabled = true; $('#impDone').hidden = true;
+      plan = null; $('#impErr').textContent = ''; $('#impPrev').textContent = ''; $('#impDone').hidden = true; st.block(1, true);
       const f = $('#impFile').files[0]; if (!f) return;
       $('#impFileName').textContent = f.name;
       if (f.size > MAX_BYTES) { $('#impErr').textContent = 'That file is larger than 5 MB. Export one folder at a time from your browser.'; return; }
       try {
         const text = await f.text();
         plan = { parsed: parse(text, clean('Imported ' + today(), MAX_CAT)) };
-        preview();
+        preview(); st.block(1, false);
+        if (st.step() === 1) st.go(2);   // a good file: straight on to its preview
       } catch (/** @type {any} */ e) { $('#impErr').textContent = e && e.message ? e.message : 'That file could not be read.'; }
     };
 
-    $('#impGo').onclick = async e => {
-      e.preventDefault(); if (!plan) return;
+    async function doImport() {
+      if (!plan) return false;
+      $('#impErr').textContent = '';
       const toNew = where() === 'new';
       const name = clean($('#impName').value, 40) || 'Imported ' + today();
       let tab = toNew ? null : plain().find(t => t.id === sel.value);
-      if (!toNew && !tab) { $('#impErr').textContent = 'Pick a tab.'; return; }
-      if (toNew && BM.tabs().length >= BM.maxTabs) { $('#impErr').textContent = 'Links already has ' + BM.maxTabs + ' tabs. Pick an existing tab.'; return; }
+      if (!toNew && !tab) { $('#impErr').textContent = 'Pick a tab.'; return false; }
+      if (toNew && BM.tabs().length >= BM.maxTabs) { $('#impErr').textContent = 'Links already has ' + BM.maxTabs + ' tabs. Pick an existing tab.'; return false; }
       const have = existingKeys(tab);
       let added = 0, there = 0, cut = 0;
       const newCats = [], into = new Map();   // existing categories of the target tab, by name, get the links of the same name
@@ -268,9 +291,9 @@
       }
       if (!added) {
         $('#impErr').textContent = there ? 'Every link in the file is already in ' + (target.title || 'that tab') + '. Nothing was changed.' : 'There is no room left in Links for these links. Nothing was changed.';
-        return;
+        return false;
       }
-      $('#impGo').disabled = true; $('#impErr').textContent = ''; $('#impPrev').textContent = 'Saving…';
+      $('#impSum').textContent = 'Saving…';
       const apply = () => {
         if (newTab) BM.tabs().push(newTab);
         for (const c of newCats) { c.col = BM.shortestCol(target); target.categories.push(c); }
@@ -283,19 +306,20 @@
       };
       try { await BM.save(apply, undo); }
       catch (/** @type {any} */ err) {
-        $('#impPrev').textContent = ''; $('#impGo').disabled = false;
+        summary();
         $('#impErr').textContent = 'Nothing was imported: ' + (err && err.message ? err.message : 'the save failed.');
-        return;
+        return false;
       }
       BM.showTab(target.id);
       const skipped = plan.parsed.skipped.scheme + plan.parsed.skipped.dupFile + cut;
-      const done = $('#impDone'); done.textContent = ''; done.hidden = false; $('#impPrev').textContent = ''; $('#impWhere').hidden = true;
+      const done = $('#impDone'); done.textContent = ''; done.hidden = false;
       done.append(el('p', { text: plural(added, 'link') + ' added to ' + (target.title || 'the tab') + '. ' + there + ' ' + (there === 1 ? 'was' : 'were') + ' already there. ' + skipped + ' ' + (skipped === 1 ? 'was' : 'were') + ' skipped.' }));
       if (cut) done.append(el('p', { text: cut + ' of the skipped links did not fit: Links saves at most 3 MB. Import the rest into another tab, or remove links you no longer need.' }));
       done.append(el('p', { text: 'Their icons: choose Fetch Icons in the same menu. To undo the import: Settings › Backup & Restore › Earlier Versions (a copy of Links was kept just before).' }));
-      $('#impGo').hidden = true; $('#impClose').textContent = 'Close';
+      $('#impClose').textContent = 'Close';
       BM.toast(plural(added, 'link') + ' imported');
-    };
+      return true;
+    }
     sync();
     dlg.showModal();
     $('#impPick').focus();

@@ -857,3 +857,59 @@ html:not([data-ix-gsolid])[data-ix-gwin] dialog.ix-sdlg{
   box-shadow:inset 0 1px 0 rgba(255,255,255,min(1,calc(var(--ix-grim,.35) + .2))),inset 0 0 0 1px rgba(255,255,255,calc(var(--ix-grim,.35) * .5)),0 24px 70px rgba(0,0,0,calc(var(--ix-gsh,.3) + .2))!important}
 html[data-theme="light"]:not([data-ix-gsolid])[data-ix-gwin] dialog.ix-sdlg{
   box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 1px rgba(0,0,0,calc(var(--ix-grim,.35) * .25)),0 24px 70px rgba(0,0,0,calc(var(--ix-gsh,.3) * .6))!important}
+
+/* ---------- (1.69.0) Stepper (shell.js stepper()): React Bits' Stepper (David Haz, MIT + Commons Clause), plain CSS on the site's colours.
+   The current step sits on a raised tile that slides along; finished steps show a tick that draws itself. ---------- */
+.ix-st{position:relative;display:flex;flex-direction:column;min-width:0;color:var(--ix-tx)}
+.ix-st-frame{padding:8px;border-radius:24px;background:color-mix(in srgb,var(--ix-gtc,var(--ix-s1)) max(var(--ix-gt,20%),55%),transparent);
+  backdrop-filter:blur(max(var(--ix-gb,3px),18px)) saturate(var(--ix-gs,1));-webkit-backdrop-filter:blur(max(var(--ix-gb,3px),18px)) saturate(var(--ix-gs,1));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,calc(var(--ix-grim,.35) * .3)),inset 0 1px 0 rgba(255,255,255,var(--ix-grim,.35)),0 22px 44px -20px rgba(0,0,0,.7)}
+.ix-st-frame .ix-st-view{padding:0 12px}.ix-st-frame .ix-st-foot{padding:16px 12px 12px}
+.ix-st-track{position:relative;display:flex;gap:4px;padding:4px;border-radius:16px;background:color-mix(in srgb,var(--ix-tx) 7%,transparent)}
+.ix-st-glider{position:absolute;top:0;left:0;border-radius:12px;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,var(--ix-s1) 80%,var(--ix-tx)),var(--ix-s1));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ix-tx) 8%,transparent),inset 0 1px 0 color-mix(in srgb,#fff 12%,transparent),0 4px 10px -4px rgba(0,0,0,.45);
+  transition:transform .56s cubic-bezier(.34,1.4,.64,1),width .56s cubic-bezier(.34,1.4,.64,1),opacity .2s}
+html[data-theme="light"] .ix-st-glider{background:linear-gradient(180deg,#fff,#f6f6f8)}
+.ix-st-seg{position:relative;display:flex;flex:1 1 auto;align-items:center;justify-content:center;gap:8px;min-width:0;height:40px;padding:0 10px;border:0;border-radius:12px;background:none;color:var(--ix-mu);font:inherit;cursor:pointer}
+.ix-st-seg:disabled{cursor:default}
+@media (hover:hover){.ix-st-seg:not(:disabled):hover{background:color-mix(in srgb,var(--ix-tx) 4%,transparent)}}
+.ix-st-badge{display:grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ix-tx) 22%,transparent);font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;transition:background-color .15s,box-shadow .15s,color .15s}
+.ix-st-badge[data-s="active"]{box-shadow:inset 0 0 0 1.5px var(--ix-tx);color:var(--ix-tx)}
+.ix-st-badge[data-s="done"]{background:var(--ix-accent);color:var(--ix-ink);box-shadow:none}
+.ix-st-badge svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.ix-st-badge svg path{stroke-dasharray:24;animation:ix-st-tick .36s cubic-bezier(.22,1,.36,1)}
+@keyframes ix-st-tick{from{stroke-dashoffset:24}to{stroke-dashoffset:0}}
+.ix-st-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ix-st-seg:not([data-s="upcoming"]) .ix-st-name{color:var(--ix-tx)}
+.ix-st-tight .ix-st-name{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.ix-st-dots{display:flex;justify-content:center;gap:2px}
+.ix-st-dots button{display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;background:none;cursor:pointer}
+.ix-st-dots button:disabled{cursor:default}
+.ix-st-dots i{width:8px;height:8px;border-radius:50%;background:color-mix(in srgb,var(--ix-tx) 22%,transparent);transition:background-color .25s,transform .45s cubic-bezier(.34,1.4,.64,1)}
+.ix-st-dots [data-s="done"] i{background:var(--ix-mu)}.ix-st-dots [data-s="active"] i{background:var(--ix-accent);transform:scale(1.35)}
+.ix-st-bars{display:flex;gap:6px}
+.ix-st-bars i{flex:1;height:4px;border-radius:4px;overflow:hidden;background:color-mix(in srgb,var(--ix-tx) 10%,transparent)}
+.ix-st-bars b{display:block;height:100%;background:var(--ix-accent);transform:scaleX(0);transform-origin:left;transition:transform .56s cubic-bezier(.34,1.4,.64,1)}
+.ix-st-bars i.on b{transform:none}
+.ix-st-view{position:relative;overflow:hidden;padding-top:18px}
+.ix-st-pane{outline:none}
+.ix-st-pane>:first-child{margin-top:0}
+.ix-st-err:empty{display:none}
+.ix-st-foot{display:flex;align-items:center;gap:10px;padding-top:16px}
+.ix-st-foot .ix-st-back[data-h]{visibility:hidden}
+.ix-st-foot .ix-st-next{margin-left:auto}
+.ix-st-foot .ix-st-skip{background:none;border-color:transparent;color:var(--ix-mu)}
+.ix-st-seg:focus-visible,.ix-st-dots button:focus-visible{outline:2px solid var(--ix-accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.ix-st-glider,.ix-st-dots i,.ix-st-bars b{transition:none}.ix-st-badge svg path{animation:none}}
+.ix-st-fin{text-align:center;padding:10px 0 4px}.ix-st-fin h3{margin:0 0 4px}.ix-st-fin p{margin:0;color:var(--ix-mu)}
+.ix-st-big{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;background:var(--ix-accent);color:var(--ix-ink)}
+.ix-st-big svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.ix-st-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* the Stepper's own buttons, for pages that do not style .ix-btn (Links, Files, Home); Settings and the shared windows keep theirs */
+.ix-st-foot .ix-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 16px;border-radius:12px;border:1px solid color-mix(in srgb,var(--ix-tx) 14%,transparent);
+  background:color-mix(in srgb,var(--ix-tx) 7%,transparent);color:var(--ix-tx);font:600 13.5px/1 var(--ix-font,inherit);cursor:pointer;transition:filter .2s,transform .2s}
+.ix-st-foot .ix-btn.pri{background:var(--ix-accent);border-color:transparent;color:var(--ix-ink,#111)}
+.ix-st-foot .ix-btn.danger{background:#e5484d;border-color:transparent;color:#fff}
+.ix-st-foot .ix-btn:disabled{opacity:.45;cursor:not-allowed}
+@media (hover:hover){.ix-st-foot .ix-btn:not(:disabled):hover{filter:brightness(1.08)}}
+.ix-st-foot .ix-btn:not(:disabled):active{transform:scale(.97)}

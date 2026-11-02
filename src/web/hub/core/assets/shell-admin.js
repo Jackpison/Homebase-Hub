@@ -27,7 +27,7 @@
 (function (K) {
   'use strict';
   if (!K || K.impl) return;
-  var S = K.S, esc = K.esc, toast = K.toast, api = K.api, ICON = K.ICON, svg = K.svg, remember = K.remember, applySizes = K.applySizes, APP = K.APP, openDlg = K.openDlg, closeDlg = K.closeDlg, login = K.login, ROOT = K.ROOT, applyFont = K.applyFont, applyColors = K.applyColors, applyAttrs = K.applyAttrs, PG_APPS = K.PG_APPS, CORE = K.CORE, ASSETS = K.ASSETS, COLOR_DEFAULT = K.COLOR_DEFAULT, pageList = K.pageList, applyFavicon = K.applyFavicon, SIZE_SPEC = K.SIZE_SPEC, PAGE_DEF = K.PAGE_DEF, FONTS = K.FONTS, COLOR_KEYS = K.COLOR_KEYS, when = K.when, redraw = K.redraw;
+  var S = K.S, esc = K.esc, toast = K.toast, api = K.api, ICON = K.ICON, svg = K.svg, remember = K.remember, applySizes = K.applySizes, APP = K.APP, openDlg = K.openDlg, closeDlg = K.closeDlg, login = K.login, ROOT = K.ROOT, applyFont = K.applyFont, applyColors = K.applyColors, applyAttrs = K.applyAttrs, PG_APPS = K.PG_APPS, CORE = K.CORE, ASSETS = K.ASSETS, COLOR_DEFAULT = K.COLOR_DEFAULT, pageList = K.pageList, applyFavicon = K.applyFavicon, SIZE_SPEC = K.SIZE_SPEC, PAGE_DEF = K.PAGE_DEF, FONTS = K.FONTS, COLOR_KEYS = K.COLOR_KEYS, when = K.when, redraw = K.redraw, stepper = K.stepper;
   function D() { return document.getElementById('ix-dlg'); }
   /* element lookup: inside an open small dialog (Text Sizes) first, otherwise inside the Settings page */
   /* (1.65.1) a window that is closing (its 150 ms fade) no longer counts as open: right after the Keyboard Shortcuts window closed, a change of
@@ -1855,29 +1855,39 @@
       b.innerHTML = tabHead(ICON.device, 'Passkeys', 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in.') +
         ecCard(keys.length ? 'good' : '', ICON.shield, keys.length ? 'Passkeys On' : 'No Passkeys Yet', 'Your device must check that it is you (fingerprint, face or PIN) every time. Nothing a passkey leaves on your server can log anyone in.', list) +
         (can ? ecCard('', ICON.key, 'Add a Passkey', 'Your browser or phone asks which device or key to use. Adding or removing a passkey needs your website password.',
-          '<div class="ix-fgrid">' + ecField('ix-pkn', 'Name', 'text', 'off', 'Like "My Phone" or "Laptop".') + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div>' +
-          '<p class="ix-err" id="ix-pke"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-pkadd">Add a Passkey</button></div>')
+          '<div id="ix-pkst"></div><p class="ix-err" id="ix-pke"></p>')
           : ecCard('warn', ICON.lock, 'Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.' + (keys.length ? ' You can still remove the ones you have: type your website password below.' : ''),
             keys.length ? '<div class="ix-fgrid">' + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div><p class="ix-err" id="ix-pke"></p>' : ''));
       var err = function (t) { var e = b.querySelector('#ix-pke'); if (e) e.textContent = t; }, val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
-      var add = b.querySelector('#ix-pkadd');
-      if (add) add.onclick = function () {
-        var pw = val('#ix-pkw'); if (!pw) { err('Type your website password first.'); return; }
-        var nm = val('#ix-pkn').trim() || 'Passkey'; add.disabled = true; err('Waiting for your device…');
-        api('pk_register_begin', { password: pw }).then(function (j) {
-          if (!j.ok) throw new Error(j._status === 401 ? 'That isn\'t your website password.' : j.error || 'Could not start.');
-          var o = j.publicKey, H = window.HUB;
-          return navigator.credentials.create({ publicKey: { challenge: H.b64uBuf(o.challenge), rp: o.rp, user: { id: H.b64uBuf(o.user.id), name: o.user.name, displayName: o.user.displayName }, pubKeyCredParams: o.pubKeyCredParams, timeout: o.timeout,
-            attestation: o.attestation, authenticatorSelection: o.authenticatorSelection, excludeCredentials: (o.excludeCredentials || []).map(function (c) { return { type: 'public-key', id: H.b64uBuf(c.id) }; }) } });
-        }).then(function (c) {
-          if (!c) throw new Error('No passkey was made.');
-          var H = window.HUB;
-          return api('pk_register_finish', { name: nm, response: { clientDataJSON: H.bufB64u(c.response.clientDataJSON), attestationObject: H.bufB64u(c.response.attestationObject) } });
-        }).then(function (j) {
-          if (!j.ok) throw new Error(j.error || 'The passkey was not saved.');
-          st.pk = j.keys; toast('Passkey added.'); drawPk(); overview();
-        }).catch(function (x) { err(x && x.name === 'NotAllowedError' ? 'No passkey was made: it was cancelled or timed out.' : x && x.name === 'InvalidStateError' ? 'This device already has a passkey here.' : (x && x.message) || 'Could not add a passkey.'); add.disabled = false; });
-      };
+      /* (1.69.0) Add a Passkey is a Stepper: Name -> Your Device (the last button, #ix-pkadd, asks the device). A wrong password goes back. */
+      var pkHost = b.querySelector('#ix-pkst');
+      if (pkHost) stepper(pkHost, { kind: 'dots', linear: true, lastId: 'ix-pkadd', complete: 'Ask My Device',
+        steps: [
+          { title: 'Name', html: '<div class="ix-fgrid">' + ecField('ix-pkn', 'Name', 'text', 'off', 'Like "My Phone" or "Laptop".') + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div>',
+            next: function (q, c) { if (!val('#ix-pkw')) { c.err('Type your website password first.'); return false; } } },
+          { title: 'Your Device', html: '<p>Your browser or phone now asks which device or key to use: your fingerprint, face, PIN or a security key.</p>',
+            next: function (q, c) {
+              var pw = val('#ix-pkw'), nm = val('#ix-pkn').trim() || 'Passkey'; err('');
+              return api('pk_register_begin', { password: pw }).then(function (j) {
+                if (!j.ok) { if (j._status === 401) { var e = new Error('That isn\'t your website password.'); e.back = true; throw e; } throw new Error(j.error || 'Could not start.'); }
+                var o = j.publicKey, H = window.HUB;
+                return navigator.credentials.create({ publicKey: { challenge: H.b64uBuf(o.challenge), rp: o.rp, user: { id: H.b64uBuf(o.user.id), name: o.user.name, displayName: o.user.displayName }, pubKeyCredParams: o.pubKeyCredParams, timeout: o.timeout,
+                  attestation: o.attestation, authenticatorSelection: o.authenticatorSelection, excludeCredentials: (o.excludeCredentials || []).map(function (x) { return { type: 'public-key', id: H.b64uBuf(x.id) }; }) } });
+              }).then(function (cr) {
+                if (!cr) throw new Error('No passkey was made.');
+                var H = window.HUB;
+                return api('pk_register_finish', { name: nm, response: { clientDataJSON: H.bufB64u(cr.response.clientDataJSON), attestationObject: H.bufB64u(cr.response.attestationObject) } });
+              }).then(function (j) {
+                if (!j.ok) throw new Error(j.error || 'The passkey was not saved.');
+                st.pk = j.keys; toast('Passkey added.'); return true;
+              }).catch(function (x) {
+                var msg = x && x.name === 'NotAllowedError' ? 'No passkey was made: it was cancelled or timed out.' : x && x.name === 'InvalidStateError' ? 'This device already has a passkey here.' : (x && x.message) || 'Could not add a passkey.';
+                if (x && x.back) { setTimeout(function () { c.go(1); c.err(msg); }, 0); return false; }   // after the Stepper has finished this try
+                throw new Error(msg);
+              });
+            } }],
+        done: '<div class="ix-st-fin"><span class="ix-st-big"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><h3>Passkey added</h3><p>It can log in without the password now.</p></div>',
+        onDone: function () { setTimeout(function () { drawPk(); overview(); }, 1200); } });
       // (1.62.1) Remove used to say nothing near the button: its messages went to the line in the box below, out of sight. Now each one also shows as a message on top.
       var say = function (t) { err(t); toast(t, true); };
       b.querySelectorAll('[data-pkdel]').forEach(function (x) { x.onclick = function () {
@@ -1922,12 +1932,8 @@
       var html;
       if (!on) {
         html = card('intro', ICON.shield, 'Lock Your Private Tabs and Backups', 'One passphrase locks your Files, Cards and saved presets, the encrypted tabs in Info and Links, and your backup files. Only you can unlock them, even if someone copies your server.', chips) + older +
-          '<form id="ix-ef">' + card('', ICON.key, 'Set a Passphrase', 'At least 8 characters. A few words you will remember work better than a short jumble.',
-            '<div class="ix-fgrid">' + fd('ix-en1', 'New Passphrase', 'new-password') + fd('ix-en2', 'Type It Again', 'new-password') + '</div>' +
-            fd('ix-epw', 'Website Password', 'current-password', 'To confirm that it is you.') +
-            fd('ix-eold', 'Earlier Passphrase', 'off', 'The one your existing locked tabs use now.', 'ix-eoldw') +
-            '<label class="ix-chk"><input type="checkbox" id="ix-eack"> I understand a lost passphrase cannot be recovered</label>' +
-            '<p class="ix-err" id="ix-ee"></p><div class="ix-row"><button class="ix-btn pri" id="ix-eset">Set Passphrase</button></div>') + '</form>';
+          card('', ICON.key, 'Set a Passphrase', 'Three steps: the passphrase, your website password to confirm it is you, then a recovery key in case you ever forget it.',
+            '<div id="ix-encst"></div><p class="ix-err" id="ix-ee"></p>');
       } else {
         html = card('good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
           card('', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
@@ -1946,22 +1952,47 @@
             '<p class="ix-err" id="ix-ee"></p><div class="ix-row"><button type="button" data-hold class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
       }
       b.innerHTML = tabHead(ICON.lock, 'Encryption', 'One passphrase locks your Files, Cards and saved presets, your private tabs in Info and Links, and your backup files. Only you can unlock them.') + html;
-      var f = b.querySelector('#ix-ef'), er = b.querySelector('#ix-ee'), val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
+      var er = b.querySelector('#ix-ee'), val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
       var run = function (btn, msg, work, ok) {
         btn.disabled = true; er.textContent = msg;
         work().then(function () { er.textContent = ''; toast(ok); afterVaultChange(); })
           .catch(function (x) { er.textContent = x && x.user ? x.message : "Can't reach the server. Nothing was changed."; if (x && x.needOld) b.querySelector('#ix-eoldw').hidden = false; if (btn.dataset.armed) { btn.dataset.armed = ''; btn.textContent = 'Remove Passphrase'; } })
           .finally(function () { btn.disabled = false; });
       };
-      if (!on) f.onsubmit = function (e) {
-        e.preventDefault(); er.textContent = '';
-        var n1 = val('#ix-en1'), site = val('#ix-epw');
-        if (n1.length < 8) { er.textContent = 'Use at least 8 characters for the passphrase.'; return; }
-        if (n1 !== val('#ix-en2')) { er.textContent = 'The two passphrases are not the same.'; return; }
-        if (!site) { er.textContent = 'Type your website password.'; return; }
-        if (!b.querySelector('#ix-eack').checked) { er.textContent = 'Please confirm you understand the passphrase can\'t be recovered.'; return; }
-        run(b.querySelector('#ix-eset'), 'Setting…', function () { return PP.set({ pp: n1, site: site, old: val('#ix-eold') }); }, 'Passphrase set. Info tabs, Links tabs and backups use it now.');
-      };
+      /* (1.69.0) the first passphrase is a Stepper: Passphrase -> Confirm It's You (sets it) -> Recovery Key (made and shown at once) */
+      if (!on) {
+        var recCode = '', recFail = function (x) { return x && x.user ? x.message : "Can't reach the server. Nothing was changed."; };
+        stepper(b.querySelector('#ix-encst'), { kind: 'numbers', linear: true, complete: 'Finish',
+          steps: [
+            { title: 'Passphrase', html: '<p>At least 8 characters. A few words you will remember work better than a short jumble.</p><div class="ix-fgrid">' + fd('ix-en1', 'New Passphrase', 'new-password') + fd('ix-en2', 'Type It Again', 'new-password') + '</div>' +
+                '<label class="ix-chk"><input type="checkbox" id="ix-eack"> I understand a lost passphrase cannot be recovered without a recovery key</label>',
+              next: function (p, c) {
+                if (val('#ix-en1').length < 8) { c.err('Use at least 8 characters for the passphrase.'); return false; }
+                if (val('#ix-en1') !== val('#ix-en2')) { c.err('The two passphrases are not the same.'); return false; }
+                if (!b.querySelector('#ix-eack').checked) { c.err('Please confirm you understand the passphrase can\'t be recovered.'); return false; } } },
+            { title: 'Confirm It\'s You', html: fd('ix-epw', 'Website Password', 'current-password', 'To confirm that it is you. This sets the passphrase.') +
+                fd('ix-eold', 'Earlier Passphrase', 'off', 'The one your existing locked tabs use now.', 'ix-eoldw'),
+              next: function (p, c) {
+                if (!val('#ix-epw')) { c.err('Type your website password.'); return false; }
+                return PP.set({ pp: val('#ix-en1'), site: val('#ix-epw'), old: val('#ix-eold') }).then(function () { toast('Passphrase set. Info tabs, Links tabs and backups use it now.'); return true; },
+                  function (x) { if (x && x.needOld) b.querySelector('#ix-eoldw').hidden = false; throw new Error(recFail(x)); });
+              } },
+            { title: 'Recovery Key', html: '<p>A spare way in: if you ever forget the passphrase, this code opens your locked data and lets you set a new passphrase. It is shown only now.</p><div id="ix-ercode"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span></div>' +
+                '<label class="ix-chk"><input type="checkbox" id="ix-erack"> I saved the recovery key somewhere safe</label>',
+              enter: function (p, c) {
+                if (recCode) return;
+                c.block(3, true);
+                PP.makeRecovery({ pp: val('#ix-en1'), site: val('#ix-epw') }).then(function (code) {
+                  recCode = code; st.rec = true;
+                  p.querySelector('#ix-ercode').innerHTML = '<div class="ix-codes"><span class="ix-mono" id="ix-rcode">' + esc(code) + '</span></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-ercopy">Copy</button></div>';
+                  p.querySelector('#ix-ercopy').onclick = function () { navigator.clipboard && navigator.clipboard.writeText(code).then(function () { toast('Copied.'); }); };
+                  c.block(3, false);
+                }, function (x) { p.querySelector('#ix-ercode').textContent = ''; c.err(recFail(x) + ' You can make one later in this section.'); c.block(3, false); });
+              },
+              next: function (p, c) { if (recCode && !b.querySelector('#ix-erack').checked) { c.err('Tick the box once you have saved it.'); return false; } } }],
+          done: '<div class="ix-st-fin"><span class="ix-st-big"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><h3>Encryption is on</h3><p>To lock a tab: edit it, then choose Encrypted Tab.</p></div>',
+          onDone: function () { setTimeout(afterVaultChange, 1400); } });
+      }
       var cgo = b.querySelector('#ix-cgo');
       if (cgo) cgo.onclick = function () {
         var ce = b.querySelector('#ix-ce'), cur = val('#ix-ccur'), n1 = val('#ix-cn1'), site = val('#ix-cpw');
@@ -2498,8 +2529,7 @@
           }).join('') + '</div></details></details>' +
         '<p class="ix-note">Keep backup files somewhere other than this server.</p>' +
         '<details class="ix-acc"><summary><span>Restore</span><small>Bring everything back from a backup file.</small></summary><div class="ix-accb">' +
-          '<label class="ix-dropz" id="ix-dropz"><input type="file" id="ix-imp" accept=".json,.gz,application/json,application/gzip"><b>Drop a Backup File Here</b><span>or click to choose. .json, or .json.gz from Telegram. You pick what to restore next, and what is there now is kept as an earlier version first.</span></label>' +
-          '<div id="ix-impx"></div>' +
+          '<div id="ix-rst"></div>' +
           '<h3 class="ix-h3" id="ix-vacc">Earlier Versions</h3><p>' + (j.versions.length ? j.versions.length + ' saved' + (newest ? ', newest ' + esc(ago(newest)) : '') : 'None yet') + '. Up to 40 per page, one every 10 minutes, kept automatically while you edit. Restoring keeps a copy first.</p>' +
           '<div class="ix-row" id="ix-vf" style="margin-bottom:6px">' + seg('vf', [['all', 'All']].concat(['links', 'info', 'cards', 'tasks', 'home'].map(function (k) {
             var c = j.versions.filter(function (v) { return v.app === k; }).length; return [k, NAMES[k] + (c ? ' ' + c : '')]; })), 'all') + '</div><div id="ix-vl"></div></div></details>' +
@@ -2513,28 +2543,36 @@
             '<label class="ix-tg"><span>Include Private Tabs<small>Also writes your private tabs. The file is plain text: keep it safe.</small></span><input type="checkbox" id="ix-bmpriv"></label><div class="ix-row"><button type="button" class="ix-btn pri" data-export="links" data-fmt="html">' + svg(ICON.down) + 'Download Bookmark File</button></div>') +
           '<p class="ix-note" id="ix-xs">The files hold your data as plain text. Keep them somewhere safe.</p></div></details>' +
         '<details class="ix-acc ix-danger" id="ix-reset"><summary><span>Start Over</span><small>Erase all data and settings, like a new site</small></summary><div class="ix-accb">' +
-          '<p><b>This erases:</b> every page\'s data and earlier versions (Links, Info, Cards, Tasks, Start page), your pictures, icons and logo, the site settings and colors, Telegram, the domain watch list, the encryption passphrase and Telegram login approval.</p>' +
-          '<p><b>This keeps:</b> your password and two-step login, so you can log in again. Encrypted tabs cannot be opened afterwards unless you restore a backup and set the same passphrase.</p>' +
-          '<p>Everything comes back by restoring a backup file (the Restore tab). <b>Download a full backup first.</b></p>' +
-          '<label class="ix-fl2">Type ERASE<input type="text" id="ix-rsc" autocomplete="off" spellcheck="false"></label>' +
-          '<label class="ix-fl2">Website Password<input type="password" id="ix-rsp" autocomplete="current-password"></label>' +
-          '<p class="ix-err" id="ix-rse"></p><div class="ix-row"><button type="button" class="ix-btn danger ix-erase" id="ix-rsgo"><span class="ix-et">Erase Everything</span><span class="ix-ei" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/></svg></span></button></div></div></details>' +
+          '<div id="ix-rsst"></div></div></details>' +
         '<p class="ix-note">Moving the site? Copy the whole folder: your data is in <code>site-data</code>.</p>';
       p.querySelector('#ix-tgset').onclick = function (e) { e.preventDefault(); go('telegram'); };
-      p.querySelector('#ix-rsgo').onclick = function () {
-        var er = p.querySelector('#ix-rse'), btn = this;
-        if (p.querySelector('#ix-rsc').value.trim() !== 'ERASE') { er.textContent = 'Type ERASE (in capitals) to confirm.'; return; }
-        if (!p.querySelector('#ix-rsp').value) { er.textContent = 'Type your website password.'; return; }
-        if (!confirm('Erase all data and settings now? This cannot be undone except by importing a backup file.')) return;
-        btn.disabled = true; er.textContent = 'Erasing…';
-        api('reset_all', { confirm: 'ERASE', password: p.querySelector('#ix-rsp').value }).then(function (j) {
-          if (!j.ok) { er.textContent = j.error || 'Nothing was erased.'; btn.disabled = false; return; }
-          try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}   // this browser's copies too (theme, cached pages, kept keys)
-          window.HubVault.devDropAll();
-          er.className = 'ix-note'; er.textContent = 'Erased: ' + j.erased.join(', ') + '. Reloading…';
-          setTimeout(function () { location.reload(); }, 1200);
-        }).catch(function () { er.textContent = "Can't reach the server. Nothing was erased."; btn.disabled = false; });
-      };
+      /* (1.69.0) Start Over is a Stepper: What Gets Erased -> Back Up First -> Type ERASE. The last button keeps the Erase Everything look (#ix-rsgo). */
+      stepper(p.querySelector('#ix-rsst'), { kind: 'numbers', linear: true, danger: true, lastId: 'ix-rsgo', lastClass: 'ix-erase',
+        lastHtml: '<span class="ix-et">Erase Everything</span><span class="ix-ei" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/></svg></span>',
+        steps: [
+          { title: 'What Gets Erased', html: '<p><b>This erases:</b> every page\'s data and earlier versions (Links, Info, Cards, Tasks, Start page), your pictures, icons and logo, the site settings and colors, Telegram, the domain watch list, the encryption passphrase and Telegram login approval.</p>' +
+              '<p><b>This keeps:</b> your password and two-step login, so you can log in again. Encrypted tabs cannot be opened afterwards unless you restore a backup and set the same passphrase.</p>' },
+          { title: 'Back Up First', html: '<p>Everything comes back by restoring a backup file (Restore, above). <b>Download a full backup first</b>; it uses what is chosen under Back Up.</p>' +
+              '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-rsbk">' + svg(ICON.down) + 'Download a Backup</button></div>' },
+          { title: 'Confirm', html: '<label class="ix-fl2">Type ERASE<input type="text" id="ix-rsc" autocomplete="off" spellcheck="false"></label>' +
+              '<label class="ix-fl2">Website Password<input type="password" id="ix-rsp" autocomplete="current-password"></label><p class="ix-err" id="ix-rse"></p>',
+            next: function (q, c) {
+              var er = p.querySelector('#ix-rse');
+              if (p.querySelector('#ix-rsc').value.trim() !== 'ERASE') { er.textContent = 'Type ERASE (in capitals) to confirm.'; return false; }
+              if (!p.querySelector('#ix-rsp').value) { er.textContent = 'Type your website password.'; return false; }
+              if (!confirm('Erase all data and settings now? This cannot be undone except by importing a backup file.')) return false;
+              er.textContent = 'Erasing…';
+              return api('reset_all', { confirm: 'ERASE', password: p.querySelector('#ix-rsp').value }).then(function (j) {
+                if (!j.ok) { er.textContent = j.error || 'Nothing was erased.'; return false; }
+                try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}   // this browser's copies too (theme, cached pages, kept keys)
+                window.HubVault.devDropAll();
+                er.textContent = '';
+                setTimeout(function () { location.reload(); }, 1200);
+                return true;
+              }, function () { er.textContent = "Can't reach the server. Nothing was erased."; return false; });
+            } }],
+        done: '<div class="ix-st-fin"><span class="ix-st-big"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><h3>Everything is erased</h3><p>Reloading…</p></div>' });
+      p.querySelector('#ix-rsbk').onclick = function () { var x = p.querySelector('#ix-exp'); if (x) x.click(); };
       p.querySelectorAll('[data-tabsbtn]').forEach(function (b) { b.onclick = function () { var t = p.querySelector('[data-tabs="' + b.dataset.tabsbtn + '"]'); t.hidden = !t.hidden; }; });
       // tab choices follow their part's checkbox
       p.querySelectorAll('[data-part]').forEach(function (c) { c.onchange = function () { var t = p.querySelector('[data-tabs="' + c.dataset.part + '"]'), b = p.querySelector('[data-tabsbtn="' + c.dataset.part + '"]'); if (b) b.hidden = !c.checked; if (t && !c.checked) t.hidden = true; }; });
@@ -2577,11 +2615,20 @@
         api('settings', { settings: { backupEvery: S.backupEvery } }).then(function () { remember(S); redraw(); toast('Reminder saved.'); pBackup(p); });
       };
       // import: click or drop a file
+      /* (1.69.0) Restore is a Stepper: File -> Choose What to Restore -> Restoring (bars). importFile() fills step 2 (or asks for the
+         passphrase of an encrypted backup there); the Restore button runs box.__restore. */
+      var rst = stepper(p.querySelector('#ix-rst'), { kind: 'bars', linear: true, complete: 'Restore',
+        steps: [
+          { title: 'File', html: '<label class="ix-dropz" id="ix-dropz"><input type="file" id="ix-imp" accept=".json,.gz,application/json,application/gzip"><b>Drop a Backup File Here</b><span>or click to choose. .json, or .json.gz from Telegram. You pick what to restore next, and what is there now is kept as an earlier version first.</span></label>',
+            next: function (q, c) { if (!q.querySelector('#ix-imp').files.length && !rst.__file) { c.err('Choose a backup file first.'); return false; } } },
+          { title: 'Choose', html: '<div id="ix-impx"></div>', next: function (q, c) { var bx = q.querySelector('#ix-impx'); if (!bx.__restore) { c.err('Unlock the file first, or choose another one.'); return false; } return bx.__restore(); } }],
+        done: '<div class="ix-st-fin"><span class="ix-st-big"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><h3>Restored</h3><p>Reloading…</p></div>' });
       var dz = p.querySelector('#ix-dropz');
-      p.querySelector('#ix-imp').onchange = function (e) { importFile(e.target.files[0], p.querySelector('#ix-impx')); };
+      var pickFile = function (f) { if (!f) return; rst.__file = f; var bx = p.querySelector('#ix-impx'); bx.__restore = null; importFile(f, bx); rst.go(2); };
+      p.querySelector('#ix-imp').onchange = function (e) { pickFile(e.target.files[0]); };
       ['dragenter', 'dragover'].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('over'); }); });
       ['dragleave', 'drop'].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('over'); }); });
-      dz.addEventListener('drop', function (e) { if (e.dataTransfer.files[0]) importFile(e.dataTransfer.files[0], p.querySelector('#ix-impx')); });
+      dz.addEventListener('drop', function (e) { if (e.dataTransfer.files[0]) pickFile(e.dataTransfer.files[0]); });
       // earlier versions: drawn only when opened, 20 at a time
       var vl = p.querySelector('#ix-vl'), filt = 'all', shown = 20;
       function drawVersions() {
@@ -2651,18 +2698,18 @@
       box.innerHTML = '<p style="margin-top:10px">Found in this file' + (j.created ? ' (' + esc(new Date(j.created).toLocaleString()) + ')' : '') + ':</p>' +
         keys.map(function (k) { return '<div class="ix-part"><label><input type="checkbox" data-r="' + k + '" checked> <b>' + NAMES[k] + '</b></label></div>'; }).join('') +
         (tabbed ? '<p>For Links and Info:</p>' + seg('mode', [['replace', 'Replace Everything'], ['merge', 'Add or Update These Tabs Only']], 'replace') : '') +
-        '<p class="ix-err" id="ix-re"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-rs">Restore</button></div>';
+        '<p class="ix-note">What is there now is kept as an earlier version first.</p><p class="ix-err" id="ix-re"></p>';
       var mode = 'replace';
       if (tabbed) bindSeg(box, function (k, v) { mode = v; });
-      box.querySelector('#ix-rs').onclick = function () {
+      // (1.69.0) run by the Restore button of the Stepper; true when it went through (then the page reloads)
+      box.__restore = function () {
         var pick = {}; box.querySelectorAll('[data-r]:checked').forEach(function (c) { pick[c.dataset.r] = true; });
-        if (!Object.keys(pick).length) { box.querySelector('#ix-re').textContent = 'Pick at least one part.'; return; }
-        var b = this; b.disabled = true; b.textContent = 'Restoring…';
-        api('restore', { backup: j, pick: pick, mode: mode }).then(function (k) {
-          b.disabled = false; b.textContent = 'Restore';
-          if (!k.ok) { box.querySelector('#ix-re').textContent = k.error || 'Restore failed.'; return; }
-          toast('Restored: ' + k.restored.join(', ') + '. Reloading…'); setTimeout(function () { location.reload(); }, 1100);
-        }).catch(function () { b.disabled = false; b.textContent = 'Restore'; box.querySelector('#ix-re').textContent = 'The file may be too large for this server.'; });
+        box.querySelector('#ix-re').textContent = '';
+        if (!Object.keys(pick).length) { box.querySelector('#ix-re').textContent = 'Pick at least one part.'; return false; }
+        return api('restore', { backup: j, pick: pick, mode: mode }).then(function (k) {
+          if (!k.ok) { box.querySelector('#ix-re').textContent = k.error || 'Restore failed.'; return false; }
+          toast('Restored: ' + k.restored.join(', ') + '. Reloading…'); setTimeout(function () { location.reload(); }, 1100); return true;
+        }, function () { box.querySelector('#ix-re').textContent = 'The file may be too large for this server.'; return false; });
       };
     };
     r.readAsText(file);

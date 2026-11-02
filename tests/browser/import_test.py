@@ -60,9 +60,14 @@ try:
         def choose(name):
             pg.set_input_files('#impFile', os.path.join(FX, name) if not os.path.isabs(name) else name)
             wait_js(pg, "document.querySelector('#impPrev').textContent || document.querySelector('#impErr').textContent", 10000)
-            return pg.inner_text('#impPrev'), pg.inner_text('#impErr')
+            pv, er = pg.evaluate("document.querySelector('#impPrev').textContent"), pg.inner_text('#impErr')
+            # (1.69.0) the Stepper: a good file goes on to its Preview by itself; Continue goes to Where
+            if not er and pg.evaluate("!!document.querySelector('#impDlg .ix-st-next:not(:disabled)')"):
+                pg.click('#impDlg .ix-st-next'); wait_js(pg, "!document.querySelector('#impWhere').closest('.ix-st-pane').hidden", 5000)
+            return pv, er
 
         def go():
+            if not pg.query_selector('#impGo'): pg.click('#impDlg .ix-st-next'); pg.wait_for_selector('#impGo')   # (1.69.0) Where -> Import
             pg.click('#impGo')
             wait_js(pg, "!document.querySelector('#impDone').hidden || document.querySelector('#impErr').textContent", 20000)
             return pg.inner_text('#impDone'), pg.inner_text('#impErr')
@@ -155,7 +160,7 @@ try:
         _, er = choose(many); check('I30 more than 5,000 links: refused with a plain message', '5001 links' in er and '5000' in er, er)
         big = os.path.join(TMP, 'big.html'); open(big, 'w').write('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<DL>' + 'x' * (5 * 1048576 + 10) + '</DL>')
         _, er = choose(big); check('I31 a file over 5 MB: refused with a plain message', '5 MB' in er, er)
-        check('I32 the Import button stays off for a refused file', pg.is_disabled('#impGo'))
+        check('I32 Continue stays off for a refused file (1.69.0: the import is a Stepper)', pg.is_disabled('#impDlg .ix-st-next') and not pg.query_selector('#impGo'))
         close()
 
         # ----- 3,000 links: a big but allowed import, timed -----

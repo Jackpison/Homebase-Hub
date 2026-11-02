@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.69.0 | Step-by-step boxes (React Bits' Stepper) for New Site Setup, Links Import, the first Encryption Passphrase, Restore, Start Over, Files Share Link and Add a Passkey, and a new Home Tour |
 | 1.68.5 | Glass windows, menus and search results let the page show through: a much lighter layer behind a glass window and a brighter rim |
 | 1.68.4 | One glass for the whole site: the bar, the dock and the Home widgets share Settings › Appearance › Glass, with Solid, Tone, Rim Light, Shadow, Liquid only over photos, glass in more places and a live preview |
 | 1.68.3 | The Save Settings bar shows only when something changed; Bar Glass is a clean Soft glass by default, the bending is the Liquid pick; CI test fixes |
@@ -130,6 +131,27 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.69.0
+
+### Added
+
+- **The Stepper** (React Bits' Stepper by David Haz, ported to plain JavaScript in shell.js, credited in THIRD-PARTY.md): a flow of a few steps in one box. The current step sits on a raised tile that slides along, a finished step turns into a tick that draws itself, the content slides and the box grows or shrinks to the new step, with Back and Continue (the last button says what it does). Numbers with names, dots or bars; steps ahead cannot be clicked where order matters; on a narrow screen only the numbers show; Enter in a field goes on; reduced motion is respected.
+- **Where it is used:**
+  - **New Site Setup:** Code → Password → Site (each checked before going on), then Done. A wrong code goes back to the first step.
+  - **Links › Import:** File → Preview → Where → Import (a good file goes straight on to its preview). Export stays below it.
+  - **Security › Encryption, the first passphrase:** Passphrase → Confirm It's You (this sets it) → Recovery Key (made and shown at once, with Copy and an "I saved it" tick).
+  - **Backup › Restore:** File → Choose What to Restore (bars), then Restore.
+  - **Backup › Start Over:** What Gets Erased → Back Up First (a Download a Backup button) → Type ERASE, with the Erase Everything button on the last step only.
+  - **Files › Share Link:** How Long → Your Link (a file that already has links opens on them).
+  - **Security › Add a Passkey:** Name → Your Device (a wrong password goes back to the first step).
+  - **The Home Tour (new):** four cards (the start page, the bar, the widgets, Settings) that light up the part they talk about. It opens once, on the first Home visit after setting up a site, and any time from Home Settings › Take the Tour; Skip ends it.
+
+### Checked
+
+- polish_test P66 (Restore), P67 (Start Over: steps ahead locked, the tick, Erase Everything only on the last step), P68 (the passphrase is set on step 2, the recovery key on step 3), P69 (New Site Setup and the Home Tour). import_test, settings_ui_test, settings_look_test L6, encrypt_test, passkey_test (K4: a wrong password goes back), files_test (Share) and the passphrase helper walk the steps.
 
 ---
 

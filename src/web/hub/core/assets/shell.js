@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.68.5" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.69.0" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -1378,27 +1378,36 @@
     var l = host.split('.'), n = l.length >= 3 && l[l.length - 2].length <= 3 ? l[l.length - 3] : l[l.length - 2];
     return n.charAt(0).toUpperCase() + n.slice(1);
   }
+  /* (1.69.0) a new site: Code -> Password -> Site -> Done, in the Stepper (it was one long form). The server checks everything again. */
   function setupForm() {
     var nm = S.siteName && S.siteName !== 'My Site' ? S.siteName : guessName(S.host || '');
-    openDlg('<div class="ix-ico">' + svg(ICON.key) + '</div><h2>Welcome!</h2>' +
-      '<p>Let\'s set up your site. Open this file in your hosting file manager, copy the code inside, and paste it below. This proves the site is yours:</p>' +
-      '<p><code>' + esc(S.setupFile || 'site-data/core/SETUP-CODE.php') + '</code></p>' +
-      '<form id="ix-sf"><label for="ix-sc">Setup Code</label><input type="text" id="ix-sc" autocomplete="off" autocapitalize="characters" placeholder="ABCD-1234" autofocus>' +
-      '<label for="ix-sn">Site Name</label><input type="text" id="ix-sn" maxlength="30" value="' + esc(nm) + '">' +
-      '<label for="ix-p1">New Password (at least 8 characters)</label><input type="password" id="ix-p1" autocomplete="new-password">' +
-      '<label for="ix-p2">Type It Again</label><input type="password" id="ix-p2" autocomplete="new-password">' +
-      '<p class="ix-err" id="ix-se"></p><div class="ix-acts"><button type="button" class="ix-btn" data-ix="close">Later</button><button class="ix-btn pri">Create My Site</button></div></form>' +
+    openDlg('<div class="ix-ico">' + svg(ICON.key) + '</div><h2>Welcome!</h2><div id="ix-setst"></div>' +
       '<p class="ix-note">One password unlocks editing on every page. You can open this box any time from the key icon.</p>');
-    $('#ix-sf').onsubmit = function (e) {
-      e.preventDefault();
-      if ($('#ix-p1').value !== $('#ix-p2').value) { $('#ix-se').textContent = "The two passwords don't match."; return; }
-      var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (x) {}
-      // a new site starts with this browser's time zone and the theme that follows the device
-      api('setup', { code: $('#ix-sc').value, password: $('#ix-p1').value, siteName: $('#ix-sn').value, tz: tz, theme: 'auto' }).then(function (j) {
-        if (j.ok) { S.setup = false; return loggedIn().then(function () { location.reload(); }); }
-        $('#ix-se').textContent = j.error || 'Could not save.';
-      });
-    };
+    var val = function (id) { var e = document.getElementById(id); return e ? e.value : ''; };
+    stepper($('#ix-setst'), { kind: 'numbers', linear: true, complete: 'Create My Site', skip: function () { closeDlg(); }, skipText: 'Later',
+      steps: [
+        { title: 'Code', html: '<p>Open this file in your hosting file manager, copy the code inside and paste it here. This proves the site is yours:</p>' +
+            '<p><code>' + esc(S.setupFile || 'site-data/core/SETUP-CODE.php') + '</code></p>' +
+            '<label for="ix-sc">Setup Code</label><input type="text" id="ix-sc" autocomplete="off" autocapitalize="characters" placeholder="ABCD-1234">',
+          next: function (p, c) { if (!val('ix-sc').trim()) { c.err('Paste the code from the file first.'); return false; } } },
+        { title: 'Password', html: '<p>One password for editing every page.</p><label for="ix-p1">New Password (at least 8 characters)</label><input type="password" id="ix-p1" autocomplete="new-password">' +
+            '<label for="ix-p2">Type It Again</label><input type="password" id="ix-p2" autocomplete="new-password">',
+          next: function (p, c) {
+            if (val('ix-p1').length < 8) { c.err('At least 8 characters.'); return false; }
+            if (val('ix-p1') !== val('ix-p2')) { c.err("The two passwords don't match."); return false; } } },
+        { title: 'Site', html: '<label for="ix-sn">Site Name</label><input type="text" id="ix-sn" maxlength="30" value="' + esc(nm) + '">' +
+            '<p class="ix-note">The time zone is taken from this browser; the look follows your device (light or dark). Both can be changed in Settings.</p>',
+          next: function (p, c) {
+            var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (x) {}
+            // a new site starts with this browser's time zone and the theme that follows the device
+            return api('setup', { code: val('ix-sc'), password: val('ix-p1'), siteName: val('ix-sn'), tz: tz, theme: 'auto' }).then(function (j) {
+              if (j.ok) { S.setup = false; return true; }
+              if (/code/i.test(j.error || '')) { setTimeout(function () { c.go(1); c.err(j.error); }, 0); return false; }   // after the Stepper has finished this try
+              throw new Error(j.error || 'Could not save.');
+            });
+          } }],
+      done: '<div class="ix-st-fin"><span class="ix-st-big">' + '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><h3>Your site is ready</h3><p>Opening it…</p></div>',
+      onDone: function () { try { localStorage.setItem('hl-tour-due', '1'); } catch (x) {} loggedIn().then(function () { location.reload(); }); } });   // (1.69.0) the Home Tour on the first visit
   }
   /* The password was right; the login waits for Approve in Telegram (or a two-step recovery code, when two-step is on).
      Settings > Security turns this on. */
@@ -1561,7 +1570,108 @@
     applyColors: applyColors, applyAttrs: applyAttrs, PG_APPS: PG_APPS, CORE: CORE, ASSETS: ASSETS, COLOR_DEFAULT: COLOR_DEFAULT, setTheme: setTheme, pageList: pageList,
     applyFavicon: applyFavicon, SIZE_SPEC: SIZE_SPEC, PAGE_DEF: PAGE_DEF, FONTS: FONTS, COLOR_KEYS: COLOR_KEYS, when: when, previewWith: previewWith,
     previewTheme: previewTheme, restoreTheme: restoreTheme, storeTheme: storeTheme, resolveTheme: resolveTheme,
-    pageColor: pageColor, pageTile: function (id) { var x = PAGE_TILE[id]; return x ? '<svg viewBox="0 0 24 24">' + x[1] + '</svg>' : ''; } };
+    stepper: stepper, pageColor: pageColor, pageTile: function (id) { var x = PAGE_TILE[id]; return x ? '<svg viewBox="0 0 24 24">' + x[1] + '</svg>' : ''; } };
+
+  /* ---------- (1.69.0) Stepper: a flow of a few steps in one box. Ported to plain JavaScript from React Bits' Stepper (David Haz, MIT +
+     Commons Clause; credited in THIRD-PARTY.md). The current step sits on a raised tile that slides along; a finished step turns into a tick
+     that draws itself; the content slides and the box grows or shrinks to the new step; Back / Continue below (Continue says the last action).
+     All steps are built at once and only shown one at a time, so their fields and handlers stay as they are.
+     o = { steps: [{ title, html, enter(pane, ctl), next(pane, ctl) -> false to stay (or a promise) }], kind: 'numbers' | 'dots' | 'bars',
+           linear (only back to steps already reached), complete (last button), danger (red last button), skip (a Skip button: function),
+           done (html shown after the last step), onDone(ctl), frame (a glass panel around it), back, cont }
+     Also: lastId, lastClass, lastHtml (the last button's id, class and inside), skipText, start (the step to open on). Returns { el, go(n), pane(n), err(text), block(n, on), fin (the done pane), step() }. */
+  function stepper(host, o) {
+    var steps = o.steps, total = steps.length, kind = o.kind || 'numbers', cur = 1, reached = 1, busy = false, blocked = {};
+    var TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+    var root = document.createElement('div'); root.className = 'ix-st' + (o.frame ? ' ix-st-frame' : '');
+    var head = document.createElement('div'); head.className = 'ix-st-head ix-st-' + kind;
+    var view = document.createElement('div'); view.className = 'ix-st-view'; view.setAttribute('aria-live', 'polite');
+    var foot = document.createElement('div'); foot.className = 'ix-st-foot';
+    var panes = steps.map(function (st, i) {
+      var p = document.createElement('div'); p.className = 'ix-st-pane'; p.tabIndex = -1; p.hidden = i > 0;
+      p.innerHTML = (st.html || '') + '<p class="ix-err ix-st-err" role="alert"></p>'; view.appendChild(p); return p;
+    });
+    var fin = document.createElement('div'); fin.className = 'ix-st-pane ix-st-done'; fin.hidden = true; view.appendChild(fin);
+    root.append(head, view, foot); host.innerHTML = ''; host.appendChild(root);
+    var status = function (n) { return cur > total || n < cur ? 'done' : n === cur ? 'active' : 'upcoming'; };
+    var can = function (n) { return !busy && n !== cur && cur <= total && (!o.linear || n <= reached); };
+    function drawHead() {
+      if (kind === 'bars') { head.innerHTML = '<div class="ix-st-bars">' + steps.map(function (st, i) { return '<i' + (cur > i ? ' class="on"' : '') + '><b></b></i>'; }).join('') + '</div>'; return; }
+      if (kind === 'dots') {
+        head.innerHTML = '<div class="ix-st-dots">' + steps.map(function (st, i) { var n = i + 1;
+          return '<button type="button" data-n="' + n + '" data-s="' + status(n) + '" aria-label="Step ' + n + ': ' + esc(st.title) + '"' + (n === cur ? ' aria-current="step"' : '') + (can(n) ? '' : ' disabled') + '><i></i></button>'; }).join('') + '</div>';
+      } else {
+        if (!head.firstChild) head.innerHTML = '<div class="ix-st-track"><span class="ix-st-glider" aria-hidden="true"></span>' + steps.map(function (st, i) {
+          return '<button type="button" class="ix-st-seg" data-n="' + (i + 1) + '"><span class="ix-st-badge"></span><span class="ix-st-name">' + esc(st.title) + '</span><span class="ix-st-sr"></span></button>'; }).join('') + '</div>';
+        head.querySelectorAll('.ix-st-seg').forEach(function (b) {
+          var n = +b.dataset.n, s = status(n), bd = b.firstChild; b.dataset.s = s; b.disabled = !can(n);
+          b.querySelector('.ix-st-sr').textContent = s === 'done' ? ', done' : '';   // the name is what shows (number and title), plus ", done"
+          if (n === cur) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+          if (bd.dataset.s !== s) { bd.dataset.s = s; bd.innerHTML = s === 'done' ? TICK : String(n); }
+        });
+        placeGlider(true);
+      }
+      head.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () { go(+b.dataset.n); }; });
+    }
+    function placeGlider(anim) {
+      var g = head.querySelector('.ix-st-glider'), seg = head.querySelector('.ix-st-seg[data-n="' + Math.min(cur, total) + '"]');
+      if (!g || !seg) return;
+      if (!anim) g.style.transition = 'none';
+      g.style.width = seg.offsetWidth + 'px'; g.style.height = seg.offsetHeight + 'px';
+      g.style.transform = 'translate(' + seg.offsetLeft + 'px,' + seg.offsetTop + 'px)'; g.style.opacity = cur > total ? '0' : '1';
+      if (!anim) { void g.offsetWidth; g.style.transition = ''; }
+    }
+    function drawFoot() {
+      if (cur > total) { foot.hidden = true; return; }
+      var last = cur === total;
+      foot.innerHTML = '<button type="button" class="ix-btn ix-st-back"' + (cur <= 1 ? ' data-h' : '') + '>' + esc(o.back || 'Back') + '</button>' +
+        (o.skip ? '<button type="button" class="ix-btn ix-st-skip">' + esc(o.skipText || 'Skip') + '</button>' : '') +
+        '<button type="button" class="ix-btn ' + (last && o.danger ? 'danger' : 'pri') + (last && o.lastClass ? ' ' + o.lastClass : '') + ' ix-st-next"' + (last && o.lastId ? ' id="' + o.lastId + '"' : '') + (blocked[cur] ? ' disabled' : '') + '>' +
+          (last && o.lastHtml ? o.lastHtml : esc(last ? (o.complete || 'Done') : (o.cont || 'Continue'))) + '</button>';
+      foot.querySelector('.ix-st-back').onclick = function () { go(cur - 1); };
+      foot.querySelector('.ix-st-next').onclick = forward;
+      if (o.skip) foot.querySelector('.ix-st-skip').onclick = function () { o.skip(ctl); };
+    }
+    function err(t) { var e = panes[Math.min(cur, total) - 1].querySelector('.ix-st-err'); if (e) e.textContent = t || ''; }
+    function forward() {
+      if (busy || blocked[cur]) return;
+      var st = steps[cur - 1], b = foot.querySelector('.ix-st-next'), label = b.innerHTML;
+      err('');
+      var r = st.next ? st.next(panes[cur - 1], ctl) : true;
+      if (r && typeof r.then === 'function') {
+        busy = true; b.disabled = true; if (!o.lastHtml || cur < total) b.textContent = 'Working…';
+        r.then(function (ok) { busy = false; if (b.isConnected) { b.disabled = !!blocked[cur]; b.innerHTML = label; } if (ok !== false) go(cur + 1); },
+          function (e) { busy = false; if (b.isConnected) { b.disabled = !!blocked[cur]; b.innerHTML = label; } err((e && e.message) || "Can't reach the server."); });
+      } else if (r !== false) go(cur + 1);
+    }
+    function go(n) {
+      n = Math.max(1, Math.min(total + 1, n));
+      if (n === cur || busy) return;
+      var dir = n > cur ? 1 : -1, from = view.offsetHeight, old = cur <= total ? panes[cur - 1] : fin;
+      cur = n; reached = Math.max(reached, n);
+      var now = n > total ? fin : panes[n - 1];
+      if (n > total) { fin.innerHTML = o.done || ''; }
+      old.hidden = true; now.hidden = false;
+      var moving = now.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (moving) {
+        now.animate([{ transform: 'translateX(' + (dir * 36) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.34,1.3,.64,1)' });
+        var to = view.offsetHeight;
+        if (Math.abs(to - from) > 1) view.animate([{ height: from + 'px' }, { height: to + 'px' }], { duration: 420, easing: 'cubic-bezier(.34,1.3,.64,1)' });
+      }
+      drawHead(); drawFoot();
+      if (n <= total) { var st = steps[n - 1]; if (st.enter) st.enter(now, ctl); var f = now.querySelector('input:not([type=hidden]):not([disabled]),select,textarea'); (f || now).focus({ preventScroll: true }); }
+      else if (o.onDone) o.onDone(ctl);
+    }
+    // block(n, on): Continue stays off on step n until it is unblocked (a file not chosen yet, a box not ticked)
+    var block = function (n, on) { blocked[n] = !!on; var b = foot.querySelector('.ix-st-next'); if (b && n === cur && !busy) b.disabled = !!on; };
+    var ctl = { el: root, go: go, err: err, block: block, fin: fin, pane: function (n) { return panes[n - 1]; }, step: function () { return cur; } };
+    root.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox' && e.target.type !== 'radio') { e.preventDefault(); forward(); } });
+    if (window.ResizeObserver) new ResizeObserver(function () { root.classList.toggle('ix-st-tight', root.clientWidth < 420); placeGlider(false); }).observe(root);
+    if (o.start > 1 && o.start <= total) { panes[0].hidden = true; cur = reached = o.start; panes[cur - 1].hidden = false; }   // start: open on a later step
+    drawHead(); drawFoot();
+    if (steps[cur - 1].enter) steps[cur - 1].enter(panes[cur - 1], ctl);
+    return ctl;
+  }
 
   /* ---------- 13. start ---------- */
   /* One request at a time: a second caller gets the answer already on its way. */
@@ -1695,6 +1805,7 @@
     isAdmin: function () { return !!S.admin; }, ready: function () { return refresh(); }, fetch: hubFetch, esc: esc, isHex: isHex,
     bufB64u: bufB64u, b64uBuf: b64uBuf, bookmarksHtml: bookmarksHtml,   // (1.61.0) for the passkey screens of Settings
     api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
+    stepper: stepper,   // (1.69.0) a flow of a few steps (Links import, Files share, the Home tour)
     /* (1.65.1) A page that needs the login (Settings when logged out): a card with the site's logo, a line and the Log In button, on a
        faint dot grid. One copy for every such page, styled by shell.css, so it never falls back to the browser's own grey button. */
     gate: function (host, title, text) {   // built from elements (textContent), so nothing is read as HTML

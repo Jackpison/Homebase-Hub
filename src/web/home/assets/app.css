@@ -403,3 +403,9 @@ body.onlyme{min-height:100dvh;display:grid;place-items:center;background:#111;co
 /* (1.68.4) Home Settings > Glass now only points to Settings > Appearance > Glass */
 .g-note{margin:0;padding:12px 14px;font-size:13.5px;line-height:1.5;opacity:.85}
 .g-note a{color:inherit;font-weight:600;text-decoration:underline}
+
+/* (1.69.0) Home Tour: a glass card at the bottom (the Stepper, shell.js); the part it talks about gets a ring */
+.hl-tour{position:fixed;z-index:2147483005;left:50%;bottom:max(110px,calc(env(safe-area-inset-bottom) + 96px));transform:translateX(-50%);width:min(420px,calc(100% - 32px));color:#fff}
+.hl-tour .ix-st-frame{--ix-tx:#fff;--ix-mu:rgba(255,255,255,.72)}
+.hl-tour-h{margin:0 0 4px;font-size:17px}.hl-tour-p{margin:0;font-size:14px;line-height:1.5;opacity:.85}
+.hl-spot{outline:2px solid var(--ix-accent,#ffc21a)!important;outline-offset:6px;border-radius:16px;box-shadow:0 0 0 8px color-mix(in srgb,var(--ix-accent,#ffc21a) 25%,transparent)!important;transition:outline-offset .3s}

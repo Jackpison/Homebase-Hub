@@ -702,10 +702,18 @@ async function shareBox(i) {
     const sm = await V.seal(fk, JSON.stringify({ n: meta1.n, ty: meta1.ty || "", s: meta1.s }));
     const e = +exp.value, j = await post("share_create", { id: i.id, sm, exp: e ? Math.floor(Date.now() / 1000) + e : 0 });
     if (!j.ok) { derr(j.error); return false; }
-    await refresh(); draw(); toast("Link made."); return false;
+    await refresh(); draw(); toast("Link made."); return true;
   };
-  await openDialog("Share " + nameOf(i), [FC ? h("div", { class: "shfc" }, FC.make(nameOf(i), "m"), h("b", { text: nameOf(i) })) : null, h("p", { text: "Anyone with the link can open this one file. The key to unlock it is in the link itself (after the #), so it never reaches your server, and the file stays locked there." }), box,
-    h("label", { for: "dexp", text: "New link ends" }), exp], [{ text: "Make a New Link", pri: true, left: true, run: make }, { text: "Done", run: () => {} }]);
+  /* (1.69.0) a Stepper (shell.js): How Long -> Your Link. A file that already has links opens on them. */
+  const host = h("div", { id: "dshst" });
+  if (window.HUB && HUB.stepper) {
+    const st = HUB.stepper(host, { kind: "dots", start: D.shares.some(s => s.id === i.id) ? 2 : 1, cont: "Make a New Link", complete: "Done",
+      steps: [{ title: "How Long", next: () => make() }, { title: "Your Link", next: () => { dlg.close(); return false; } }] });
+    st.pane(1).prepend(h("label", { for: "dexp", text: "The link ends" }), exp);
+    st.pane(2).prepend(box);
+  } else host.append(box, h("label", { for: "dexp", text: "New link ends" }), exp);
+  await openDialog("Share " + nameOf(i), [FC ? h("div", { class: "shfc" }, FC.make(nameOf(i), "m"), h("b", { text: nameOf(i) })) : null, h("p", { text: "Anyone with the link can open this one file. The key to unlock it is in the link itself (after the #), so it never reaches your server, and the file stays locked there." }), host],
+    window.HUB && HUB.stepper ? [{ text: "Close", run: () => {} }] : [{ text: "Make a New Link", pri: true, left: true, run: async () => { await make(); return false; } }, { text: "Done", run: () => {} }]);
   raw.fill(0);
 }
 

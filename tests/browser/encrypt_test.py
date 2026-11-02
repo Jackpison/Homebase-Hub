@@ -49,7 +49,8 @@ try:
 
         # ---- set the passphrase in Settings > Security > Encryption ----
         pg.goto(base + '/web/settings/#security/encryption'); wait_js(pg, "!!document.querySelector('#ix-en1')", 20000)
-        pg.fill('#ix-en1', PP1); pg.fill('#ix-en2', PP1); pg.fill('#ix-epw', PW); pg.check('#ix-eack'); pg.click('#ix-eset')
+        pg.fill('#ix-en1', PP1); pg.fill('#ix-en2', PP1); pg.check('#ix-eack'); pg.click('#ix-encst .ix-st-next')   # (1.69.0) a Stepper
+        wait_js(pg, "!document.querySelector('#ix-epw').closest('.ix-st-pane').hidden", 10000); pg.fill('#ix-epw', PW); pg.click('#ix-encst .ix-st-next')
         until(lambda: s.get('sv_get').get('pp'), 30000)   # the passphrase mark comes last, after every key is wrapped
         sv = s.get('sv_get'); v = sv.get('vault') or {}
         check('E2 setting the passphrase makes the site key, wrapped (salt, 600,000 rounds, wrap) with a key id, and marks the passphrase as set',

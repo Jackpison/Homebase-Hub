@@ -143,7 +143,7 @@ try:
         link = pg.locator('#dform .linkbox input').first.input_value()
         check('B25 Share Link makes an address with the token in the query and the key after the #', re.search(r'/web/files/share\.html\?t=[A-Za-z0-9_-]{32}#[A-Za-z0-9_-]{43}$', link), link)
         key = link.split('#')[1]; tok = re.search(r't=([A-Za-z0-9_-]{32})', link).group(1)
-        pg.click('#dform .act button:has-text("Done")')
+        pg.click('#dform .ix-st-next:has-text("Done")')   # (1.69.0) the Share window is a Stepper: Done is its last button
         vctx = b.new_context(viewport={'width': 1000, 'height': 800}, accept_downloads=True); vctx.add_init_script(CSP_REPORTER)
         vp = vctx.new_page(); seen = []; vp.on('request', lambda r: seen.append(r.url)); verrs = []
         vp.on('console', lambda m: verrs.append(m.text[:160]) if m.type == 'error' and 'security policy' in m.text.lower() else None)
@@ -162,7 +162,7 @@ try:
         check('B31 a visitor opening Files itself sees only "private"', 'private' in vp.inner_text('body').lower() and 'greeting' not in vp.inner_text('body'))
         # remove it
         menu(pg, 'greeting.txt', 'Share Link'); pg.wait_for_selector('#dform .lk'); pg.click('#dform .lk button:has-text("Remove")'); until(lambda: pg.locator('#dform .lk').count() == 0, 8000)
-        pg.click('#dform .act button:has-text("Done")')
+        pg.click('#dform .ix-st-next:has-text("Done")')   # (1.69.0) the Share window is a Stepper: Done is its last button
         vp.goto(link); wait_js(vp, "document.getElementById('err').textContent.length > 0", 15000)
         check('B32 once the link is removed, opening it says it has ended', 'ended or was removed' in vp.inner_text('#err'), vp.inner_text('#err'))
         vp.goto(s.site_base + '/web/files/share.html?t=%s#%s' % ('a' * 32, 'b' * 43)); wait_js(vp, "document.getElementById('err').textContent.length > 0", 15000)

@@ -227,7 +227,10 @@ def browser_set_passphrase(pg, base, passphrase, pw=PW, timeout=40000):
     """Sets the encryption passphrase through Settings > Security > Encryption, the way a person does. Returns '' when it is set."""
     pg.goto(base + '/web/settings/#security/encryption')
     wait_js(pg, "!!document.querySelector('#ix-en1')", 20000)
-    pg.fill('#ix-en1', passphrase); pg.fill('#ix-en2', passphrase); pg.fill('#ix-epw', pw); pg.check('#ix-eack'); pg.click('#ix-eset')
+    # (1.69.0) a Stepper: Passphrase -> Confirm It's You (this sets it) -> Recovery Key
+    pg.fill('#ix-en1', passphrase); pg.fill('#ix-en2', passphrase); pg.check('#ix-eack'); pg.click('#ix-encst .ix-st-next')
+    wait_js(pg, "!!document.querySelector('#ix-epw') && !document.querySelector('#ix-epw').closest('.ix-st-pane').hidden", 10000)
+    pg.fill('#ix-epw', pw); pg.click('#ix-encst .ix-st-next')
     end = time.time() + timeout / 1000
     while time.time() < end:
         try:

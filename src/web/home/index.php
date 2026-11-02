@@ -71,8 +71,8 @@ if (!empty($site['private']) && !hub_admin()) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.68.5">
-<script src="../hub/core/assets/shell.js?v=1.68.5" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.69.0">
+<script src="../hub/core/assets/shell.js?v=1.69.0" data-app="home"></script>
 <link rel="icon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <link rel="stylesheet" href="<?= $v('assets/app.css') ?>">
@@ -94,8 +94,8 @@ if (!empty($site['private']) && !hub_admin()) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.68.5">
-<script src="../hub/core/assets/shell.js?v=1.68.5" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.69.0">
+<script src="../hub/core/assets/shell.js?v=1.69.0" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <?php if ($logoOk): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png"><?php endif; ?>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
@@ -172,6 +172,8 @@ if (!empty($site['private']) && !hub_admin()) {
             <input type="text" id="sTitle" maxlength="80"></label>
           <label class="g-row stack"><span class="g-label">Welcome Text<small>Fades in when Home opens. Empty for none.</small></span>
             <input type="text" id="sWelcome" maxlength="80" placeholder="Welcome Home"></label>
+          <div class="g-row"><span class="g-label">Home Tour<small>A short look at the clock, the bar, the widgets and Settings.</small></span>
+            <button type="button" class="btn" id="sTour">Take the Tour</button></div>
         </div>
       </section>
       <section>

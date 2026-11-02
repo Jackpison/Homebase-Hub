@@ -77,8 +77,8 @@ try:
         imp = pg.evaluate("""(() => { const d = document.getElementById('impDlg');
             return [d.classList.contains('ix-sdlg'), !!d.querySelector('.ix-sh .ix-sx'), d.querySelectorAll('.ix-grp').length, [...d.querySelectorAll('.ix-sf button')].map(b => b.textContent.trim()),
                     Math.max(...[...d.querySelectorAll('.ix-sb small, .ix-sb .hint')].map(x => x.textContent.length)), document.activeElement.id, !!document.getElementById('impFile').hidden]; })()""")
-        check('L6 Import and Export Bookmarks: the Settings window frame (title and X, Import and Export cards, Cancel then Import), short help, focus on Choose File',
-              imp[:4] == [True, True, 2, ['Cancel', 'Import']] and imp[4] <= 80 and imp[5] == 'impPick' and imp[6], imp)
+        check('L6 Import and Export Bookmarks: the Settings window frame (title and X, Import and Export cards, Cancel at the bottom; Import is the last step of its Stepper, 1.69.0), short help, focus on Choose File',
+              imp[:4] == [True, True, 2, ['Cancel']] and imp[4] <= 80 and imp[5] == 'impPick' and imp[6], imp)
         pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('impDlg').open"), 4000)
 
         open_menu(pg, s.base, '/web/files/', 'Files Settings')

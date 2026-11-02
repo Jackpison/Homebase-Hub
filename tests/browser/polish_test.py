@@ -5,9 +5,9 @@ swipe in Tasks (touch), the count-up numbers in Cards, and the Presets screen wi
 1.65.1: the logged-out Settings card, the login window, search results at full width, Keyboard Shortcuts in search and in Settings > General,
 the What's New light, Erase Everything, the hover glow and the edit bar. 1.67.0: the bar's colour tiles, line, search border and tray.
     python3 tests/browser/polish_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8979)"""
-import json, os, subprocess, sys
+import json, os, re, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
+from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -128,7 +128,7 @@ try:
         check('P21 Settings > General has View Shortcuts; right after its window closes, another section still opens (it stayed on General)', pg.evaluate("!!document.getElementById('ix-exp')"))
 
         # ---- (1.65.1) Erase Everything ----
-        pg.wait_for_timeout(800); pg.click('.ix-tabbar button[data-tab=start-over]'); pg.wait_for_selector('#ix-rsgo', state='visible')
+        pg.wait_for_timeout(800); pg.click('.ix-tabbar button[data-tab=start-over]'); pg.click('#ix-rsst .ix-st-next'); pg.click('#ix-rsst .ix-st-next'); pg.wait_for_selector('#ix-rsgo', state='visible'); pg.mouse.move(5, 5); pg.wait_for_timeout(500)   # (1.69.0) a Stepper: two steps before the button (the mouse leaves the spot of Continue)
         er0 = pg.evaluate("(() => { const b = document.getElementById('ix-rsgo'); return [getComputedStyle(b.querySelector('.ix-et')).color, b.querySelector('.ix-ei').offsetWidth < b.offsetWidth / 2]; })()")
         pg.hover('#ix-rsgo'); pg.wait_for_timeout(450)
         er1 = pg.evaluate("(() => { const b = document.getElementById('ix-rsgo'); return [b.querySelector('.ix-ei').offsetWidth >= b.offsetWidth - 2, getComputedStyle(b.querySelector('.ix-et')).color]; })()")
@@ -405,6 +405,55 @@ try:
         wn = wp.evaluate(WIN); wp.context.close()
         check('P65 Where > Settings Windows: the window is see-through glass (55% of its own colour, 14 px frost) over a light layer, so the page shows through; off, windows are as before (1.68.5)',
               0.5 < wg[0] < 0.6 and 'blur(14px)' in wg[1] and wg[2] <= 0.2 and wn[0] > 0.95 and wn[2] >= 0.4, (wg, wn))
+        # ---- (1.69.0) the Stepper (React Bits' Stepper, shell.js): Restore, Start Over, the passphrase, New Site Setup and the Home Tour ----
+        sp = b.new_context(viewport={'width': 1280, 'height': 900}).new_page(); sp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(sp, s.base)
+        sp.goto(s.base + '/web/settings/#backup/restore'); wait_js(sp, "!!document.querySelector('#ix-rst .ix-st-bars') && !!document.querySelector('#ix-imp')", 20000)
+        bk = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'stepper-links.json')
+        open(bk, 'w').write(json.dumps({'format': 'bookmarks-backup', 'version': 2, 'data': {'settings': {}, 'tabs': [{'id': 'rs1', 'title': 'From Backup', 'categories': [{'id': 'rc1', 'title': 'Saved', 'col': 0, 'links': [{'title': 'Restored Site', 'url': 'https://restored.example.com'}]}]}]}}))
+        r0 = sp.evaluate("[document.querySelectorAll('#ix-rst .ix-st-bars i').length, document.querySelectorAll('#ix-rst .ix-st-bars i.on').length]")
+        sp.set_input_files('#ix-imp', bk); wait_js(sp, "!!document.querySelector('#ix-impx [data-r=links]') && !document.querySelector('#ix-impx').closest('.ix-st-pane').hidden", 10000)
+        r1 = sp.evaluate("[document.querySelectorAll('#ix-rst .ix-st-bars i.on').length, document.querySelector('#ix-rst .ix-st-next').textContent]")
+        sp.click('#ix-rst .ix-st-next'); until(lambda: 'From Backup' in json.dumps(s.req(s.base + '/web/links/api.php?action=get')), 15000)
+        os.remove(bk)
+        check('P66 Restore is a Stepper (bars): a backup file goes straight on to what is inside, and Restore brings it back (1.69.0)',
+              r0 == [2, 1] and r1 == [2, 'Restore'] and 'From Backup' in json.dumps(s.req(s.base + '/web/links/api.php?action=get')), (r0, r1))
+        sp.wait_for_timeout(1500)   # the page reloads after a restore
+        sp.goto(s.base + '/web/settings/#backup/start-over'); wait_js(sp, "!!document.querySelector('#ix-rsst .ix-st-track')", 20000)
+        so = [sp.evaluate("[document.querySelectorAll('#ix-rsst .ix-st-seg').length, !!document.getElementById('ix-rsgo'), document.querySelector('#ix-rsst .ix-st-seg[data-n=\"3\"]').disabled]")]
+        sp.click('#ix-rsst .ix-st-next'); sp.wait_for_timeout(300)
+        so.append(sp.evaluate("[!!document.querySelector('#ix-rsst .ix-st-seg[data-n=\"1\"] .ix-st-badge svg'), document.querySelector('#ix-rsst .ix-st-seg[data-n=\"2\"]').getAttribute('aria-current')]"))
+        sp.click('#ix-rsst .ix-st-next'); sp.wait_for_selector('#ix-rsgo'); sp.fill('#ix-rsc', 'erase'); sp.click('#ix-rsgo'); sp.wait_for_timeout(300)
+        so.append(sp.inner_text('#ix-rse'))
+        check('P67 Start Over is a Stepper: three steps, a step ahead cannot be clicked, a done step shows a tick, Erase Everything only on the last step and it asks for ERASE (1.69.0)',
+              so[0] == [3, False, True] and so[1] == [True, 'step'] and 'Type ERASE' in so[2], so)
+        why = browser_set_passphrase(sp, s.base, 'stepper passphrase 1')
+        rc = until(lambda: sp.evaluate("(document.getElementById('ix-rcode') || {}).textContent || ''"), 20000)
+        rk = sp.evaluate("[(document.getElementById('ix-rcode') || {}).textContent || '', !document.getElementById('ix-rcode').closest('.ix-st-pane').hidden]")
+        check('P68 the first passphrase is a Stepper: it is set on step 2 and step 3 shows the recovery key at once (1.69.0)', not why and rk[0] and rk[1], (why, rk))
+        sp.context.close()
+        ns = Site(ZIP, 8974, setup=False)
+        try:
+            np_ = b.new_context(viewport={'width': 1280, 'height': 860}).new_page(); np_.on('pageerror', lambda e: errs.append(str(e)[:200]))
+            np_.goto(ns.base + '/web/links/'); wait_js(np_, "!!(window.HUB && HUB.login)", 20000)
+            np_.evaluate("() => { HUB.login(); }"); wait_js(np_, "!!document.querySelector('#ix-setst .ix-st-next')", 20000)   # a new site: Log In opens the setup
+            code = re.search(r'([A-Z0-9]{4}(?:-[A-Z0-9]{4})+|[A-Z0-9]{8,})', open(ns.dir + '/site-data/core/SETUP-CODE.php').read().split('?>')[-1]).group(1)
+            np_.click('#ix-setst .ix-st-next'); s1 = np_.inner_text('#ix-setst .ix-st-pane:not([hidden]) .ix-st-err')
+            np_.fill('#ix-sc', code); np_.click('#ix-setst .ix-st-next'); np_.fill('#ix-p1', 'short'); np_.fill('#ix-p2', 'short'); np_.click('#ix-setst .ix-st-next')
+            s2 = np_.inner_text('#ix-setst .ix-st-pane:not([hidden]) .ix-st-err')
+            np_.fill('#ix-p1', 'a good long password'); np_.fill('#ix-p2', 'a good long password'); np_.keyboard.press('Enter')   # Enter goes on too
+            wait_js(np_, "!!document.getElementById('ix-sn') && !document.getElementById('ix-sn').closest('.ix-st-pane').hidden", 5000)
+            np_.fill('#ix-sn', 'Stepper Site'); np_.click('#ix-setst .ix-st-next')
+            until(lambda: ns.get('state').get('setup') is False, 15000); np_.wait_for_load_state(); np_.wait_for_timeout(1500)
+            due = np_.evaluate("localStorage.getItem('hl-tour-due')")
+            np_.goto(ns.base + '/web/home/'); wait_js(np_, "!!document.querySelector('#hlTour .ix-st-dots')", 15000)
+            t1 = np_.evaluate("[document.querySelectorAll('#hlTour .ix-st-dots button').length, !!document.querySelector('.hl-spot')]")
+            np_.click('#hlTour .ix-st-skip'); np_.wait_for_timeout(300)
+            t2 = np_.evaluate("[!!document.getElementById('hlTour'), localStorage.getItem('hl-tour'), localStorage.getItem('hl-tour-due'), !!document.querySelector('.hl-spot')]")
+            check('P69 New Site Setup is a Stepper (Code, Password, Site; each checked before going on; Enter goes on), and the first Home visit after it shows the Home Tour (four cards, the part lit up; Skip ends it for good) (1.69.0)',
+                  'code' in s1.lower() and '8 characters' in s2 and ns.get('state').get('siteName') == 'Stepper Site' and due == '1' and t1 == [4, True] and t2 == [False, '1', None, False], (s1, s2, due, t1, t2))
+            np_.context.close()
+        finally:
+            ns.p.terminate()
         check('P36 no page error', not errs, errs)
         b.close()
 finally:

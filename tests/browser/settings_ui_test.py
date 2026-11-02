@@ -69,7 +69,7 @@ try:
         pg.set_input_files('#impFile', f2); wait_js(pg, "document.querySelector('#impPrev').textContent || document.querySelector('#impErr').textContent", 10000)
         pv = pg.inner_text('#impPrev')
         check('U9 Links\' own importer reads the file back: 3 links, the folders as tabs and categories', 'Found 3 links' in pv and 'Daily' in pv and 'Money' in pv, pv)
-        pg.fill('#impName', 'Round Trip'); pg.click('#impGo'); wait_js(pg, "!document.querySelector('#impDone').hidden || document.querySelector('#impErr').textContent", 20000)
+        pg.click('#impDlg .ix-st-next'); pg.fill('#impName', 'Round Trip'); pg.click('#impDlg .ix-st-next'); pg.click('#impGo');   # (1.69.0) Preview -> Where -> Import wait_js(pg, "!document.querySelector('#impDone').hidden || document.querySelector('#impErr').textContent", 20000)
         d = s.req(s.base + '/web/links/api.php?action=get').get('data', {})
         rt = [t for t in d.get('tabs', []) if t.get('title') == 'Round Trip'][0]
         got = sorted((l['title'], l['url']) for c in rt['categories'] for l in c['links'])
