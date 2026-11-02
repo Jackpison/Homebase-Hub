@@ -427,9 +427,10 @@ try:
         check('P67 Start Over is a Stepper: three steps, a step ahead cannot be clicked, a done step shows a tick, Erase Everything only on the last step and it asks for ERASE (1.69.0)',
               so[0] == [3, False, True] and so[1] == [True, 'step'] and 'Type ERASE' in so[2], so)
         why = browser_set_passphrase(sp, s.base, 'stepper passphrase 1')
-        rc = until(lambda: sp.evaluate("(document.getElementById('ix-rcode') || {}).textContent || ''"), 20000)
+        sp.wait_for_selector('#ix-ermk', state='visible'); sp.click('#ix-ermk')   # (1.69.0) the recovery key is made on a click (slow work)
+        rc = until(lambda: sp.evaluate("(document.getElementById('ix-rcode') || {}).textContent || ''"), 30000)
         rk = sp.evaluate("[(document.getElementById('ix-rcode') || {}).textContent || '', !document.getElementById('ix-rcode').closest('.ix-st-pane').hidden]")
-        check('P68 the first passphrase is a Stepper: it is set on step 2 and step 3 shows the recovery key at once (1.69.0)', not why and rk[0] and rk[1], (why, rk))
+        check('P68 the first passphrase is a Stepper: it is set on step 2; step 3 makes the recovery key on a click and shows it (1.69.0)', not why and rk[0] and rk[1], (why, rk))
         sp.context.close()
         ns = Site(ZIP, 8974, setup=False)
         try:

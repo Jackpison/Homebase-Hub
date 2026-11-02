@@ -1977,17 +1977,21 @@
                 return PP.set({ pp: val('#ix-en1'), site: val('#ix-epw'), old: val('#ix-eold') }).then(function () { toast('Passphrase set. Info tabs, Links tabs and backups use it now.'); return true; },
                   function (x) { if (x && x.needOld) b.querySelector('#ix-eoldw').hidden = false; throw new Error(recFail(x)); });
               } },
-            { title: 'Recovery Key', html: '<p>A spare way in: if you ever forget the passphrase, this code opens your locked data and lets you set a new passphrase. It is shown only now.</p><div id="ix-ercode"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span></div>' +
-                '<label class="ix-chk"><input type="checkbox" id="ix-erack"> I saved the recovery key somewhere safe</label>',
+            { title: 'Recovery Key', html: '<p>A spare way in: if you ever forget the passphrase, this code opens your locked data and lets you set a new passphrase. It is shown only once. You can also make it later, in this section.</p>' +
+                '<div id="ix-ercode"><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-ermk">Make My Recovery Key</button></div></div>' +
+                '<label class="ix-chk" id="ix-erackw" hidden><input type="checkbox" id="ix-erack"> I saved the recovery key somewhere safe</label>',
+              // (1.69.0) made on a click, not on arrival: it is slow work (600,000 rounds), and some people want it later
               enter: function (p, c) {
-                if (recCode) return;
-                c.block(3, true);
-                PP.makeRecovery({ pp: val('#ix-en1'), site: val('#ix-epw') }).then(function (code) {
-                  recCode = code; st.rec = true;
-                  p.querySelector('#ix-ercode').innerHTML = '<div class="ix-codes"><span class="ix-mono" id="ix-rcode">' + esc(code) + '</span></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-ercopy">Copy</button></div>';
-                  p.querySelector('#ix-ercopy').onclick = function () { navigator.clipboard && navigator.clipboard.writeText(code).then(function () { toast('Copied.'); }); };
-                  c.block(3, false);
-                }, function (x) { p.querySelector('#ix-ercode').textContent = ''; c.err(recFail(x) + ' You can make one later in this section.'); c.block(3, false); });
+                var mk = p.querySelector('#ix-ermk'); if (!mk || mk.__on) return; mk.__on = true;
+                mk.onclick = function () {
+                  mk.disabled = true; mk.textContent = 'Making it…'; c.err(''); c.block(3, true);
+                  PP.makeRecovery({ pp: val('#ix-en1'), site: val('#ix-epw') }).then(function (code) {
+                    recCode = code; st.rec = true;
+                    p.querySelector('#ix-ercode').innerHTML = '<div class="ix-codes"><span class="ix-mono" id="ix-rcode">' + esc(code) + '</span></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-ercopy">Copy</button></div>';
+                    p.querySelector('#ix-ercopy').onclick = function () { navigator.clipboard && navigator.clipboard.writeText(code).then(function () { toast('Copied.'); }); };
+                    p.querySelector('#ix-erackw').hidden = false; c.block(3, false);
+                  }, function (x) { mk.disabled = false; mk.textContent = 'Make My Recovery Key'; c.err(recFail(x)); c.block(3, false); });
+                };
               },
               next: function (p, c) { if (recCode && !b.querySelector('#ix-erack').checked) { c.err('Tick the box once you have saved it.'); return false; } } }],
           done: '<div class="ix-st-fin"><span class="ix-st-big"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><h3>Encryption is on</h3><p>To lock a tab: edit it, then choose Encrypted Tab.</p></div>',

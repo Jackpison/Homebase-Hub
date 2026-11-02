@@ -142,7 +142,7 @@ Nothing to migrate by hand unless an entry says so.
 - **Where it is used:**
   - **New Site Setup:** Code → Password → Site (each checked before going on), then Done. A wrong code goes back to the first step.
   - **Links › Import:** File → Preview → Where → Import (a good file goes straight on to its preview). Export stays below it.
-  - **Security › Encryption, the first passphrase:** Passphrase → Confirm It's You (this sets it) → Recovery Key (made and shown at once, with Copy and an "I saved it" tick).
+  - **Security › Encryption, the first passphrase:** Passphrase → Confirm It's You (this sets it) → Recovery Key (made on a click, as it is slow work, then shown once with Copy and an "I saved it" tick; it can also be made later).
   - **Backup › Restore:** File → Choose What to Restore (bars), then Restore.
   - **Backup › Start Over:** What Gets Erased → Back Up First (a Download a Backup button) → Type ERASE, with the Erase Everything button on the last step only.
   - **Files › Share Link:** How Long → Your Link (a file that already has links opens on them).
@@ -151,7 +151,7 @@ Nothing to migrate by hand unless an entry says so.
 
 ### Checked
 
-- polish_test P66 (Restore), P67 (Start Over: steps ahead locked, the tick, Erase Everything only on the last step), P68 (the passphrase is set on step 2, the recovery key on step 3), P69 (New Site Setup and the Home Tour). import_test, settings_ui_test, settings_look_test L6, encrypt_test, passkey_test (K4: a wrong password goes back), files_test (Share) and the passphrase helper walk the steps.
+- polish_test P66 (Restore), P67 (Start Over: steps ahead locked, the tick, Erase Everything only on the last step), P68 (the passphrase is set on step 2, the recovery key made on step 3), P69 (New Site Setup and the Home Tour). import_test, settings_ui_test, settings_look_test L6, encrypt_test, passkey_test (K4: a wrong password goes back), files_test (Share) and the passphrase helper walk the steps.
 
 ---
 
