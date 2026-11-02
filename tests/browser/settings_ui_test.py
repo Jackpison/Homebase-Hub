@@ -158,7 +158,9 @@ try:
         fh2 = os.path.join(TMP, 'settings2.html'); dl.value.save_as(fh2)
         check('U27 ...and with Include Private Tabs on, the private tab is there too', 'Hidden Bank Login' in open(fh2, encoding='utf-8').read())
         pg.goto(s.base + '/web/settings/#backup/restore'); wait_js(pg, "!!document.getElementById('ix-vl')", 20000)
-        wait_js(pg, "!!document.querySelector('.ix-tabbar [aria-selected=true]')", 10000)
+        # (1.69.1) the same page with a new address: wait for the Restore tab to be the open one (it read the Export tab before the switch, in CI)
+        try: wait_js(pg, "(document.querySelector('.ix-tabbar [aria-selected=true]') || {}).textContent === 'Restore' && /Earlier Versions/.test((document.querySelector('.ix-tpane.ix-on') || {}).innerText || '')", 10000)
+        except Exception: pass
         check('U28 Earlier Versions is part of the Restore tab', 'Earlier Versions' in pg.inner_text('.ix-tpane.ix-on') and pg.evaluate("document.querySelector('.ix-tabbar [aria-selected=true]').textContent") == 'Restore')
         # ---- keyboard shortcuts ----
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && document.querySelectorAll('.tab').length > 1", 20000)
