@@ -325,15 +325,15 @@ try:
             document.documentElement.style.getPropertyValue('--ix-gb'), !!document.querySelector('#ix-sf:not([hidden])')]"""
         cr = BROWSER == 'chromium'   # Safari and Firefox (WebKit here) show the frosted glass: no SVG filter, only frost, tint and saturation
         t0 = tp.evaluate(GX)
-        tp.click('[data-seg=gpick] [data-v=frosted]'); until(lambda: tp.evaluate(GX)[2:] == ['10px', True], 3000); t1 = tp.evaluate(GX)   # the bar is shown just after the click (a 0 ms timer)
+        tp.click('[data-seg=gpick] [data-v=frosted]'); until(lambda: tp.evaluate(GX)[2:] == ['14px', True], 3000); t1 = tp.evaluate(GX)   # the bar is shown just after the click (a 0 ms timer)
         tp.click('[data-seg=gpick] [data-v=liquid]'); until(lambda: tp.evaluate(GX)[2] == '3px', 3000); tp.wait_for_timeout(200); t2 = tp.evaluate(GX)
         tp.evaluate("(() => { const r = document.getElementById('ix-gx-bend'); r.value = 90; r.dispatchEvent(new Event('input', {bubbles: true})); })()"); tp.wait_for_timeout(200); t3 = tp.evaluate(GX)
         tp.click('#ix-save'); until(lambda: '"bend":90' in s.php("echo json_encode(hub_settings()['glassFx']);"), 8000)
         kept = s.php("echo json_encode(hub_settings()['glassFx']);").strip()
         tp.goto(s.base + '/web/links/'); wait_js(tp, "!!document.querySelector('#ix-bar.glass-surface')", 20000); tp.wait_for_timeout(500); t4 = tp.evaluate(GX)
-        ok = t0[3] is False and t1[2] == '10px' and t1[3] is True and json.loads(kept) == {'bend': 90, 'fringe': 10} and t4[:3] == t3[:3]
-        if cr: ok = ok and 'url(' not in t0[0] and 'blur(10px)' in t1[0] and 'url("#ix-glass-f")' in t2[0] and t2[1] == '-180' and t3[1] == '-270'
-        check('P58 the Glass tab: no Save bar until a change; Frosted and Liquid change the real bar at once (Liquid turns the bending on), the slider too; Save keeps them for every page (1.68.3)', ok, (t0, t1, t2, t3, kept, t4))
+        ok = t0[3] is False and t1[2] == '14px' and t1[3] is True and json.loads(kept) == {'bend': 90, 'fringe': 10} and t4[:3] == t3[:3]
+        if cr: ok = ok and 'url(' not in t0[0] and 'blur(14px)' in t1[0] and 'url(' not in t2[0]   # (1.68.4) Only Over Photos: Liquid bends on the start page only (P62)
+        check('P58 the Glass tab: no Save bar until a change; Frosted and Liquid change the real bar at once, the slider too; Save keeps them for every page (1.68.3, 1.68.4)', ok, (t0, t1, t2, t3, kept, t4))
         tp.goto(s.base + '/web/settings/#glass'); wait_js(tp, "!!document.getElementById('ix-gxr')", 20000)
         tp.click('#ix-gxr'); tp.click('#ix-save'); until(lambda: s.php("echo json_encode(hub_settings()['glassFx']);").strip() in ('[]', '{}'), 8000)
         check('P58b Reset to Default goes back to the built-in glass (nothing kept) (1.68.2)', s.php("echo json_encode(hub_settings()['glassFx']);").strip() in ('[]', '{}'))
@@ -356,6 +356,41 @@ try:
         sw = tp.evaluate("document.getElementById('ix-bh').checked")
         check('P60 Hide the Bar While Scrolling: on, the top bar slides away as you scroll down; off, it stays; the switch is in Appearance > Look (1.68.2)', hid_on is True and hid_off is False and sw is True, (hid_on, hid_off, sw))
         tp.context.close()
+        # ---- (1.68.4) one glass for the whole site: the Home widgets, Liquid only over photos, Where, Tone / Rim / Saturation ----
+        s.php("hub_settings_update(function ($x) { $x['glass'] = true; $x['nav'] = 'top'; $x['homeBar'] = true; $x['glassFx'] = ['frost' => 14, 'tint' => 35, 'sat' => 120]; return $x; });")
+        op = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); op.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(op, s.base)
+        WG = "(() => { const c = document.querySelector('.wchip, .wcard, .chip, .lg'); if (!c) return null; const st = getComputedStyle(c); return [st.backdropFilter || st.webkitBackdropFilter || '', st.backgroundColor]; })()"
+        op.goto(s.base + '/'); until(lambda: op.evaluate(WG) is not None, 15000); op.wait_for_timeout(600); w1 = op.evaluate(WG)
+        gs = op.evaluate("document.documentElement.style.getPropertyValue('--ix-gs')")
+        s.php("hub_settings_update(function ($x) { $x['glassFx'] = ['solid' => 1]; return $x; });")
+        op.goto(s.base + '/'); until(lambda: op.evaluate(WG) is not None, 15000); op.wait_for_timeout(600); w2 = op.evaluate(WG)
+        check('P61 the Home widgets use the one glass: Frosted gives them 14 px frost and the saturation (1.68.3 had lost it), Solid takes the see-through away (1.68.4)',
+              'blur(14px)' in w1[0] and gs == '1.2' and w2[0] in ('none', '') , (w1, gs, w2))
+        if BROWSER == 'chromium':
+            s.php("hub_settings_update(function ($x) { $x['glassFx'] = ['bend' => 60, 'fringe' => 10]; return $x; });")
+            op.goto(s.base + '/'); until(lambda: op.evaluate(WG) is not None, 15000); until(lambda: 'url(' in (op.evaluate(WG) or [''])[0], 8000); lh = op.evaluate(WG)
+            op.goto(s.base + '/web/links/'); wait_js(op, "!!document.querySelector('#ix-bar.glass-surface')", 20000); op.wait_for_timeout(600)
+            ll = op.evaluate("[getComputedStyle(document.getElementById('ix-bar')).backdropFilter, document.documentElement.style.getPropertyValue('--ix-gf')]")
+            check('P62 Liquid with Only Over Photos (the default): it bends on the start page (the widgets read the Liquid filter) but not on a page of text (1.68.4)',
+                  'url(' in lh[0] and 'url(' not in ll[0] and ll[1] == 'blur(0px)', (lh, ll))
+        POP = "(() => { const e = document.getElementById('ix-pop'); return e ? getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter || 'none' : null; })()"
+        pops = []
+        for on in (0, 1):
+            s.php("hub_settings_update(function ($x) { $x['glassFx'] = ['wpop' => %d]; return $x; });" % on)
+            op.goto(s.base + '/web/links/'); wait_js(op, "!!document.getElementById('ix-editb') && !!(window.HUB && HUB.isAdmin())", 20000)
+            op.click('#ix-editb'); until(lambda: op.evaluate(POP) is not None, 5000); op.wait_for_timeout(300); pops.append(op.evaluate(POP)); op.keyboard.press('Escape')
+        check('P63 Where > Menus and Pop-ups: off, the Edit menu is as before; on, it is glass (at least 14 px frost so it stays readable) (1.68.4)', pops[0] in ('none', '') and 'blur(14px)' in pops[1], pops)
+        s.php("hub_settings_update(function ($x) { $x['glassFx'] = []; return $x; });")
+        op.goto(s.base + '/web/settings/#glass'); wait_js(op, "!!document.getElementById('ix-gx-rim') && !!document.querySelector('.ix-gpv')", 20000)
+        op.click('[data-seg=gtone] [data-v="1"]')
+        op.evaluate("(() => { const r = document.getElementById('ix-gx-rim'); r.value = 80; r.dispatchEvent(new Event('input', {bubbles: true})); })()"); op.wait_for_timeout(300)
+        tv = op.evaluate("[document.documentElement.style.getPropertyValue('--ix-gtc'), document.documentElement.style.getPropertyValue('--ix-grim'), getComputedStyle(document.querySelector('.ix-gpvw')).backgroundColor]")
+        op.click('#ix-save'); until(lambda: '"rim":80' in s.php("echo json_encode(hub_settings()['glassFx']);"), 8000)
+        kept2 = s.php("echo json_encode(hub_settings()['glassFx']);").strip()
+        check('P64 the Glass tab: Tone Light and Rim Light change the glass and the live preview at once, Save keeps them (1.68.4)',
+              tv[0] == '#f4f4f1' and tv[1] == '0.8' and json.loads(kept2) == {'tone': 1, 'rim': 80} and ('0.956' in tv[2] or tv[2].startswith('rgba(244')), (tv, kept2))
+        s.php("hub_settings_update(function ($x) { $x['glassFx'] = []; $x['glass'] = false; $x['homeBar'] = false; return $x; });")
+        op.context.close()
         check('P36 no page error', not errs, errs)
         b.close()
 finally:

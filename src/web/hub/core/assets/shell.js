@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.68.3" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.68.4" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -160,7 +160,21 @@
   function syncThemeKeys(t) {
     ls.set('bm-theme', t); ls.set('info3-theme', t); ls.set('theme4', t);
   }
-  var gfx = {};
+  var gfx = {}, liquidHere = false;
+  /* (1.68.4) One glass for the whole site (Settings > Appearance > Glass): the bar, the dock, the Home widgets and the places switched on
+     under "Where" all read these variables. Defaults = the Soft pick. 1.68.3 had lost the saturation line inside a comment. */
+  function glassVars() {
+    var gv = function (k, d) { return typeof gfx[k] === 'number' ? gfx[k] : d; }, st = H.style;
+    st.setProperty('--ix-gt', gv('tint', 20) + '%'); st.setProperty('--ix-gb', gv('frost', 3) + 'px'); st.setProperty('--ix-gs', String(gv('sat', 100) / 100));
+    st.setProperty('--ix-grim', String(gv('rim', 35) / 100)); st.setProperty('--ix-gsh', String(gv('shadow', 30) / 100));
+    st.setProperty('--ix-gtc', ['var(--ix-barbg,var(--ix-bg))', '#f4f4f1', '#101114'][gv('tone', 0)] || 'var(--ix-barbg,var(--ix-bg))');
+    var flag = function (a, on) { if (on) H.setAttribute(a, ''); else H.removeAttribute(a); };
+    flag('data-ix-gsolid', gv('solid', 0) === 1);
+    flag('data-ix-gpop', gv('wpop', 0) === 1); flag('data-ix-gdrawer', gv('wdrawer', 0) === 1); flag('data-ix-gsearch', gv('wsearch', 0) === 1); flag('data-ix-gwin', gv('wwin', 0) === 1);
+    // Liquid (the bending) only where it is wanted: with "Only Over Photos" (on by default) just on the start page, where the photo is
+    liquidHere = (gv('bend', 0) > 0 || gv('fringe', 0) > 0) && gv('solid', 0) !== 1 && (gv('photo', 1) !== 1 || APP === 'home');
+    if (!liquidHere) st.setProperty('--ix-gf', 'blur(0px)');
+  }
   function applyAttrs() {
     H.setAttribute('data-ix-app', APP);
     H.setAttribute('data-ix-nav', S.nav || 'top');
@@ -169,8 +183,7 @@
     if (S.glass === true) H.setAttribute('data-ix-glass', ''); else H.removeAttribute('data-ix-glass');   // (1.68.0) Settings > Appearance > Bar Glass
     // (1.68.2) the Glass tab: tint, frost and saturation are CSS; bend, edge and fringe go to glass.js (gfx, read by glass())
     gfx = (S.glassFx && typeof S.glassFx === 'object' && !Array.isArray(S.glassFx)) ? S.glassFx : {};
-    var gv = function (k, d) { return typeof gfx[k] === 'number' ? gfx[k] : d; };
-    H.style.setProperty('--ix-gt', gv('tint', 20) + '%'); H.style.setProperty('--ix-gb', gv('frost', 3) + 'px');   // (1.68.3) the Soft default H.style.setProperty('--ix-gs', String(gv('sat', 100) / 100));
+    glassVars();
     // (1.68.2) Settings > Appearance > Hide the Bar While Scrolling (on unless switched off)
     if (S.barHide === false) { H.setAttribute('data-ix-nohide', ''); H.classList.remove('ix-hide', 'ix-scrolling'); } else H.removeAttribute('data-ix-nohide');
     var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Appearance > Colors)
@@ -778,8 +791,10 @@
     var bar = document.getElementById('ix-bar'), nav = NAV();
     var on = H.hasAttribute('data-ix-glass') && !!bar && nav !== 'side';
     var el = on ? (nav === 'dock' ? bar.querySelector('.ix-pill') : bar) : null;
-    if (!el) { if (window.HubGlass) window.HubGlass.off(); return; }
-    if (window.HubGlass) { window.HubGlass.apply(el); window.HubGlass.set(gfx); return; }
+    // (1.68.4) glass.js is wanted for the bar's glass, or for Liquid on the Home widgets (the start page) even without the bar's glass
+    var fx = liquidHere ? gfx : Object.assign({}, gfx, { bend: 0, fringe: 0 });
+    if (!el && !liquidHere) { if (window.HubGlass) { window.HubGlass.off(); window.HubGlass.set(fx); } return; }
+    if (window.HubGlass) { if (el) window.HubGlass.apply(el); else window.HubGlass.off(); window.HubGlass.set(fx); return; }
     glassP = glassP || new Promise(function (ok) {
       var s = document.createElement('script'), ver = ((me && /\?v=[^&#]+/.exec(me.src)) || [''])[0];
       s.src = ASSETS + 'glass.js' + ver; s.onload = ok; s.onerror = function () { glassP = null; };

@@ -36,17 +36,10 @@ function setFavicon(icon){
   link.href = icon ? media(icon) + '?v=' + Date.now() : (/** @type {any} */ (window).LOGO_FAVICON || DEFAULT_FAVICON);
   old.replaceWith(link);
 }
-function applyPanel(p){
-  const r = document.documentElement.style;
-  r.setProperty('--panel-a', p.opacity);
-  r.setProperty('--panel-blur', p.blur + 'px');
-  document.documentElement.dataset.glass = p.tint || 'light';
-}
 function applyPageMeta(src){
   document.title = src.title || 'Home';
   if (src.icon !== lastIcon){ setFavicon(src.icon); lastIcon = src.icon; }
   document.documentElement.style.setProperty('--dim', src.bg.dim);
-  applyPanel(src.panel);
 }
 
 /* ======================================================================
@@ -406,14 +399,11 @@ function openSheetFor(id){
   openSheet(id);
 }
 function openSettings(){
-  settingsDraft = { title:ADMIN.title, icon:ADMIN.icon, panel:{ ...ADMIN.panel } };
+  settingsDraft = { title:ADMIN.title, icon:ADMIN.icon };   // (1.68.4) the glass is set in Settings > Appearance > Glass
   $('#sTitle').value = settingsDraft.title;
   $('#sWelcome').value = ADMIN.welcome ?? 'Welcome Home';
   $('#sHomeBar').checked = homeBarOn();
   $('#sPrivate').checked = !!ADMIN.private;
-  $('#pOpacity').value = Math.round(settingsDraft.panel.opacity * 100); $('#pOpVal').textContent = $('#pOpacity').value + '%';
-  $('#pBlur').value = settingsDraft.panel.blur; $('#pBlurVal').textContent = settingsDraft.panel.blur + 'px';
-  seg($('#pTint'), settingsDraft.panel.tint || 'light');
   openSheet('settingsSheet');
 }
 /* Show the Bar on the Home Page: the site-wide setting (Settings > Appearance), shown here too */
@@ -475,17 +465,12 @@ async function fillNotePicker(){
     sel.value = [...sel.options].some(o => o.value === val) ? val : '';
   } catch { sel.innerHTML = '<option value="">None</option>' + (val ? `<option value="${esc(val)}">The note you chose</option>` : ''); sel.value = val; }
 }
-$('#pOpacity').addEventListener('input', e => { settingsDraft.panel.opacity = e.target.value / 100; $('#pOpVal').textContent = e.target.value + '%'; applyPanel(settingsDraft.panel); });
-$('#pTint').addEventListener('change', e => { settingsDraft.panel.tint = e.detail; applyPanel(settingsDraft.panel); });
-$('#pBlur').addEventListener('input', e => { settingsDraft.panel.blur = +e.target.value; $('#pBlurVal').textContent = e.target.value + 'px'; applyPanel(settingsDraft.panel); });
-$('#settingsSheet').addEventListener('close', () => { if (ADMIN) applyPanel(ADMIN.panel); });
 $('#saveSettings').addEventListener('click', e => withBusy(e.currentTarget, async () => {
-  const prev = { title:ADMIN.title, icon:ADMIN.icon, panel:ADMIN.panel, welcome:ADMIN.welcome, private:ADMIN.private };
+  const prev = { title:ADMIN.title, icon:ADMIN.icon, welcome:ADMIN.welcome, private:ADMIN.private };
   ADMIN.title = $('#sTitle').value.trim() || 'Home';
   ADMIN.welcome = $('#sWelcome').value.trim();
   ADMIN.private = $('#sPrivate').checked;
   ADMIN.icon = '';   // no separate start page icon any more: the site logo is used
-  ADMIN.panel = settingsDraft.panel;
   const bar = $('#sHomeBar').checked, barChanged = bar !== homeBarOn();
   try {
     if (!barChanged) closeSheet('settingsSheet');   // (1.64.4) the window closes at once; the server catches up. If it refuses, it opens again below

@@ -767,3 +767,22 @@ html[data-theme="light"] #ix-page .ix-snav .ix-sp.warn{color:#8a3a06}html[data-t
 /* (1.68.2) Appearance > Glass: each slider's name with what it does on a line under it */
 #ix-page .ix-gxf label small{display:block;margin-top:2px;color:var(--ix-mu);font-size:12.5px;font-weight:400}
 #ix-page .ix-gxf{margin-bottom:16px}
+
+/* (1.68.4) Appearance > Glass: a small start page (photo, bar, clock, a widget, the dock) in the glass you are setting; it reads the same
+   variables as the real glass (--ix-gt tint, --ix-gb frost, --ix-gs saturation, --ix-gtc tone, --ix-grim rim, --ix-gsh shadow) */
+#ix-page .ix-gpv{position:relative;height:250px;margin:6px 0 10px;border-radius:16px;overflow:hidden;background:#1d2633 center 35%/cover no-repeat}
+#ix-page .ix-gpv i{position:absolute;display:flex;align-items:center;font-style:normal;color:#fff}
+#ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background:color-mix(in srgb,var(--ix-gtc,#101114) var(--ix-gt,20%),transparent);
+  backdrop-filter:blur(var(--ix-gb,3px)) saturate(var(--ix-gs,1));-webkit-backdrop-filter:blur(var(--ix-gb,3px)) saturate(var(--ix-gs,1));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,var(--ix-grim,.35)),inset 0 0 0 1px rgba(255,255,255,calc(var(--ix-grim,.35) * .55)),0 12px 30px rgba(0,0,0,var(--ix-gsh,.3))}
+html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background:color-mix(in srgb,var(--ix-gtc,#181c24) 94%,transparent);backdrop-filter:none;-webkit-backdrop-filter:none}
+#ix-page .ix-gpvb{top:10px;left:10px;right:10px;height:36px;border-radius:12px;gap:8px;padding:0 10px}
+#ix-page .ix-gpvb b,#ix-page .ix-gpvd b{width:18px;height:18px;border-radius:5px;background:#f5a524}
+#ix-page .ix-gpvb b:nth-child(2),#ix-page .ix-gpvd b:nth-child(2){background:#3b82f6}#ix-page .ix-gpvb b:nth-child(3),#ix-page .ix-gpvd b:nth-child(3){background:#a855f7}
+#ix-page .ix-gpvd b:nth-child(4){background:#22c55e}#ix-page .ix-gpvd b:nth-child(5){background:#71717a}
+#ix-page .ix-gpvb em{margin-left:auto;width:30%;height:20px;border-radius:7px;background:rgba(0,0,0,.35)}
+#ix-page .ix-gpvc{top:62px;left:0;right:0;justify-content:center;font-size:42px;font-weight:800;letter-spacing:-.03em;text-shadow:0 2px 12px rgba(0,0,0,.45)}
+#ix-page .ix-gpvw{top:124px;left:50%;transform:translateX(-50%);width:min(260px,70%);flex-direction:column;align-items:flex-start;gap:2px;padding:10px 14px;border-radius:16px;font-size:12.5px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+#ix-page .ix-gpvd{bottom:12px;left:50%;transform:translateX(-50%);height:40px;padding:0 12px;gap:8px;border-radius:99px}
+#ix-page .ix-gxt{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+#ix-page .ix-gxt small{display:block;color:var(--ix-mu);font-size:12.5px}

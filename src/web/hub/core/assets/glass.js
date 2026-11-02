@@ -70,10 +70,11 @@
   }
   /* A new map whenever the glass changes size (the corners follow its own radius). */
   function draw() {
-    if (!el || !img) return;
-    var w = Math.round(el.offsetWidth), h = Math.round(el.offsetHeight);
+    if (!img) return;
+    // (1.68.4) with no bar glass (Liquid on the Home widgets only) the map is drawn at a widget's usual size; each glass stretches it to its own
+    var w = el ? Math.round(el.offsetWidth) : 320, h = el ? Math.round(el.offsetHeight) : 90;
     if (!w || !h) return;
-    var r = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, h / 2), k = w + 'x' + h + 'r' + r;
+    var r = Math.min(el ? parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0 : 18, h / 2), k = w + 'x' + h + 'r' + r;
     if (k === last) return;
     last = k;
     img.setAttribute('href', map(w, h, r));
@@ -87,14 +88,12 @@
     var svg = svgOK();
     el.classList.add('glass-surface', svg ? 'glass-surface--svg' : 'glass-surface--fallback');
     if (!svg) return;
-    filter();
-    el.style.setProperty('--filter-id', flat ? 'blur(0px)' : 'url(#' + ID + ')');
     last = ''; draw();
     if (window.ResizeObserver) { ro = new ResizeObserver(draw); ro.observe(el); }
   }
   function off() {
     if (ro) { ro.disconnect(); ro = null; }
-    if (el) { el.classList.remove('glass-surface', 'glass-surface--svg', 'glass-surface--fallback'); el.style.removeProperty('--filter-id'); }
+    if (el) el.classList.remove('glass-surface', 'glass-surface--svg', 'glass-surface--fallback');
     el = null;
   }
   /* (1.68.2) Settings > Appearance > Glass: bend (0-100, 60 = the component's -180), edge (2-40 = 2-40% of the shorter side, 7 = 0.07)
@@ -107,7 +106,10 @@
     O.distortionScale = -3 * num(fx.bend, 0); O.borderWidth = num(fx.edge, 7) / 100;
     O.greenOffset = num(fx.fringe, 0); O.blueOffset = 2 * O.greenOffset;
     flat = !O.distortionScale && !O.greenOffset;
-    if (el && el.classList.contains('glass-surface--svg')) el.style.setProperty('--filter-id', flat ? 'blur(0px)' : 'url(#' + ID + ')');
+    // (1.68.4) one page-wide filter: the bar, the dock and the Home widgets all read --ix-gf (the Liquid filter, or nothing)
+    var useIt = !flat && svgOK();
+    if (useIt && document.body) filter();
+    document.documentElement.style.setProperty('--ix-gf', useIt ? 'url(#' + ID + ')' : 'blur(0px)');
     if (!svgEl) return;
     var off = { R: O.redOffset, G: O.greenOffset, B: O.blueOffset };
     svgEl.querySelectorAll('feDisplacementMap').forEach(function (d) { d.setAttribute('scale', String(O.distortionScale + off[d.getAttribute('data-c')])); });

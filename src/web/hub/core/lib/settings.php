@@ -82,6 +82,7 @@ function hub_settings_default(): array {
         'homeBar'  => false,        // show the shared bar on the start page
         'glass'    => false,        // (1.68.0) Bar Glass: the top bar and the dock turn to glass (React Bits GlassSurface)
         'glassFx'  => [],           // (1.68.2) Settings > Appearance > Glass: {bend, edge, fringe, frost, tint, sat}; missing = the built-in look
+        'glassV'   => 0,            // (1.68.4) 1 once Home's own glass look has been moved into the one glass
         'barHide'  => true,         // (1.68.2) the top bar slides away while you scroll down (and the dock shrinks); false = it stays
         'editBar'  => [],           // the edit bar per page: {links: 'text'} = icons and text; missing = icons only (1.53.5)
         'font'     => 'default',    // site-wide font: default | trebuchet | system | verdana | tahoma | segoe | arial | georgia | palatino | mono | custom
@@ -139,6 +140,7 @@ function hub_clean_settings(array $in): array {
     $o['glass']    = ($in['glass'] ?? false) === true;
     $o['glassFx']  = hub_clean_glass($in['glassFx'] ?? []);
     $o['barHide']  = ($in['barHide'] ?? true) !== false;
+    $o['glassV']   = (int)($in['glassV'] ?? 0) === 1 ? 1 : 0;
     $o['editBar']  = [];
     foreach (['home', 'links', 'info', 'cards', 'tasks'] as $app) if (($in['editBar'][$app] ?? '') === 'text') $o['editBar'][$app] = 'text';
     $o['font']     = in_array($in['font'] ?? '', ['default', 'trebuchet', 'system', 'verdana', 'tahoma', 'segoe', 'arial', 'georgia', 'palatino', 'mono', 'custom'], true) ? $in['font'] : 'default';
@@ -157,7 +159,11 @@ function hub_clean_settings(array $in): array {
 /** The bar's tabs: every known page exactly once, in your order, with your name (empty = the default name). At least one stays visible. */
 /** (1.68.2) The Glass tab's values: whole numbers, each kept inside its range; anything else is left out (the built-in value is used). */
 function hub_glass_ranges(): array {
-    return ['bend' => [0, 100], 'edge' => [2, 40], 'fringe' => [0, 40], 'frost' => [0, 12], 'tint' => [0, 80], 'sat' => [50, 200]];
+    // (1.68.4) one glass for the bar, the dock and the Home widgets: frost up to 40 px and tint up to 94% (Home's old range), tone 0 auto /
+    // 1 light / 2 dark, rim and shadow, solid, photo (Liquid only on the start page), and where else glass shows (0/1 each)
+    return ['bend' => [0, 100], 'edge' => [2, 40], 'fringe' => [0, 40], 'frost' => [0, 40], 'tint' => [0, 94], 'sat' => [50, 200],
+            'tone' => [0, 2], 'rim' => [0, 100], 'shadow' => [0, 80], 'solid' => [0, 1], 'photo' => [0, 1],
+            'wpop' => [0, 1], 'wdrawer' => [0, 1], 'wsearch' => [0, 1], 'wwin' => [0, 1]];
 }
 function hub_clean_glass($in): array {
     $o = [];
@@ -167,6 +173,23 @@ function hub_clean_glass($in): array {
         if (is_int($v) || is_float($v) || (is_string($v) && is_numeric($v))) $o[$k] = max($lo, min($hi, (int)round((float)$v)));
     }
     return $o;
+}
+/** (1.68.4) Home's own glass (Home Settings > Glass: tint light/dark/solid, opacity 0-1, blur px) as values of the one glass. Home's built-in
+    look (light, 40%, 22 px) gives nothing: such a site simply takes the shared default. */
+function hub_glass_from_panel(array $p): array {
+    $tint = (string)($p['tint'] ?? 'light'); $op = (float)($p['opacity'] ?? 0.40); $blur = (int)($p['blur'] ?? 22);
+    if ($tint === 'solid') return ['solid' => 1];
+    if ($tint === 'light' && abs($op - 0.40) < 0.001 && $blur === 22) return [];
+    return hub_clean_glass(['frost' => $blur, 'tint' => (int)round($op * ($tint === 'dark' ? 60 : 30)), 'tone' => $tint === 'dark' ? 2 : 1]);
+}
+/** (1.68.4) once per site: a Home glass look that was changed by hand moves into the one glass (if that was never set). */
+function hub_glass_adopt_home(array $panel): void {
+    if (!empty(hub_settings()['glassV'])) return;
+    hub_settings_update(function ($x) use ($panel) {
+        if (empty($x['glassFx'])) { $fx = hub_glass_from_panel($panel); if ($fx) $x['glassFx'] = $fx; }
+        $x['glassV'] = 1;
+        return $x;
+    });
 }
 function hub_clean_pages($in): array {
     $out = []; $seen = [];

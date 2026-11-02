@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.68.4 | One glass for the whole site: the bar, the dock and the Home widgets share Settings › Appearance › Glass, with Solid, Tone, Rim Light, Shadow, Liquid only over photos, glass in more places and a live preview |
 | 1.68.3 | The Save Settings bar shows only when something changed; Bar Glass is a clean Soft glass by default, the bending is the Liquid pick; CI test fixes |
 | 1.68.2 | A Glass tab in Appearance (quick picks and sliders for Bar Glass), a switch to keep the bar in place while scrolling, no line over the current page in the dock |
 | 1.68.1 | Bar Glass looks like the mock-up (strong bend, clear on every page), shows even when Windows asks for less transparency, and stays on while the dock shrinks during scrolling |
@@ -128,6 +129,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.68.4
+
+### Changed
+
+- **One glass for the whole site:** the top bar or dock and the Home widgets (chips, cards, the dock, the open widget) now share one set of values in **Settings › Appearance › Glass**, with one piece of code (the same CSS variables, and glass.js for Liquid). Home › Settings › Glass is now a link to it. A Home glass look you had changed by hand moves into the shared glass once (when the shared glass was never set); Home's built-in look simply takes the shared default (Soft). The open widget keeps its extra frost so text behind it never shows through.
+- **The Glass tab:** a live preview (the start page's photo with a bar, the clock, a widget and the dock) that follows every change; Quick Picks Soft, Clear, Frosted, **Solid** (from Home: easiest to read on busy photos), Liquid and Strong Liquid; Fine-Tune with **Tone** (Auto follows the theme, Light, Dark), Frost (up to 40 px), Tint (up to 94%), Saturation, **Rim Light** and **Shadow**; a **Liquid** card with **Only Over Photos** (on by default: the bending runs on the start page, plain glass on pages of text, where it would mirror the words); and **Where**: glass also on Menus and Pop-ups, the Phone Page List, Search Results and Settings Windows, each on its own switch (they keep most of their own colour and at least 14 px of frost, so they stay easy to read).
+
+### Fixed
+
+- **Saturation did nothing since 1.68.3:** a comment had swallowed the line that set it. It is set again (and tested).
+
+### Checked
+
+- polish_test P61 (the Home widgets follow the one glass; Frosted's frost and saturation; Solid), P62 (Liquid with Only Over Photos: bends on the start page, not on Links), P63 (Menus and Pop-ups glass on its switch), P64 (Tone Light and Rim Light change the glass and the preview, Save keeps them); P58 updated. pages_test P40 (the Home widgets follow the Glass tab; still see-through with "reduce transparency"; Tone Light; Solid). settings_look_test L9 (Home Settings shows the link, not its own glass controls). nav_settings_test.php: Home's look moves once and only when the shared glass was never set; the new value ranges.
 
 ---
 

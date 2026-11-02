@@ -95,11 +95,11 @@ try:
 
         pg.goto(s.base + '/'); wait_js(pg, "!!document.getElementById('settingsSheet')", 20000)
         pg.evaluate("document.getElementById('settingsSheet').showModal()"); pg.wait_for_timeout(300)
-        hm = pg.evaluate("""(() => { const r = id => document.getElementById(id), seg = r('sEditBar').nextElementSibling, tint = r('pTint');
+        hm = pg.evaluate("""(() => { const r = id => document.getElementById(id), seg = r('sEditBar').nextElementSibling, link = document.querySelector('#settingsSheet .g-note a');
             const right = (ctl) => { const row = ctl.closest('.g-row'), l = row.querySelector('.g-label').getBoundingClientRect(), c = ctl.getBoundingClientRect(); return (c.left >= l.right - 2 && Math.abs((c.top + c.bottom) / 2 - (l.top + l.bottom) / 2) < 30) || c.top >= l.bottom - 2; };   // beside the label, or (1.64.3) under it at full width when they do not fit side by side
             const only = r('sPrivate').closest('.g-row'), lab = only.querySelector('.g-label').getBoundingClientRect(), tile = only.querySelector('.ix-rt').getBoundingClientRect();
-            return [right(seg), right(tint), Math.round(lab.left - tile.right) <= 24]; })()""")
-        check('L9 Home Settings: Edit Bar and Tint buttons sit at the right of their label or under it; Only Me starts next to its tile', hm == [True, True, True], hm)
+            return [right(seg), !!link && /settings\/#glass$/.test(link.getAttribute('href')) && !r('pTint') && !r('pOpacity') && !r('pBlur'), Math.round(lab.left - tile.right) <= 24]; })()""")
+        check('L9 Home Settings: Edit Bar sits at the right of its label or under it; Glass is only a link to Settings > Appearance > Glass (1.68.4); Only Me starts next to its tile', hm == [True, True, True], hm)
 
         # ---- the main Settings page ----
         pg.goto(s.base + '/web/settings/#nav'); wait_js(pg, "!!document.querySelector('#ix-tabl .ix-pgr')", 20000)

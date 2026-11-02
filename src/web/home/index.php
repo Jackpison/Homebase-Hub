@@ -51,6 +51,7 @@ $first = $first ?? $pickFrom($site['uploads']);
 $site['first'] = $first;
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 $v = fn($f) => $f . '?v=' . (is_file(__DIR__ . '/' . $f) ? filemtime(__DIR__ . '/' . $f) : 0);
+hub_glass_adopt_home(is_array($site['panel'] ?? null) ? $site['panel'] : []);   // (1.68.4) once: a hand-set Home glass look becomes the one glass
 // The tab icon is the site logo from the main Settings.
 $siteLogo = hub_settings()['logo'] ?? '';
 $logoOk = $siteLogo !== '' && is_file(HUB_PUBLIC . '/' . $siteLogo);
@@ -70,8 +71,8 @@ if (!empty($site['private']) && !hub_admin()) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.68.3">
-<script src="../hub/core/assets/shell.js?v=1.68.3" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.68.4">
+<script src="../hub/core/assets/shell.js?v=1.68.4" data-app="home"></script>
 <link rel="icon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <link rel="stylesheet" href="<?= $v('assets/app.css') ?>">
@@ -86,15 +87,15 @@ if (!empty($site['private']) && !hub_admin()) {
 }
 
 ?><!doctype html>
-<html lang="en" data-glass="<?= $h($site['panel']['tint']) ?>">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <?php if (defined('HOME_BASE')): ?><base href="<?= $h(HOME_BASE) ?>"><?php endif; ?>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.68.3">
-<script src="../hub/core/assets/shell.js?v=1.68.3" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.68.4">
+<script src="../hub/core/assets/shell.js?v=1.68.4" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <?php if ($logoOk): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png"><?php endif; ?>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
@@ -115,7 +116,7 @@ if (!empty($site['private']) && !hub_admin()) {
 <?php endif; ?>
 <?php endif; ?>
 <link rel="stylesheet" href="<?= $v('assets/app.css') ?>">
-<style>:root{--dim:<?= (float) $site['bg']['dim'] ?>;--panel-a:<?= (float) $site['panel']['opacity'] ?>;--panel-blur:<?= (int) $site['panel']['blur'] ?>px}</style>
+<style>:root{--dim:<?= (float) $site['bg']['dim'] ?>}</style>
 </head>
 <body>
 
@@ -191,14 +192,7 @@ if (!empty($site['private']) && !hub_admin()) {
       </section>
       <section>
         <h3>Glass</h3>
-        <div class="group">
-          <div class="g-row"><span class="g-label">Tint<small>Solid is easiest to read on busy photos.</small></span>
-            <div class="seg" id="pTint" role="radiogroup" aria-label="Tint"><button type="button" role="radio" data-v="light">Light</button><button type="button" role="radio" data-v="dark">Dark</button><button type="button" role="radio" data-v="solid">Solid</button></div></div>
-          <div class="g-row stack"><span class="g-label">Opacity <b id="pOpVal"></b><small>How much the widgets tint the photo. 0% is fully see-through.</small></span>
-            <input type="range" id="pOpacity" min="0" max="100" step="5"></div>
-          <div class="g-row stack"><span class="g-label">Blur <b id="pBlurVal"></b><small>Frosted-glass effect behind the widgets.</small></span>
-            <input type="range" id="pBlur" min="0" max="40" step="2"></div>
-        </div>
+        <div class="group"><p class="g-note">The widgets use the same glass as the bar: set it in <a href="../settings/#glass">Settings › Appearance › Glass</a>.</p></div>
       </section>
     </div>
     <footer class="sf"><span></span><div class="sf-r">

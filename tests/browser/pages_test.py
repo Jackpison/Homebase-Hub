@@ -277,20 +277,20 @@ try:
             pc.close(); return out
         g = placed('glance', 1280, 800, ['quote', 'weather', 'today']); d = placed('dock', 1280, 700, ['weather', 'today'])
         check('P41 an open widget sits above the cards or the dock (never on them), stays on screen, and the clock makes way when there is no room', g == [3, 3, 3] and d == [3, 3], (g, d))
-        # P40: the glass. The computer's "reduce transparency" (Windows: Transparency effects off) no longer turns it into a dark block;
-        # Home Settings > Glass > Tint decides: Light (see-through, the default), Dark, or Solid.
-        def glass(tint=None, reduce=False):
-            if tint: subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['panel']['tint'] = '%s'; write_json(SITE_FILE, clean_site($s));" % (D, tint)], check=True)
+        # P40: the glass. (1.68.4) one glass for the whole site, set in Settings > Appearance > Glass (Home Settings > Glass is only a link now).
+        # The computer's "reduce transparency" (Windows: Transparency effects off) does not turn it into a dark block.
+        def glass(fx=None, reduce=False):
+            subprocess.run(['php', '-r', "chdir('%s'); require '%s/web/hub/core/lib/boot.php'; hub_settings_update(function ($x) { $x['glassFx'] = json_decode('%s', true); return $x; });" % (D, D, json.dumps(fx or {}))], check=True)
             gc = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); gc.add_cookies(cookies); gc.route('**/*', handle); gc.add_init_script(TRACK_REQUESTS)
             gc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}"); gp = gc.new_page()
             if reduce: gc.new_cdp_session(gp).send('Emulation.setEmulatedMedia', {'features': [{'name': 'prefers-reduced-transparency', 'value': 'reduce'}]}) if BROWSER == 'chromium' else None
             gp.goto(B + '/web/home/', wait_until='domcontentloaded'); until(lambda: gp.evaluate("document.querySelectorAll('.wcard, .wdb').length > 0"), 10000); settle(gp)
             el = '.wcard' if gp.evaluate("!!document.querySelector('.wcard')") else '#wDock'
-            r = gp.evaluate("(() => { const c = getComputedStyle(document.querySelector('%s')); const m = c.backgroundColor.match(/rgba?\\(([^)]+)\\)/)[1].split(',').map(Number); return [m[0], m[3] === undefined ? 1 : m[3], (c.backdropFilter || c.webkitBackdropFilter || 'none') !== 'none'] })()" % el)
+            r = gp.evaluate("(() => { const c = getComputedStyle(document.querySelector('%s')); const m = c.backgroundColor.match(/[\\d.]+/g).map(Number); return [Math.round(m[0] <= 1 && /color\\(/.test(c.backgroundColor) ? m[0] * 255 : m[0]), m.length > 3 ? m[3] : 1, (c.backdropFilter || c.webkitBackdropFilter || 'none') !== 'none'] })()" % el)
             gc.close(); return r
-        light_reduce = glass('light', reduce=True); dark = glass('dark'); solid = glass('solid'); glass('light')
-        check('P40 Glass Tint: Light stays see-through and blurred even when the computer asks to reduce transparency; Dark is a dark see-through tint; Solid is not see-through',
-              light_reduce[0] == 255 and light_reduce[1] < 0.5 and light_reduce[2] and dark[0] < 60 and dark[1] < 0.5 and dark[2] and solid[1] > 0.85 and not solid[2], (light_reduce, dark, solid))
+        soft_reduce = glass({}, reduce=True); light = glass({'tone': 1, 'tint': 30}); solid = glass({'solid': 1}); glass({})
+        check('P40 one glass (1.68.4): the Home widgets follow Settings > Appearance > Glass: Soft stays see-through and blurred even when the computer asks to reduce transparency; Tone Light is a light see-through tint; Solid is not see-through',
+              soft_reduce[1] < 0.5 and soft_reduce[2] and light[0] > 200 and light[1] < 0.5 and light[2] and solid[1] > 0.85 and not solid[2], (soft_reduce, light, solid))
         # P48: Settings > Overview after an update shows What's New from a small answer (the newest version only, 1.53.1)
         wctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); wctx.add_cookies(cookies); wctx.route('**/*', handle); wctx.add_init_script(TRACK_REQUESTS)
         wsz = []; wp = wctx.new_page(); wp.on('requestfinished', lambda r: wsz.append((r.url, len(r.response().body() or b''))) if 'action=changelog' in r.url else None)

@@ -101,19 +101,30 @@
     var pg = c.pg || {}; Object.keys(pg).sort().forEach(function (a) { ['dark', 'light'].forEach(function (m) { if (pg[a] && pg[a][m]) out['pg.' + a + '.' + m] = pg[a][m]; }); });
     return out;
   }
-  /* (1.68.2) the Glass tab: [key, name, what it does, min, max, built-in value, unit] (the server keeps the same ranges: hub_glass_ranges) */
-  // (1.68.3) Bend and Colour Fringe start at 0: the bending reads from just outside the bar, where Chrome mirrors the page, so over text it
-  // shows upside-down copies. It is the Liquid effect now (a quick pick), best over a photo; the plain glass is clean.
-  var GFX = [['bend', 'Liquid Bend', 'Bends what is under the edges, and mirrors it a little. 0 = off. Best over a photo.', 0, 100, 0, ''], ['edge', 'Edge Width', 'How far in from the rim the bending reaches.', 2, 40, 7, '%'],
-    ['fringe', 'Colour Fringe', 'The red, green and blue split at the bent edges.', 0, 40, 0, ''], ['frost', 'Frost', 'Blur behind the glass.', 0, 12, 3, ' px'],
-    ['tint', 'Tint', 'How much of the bar colour sits over the glass.', 0, 80, 20, '%'], ['sat', 'Saturation', 'How vivid things look through the glass.', 50, 200, 100, '%']];
-  var GPICKS = [['soft', 'Soft', {}], ['clear', 'Clear', { frost: 0, tint: 10 }], ['frosted', 'Frosted', { frost: 10, tint: 30, sat: 120 }], ['liquid', 'Liquid', { bend: 60, fringe: 10 }], ['strong', 'Strong Liquid', { bend: 100, edge: 20, fringe: 20, tint: 5, sat: 130 }]];
+  /* (1.68.2) the Glass tab: [key, name, what it does, min, max, built-in value, unit, card] (the server keeps the same ranges: hub_glass_ranges).
+     (1.68.3) Bend and Colour Fringe start at 0: the bending reads from just outside the bar, where Chrome mirrors the page, so over text it
+     shows upside-down copies; it is the Liquid effect (a quick pick). (1.68.4) one glass for the whole site, Home widgets included: frost up
+     to 40 px and tint up to 94% (Home's old range), Rim Light and Shadow; GFLAGS are the switches and choices kept with them. */
+  var GFX = [['frost', 'Frost', 'Blur behind the glass.', 0, 40, 3, ' px', 'fine'], ['tint', 'Tint', 'How much colour sits over the glass.', 0, 94, 20, '%', 'fine'],
+    ['sat', 'Saturation', 'How vivid things look through the glass.', 50, 200, 100, '%', 'fine'], ['rim', 'Rim Light', 'The light edge.', 0, 100, 35, '%', 'fine'],
+    ['shadow', 'Shadow', 'How much the glass floats.', 0, 80, 30, '%', 'fine'],
+    ['bend', 'Liquid Bend', '0 = off.', 0, 100, 0, '', 'liquid'], ['edge', 'Edge Width', 'How far in from the rim the bending reaches.', 2, 40, 7, '%', 'liquid'],
+    ['fringe', 'Colour Fringe', 'The red, green and blue split at the bent edges.', 0, 40, 0, '', 'liquid']];
+  // [key, min, max, built-in]: tone 0 Auto / 1 Light / 2 Dark; solid; photo = Liquid only on the start page; where else glass shows
+  var GFLAGS = [['tone', 0, 2, 0], ['solid', 0, 1, 0], ['photo', 0, 1, 1], ['wpop', 0, 1, 0], ['wdrawer', 0, 1, 0], ['wsearch', 0, 1, 0], ['wwin', 0, 1, 0]];
+  var GLOOK = ['frost', 'tint', 'sat', 'bend', 'edge', 'fringe', 'solid'];   // what a Quick Pick sets (tone, rim, shadow and Where stay as they are)
+  var GPICKS = [['soft', 'Soft', {}], ['clear', 'Clear', { frost: 0, tint: 10 }], ['frosted', 'Frosted', { frost: 14, tint: 35, sat: 120 }], ['solid', 'Solid', { solid: 1 }],
+    ['liquid', 'Liquid', { bend: 60, fringe: 10 }], ['strong', 'Strong Liquid', { bend: 100, edge: 20, fringe: 20, tint: 5, sat: 130 }]];
+  var GWHERE = [['wpop', 'Menus and Pop-ups', 'The Edit menu, search options and other small menus.'], ['wdrawer', 'Phone Page List', 'The panel that slides in on a phone.'],
+    ['wsearch', 'Search Results', 'The list under the search box.'], ['wwin', 'Settings Windows', 'The Settings windows of Links, Info, Cards and Tasks.']];
   /* only the values that differ from the built-in look, whole numbers inside their range, always in the same order */
   function canonGfx(o) {
     var out = {}; o = o && typeof o === 'object' ? o : {};
-    GFX.forEach(function (g) { var v = o[g[0]]; if (typeof v === 'number' && isFinite(v)) { v = Math.max(g[3], Math.min(g[4], Math.round(v))); if (v !== g[5]) out[g[0]] = v; } });
+    GFX.map(function (g) { return [g[0], g[3], g[4], g[5]]; }).concat(GFLAGS).forEach(function (g) {
+      var v = o[g[0]]; if (typeof v === 'number' && isFinite(v)) { v = Math.max(g[1], Math.min(g[2], Math.round(v))); if (v !== g[3]) out[g[0]] = v; } });
     return out;
   }
+  function gLook(o) { var r = {}; GLOOK.forEach(function (k) { if (o[k] !== undefined) r[k] = o[k]; }); return JSON.stringify(r); }
   function canonAccents(a) { var out = {}; Object.keys(a || {}).sort().forEach(function (k) { if (a[k]) out[k] = a[k]; }); return out; }
   function pick(o) {
     var r = {};
@@ -275,7 +286,7 @@
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
   var CARDIFY = { general: 1, nav: 1, look: 1, glass: 1 };
   var CARD_ICON = { 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
-    'navigation style': ICON.menu, 'tabs': ICON.pages, 'bar glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear };
+    'navigation style': ICON.menu, 'tabs': ICON.pages, 'glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear, 'liquid': ICON.sparkle, 'where': ICON.grid };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
     var groups = [], cur = null;
@@ -788,31 +799,50 @@
     return null;
   }
   var lastMix = { dark: null, light: null };
-  /* (1.68.2) Appearance > Glass: quick picks and sliders for Bar Glass; the real bar or dock follows each move (preview), Save keeps it. */
+  /* (1.68.2) Appearance > Glass; (1.68.4) one glass for the whole site: the bar, the dock, the Home widgets and the places under Where.
+     The real bar and the preview follow each move (preview); Save keeps it. */
   function pGlass(p) {
     draft.glassFx = canonGfx(draft.glassFx);
-    var fx = draft.glassFx, val = function (g) { return typeof fx[g[0]] === 'number' ? fx[g[0]] : g[5]; };
+    var fx = draft.glassFx, val = function (k, d) { return typeof fx[k] === 'number' ? fx[k] : d; };
     var ua = navigator.userAgent, bends = !((/Safari/.test(ua) && !/Chrome/.test(ua)) || /Firefox/.test(ua));
-    var picked = GPICKS.filter(function (k) { return JSON.stringify(canonGfx(k[2])) === JSON.stringify(fx); })[0];
-    p.innerHTML = '<h3>Bar Glass</h3><p>The top bar or the dock turns to glass that bends what is under its edges. Not for the sidebar.</p>' +
-      '<label class="ix-tg"><span>Show the Glass<small>' + (draft.glass ? 'On: the bar shows each change as you make it.' : 'Off: switch it on to see the changes below on the bar.') + '</small></span><input type="checkbox" id="ix-glass2"' + (draft.glass ? ' checked' : '') + '></label>' +
-      '<h3>Quick Picks</h3><p>Soft (the default), Clear and Frosted are plain glass. Liquid bends what is under the edges (as React Bits\' GlassSurface does); it looks best over a photo, over text it shows mirrored copies at the edges.</p>' + seg('gpick', GPICKS.map(function (k) { return [k[0], k[1]]; }), picked ? picked[0] : '') +
-      '<h3>Fine-Tune</h3><p>' + (bends ? 'Every page, the top bar and the dock.' : 'This browser shows frosted glass: only Frost, Tint and Saturation change it. Chrome and Edge show the bending too.') + '</p>' +
-      GFX.map(function (g) {
-        return '<div class="ix-tsf ix-gxf"><label for="ix-gx-' + g[0] + '">' + g[1] + '<small>' + esc(g[2]) + '</small></label><div class="ix-tsr"><input type="range" id="ix-gx-' + g[0] + '" data-g="' + g[0] + '" min="' + g[3] + '" max="' + g[4] + '" step="1" value="' + val(g) + '"><output>' + val(g) + g[6] + '</output></div></div>';
-      }).join('') +
-      '<div class="ix-acts"><button type="button" class="ix-btn" id="ix-gxr">Reset to Default</button></div>';
-    p.querySelector('#ix-glass2').onchange = function (e) { draft.glass = e.target.checked; preview(); pGlass(p); };
-    bindSeg(p, function (k, v) { if (k !== 'gpick') return; var pk = GPICKS.filter(function (x) { return x[0] === v; })[0]; draft.glassFx = canonGfx(pk ? pk[2] : {}); preview(); pGlass(p); });
+    var picked = GPICKS.filter(function (k) { return gLook(canonGfx(k[2])) === gLook(fx); })[0];
+    var slider = function (g) { var v = val(g[0], g[5]);
+      return '<div class="ix-tsf ix-gxf"><label for="ix-gx-' + g[0] + '">' + g[1] + '<small>' + esc(g[2]) + '</small></label><div class="ix-tsr"><input type="range" id="ix-gx-' + g[0] + '" data-g="' + g[0] + '" min="' + g[3] + '" max="' + g[4] + '" step="1" value="' + v + '"><output>' + v + g[6] + '</output></div></div>'; };
+    var sw = function (id, name, help, on, off) { return '<label class="ix-tg"><span>' + name + '<small>' + esc(help) + '</small></span><input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + (off ? ' disabled' : '') + '></label>'; };
+    var photo = ROOT + 'web/home/starter/mountains.jpg';
+    p.innerHTML = '<h3>Glass</h3><p>One glass for the whole site: the top bar or the dock, the Home widgets, and the places you pick under Where.</p>' +
+        sw('ix-glass2', 'Glass on the Bar', 'The top bar or the dock (not the sidebar). The Home widgets are always glass.', draft.glass) +
+        '<div class="ix-gpv" aria-hidden="true"><i class="ix-gpvb"><b></b><b></b><b></b><em></em></i>' +
+          '<i class="ix-gpvc">6:13</i><i class="ix-gpvw"><b>Note</b><span>Buy milk. Call the plumber on Monday.</span></i><i class="ix-gpvd"><b></b><b></b><b></b><b></b><b></b></i></div>' +
+        '<p class="ix-note">The preview follows every change. ' + (bends ? 'Liquid shows on the real glass (with Only Over Photos: on the start page).' : 'This browser shows frosted glass: Liquid, Edge Width and Colour Fringe change nothing here; Chrome and Edge show them.') + '</p>' +
+      '<h3>Quick Picks</h3><p>A starting point; everything below fine-tunes it. Solid is easiest to read on busy photos.</p>' + seg('gpick', GPICKS.map(function (k) { return [k[0], k[1]]; }), picked ? picked[0] : '') +
+      '<h3>Fine-Tune</h3><p>Every glass on the site follows these.</p>' +
+        '<div class="ix-gxt"><span>Tone<small>Auto follows the theme; Light and Dark keep one look.</small></span>' + seg('gtone', [['0', 'Auto'], ['1', 'Light'], ['2', 'Dark']], String(val('tone', 0))) + '</div>' +
+        GFX.filter(function (g) { return g[7] === 'fine'; }).map(slider).join('') +
+      '<h3>Liquid</h3><p>Bends what is under the edges, with a colour fringe (React Bits\' GlassSurface). Over text it mirrors the words a little, so by default it shows only over the start page\'s photo.</p>' +
+        GFX.filter(function (g) { return g[7] === 'liquid'; }).map(slider).join('') +
+        sw('ix-gphoto', 'Only Over Photos', 'Liquid on the start page (the photo); plain glass on pages of text.', val('photo', 1) === 1) +
+      '<h3>Where</h3><p>Glass in more places, each on its own switch. These stay easy to read: they keep most of their own colour.</p>' +
+        sw('ix-gwhome', 'Home Widgets', 'Today, Countdown, Note, Calendar, Quote and the open widget.', true, true) +
+        GWHERE.map(function (w) { return sw('ix-g' + w[0], w[1], w[2], val(w[0], 0) === 1); }).join('') +
+        '<div class="ix-acts"><button type="button" class="ix-btn" id="ix-gxr">Reset to Default</button></div>';
+    p.querySelector('.ix-gpv').style.backgroundImage = 'url("' + photo + '")';   // the start page's own mountain photo
+    var setFx = function (k, v) { var o = Object.assign({}, draft.glassFx); o[k] = v; draft.glassFx = canonGfx(o); };
+    var markPick = function () { var pk = GPICKS.filter(function (k) { return gLook(canonGfx(k[2])) === gLook(draft.glassFx); })[0];
+      p.querySelectorAll('[data-seg="gpick"] button').forEach(function (b) { b.setAttribute('aria-pressed', pk && b.dataset.v === pk[0] ? 'true' : 'false'); }); };
+    p.querySelector('#ix-glass2').onchange = function (e) { draft.glass = e.target.checked; preview(); };
+    p.querySelector('#ix-gphoto').onchange = function (e) { setFx('photo', e.target.checked ? 1 : 0); preview(); };
+    GWHERE.forEach(function (w) { p.querySelector('#ix-g' + w[0]).onchange = function (e) { setFx(w[0], e.target.checked ? 1 : 0); preview(); }; });
+    bindSeg(p, function (k, v) {
+      if (k === 'gtone') { setFx('tone', +v); preview(); return; }
+      if (k !== 'gpick') return;
+      var pk = GPICKS.filter(function (x) { return x[0] === v; })[0], o = Object.assign({}, draft.glassFx);
+      GLOOK.forEach(function (key) { delete o[key]; }); Object.assign(o, pk ? pk[2] : {});
+      draft.glassFx = canonGfx(o); preview(); var y = p.closest('.ix-pane') ? p.closest('.ix-pane').scrollTop : 0; pGlass(p); if (p.closest('.ix-pane')) p.closest('.ix-pane').scrollTop = y;
+    });
     p.querySelectorAll('[data-g]').forEach(function (r) {
       var g = GFX.filter(function (x) { return x[0] === r.dataset.g; })[0];
-      r.oninput = function () {
-        var o = Object.assign({}, draft.glassFx); o[g[0]] = +r.value; draft.glassFx = canonGfx(o);
-        r.nextElementSibling.textContent = r.value + g[6];
-        var pk = GPICKS.filter(function (k) { return JSON.stringify(canonGfx(k[2])) === JSON.stringify(draft.glassFx); })[0];
-        p.querySelectorAll('[data-seg="gpick"] button').forEach(function (b) { b.setAttribute('aria-pressed', pk && b.dataset.v === pk[0] ? 'true' : 'false'); });
-        preview();
-      };
+      r.oninput = function () { setFx(g[0], +r.value); r.nextElementSibling.textContent = r.value + g[6]; markPick(); preview(); };
     });
     p.querySelector('#ix-gxr').onclick = function () { draft.glassFx = {}; preview(); pGlass(p); };
   }

@@ -9,8 +9,6 @@
 :root{
   --ink:#F6F5F1;
   --ink-2:rgba(246,245,241,.72);
-  --panel-a:.40; --panel-blur:22px;
-  --glass:rgba(12,14,22,var(--panel-a));
   --glass-line:rgba(255,255,255,.12);
   --font:"Trebuchet MS","Lucida Grande","Lucida Sans Unicode",Tahoma, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
@@ -58,21 +56,21 @@ svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 body:not(.has-widgets) .stage{justify-content:center;padding-top:0;padding-bottom:6vh}
 
 /* ================= liquid glass ================= */
-/* Glass: a tinted, blurred and brightened pane with a light edge and a soft sheen. Home Settings > Glass sets the tint (Light, Dark
-   or Solid), its strength (--panel-a) and the blur. Your choice wins over the computer's "reduce transparency" (pick Solid for that). */
-:root{--g-tint:rgba(255,255,255,calc(var(--panel-a) * .3));--g-hover:rgba(255,255,255,calc(var(--panel-a) * .3 + .12))}
-html[data-glass="dark"]{--g-tint:rgba(16,22,30,calc(var(--panel-a) * .6));--g-hover:rgba(60,70,84,calc(var(--panel-a) * .6))}
-html[data-glass="solid"]{--g-tint:rgba(24,28,36,.92);--g-hover:rgba(44,50,62,.94)}
+/* Glass: a tinted, blurred and brightened pane with a light edge and a soft sheen. (1.68.4) One glass for the whole site: the values come
+   from Settings > Appearance > Glass, as CSS variables shell.js sets on <html> (--ix-gt tint, --ix-gb frost, --ix-gs saturation,
+   --ix-gtc tone colour, --ix-grim rim, --ix-gsh shadow, --ix-gf the Liquid filter or nothing); Solid is html[data-ix-gsolid]. */
+:root{--panel-blur:var(--ix-gb,3px);--g-tint:color-mix(in srgb,var(--ix-gtc,#101114) var(--ix-gt,20%),transparent);--g-hover:color-mix(in srgb,var(--ix-gtc,#101114) calc(var(--ix-gt,20%) + 12%),rgba(255,255,255,.12))}
+html[data-ix-gsolid]{--g-tint:color-mix(in srgb,var(--ix-gtc,#181c24) 94%,transparent);--g-hover:color-mix(in srgb,var(--ix-gtc,#181c24) 94%,#fff)}
 .lg,.chip{position:relative;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5),0 0 1px rgba(0,0,0,.35);
   background:linear-gradient(140deg,rgba(255,255,255,.24),rgba(255,255,255,.08) 55%,rgba(255,255,255,.12)),var(--g-tint);
-  backdrop-filter:blur(var(--panel-blur)) saturate(175%);-webkit-backdrop-filter:blur(var(--panel-blur)) saturate(175%);
-  border:1px solid rgba(255,255,255,.30);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.10),0 14px 40px rgba(0,8,20,.30)}
+  backdrop-filter:var(--ix-gf,blur(0px)) blur(var(--panel-blur)) saturate(calc(var(--ix-gs,1) * 175%));-webkit-backdrop-filter:var(--ix-gf,blur(0px)) blur(var(--panel-blur)) saturate(calc(var(--ix-gs,1) * 175%));
+  border:1px solid rgba(255,255,255,calc(var(--ix-grim,.35) * .85));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,min(1,calc(var(--ix-grim,.35) * 1.6))),inset 0 -1px 0 rgba(255,255,255,.10),0 14px 40px rgba(0,8,20,var(--ix-gsh,.3))}
 .lg::before,.chip::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background:radial-gradient(110% 70% at 18% 0%,rgba(255,255,255,.30),rgba(255,255,255,0) 55%)}
 .lg > *,.chip > *{position:relative}
-html[data-glass="solid"] .lg,html[data-glass="solid"] .chip{backdrop-filter:none;-webkit-backdrop-filter:none;text-shadow:none}
-html[data-glass="solid"] .lg::before,html[data-glass="solid"] .chip::before{display:none}
+html[data-ix-gsolid] .lg,html[data-ix-gsolid] .chip{backdrop-filter:none;-webkit-backdrop-filter:none;text-shadow:none}
+html[data-ix-gsolid] .lg::before,html[data-ix-gsolid] .chip::before{display:none}
 @media (forced-colors:active){ .lg,.chip{border:1px solid CanvasText} }
 
 /* ================= Glass Dock: chips, the dock ================= */
@@ -165,9 +163,9 @@ body[data-wstyle="glance"] .wpanel{top:clamp(250px,40vh,320px);width:min(520px,c
 /* an open widget that would reach the clock or the chips: they step aside while it is open */
 body.w-cover .clock,body.w-cover .chips{visibility:hidden}
 /* the open widget is frosted harder than the cards, so nothing behind it shows through its text */
-.wpanel{backdrop-filter:blur(calc(var(--panel-blur) + 24px)) saturate(150%);-webkit-backdrop-filter:blur(calc(var(--panel-blur) + 24px)) saturate(150%);
+.wpanel{backdrop-filter:blur(calc(var(--panel-blur) + 24px)) saturate(calc(var(--ix-gs,1) * 150%));-webkit-backdrop-filter:blur(calc(var(--panel-blur) + 24px)) saturate(calc(var(--ix-gs,1) * 150%));
   background:linear-gradient(140deg,rgba(255,255,255,.22),rgba(255,255,255,.08) 55%,rgba(255,255,255,.12)),linear-gradient(var(--g-tint),var(--g-tint)),rgba(12,14,20,.28)}
-html[data-glass="solid"] .wpanel{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--g-tint)}
+html[data-ix-gsolid] .wpanel{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--g-tint)}
 
 /* the bar's Bottom Dock: Home's dock and cards sit above it */
 html[data-ix-bar][data-ix-nav="dock"] .wdock{bottom:calc(var(--ix-dock) + 36px)}
@@ -401,3 +399,7 @@ body.onlyme{min-height:100dvh;display:grid;place-items:center;background:#111;co
 .sheet .sb h3:first-child{margin-top:8px}
 .g-row:not(.stack)>.seg{display:inline-flex;flex-wrap:nowrap}
 @media (max-width:480px){.g-row:not(.stack):has(>.ix-sgc,>.seg){flex-wrap:wrap}.g-row:not(.stack)>.ix-sgc,.g-row:not(.stack)>.seg{max-width:100%}}
+
+/* (1.68.4) Home Settings > Glass now only points to Settings > Appearance > Glass */
+.g-note{margin:0;padding:12px 14px;font-size:13.5px;line-height:1.5;opacity:.85}
+.g-note a{color:inherit;font-weight:600;text-decoration:underline}

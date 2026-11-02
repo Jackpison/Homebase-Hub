@@ -41,3 +41,17 @@ t('no Glass values (or not a list) means the built-in look', hub_clean_settings(
 t('Hide the Bar While Scrolling is on unless switched off', hub_clean_settings([])['barHide'] === true && hub_clean_settings(['barHide' => false])['barHide'] === false && hub_clean_settings(['barHide' => 0])['barHide'] === true);
 $ps = hub_public_state();
 t('the public state carries the Glass values and Hide the Bar', array_key_exists('glassFx', $ps) && array_key_exists('barHide', $ps));
+
+// (1.68.4) one glass: Home's own glass look moves into it once
+t('Home\'s built-in glass (light, 40%, 22 px) moves nothing: the site takes the shared default', hub_glass_from_panel(['tint' => 'light', 'opacity' => 0.4, 'blur' => 22]) === []);
+t('Home set to Solid becomes the Solid glass', hub_glass_from_panel(['tint' => 'solid', 'opacity' => 0.4, 'blur' => 22]) === ['solid' => 1]);
+$m = hub_glass_from_panel(['tint' => 'dark', 'opacity' => 0.5, 'blur' => 30]);
+t('Home set by hand (dark, 50%, 30 px) becomes frost 30, tint 30%, tone Dark', $m === ['frost' => 30, 'tint' => 30, 'tone' => 2], json_encode($m));
+hub_settings_update(function ($x) { $x['glassFx'] = []; $x['glassV'] = 0; return $x; });
+hub_glass_adopt_home(['tint' => 'dark', 'opacity' => 0.5, 'blur' => 30]);
+$a = hub_settings();
+t('the move happens once and only when the one glass was never set', $a['glassFx'] === ['frost' => 30, 'tint' => 30, 'tone' => 2] && $a['glassV'] === 1);
+hub_glass_adopt_home(['tint' => 'solid']);
+t('...a second time changes nothing', hub_settings()['glassFx'] === ['frost' => 30, 'tint' => 30, 'tone' => 2]);
+$c = hub_clean_settings(['glassFx' => ['frost' => 99, 'tint' => 120, 'tone' => 5, 'rim' => 80, 'wpop' => 1, 'solid' => 3]])['glassFx'];
+t('the new values keep their ranges (frost up to 40 px, tint up to 94%, tone 0-2, switches 0/1)', $c === ['frost' => 40, 'tint' => 94, 'tone' => 2, 'rim' => 80, 'solid' => 1, 'wpop' => 1], json_encode($c));
