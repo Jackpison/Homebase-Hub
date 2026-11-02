@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.68.5 | Glass windows, menus and search results let the page show through: a much lighter layer behind a glass window and a brighter rim |
 | 1.68.4 | One glass for the whole site: the bar, the dock and the Home widgets share Settings › Appearance › Glass, with Solid, Tone, Rim Light, Shadow, Liquid only over photos, glass in more places and a live preview |
 | 1.68.3 | The Save Settings bar shows only when something changed; Bar Glass is a clean Soft glass by default, the bending is the Liquid pick; CI test fixes |
 | 1.68.2 | A Glass tab in Appearance (quick picks and sliders for Bar Glass), a switch to keep the bar in place while scrolling, no line over the current page in the dock |
@@ -129,6 +130,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.68.5
+
+### Changed
+
+- **Glass > Where > Settings Windows** was almost invisible: the window kept 72% of its own colour and the dark layer behind every window dimmed the page, so the glass showed mostly dark. Now the layer behind a glass window is much lighter (the page stays visible around it), the window keeps 55% of its own colour so the frosted page shows through, and its edge is a brighter rim. Menus and Pop-ups and Search Results also keep 55% (was 72%); all of them keep at least 14 px of frost so text stays readable. Solid keeps the usual windows.
+
+### Checked
+
+- polish_test P65: with Settings Windows on, the Links Settings window is see-through glass (55%, 14 px frost) over a light layer; off, windows are as before.
 
 ---
 

@@ -391,6 +391,20 @@ try:
               tv[0] == '#f4f4f1' and tv[1] == '0.8' and json.loads(kept2) == {'tone': 1, 'rim': 80} and ('0.956' in tv[2] or tv[2].startswith('rgba(244')), (tv, kept2))
         s.php("hub_settings_update(function ($x) { $x['glassFx'] = []; $x['glass'] = false; $x['homeBar'] = false; return $x; });")
         op.context.close()
+        # ---- (1.68.5) Where > Settings Windows: the page shows through a glass window (a light layer behind it, 55% of its own colour) ----
+        s.php("hub_settings_update(function ($x) { $x['glassFx'] = ['wwin' => 1, 'frost' => 0, 'tint' => 10]; return $x; });")
+        wp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); wp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(wp, s.base)
+        wp.goto(s.base + '/web/links/'); wait_js(wp, "document.querySelectorAll('.cat').length > 0 && document.documentElement.hasAttribute('data-ix-gwin')", 20000)
+        wp.evaluate("document.getElementById('settingsBtn').click()"); wp.wait_for_selector('#setDlg[open]'); wp.wait_for_timeout(400)
+        WIN = """(() => { const d = document.getElementById('setDlg'), a = c => { const m = c.match(/[\\d.]+/g) || []; return m.length > 3 ? +m[3] : 1; };
+            const st = getComputedStyle(d); return [a(st.backgroundColor), (st.backdropFilter || st.webkitBackdropFilter || ''), a(getComputedStyle(d, '::backdrop').backgroundColor)]; })()"""
+        wg = wp.evaluate(WIN); wp.keyboard.press('Escape')
+        s.php("hub_settings_update(function ($x) { $x['glassFx'] = []; return $x; });")
+        wp.goto(s.base + '/web/links/'); wait_js(wp, "document.querySelectorAll('.cat').length > 0", 20000)
+        wp.evaluate("document.getElementById('settingsBtn').click()"); wp.wait_for_selector('#setDlg[open]'); wp.wait_for_timeout(400)
+        wn = wp.evaluate(WIN); wp.context.close()
+        check('P65 Where > Settings Windows: the window is see-through glass (55% of its own colour, 14 px frost) over a light layer, so the page shows through; off, windows are as before (1.68.5)',
+              0.5 < wg[0] < 0.6 and 'blur(14px)' in wg[1] and wg[2] <= 0.2 and wn[0] > 0.95 and wn[2] >= 0.4, (wg, wn))
         check('P36 no page error', not errs, errs)
         b.close()
 finally:
