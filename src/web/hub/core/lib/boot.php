@@ -26,7 +26,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 
 if (defined('HUB')) return;
-define('HUB', '1.71.0');
+define('HUB', '1.72.0');
 const HUB_MIN_PHP = '8.3';   // the oldest PHP this version supports and is tested on; an update zip carries it as "minPhp" in its file list
 
 /** When each PHP branch stops getting security fixes (https://www.php.net/supported-versions, checked 2026-10-23). Branches not listed are newer than this table. Add a row each November. */
@@ -296,6 +296,15 @@ function hub_site_path(string $script): string {
     return rtrim($p, '/');
 }
 
+/**
+ * (1.72.0) Offline Reading: the headers of its service worker (api.php?action=sw). The script lives in web/hub/core, but it looks
+ * after the whole site, which a browser allows only with Service-Worker-Allowed naming the site's folder. No other site and no cookie
+ * is involved; nothing is kept on the server.
+ */
+function hub_sw_headers(string $root): array {
+    return ['Content-Type: text/javascript; charset=utf-8', 'Service-Worker-Allowed: ' . rtrim($root, '/') . '/', 'Cache-Control: no-cache', 'X-Content-Type-Options: nosniff'];
+}
+
 /** The owner's logo, when it can be an app icon: a square PNG of at least 512 px. Its address inside the site, or ''. */
 function hub_app_logo(string $logo, string $public): string {
     if (!preg_match('#^web/(?:hub/core|hub)/media/brand/logo-[0-9a-f]+\.png$#', $logo)) return '';
@@ -306,7 +315,7 @@ function hub_app_logo(string $logo, string $public): string {
 
 /**
  * The web app manifest (what a phone uses for "Add to Home Screen"). Public: only the site name, icons, colours and the
- * pages' names. Every address starts at the site's own path, so an install in a sub-folder works. No offline mode.
+ * pages' names. Every address starts at the site's own path, so an install in a sub-folder works. (Offline Reading, 1.72.0, is a separate switch: hub_sw_headers.)
  */
 function hub_manifest(array $s, string $root, string $public): array {
     $name = mb_substr(trim(strip_tags((string)($s['siteName'] ?? ''))), 0, 30) ?: 'Homebase Hub';

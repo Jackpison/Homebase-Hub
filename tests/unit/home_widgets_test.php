@@ -8,8 +8,8 @@ require_once $site . '/web/tasks/lib.php';
 
 /* ---------- widget settings ---------- */
 $w = clean_widgets([]);
-t('a site with no widget settings gets the default: Glass Dock, the clock, every widget in order; Scratch Pad, World Clock and Weather off',
-  $w['style'] === 'dock' && $w['clock'] === true && array_column($w['list'], 'id') === WIDGET_IDS && array_column($w['list'], 'on') === [true, true, true, true, true, false, true, false, false]
+t('a site with no widget settings gets the default: Glass Dock, the clock, every widget in order; Scratch Pad, World Clock, Weather and the four of 1.72.0 (Upcoming Bills, Recent Links, Recent Files, Server Status) off',
+  $w['style'] === 'dock' && $w['clock'] === true && array_column($w['list'], 'id') === WIDGET_IDS && array_column($w['list'], 'on') === [true, true, true, true, true, false, true, false, false, false, false, false, false]
   && $w['zones'] === [] && $w['weather'] === ['town' => '', 'unit' => 'c'], json_encode($w));
 $w = clean_widgets(['style' => 'glance', 'clock' => false, 'list' => [['id' => 'pad', 'on' => true], ['id' => 'nope', 'on' => true], ['id' => 'today', 'on' => false], ['id' => 'pad', 'on' => false], 'x']]);
 t('your order is kept, an unknown widget and a second copy are dropped, missing ones come after (in their default state)',

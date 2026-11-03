@@ -552,6 +552,10 @@ function takeData(j){
   PAGE.iconHash=ih;keepLocal();renderAuth();
   autoUnlock();
 }
+// (1.72.0) the site search finds boxes in locked tabs too, while they are unlocked on this page (read from memory, never stored)
+if(window.HUB&&HUB.findHook)HUB.findHook(()=>{const out=[];if(!KEY)return out;
+  for(const t of TABS)if(t.enc)for(const b of t.boxes)if(!b.sealed)out.push({title:String(b.title||t.name||"Box"),text:String(b.notes||"").replace(/\s+/g," "),where:t.name||"Tab",href:"#hub-info="+encodeURIComponent(t.id)});
+  return out});
 async function load(){
   renderPage(); // default title and icon right away, even on a first visit
   lsSet("info3-tok",null);   // an old per-page login token (before the one site login): no longer used (1.59)
@@ -560,20 +564,24 @@ async function load(){
     const l=JSON.parse(lsGet(LS)||"null");
     if(l&&Array.isArray(l.tabs)){local=l;if(local.page&&!local.page.icon)local.page.icon=savedIcon=lsGet(ICONK)||""}
   }catch(e){}
-  // 1. Show the copy saved in this browser straight away, so the page appears instantly.
-  if(local&&(local.tabs.length||local.closed)){applyData(local);setStatus("Checking for updates…")}
+  // 1. Show the copy saved in this browser straight away, so the page appears instantly. (1.72.0) Logged in, this tab's own last copy
+  //    comes first: it also has your private tabs (locked ones stay locked in it).
+  const HB=window.HUB,sn=HB&&HB.snap?HB.snap.get("info"):null;
+  if(sn&&Array.isArray(sn.tabs)){applyData(sn);HB.snap.stale(true);setStatus("Checking for updates…")}
+  else if(local&&(local.tabs.length||local.closed)){applyData(local);setStatus("Checking for updates…")}
   else if(local&&local.page){PAGE=normPage(local.page);renderPage();applyColors(PAGE.colors);setStatus("Loading…")}
   // 2. Ask the server for the latest version.
   try{
     const j=await fetchData();
+    if(HB&&HB.snap){HB.snap.put("info",j.auth?j:null);HB.snap.stale(false)}
     WAIT=false;takeData(j);renderTabs();lastFetch=Date.now();
     setStatus(savedMsg());
   }catch(e){
-    server=false;WAIT=false;
+    server=false;WAIT=false;if(HB&&HB.snap)HB.snap.stale(false);
     if(!local||!local.tabs.length)applyData({tabs:[{name:"Information & Notes",boxes:[{title:"Information"},{title:"Notes"}]}],rev:0});
     keepLocal();setStatus("Saved in this browser only.");
   }
-  loaded=true;
+  loaded=true;takeImport();
   // Edits that never reached the server are reopened so they aren't lost.
   // Drafts from the previous page version (numbered boxes) map onto the tabs in the same order.
   for(let i=0;i<10;i++){const d=lsGet("info2-draft-"+i);if(d){const b=TABS[i>>1]&&TABS[i>>1].boxes[i&1];if(b&&!dGet(b))dSet(b,d);lsSet("info2-draft-"+i,null)}}
@@ -743,6 +751,22 @@ function mergeTabs(d){
   REV=d.rev|0;keepLocal();syncDom();renderGates();
 }
 // Saves the whole tab list: [{id or null for new, name, color, private}]. Calls done() once saved.
+/* (1.72.0) the Import Center hands over notes (Google Keep, Notion, text files): one new private tab, its boxes already filled; a box that is
+   already in Info (same title and text) is left out. Saved like a new tab, with Undo. */
+function takeImport(){
+  const p=window.HUB&&HUB.importTake?HUB.importTake("info"):null;if(!p||!Array.isArray(p.boxes)||!p.boxes.length)return;
+  if(!authed||!server){HUB.toast("Log in (and be online) to add what you imported.",true);return}
+  if(TABS.length>=20){HUB.toast("Info has 20 tabs already. Remove one, then import again.",true);return}
+  const have=new Set(TABS.flatMap(t=>t.boxes.map(b=>(b.title+"|"+b.notes).toLowerCase())));
+  const boxes=p.boxes.map(b=>({title:String(b.title||"").slice(0,80),notes:String(b.notes||"")})).filter(b=>!have.has((b.title+"|"+b.notes).toLowerCase())).slice(0,12);
+  if(!boxes.length){HUB.toast("Everything in it is already in Info.");return}
+  /** @type {any[]} */
+  const now=TABS.map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private}));
+  saveTabsList(now.concat([{name:String(p.tab||"Imported").slice(0,40),color:freeColor(TABS.map(t=>t.color)),private:true,restore:{boxes}}]),m=>HUB.toast(m,true),()=>{
+    const nt=TABS[TABS.length-1],msg="Added a tab with "+boxes.length+(boxes.length===1?" box":" boxes")+" from "+(p.src||"the import")+".";
+    if(nt&&HUB.undo)HUB.undo(msg,()=>saveTabsList(TABS.filter(t=>t.id!==nt.id).map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private})),m=>HUB.toast(m,true)));else HUB.toast(msg);
+  });
+}
 async function saveTabsList(list,say,done){
   const before=new Set(TABS.map(t=>t.id));
   const showNew=()=>{const t=TABS.find(x=>!before.has(x.id));if(t)showTab(t.id)};

@@ -46,6 +46,10 @@ The maintenance pull request lists them under "Waiting for a person to decide":
 - **PDF writer:** since 1.60 Tools uses `@cantoo/pdf-lib`, the maintained copy of pdf-lib (the original is no longer updated). The monthly maintenance updates it like the other libraries.
 - **PHP versions:** when a PHP version stops getting security fixes (the dates are in `hub_php_eol()` in `src/web/hub/core/lib/boot.php`), raise `HUB_MIN_PHP` and the CI versions together.
 
+## After a release that changes how the site looks or moves
+
+Go through [PHONE-CHECKLIST.md](PHONE-CHECKLIST.md) on a real phone: the tests cannot use a real finger, camera or clipboard.
+
 ## Handing the project over
 
 Give the new person or AI:

@@ -429,6 +429,7 @@ dialog::backdrop{background:var(--ix-win-dim)}
 .c2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 .c3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:0 12px}
 .pair{display:flex;gap:8px}
+.pair>input,#dlg .pair>input{flex:0 0 96px;width:96px;min-width:0}.pair>select,#dlg .pair>select{flex:1 1 auto;width:auto;min-width:0}   /* (1.72.0) Every [n] [unit]: the unit was pushed out of the window */
 .pair input{width:90px;flex:none}
 .hint{font-size:12.5px;color:var(--mute);margin:-6px 0 12px;font-weight:400}
 .sh3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
@@ -557,3 +558,25 @@ html[data-ix-bar][data-ix-nav="dock"] .snack{bottom:calc(var(--ix-dock,76px) + 2
 .swbg.go[data-side="done"]{background:#5fd68a;color:#08210f}.swbg.go[data-side="skip"]{background:#ffc21a;color:#2a1f00}
 .swbg.go span{opacity:1}
 @media (prefers-reduced-motion:reduce){.swbg,.swbg span{transition:none}}
+/* (1.72.0) the days a weekly task falls on: seven small toggles */
+.wdpick{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.wdpick label{position:relative;display:inline-flex;cursor:pointer}
+.wdpick input{position:absolute;opacity:0;width:1px;height:1px}
+.wdpick span{display:inline-grid;place-items:center;min-width:44px;height:34px;padding:0 8px;border-radius:9px;border:1px solid var(--line);background:var(--field);color:var(--fg);font-weight:600;font-size:13px}
+.wdpick input:checked+span{background:var(--acc);border-color:var(--acc);color:var(--ink)}
+.wdpick input:focus-visible+span{outline:2px solid var(--acc);outline-offset:2px}
+/* (1.72.0) calendars you follow: their events (read-only), and the list in Tasks Settings */
+.evp,.evc,.evr{display:flex;align-items:center;gap:5px;min-width:0;border-left:3px solid var(--ec);background:color-mix(in srgb,var(--ec) 14%,transparent);color:var(--fg);border-radius:4px}
+.evp{margin-top:2px;padding:1px 5px;font-size:11px;line-height:1.35}
+.evc{padding:5px 8px;margin:0 0 6px;font-size:12.5px}
+.evr{padding:7px 10px;margin:4px 0;font-size:13.5px}
+.evp span,.evc span,.evr span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evp em,.evc em,.evr em{font-style:normal;color:var(--mute);font-size:.9em;flex:none}
+.subs{display:grid;gap:6px;margin:6px 0 10px}
+.subr{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
+.subr>i{width:12px;height:12px;border-radius:50%;flex:none}
+.subr>div{flex:1;min-width:0}.subr small{display:block;color:var(--mute);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subr .bad{color:var(--late)}
+.subadd{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.subadd input[type=url]{flex:1 1 240px;min-width:0}.subadd input[type=text],.subadd #s-subname{flex:1 1 120px;min-width:0}
+.subadd input[type=color]{width:44px;height:38px;padding:2px;flex:none}

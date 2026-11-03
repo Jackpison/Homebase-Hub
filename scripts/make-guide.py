@@ -138,7 +138,7 @@ story += chapter('3', 'First steps', 'Guided Setup walks you through protecting 
  shot('s-overview', 'Settings, Overview: a card for each area, the things to look at next, and a status on every menu item.'),
  Tip('You can do the steps in any order, and skip the ones you do not need. Each one also lives in its own section of Settings.'),
  *sub('Install on your phone'),
- P('Put your site on the home screen of a phone or computer. It then opens like an app, with its own icon and no browser bars. Your data still comes from your server every time: nothing is kept offline. The steps are also in %s.' % C('Settings, Overview, Start Here')),
+ P('Put your site on the home screen of a phone or computer. It then opens like an app, with its own icon and no browser bars. Your data comes from your server; to read it without a connection, switch on Offline Reading for that device (a read-only copy, deleted when you log out). The steps are also in %s.' % C('Settings, Overview, Start Here')),
  P('<font name="M-Bold">iPhone or iPad</font>'),
  steps(['Open your site in Safari.', 'Tap %s (the square with an arrow).' % C('Share'), 'Choose %s, then %s.' % (C('Add to Home Screen'), C('Add'))]),
  P('<font name="M-Bold">Android</font>'),

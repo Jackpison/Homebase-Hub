@@ -202,6 +202,10 @@ html[data-ix-app="home"][data-ix-nav="dock"] .ix-pill{background:color-mix(in sr
 .ix-panel.inline{position:static;max-height:min(60vh,460px);box-shadow:none;animation:none;margin-top:8px}
 .ix-panel[hidden]{display:none}
 .ix-rh{padding:8px 10px 4px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ix-mu2)}
+/* (1.72.0) how many matched in a group, and Clear for the recent searches */
+.ix-rh .ix-rc{display:inline-block;min-width:18px;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--ix-s2);color:var(--ix-mu);font-size:10.5px;letter-spacing:0;text-align:center}
+.ix-rh .ix-rclr{float:right;font-size:11.5px;letter-spacing:0;text-transform:none}
+.ix-r.ix-rec .ix-rx b{font-weight:500}
 .ix-r{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;color:inherit!important;text-decoration:none}
 .ix-r[aria-selected="true"],.ix-r:hover{background:var(--ix-s3)}
 .ix-r img{width:20px;height:20px;border-radius:5px;object-fit:contain;flex:none}
@@ -942,6 +946,12 @@ html[data-theme="light"] .ix-st-glider{background:linear-gradient(180deg,#fff,#f
 .ix-uf-raw:not(#\#) .ix-uf-px{display:none}
 .ix-uf:not(#\#) input:not(#\#){flex:1;min-width:0;width:auto;height:auto;margin:0;border:0;outline:0;border-radius:0;background:none;box-shadow:none;color:var(--ix-tx);padding:10px 12px;font:500 14.5px var(--ix-font)}
 .ix-uf:not(#\#) input:not(#\#):focus{outline:0;box-shadow:none;border:0}
+/* (1.72.0) a read-only key that wraps on a narrow phone instead of being cut off (o.wrap: a textarea that grows to its lines) */
+.ix-uf:not(#\#) textarea:not(#\#){flex:1;min-width:0;width:auto;margin:0;border:0;outline:0;border-radius:0;background:none;box-shadow:none;color:var(--ix-tx);padding:10px 12px;
+  font:700 15px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.08em;resize:none;overflow:hidden;overflow-wrap:anywhere;white-space:pre-wrap;
+  field-sizing:content;min-height:44px;height:auto;align-self:center}
+.ix-uf:not(#\#) textarea:not(#\#):focus{outline:0;box-shadow:none;border:0}
+@supports not (field-sizing:content){.ix-uf:not(#\#) textarea:not(#\#){height:calc(1.45em + 20px)}@media (max-width:480px){.ix-uf:not(#\#) textarea:not(#\#){height:calc(2.9em + 20px)}}}
 .ix-uf-mono:not(#\#) input:not(#\#){font:500 13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em}
 .ix-uf:not(#\#) :is(.ix-uf-cp,.ix-uf-open){position:relative;display:grid;place-items:center;flex:none;width:44px;min-height:0;height:auto;margin:0;padding:0;border:0;
   border-left:1px solid var(--ix-line);border-radius:0;background:none;box-shadow:none;color:var(--ix-mu);cursor:pointer;transition:color .2s,background .2s}
@@ -960,4 +970,14 @@ html[data-theme="light"] .ix-st-glider{background:linear-gradient(180deg,#fff,#f
 .ix-uf-gap:not(#\#){margin:8px 0 14px}
 .ix-uf-key:not(#\#){max-width:460px;margin:12px 0}
 .ix-uf-key:not(#\#) input:not(#\#){font-size:15px;letter-spacing:.08em;font-weight:700}
-@media (max-width:480px){.ix-uf-key:not(#\#) input:not(#\#){font-size:13px;letter-spacing:.02em;padding:10px 8px}.ix-uf:not(#\#) .ix-uf-px{padding:0 9px}}
+@media (max-width:480px){.ix-uf-key:not(#\#) :is(input,textarea):not(#\#){font-size:13px;letter-spacing:.02em;padding:10px 8px}.ix-uf:not(#\#) .ix-uf-px{padding:0 9px}}
+
+/* ---------- (1.72.0) Offline Reading: the note while there is no connection (shell.js offlineNote) ---------- */
+#ix-offl{position:fixed;z-index:2147483001;left:50%;top:calc(var(--ix-top-now,52px) + 10px);transform:translateX(-50%);max-width:calc(100% - 24px);box-sizing:border-box;
+  padding:8px 14px;border-radius:999px;background:var(--ix-s1,#1a1a1a);color:var(--ix-tx,#f2f2f2);border:1px solid var(--ix-line2,rgba(255,255,255,.2));
+  box-shadow:0 8px 24px rgba(0,0,0,.3);font:600 13px/1.35 var(--ix-font,system-ui,sans-serif);text-align:center;pointer-events:none}
+#ix-offl::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:var(--ix-warn,#f5a524);vertical-align:1px}
+html:not([data-ix-nav="top"]) #ix-offl{top:max(12px,env(safe-area-inset-top))}
+html.ix-offline [data-hub=toggle],html.ix-stale [data-hub=toggle]{opacity:.55}
+/* (1.72.0) read by screen readers only (shell.js announce) */
+.ix-sr{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}

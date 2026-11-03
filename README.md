@@ -274,7 +274,7 @@ Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari. On Links, p
 <details>
 <summary><b>Does it work offline?</b></summary>
 <br>
-No, on purpose: your data always comes from your server. Only what you send with the phone's Share button waits in the browser, for a day at most, until you save or discard it.
+Only if you switch it on, one device at a time. Offline Reading (Settings > Overview > Start Here) keeps a read-only copy of Home, Links, Info, Cards and Tasks on that device; Log Out deletes it. Off (the default), your data always comes from your server, and only what you send with the phone's Share button waits in the browser, for a day at most.
 </details>
 
 <details>

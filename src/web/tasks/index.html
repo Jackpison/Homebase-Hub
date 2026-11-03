@@ -8,9 +8,9 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
 <title>Tasks</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc21a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M8.5 15.5l2.2 2.2 4.8-4.8'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.71.0">
-<script src="../hub/core/assets/shell.js?v=1.71.0" data-app="tasks"></script>
-<link rel="stylesheet" href="assets/tasks.css?v=1.71.0">
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.72.0">
+<script src="../hub/core/assets/shell.js?v=1.72.0" data-app="tasks"></script>
+<link rel="stylesheet" href="assets/tasks.css?v=1.72.0">
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <meta name="theme-color" content="#1a1a1a">
@@ -137,7 +137,7 @@
       <div class="c2">
         <label class="fl">Repeats<select id="e-rep">
           <option value="none">Doesn't Repeat</option><option value="day:1">Every Day</option><option value="week:1">Every Week</option><option value="week:2">Every 2 Weeks</option>
-          <option value="month:1">Every Month</option><option value="month:2">Every 2 Months</option><option value="month:3">Every 3 Months (Quarterly)</option>
+          <option value="wkday">Every Weekday (Mon to Fri)</option><option value="month:1">Every Month</option><option value="mlast">The Last Day of Every Month</option><option value="month:2">Every 2 Months</option><option value="month:3">Every 3 Months (Quarterly)</option>
           <option value="month:6">Every 6 Months</option><option value="year:1">Every Year</option><option value="year:2">Every 2 Years</option><option value="year:3">Every 3 Years</option>
           <option value="custom">Custom…</option></select></label>
         <label class="fl">Remind Me<select id="e-remind">
@@ -146,6 +146,9 @@
       </div>
       <div class="fl" id="e-custom" hidden>Every<div class="pair"><input type="number" id="e-n" min="1" max="99" value="1" aria-label="How Many">
         <select id="e-unit" aria-label="Unit"><option value="day">Days</option><option value="week">Weeks</option><option value="month">Months</option><option value="year">Years</option></select></div></div>
+      <div class="fl" id="e-wdrow" hidden>On These Days<div class="wdpick" id="e-wd" role="group" aria-label="Days of the Week">
+        <label><input type="checkbox" value="1"><span>Mon</span></label><label><input type="checkbox" value="2"><span>Tue</span></label><label><input type="checkbox" value="3"><span>Wed</span></label><label><input type="checkbox" value="4"><span>Thu</span></label><label><input type="checkbox" value="5"><span>Fri</span></label><label><input type="checkbox" value="6"><span>Sat</span></label><label><input type="checkbox" value="0"><span>Sun</span></label></div></div>
+      <label class="fl" id="e-onrow" hidden>On<select id="e-on"><option value="day">The Same Date Each Time</option><option value="last">The Last Day of the Month</option><option value="nth">The 2nd Tuesday</option><option value="nthl">The Last Tuesday</option></select></label>
       <p class="hint" id="e-next"></p>
       <h3 class="sh3">Payment</h3>
       <div class="c2">
@@ -190,6 +193,15 @@
         <div class="df2"><button type="button" class="btn" id="s-calcopy">Copy Link</button><button type="button" class="btn" id="s-calnew">Make a New Link</button></div>
         <p class="hint">Anyone with the link sees your task names. A new link ends the old one.</p>
       </div>
+      <h3 class="sh3">Calendars You Follow</h3>
+      <p class="hint">Show another calendar's events here, read-only: Google (its secret address in iCal format), Apple (a public calendar link), Outlook, a school or team calendar. Fetched now and every 6 hours.</p>
+      <div id="s-subs" class="subs"></div>
+      <div class="subadd">
+        <input id="s-suburl" type="url" maxlength="2000" placeholder="https:// or webcal:// address" aria-label="Calendar Address" autocomplete="off" spellcheck="false">
+        <input id="s-subname" maxlength="40" placeholder="Name, like Family" aria-label="Calendar Name" autocomplete="off">
+        <input type="color" id="s-subcol" value="#4cc9f0" aria-label="Colour of Its Events">
+        <button type="button" class="btn" id="s-subadd">Follow</button>
+      </div>
       <h3 class="sh3">Privacy</h3>
       <div class="ix-srow"><label for="s-onlyme">Only Me<small>Always on for Tasks.</small></label><input type="checkbox" class="ix-sw" id="s-onlyme" checked disabled></div>
       <p class="hint">These settings apply on every device.</p>
@@ -204,6 +216,6 @@
   <div class="df"><button type="button" class="btn" data-close>Close</button><button type="button" class="btn pri" id="ygo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download PDF</button></div>
 </dialog>
 <datalist id="cats"></datalist>
-<script src="assets/tasks.js?v=1.71.0"></script>
+<script src="assets/tasks.js?v=1.72.0"></script>
 </body>
 </html>

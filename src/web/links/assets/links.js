@@ -399,19 +399,33 @@ function paintFromCache() {
     S.data = normalize(c, true); pickTab(); render();
   } catch {}
 }
+// (1.72.0) the site search finds links in locked tabs too, while they are unlocked on this page (read from memory, never stored)
+{ const HB0 = /** @type {any} */ (window).HUB; if (HB0 && HB0.findHook) HB0.findHook(() => {
+  const out = [];
+  for (const t of S.data.tabs) if (t.encrypted && !t.locked) for (const c of t.categories || []) for (const l of c.links || []) if (l && !l.divider && l.url) out.push({ title: String(l.title || l.url), text: String(l.url), where: (t.title || 'Tab') + (c.title ? ' › ' + c.title : ''), href: l.url });
+  return out;
+}); }
 async function load() {
   let j;
+  // (1.72.0) instant: the last data this tab got while you were logged in shows at once; the fresh data replaces it below
+  const HB = /** @type {any} */ (window).HUB, sn = HB && HB.snap && !S.data.tabs.length ? HB.snap.get('links') : null;
+  if (sn && sn.data) {
+    S.auth = !!sn.auth; S.setup = !!sn.setup; S.locked = !!sn.locked; S.rev = sn.rev || ''; S.data = normalize(sn.data, !S.auth);
+    S.visits = sn.visits && typeof sn.visits === 'object' ? sn.visits : {}; markEnc(); pickTab(); applyLook(); HB.snap.stale(true); render();
+  }
   try {
     const w = /** @type {any} */ (window), early = w.__bmGet ? await w.__bmGet : null; w.__bmGet = null;   // used once: later reloads ask the server again
     j = early && early.r.ok && early.j && early.j.data ? early.j : await api('get');
   }
   catch (e) {
+    if (HB && HB.snap) HB.snap.stale(false);
     if (S.data.tabs.length) { toast('Could not reach the server: ' + e.message, true); return; }
     $('#grid').innerHTML = '';
     $('#grid').append(h('div', { class: 'loading' }, 'Could not load bookmarks: ' + e.message + '. Check that api.php is uploaded and PHP is enabled.'));
     return;
   }
   S.auth = !!j.auth; S.setup = !!j.setup; S.locked = !!j.locked; S.rev = j.rev || '';
+  if (HB && HB.snap) { HB.snap.put('links', S.auth ? j : null); HB.snap.stale(false); }
   S.data = normalize(j.data, !S.auth);
   S.visits = S.auth && j.visits && typeof j.visits === 'object' ? j.visits : {};
   noFile = new Set(Array.isArray(j.missingIcons) ? j.missingIcons : []);   // (1.64.12) saved icons whose file is gone: show the letter, and Fetch Icons > Only Missing gets them again   // visit counts: only you get them
@@ -424,10 +438,36 @@ async function load() {
   if (enc && KEY) await decryptAll();   // the key is already in memory: quick
   S.opening = enc && !KEY && CAN_ENC && !!vault();   // a kept key may open the tabs: draw the page first and unlock in the background
   render();
+  takeImport();
   if (S.opening) {
     try { await openKept(); } catch {}
     if (S.data === mine) { S.opening = false; render(); }
   }
+}
+/* (1.72.0) the Import Center hands over links (Raindrop, Pocket, bookmarks): a new private tab with a category per folder or tag (when all
+   6 tabs are in use, the categories go into the first tab that is not locked); a link already anywhere in Links is left out. With Undo. */
+function takeImport() {
+  const HB = /** @type {any} */ (window).HUB, p = HB && HB.importTake ? HB.importTake('links') : null;
+  if (!p || !Array.isArray(p.cats)) return;
+  if (!S.auth) { toast('Log in to add what you imported.', true); return; }
+  const have = new Set(); S.data.tabs.forEach(t => (t.categories || []).forEach(c => (c.links || []).forEach(l => { if (l && l.url) have.add(l.url); })));
+  let dup = 0;
+  const cats = p.cats.map((/** @type {any} */ c, /** @type {number} */ i) => ({ id: uid(), title: String(c.title || 'Links').slice(0, 60), col: i % COLS,
+    links: (Array.isArray(c.links) ? c.links : []).filter((/** @type {any} */ l) => { if (!l || !/^https?:\/\//i.test(String(l.url))) return false; if (have.has(l.url)) { dup++; return false; } have.add(l.url); return true; })
+      .map((/** @type {any} */ l) => ({ id: uid(), title: String(l.title || l.url).slice(0, 120), url: String(l.url) })) })).filter(c => c.links.length);
+  const n = cats.reduce((a, c) => a + c.links.length, 0);
+  if (!n) { toast('Nothing new to add' + (dup ? ': every link is already in Links.' : '.')); return; }
+  /** @type {any} */
+  let tab = null, added = null;
+  if (S.data.tabs.length < MAX_TABS) { tab = { id: uid(), title: String(p.tab || 'Imported').slice(0, 40), categories: cats, private: true }; S.data.tabs.push(tab); S.tab = tab.id; added = tab; }
+  else { tab = S.data.tabs.find(t => !t.encrypted); if (!tab) { toast('Every tab is locked: unlock one, or make room for a new tab.', true); return; } tab.categories.push(...cats); S.tab = tab.id; }
+  persist('Imported');
+  const msg = 'Added ' + n + (n === 1 ? ' link' : ' links') + ' from ' + (p.src || 'the import') + '.' + (dup ? ' ' + dup + (dup === 1 ? ' was' : ' were') + ' already here.' : '');
+  if (HB.undo) HB.undo(msg, () => {
+    if (added) { S.data.tabs = S.data.tabs.filter(t => t !== added); S.tab = S.data.tabs[0] ? S.data.tabs[0].id : ''; }
+    else tab.categories = tab.categories.filter((/** @type {any} */ c) => !cats.includes(c));
+    persist('Import undone');
+  }); else toast(msg);
 }
 
 // Saving: changes made while a save is running are sent together right after it.
@@ -576,7 +616,7 @@ function openImport() {
   if (!S.auth) return toast('Log in to import bookmarks.', true);
   importer ||= new Promise((ok, no) => {
     const s = document.createElement('script');
-    s.src = 'assets/links-import.js?v=1.71.0';
+    s.src = 'assets/links-import.js?v=1.72.0';
     s.onload = () => window.LinksImport ? ok(window.LinksImport) : no(new Error('The importer did not start.'));
     s.onerror = () => no(new Error('Could not load the importer. Check your connection and try again.'));
     document.head.append(s);
@@ -788,7 +828,17 @@ function countVisit(a) {
       });
     }).catch(() => {});
 }
-document.addEventListener('click', e => { const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u]'); if (a) countVisit(a); });
+// (1.72.0) Home's Recent Links: the last links you opened on this device (localStorage; never those of a locked tab; Log Out clears it)
+function rememberOpen(/** @type {any} */ a) {
+  try {
+    const url = a.getAttribute('data-u') || a.href; if (!/^https?:/i.test(url)) return;
+    if (S.data.tabs.some(t => t.encrypted && (t.categories || []).some(c => (c.links || []).some(l => l && l.url === url)))) return;
+    const title = (a.textContent || '').trim().slice(0, 120) || url;
+    const list = JSON.parse(localStorage.getItem('hub-recent-links') || '[]').filter((/** @type {any} */ x) => x && x.u !== url);
+    list.unshift({ u: url, n: title, t: Date.now() }); localStorage.setItem('hub-recent-links', JSON.stringify(list.slice(0, 12)));
+  } catch { /* storage blocked: nothing to remember */ }
+}
+document.addEventListener('click', e => { const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u]'); if (a) { countVisit(a); rememberOpen(a); } });
 document.addEventListener('auxclick', e => { if (e.button !== 1) return; const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u]'); if (a) countVisit(a); });   // the middle button opens a new tab
 
 function render() {

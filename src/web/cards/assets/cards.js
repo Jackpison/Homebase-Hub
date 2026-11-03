@@ -89,27 +89,50 @@ async function load(){
       if(Array.isArray(o)&&o.length)local={cards:o,people:[...new Set(o.map(c=>c.owner))],notes:""}}
     if(!local.notes){local.notes=localStorage.getItem("notes4")||""}
   }catch(e){}
+  // (1.72.0) instant: this tab's last copy (only cards that are not locked; locked cards always open from the server)
+  const HB=window.HUB,sn=HB&&HB.snap?HB.snap.get("cards"):null;
+  if(sn&&Array.isArray(sn.cards)&&Array.isArray(sn.people)){apply(sn);HB.snap.stale(true);render()}
   try{
     const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),15000);
     const r=await HF("api.php",{cache:"no-store",signal:ctl.signal});clearTimeout(to);
     if(!r.ok)throw 0;
     const j=await r.json();
     if(!j||typeof j!=="object")throw 0;
-    server=true;
+    server=true;if(HB&&HB.snap){HB.snap.put("cards",j.auth&&Array.isArray(j.cards)&&typeof j.enc!=="string"?j:null);HB.snap.stale(false)}
     if(j.private&&!j.auth){privateScreen(j);return}     // visitors: no card data is ever sent
     if(typeof j.enc==="string"){   // locked in the browser: open it here (the passphrase is asked for once)
       ENC=true;
-      try{const data=await HubSite.openJson(j.enc);apply(data);lastN=D.length;dropPlain();setStatus("Saved to your server, locked")}
+      try{const data=await HubSite.openJson(j.enc);apply(data);lastN=D.length;dropPlain();setStatus("Saved to your server, locked");
+        // (1.72.0) the site search finds locked cards by name once opened here: bank, card, network and holder only (never numbers), in this tab only
+        try{sessionStorage.setItem("hub-find-cards",JSON.stringify(D.map(c=>({bank:c.bank||"",name:c.name||"",owner:c.owner||"",net:c.network||""}))))}catch(x){}}
       catch(e){lockedScreen(e);return}
     }
     else if(Array.isArray(j.cards)&&Array.isArray(j.people)){apply(j);setStatus(savedMsg());offerLock()}
     else{apply({cards:[],people:[],notes:""});setStatus(savedMsg());offerLock()}
   }catch(e){
     // offline: only this device's own copy, which exists only while you're logged in here
-    server=false;
+    server=false;if(HB&&HB.snap)HB.snap.stale(false);
     if(local.cards.length){apply(local);setStatus("Offline: showing this device's copy")}else{privateScreen({});return}
   }
-  render();
+  render();if(server)takeImport();
+}
+/* (1.72.0) the Import Center hands over cards from a spreadsheet: a card already here (same bank, name and holder) is left out; saved the
+   usual way (so locked Cards stay locked), with Undo */
+function takeImport(){
+  const p=window.HUB&&HUB.importTake?HUB.importTake("cards"):null;if(!p||!Array.isArray(p.items))return;
+  const have=new Set(D.map(c=>[c.bank,c.name,c.owner].join("|").toLowerCase())),ids=[],newP=[];let dup=0,next=Math.max(-1,...D.map(c=>c.id))+1;
+  const num=v=>v==null||v===""||!isFinite(+v)?null:+v;
+  for(const x of p.items){
+    const owner=String(x.owner||"").trim().slice(0,40)||P[0]||"Me",k=[x.bank,x.name,owner].join("|").toLowerCase();
+    if(have.has(k)){dup++;continue}have.add(k);
+    if(!P.includes(owner)){P.push(owner);newP.push(owner)}
+    D.push({id:next,owner,bank:String(x.bank||"").slice(0,60),name:String(x.name||"").slice(0,60),network:String(x.network||"").slice(0,40),variant:String(x.variant||"").slice(0,40),
+      type:x.type==="Paid"?"Paid":"LTF",kind:x.kind==="Debit"?"Debit":"Credit",expiry:normExp(String(x.expiry||""))||"",limit:num(x.limit),fee:num(x.fee)||0,remark:String(x.remark||"").slice(0,200),url:""});
+    ids.push(next++);
+  }
+  if(ids.length){persist();render()}
+  const msg=(ids.length?"Added "+ids.length+(ids.length===1?" card":" cards")+" from "+(p.src||"the import")+".":"Nothing new to add.")+(dup?" "+dup+(dup===1?" was":" were")+" already here.":"");
+  if(ids.length&&window.HUB&&HUB.undo)HUB.undo(msg,()=>{D=D.filter(c=>!ids.includes(c.id));P=P.filter(x=>!newP.includes(x)||D.some(c=>c.owner===x));persist();render()});else if(window.HUB)HUB.toast(msg);
 }
 
 /* Cards that are locked but not opened yet (the passphrase was not given), or locked with a passphrase that is not set up here */
@@ -592,6 +615,7 @@ $("infoSave").onclick=()=>{NOTES=$("notes").value;persist();renderInfo();infoMod
 
 $("lockBtn").onclick=lockNow;
 $("fq").addEventListener("input",e=>{F.q=e.target.value;render()});
+{const hq=/^#q=(.+)$/.exec(location.hash);if(hq){try{F.q=decodeURIComponent(hq[1])}catch(e){F.q=""}$("fq").value=F.q;history.replaceState(null,"",location.pathname+location.search)}}   // (1.72.0) a search result
 [["fbank","bank"],["fnet","net"],["fkind","kind"]].forEach(([id,k])=>$(id).addEventListener("change",e=>{F[k]=e.target.value;render()}));
 $("fchips").addEventListener("click",e=>{const b=e.target.closest("[data-h]");if(!b)return;active=b.dataset.h;render();const nb=$("fchips").querySelector(`[data-h="${CSS.escape(active)}"]`);if(nb)nb.focus()});
 $("fview").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;VIEW=b.dataset.v;try{localStorage.setItem("cards-view",VIEW)}catch(x){}render()});

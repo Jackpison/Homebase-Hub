@@ -10,6 +10,13 @@ t('two folders deep', hub_site_path('/a/b/web/hub/core/api.php') === '/a/b');
 t('from the top index.php', hub_site_path('/hub/index.php') === '/hub' && hub_site_path('/index.php') === '');
 t('Windows separators', hub_site_path('\\hub\\web\\hub/core\\api.php') === '/hub');
 
+// (1.72.0) Offline Reading's service worker may look after the whole site, at the top or in a sub-folder
+$h = hub_sw_headers('/hub');
+t('the service worker may cover the sub-folder site', in_array('Service-Worker-Allowed: /hub/', $h, true) && in_array('Content-Type: text/javascript; charset=utf-8', $h, true));
+t('at the top it covers /', in_array('Service-Worker-Allowed: /', hub_sw_headers(''), true));
+t('it is checked every time (no stale worker after an update)', in_array('Cache-Control: no-cache', hub_sw_headers(''), true));
+t('the worker file ships next to the shell', is_file($site . '/web/hub/core/assets/offline-sw.js') && strpos((string)file_get_contents($site . '/web/hub/core/assets/offline-sw.js'), "const CACHE = 'hub-offline'") !== false);
+
 $pub = sys_get_temp_dir() . '/hub-man-' . bin2hex(random_bytes(4)); @mkdir($pub . '/web/hub/media/brand', 0755, true);
 $png = function (string $name, int $w, int $h) use ($pub) { $im = imagecreatetruecolor($w, $h); imagepng($im, $pub . '/web/hub/media/brand/' . $name); return 'web/hub/media/brand/' . $name; };
 $big = $png('logo-1a.png', 512, 512); $small = $png('logo-2b.png', 192, 192); $wide = $png('logo-3c.png', 800, 512);

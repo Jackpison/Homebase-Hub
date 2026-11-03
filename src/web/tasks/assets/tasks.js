@@ -66,10 +66,23 @@ V.q="";V.day="";V.dq="";V.calSel="";V.calM="";V.wk=0;
 const keepView=()=>{try{localStorage.setItem(VKEY,JSON.stringify({...V,q:"",day:"",dq:"",calSel:"",calM:"",wk:0}))}catch(e){}};
 
 /* ---------- dates and repeats ---------- */
+// (1.72.0) more repeats: weekly on chosen weekdays (wd: 0 Sunday .. 6 Saturday), monthly on the last day (on "last") or the nth weekday
+// (on "nth", nth 1..4 or -1 = the last, dow). The server works the next date out the same way (tasks/lib.php tasks_next_date).
+const DOW=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],ORD={"-1":"Last",1:"1st",2:"2nd",3:"3rd",4:"4th"};
+function nthWeekday(y,m,nth,dow){const dm=dim(y,m);if(nth<0){const last=new Date(y,m,dm,12).getDay();return dm-((last-dow+7)%7)}const first=new Date(y,m,1,12).getDay();return Math.min(dm,1+((dow-first+7)%7)+7*(nth-1))}
 function nextDate(s,rep,day){
   const d=parse(s),n=Math.max(1,rep.n|0);
   if(rep.unit==="day"){d.setDate(d.getDate()+n);return ymd(d)}
+  if(rep.unit==="week"&&Array.isArray(rep.wd)&&rep.wd.length){
+    const mon=new Date(d);mon.setDate(d.getDate()-((d.getDay()+6)%7));
+    for(let i=1;i<=7*n+7;i++){const c=new Date(d);c.setDate(d.getDate()+i);const cm=new Date(c);cm.setDate(c.getDate()-((c.getDay()+6)%7));
+      if(rep.wd.includes(c.getDay())&&Math.round((+cm-+mon)/604800000)%n===0)return ymd(c)}
+  }
   if(rep.unit==="week"){d.setDate(d.getDate()+7*n);return ymd(d)}
+  if(rep.unit==="month"&&(rep.on==="last"||rep.on==="nth")){
+    let y=d.getFullYear(),m=d.getMonth()+n;y+=Math.floor(m/12);m=((m%12)+12)%12;
+    return ymd(new Date(y,m,rep.on==="last"?dim(y,m):nthWeekday(y,m,rep.nth,rep.dow),12));
+  }
   if(rep.unit==="month"||rep.unit==="year"){
     let y=d.getFullYear(),m=d.getMonth()+(rep.unit==="month"?n:0);
     if(rep.unit==="year")y+=n;
@@ -87,6 +100,12 @@ function dates(t,from,to){
 function repLabel(r){
   const n=r.n|0||1,u=r.unit;
   if(u==="none")return"One-Time";
+  if(u==="week"&&Array.isArray(r.wd)&&r.wd.length){
+    if(n===1&&r.wd.join()==="1,2,3,4,5")return"Every Weekday";
+    const nm=r.wd.map(x=>DOW[x].slice(0,3)),list=nm.length>1?nm.slice(0,-1).join(", ")+" and "+nm[nm.length-1]:nm[0];
+    return(n===1?"Every ":"Every "+n+" Weeks on ")+list;
+  }
+  if(u==="month"&&(r.on==="last"||r.on==="nth"))return(n===1?"Monthly":n===3?"Quarterly":"Every "+n+" Months")+" on the "+(r.on==="last"?"Last Day":ORD[r.nth]+" "+DOW[r.dow]);
   if(n===1)return{day:"Daily",week:"Weekly",month:"Monthly",year:"Yearly"}[u];
   if(u==="month"&&n===3)return"Quarterly";
   return"Every "+n+" "+u[0].toUpperCase()+u.slice(1)+"s";
@@ -97,7 +116,7 @@ function repKind(r){
   if((r.unit==="day"||r.unit==="week"||r.unit==="year")&&r.n===1)return r.unit;
   return"other";
 }
-const perYear=r=>({day:365,week:52.18,month:12,year:1}[r.unit]||0)/(r.n||1);
+const perYear=r=>({day:365,week:52.18,month:12,year:1}[r.unit]||0)*(r.unit==="week"&&Array.isArray(r.wd)&&r.wd.length?r.wd.length:1)/(r.n||1);
 const lead=t=>t.remind>=0?t.remind:SET.soon;
 const REMIND={"-1":"Page Default","0":"On the Day","1":"1 Day Before","3":"3 Days Before","7":"1 Week Before","14":"2 Weeks Before","30":"1 Month Before","60":"2 Months Before"};
 /** late | today | soon | up | paused | done. A task due today whose time has passed is overdue. */
@@ -159,13 +178,34 @@ function openWith(){
 }
 function applyLook(){$("app").classList.toggle("nostats",SET.stats===false)}
 async function load(){
+  // (1.72.0) instant: this tab's last copy shows at once while the fresh list loads
+  const HB=window.HUB,sn=HB&&HB.snap?HB.snap.get("tasks"):null;
+  if(sn&&Array.isArray(sn.tasks)){take(sn);HB.snap.stale(true);drawFilters();render()}
   try{
     const r=await HF("api.php",{cache:"no-store"});
     const j=await r.json();
+    if(HB&&HB.snap){HB.snap.put("tasks",j.auth?j:null);HB.snap.stale(false)}
     if(j.private&&!j.auth){privateScreen();return}
     take(j);openWith();setStatus("Saved on the server.");
-  }catch(e){$("list").innerHTML='<div class="empty"><h2>Tasks Couldn\'t Load</h2><p>The server didn\'t answer. Check your connection, then reload the page.</p><button type="button" class="btn">Reload</button></div>';$("list").querySelector("button").onclick=()=>location.reload();return}
-  drawFilters();render();fromHash();
+  }catch(e){if(HB&&HB.snap)HB.snap.stale(false);$("list").innerHTML='<div class="empty"><h2>Tasks Couldn\'t Load</h2><p>The server didn\'t answer. Check your connection, then reload the page.</p><button type="button" class="btn">Reload</button></div>';$("list").querySelector("button").onclick=()=>location.reload();return}
+  drawFilters();render();fromHash();takeImport();
+}
+/* (1.72.0) the Import Center (Settings > Backup & Restore > Import) hands over tasks from a calendar or Todoist: added unless the same
+   name is already due that day, saved as usual, with Undo */
+function takeImport(){
+  const p=window.HUB&&HUB.importTake?HUB.importTake("tasks"):null;if(!p||!Array.isArray(p.items))return;
+  const have=new Set(T.map(t=>t.name.toLowerCase()+"|"+t.due)),n=now(),ids=new Set();let dup=0;
+  for(const x of p.items){
+    const name=String(x&&x.name||"").trim().slice(0,120),due=/^\d{4}-\d{2}-\d{2}$/.test(x&&x.due)?x.due:todayS();if(!name)continue;
+    const key=name.toLowerCase()+"|"+due;if(have.has(key)){dup++;continue}have.add(key);
+    const rep=x.repeat&&["day","week","month","year"].includes(x.repeat.unit)?x.repeat:{n:1,unit:"none"};
+    const t={id:uid(),name,due,time:/^\d{2}:\d{2}$/.test(x.time||"")?x.time:"",repeat:rep,price:null,cur:"",mode:"",cat:String(x.cat||"").slice(0,40),remind:-1,url:"",notes:String(x.notes||"").slice(0,4000),
+      updated:n,day:+due.slice(8,10),pay:"",auto:false,status:"active",created:n,doneAt:0,history:[]};
+    T.push(t);ids.add(t.id);
+  }
+  if(ids.size){save();drawFilters();render()}
+  const msg=(ids.size?"Added "+ids.size+(ids.size===1?" task":" tasks")+" from "+(p.src||"the import")+".":"Nothing new to add.")+(dup?" "+dup+(dup===1?" was":" were")+" already here.":"");
+  snack(msg,ids.size?()=>{T=T.filter(t=>!ids.has(t.id));save();drawFilters();render()}:undefined);
 }
 /* Saving: the whole list goes to the server. `ver` counts changes made here, so an answer for an older list never
    replaces changes made while it was on its way. */
@@ -414,7 +454,8 @@ function parseQuick(src,base){
   const t0=todayS(),mon="jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december";
   const MI=x=>"jan feb mar apr may jun jul aug sep oct nov dec".split(" ").indexOf(x.slice(0,3).toLowerCase());
   let m,due="";
-  if(m=take(/\severy\s+(\d{1,2})\s+(day|week|month|year)s?\s/i))t.repeat={n:Math.max(1,+m[1]),unit:m[2].toLowerCase()};
+  if(m=take(/\s(?:every\s+)?weekdays?\s/i))t.repeat={n:1,unit:"week",wd:[1,2,3,4,5]};   // (1.72.0) "weekdays" or "every weekday"
+  else if(m=take(/\severy\s+(\d{1,2})\s+(day|week|month|year)s?\s/i))t.repeat={n:Math.max(1,+m[1]),unit:m[2].toLowerCase()};
   else if(m=take(/\s(daily|weekly|monthly|quarterly|yearly|annually|annual|every\s+(?:day|week|month|year))\s/i)){
     const w=m[1].toLowerCase().replace(/\s+/g," ");
     t.repeat={n:w==="quarterly"?3:1,unit:{daily:"day",weekly:"week",monthly:"month",quarterly:"month",yearly:"year",annually:"year",annual:"year"}[w]||w.slice(6)};
@@ -516,6 +557,42 @@ $("vsw").onclick=e=>{const b=/** @type {any} */ (e.target).closest("[data-v]");i
 
 /* ---------- Calendar: a month, a week or the whole year; the chosen day on the right ---------- */
 const calBase=()=>/^\d{4}-\d{2}$/.test(V.calM)?V.calM:todayS().slice(0,7);
+/* ---------- (1.72.0) calendars you follow: their events, read-only, beside the tasks (api.php?action=subs) ---------- */
+/** @type {{cals:any[],events:any[],stale?:boolean}} */
+let SUBS={cals:[],events:[]};
+const subCal=id=>SUBS.cals.find(c=>c.id===id)||{name:"Calendar",color:"#4cc9f0"};
+const evOn=d=>SUBS.events.filter(e=>e.d===d).sort((a,b)=>(a.t||"").localeCompare(b.t||""));
+function evHtml(e,cls){const c=subCal(e.c);return '<span class="'+cls+'" style="--ec:'+esc(c.color)+'" title="'+esc(c.name+": "+e.s+(e.t?" at "+tShort(e.t):""))+'">'+(e.t?'<em>'+tShort(e.t)+'</em>':'')+'<span>'+esc(e.s)+'</span></span>'}
+let subsAgain=false;
+async function subsLoad(){
+  try{const r=await HF("api.php?action=subs",{cache:"no-store"}),j=await r.json();if(!j||!j.ok)return;SUBS=j;if(V.view==="cal")render();if($("sdlg").open)subsDraw();
+    if(j.stale&&!subsAgain){subsAgain=true;subsPost({action:"sub_refresh"},true)}}catch{}
+}
+async function subsPost(body,quiet){
+  try{const r=await HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),j=await r.json();
+    if(!j.ok){if(!quiet)snack(j.error||"That did not work.");return false}
+    SUBS=j;if(V.view==="cal")render();subsDraw();return true}catch{if(!quiet)snack("Can't reach the server.");return false}
+}
+function subsDraw(){
+  const box=$("s-subs");if(!box)return;
+  box.innerHTML=SUBS.cals.length?SUBS.cals.map(c=>'<div class="subr"><i style="background:'+esc(c.color)+'"></i><div><b>'+esc(c.name)+'</b><small>'+esc(c.show)+' · '+
+    (c.error?'<span class="bad">'+esc(c.error)+'</span>':c.n+(c.n===1?" event":" events"))+(c.at?' · '+esc(new Date(c.at*1000).toLocaleString(LOC(),{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"")+'</small></div>'+
+    '<button type="button" class="ib" data-subre="'+esc(c.id)+'" aria-label="Fetch '+esc(c.name)+' again" title="Fetch Again">'+SVG("M21 12a9 9 0 1 1-3-6.7M21 4v5h-5","")+'</button>'+
+    '<button type="button" class="ib" data-subdel="'+esc(c.id)+'" aria-label="Stop following '+esc(c.name)+'" title="Stop Following">'+SVG("M6 6l12 12M18 6L6 18","")+'</button></div>').join(""):'<p class="hint">None yet.</p>';
+}
+$("s-subs").addEventListener("click",async e=>{
+  const t=/** @type {any} */ (e.target).closest("[data-subre],[data-subdel]");if(!t)return;t.disabled=true;
+  if(t.dataset.subre){if(await subsPost({action:"sub_refresh",id:t.dataset.subre}))snack("Fetched again.")}
+  else if(confirm("Stop following this calendar? Its events leave Tasks.")){if(await subsPost({action:"sub_del",id:t.dataset.subdel}))snack("You no longer follow it.")}
+  t.disabled=false;
+});
+$("s-subadd").onclick=async()=>{
+  const u=/** @type {HTMLInputElement} */ ($("s-suburl")),b=/** @type {HTMLButtonElement} */ ($("s-subadd"));
+  if(!u.value.trim()){u.focus();return}
+  b.disabled=true;b.textContent="Fetching…";
+  const ok=await subsPost({action:"sub_add",url:u.value.trim(),name:/** @type {HTMLInputElement} */ ($("s-subname")).value.trim(),color:/** @type {HTMLInputElement} */ ($("s-subcol")).value});
+  b.disabled=false;b.textContent="Follow";if(ok){u.value="";/** @type {HTMLInputElement} */ ($("s-subname")).value="";snack("Following it. Its events are in the Calendar.")}
+};
 function pillHtml(x){
   const id=itId(x),drag=x.t&&!x.occ;
   return '<span class="pl s-'+x.st+(x.occ?" occ":"")+'"'+(id?' data-id="'+esc(id)+'"':'')+(drag?' draggable="true"':'')+' style="--cc:'+ccOf(x)+'" title="'+esc(itTip(x))+'">'+
@@ -558,7 +635,7 @@ function drawCalView(){
     title=fmtD(from,{day:"numeric",month:"short"})+" – "+fmtD(to,{day:"numeric",month:"short",year:"numeric"});
     body='<div class="wg">'+ds.map((d,i)=>{const it=on[d]||[],m=sums(dueMap(it));
       return '<div class="wcol'+(d===t0?" today":"")+(d===sel?" sel":"")+'" data-day="'+d+'"><div class="wch"><small>'+WDN()[i]+'</small><b class="num">'+(+d.slice(8))+'</b><span class="num">'+esc(m)+'</span></div>'+
-        '<div class="wcl">'+(it.map(wcardHtml).join("")||'<p class="wce">Free</p>')+'</div>'+
+        '<div class="wcl">'+(evOn(d).map(e=>evHtml(e,"evc")).join("")+it.map(wcardHtml).join("")||'<p class="wce">Free</p>')+'</div>'+
         '<button type="button" class="wadd" data-addday="'+d+'" aria-label="Add a task on '+esc(fmtD(d,{weekday:"long",day:"numeric",month:"long"}))+'" title="Add a Task">'+SVG("M12 5v14M5 12h14","")+'</button></div>'}).join("")+'</div>';
   }else{
     const y=+base.slice(0,4),m=+base.slice(5,7)-1,start=weekStart(base+"-01"),cells=[];
@@ -569,7 +646,7 @@ function drawCalView(){
       const it=on[d]||[],wd=parse(d).getDay(),mt=compactMap(dueMap(it));
       return '<div class="cd'+(d.slice(0,7)!==base?" out":"")+(d===t0?" today":"")+(d===sel?" sel":"")+(wd===0||wd===6?" we":"")+'" data-day="'+d+'" role="button" tabindex="0" title="'+esc(fmtD(d,{weekday:"long",day:"numeric",month:"long"}))+(it.length?", "+it.length+(it.length===1?" task":" tasks"):"")+'">'+
         '<div class="cdh"><span class="n num">'+(+d.slice(8))+'</span>'+(mt?'<small class="num">'+esc(mt)+'</small>':'')+'</div>'+
-        it.slice(0,3).map(pillHtml).join("")+(it.length>3?'<span class="more">+'+(it.length-3)+' More</span>':'')+
+        it.slice(0,3).map(pillHtml).join("")+(it.length>3?'<span class="more">+'+(it.length-3)+' More</span>':'')+evOn(d).slice(0,it.length>2?1:2).map(e=>evHtml(e,"evp")).join("")+
         (it.length?'<span class="dots">'+it.slice(0,4).map(x=>'<i class="s-'+x.st+'"'+(x.st==="up"?' style="--pc:'+ccOf(x)+'"':'')+'></i>').join("")+'</span>':'')+'</div>';
     }).join("")+'</div>';
   }
@@ -592,7 +669,8 @@ function agendaHtml(d){
       '<h3>'+esc(fmtD(d,{weekday:rel>=-1&&rel<=1?"long":undefined,day:"numeric",month:"long"}))+'</h3><p class="num">'+(open.length?open.length+(open.length===1?" Task":" Tasks")+(m&&SET.stats!==false?" · "+esc(m):""):it.length?"All Done":"Nothing Due")+'</p></div>'+
     '<form class="aga" id="agf" autocomplete="off">'+SVG("M12 5v14M5 12h14")+'<input type="text" id="agq" maxlength="200" placeholder="Add to '+esc(fmtD(d,{weekday:"short",day:"numeric",month:"short"}))+'…" aria-label="Quick Add a Task on This Day"></form>'+
     '<div class="agl">'+(rows||(late.length?"":'<p class="none">'+(d<t0?"Nothing was due this day.":"Nothing due. Type above to add a task here.")+'</p>'))+
-      (late.length?'<p class="sub">Still Overdue</p>'+late.map(t=>rowHtml({t,d:t.due,st:"late",occ:false})).join(""):"")+'</div></div>';
+      (late.length?'<p class="sub">Still Overdue</p>'+late.map(t=>rowHtml({t,d:t.due,st:"late",occ:false})).join(""):"")+
+      (evOn(d).length?'<p class="sub">From Your Calendars</p>'+evOn(d).map(e=>evHtml(e,"evr")).join(""):"")+'</div></div>';
 }
 function summaryHtml(scope,list){
   const open=list.filter(x=>x.st!=="done"),done=list.filter(x=>x.st==="done"),late=open.filter(x=>x.st==="late");
@@ -1154,29 +1232,42 @@ $("vdlg").addEventListener("click",e=>{if(e.target===$("vdlg"))$("vdlg").close()
 /* ---------- add and edit ---------- */
 let editing=null,eMode="";
 const REP_PRESETS=[.../** @type {NodeListOf<HTMLOptionElement>} */ (document.querySelectorAll("#e-rep option"))].map(o=>o.value);
+function nthOf(due){const d=+due.slice(8,10),y=+due.slice(0,4),m=+due.slice(5,7)-1;return{nth:Math.min(4,Math.ceil(d/7)),last:d+7>dim(y,m),dow:parse(due).getDay()}}
 function repFromForm(){
-  const v=$("e-rep").value;
+  const v=$("e-rep").value,due=$("e-due").value;
   if(v==="none")return{n:1,unit:"none"};
-  if(v==="custom")return{n:Math.max(1,Math.min(99,parseInt($("e-n").value,10)||1)),unit:$("e-unit").value};
+  if(v==="wkday")return{n:1,unit:"week",wd:[1,2,3,4,5]};
+  if(v==="mlast")return{n:1,unit:"month",on:"last"};
+  if(v==="custom"){
+    /** @type {any} */
+    const r={n:Math.max(1,Math.min(99,parseInt($("e-n").value,10)||1)),unit:$("e-unit").value};
+    if(r.unit==="week"){const wd=[...document.querySelectorAll("#e-wd input:checked")].map(x=>+(/** @type {HTMLInputElement} */ (x)).value).sort((a,b)=>a-b);if(wd.length)r.wd=wd}
+    if(r.unit==="month"){const on=$("e-on").value;if(on==="last")r.on="last";else if((on==="nth"||on==="nthl")&&due){const x=nthOf(due);r.on="nth";r.nth=on==="nthl"?-1:x.nth;r.dow=x.dow}}
+    return r;
+  }
   const[u,n]=v.split(":");return{n:+n,unit:u};
 }
 function previewNext(){
-  const due=$("e-due").value,rep=repFromForm();
-  $("e-custom").hidden=$("e-rep").value!=="custom";
+  const due=$("e-due").value,rep=repFromForm(),cu=$("e-rep").value==="custom",un=$("e-unit").value;
+  $("e-custom").hidden=!cu;$("e-wdrow").hidden=!(cu&&un==="week");$("e-onrow").hidden=!(cu&&un==="month");
+  if(due){const x=nthOf(due),o=/** @type {HTMLSelectElement} */ ($("e-on"));o.options[2].textContent="The "+ORD[x.nth]+" "+DOW[x.dow];o.options[3].textContent="The Last "+DOW[x.dow];o.options[3].hidden=!x.last;if(!x.last&&o.value==="nthl")o.value="nth"}
   if(!due||rep.unit==="none"){$("e-next").textContent="";return}
   const day=+due.slice(8,10),out=[];let s=due;
   for(let i=0;i<4;i++){out.push(fmtD(s));s=nextDate(s,rep,day)}
   $("e-next").textContent="Dates: "+out.join(", ")+"…";
 }
-["e-due","e-rep","e-n","e-unit"].forEach(id=>$(id).addEventListener("input",previewNext));
+["e-due","e-rep","e-n","e-unit","e-on"].forEach(id=>$(id).addEventListener("input",previewNext));$("e-wd").addEventListener("change",previewNext);
 $("e-mode").onclick=e=>{const b=/** @type {any} */ (e.target).closest("[data-m]");if(!b)return;eMode=b.dataset.m;document.querySelectorAll("#e-mode button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)))};
 function openEditor(t,copy,day){
   editing=t&&!copy?t:null;
   const x=t||{name:"",due:day||(V.view==="cal"&&V.calSel)||V.day||todayS(),time:"",repeat:{n:1,unit:"none"},price:null,cur:"",mode:"",cat:"",remind:-1,url:"",notes:""};
   $("dlgt").textContent=editing?"Edit Task":copy?"Copy of Task":"Add Task";
   $("e-name").value=x.name;$("e-due").value=x.due;$("e-time").value=x.time||"";
-  const key=x.repeat.unit==="none"?"none":x.repeat.unit+":"+x.repeat.n;
-  $("e-rep").value=REP_PRESETS.includes(key)?key:"custom";$("e-n").value=x.repeat.n||1;$("e-unit").value=x.repeat.unit==="none"?"month":x.repeat.unit;
+  const xr=/** @type {any} */ (x.repeat),plain=!xr.wd&&!xr.on;
+  const key=xr.unit==="none"?"none":xr.unit==="week"&&xr.n===1&&(xr.wd||[]).join()==="1,2,3,4,5"&&!xr.on?"wkday":xr.unit==="month"&&xr.n===1&&xr.on==="last"?"mlast":plain?xr.unit+":"+xr.n:"custom";
+  $("e-rep").value=REP_PRESETS.includes(key)?key:"custom";$("e-n").value=xr.n||1;$("e-unit").value=xr.unit==="none"?"month":xr.unit;
+  document.querySelectorAll("#e-wd input").forEach(i=>{/** @type {HTMLInputElement} */ (i).checked=Array.isArray(xr.wd)&&xr.wd.includes(+(/** @type {HTMLInputElement} */ (i)).value)});
+  $("e-on").value=xr.on==="last"?"last":xr.on==="nth"?(xr.nth===-1?"nthl":"nth"):"day";
   $("e-price").value=x.price??"";
   $("e-cur").innerHTML='<option value="">Default ('+esc(SET.currency||"None")+')</option>'+CURS.map(c=>'<option value="'+c[0]+'">'+c[0]+'</option>').join("");
   $("e-cur").value=x.cur&&CURS.some(c=>c[0]===x.cur)?x.cur:"";
@@ -1231,7 +1322,7 @@ $("psets").onclick=()=>{
   $("s-soon").value=String([0,1,3,7,14,30].includes(SET.soon)?SET.soon:7);
   ["start","range","sort","cal","week","dates"].forEach(k=>$("s-"+k).value=SET[k]||SET_DEF[k]);
   $("s-stats").checked=SET.stats!==false;
-  calDraw({on:false,link:""});calLoad();
+  calDraw({on:false,link:""});calLoad();subsDraw();
   $("sdlg").showModal();
 };
 /* the calendar link: kept on the server on its own, so it takes effect at once (not with Save Settings) */
@@ -1308,4 +1399,4 @@ let lastSig="";
 setInterval(()=>{if(!loaded)return;const s=stateSig();if(s!==lastSig){const first=!lastSig;lastSig=s;if(!first&&!document.querySelector("dialog[open]")&&!popEl)render()}},30000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!document.querySelector("dialog[open]"))render()});
 
-load();
+load();subsLoad();   // (1.72.0) the calendars you follow

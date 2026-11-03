@@ -104,6 +104,12 @@ case 'manifest':   // GET: the web app manifest for "Add to Home Screen" (public
     echo json_encode(hub_manifest(hub_settings(), hub_site_path((string)($_SERVER['SCRIPT_NAME'] ?? '/web/hub/core/api.php')), HUB_PUBLIC), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     exit;
 
+case 'sw':   // GET (1.72.0): the service worker of Offline Reading (public: it holds no data; a device registers it only when switched on)
+    if ($method !== 'GET') hub_json(405, ['ok' => false, 'error' => 'Use GET.']);
+    foreach (hub_sw_headers(hub_site_path((string)($_SERVER['SCRIPT_NAME'] ?? '/web/hub/core/api.php'))) as $h) header($h);
+    readfile(__DIR__ . '/assets/offline-sw.js');
+    exit;
+
 case 'state':
     // after the page has its answer: send any Telegram reminders that are due (at most every 10 minutes)
     register_shutdown_function(function () {

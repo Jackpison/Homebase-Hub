@@ -36,6 +36,9 @@ jobs:
           set -o pipefail
           echo "--- npm audit ---" >> check.log
           npm audit --audit-level=moderate 2>&1 | tee -a check.log
+      - name: npm overrides that can go (a notice only)
+        if: success() || failure()
+        run: python3 scripts/overrides.py --github
       - name: Open or update the issue
         if: failure()
         env:

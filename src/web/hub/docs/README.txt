@@ -103,9 +103,22 @@ and Tools (rename, reorder or hide them in Settings > Appearance > Bar).
   shows them as a side menu on the left (the default; it can shrink to icons) or as tabs on top. Phones always get tabs.
   Tools > Organise: star favourites, drag tools to reorder them or move them to another section, reorder sections, hide tools.
   Heavy engines live in web/tools/assets/vendor/ (OCR, background removal, PDF encryption) and load only when a tool needs them.
-- Search covers Links, Info, Tasks (while logged in) and Tools; Cards keeps its own search. Press / or Ctrl+K anywhere. The sliders button in
-  the search box chooses where to look: Everything or only Links / Info / Tasks / Tools, and one tab. Names, web addresses
-  and note text are always searched. Shortcut: type  links: text  or  info: text.
+- Search covers Links, Info, Tasks (while logged in) and Tools; since 1.72.0 also Cards, the Scratch Pad, every Settings item, Files'
+  names (once Files has opened them in that tab) and the locked tabs a page has unlocked (only while you are on it). Results are
+  grouped with counts, a small typo still finds it, and the empty box shows your recent searches (this device only). Press / or
+  Ctrl+K anywhere. The sliders button in the search box chooses where to look: Everything or only Links / Info / Tasks / Tools, and
+  one tab. Names, web addresses and note text are always searched. Shortcut: type  links: text  or  info: text.
+- Pages open at once (1.72.0): each page shows the data it had last time in that browser tab while the fresh data loads (the
+  pencil waits until it is in). The copy lives in the tab only and Log Out clears it; locked tabs and Cards stay locked in it.
+- Keys: [ and ] open the page before and after (like a swipe on a phone).
+- Tasks (1.72.0): besides every N days, weeks, months or years, a task can repeat on chosen weekdays (Every Weekday, Mon/Wed/Fri),
+  on the last day of the month, or on the nth weekday (the 2nd Tuesday, the last Friday); the calendar link carries these too.
+  Tasks Settings > Calendars You Follow: paste a calendar's address (Google's secret iCal address, an Apple public link, Outlook,
+  a school's calendar); the server fetches it then and every 6 hours (the cron job or an open Tasks page), and its events show
+  read-only in the Calendar, the day panel and Home's Today widget. Nothing is fetched until you add an address.
+- Home widgets (1.72.0, off until you switch them on in Edit > Settings > Widgets): Upcoming Bills (priced tasks still to pay
+  this month), Recent Links (the links you opened on this device), Recent Files (once Files has opened them in that tab) and
+  Server Status (the same overview as Settings).
 - Settings is a page of its own (web/settings/, the gear in the bar). A menu on the left: Overview, then three groups: Web Setting (General;
   Appearance: Look, Bar, Colors, Presets, Glass), Data Setting (Security, Telegram, Backup & Restore) and System Setting
   (Health, Updates with What's New). A search box at the top of the menu jumps to any setting (press /). Overview › Start Here walks through the protection steps in order (Guided Setup), with Install on Your Phone and Keyboard Shortcuts below. Overview comes first: how things stand and what to look at next. Security, Telegram and Backup &
@@ -121,8 +134,10 @@ and Tools (rename, reorder or hide them in Settings > Appearance > Bar).
 - Install on Your Phone (Settings > Overview > Start Here): add the site to the home screen of a phone or computer and it opens
   like an app (its own icon, no browser bars). The steps are under "How?". iPhone: Safari, Share, Add to Home Screen. Android: Chrome menu, Install App.
   Computer: the install icon in Chrome's or Edge's address bar. The site describes itself to the phone through
-  web/hub/core/api.php?action=manifest (public: the site name, icons, colours and the pages' names). There is no offline
-  mode: pages and data always come from your server.
+  web/hub/core/api.php?action=manifest (public: the site name, icons, colours and the pages' names).
+- Offline Reading (Settings > Overview > Start Here, a switch per device, off by default; needs https): a service worker
+  (web/hub/core/api.php?action=sw) keeps the pages and their last data on that device, so Home, Links, Info, Cards and Tasks
+  open without a connection, read-only, with an "Offline" note. Log Out deletes the copy; switching it off deletes it and the worker.
 - Start page without the bar (Settings > Appearance > Bar): a gear button in its corner opens editing, the other
   sections and Settings once you are logged in.
 
@@ -135,6 +150,10 @@ Settings > Backup & Restore (the Backup icon in the bar opens it too) has four t
 - Restore: drop or choose a backup file (.json or .json.gz). Choose "Replace everything" or "Add or update these tabs only". What is
   there now is kept as an earlier version first. Earlier Versions (click to open) lists every page's saved versions, with Restore.
 - Export: Links, Cards or Tasks as CSV or JSON, and Bookmarks for Other Browsers (the standard bookmark file).
+- Import (1.72.0): another app's export, read in the browser and shown first with ticks: a calendar (.ics) or Todoist (CSV) to
+  Tasks; Google Keep (Takeout .zip), Notion (Markdown .zip) or notes (.txt, .md, .html) to Info as a new tab; Raindrop (CSV),
+  Pocket or browser bookmarks (.html) to Links as a new tab; a spreadsheet of cards (CSV, its columns matched) to Cards. What is
+  already there is not added twice, and the page offers Undo.
 - Start Over: erases everything except your password and two-step login (it asks you to type ERASE and your password).
 Moving the site: copy the whole site folder (data included), or export a backup and import it on the new site.
 Keep backup files off the server.

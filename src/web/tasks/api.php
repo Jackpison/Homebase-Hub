@@ -17,6 +17,9 @@ declare(strict_types=1);
  *  POST { action: "done", id, due }                     marks that date of the task done (Home's Today), like the Done button
  *  GET  ?action=cal                                     { on, link }   the secret calendar link (logged in only)
  *  POST { action: "cal_set", on?, renew? }              turns the calendar link on or off, or makes a new link
+ *  GET  ?action=subs                                    (1.72.0) the calendars you follow (address hidden) and their events
+ *  POST { action: "sub_add", url, name, color }         follows a calendar (fetched at once)
+ *  POST { action: "sub_del", id } / { action: "sub_refresh", id? }   stops following one / fetches one (or every one) again
  *
  * Every POST passes the same-site checks and the site's security check; saves are atomic and keep earlier versions.
  */
@@ -31,11 +34,16 @@ function view(array $d): array { return ['auth' => true, 'rev' => $d['rev'], 'ta
 $admin = hub_admin();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+function subs_out(): array {
+    $tz = (string)(hub_settings()['tz'] ?? 'UTC'); try { $now = new DateTimeImmutable('now', new DateTimeZone($tz)); } catch (Exception $e) { $now = new DateTimeImmutable('now'); }
+    return ['ok' => true] + tasks_subs_view($now->modify('-14 days')->format('Y-m-d'), $now->modify('+190 days')->format('Y-m-d'));
+}
 function cal_view(array $c): array { return ['ok' => true, 'on' => $c['on'], 'link' => $c['key'] === '' ? '' : 'calendar.php?k=' . $c['key']]; }
 
 if ($method === 'GET') {
     if (!$admin) hub_json(200, ['private' => true, 'auth' => false]);
     if (($_GET['action'] ?? '') === 'cal') hub_json(200, cal_view(tasks_cal_state()));
+    if (($_GET['action'] ?? '') === 'subs') hub_json(200, subs_out());
     hub_json(200, view(tasks_read()));
 }
 if ($method !== 'POST') hub_json(405, ['ok' => false, 'error' => 'Use GET or POST.']);
@@ -58,6 +66,27 @@ if (($b['action'] ?? '') === 'cal_set') {
     $c = tasks_cal_set(array_key_exists('on', $b) ? !empty($b['on']) : null, !empty($b['renew']));
     if ($c === null) hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
     hub_json(200, cal_view($c));
+}
+// (1.72.0) calendars you follow
+if (in_array($b['action'] ?? '', ['sub_add', 'sub_del', 'sub_refresh'], true)) {
+    $tz = (string)(hub_settings()['tz'] ?? 'UTC');
+    $list = tasks_subs_load();
+    if ($b['action'] === 'sub_add') {
+        $url = tasks_sub_url((string)($b['url'] ?? ''));
+        if ($url === '') hub_json(400, ['ok' => false, 'error' => 'Paste a calendar address (it starts with https:// or webcal://).']);
+        if (count($list) >= TASKS_SUBS_MAX) hub_json(400, ['ok' => false, 'error' => 'You follow ' . TASKS_SUBS_MAX . ' calendars already. Remove one first.']);
+        foreach ($list as $c) if ($c['url'] === $url) hub_json(409, ['ok' => false, 'error' => 'You follow this calendar already.']);
+        $c = tasks_sub_fetch(['id' => bin2hex(random_bytes(4)), 'name' => tasks_str($b['name'] ?? '', 40) ?: 'Calendar', 'url' => $url,
+                              'color' => preg_match('/^#[0-9a-f]{6}$/i', (string)($b['color'] ?? '')) ? $b['color'] : '#4cc9f0', 'at' => 0, 'error' => '', 'events' => []], $tz);
+        if ($c['error'] !== '' && !$c['events']) hub_json(400, ['ok' => false, 'error' => $c['error']]);   // nothing to show: not kept
+        $list[] = $c;
+    } elseif ($b['action'] === 'sub_del') {
+        $list = array_values(array_filter($list, function ($c) use ($b) { return $c['id'] !== (string)($b['id'] ?? ''); }));
+    } else {
+        foreach ($list as $i => $c) if (empty($b['id']) || $c['id'] === (string)$b['id']) $list[$i] = tasks_sub_fetch($c, $tz);
+    }
+    if (!tasks_subs_save($list)) hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
+    hub_json(200, subs_out());
 }
 if (($b['action'] ?? '') === 'done') {
     $id = (string)($b['id'] ?? ''); $due = (string)($b['due'] ?? '');

@@ -960,10 +960,15 @@ const W_META = {
   pad:       { name:'Scratch Pad',    short:'Pad',       icon:'<path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/>' },
   quote:     { name:'Quote of the Day', short:'Quote',    icon:'<path d="M7 7h4v4c0 3-2 5-4 6M14 7h4v4c0 3-2 5-4 6"/>' },
   worldclock:{ name:'World Clock',    short:'World',     icon:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/>' },
+  // (1.72.0) four more: money due this month, the links you opened last, your newest files, and how the site is doing
+  bills:     { name:'Upcoming Bills', short:'Bills',     icon:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>' },
+  recent:    { name:'Recent Links',   short:'Links',     icon:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>' },
+  files:     { name:'Recent Files',   short:'Files',     icon:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>' },
+  status:    { name:'Server Status',  short:'Status',    icon:'<path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01"/>' },
   weather:   { name:'Weather',        short:'Weather',   icon:'<path d="M8 3v1.5M3.5 8H2M4.8 4.8l1 1M12 6.5A4 4 0 0 0 5 9"/><path d="M8 20h9a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.6 1.6A2.8 2.8 0 0 0 8 20z"/>' },
 };
 let WCFG = PUB.widgets || null;   // null: a visitor, or logged out
-const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'' };
+const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', events:[], recent:null, files:null, status:null, statusErr:'' };
 let wOpen = '', calMonth = '';
 
 /* dates: Tasks uses the site's time zone (Settings > General), so "today" here is the same day as on the Tasks page */
@@ -1014,7 +1019,35 @@ async function loadTasks(){
   try { const j = await siteJSON('../tasks/api.php'); WD.tasks = j.auth ? j.tasks : []; WD.set = j.settings || {}; WD.tasksErr = ''; }
   catch (e){ WD.tasksErr = e.message; }
   renderWidgets();
+  // (1.72.0) today's events from the calendars you follow in Tasks (read-only)
+  try { const s = await siteJSON('../tasks/api.php?action=subs'); const t = siteToday(), cals = Object.fromEntries((s.cals || []).map(c => [c.id, c]));
+    WD.events = (s.events || []).filter(e => e.d === t).map(e => ({ ...e, cal:cals[e.c] || { name:'Calendar', color:'#4cc9f0' } })).sort((a, b) => (a.t || '').localeCompare(b.t || '')); renderWidgets(); } catch { WD.events = []; }
 }
+/* (1.72.0) Recent Links: the links you opened last on this device (Links keeps the list; nothing from a locked tab) */
+function loadRecent(){
+  try { WD.recent = (JSON.parse(localStorage.getItem('hub-recent-links') || '[]') || []).filter(x => x && /^https?:/i.test(x.u)).slice(0, 6); } catch { WD.recent = []; }
+  renderWidgets();
+}
+/* (1.72.0) Recent Files: the names are locked, so they come from Files once it has opened them in this tab */
+function loadFilesW(){
+  try { WD.files = (JSON.parse(sessionStorage.getItem('hub-find-files') || '[]') || []).filter(x => x && x.t).sort((a, b) => b.t - a.t).slice(0, 5); } catch { WD.files = []; }
+  renderWidgets();
+}
+/* (1.72.0) Server Status: the same overview as Settings › Overview (logged in only) */
+async function loadStatus(){
+  try { const j = window.HUB && HUB.api ? await HUB.api('overview') : null; if (!j || !j.ok) throw new Error(j && j.error || 'Couldn\'t check the site'); WD.status = j; WD.statusErr = ''; }
+  catch (e){ WD.statusErr = e.message; }
+  renderWidgets();
+}
+/* (1.72.0) Upcoming Bills: what is still to pay this month (and anything overdue), from Tasks: priced tasks only */
+function billsNow(){
+  const t = siteToday(), end = t.slice(0, 7) + '-31', cur = (WD.set && WD.set.currency) || '';
+  const l = (WD.tasks || []).filter(x => x.status === 'active' && x.price != null && x.due <= end).sort((a, b) => a.due.localeCompare(b.due));
+  const tot = {}; l.forEach(x => { const c = x.cur || cur; tot[c] = (tot[c] || 0) + x.price; });
+  return { list:l, tot, over:l.filter(x => x.due < t).length };
+}
+function moneyW(v, c){ try { return new Intl.NumberFormat(c === 'INR' ? 'en-IN' : undefined, c ? { style:'currency', currency:c, maximumFractionDigits:2, minimumFractionDigits:0 } : { maximumFractionDigits:2 }).format(v); } catch { return String(v); } }
+const dShortW = s => dParse(s).toLocaleDateString(undefined, { day:'numeric', month:'short' });
 async function loadInfo(){
   try { WD.info = await siteJSON('../info/api.php'); WD.infoErr = ''; } catch (e){ WD.infoErr = e.message; }
   renderWidgets();
@@ -1043,10 +1076,15 @@ async function loadWeather(){
 function loadWidgets(){
   if (!WCFG) return;
   if (wOn('weather')) loadWeather();
-  if (wOn('today') || wOn('calendar')) loadTasks();
+  if (wOn('today') || wOn('calendar') || wOn('bills')) loadTasks();
+  if (wOn('recent')) loadRecent();
+  if (wOn('files')) loadFilesW();
+  if (wOn('status')) loadStatus();
   if (wOn('note') && WCFG.note.box) loadInfo();
   if (wOn('tools')) loadTools();
   if (wOn('pad')) loadPad();
+  // (1.72.0) a search result from the Scratch Pad: open it
+  if (location.hash === '#pad' && wOn('pad')){ history.replaceState(null, '', location.pathname + location.search); if (wOpen !== 'pad') openWidget('pad'); }
 }
 
 /* ---------- what each widget says ---------- */
@@ -1168,6 +1206,27 @@ function summary(id){
     const w = WD.weather;
     return { big:w.temp + '°', small:w.text + ' · ' + w.place.split(',')[0], chip:w.temp + '° ' + w.place.split(',')[0], pic:w.pic };
   }
+  if (id === 'bills'){
+    if (WD.tasksErr) return { small:'Couldn\'t load your tasks' };
+    if (!WD.tasks) return { small:'…' };
+    const b = billsNow(), sums = Object.entries(b.tot).map(([c, v]) => moneyW(v, c));
+    return { big: sums[0] || 'Nothing', small: b.list.length ? plural(b.list.length, 'bill', 'bills') + ' left this month' + (sums.length > 1 ? ' · + ' + sums.slice(1).join(' · ') : '') : 'Nothing left to pay this month',
+             alert: b.over ? b.over + ' overdue' : '', chip: sums[0] ? sums[0] + ' to pay' : 'No bills', hot: !!b.over };
+  }
+  if (id === 'recent'){
+    if (!WD.recent) return { small:'…' };
+    return { small: WD.recent.length ? WD.recent.slice(0, 3).map(x => x.n).join(' · ') : 'Links you open show up here' };
+  }
+  if (id === 'files'){
+    if (!WD.files) return { small:'…' };
+    return { small: WD.files.length ? WD.files.slice(0, 3).map(x => x.n).join(' · ') : 'Open Files to see your newest files here' };
+  }
+  if (id === 'status'){
+    if (WD.statusErr) return { small:WD.statusErr };
+    if (!WD.status) return { small:'…' };
+    const o = WD.status, n = (o.alerts || []).length;
+    return { big: n ? plural(n, 'thing', 'things') : 'All good', small: n ? o.alerts[0].text : 'Backups, updates and security look fine', alert: n ? 'Look' : '', chip: n ? plural(n, 'thing', 'things') + ' to see' : 'All good', hot: !!n };
+  }
   if (id === 'pad'){
     if (WD.padErr) return { small:'Couldn\'t load the pad' };
     if (!WD.pad) return { small:'…' };
@@ -1245,7 +1304,8 @@ function panelHTML(id){
       const late = dDiff(t, x.due), when = late === 1 ? 'yesterday' : late > 1 ? late + ' days ago' : x.time;
       return `<label class="wrow${late > 0 ? ' late' : ''}"><input type="checkbox" data-done="${esc(x.id)}" data-due="${esc(x.due)}"><span class="wr-n">${esc(x.name)}</span>${when ? `<span class="wr-t">${esc(when)}</span>` : ''}</label>`;
     }).join('');
-    return `<div class="wlist">${rows || '<p class="wmsg">Nothing due today.</p>'}</div>
+    const evs = (WD.events || []).map(e => `<div class="wrow wev" style="--ec:${esc(e.cal.color)}"><span class="wr-n">${esc(e.s)}</span><span class="wr-t">${esc(e.t || 'All day')} · ${esc(e.cal.name)}</span></div>`).join('');
+    return `<div class="wlist">${rows || (evs ? '' : '<p class="wmsg">Nothing due today.</p>')}${evs ? '<p class="wmsg small">From Your Calendars</p>' + evs : ''}</div>
       <form class="wqa" id="wQaForm"><input type="text" id="wQa" maxlength="300" autocomplete="off" placeholder="+ Add a task, press Enter" aria-label="Quick Add" aria-describedby="wQaHint"></form>
       <p class="wmsg small" id="wQaHint">For example: Pay rent 5 Nov, or Netflix 649 monthly</p>${more('../tasks/', 'Open Tasks')}`;
   }
@@ -1288,6 +1348,33 @@ function panelHTML(id){
       <div class="wwdays">${w.days.map(d => `<div class="wwday"><span>${esc(day(d.date))}</span>${svgI(W_PIC[d.pic] || '')}<span class="ww-t">${esc(d.text)}</span><b>${d.max}°</b><span class="ww-min">${d.min}°</span></div>`).join('')}</div>
       ${w.stale ? '<p class="wmsg small">Open-Meteo can\'t be reached just now, so this is the last forecast your server got.</p>' : ''}
       <a class="wmore" href="https://open-meteo.com/" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a>`;
+  }
+  if (id === 'bills'){
+    if (WD.tasksErr) return `<p class="wmsg">${esc(WD.tasksErr)}</p>`;
+    if (!WD.tasks) return '<p class="wmsg">Loading…</p>';
+    const b = billsNow(), t = siteToday();
+    if (!b.list.length) return '<p class="wmsg">Nothing left to pay this month. Give a task a price in Tasks and it shows here.</p>' + more('../tasks/', 'Open Tasks');
+    return `<div class="wlist">${b.list.slice(0, 8).map(x => `<a class="wrow${x.due < t ? ' late' : ''}" href="../tasks/#task=${encodeURIComponent(x.id)}"><span class="wr-n">${esc(x.name)}</span><span class="wr-t">${esc(dShortW(x.due))} · ${esc(moneyW(x.price, x.cur || (WD.set && WD.set.currency) || ''))}</span></a>`).join('')}</div>
+      <p class="wmsg small">Left this month: ${Object.entries(b.tot).map(([c, v]) => esc(moneyW(v, c))).join(' · ')}</p>${more('../tasks/', 'Open Tasks')}`;
+  }
+  if (id === 'recent'){
+    if (!WD.recent) return '<p class="wmsg">Loading…</p>';
+    if (!WD.recent.length) return '<p class="wmsg">The links you open in Links show up here (on this device only).</p>' + more('../links/', 'Open Links');
+    return `<div class="wtools">${WD.recent.map(x => `<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.n)}</a>`).join('')}</div>${more('../links/', 'Open Links')}`;
+  }
+  if (id === 'files'){
+    if (!WD.files) return '<p class="wmsg">Loading…</p>';
+    if (!WD.files.length) return '<p class="wmsg">Your files are locked, so their names show here once Files has opened them in this tab.</p>' + more('../files/', 'Open Files');
+    return `<div class="wlist">${WD.files.map(x => `<a class="wrow" href="../files/#q=${encodeURIComponent(x.n)}"><span class="wr-n">${esc(x.n)}</span><span class="wr-t">${esc(new Date(x.t).toLocaleDateString(undefined, { day:'numeric', month:'short' }))}</span></a>`).join('')}</div>${more('../files/', 'Open Files')}`;
+  }
+  if (id === 'status'){
+    if (WD.statusErr) return `<p class="wmsg">${esc(WD.statusErr)}</p>`;
+    if (!WD.status) return '<p class="wmsg">Checking…</p>';
+    const o = WD.status, bk = o.backup || {}, up = o.update || {}, ago = s => { const d = Math.round((Date.now() / 1000 - s) / 86400); return d < 1 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'; };
+    const rows = [['Last Backup', bk.last ? ago(bk.last) : 'Never', !bk.last], ['Updates', up.staged ? 'Ready to install' : up.newer ? 'Version ' + up.newer + ' is out' : 'Up to date', !!(up.staged || up.newer)],
+      ['Protection', (o.protect ? o.protect.on + ' of ' + o.protect.total : '—'), !!(o.protect && o.protect.on < o.protect.total)], ['Secure Connection', o.https ? 'Yes (https)' : 'No', !o.https]];
+    return `<div class="wzones">${rows.map(r => `<div class="wzone${r[2] ? ' late' : ''}"><span class="wz-n">${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('')}</div>
+      ${(o.alerts || []).slice(0, 3).map(a => `<p class="wmsg small">• ${esc(a.text)}</p>`).join('')}${more('../settings/#overview', 'Open Settings')}`;
   }
   if (id === 'pad'){
     if (WD.padErr) return `<p class="wmsg">${esc(WD.padErr)}</p>`;
@@ -1464,7 +1551,8 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden || !WCFG || Date.now() - wSeen < 30000) return;
   wSeen = Date.now();
   if (wOn('weather') && (!WD.weather || WD.weather.saved < Date.now() / 1000 - 1800)) loadWeather();
-  if (wOn('today') || wOn('calendar')) loadTasks(); else renderWidgets();
+  if (wOn('recent')) loadRecent(); if (wOn('files')) loadFilesW(); if (wOn('status')) loadStatus();
+  if (wOn('today') || wOn('calendar') || wOn('bills')) loadTasks(); else renderWidgets();
 });
 welcome();
 // ?bg=picsum | bing | wikimedia | wallhaven | artic | unsplash | pixabay | pixabay_video | upload  forces a source (handy for testing)

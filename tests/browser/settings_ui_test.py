@@ -141,7 +141,7 @@ try:
         # ---- Backup: four tabs ----
         pg.goto(s.base + '/web/settings/#backup'); wait_js(pg, "!!document.querySelector('#ix-exp')", 20000)
         tabs = pg.evaluate("[...document.querySelectorAll('.ix-tabbar button')].map(b => b.textContent)")
-        check('U20 Backup & Restore has four tabs', tabs == ['Back Up', 'Restore', 'Export', 'Start Over'], tabs)
+        check('U20 Backup & Restore has five tabs (Import since 1.72.0)', tabs == ['Back Up', 'Restore', 'Export', 'Import', 'Start Over'], tabs)
         big = pg.evaluate("(() => { const b = document.getElementById('ix-exp'); return [b.offsetHeight >= 48, document.getElementById('ix-choose').open, [...document.querySelectorAll('[data-grp]')].map(x => x.dataset.grp), document.querySelectorAll('[data-part]:checked').length > 0]; })()")
         check('U21 one big Download Backup, and "Choose What to Include" is folded with Pages and Site switches', big[0] and big[1] is False and big[2][:2] == ['pages', 'site'], big)
         pg.click('#ix-choose summary')

@@ -182,7 +182,7 @@
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'setup', 'keys keyboard hotkeys shortcut question mark help'], ['Install on Your Phone', 'setup', 'app home screen phone install add to home screen iphone android help'],
-    ['Guided Setup', 'setup', 'start here wizard steps protect'],
+    ['Guided Setup', 'setup', 'start here wizard steps protect'], ['Offline Reading', 'setup', 'offline airplane no connection internet read without cache device app'],
     ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'nav', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'nav', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
@@ -289,7 +289,8 @@
   /* The plain panes (General, Tabs, Look) are written as "heading, one line, controls". Each heading with what follows it
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
   var CARDIFY = { general: 1, nav: 1, look: 1, glass: 1 };
-  var CARD_ICON = { 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
+  var OFFL = function () { return K.offline(); };
+  var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages, 'glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear, 'liquid': ICON.sparkle, 'where': ICON.grid };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
@@ -388,8 +389,21 @@
       '<h4>Computer</h4><p>In Chrome or Edge, click the install icon at the right end of the address bar, or open the menu and choose Install.</p></div></details>' +
       '<button type="button" class="ix-btn pri" id="ix-inst" hidden>' + svg(ICON.down) + 'Install</button>' +
       '<h3 id="ix-keyh" class="ix-kbonly">Keyboard Shortcuts</h3><p class="ix-kbonly">Search, go to a page and edit from the keyboard. Press <kbd>?</kbd> on any page to see them all.</p>' +
-      '<button type="button" class="ix-btn ix-kbonly" id="ix-keysb">' + svg(ICON.keyboard) + 'View Shortcuts</button>';
+      '<button type="button" class="ix-btn ix-kbonly" id="ix-keysb">' + svg(ICON.keyboard) + 'View Shortcuts</button>' +
+      // (1.72.0) Offline Reading: one switch for this device (the copy stays in this browser only)
+      '<h3 id="ix-offh">Offline Reading</h3><p>Open Home, Links, Info, Cards and Tasks without a connection, read-only. Only on this device; Log Out deletes the copy, and locked tabs stay locked.</p>' +
+      '<label class="ix-tg"><span>On This Device<small id="ix-offst">' + (OFFL().can() ? 'Off' : 'Needs a secure (https) connection.') + '</small></span><input type="checkbox" id="ix-offsw"' + (OFFL().on() ? ' checked' : '') + (OFFL().can() ? '' : ' disabled') + '></label>';
     p.querySelector('#ix-keysb').onclick = function () { window.HUB.showKeys(); };
+    var offSt = function () {
+      var st = p.querySelector('#ix-offst'); if (!st || !OFFL().can()) return;
+      if (!OFFL().on()) { st.textContent = 'Off'; return; }
+      OFFL().count().then(function (n) { st.textContent = n ? 'On: ' + n + ' pages and files kept on this device.' : 'On: pages are kept as you open them.'; });
+    };
+    p.querySelector('#ix-offsw').onchange = function (e) {
+      var on = e.target.checked; e.target.disabled = true;
+      OFFL().set(on).then(function (ok) { e.target.disabled = false; if (on && !ok) { e.target.checked = false; OFFL().set(false); toast('This browser cannot keep the site for offline use.'); } else toast(on ? 'Offline Reading is on for this device.' : 'Offline Reading is off; the copy is deleted.'); offSt(); });
+    };
+    offSt();
     // the Install button shows only when this browser offers it (settings.js keeps the offer: beforeinstallprompt)
     var ib = p.querySelector('#ix-inst');
     var offer = function () { ib.hidden = !window.__hubInstall; };
@@ -1288,7 +1302,7 @@
             fd('ix-wpw', 'Website Password', 'password', 'current-password') +
             '<label class="ix-chk"><input type="checkbox" id="ix-wack"> I understand the passphrase can\'t be recovered, only replaced with a recovery key.</label>' +
             '<p class="ix-err" id="ix-wzerr"></p><div class="ix-row"><button class="ix-btn pri" id="ix-wzgo">Set Passphrase</button></div></form>',
-          recovery: WZ.rec ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Your recovery key. It is shown only now.</b></span></div>' + linkField({ id: 'ix-wzrk', value: WZ.rec, prefix: 'Key', readonly: true, copyId: 'ix-wzcp', label: 'Recovery key', cls: 'ix-uf-key' }) +
+          recovery: WZ.rec ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Your recovery key. It is shown only now.</b></span></div>' + linkField({ id: 'ix-wzrk', value: WZ.rec, prefix: 'Key', readonly: true, copyId: 'ix-wzcp', label: 'Recovery key', cls: 'ix-uf-key', wrap: true }) +
               '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-wzsaved">I Saved It, Continue</button></div>' +
               '<p class="ix-note">Save it somewhere safe, apart from this server. A key made earlier no longer works.</p>' :
             steps[2].done ? '<div class="ix-status"><span class="ix-ok">✓</span><span>A recovery key exists. Make a new one any time in Security › Encryption.</span></div>' :
@@ -1997,7 +2011,7 @@
                   mk.disabled = true; mk.textContent = 'Making it…'; c.err(''); c.block(3, true);
                   PP.makeRecovery({ pp: val('#ix-en1'), site: val('#ix-epw') }).then(function (code) {
                     recCode = code; st.rec = true;
-                    p.querySelector('#ix-ercode').innerHTML = linkField({ id: 'ix-rcode', value: code, prefix: 'Key', readonly: true, copyId: 'ix-ercopy', label: 'Recovery key', cls: 'ix-uf-key' });
+                    p.querySelector('#ix-ercode').innerHTML = linkField({ id: 'ix-rcode', value: code, prefix: 'Key', readonly: true, copyId: 'ix-ercopy', label: 'Recovery key', cls: 'ix-uf-key', wrap: true });
                     p.querySelector('#ix-erackw').hidden = false; c.block(3, false);
                   }, function (x) { mk.disabled = false; mk.textContent = 'Make My Recovery Key'; c.err(recFail(x)); c.block(3, false); });
                 };
@@ -2025,7 +2039,7 @@
         rmk.disabled = true; re.textContent = 'Making it…';
         PP.makeRecovery({ pp: pp, site: site }).then(function (code) {
           re.textContent = ''; st.rec = true;
-          b.querySelector('#ix-rshow').innerHTML = '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Your recovery key. It is shown only now.</b></span></div>' + linkField({ id: 'ix-rcode', value: code, prefix: 'Key', readonly: true, copyId: 'ix-rcopy', label: 'Recovery key', cls: 'ix-uf-key' }) +
+          b.querySelector('#ix-rshow').innerHTML = '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Your recovery key. It is shown only now.</b></span></div>' + linkField({ id: 'ix-rcode', value: code, prefix: 'Key', readonly: true, copyId: 'ix-rcopy', label: 'Recovery key', cls: 'ix-uf-key', wrap: true }) +
             '<p class="ix-note">Save it before you close this. A key made earlier no longer works.</p>';
           toast('Recovery key created.');
         }).catch(function (x) { re.textContent = x && x.user ? x.message : "Can't reach the server. Nothing was changed."; })
@@ -2409,7 +2423,7 @@
       api('twostep_begin', {}).then(function (j) {
         if (!j.ok) { toast(j.error); return; }
         box.innerHTML = head + tsBar(1) + ecCard('', ICON.device, 'Step 1: Scan the Code', 'Scan this with your authenticator app, or on your phone tap <a href="' + esc(j.uri) + '">open in app</a>. You can also type the key by hand.',
-            '<div class="ix-qr" id="ix-qr"></div>' + linkField({ value: j.secret.replace(/(.{4})/g, '$1 ').trim(), copyText: j.secret, prefix: 'Key', readonly: true, label: 'Two-step key', cls: 'ix-uf-key' })) +
+            '<div class="ix-qr" id="ix-qr"></div>' + linkField({ value: j.secret.replace(/(.{4})/g, '$1 ').trim(), copyText: j.secret, prefix: 'Key', readonly: true, label: 'Two-step key', cls: 'ix-uf-key', wrap: true })) +
           ecCard('', ICON.check, 'Step 2: Type the 6-Digit Code', 'The app now shows a code that changes every 30 seconds. Type the current one to finish.',
             '<div class="ix-fd"><label for="ix-tc">6-Digit Code</label><input type="text" id="ix-tc" inputmode="numeric" autocomplete="one-time-code" maxlength="7" style="max-width:220px"></div>' +
             '<p class="ix-err" id="ix-te2"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-en">Turn On</button></div>') + '<div id="ix-rcs"></div>';
@@ -2477,6 +2491,89 @@
   function download(name, mime, text, bom) {
     var a = document.createElement('a'), u = URL.createObjectURL(new Blob([bom ? '\ufeff' : '', text], { type: mime }));
     a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
+  }
+  /* ---------- (1.72.0) the Import Center (Backup & Restore › Import) ----------
+     importer.js reads the file here in the browser; the list shows what was found (all ticked, past calendar events not); Add hands what
+     is ticked to the page it goes to (sessionStorage "hub-import", read once by HUB.importTake), which adds it with its own save and
+     offers Undo. Info gets one new tab of at most 12 boxes, Links one new tab with a category per folder or tag. */
+  var impP = null;
+  function importer() {
+    if (window.HubImport) return Promise.resolve(window.HubImport);
+    return impP || (impP = new Promise(function (ok, fail) {
+      var me = document.querySelector('script[src*="shell.js"]'), ver = me ? ((/\?v=[^&#]+/.exec(me.src) || [''])[0]) : '';
+      var sc = document.createElement('script'); sc.src = ASSETS + 'importer.js' + ver;
+      sc.onload = function () { if (window.HubImport) ok(window.HubImport); else { impP = null; fail(); } }; sc.onerror = function () { impP = null; fail(); };
+      document.head.appendChild(sc);
+    }));
+  }
+  var IMP_PAGE = { tasks: ['Tasks', 'web/tasks/', 'tasks'], info: ['Info', 'web/info/', 'notes'], links: ['Links', 'web/links/', 'links'], cards: ['Cards', 'web/cards/', 'cards'] };
+  var IMP_FIELD = { bank: 'Bank', name: 'Card Name', network: 'Network', variant: 'Variant', kind: 'Credit or Debit', type: 'Fee Type', limit: 'Limit', fee: 'Annual Fee', expiry: 'Expiry', owner: 'Holder', remark: 'Remark' };
+  /* notes into the boxes of one tab: a box per note when there are 12 or fewer; else a box per folder or label (the notes in it under headings) */
+  function packBoxes(notes) {
+    if (notes.length <= 12) return notes.map(function (n) { return { title: n.title, notes: n.notes }; });
+    var groups = [], by = {};
+    notes.forEach(function (n) { var g = n.group || 'Notes'; if (!by[g]) { by[g] = []; groups.push(g); } by[g].push(n); });
+    groups.sort(function (a, b) { return by[b].length - by[a].length; });
+    if (groups.length > 12) { var rest = [].concat.apply([], groups.slice(11).map(function (g) { return by[g]; })); groups = groups.slice(0, 11).concat(['More']); by.More = rest; }
+    if (groups.length === 1) {   // one big group: share it out over 12 boxes, in order
+      var per = Math.ceil(notes.length / 12); groups = []; by = {};
+      for (var i = 0; i < notes.length; i += per) { var nm = 'Notes ' + (i + 1) + '–' + Math.min(notes.length, i + per); groups.push(nm); by[nm] = notes.slice(i, i + per); }
+    }
+    return groups.map(function (g) { return { title: g.slice(0, 80), notes: by[g].map(function (n) { return '### ' + n.title + (n.notes ? '\n\n' + n.notes : ''); }).join('\n\n---\n\n') }; });
+  }
+  function bindImport(p) {
+    var inp = p.querySelector('#ix-imfile'), drop = p.querySelector('#ix-imdrop'), res = p.querySelector('#ix-imres'); if (!inp) return;
+    var cur = null, on = [];
+    var take = function (files) {
+      if (!files || !files.length) return;
+      res.innerHTML = spinRow('Reading ' + esc(files.length === 1 ? files[0].name : files.length + ' files') + '…');
+      importer().then(function (H) { return H.read(files); }).then(function (r) { cur = r; on = r.items ? r.items.map(function (x) { return !x.past; }) : []; draw(); },
+        function () { res.innerHTML = '<p class="ix-err">The importer could not load. Reload the page and try again.</p>'; });
+    };
+    inp.onchange = function () { var fl = [].slice.call(inp.files || []); inp.value = ''; take(fl); };   // a copy: clearing the box empties its list
+    drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+    drop.addEventListener('drop', function (e) { e.preventDefault(); drop.classList.remove('over'); take([].slice.call((e.dataTransfer && e.dataTransfer.files) || [])); });
+    var line = function (r, x) {
+      if (r.to === 'tasks') return [x.name, [x.due + (x.time ? ' ' + x.time : ''), x.repeat && x.repeat.unit !== 'none' ? 'repeats' : '', x.past ? 'already past' : ''].filter(Boolean).join(' · ')];
+      if (r.to === 'info') return [x.title, (x.group && x.group !== 'Notes' ? x.group + ' · ' : '') + (x.notes || '').replace(/\s+/g, ' ').slice(0, 90)];
+      if (r.to === 'links') return [x.title, x.group + ' · ' + x.url];
+      return [[x.bank, x.name].filter(Boolean).join(' '), [x.network, x.owner, x.expiry].filter(Boolean).join(' · ')];
+    };
+    function draw() {
+      var r = cur; if (!r) return;
+      if (r.error) { res.innerHTML = '<p class="ix-err">' + esc(r.error) + '</p>'; return; }
+      if (!r.items.length) { res.innerHTML = '<p class="ix-err">Nothing to import was found in this file.</p>'; return; }
+      var pg = IMP_PAGE[r.to], shown = r.items.slice(0, 500);
+      var map = r.to === 'cards' ? '<div class="ix-immap">' + window.HubImport.FIELDS.map(function (f) {
+        return '<label>' + IMP_FIELD[f] + '<select data-f="' + f + '"><option value="">(none)</option>' + r.head.map(function (h) { return '<option' + (r.map[f] === h ? ' selected' : '') + '>' + esc(h) + '</option>'; }).join('') + '</select></label>'; }).join('') + '</div>' : '';
+      res.innerHTML = '<div class="ix-status"><span class="ix-ok">✓</span><span><b>' + esc(r.label) + '</b>: ' + r.items.length + ' ' + pg[2] + ' found. They go to <b>' + pg[0] + '</b>' +
+          (r.to === 'info' ? ', as a new tab' : r.to === 'links' ? ', as a new tab with a category per folder or tag' : '') + '. What is already there is not added twice.</span></div>' + map +
+        '<div class="ix-imtools"><button type="button" class="ix-linkbtn" data-imall="1">Tick All</button><button type="button" class="ix-linkbtn" data-imall="0">Untick All</button><span class="ix-mu" id="ix-imn"></span></div>' +
+        '<div class="ix-imlist">' + shown.map(function (x, i) { var l = line(r, x); return '<label class="ix-imrow"><input type="checkbox" data-i="' + i + '"' + (on[i] ? ' checked' : '') + '><span><b>' + esc(l[0] || '(no name)') + '</b><small>' + esc(l[1] || '') + '</small></span></label>'; }).join('') +
+          (r.items.length > 500 ? '<p class="ix-note">The first 500 are listed; the other ' + (r.items.length - 500) + ' are added too.</p>' : '') + '</div>' +
+        '<p class="ix-err" id="ix-imerr"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-imgo">' + svg(ICON.upload) + 'Add to ' + pg[0] + '</button></div>';
+      var count = function () { var n = on.filter(Boolean).length + Math.max(0, r.items.length - 500); res.querySelector('#ix-imn').textContent = n + ' of ' + r.items.length + ' ticked'; };
+      count();
+      res.querySelectorAll('[data-i]').forEach(function (c) { c.onchange = function () { on[+c.dataset.i] = c.checked; count(); }; });
+      res.querySelectorAll('[data-imall]').forEach(function (b) { b.onclick = function () { var v = b.dataset.imall === '1'; on = on.map(function () { return v; }); res.querySelectorAll('[data-i]').forEach(function (c) { c.checked = v; }); count(); }; });
+      res.querySelectorAll('[data-f]').forEach(function (sel) { sel.onchange = function () {   // Cards: another column for this field, and the list is read again
+        r.map[sel.dataset.f] = sel.value; r.items = window.HubImport.cards(r.csv, r.map); on = r.items.map(function () { return true; }); draw(); }; });
+      res.querySelector('#ix-imgo').onclick = function () {
+        var pick = r.items.filter(function (x, i) { return i >= 500 || on[i]; });
+        if (!pick.length) { res.querySelector('#ix-imerr').textContent = 'Tick at least one.'; return; }
+        var out = { to: r.to, src: r.label };
+        if (r.to === 'info') { out.tab = ('From ' + r.label).slice(0, 40); out.boxes = packBoxes(pick); }
+        else if (r.to === 'links') {
+          var cats = [], by = {}; pick.forEach(function (l) { var g = l.group || 'Links'; if (!by[g]) { by[g] = { title: g, links: [] }; cats.push(by[g]); } by[g].links.push({ title: l.title, url: l.url }); });
+          out.tab = ('From ' + r.label).slice(0, 40); out.cats = cats;
+        } else out.items = pick;
+        var raw = JSON.stringify(out);
+        if (raw.length > 1800000) { res.querySelector('#ix-imerr').textContent = 'That is too much for one go (' + Math.round(raw.length / 1e6 * 10) / 10 + ' MB of text). Untick some and add the rest after.'; return; }
+        try { sessionStorage.setItem('hub-import', raw); } catch (e) { res.querySelector('#ix-imerr').textContent = 'This browser could not hold that much. Untick some and add the rest after.'; return; }
+        location.href = ROOT + pg[1] + '#hub-import';
+      };
+    }
   }
   function bindExport(p) {
     if (p.__xb) return; p.__xb = true;
@@ -2562,10 +2659,18 @@
           ecCard('', ICON.bookmark, 'Bookmarks for Other Browsers', 'The standard bookmark file that Chrome, Edge, Firefox and Safari can import. Encrypted tabs stay locked here; to include them, unlock them and use Export Bookmarks in Links Settings.',
             '<label class="ix-tg"><span>Include Private Tabs<small>Also writes your private tabs. The file is plain text: keep it safe.</small></span><input type="checkbox" id="ix-bmpriv"></label><div class="ix-row"><button type="button" class="ix-btn pri" data-export="links" data-fmt="html">' + svg(ICON.down) + 'Download Bookmark File</button></div>') +
           '<p class="ix-note" id="ix-xs">The files hold your data as plain text. Keep them somewhere safe.</p></div></details>' +
+        // (1.72.0) the Import Center: another app's export becomes tasks, notes, links or cards (importer.js reads it here in the browser)
+        '<details class="ix-acc" id="ix-iacc"><summary><span>Import</span><small>From Todoist, Google Keep, Notion, a calendar, Raindrop, Pocket and more</small></summary><div class="ix-accb">' +
+          tabHead(ICON.upload, 'Import', 'Bring in what you keep in another app. You see everything first; nothing is added until you press Add, and Undo takes it back.') +
+          '<div class="ix-imfrom">' + [['Calendar (.ics)', 'Tasks'], ['Todoist (CSV)', 'Tasks'], ['Google Keep (Takeout)', 'Info'], ['Notion (Markdown export)', 'Info'], ['Notes (.txt, .md, .html)', 'Info'],
+            ['Raindrop (CSV)', 'Links'], ['Pocket', 'Links'], ['Bookmarks (.html)', 'Links'], ['Cards (CSV)', 'Cards']].map(function (x) { return '<span><b>' + x[0] + '</b>' + svg('M5 12h14M13 6l6 6-6 6') + x[1] + '</span>'; }).join('') + '</div>' +
+          '<label class="ix-drop" id="ix-imdrop"><input type="file" id="ix-imfile" multiple accept=".ics,.csv,.json,.zip,.md,.markdown,.txt,.html,.htm"><b>Choose a File</b><span>or drop it here. A .zip from Google Takeout or Notion is read as a whole.</span></label>' +
+          '<div id="ix-imres" aria-live="polite"></div></div></details>' +
         '<details class="ix-acc ix-danger" id="ix-reset"><summary><span>Start Over</span><small>Erase all data and settings, like a new site</small></summary><div class="ix-accb">' +
           '<div id="ix-rsst"></div></div></details>' +
         '<p class="ix-note">Moving the site? Copy the whole folder: your data is in <code>site-data</code>.</p>';
       p.querySelector('#ix-tgset').onclick = function (e) { e.preventDefault(); if (tgOn) p.querySelector('#ix-tgbk').scrollIntoView({ block: 'center', behavior: 'smooth' }); else go('telegram/setup'); };
+      bindImport(p);   // (1.72.0) the Import tab, once it is drawn
       var tgb = p.querySelector('#ix-tgbk');
       if (!tgOn) tgb.querySelector('#ix-tgsetup').onclick = function () { go('telegram/setup'); };
       else {
@@ -2885,5 +2990,7 @@
     draw(w);
   }
 
-  K.impl = { settings: go, mount: mount, openBackup: openBackup, textSizes: textSizes, health: health };
+  /* (1.72.0) the site-wide search finds Settings too: [name, where it opens, more words, the section's name] */
+  function searchIndex() { return SEARCH.map(function (x) { var s = sectionOf(SUB_OF[x[1].split('/')[0]] || ''); return [x[0], x[1], x[2], s ? 'Settings › ' + s[1] : 'Settings']; }); }
+  K.impl = { settings: go, mount: mount, openBackup: openBackup, textSizes: textSizes, health: health, searchIndex: searchIndex };
 })(window.__ixShell);

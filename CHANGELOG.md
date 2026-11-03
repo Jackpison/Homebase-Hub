@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.72.0 | Faster and offline pages, search everywhere, more Tasks repeats and followed calendars, four new Home widgets, an Import Center, phone and accessibility fixes |
 | 1.71.0 | Smoother on phones: the page follows your finger when you swipe, quicker page changes, the bar hides without restyling the page, Home's next background waits |
 | 1.70.0 | Settings sorted: Bar tab in Appearance, Accent Color in Colors, Text Sizes in Look, Start Here in Overview, Telegram backups in Backup, Files in Server Check, What's New in Updates |
 | 1.69.1 | The link field (Uiverse): a label in front and a copy icon for Links' Address, Files' Share Link, Health › Domains, the Telegram cron lines and the recovery and two-step keys |
@@ -134,6 +135,34 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.72.0
+
+### Added
+
+- **Import Center** (Settings › Backup & Restore › Import): another app's export, read here in the browser and shown first with ticks. A calendar (.ics) or Todoist (CSV) goes to Tasks; Google Keep (Takeout .zip), Notion (Markdown .zip) or notes (.txt, .md, .html, such as Apple Notes exported by an app) to Info as a new private tab; Raindrop (CSV), Pocket or browser bookmarks (.html) to Links as a new private tab, a category per folder or tag; a spreadsheet of cards (CSV, its columns matched and changeable) to Cards. What is already there is not added twice, the page saves it the usual way (locked Cards stay locked), and Undo takes it back.
+- **Offline Reading** (Settings › Overview › Start Here): a switch per device, off by default, needs https. On, Home, Links, Info, Cards and Tasks open without a connection, read-only, with an "Offline" note; back online they load fresh. Log Out deletes the copy; switching it off deletes it and its service worker.
+- **Calendars You Follow** (Tasks Settings): paste a calendar's address (Google's secret iCal address, an Apple public link, Outlook, a school's calendar). The server fetches it then and every 6 hours; its events show read-only in the Calendar, the day panel and Home's Today. The address is never shown in full. Nothing is fetched until you add one.
+- **More ways to repeat a task**: on chosen weekdays (Every Weekday, Mon/Wed/Fri, every 2 weeks on Tuesday), on the last day of the month, or on the nth weekday (the 2nd Tuesday, the last Friday). Quick Add understands "weekdays". The calendar link carries the new rules.
+- **Home widgets** (off until switched on in Edit › Settings › Widgets): Upcoming Bills (priced tasks still to pay this month, and the total), Recent Links (opened on this device), Recent Files (once Files has opened them in that tab) and Server Status (the same overview as Settings).
+- **Search everywhere**: also Cards, the Scratch Pad, every Settings item, Files' names (once Files opened them in that tab) and, while you are on a page, the locked tabs it has unlocked. Results are grouped with counts, a small typo still finds it, and the empty box shows your recent searches.
+
+### Changed
+
+- **Pages open at once**: Links, Info, Cards and Tasks show the data they had last time in that tab while the fresh data loads; the pencil waits until it is in. Log Out clears it.
+- **Accessibility**: a stepper step is a labelled group and says "Step 2 of 3"; the search box tells a screen reader which result is chosen and how many there are; Copy says "Copied". The keys [ and ] open the page before and after. The accessibility check now also runs in WebKit.
+- On a page opened over plain http, Copy uses the browser's older copy command; only if that fails too is the text selected, with a note for a phone or a computer.
+
+### Fixed
+
+- **Narrow phones**: the recovery key and the two-step key were cut off at the right on a 320 px screen; they now wrap onto a second line.
+- **Tasks › Add Task › Repeats › Custom**: the number box took the whole row and pushed the Days / Weeks / Months choice out of the window.
+
+### For the project
+
+- The weekly security check says when an npm override (minimatch) is no longer needed (`scripts/overrides.py`). A checklist for trying a release on a real phone: `docs/PHONE-CHECKLIST.md`.
 
 ---
 

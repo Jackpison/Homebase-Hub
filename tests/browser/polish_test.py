@@ -458,6 +458,25 @@ try:
         saved = until(lambda: [l.get('url') for t in s.req(s.base + '/web/links/api.php?action=get').get('data', {}).get('tabs', []) for c in t.get('categories', []) for l in c.get('links', []) if l.get('title') == 'Plain'], 10000)
         check('P73 Links > Edit Link: the Address field has https:// in front (a tap gives http://), a typed http:// moves into it, another scheme hides it, Copy gives the whole address, and Save keeps the whole address (1.69.1)',
               lk[0][0] == 'https://' and lk[0][1] and not lk[0][1].startswith('http') and lk[1] == ['http://', 'Plain.example.com/a'] and lk[2] == ['https://', 'https://Plain.example.com/a', 'COPIED'] and lk[3] == 'none' and saved == ['https://Plain.example.com/a'], (lk, saved))
+        # ---- (1.72.0) phone details: a read-only key wraps instead of being cut off; copying without the clipboard API; the two-step key ----
+        sp.set_viewport_size({'width': 320, 'height': 760})
+        sp.goto(s.base + '/web/settings/#security/encryption'); wait_js(sp, "!!(window.HUB && HUB.linkField)", 20000)
+        kw = sp.evaluate("""(() => { const h = document.createElement('div'); h.style.width = '234px'; h.innerHTML = HUB.linkField({ id: 'tkey', value: 'GKTN-M7EC-GTX5-3QAB-ZZ9K', prefix: 'Key', readonly: true, cls: 'ix-uf-key', wrap: true, copyId: 'tkcp' });
+            document.body.appendChild(h); const t = document.getElementById('tkey');
+            return [t.tagName, t.readOnly, t.value, t.scrollWidth <= t.clientWidth + 1, t.scrollHeight <= t.clientHeight + 2, t.clientHeight > 50]; })()""")
+        check('P74 a read-only key (recovery key, two-step key) wraps onto a second line on a 320 px phone: nothing is cut off (1.72.0)',
+              kw == ['TEXTAREA', True, 'GKTN-M7EC-GTX5-3QAB-ZZ9K', True, True, True], kw)
+        sp.evaluate("Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true }); window.__ex = []; document.execCommand = c => { window.__ex.push(c); return window.__exok; }; window.__exok = true")
+        sp.click('#tkcp'); sp.wait_for_timeout(150)
+        c1 = sp.evaluate("[window.__ex.join(','), document.getElementById('tkcp').classList.contains('done'), document.querySelector('#tkcp .ix-uf-tip').textContent]")
+        sp.evaluate("window.__exok = false; window.__ex = []; document.getElementById('tkcp').classList.remove('done')"); sp.click('#tkcp'); sp.wait_for_timeout(250)
+        c2 = sp.evaluate("[window.__ex.join(','), document.getElementById('tkcp').classList.contains('done'), document.activeElement && document.activeElement.id, (document.getElementById('ix-toast') || {}).textContent || '']")
+        check('P75 no clipboard API (plain http): the older copy command copies and says COPIED; when that fails too the key is selected and a note says how to copy (1.72.0)',
+              c1 == ['copy', True, 'COPIED'] and c2[0] == 'copy' and not c2[1] and c2[2] == 'tkey' and 'Ctrl+C' in c2[3], (c1, c2))
+        sp.goto(s.base + '/web/settings/#security/two-step-login'); wait_js(sp, "!!document.getElementById('ix-on')", 20000); sp.click('#ix-on')
+        wait_js(sp, "!!document.querySelector('#ix-qr') && !!document.querySelector('.ix-uf-key textarea')", 15000)
+        ts = sp.evaluate("(() => { const t = document.querySelector('.ix-uf-key textarea'), c = t.closest('.ix-uf').querySelector('.ix-uf-cp'); return [t.readOnly, /^[A-Z2-7]{16,}$/.test(c.dataset.copy || ''), t.value.replace(/ /g, '') === c.dataset.copy, t.scrollWidth <= t.clientWidth + 1, t.scrollHeight <= t.clientHeight + 2]; })()")
+        check('P76 Two-Step Login on a 320 px phone: the key field shows the whole key (spaced) and Copy gives it without spaces (1.72.0)', ts == [True, True, True, True, True], ts)
         sp.context.close()
         ns = Site(ZIP, 8974, setup=False)
         try:

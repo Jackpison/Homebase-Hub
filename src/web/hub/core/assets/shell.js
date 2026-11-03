@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.71.0" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.72.0" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -1024,9 +1024,18 @@
     if (SX.p && Date.now() - SX.at < 60000) return SX.p;
     SX.at = Date.now();
     var get = function (url) { return hubFetch(url, { credentials: 'same-origin', cache: 'no-store' }, { timeout: 20000 }).then(function (r) { return r.json(); }).catch(function () { return null; }); };
-    SX.p = Promise.all([get(ROOT + 'web/links/api.php?action=get'), get(ROOT + 'web/info/api.php'), S.admin ? get(ROOT + 'web/tasks/api.php') : null]).then(function (r) {
-      var L = r[0], I = r[1], K = r[2];
-      SX.links = []; SX.linkTabs = []; SX.info = []; SX.infoTabs = []; SX.tasks = [];
+    // (1.72.0) also Cards (not locked), Home's Scratch Pad and every Settings item, while you are logged in
+    var adm = S.admin;
+    SX.p = Promise.all([get(ROOT + 'web/links/api.php?action=get'), get(ROOT + 'web/info/api.php'), adm ? get(ROOT + 'web/tasks/api.php') : null,
+      adm ? get(ROOT + 'web/cards/api.php') : null, adm ? hubFetch(ROOT + 'web/home/api.php?action=pad', { credentials: 'same-origin', cache: 'no-store', headers: { 'X-Hub-CSRF': S.csrf || '' } }, { timeout: 20000 }).then(function (r) { return r.json(); }).catch(function () { return null; }) : null,
+      adm ? adminJs().then(function (m) { return m.searchIndex ? m.searchIndex() : []; }, function () { return []; }) : null]).then(function (r) {
+      var L = r[0], I = r[1], K = r[2], C = r[3], PD = r[4];
+      SX.links = []; SX.linkTabs = []; SX.info = []; SX.infoTabs = []; SX.tasks = []; SX.cards = []; SX.pad = ''; SX.files = []; SX.settings = r[5] || [];
+      var kept = function (k) { try { var v = JSON.parse(sessionStorage.getItem(k) || 'null'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+      if (C && C.auth !== false && Array.isArray(C.cards)) C.cards.forEach(function (c) { SX.cards.push({ bank: String(c.bank || ''), name: String(c.name || ''), owner: String(c.owner || ''), net: String(c.network || '') }); });
+      else kept('hub-find-cards').forEach(function (c) { SX.cards.push(c); });   // locked Cards: only the names, once opened in this tab
+      if (PD && typeof PD.text === 'string') SX.pad = PD.text;
+      SX.files = kept('hub-find-files');   // Files' names are locked: they are searchable once Files has opened them in this tab
       if (K && K.auth) (K.tasks || []).forEach(function (t) {   // Tasks are private: only searched while you are logged in
         SX.tasks.push({ id: t.id, name: String(t.name || ''), cat: String(t.cat || ''), pay: String(t.pay || ''), notes: plainNote(t.notes), due: t.due, status: t.status,
           price: t.price, cur: t.cur || (K.settings && K.settings.currency) || '' });
@@ -1061,11 +1070,23 @@
     if (m) { scope = m[1].toLowerCase(); raw = raw.slice(m[0].length); }
     return { q: raw.trim(), scope: scope };
   }
+  /* (1.72.0) a small typo still finds it: one letter wrong, missing, extra or two swapped, in words of 4 letters or more */
+  function near(a, b) {
+    if (Math.abs(a.length - b.length) > 1) return false;
+    var i = 0; while (i < a.length && a.charAt(i) === b.charAt(i)) i++;
+    if (i === a.length && i === b.length) return true;
+    var x = a.slice(i + 1), y = b.slice(i + 1);
+    return x === y || a.slice(i + 1) === b.slice(i) || a.slice(i) === b.slice(i + 1) || (a.charAt(i) === b.charAt(i + 1) && a.charAt(i + 1) === b.charAt(i) && a.slice(i + 2) === b.slice(i + 2));
+  }
   function searchResults(p) {
     var q = p.q.toLowerCase(), scope = p.scope;
     var rank = function (s) {
       s = String(s || '').toLowerCase();
-      var i = s.indexOf(q); return i < 0 ? 9 : i === 0 ? 0 : /[\s./:-]/.test(s.charAt(i - 1)) ? 1 : 2;
+      var i = s.indexOf(q); if (i >= 0) return i === 0 ? 0 : /[\s./:-]/.test(s.charAt(i - 1)) ? 1 : 2;
+      if (q.length < 4 || q.indexOf(' ') >= 0) return 9;
+      var w = s.split(/[^a-z0-9\u00c0-\uffff]+/);
+      for (var k = 0; k < w.length; k++) if (w[k].length >= 3 && (near(w[k], q) || (w[k].length > q.length && near(w[k].slice(0, q.length), q)))) return 4;
+      return 9;
     };
     var links = [], info = [], seen = {}, tabFilter = SF.tab ? SF.tab.split(':') : null;
     if (scope === 'all' || scope === 'links') SX.links.forEach(function (l, i) {
@@ -1085,10 +1106,28 @@
       var r = Math.min(rank(t.name), rank(t.cat) + 1, rank(t.pay) + 2, t.notes ? rank(t.notes) + 2 : 9);
       if (r < 9) tasks.push({ r: r + (t.status === 'done' ? 3 : 0), i: i, v: t });
     });
+    var cards = [], files = [], pad = [], sets = [], here = [];
+    var all = (scope === 'all') && !tabFilter;
+    if (all) {
+      (SX.cards || []).forEach(function (c, i) { var r = Math.min(rank(c.name), rank(c.bank), rank(c.owner) + 1, rank(c.net) + 2); if (r < 9) cards.push({ r: r, i: i, v: c }); });
+      (SX.files || []).forEach(function (f, i) { var r = rank(f.n); if (r < 9) files.push({ r: r, i: i, v: f }); });
+      if (SX.pad) SX.pad.split(/\n+/).forEach(function (line, i) { var r = rank(line); if (r < 9 && line.trim()) pad.push({ r: r, i: i, v: line.trim() }); });
+      (SX.settings || []).forEach(function (x, i) { var r = Math.min(rank(x[0]), rank(x[2]) + 2); if (r < 9) sets.push({ r: r, i: i, v: x }); });
+    }
+    // the page you are on may add what only it can read: tabs and cards it has unlocked (kept in its memory, never stored)
+    if (typeof FIND_HOOK === 'function' && (scope === 'all' || scope === APP)) {
+      try { (FIND_HOOK() || []).forEach(function (x, i) { var r = Math.min(rank(x.title), rank(x.text) + 1); if (r < 9) here.push({ r: r, i: i, v: x }); }); } catch (e) {}
+    }
     var cmp = function (a, b) { return a.r - b.r || a.i - b.i; };
-    links.sort(cmp); info.sort(cmp); tasks.sort(cmp);
-    return { links: links.slice(0, 8).map(function (x) { return x.v; }), info: info.slice(0, 8).map(function (x) { return x.v; }), tasks: tasks.slice(0, 8).map(function (x) { return x.v; }) };
+    var cut = function (a) { a.sort(cmp); return a.slice(0, 8).map(function (x) { return x.v; }); };
+    return { links: cut(links), info: cut(info), tasks: cut(tasks), cards: cut(cards), files: cut(files), pad: cut(pad), settings: cut(sets), here: cut(here),
+      count: { links: links.length, info: info.length, tasks: tasks.length, cards: cards.length, files: files.length, pad: pad.length, settings: sets.length, here: here.length } };
   }
+  var FIND_HOOK = null;
+  /* (1.72.0) recent searches, on this device only (shown when the box is empty; a click searches again) */
+  var RECENT_KEY = 'hub-srecent';
+  function recentList() { try { var v = JSON.parse(ls.get(RECENT_KEY) || '[]'); return Array.isArray(v) ? v.filter(function (x) { return typeof x === 'string'; }).slice(0, 6) : []; } catch (e) { return []; } }
+  function recentAdd(q) { q = String(q || '').trim(); if (q.length < 2) return; ls.set(RECENT_KEY, JSON.stringify([q].concat(recentList().filter(function (x) { return x.toLowerCase() !== q.toLowerCase(); })).slice(0, 6))); }
   function host(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return u; } }
   var infoHref = function (x, q) { return ROOT + 'web/info/#hub-info=' + encodeURIComponent(x.tab) + '&q=' + encodeURIComponent(q); };
 
@@ -1113,19 +1152,33 @@
     };
     // (1.65.1) "?", "keys", "shortcuts", "keyboard" or "hotkeys": the list of keyboard shortcuts comes first
     if (/^\s*\?\s*$|^keys?$|keyboard|shortcut|hotkey/i.test(q)) h += '<div class="ix-rh">Help</div>' + row('#ix-keys', false, '<i class="ix-d"></i>', 'Keyboard Shortcuts', 'Search, go to a page, edit: press ? on any page');
-    if (r.links.length) h += '<div class="ix-rh">Links</div>' + r.links.map(function (l) {
+    var head = function (name, k) { var c = r.count[k]; return '<div class="ix-rh">' + name + (c ? ' <span class="ix-rc">' + c + '</span>' : '') + '</div>'; };
+    if (r.links.length) h += head('Links', 'links') + r.links.map(function (l) {
       var ic = /^icons\//.test(l.icon) ? ROOT + 'web/hub/media/links/' + l.icon : /^https?:/.test(l.icon) ? l.icon : '';
       return row(safeHref(l.url), true, ic ? '<img src="' + esc(ic) + '" alt="" loading="lazy">' : '<i class="ix-d"></i>', snip(l.title, ql), esc(host(l.url)) + ' · ' + esc(l.where));
     }).join('');
-    if (r.info.length) h += '<div class="ix-rh">Info</div>' + r.info.map(function (x) {
+    if (r.info.length) h += head('Info', 'info') + r.info.map(function (x) {
       var sub = x.text ? esc(x.text) + (x.body && x.body.toLowerCase().indexOf(ql) >= 0 ? ' — ' + snip(x.body, ql) : '') : (x.body ? snip(x.body, ql) : 'Tab');
       return row(infoHref(x, q), false, '<i class="ix-d" style="' + (/^#[0-9a-f]{3,8}$/i.test(x.color || '') ? 'background:' + x.color : '') + '"></i>', snip(x.title, ql), sub);
     }).join('');
-    if (r.tasks.length) h += '<div class="ix-rh">Tasks</div>' + r.tasks.map(function (t) {
+    if (r.tasks.length) h += head('Tasks', 'tasks') + r.tasks.map(function (t) {
       var d = ''; try { d = new Date(t.due + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) {}
       var pr = ''; if (t.price != null) { try { pr = new Intl.NumberFormat(t.cur === 'INR' ? 'en-IN' : undefined, t.cur ? { style: 'currency', currency: t.cur, maximumFractionDigits: 2, minimumFractionDigits: 0 } : {}).format(t.price); } catch (e) { pr = String(t.price); } }
       var sub = [t.status === 'done' ? 'Done' : t.status === 'paused' ? 'Paused' : 'Due ' + d, t.cat, pr].filter(Boolean).map(esc).join(' · ');
       return row(ROOT + 'web/tasks/#task=' + encodeURIComponent(t.id), false, '<i class="ix-d"></i>', snip(t.name, ql), sub + (t.notes && t.notes.toLowerCase().indexOf(ql) >= 0 ? ' — ' + snip(t.notes, ql) : ''));
+    }).join('');
+    if (r.here.length) h += head('Unlocked on This Page', 'here') + r.here.map(function (x) {
+      return row(x.href || '#', false, '<i class="ix-d"></i>', snip(x.title, ql), esc(x.where || '') + (x.text && x.text.toLowerCase().indexOf(ql) >= 0 ? ' — ' + snip(x.text, ql) : ''));
+    }).join('');
+    if (r.cards.length) h += head('Cards', 'cards') + r.cards.map(function (c) {
+      return row(ROOT + 'web/cards/#q=' + encodeURIComponent(c.name || c.bank), false, '<i class="ix-d"></i>', snip([c.bank, c.name].filter(Boolean).join(' '), ql), esc([c.net, c.owner].filter(Boolean).join(' · ')));
+    }).join('');
+    if (r.files.length) h += head('Files', 'files') + r.files.map(function (f) {
+      return row(ROOT + 'web/files/#q=' + encodeURIComponent(f.n), false, '<i class="ix-d"></i>', snip(f.n, ql), esc(f.d ? 'In ' + f.d : 'Files'));
+    }).join('');
+    if (r.pad.length) h += head('Scratch Pad', 'pad') + r.pad.map(function (line) { return row(ROOT + 'web/home/#pad', false, '<i class="ix-d"></i>', snip(line, ql), 'Home'); }).join('');
+    if (r.settings.length) h += head('Settings', 'settings') + r.settings.map(function (x) {
+      return row(ROOT + 'web/settings/#' + x[1], false, '<i class="ix-d"></i>', snip(x[0], ql), esc(x[3] || 'Settings'));
     }).join('');
     // the search words are escaped (esc) before they go into the markup
     if (p.scope === 'all' || p.scope === 'tools') h += '<div class="ix-rh">Tools</div>' + row(ROOT + 'web/tools/#/search/' + encodeURIComponent(q), false, '<i class="ix-d"></i>', 'Search Tools for “' + esc(q) + '”', 'Image, PDF and Utility Tools');   // nosemgrep: javascript.browser.security.raw-html-concat.raw-html-concat
@@ -1137,15 +1190,21 @@
   function makeSearch(input, panel, onPick) {
     var idx = -1, t = 0, token = 0, forceOpen = false;
     function items() { return panel.querySelectorAll('.ix-r'); }
-    function mark(i) { var it = items(); if (!it.length) return; idx = (i + it.length) % it.length; it.forEach(function (e, k) { e.setAttribute('aria-selected', String(k === idx)); }); it[idx].scrollIntoView({ block: 'nearest' }); }
+    function mark(i) { var it = items(); if (!it.length) { input.removeAttribute('aria-activedescendant'); return; } idx = (i + it.length) % it.length; it.forEach(function (e, k) { e.setAttribute('aria-selected', String(k === idx)); }); it[idx].scrollIntoView({ block: 'nearest' }); input.setAttribute('aria-activedescendant', it[idx].id); }
+    // (1.72.0) the box says what it controls; a screen reader hears how many results there are
+    input.setAttribute('role', 'combobox'); input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-controls', panel.id || ''); input.setAttribute('aria-expanded', 'false');
+    new MutationObserver(function () { input.setAttribute('aria-expanded', String(!panel.hidden)); if (panel.hidden) input.removeAttribute('aria-activedescendant'); }).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
     function show() {
       var p = parseQuery(input.value), my = ++token;
       if (!p.q && !forceOpen) { panel.hidden = true; panel.innerHTML = ''; return; }
       loadSearchData().then(function () {
         if (my !== token) return;
-        panel.innerHTML = filtersHtml() + (p.q ? resultsHtml(p) : '<div class="ix-none">Type to search links, notes and tools.</div>') +
+        var rec = p.q ? [] : recentList();
+        panel.innerHTML = filtersHtml() + (p.q ? resultsHtml(p) : rec.length ? '<div class="ix-rh">Recent Searches <button type="button" class="ix-reset ix-rclr" data-recent-clear>Clear</button></div>' +
+            rec.map(function (x, i) { return '<a class="ix-r ix-rec" role="option" id="ix-r' + i + '" href="#" data-recent="' + esc(x) + '"><i class="ix-d"></i><span class="ix-rx"><b>' + esc(x) + '</b></span></a>'; }).join('')
+          : '<div class="ix-none">Type to search links, notes, tasks, cards, files, settings and tools.</div>') +
           (p.q || !matchMedia('(hover:hover) and (pointer:fine)').matches ? '' : '<a class="ix-khint" href="#ix-keys"><kbd>?</kbd> Keyboard Shortcuts</a>');   // (1.65.1) so the list can be found
-        panel.hidden = false; idx = -1; if (p.q) mark(0);
+        panel.hidden = false; idx = -1; if (p.q) { mark(0); var nr = panel.querySelectorAll('a.ix-r').length; announce(nr ? nr + (nr === 1 ? ' result' : ' results') : 'No results'); }
         if (panel.id === 'ix-sres') placePanel(input, panel);
       });
     }
@@ -1153,7 +1212,7 @@
       if (!panel.hidden && forceOpen) { forceOpen = false; if (!input.value.trim()) panel.hidden = true; return; }
       forceOpen = true; input.focus(); show();
     };
-    input.addEventListener('focus', function () { loadSearchData(); if (input.value.trim()) show(); });
+    input.addEventListener('focus', function () { loadSearchData(); if (input.value.trim()) show(); else if (recentList().length) { forceOpen = true; show(); } });   // (1.72.0) empty: the recent searches
     input.addEventListener('input', function () { clearTimeout(t); t = setTimeout(show, 60); });
     input.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown') { e.preventDefault(); mark(idx + 1); }
@@ -1171,7 +1230,11 @@
         else if (f === 'reset') SF = { scope: 'all', tab: '' };
         saveSF(); forceOpen = true; show(); input.focus(); return;
       }
+      if (e.target.closest('[data-recent-clear]')) { e.preventDefault(); ls.set(RECENT_KEY, null); forceOpen = true; show(); input.focus(); return; }
+      var rc = e.target.closest('a[data-recent]');
+      if (rc) { e.preventDefault(); input.value = rc.getAttribute('data-recent'); forceOpen = true; show(); input.focus(); return; }
       var a = e.target.closest('a.ix-r, a.ix-khint'); if (!a) return;
+      recentAdd(input.value);
       panel.hidden = true; forceOpen = false; onPick && onPick();
       if (a.getAttribute('href') === '#ix-keys') { e.preventDefault(); input.blur(); showKeys(); return; }
       if (a.href.indexOf('#hub-info=') >= 0 && a.href.split('#')[0] === location.href.split('#')[0]) {   // already on that page: no reload
@@ -1242,7 +1305,7 @@
     var kbd = function (a) { return a.split(' ').map(function (x) { return x === 'then' ? ' then ' : '<kbd>' + esc(x) + '</kbd>'; }).join(''); };
     openDlg('<div class="ix-ico">' + svg(ICON.keyboard) + '</div><h2>Keyboard Shortcuts</h2>' +
       '<div class="ix-keys" tabindex="0" role="region" aria-label="Keyboard shortcuts"><h3>Anywhere</h3>' + row(kbd('/') + ' or ' + kbd('Ctrl K'), 'Search the site') + row(kbd('?'), 'Show this list') + row(kbd('Esc'), 'Close a window') +
-      (S.admin ? row(kbd('E'), 'Edit this page (the pencil)') : '') +
+      (S.admin ? row(kbd('E'), 'Edit this page (the pencil)') : '') + (SWIPE_APPS.indexOf(APP) >= 0 ? row(kbd('[') + ' and ' + kbd(']'), 'The page before or after (like a swipe on a phone)') : '') +
       '<h3>Go to a Page</h3>' + go.map(function (g) { return row(kbd('G') + ' then ' + kbd(g[0].toUpperCase()), g[1]); }).join('') +
       (PAGEKEYS[APP] ? '<h3>On This Page</h3>' + PAGEKEYS[APP].filter(function (k) { return APP !== 'home' || S.admin; }).map(function (k) { return row(kbd(k[0]), k[1]); }).join('') : '') + '</div>' +
       '<div class="ix-acts"><button type="button" class="ix-btn pri" id="ix-kclose" autofocus>Close</button></div>');
@@ -1266,6 +1329,7 @@
       el.innerHTML = 'Go to: ' + goKeys().map(function (g) { return '<kbd>' + esc(g[0].toUpperCase()) + '</kbd> ' + esc(g[1]); }).join(' · ');
       document.body.appendChild(el); return;
     }
+    if ((k === '[' || k === ']') && SWIPE_APPS.indexOf(APP) >= 0 && !e.ctrlKey && !e.metaKey && !e.altKey) { if (swipePage(k === ']' ? 1 : -1)) { e.preventDefault(); return; } }   // (1.72.0) like a swipe
     if ((k === 'e' || k === 'E') && APP !== 'home' && S.admin) { var tg = document.querySelector('[data-hub=toggle]'); if (tg) { e.preventDefault(); e.stopPropagation(); tg.click(); } }
   }, true);
 
@@ -1468,8 +1532,9 @@
   function logout() {
     api('logout', {}).finally(function () {
       // private copies some pages keep in this browser
-      ls.set('family4', null); ls.set('cards3', null); ls.set('notes4', null);
+      ls.set('family4', null); ls.set('cards3', null); ls.set('notes4', null); ls.set('hub-recent-links', null);   // (1.72.0) Home's Recent Links
       try { sessionStorage.clear(); } catch (e) {}
+      if (window.caches) caches.delete('hub-offline').catch(function () {});   // (1.72.0) Offline Reading's copy; the switch stays on
       window.HubVault.devDropAll();   // the "keep unlocked on this device" keys of Links and Info
       location.reload();
     });
@@ -1580,7 +1645,7 @@
     applyColors: applyColors, applyAttrs: applyAttrs, PG_APPS: PG_APPS, CORE: CORE, ASSETS: ASSETS, COLOR_DEFAULT: COLOR_DEFAULT, setTheme: setTheme, pageList: pageList,
     applyFavicon: applyFavicon, SIZE_SPEC: SIZE_SPEC, PAGE_DEF: PAGE_DEF, FONTS: FONTS, COLOR_KEYS: COLOR_KEYS, when: when, previewWith: previewWith,
     previewTheme: previewTheme, restoreTheme: restoreTheme, storeTheme: storeTheme, resolveTheme: resolveTheme,
-    stepper: stepper, linkField: linkField, pageColor: pageColor, pageTile: function (id) { var x = PAGE_TILE[id]; return x ? '<svg viewBox="0 0 24 24">' + x[1] + '</svg>' : ''; } };
+    stepper: stepper, linkField: linkField, offline: function () { return offline; }, pageColor: pageColor, pageTile: function (id) { var x = PAGE_TILE[id]; return x ? '<svg viewBox="0 0 24 24">' + x[1] + '</svg>' : ''; } };
 
   /* ---------- (1.69.0) Stepper: a flow of a few steps in one box. Ported to plain JavaScript from React Bits' Stepper (David Haz, MIT +
      Commons Clause; credited in THIRD-PARTY.md). The current step sits on a raised tile that slides along; a finished step turns into a tick
@@ -1590,18 +1655,26 @@
            linear (only back to steps already reached), complete (last button), danger (red last button), skip (a Skip button: function),
            done (html shown after the last step), onDone(ctl), frame (a glass panel around it), back, cont }
      Also: lastId, lastClass, lastHtml (the last button's id, class and inside), skipText, start (the step to open on). Returns { el, go(n), pane(n), err(text), block(n, on), fin (the done pane), step() }. */
+  /* (1.72.0) a short message a screen reader reads out (a step changed, a copy worked, how many results), without moving the focus */
+  var liveT = 0;
+  function announce(text) {
+    var el = document.getElementById('ix-live');
+    if (!el) { if (!document.body) return; el = document.createElement('div'); el.id = 'ix-live'; el.className = 'ix-sr'; el.setAttribute('aria-live', 'polite'); el.setAttribute('role', 'status'); document.body.appendChild(el); }
+    clearTimeout(liveT); el.textContent = ''; liveT = setTimeout(function () { el.textContent = String(text || ''); }, 60);   // emptied first, so the same words are read again
+  }
   function stepper(host, o) {
     var steps = o.steps, total = steps.length, kind = o.kind || 'numbers', cur = 1, reached = 1, busy = false, blocked = {};
     var TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
     var root = document.createElement('div'); root.className = 'ix-st' + (o.frame ? ' ix-st-frame' : '');
     var head = document.createElement('div'); head.className = 'ix-st-head ix-st-' + kind;
-    var view = document.createElement('div'); view.className = 'ix-st-view'; view.setAttribute('aria-live', 'polite');
+    var view = document.createElement('div'); view.className = 'ix-st-view';   // (1.72.0) no aria-live here: it read the whole step out; announce() says which step it is
     var foot = document.createElement('div'); foot.className = 'ix-st-foot';
     var panes = steps.map(function (st, i) {
       var p = document.createElement('div'); p.className = 'ix-st-pane'; p.tabIndex = -1; p.hidden = i > 0;
+      p.setAttribute('role', 'group'); p.setAttribute('aria-label', 'Step ' + (i + 1) + ' of ' + steps.length + ': ' + (st.title || ''));
       p.innerHTML = (st.html || '') + '<p class="ix-err ix-st-err" role="alert"></p>'; view.appendChild(p); return p;
     });
-    var fin = document.createElement('div'); fin.className = 'ix-st-pane ix-st-done'; fin.hidden = true; view.appendChild(fin);
+    var fin = document.createElement('div'); fin.className = 'ix-st-pane ix-st-done'; fin.hidden = true; fin.tabIndex = -1; view.appendChild(fin);
     root.append(head, view, foot); host.innerHTML = ''; host.appendChild(root);
     var status = function (n) { return cur > total || n < cur ? 'done' : n === cur ? 'active' : 'upcoming'; };
     var can = function (n) { return !busy && n !== cur && cur <= total && (!o.linear || n <= reached); };
@@ -1669,8 +1742,8 @@
         if (Math.abs(to - from) > 1) view.animate([{ height: from + 'px' }, { height: to + 'px' }], { duration: 420, easing: 'cubic-bezier(.34,1.3,.64,1)' });
       }
       drawHead(); drawFoot();
-      if (n <= total) { var st = steps[n - 1]; if (st.enter) st.enter(now, ctl); var f = now.querySelector('input:not([type=hidden]):not([disabled]),select,textarea'); (f || now).focus({ preventScroll: true }); }
-      else if (o.onDone) o.onDone(ctl);
+      if (n <= total) { var st = steps[n - 1]; if (st.enter) st.enter(now, ctl); var f = now.querySelector('input:not([type=hidden]):not([disabled]),select,textarea'); (f || now).focus({ preventScroll: true }); announce('Step ' + n + ' of ' + total + ': ' + (st.title || '')); }
+      else { if (o.onDone) o.onDone(ctl); if (fin.isConnected && !fin.contains(document.activeElement)) fin.focus({ preventScroll: true }); announce('Done.'); }
     }
     // block(n, on): Continue stays off on step n until it is unblocked (a file not chosen yet, a box not ticked)
     var block = function (n, on) { blocked[n] = !!on; var b = foot.querySelector('.ix-st-next'); if (b && n === cur && !busy) b.disabled = !!on; };
@@ -1716,7 +1789,7 @@
   }
   function start() {
     drawBar(); watchFavicon(); watchEditBarPick();
-    var go = function () { refresh().then(function () { afterLoad(); openFromHash(); backupReminder(); shareWorker(); }); };
+    var go = function () { refresh().then(function () { afterLoad(); openFromHash(); backupReminder(); shareWorker(); offlineStart(); }, function () { offlineStart(); }); };
     if (document.prerendering) document.addEventListener('prerenderingchange', go, { once: true }); else go();   // a page prepared in the background waits until you open it
     window.addEventListener('hashchange', openFromHash);
     // the Edit icon lights up while the page is in edit mode
@@ -1863,8 +1936,10 @@
     return '<div class="ix-uf' + (o.mono || ro ? ' ix-uf-mono' : '') + (o.cls ? ' ' + esc(o.cls) : '') + '"' + a('data-scheme', sch) + a('data-strip', !!o.strip) + '>' +
       (px ? (sch ? '<button type="button" class="ix-uf-px" data-uf-px title="Tap for http:// or https://" aria-label="Address starts with ' + esc(px) + '. Tap to switch">' + esc(px) + '</button>'
                  : '<span class="ix-uf-px" aria-hidden="true">' + esc(px) + '</span>') : '') +
-      '<input type="text"' + a('id', o.id) + a('value', o.show != null ? o.show : o.value) + a('readonly', ro) + a('required', o.required) + a('placeholder', o.placeholder) +
-        a('aria-label', o.label) + ' autocomplete="off" spellcheck="false"' + (sch ? ' inputmode="url"' : '') + '>' +
+      // (1.72.0) o.wrap: a read-only key that may wrap onto a second line on a narrow phone (a textarea), so no part of it is ever cut off
+      (o.wrap && ro ? '<textarea rows="1" readonly' + a('id', o.id) + a('aria-label', o.label) + ' autocomplete="off" spellcheck="false">' + esc(o.show != null ? o.show : o.value) + '</textarea>'
+        : '<input type="text"' + a('id', o.id) + a('value', o.show != null ? o.show : o.value) + a('readonly', ro) + a('required', o.required) + a('placeholder', o.placeholder) +
+        a('aria-label', o.label) + ' autocomplete="off" spellcheck="false"' + (sch ? ' inputmode="url"' : '') + '>') +
       (o.open ? '<button type="button" class="ix-uf-open" aria-label="Open the link in a new tab" title="Open"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>' : '') +
       (o.copy === false ? '' : '<button type="button" class="ix-uf-cp"' + a('id', o.copyId) + a('data-copy', o.copyText) + ' aria-label="Copy">' + UF_COPY + '<span class="ix-uf-tip" aria-hidden="true">COPY</span></button>') +
       '</div>';
@@ -1894,21 +1969,100 @@
   function ufCopied(b, ok) {
     var tip = b.querySelector('.ix-uf-tip');
     clearTimeout(b.__t); b.classList.toggle('done', ok); if (tip) tip.textContent = ok ? 'COPIED' : 'COPY';
-    b.setAttribute('aria-label', ok ? 'Copied' : 'Copy');
+    b.setAttribute('aria-label', ok ? 'Copied' : 'Copy'); if (ok) announce('Copied');
     if (ok) b.__t = setTimeout(function () { ufCopied(b, false); }, 1600);
+  }
+  /* the older copy command, for pages without the clipboard API: a hidden box holds the exact text (the field may show it spaced) */
+  function legacyCopy(text) {
+    var a = document.createElement('textarea'), ok = false, was = document.activeElement;
+    a.value = text; a.setAttribute('readonly', ''); a.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
+    document.body.appendChild(a); a.select(); try { a.setSelectionRange(0, text.length); } catch (e) {}
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    a.remove(); if (was && was.focus) try { was.focus({ preventScroll: true }); } catch (e) {}
+    return ok;
   }
   document.addEventListener('input', function (e) { var t = e.target; if (t && t.tagName === 'INPUT' && ufOf(t)) ufSplit(t); });
   document.addEventListener('click', function (e) {
     var b = e.target && e.target.closest ? e.target.closest('.ix-uf-px[data-uf-px], .ix-uf-cp, .ix-uf-open') : null;
     if (!b) return;
-    var f = ufOf(b), inp = f && f.querySelector('input');
+    var f = ufOf(b), inp = f && f.querySelector('input, textarea');
     if (b.classList.contains('ix-uf-px')) { b.textContent = b.textContent === 'https://' ? 'http://' : 'https://'; if (inp) inp.dispatchEvent(new Event('change', { bubbles: true })); return; }
     if (b.classList.contains('ix-uf-open')) { var u = linkValue(inp); if (/^https?:\/\//i.test(u)) window.open(u, '_blank', 'noopener'); else toast('Type the address first.'); return; }
     var text = b.hasAttribute('data-copy') ? b.getAttribute('data-copy') : linkValue(inp);
     if (!text) return;
-    var fail = function () { if (inp) { inp.focus(); inp.select(); } toast('Press Ctrl+C to copy.'); };
+    // (1.72.0) where the browser has no clipboard here (a page opened over plain http), the older copy command usually still works;
+    // only when that fails too is the text selected, with a note that fits the device
+    var fail = function () {
+      if (legacyCopy(text)) { ufCopied(b, true); return; }
+      if (inp) { inp.focus(); inp.select(); }
+      toast(matchMedia('(pointer: coarse)').matches ? 'Selected: tap and hold, then Copy.' : 'Selected: press Ctrl+C (Cmd+C on a Mac) to copy.');
+    };
     try { (navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () { ufCopied(b, true); }, fail); } catch (x) { fail(); }
   });
+
+  /* ---------- (1.72.0) Instant pages: each page keeps the last data it got from the server in this browser tab (sessionStorage), and
+     shows it at once on the next visit while the fresh data loads. Only what the page got while you were logged in; locked tabs and
+     locked Cards stay locked in it (scrambled, as the server sends them). It is gone when the tab closes, and Log Out clears it.
+     While the old copy is on screen (html.ix-stale) the pencil waits: nothing can be edited until the fresh data is in. ---------- */
+  var snap = {
+    get: function (app) { try { var v = JSON.parse(sessionStorage.getItem('hub-snap-' + app) || 'null'); return v && v.d ? v.d : null; } catch (e) { return null; } },
+    put: function (app, d) {
+      try { if (d == null) sessionStorage.removeItem('hub-snap-' + app); else sessionStorage.setItem('hub-snap-' + app, JSON.stringify({ t: Date.now(), d: d })); }
+      catch (e) { try { sessionStorage.removeItem('hub-snap-' + app); } catch (x) {} }   // too big for this browser: no copy, the page just loads as before
+    },
+    stale: function (on) { H.classList.toggle('ix-stale', !!on); }
+  };
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('[data-hub=toggle]') : null;
+    if (!t || editing()) return;
+    var off = H.classList.contains('ix-offline');
+    if (!off && !H.classList.contains('ix-stale')) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    toast(off ? 'You are offline: editing comes back when you are online.' : 'Loading the latest version first…');
+  }, true);
+
+  /* ---------- (1.72.0) Offline Reading: a switch per device (Settings > Overview > Start Here), off by default. On, a service worker
+     (assets/offline-sw.js, served by api.php?action=sw so it may look after the whole site) keeps the pages and their last data in this
+     browser, and shows them, read-only, when there is no connection. Log Out deletes the copy; switching it off deletes it and the worker. */
+  var OFF_KEY = 'hub-offline';
+  var offline = {
+    can: function () { return 'serviceWorker' in navigator && !!window.isSecureContext && !!window.caches; },
+    on: function () { return ls.get(OFF_KEY) === '1'; },
+    start: function () {
+      if (!offline.can()) return Promise.resolve(false);
+      return navigator.serviceWorker.register(CORE + 'api.php?action=sw', { scope: ROOT }).then(function () { return true; }, function () { return false; });
+    },
+    stop: function () {
+      var p = [];
+      if ('serviceWorker' in navigator) p.push(navigator.serviceWorker.getRegistrations().then(function (rs) {
+        return Promise.all(rs.filter(function (r) { var w = r.active || r.waiting || r.installing; return w && /api\.php\?action=sw$/.test(w.scriptURL); }).map(function (r) { return r.unregister(); }));
+      }));
+      if (window.caches) p.push(caches.delete('hub-offline'));
+      return Promise.all(p).then(function () { return true; }, function () { return false; });
+    },
+    set: function (v) { ls.set(OFF_KEY, v ? '1' : null); return v ? offline.start() : offline.stop(); },
+    count: function () { return window.caches ? caches.open('hub-offline').then(function (c) { return c.keys(); }).then(function (k) { return k.length; }, function () { return 0; }) : Promise.resolve(0); }
+  };
+  /* no connection (the browser says so, or the worker had to show its copy): a note at the top, and editing waits (see the click guard above) */
+  function offlineNote(on) {
+    var was = H.classList.contains('ix-offline'); if (was === on) return;
+    H.classList.toggle('ix-offline', on);
+    var n = document.getElementById('ix-offl');
+    if (on && !n && document.body) {
+      n = document.createElement('div'); n.id = 'ix-offl'; n.setAttribute('role', 'status');
+      n.textContent = 'Offline: showing your last copy. Changes can’t be saved until you are back online.';
+      document.body.appendChild(n);
+    } else if (!on && n) n.remove();
+    if (was && !on && !editing()) location.reload();   // back online: the page fetches everything fresh
+  }
+  addEventListener('offline', function () { offlineNote(true); });
+  addEventListener('online', function () { offlineNote(false); });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.hub === 'offline') offlineNote(true); });
+  function offlineStart() {
+    if (navigator.onLine === false) offlineNote(true);
+    if (offline.on()) offline.start();
+    else if ('serviceWorker' in navigator && navigator.serviceWorker.controller && /api\.php\?action=sw$/.test(navigator.serviceWorker.controller.scriptURL)) offline.stop();   // switched off in another tab
+  }
 
   window.HUB = {
     app: APP, state: function () { return S; }, login: login, logout: logout, settings: settings, toast: toast, undo: function (msg, run) { toast(msg, false, false, { label: 'Undo', run: run }); }, theme: themeNow, setTheme: setTheme,
@@ -1917,6 +2071,16 @@
     api: api,   // (1.60) the core API with the security token, for pages without their own (Tools' presets)
     stepper: stepper,   // (1.69.0) a flow of a few steps (Links import, Files share, the Home tour)
     linkField: linkField, linkValue: linkValue, linkSet: linkSet,   // (1.69.1) the link field (Links, Files share, Settings)
+    findHook: function (fn) { FIND_HOOK = typeof fn === 'function' ? fn : null; },
+    // (1.72.0) the Import Center hands what you chose to the page it goes to (sessionStorage, read once): Tasks, Info, Links or Cards
+    importTake: function (to) {
+      if (location.hash !== '#hub-import') return null;
+      var p = null; try { p = JSON.parse(sessionStorage.getItem('hub-import') || 'null'); } catch (e) { p = null; }
+      if (!p || p.to !== to) return null;
+      try { sessionStorage.removeItem('hub-import'); history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+      return p;
+    },   // (1.72.0) a page adds what only it can read (unlocked tabs) to the search
+    snap: snap,   // (1.72.0) instant pages: the last data of a page in this tab
     /* (1.65.1) A page that needs the login (Settings when logged out): a card with the site's logo, a line and the Log In button, on a
        faint dot grid. One copy for every such page, styled by shell.css, so it never falls back to the browser's own grey button. */
     gate: function (host, title, text) {   // built from elements (textContent), so nothing is read as HTML

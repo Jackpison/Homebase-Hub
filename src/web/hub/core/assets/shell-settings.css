@@ -785,3 +785,25 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-gpvd{bottom:12px;left:50%;transform:translateX(-50%);height:40px;padding:0 12px;gap:8px;border-radius:99px}
 #ix-page .ix-gxt{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}
 #ix-page .ix-gxt small{display:block;color:var(--ix-mu);font-size:12.5px}
+
+/* ---------- (1.72.0) Backup & Restore › Import ---------- */
+#ix-page .ix-imfrom{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
+#ix-page .ix-imfrom span{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--ix-s2);color:var(--ix-mu);font-size:12.5px}
+#ix-page .ix-imfrom b{color:var(--ix-tx);font-weight:600}
+#ix-page .ix-imfrom svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+#ix-page .ix-drop{display:grid;place-items:center;gap:4px;padding:26px 16px;border:2px dashed var(--ix-line2);border-radius:14px;text-align:center;cursor:pointer;color:var(--ix-mu);transition:border-color .2s,background .2s}
+#ix-page .ix-drop:hover,#ix-page .ix-drop.over,#ix-page .ix-drop:focus-within{border-color:var(--ix-accent);background:color-mix(in srgb,var(--ix-accent) 8%,transparent)}
+#ix-page .ix-drop b{color:var(--ix-tx);font-size:15px}
+#ix-page .ix-drop input{position:absolute;width:1px;height:1px;opacity:0}
+#ix-page #ix-imres{margin-top:14px}
+#ix-page .ix-imtools{display:flex;align-items:center;gap:14px;margin:10px 0 6px;font-size:13px}
+#ix-page .ix-imtools .ix-mu{margin-left:auto}
+#ix-page .ix-imlist{max-height:360px;overflow:auto;border:1px solid var(--ix-line);border-radius:12px}
+#ix-page .ix-imrow{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-bottom:1px solid var(--ix-line);cursor:pointer}
+#ix-page .ix-imrow:last-child{border-bottom:0}
+#ix-page .ix-imrow input{margin-top:3px;width:17px;height:17px;accent-color:var(--ix-accent);flex:none}
+#ix-page .ix-imrow span{min-width:0}
+#ix-page .ix-imrow b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ix-page .ix-imrow small{display:block;color:var(--ix-mu);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ix-page .ix-immap{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin:10px 0}
+#ix-page .ix-immap label{display:grid;gap:4px;font-size:12.5px;color:var(--ix-mu)}

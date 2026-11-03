@@ -782,7 +782,12 @@ async function load() {
   try { const r = await HF("api.php?action=list", { cache: "no-store" }); j = await r.json(); } catch (e) { j = null; }
   if (!j) { $("sync").textContent = "Could not reach the server."; return; }
   if (j.private && !j.auth) return privateScreen(j);
-  apply(j); await names(); started = true; render();
+  apply(j); await names(); started = true;
+  // (1.72.0) the site search finds files by name once they are opened here: only the names (and their folder), in this tab only
+  if (unlocked) { try { sessionStorage.setItem("hub-find-files", JSON.stringify(live().filter(i => MC.has(i.m)).slice(0, 3000).map(i => ({ n: nameOf(i), d: i.p && byId.get(i.p) ? nameOf(byId.get(i.p)) : "", t: i.t === "f" ? dateOf(i) : 0 })))); } catch (e) { /* too big: no names */ } }
+  const hq = /^#q=(.+)$/.exec(location.hash);   // a search result: show the file
+  if (hq) { try { q = decodeURIComponent(hq[1]); } catch (e) { q = ""; } tab = "files"; $("q").value = q; history.replaceState(null, "", location.pathname + location.search); }
+  render();
   const sh = new URLSearchParams(location.search).get("shared");
   if (sh) { history.replaceState(null, "", location.pathname + location.hash); sharedBox(sh); }
 }

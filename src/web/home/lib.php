@@ -224,10 +224,10 @@ function site_from_page(array $in, array $cur): array
 /* ================= widgets (1.51) ================= */
 
 /** The widgets Home can show, in their default order. Private ones load their data only for a logged-in browser. */
-const WIDGET_IDS = ['today', 'countdown', 'note', 'tools', 'calendar', 'pad', 'quote', 'worldclock', 'weather'];
+const WIDGET_IDS = ['today', 'countdown', 'note', 'tools', 'calendar', 'pad', 'quote', 'worldclock', 'weather', 'bills', 'recent', 'files', 'status'];   // (1.72.0) the last four
 // Weather stays off until you turn it on and type your town: only then does your server ask Open-Meteo for the forecast.
 const WIDGET_ON  = ['today' => true, 'countdown' => true, 'note' => true, 'tools' => true, 'calendar' => true, 'pad' => false,
-                    'quote' => true, 'worldclock' => false, 'weather' => false];
+                    'quote' => true, 'worldclock' => false, 'weather' => false, 'bills' => false, 'recent' => false, 'files' => false, 'status' => false];
 const WORLD_CLOCKS = 3;                     // places in World Clock
 const WIDGET_STYLES = ['dock', 'glance'];
 const GLASS_TINTS = ['light', 'dark', 'solid'];   // Home Settings > Glass > Tint   // Glass Dock, or Glance and Expand
