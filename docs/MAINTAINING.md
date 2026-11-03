@@ -34,6 +34,7 @@ When there is no maintenance pull request, everything was already current. Nothi
 
 - **A maintenance or Dependabot pull request has a red check:** do not merge it. Leave a comment if you like, then close it. Next month tries again with newer versions, which often fixes it. If it keeps failing, it needs a person or an AI: give them this file, `AGENTS.md` and the link to the failed check.
 - **An issue "Monthly maintenance failed":** nothing reached `main`, and your sites are safe. Run it again later: **Actions › Monthly maintenance › Run workflow**. If it fails again, hand it over as above.
+- **…and the failed run says "GitHub Actions is not permitted to create or approve pull requests":** the update worked, but GitHub would not let it open the pull request. Turn it on once: **Settings › Actions › General › Workflow permissions**, tick **Allow GitHub Actions to create and approve pull requests**, **Save**. Then **Run workflow** again and close the issue.
 - **An issue labelled `security`:** a library has a known problem. If the monthly maintenance doesn't fix it within a month (or it's urgent), hand it over.
 - **An issue labelled `php`:** the next PHP version breaks something. You have months: hosts offer a new PHP about a year after it appears. Hand it over before your host switches.
 - **A site misbehaves after an update:** **Settings › Updates › Go Back** puts the previous version back.

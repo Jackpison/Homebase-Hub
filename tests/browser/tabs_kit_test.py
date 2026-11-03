@@ -5,7 +5,7 @@ Settings look, and a tab icon chosen from 16 (saved on the tab, kept by both ser
 import json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import SEED
-from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
+from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, settle, TRACK_REQUESTS
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -32,7 +32,7 @@ try:
 
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
-        ctx = b.new_context(viewport={'width': 1280, 'height': 900})
+        ctx = b.new_context(viewport={'width': 1280, 'height': 900}); ctx.add_init_script(TRACK_REQUESTS)
         pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
         why = browser_login(pg, s.base); check('K0 logged in', not why, why)
 
@@ -43,14 +43,18 @@ try:
             return pg.evaluate("sel => [...document.querySelectorAll(sel)].map(x => x.textContent.trim())", sel)
 
         def drag(sel_from, i_from, i_to):
-            """Mouse drag of one tab onto the place of another."""
+            """Mouse drag of one tab onto the place of another. It starts once the page is still: a save answer that arrives during
+            the drag redraws the tabs, and the drag would be lost (K6 failed so once in CI under load). Returns what was under the mouse."""
+            settle(pg)
             boxes = pg.evaluate("sel => [...document.querySelectorAll(sel)].map(x => { const r = x.getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; })", sel_from)
             a, z = boxes[i_from], boxes[i_to]
+            under = pg.evaluate("([x, y]) => { const e = document.elementFromPoint(x, y); return e ? e.tagName + (e.id ? '#' + e.id : '') + '.' + String(e.className && e.className.baseVal !== undefined ? e.className.baseVal : e.className).trim().replace(/ +/g, '.') : 'nothing'; }", [a[0] + a[2] / 3, a[1] + a[3] / 2])
             pg.mouse.move(a[0] + a[2] / 3, a[1] + a[3] / 2); pg.mouse.down()
             pg.mouse.move(a[0] + a[2] / 3 + 12, a[1] + a[3] / 2, steps=4)
             pg.mouse.move(z[0] + z[2] * 0.75, z[1] + z[3] / 2, steps=14)
             pg.mouse.up()
             pg.wait_for_timeout(300)
+            return under
 
         # ---------------- Links ----------------
         pg.goto(s.base + '/web/links/'); wait_js(pg, "document.querySelectorAll('#tabs .tab').length >= 3", 20000)
@@ -76,10 +80,10 @@ try:
 
         until(lambda: not pg.evaluate("document.getElementById('hubTabDlg').open"), 10000)
         n0 = order('#tabs .tabi .tab')
-        drag('#tabs .tabi', 0, 2)
+        under = drag('#tabs .tabi', 0, 2)
         until(lambda: [t['title'] for t in links_tabs(s)] != ['Alpha', 'Beta', 'Gamma'], 10000)
         got = [t['title'] for t in links_tabs(s)]
-        check('K6 Links: dragging the first tab to the end moves it, and the new order is saved', got == ['Beta', 'Gamma', 'Alpha'], (n0, got))
+        check('K6 Links: dragging the first tab to the end moves it, and the new order is saved', got == ['Beta', 'Gamma', 'Alpha'], (n0, got, order('#tabs .tabi .tab'), 'under the mouse: ' + under))
         pg.focus('#tabs .tabi:first-child .tab'); pg.keyboard.press('Alt+ArrowRight')
         until(lambda: [t['title'] for t in links_tabs(s)][0] == 'Gamma', 10000)
         check('K7 Links: from the keyboard, Alt + Right moves the focused tab one place', [t['title'] for t in links_tabs(s)] == ['Gamma', 'Beta', 'Alpha'], [t['title'] for t in links_tabs(s)])

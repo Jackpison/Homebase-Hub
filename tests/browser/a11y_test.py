@@ -32,7 +32,16 @@ def scan(pg):
     # that draws a second time (Settings' Overview, with its fade-in) be measured mid-fade, a contrast failure that is not real.
     pg.evaluate(WATCH_DOM)
     until(lambda: pg.evaluate("performance.now() - window.__lastMut > 400 && document.getAnimations().every(a => a.playState !== 'running' || !isFinite(a.effect.getTiming().iterations))"), 8000, 100)
-    pg.add_script_tag(content=AXE); return pg.evaluate(RUN)
+    pg.add_script_tag(content=AXE); v = pg.evaluate(RUN)
+    if any(x['id'] == 'color-contrast' for x in v):
+        # Measure colours a second time once the page is still again: in WebKit a fade can end without showing in
+        # getAnimations(), and a colour read mid-fade is not a real failure (CI, 1.72.0). A real contrast problem shows both times.
+        settle(pg); pg.evaluate(WATCH_DOM)
+        until(lambda: pg.evaluate("performance.now() - window.__lastMut > 400"), 8000, 100); pg.wait_for_timeout(500)
+        again = {x['id'] for x in pg.evaluate(RUN)}
+        if 'color-contrast' not in again: print('note: a colour was measured mid-change; measured again, it passes')
+        v = [x for x in v if x['id'] != 'color-contrast' or 'color-contrast' in again]
+    return v
 try:
     cj = http.cookiejar.CookieJar(); op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
     def call(a, b=None):
