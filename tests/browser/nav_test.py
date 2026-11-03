@@ -160,8 +160,11 @@ try:
                 if nav == 'top':
                     pg.evaluate("document.documentElement.style.scrollBehavior = 'auto'; document.body.style.minHeight = '4000px'")
                     pg.mouse.move(600, 400)
-                    pg.evaluate("window.scrollTo(0, 300)"); pg.wait_for_timeout(80)   # on purpose: two scroll events, so the page sees the direction
-                    pg.evaluate("window.scrollTo(0, 900)"); until(lambda: pg.evaluate("document.documentElement.classList.contains('ix-hide')"), 3000); settle(pg)
+                    # scroll down in small steps, like a real scroll: a busy browser (WebKit in CI) can merge two quick jumps into one
+                    # scroll event, and the page then never sees the direction
+                    for y in range(150, 1000, 150):   # 150 ... 900, as far down as before (the next step scrolls up to 700)
+                        pg.evaluate("y => window.scrollTo(0, y)", y); pg.wait_for_timeout(60)
+                    until(lambda: pg.evaluate("document.documentElement.classList.contains('ix-hide')"), 3000); settle(pg)
                     hid = pg.evaluate("document.documentElement.classList.contains('ix-hide')"); r = rect(pg, '#ix-bar')
                     check('%s: scrolling down slides the bar away' % L, hid and r['b'] <= 1, (hid, r))
                     tv = pg.evaluate("[getComputedStyle(document.body).getPropertyValue('--ix-top-now').trim(), getComputedStyle(document.documentElement).getPropertyValue('--ix-top').trim()]")
