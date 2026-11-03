@@ -62,6 +62,9 @@ try:
         wait_js(pg, "navigator.serviceWorker.getRegistrations().then(r => r.some(x => x.active && /action=sw$/.test(x.active.scriptURL)))", 15000)
         scope = pg.evaluate("navigator.serviceWorker.getRegistrations().then(r => r.filter(x => x.active && /action=sw$/.test(x.active.scriptURL)).map(x => x.scope))")
         check('F5 switched on, a service worker looks after the whole site (its scope is the site\'s folder)', scope == [s.base + '/'], scope)
+        try: kept = wait_js(pg, "caches.open('hub-offline').then(c => c.keys()).then(k => k.some(r => new URL(r.url).pathname === '/web/settings/') && k.some(r => /\\/shell\\.js\\?v=/.test(r.url)))", 15000)
+        except TimeoutError: kept = False
+        check('F5b the page where it was switched on (it loaded before the worker) is kept too, with its files', kept is not False)
         for app, ready in (('links', "!!document.querySelector('#grid .col')"), ('tasks', "typeof T !== 'undefined' && T.length > 0"),
                            ('info', "document.querySelectorAll('.box').length > 0")):
             pg.goto(s.base + '/web/%s/' % app); wait_js(pg, ready + " && !!navigator.serviceWorker.controller", 20000); pg.wait_for_timeout(600)

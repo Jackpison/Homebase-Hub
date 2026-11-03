@@ -2040,7 +2040,7 @@
       if (window.caches) p.push(caches.delete('hub-offline'));
       return Promise.all(p).then(function () { return true; }, function () { return false; });
     },
-    set: function (v) { ls.set(OFF_KEY, v ? '1' : null); return v ? offline.start() : offline.stop(); },
+    set: function (v) { ls.set(OFF_KEY, v ? '1' : null); return v ? offline.start().then(function (ok) { if (ok) offlineKeepPage(); return ok; }) : offline.stop(); },
     count: function () { return window.caches ? caches.open('hub-offline').then(function (c) { return c.keys(); }).then(function (k) { return k.length; }, function () { return 0; }) : Promise.resolve(0); }
   };
   /* no connection (the browser says so, or the worker had to show its copy): a note at the top, and editing waits (see the click guard above) */
@@ -2058,9 +2058,17 @@
   addEventListener('offline', function () { offlineNote(true); });
   addEventListener('online', function () { offlineNote(false); });
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.hub === 'offline') offlineNote(true); });
+  /* the worker may have started after this page loaded (the page where it was switched on, or a slow start): hand it what the page loaded */
+  function offlineKeepPage() {
+    navigator.serviceWorker.ready.then(function (reg) {
+      var more = (performance.getEntriesByType ? performance.getEntriesByType('resource') : []).map(function (e) { return e.name; })
+        .filter(function (n) { return n.indexOf(location.origin + '/') === 0; });
+      if (reg.active) reg.active.postMessage({ keep: { page: location.href.split('#')[0], more: more } });
+    }).catch(function () {});
+  }
   function offlineStart() {
     if (navigator.onLine === false) offlineNote(true);
-    if (offline.on()) offline.start();
+    if (offline.on()) offline.start().then(function (ok) { if (ok) offlineKeepPage(); });
     else if ('serviceWorker' in navigator && navigator.serviceWorker.controller && /api\.php\?action=sw$/.test(navigator.serviceWorker.controller.scriptURL)) offline.stop();   // switched off in another tab
   }
 

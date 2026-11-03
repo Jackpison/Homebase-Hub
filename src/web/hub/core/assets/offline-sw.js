@@ -22,7 +22,26 @@ const DATA = [/^web\/links\/api\.php\?action=get$/, /^web\/info\/api\.php$/, /^w
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
-self.addEventListener('message', (e) => { if (e.data === 'clear') e.waitUntil(caches.delete(CACHE)); });
+self.addEventListener('message', (e) => {
+  if (e.data === 'clear') e.waitUntil(caches.delete(CACHE));
+  else if (e.data && e.data.keep) e.waitUntil(keep(e.data.keep));
+});
+/* (1.72.0) a page that loaded before this worker looked after it (the page where Offline Reading was switched on, or one that loaded
+   while the worker was still starting) sends what it loaded: its own address and its files and data. Each is kept by the same rules as
+   above; what is kept already is left alone. */
+async function keep(o) {
+  const c = await caches.open(CACHE), list = [[o.page, 'navigate']].concat((Array.isArray(o.more) ? o.more : []).slice(0, 80).map((x) => [x, 'cors']));
+  for (const [a, mode] of list) {
+    let u; try { u = new URL(String(a), root); } catch (e) { continue; }
+    u.hash = '';
+    const k = kind({ method: 'GET', mode }, u);
+    if (!k || (mode === 'navigate') !== (k === 'page') || await c.match(keyOf(u))) continue;
+    try {
+      const r = await fetch(u.href, { credentials: 'same-origin' });
+      if (r.ok && r.type === 'basic' && !r.redirected) await c.put(keyOf(u), r);
+    } catch (e) { /* no connection: nothing to keep */ }
+  }
+}
 
 /* the key a request is kept under: its full address without t= (a time stamp) and ih= (Info's icon check). Always a full address:
    a relative one would be read from this script's own folder. */
