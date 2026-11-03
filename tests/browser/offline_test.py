@@ -15,14 +15,20 @@ if len(sys.argv) < 2: sys.exit(__doc__)
 BROWSER = browser_name(); ZIP = sys.argv[1]; check = Checks()
 STATE = """(() => ({ url: location.href, title: document.title, ready: document.readyState, online: navigator.onLine,
   sw: !!(navigator.serviceWorker && navigator.serviceWorker.controller), cls: document.documentElement.className, cols: document.querySelectorAll('#grid .col').length,
-  note: !!document.getElementById('ix-offl'), grid: ((document.getElementById('grid') || {}).textContent || '').slice(0, 160), body: (document.body ? document.body.innerText : '').slice(0, 200) }))()"""
+  note: !!document.getElementById('ix-offl'), log: JSON.parse(sessionStorage.getItem('navlog') || '[]'), grid: ((document.getElementById('grid') || {}).textContent || '').slice(0, 160), body: (document.body ? document.body.innerText : '').slice(0, 200) }))()"""
 SNAPS = "Object.keys(sessionStorage).filter(k => k.startsWith('hub-snap-')).sort()"
 try:
     s = Site(ZIP, 8984)
     subprocess.run(['php', SEED, s.dir], capture_output=True)
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
-        ctx = b.new_context(viewport={'width': 1280, 'height': 900}); pg = ctx.new_page(); errs = []
+        ctx = b.new_context(viewport={'width': 1280, 'height': 900}); errs = []
+        # a log of how each page was reached and, for a page change a script started, where in the script (for F7, see STATE)
+        ctx.add_init_script("""(() => { try { const add = (x) => { const l = JSON.parse(sessionStorage.getItem('navlog') || '[]'); l.push(x); sessionStorage.setItem('navlog', JSON.stringify(l.slice(-12))); };
+          const n = performance.getEntriesByType('navigation')[0]; add('load ' + location.pathname + ' ' + (n ? n.type : '?') + (document.prerendering ? ' prerender' : ''));
+          if (window.navigation) navigation.addEventListener('navigate', (e) => add('go ' + e.navigationType + ' ' + new URL(e.destination.url).pathname + ' from ' + location.pathname + ' ' + String(new Error().stack || '').split('\\n').slice(1, 4).join(' | ')));
+        } catch (e) {} })()""")
+        pg = ctx.new_page()
         pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
         why = browser_login(pg, s.base); check('F0 logged in', not why, why)
 
