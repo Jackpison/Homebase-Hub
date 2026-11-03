@@ -164,6 +164,8 @@ try:
                     pg.evaluate("window.scrollTo(0, 900)"); until(lambda: pg.evaluate("document.documentElement.classList.contains('ix-hide')"), 3000); settle(pg)
                     hid = pg.evaluate("document.documentElement.classList.contains('ix-hide')"); r = rect(pg, '#ix-bar')
                     check('%s: scrolling down slides the bar away' % L, hid and r['b'] <= 1, (hid, r))
+                    tv = pg.evaluate("[getComputedStyle(document.body).getPropertyValue('--ix-top-now').trim(), getComputedStyle(document.documentElement).getPropertyValue('--ix-top').trim()]")
+                    check('%s: hiding the bar does not change a setting of the whole page (1.71.0: no page-wide restyle; --ix-top-now stays the bar\'s height)' % L, tv[0] != '' and tv[0] == tv[1], tv)
                     pg.evaluate("window.scrollTo(0, 700)"); until(lambda: not pg.evaluate("document.documentElement.classList.contains('ix-hide')"), 3000); settle(pg)
                     r = rect(pg, '#ix-bar')
                     check('%s: scrolling up brings it back' % L, not pg.evaluate("document.documentElement.classList.contains('ix-hide')") and abs(r['y']) < 1, r)

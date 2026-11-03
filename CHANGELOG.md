@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.71.0 | Smoother on phones: the page follows your finger when you swipe, quicker page changes, the bar hides without restyling the page, Home's next background waits |
 | 1.70.0 | Settings sorted: Bar tab in Appearance, Accent Color in Colors, Text Sizes in Look, Start Here in Overview, Telegram backups in Backup, Files in Server Check, What's New in Updates |
 | 1.69.1 | The link field (Uiverse): a label in front and a copy icon for Links' Address, Files' Share Link, Health › Domains, the Telegram cron lines and the recovery and two-step keys |
 | 1.69.0 | Step-by-step boxes (React Bits' Stepper) for New Site Setup, Links Import, the first Encryption Passphrase, Restore, Start Over, Files Share Link and Add a Passkey, and a new Home Tour |
@@ -133,6 +134,22 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.71.0
+
+### Changed
+
+Smoother on phones, the iPhone app included.
+
+- **Swipe between pages follows your finger.** The page moves with it (the bar stays). Let go past a third of the screen, or with a quick flick, and the page slides away while the next one slides in from that side; not far enough, and it springs back. At the first or last page it only gives a little. Before, nothing moved until you let go, and then the page reloaded with a fade.
+- **Quicker page changes:** the fade between pages is 0.26 s in all (it was 0.46 s).
+- **Reduce Motion:** nothing slides under your finger, and a page change is a short fade (it was a cut).
+- **The top bar hides without restyling the page.** It used to change a setting on the whole page, so every element was styled again each time the bar slid away or came back (up to 36 ms on Tasks on a slow phone). Toasts, Tasks' side panels and the Settings menu now slide with the bar.
+- The dock's shrink while scrolling only runs when the dock is used.
+- The swipe checks for a sideways-scrolling box only once your finger moves sideways, not on every touch.
+- **Home on a phone:** the next background waits 3 seconds after the page is ready (it was 0.6 s), and a next background that is a video is only fetched when you ask for it.
 
 ---
 

@@ -505,6 +505,7 @@ try:
             gp.evaluate("document.querySelector('#ix-ebar [data-ix-done]').click()"); until(lambda: gp.evaluate("!document.querySelector('#ix-ebar') || document.querySelector('#ix-ebar').hidden"), 5000)
             with gp.expect_navigation(timeout=10000): gp.evaluate(SWIPE, [330, 500, 120, 510])   # Links has two tabs: the swipe still goes to the next page (1.59.1)
             on_info = '/web/info/' in gp.url; ready(); settle(gp)
+            note_used = gp.evaluate("(() => { try { return sessionStorage.getItem('ix-swd'); } catch (e) { return 'x'; } })()") is None
             check('P63 on a phone, swiping left on Links goes straight to the next page (Info), not to its next tab (1.59.1); nothing happens while editing',
                   first.strip().endswith('One') and while_edit[0].strip().endswith('One') and while_edit[1] and on_info, (first, while_edit, on_info))
             order = gp.evaluate("window.__hubSwipe.pages()")
@@ -513,7 +514,24 @@ try:
             back_links = '/web/links/' in gp.url
             check('P64 swiping right goes to the previous page in the bar\'s order (Info to Links), whichever tab is open; the order leaves Tools and Settings out',
                   back_links and order == ['home', 'links', 'info', 'cards', 'tasks', 'files'], (back_links, order))
+            # (1.71.0) the page follows the finger: a drag moves the page (not the bar); let go slowly short of a third, it springs back
+            TOUCH = """([kind, x, y]) => { const el = window.__tel || (window.__tel = document.elementFromPoint(195, 520) || document.body), t = new Touch({ identifier: 1, target: el, clientX: x, clientY: y });
+              el.dispatchEvent(new TouchEvent(kind, { bubbles: true, touches: kind === 'touchend' ? [] : [t], changedTouches: [t] })); }"""
+            LAYER = "(() => { const m = [...document.body.children].find(e => !e.matches('#ix-bar,#ix-ebar,script,style,link,template,dialog') && e.getBoundingClientRect().height > 100); return [m ? m.style.transform : '?', (document.getElementById('ix-bar') || {style: {}}).style.transform, document.documentElement.classList.contains('ix-swiping')]; })()"
+            gp.evaluate(TOUCH, ['touchstart', 300, 520]); gp.evaluate(TOUCH, ['touchmove', 285, 521]); gp.evaluate(TOUCH, ['touchmove', 230, 522])
+            until(lambda: gp.evaluate(LAYER)[0] != '', 2000)   # the page moves on the next frame
+            mid = gp.evaluate(LAYER)
+            gp.wait_for_timeout(450); gp.evaluate(TOUCH, ['touchend', 230, 522]); gp.wait_for_timeout(400)
+            after = gp.evaluate(LAYER); stay = '/web/links/' in gp.url
+            check('P63b (1.71.0) a sideways drag moves the page with the finger (the bar stays); let go slowly short of a third and it springs back, on the same page; the slide-in note was used up by the new page',
+                  mid[0] == 'translate3d(-70px, 0px, 0px)' and not mid[1] and mid[2] and after == ['', '', False] and stay and note_used, (mid, after, stay, note_used))
             gp.goto(B + '/web/home/', wait_until='domcontentloaded'); ready(); gp.wait_for_selector('#nextBg', timeout=10000); settle(gp)
+            # (1.71.0) on a phone the next background waits 3 seconds after the page is ready
+            BGS = "new Set(performance.getEntriesByType('resource').filter(r => /\\/(starter|photos)\\/[^?]+\\.(jpe?g|webp|png|avif)/i.test(r.name)).map(r => r.name.split('?')[0])).size"
+            # measured from the page's own load event: when did the last background start loading?
+            AFTER = "(() => { const n = performance.getEntriesByType('navigation')[0], r = performance.getEntriesByType('resource').filter(x => /\\/(starter|photos)\\/[^?]+\\.(jpe?g|webp|png|avif)/i.test(x.name)); return r.length ? Math.round(Math.max(...r.map(x => x.startTime)) - n.loadEventEnd) : null; })()"
+            until(lambda: gp.evaluate(BGS) >= 2, 10000); wait = gp.evaluate(AFTER)
+            check('P63c (1.71.0) Home on a phone: the next background starts loading about 3 seconds after the page is ready (0.6 s on a computer)', wait is not None and wait >= 2500, wait)
             gp.evaluate("window.__pulled = 0; document.getElementById('nextBg').addEventListener('click', () => window.__pulled++)")
             gp.evaluate(SWIPE, [195, 200, 200, 420]); gp.wait_for_timeout(300); pulled = gp.evaluate("window.__pulled")
             gp.evaluate(SWIPE, [195, 200, 200, 240]); gp.wait_for_timeout(300); small = gp.evaluate("window.__pulled")

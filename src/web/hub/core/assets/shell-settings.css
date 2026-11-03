@@ -601,7 +601,8 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-steps h4+p{margin:0 0 4px}
 
 /* the menu follows the top bar as it hides and comes back; the save bar sits above the dock */
-html[data-ix-bar][data-ix-nav="top"] #ix-page .ix-snav{top:calc(var(--ix-top-now) + 24px);transition:top .26s cubic-bezier(.2,.8,.2,1)}
+html[data-ix-bar][data-ix-nav="top"] #ix-page .ix-snav{top:calc(var(--ix-top-now) + 24px);transition:transform .26s cubic-bezier(.2,.8,.2,1)}
+html.ix-hide[data-ix-bar][data-ix-nav="top"] #ix-page .ix-snav{transform:translateY(var(--ix-hide-dy))}   /* (1.71.0) slides up with the bar */
 html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock) + 30px)}
 /* ---------- the second row of tabs, the accent picker, the Install card's "How?" ---------- */
 #ix-page .ix-swc{position:relative;width:34px;height:34px;border-radius:50%;overflow:hidden;cursor:pointer;background:conic-gradient(#ff6b6b,#ffc21a,#5fd68a,#4cc9f0,#2d8cff,#b392f0,#ff2d95,#ff6b6b);border:2px solid var(--ix-line2)}

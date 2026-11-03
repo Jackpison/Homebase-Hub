@@ -31,8 +31,10 @@ html[data-theme="light"]{
   --ix-dim:color-mix(in srgb,var(--ix-accent) 70%,#000);
 }
 /* ---------- room for the bar ---------- */
-html{--ix-top-now:var(--ix-top)}
-html.ix-hide{--ix-top-now:var(--ix-safe-top)}
+/* --ix-top-now stays the bar's full height. (1.71.0) Hiding the bar used to change it on the whole page, and every element was
+   styled again each time (up to 36 ms on a slow phone, a skipped frame or two). What follows the bar now has its own ix-hide rule
+   and slides with a transform. */
+html{--ix-top-now:var(--ix-top);--ix-hide-dy:calc(var(--ix-safe-top) - var(--ix-top))}
 html[data-ix-bar][data-ix-nav="top"] body{padding-top:var(--ix-top)!important}
 html[data-ix-bar][data-ix-nav="side"] body{padding-left:var(--ix-side)!important}
 html[data-ix-bar][data-ix-nav="dock"] body{padding-bottom:calc(var(--ix-dock) + 28px)!important}
@@ -228,8 +230,9 @@ html[data-ix-app="home"][data-ix-nav="dock"] .ix-pill{background:color-mix(in sr
 .ix-none{padding:18px 12px;text-align:center;color:var(--ix-mu);font-size:13.5px}
 /* smooth page changes and theme changes: the old page eases out,the new one eases in; the bar itself never moves */
 @view-transition{navigation:auto}
-::view-transition-old(root){animation:ix-out .16s cubic-bezier(.4,0,1,1) both}
-::view-transition-new(root){animation:ix-in .3s cubic-bezier(0,0,.2,1) both}
+/* (1.71.0) quicker: 0.1 s out, 0.16 s in (it was 0.16 s and 0.3 s, which made every page change feel slow on a phone) */
+::view-transition-old(root){animation:ix-out .1s cubic-bezier(.4,0,1,1) both}
+::view-transition-new(root){animation:ix-in .16s cubic-bezier(0,0,.2,1) both}
 @keyframes ix-out{to{opacity:0;transform:translateY(-6px) scale(.998)}}
 @keyframes ix-in{from{opacity:0;transform:translateY(10px)}}
 ::view-transition-group(ix-bar){animation:none}
@@ -240,7 +243,18 @@ html.ix-vt::view-transition-new(root){animation:ix-fade-in .32s ease both}
 @keyframes ix-fade-out{to{opacity:0}}
 @keyframes ix-fade-in{from{opacity:0}}
 html.ix-fade,html.ix-fade *,html.ix-fade *::before,html.ix-fade *::after{transition:background-color .3s ease,color .3s ease,border-color .3s ease,fill .3s ease,stroke .3s ease,box-shadow .3s ease!important}
-@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}#ix-pop,.ix-panel,#ix-drawer nav{animation:none}}
+/* (1.71.0) after a swipe (shell.js sets ix-swn for the next page, ix-swp for the one before): the old page has already slid away under the
+   finger, so it stays as it is, and the new one slides in from that side */
+html.ix-swn::view-transition-old(root),html.ix-swp::view-transition-old(root){animation:none}
+html.ix-swn::view-transition-new(root){animation:ix-sw-l .24s cubic-bezier(.2,.8,.2,1) both}
+html.ix-swp::view-transition-new(root){animation:ix-sw-r .24s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ix-sw-l{from{transform:translateX(100%)}}
+@keyframes ix-sw-r{from{transform:translateX(-100%)}}
+html.ix-swiping,html.ix-swiping body{overflow-x:hidden}
+/* Reduce Motion: nothing slides or moves; a page change is a short fade (1.71.0; it was a cut) */
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+  ::view-transition-old(root){animation:ix-fade-out .12s ease both!important}::view-transition-new(root){animation:ix-fade-in .15s ease both!important}
+  #ix-pop,.ix-panel,#ix-drawer nav{animation:none}}
 /* ---------- dialogs ---------- */
 #ix-dlg{position:fixed;inset:0;z-index:2147483002;display:none;place-items:center;background:rgba(0,0,0,.65);padding:16px;font:15px/1.45 var(--ix-font);color:var(--ix-tx);-webkit-font-smoothing:antialiased}
 #ix-dlg.open{display:grid}
@@ -274,6 +288,7 @@ html.ix-fade,html.ix-fade *,html.ix-fade *::before,html.ix-fade *::after{transit
 #ix-toast.bad{border-left-color:var(--ix-err);color:var(--ix-err)}
 /* messages appear at the top of the page,just under the bar,so they never cover the editing bars at the bottom */
 html[data-ix-bar][data-ix-nav="top"] #ix-toast,html[data-ix-bar][data-ix-nav="top"] .toast{top:calc(var(--ix-top-now) + 14px)!important}
+html.ix-hide[data-ix-bar][data-ix-nav="top"] #ix-toast,html.ix-hide[data-ix-bar][data-ix-nav="top"] .toast{top:calc(var(--ix-safe-top) + 14px)!important}
 html:has(dialog[open],#ix-dlg.open) #ix-toast,html:has(dialog[open],#ix-dlg.open) .toast{top:auto!important;bottom:24px}
 /* while a dialog is open,the message goes below it */
 #ix-fontc{margin-top:8px}
@@ -298,6 +313,7 @@ html[data-ix-nav="dock"][data-ix-app="home"] .toolbar{bottom:calc(var(--ix-dock)
 html[data-ix-app="tools"][data-ix-nav="top"] body{padding-top:0!important}
 html[data-ix-app="tools"][data-ix-nav="top"] #root{padding-top:var(--ix-top)}
 html[data-ix-app="tools"][data-ix-nav="top"] aside,html[data-ix-app="tools"][data-ix-nav="top"] [class*="sidebar"]{top:var(--ix-top-now)!important;transition:top .26s cubic-bezier(.2,.8,.2,1)}
+html.ix-hide[data-ix-app="tools"][data-ix-nav="top"] aside{top:var(--ix-safe-top)!important}   /* (1.71.0) its own rule, and no [class*=...] in it: that kind of match after html.ix-hide makes the browser restyle every element with a class */
 /* ---------- the unified look: AMOLED black + gold (Balanced),on when Settings > Look says so ---------- */
 html[data-ix-look]{--ix-on:1}
 /* Links */

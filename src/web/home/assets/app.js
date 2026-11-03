@@ -188,6 +188,10 @@ const BG = {
     if (/** @type {any} */ (navigator).connection?.saveData) return;   // data saver: the next photo is fetched only when asked for
     const item = this.pick([current.url]);
     if (!item || item.url === current.url) return;
+    // (1.71.0) on a phone a next background that is a video is fetched only when asked for (a whole video on mobile data), and a
+    // photo waits 3 seconds after the page is ready, so it never slows down the start
+    const phone = matchMedia('(pointer: coarse)').matches;
+    if (phone && item.type === 'video') return;
     const go = () => {
       if (this.cur !== current.url) return;   // something else is on screen by now
       const p = this.load(item);
@@ -196,7 +200,7 @@ const BG = {
        .catch(() => { if (this.preloading?.promise === p) this.preloading = null; });
     };
     // (1.67.1) once the page has finished loading and the browser is idle, so the next photo never competes with the first one
-    const idle = () => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 4000 }) : go()), 600);
+    const idle = () => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 4000 }) : go()), phone ? 3000 : 600);
     if (document.readyState === 'complete') idle(); else addEventListener('load', idle, { once: true });
   },
 
