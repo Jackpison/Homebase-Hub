@@ -6,13 +6,16 @@
     without a connection the pages open from the copy, read-only, with a note; back online they load fresh; Log Out deletes the copy;
     switching it off removes the worker and the copy.
     python3 tests/browser/offline_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8984)"""
-import os, subprocess, sys, time
+import json, os, subprocess, sys, time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
 BROWSER = browser_name(); ZIP = sys.argv[1]; check = Checks()
+STATE = """(() => ({ url: location.href, title: document.title, ready: document.readyState, online: navigator.onLine,
+  sw: !!(navigator.serviceWorker && navigator.serviceWorker.controller), cls: document.documentElement.className, cols: document.querySelectorAll('#grid .col').length,
+  note: !!document.getElementById('ix-offl'), grid: ((document.getElementById('grid') || {}).textContent || '').slice(0, 160), body: (document.body ? document.body.innerText : '').slice(0, 200) }))()"""
 SNAPS = "Object.keys(sessionStorage).filter(k => k.startsWith('hub-snap-')).sort()"
 try:
     s = Site(ZIP, 8984)
@@ -75,13 +78,17 @@ try:
         pg.goto(s.base + '/web/tasks/', wait_until='domcontentloaded'); wait_js(pg, "typeof T !== 'undefined' && T.length > 0", 15000)
         wait_js(pg, "document.documentElement.classList.contains('ix-offline') && !!document.getElementById('ix-offl')", 8000)
         off = pg.evaluate("[document.getElementById('ix-offl').textContent, T.length]")
-        pg.goto(s.base + '/web/links/', wait_until='domcontentloaded'); wait_js(pg, "!!document.querySelector('#grid .col') && document.documentElement.classList.contains('ix-offline')", 15000)
+        pg.goto(s.base + '/web/links/', wait_until='domcontentloaded')
+        try: wait_js(pg, "!!document.querySelector('#grid .col') && document.documentElement.classList.contains('ix-offline')", 15000)
+        except TimeoutError:   # say what the page looked like, so a CI failure can be understood
+            raise SystemExit('F7 Links offline did not open: ' + json.dumps(pg.evaluate(STATE)))
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_timeout(200)
         ro = [pg.evaluate("document.body.classList.contains('editing')"), pg.evaluate("((document.getElementById('ix-toast') || {}).textContent || '')")]
         check('F7 no connection: Tasks and Links open from the copy with an "Offline" note, and editing waits for the connection',
               'Offline' in off[0] and off[1] > 0 and ro[0] is False and 'offline' in ro[1], (off, ro))
-        ctx.set_offline(False)
-        wait_js(pg, "!document.documentElement.classList.contains('ix-offline') && !document.getElementById('ix-offl')", 15000)
+        pg.evaluate("window.__beforeOnline = 1"); ctx.set_offline(False)
+        # back online the page loads itself again: wait for that new page, or the next goto collides with it
+        wait_js(pg, "!window.__beforeOnline && document.readyState === 'complete' && !document.documentElement.classList.contains('ix-offline') && !document.getElementById('ix-offl')", 15000)
         check('F8 back online the note goes and the page loads fresh', True)
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "!!(window.HUB && HUB.logout && HUB.isAdmin())", 20000)
         pg.evaluate("window.HUB.logout()"); pg.wait_for_load_state('load'); pg.wait_for_timeout(1500)
