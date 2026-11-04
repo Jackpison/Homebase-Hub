@@ -62,6 +62,19 @@ SET UP ON ANY DOMAIN
 Nothing else needs configuring. Each domain keeps its own site-data folder, so domains never share data.
 
 
+DOCKER OR YOUR OWN SERVER (VPS)
+-------------------------------
+- Docker: each release is also an image, ghcr.io/jackpison/homebase-hub (PHP and Apache, for PCs, servers and Raspberry Pi).
+  The ready files are in deploy/docker on GitHub: compose.yaml (port 8080), or compose.caddy.yaml with its Caddyfile for HTTPS.
+  The first start copies the site into a volume; update from Settings > Updates as on any host. Setup code:
+  docker compose exec hub cat site-data/core/SETUP-CODE.php
+- A VPS with Apache: deploy/apache/homebase-hub.conf. With nginx: deploy/nginx/homebase-hub.conf. nginx ignores the
+  .htaccess files, so without that file site-data would be open to anyone. The website's Install page has every step.
+- Behind your own proxy (Caddy, nginx, Traefik): set HUB_TRUSTED_PROXY to its address (an environment variable, or
+  define('HUB_TRUSTED_PROXY', '10.0.0.5'); in web/hub/core/config.php), so the site sees each visitor's address and HTTPS.
+  Only the addresses listed there are believed.
+
+
 UPDATING LATER
 --------------
 Settings > Updates: upload the new zip there. The site checks it completely first (it must be a real site update, every

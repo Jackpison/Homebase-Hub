@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!entrypoint.sh
+!php.ini
+!apache.conf
+!site.zip

@@ -8,7 +8,7 @@ These run on your own computer. Nothing here is part of the update zip.
 |---|---|
 | `unit/` | PHP unit tests (`php tests/unit/run.php`) |
 | `browser/` | Tests in a real browser: `offline_test` (1.72.0: instant pages, Offline Reading), `search_test` (1.72.0: the search everywhere, screen-reader wiring, the [ and ] keys), `tasks_more_test` (1.72.0: more repeats, calendars you follow, the new Home widgets), `importer_test` (1.72.0: the Import Center), `pages_test`, `nav_test`, `settings_test`, `settings_ui_test` (Settings windows, Only Me, Backup tabs, Export Bookmarks, calendar link, shortcuts), `polish_test` (1.65.0: switches, theme switch, tooltips, button hover, Hold to Delete, swipe in Tasks, count-up, Presets and Surprise Me), `windows_test` (1.64.1: every window checked against the shared rules, one screenshot each with `HUB_SHEET=dir`), `settings_look_test` (the look of the Settings windows and page, the Files grid, nothing wider than a phone), `tools_test`, `import_test`, `a11y_test`, `app_test`, `website_test`, and for 1.61.0 `encrypt_test`, `files_test`, `lock_test`, `tabs_lock_test`, `tabs_kit_test` (1.63.0: the tabs of Links and Info: drag, the Edit Tab window, tab icons), `passkey_test` and `share_test` (Chromium only), `speed_test` (a slowed phone, Chromium only) |
-| `server/` | Tests of the server side: `update_test`, `update_attack_test`, `core_test`, `files_test`, and Apache (`apache_setup.sh`, `apache_test.py`) |
+| `server/` | Tests of the server side: `update_test`, `update_attack_test`, `core_test`, `files_test`, Apache (`apache_setup.sh`, `apache_test.py`), nginx (`nginx_setup.sh`) and Docker (`docker_test.py`) |
 | `repo/` | Checks of the repository itself: `tscheck_test` (the JavaScript type check: `tsconfig.json` is strict for Files and Import; `tsconfig.links.json`, `.home`, `.cards`, `.tasks` and `.info` check those page scripts more loosely, one config each because page scripts share one global scope), `build_test`, `release_test`, `check_libraries`, `workflows_test`, `ci_status_test`, `ci_changes_test`, `releases_test` |
 | `fixtures/` | Files the tests open: PDFs, pictures, a HEIC photo, the favicon stand-in, bookmark exports |
 | `lib/` | Shared helpers: `helpers.py` (sites, logins, paths), `releases.py` (the previous release and its zip), `annotate.py` (CI annotations), `run_parallel.py` (runs several browser tests at once, as CI does), `prepend.php` (test-only shortcuts), `seed_demo.php` (demo data), `phpstan-bootstrap.php` |
@@ -70,6 +70,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 - `python3 tests/server/info_restore_test.py`: Info Undo through the real endpoint: a box and a tab come back in place with their text, a locked tab needs the site key, a stale page, a full tab and a visitor are refused (port 8780).
 - `python3 tests/repo/parallel_test.py`: `tests/lib/run_parallel.py`, which CI uses to run several browser tests at the same time (they overlap, output keeps its order, a failure or crash gives exit code 1 and an annotation); with `--retry 1` (CI) a failed test runs once more, alone, and passing then it shows as a "flaky" warning, never hidden; a second failure stays red).
 - `python3 tests/repo/helpers_test.py`: what counts as a page error. `page_errors()` in `tests/lib/helpers.py` leaves out only two browser notices (a request to the test site cut off by a page change, and WebKit's ResizeObserver notice); every browser test uses it.
+- `python3 tests/repo/deploy_test.py`: the server files in `deploy/` keep up with the site: every security policy in the `.htaccess` files is in the nginx file, base images are pinned by digest, and Caddy is the only trusted proxy in `compose.caddy.yaml`.
 - `python3 tests/repo/fixed_waits_test.py`: fixed pauses (`wait_for_timeout`, `time.sleep`) in the browser tests can only go down, per file. Wait for the thing itself (`wait_js`, `until`, `settle`). `wait_js` also waits until a page no longer shows its last copy (instant pages, `fresh=False` to test that state).
 - `python3 tests/repo/ci_changes_test.py`: which changes count as docs only (`scripts/ci_changes.py`): then CI's slow jobs (server, browsers, apache) skip themselves and the `ci-ok` job still passes; any doubt runs everything.
 - `python3 tests/repo/ci_status_test.py`: the release waits for CI on the tagged commit (`scripts/ci_status.py`, up to 20 minutes) and refuses to build unless every job passed; this tests that decision with made-up check runs.
@@ -180,6 +181,21 @@ python3 tests/server/apache_test.py
 ```
 
 It checks that every page answers with its policy and pre-loading header, private files and folders are refused, the rules file has its type, and in a browser nothing is refused and Tools loads its main file once.
+
+`apache_setup.sh` uses `deploy/apache/homebase-hub.conf` as shipped.
+
+## On nginx and in Docker (1.73.0)
+
+nginx ignores `.htaccess`, so `deploy/nginx/homebase-hub.conf` repeats its rules; the Apache checks run against it unchanged:
+
+```
+sudo sh tests/server/nginx_setup.sh build/site-update-X.Y.Z.zip   # nginx with PHP-FPM on port 8301, the shipped file
+python3 tests/server/apache_test.py http://127.0.0.1:8301
+cp build/site-update-X.Y.Z.zip deploy/docker/site.zip && docker build -t homebase-hub:test deploy/docker
+python3 tests/server/docker_test.py homebase-hub:test build/site-update-X.Y.Z.zip
+```
+
+`docker_test.py` checks the first start, the PHP extensions, setup, every Apache check inside the container, an update and Go Back inside it (its self-check must find the site although the outside port differs), a new container on the same volume, `HUB_TRUSTED_PROXY`, a volume with other files, and `compose.caddy.yaml` with HTTPS (`CADDY_IMAGE` replaces the Caddy image where Docker Hub cannot be reached). `tests/repo/deploy_test.py` checks that the nginx file still matches the `.htaccess` files and the Docker files keep their safety settings.
 
 ## Screenshots
 

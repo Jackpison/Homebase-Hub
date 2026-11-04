@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.73.0 | Docker and VPS: a ready image (with Caddy for HTTPS), nginx and Apache setups, and a safe way to run behind your own proxy |
 | 1.72.3 | Tools › Markdown Editor: the text box stays inside its card; Settings and tests take the last two security scan notes |
 | 1.72.2 | Safer handling of a few values the security scan pointed out: Settings addresses, colour codes, card IDs and imported bookmarks |
 | 1.72.1 | Maintenance: 2 Tools libraries updated |
@@ -138,6 +139,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.73.0
+
+### New
+- **Docker:** each release is also an image, `ghcr.io/jackpison/homebase-hub`, for PCs, servers and Raspberry Pi. It holds PHP and Apache, so the site is protected exactly as on a web host. `compose.yaml` starts it on port 8080; `compose.caddy.yaml` adds HTTPS from Caddy for your domain.
+- **Updates in Docker work as on any host:** the first start copies the site into a volume, Settings › Updates and Go Back work, and a newer image never replaces a site that is already there.
+- **A VPS:** ready settings for Apache and for nginx in `deploy/`, and every step on the website's Install page. nginx ignores the `.htaccess` files, so its file closes `site-data` and sends the same security headers itself.
+
+### Security
+- **Behind your own proxy:** a new setting, `HUB_TRUSTED_PROXY`, names your proxy's address. Only then does the site believe it about each visitor's address (login limits, Devices) and HTTPS. A visitor who writes these headers themselves is ignored, as before.
+
+### Fixes
+- **Updates:** when the site cannot reach its own address from the server (Docker with another port, or a proxy in front), the check after an update asks the web server directly, instead of undoing a good update.
 
 ---
 

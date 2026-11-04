@@ -14,6 +14,7 @@ ROOT = {
     'LICENSE': 'GitHub shows it from the root',
     'README.md': 'GitHub shows it from the root',
     'config': 'the TypeScript check files',
+    'deploy': 'ready-made server setups people copy (Docker, nginx, Apache): not build config, so not in config/',
     'docs': 'FEATURES.md, MAINTAINING.md',
     'eslint.config.js': 'ESLint only looks in the root',
     'package-lock.json': 'npm',

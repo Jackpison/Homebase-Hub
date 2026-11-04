@@ -54,7 +54,7 @@ jobs:
       - name: Library safety check
         run: python3 tests/repo/check_libraries.py
       - name: Workflow files keep their safety settings (pinned Actions, no kept token, time limits) and no secret is in the repo
-        run: python3 tests/repo/workflows_test.py && python3 tests/repo/secrets_test.py && python3 tests/repo/parallel_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py && python3 tests/repo/releases_test.py && python3 tests/repo/maintain_test.py && python3 tests/repo/presets_test.py && python3 tests/repo/tools_list_test.py && python3 tests/repo/root_test.py && python3 tests/repo/speculation_test.py && python3 tests/repo/overrides_test.py && python3 tests/repo/helpers_test.py && python3 tests/repo/fixed_waits_test.py
+        run: python3 tests/repo/workflows_test.py && python3 tests/repo/secrets_test.py && python3 tests/repo/parallel_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py && python3 tests/repo/releases_test.py && python3 tests/repo/maintain_test.py && python3 tests/repo/presets_test.py && python3 tests/repo/tools_list_test.py && python3 tests/repo/root_test.py && python3 tests/repo/speculation_test.py && python3 tests/repo/overrides_test.py && python3 tests/repo/helpers_test.py && python3 tests/repo/fixed_waits_test.py && python3 tests/repo/deploy_test.py
       - name: Workflow check (zizmor, strictest setting)
         run: python3 -m venv /tmp/zz && /tmp/zz/bin/pip install -q zizmor==1.30.1 && /tmp/zz/bin/zizmor --offline --persona=auditor .github/workflows/
       - name: Workflow check (actionlint, with shellcheck on the shell steps; the download is checked against its SHA-256)
@@ -260,10 +260,11 @@ jobs:
   apache:
     needs: changes
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
-    # Installing Apache takes about five minutes on a fresh runner, so it runs beside the other tests instead of after them.
+    # The ready-made server setups in deploy/: Apache (the .htaccess files), nginx with PHP-FPM, and the Docker image with Caddy.
+    # Installing them takes a few minutes on a fresh runner, so this runs beside the other tests instead of after them.
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    name: apache (the .htaccess files)
+    timeout-minutes: 35
+    name: web servers (Apache, nginx, Docker)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
@@ -295,6 +296,16 @@ jobs:
         run: |
           sudo sh tests/server/apache_setup.sh build/site-update-*.zip
           python3 tests/server/apache_test.py
+      - name: On nginx with PHP-FPM (deploy/nginx), the same checks
+        run: |
+          sudo sh tests/server/nginx_setup.sh build/site-update-*.zip
+          python3 tests/server/apache_test.py http://127.0.0.1:8301
+      - name: In Docker (deploy/docker), with Caddy for HTTPS
+        timeout-minutes: 15
+        run: |
+          cp build/site-update-*.zip deploy/docker/site.zip
+          docker build -t homebase-hub:ci deploy/docker
+          python3 tests/server/docker_test.py homebase-hub:ci build/site-update-*.zip
 
   ci-ok:
     # The one check that sums up CI: it fails when any job failed or was cancelled, and passes when every job passed

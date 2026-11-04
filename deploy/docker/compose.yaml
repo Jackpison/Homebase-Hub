@@ -1,0 +1,18 @@
+# Homebase Hub with Docker Compose.
+#   docker compose up -d        then open http://YOUR-SERVER:8080 and follow the setup steps
+# The site and your data live in the volume "hub-site". Update from Settings › Updates, as on any host.
+# Passkeys, offline reading and phone installs need HTTPS: use compose.caddy.yaml for that, or your own proxy (below).
+services:
+  hub:
+    image: ${HUB_IMAGE:-ghcr.io/jackpison/homebase-hub:latest}
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - hub-site:/var/www/html
+    # Only when your own reverse proxy (nginx, Traefik, Caddy...) sends visitors to this port: its address, so the site
+    # sees each visitor's address and HTTPS. Leave it out otherwise; a visitor could then fake both.
+    # environment:
+    #   HUB_TRUSTED_PROXY: "172.17.0.1"
+volumes:
+  hub-site:

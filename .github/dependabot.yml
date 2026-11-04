@@ -1,4 +1,4 @@
-# GitHub proposes a pull request when an Action, a build tool (esbuild, axe-core, eslint) or a Python test package has a new version.
+# GitHub proposes a pull request when an Action, a build tool (esbuild, axe-core, eslint), a Python test package or a Docker image (deploy/docker) has a new version.
 # Read it, check that CI passes, and merge. Nothing here changes the site itself.
 # Once a month (2026-11; was weekly), one grouped pull request per kind. A version is proposed only once it is 7 days old (cooldown):
 # a hijacked package is usually found and pulled within days. Security updates are not held back by either.
@@ -55,4 +55,28 @@ updates:
         update-types: ["version-update:semver-minor", "version-update:semver-patch"]   # the monthly maintenance does these
     groups:
       tools-libraries:
+        patterns: ["*"]
+  # (1.73.0) The Docker image's PHP base and the Caddy image in compose.caddy.yaml, both pinned by digest. CI builds the image
+  # and runs tests/server/docker_test.py (with Caddy) on the pull request; the next release publishes it.
+  - package-ecosystem: docker
+    directory: /deploy/docker
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "docker"
+    groups:
+      docker-images:
+        patterns: ["*"]
+  - package-ecosystem: docker-compose
+    directory: /deploy/docker
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "docker"
+    groups:
+      compose-images:
         patterns: ["*"]

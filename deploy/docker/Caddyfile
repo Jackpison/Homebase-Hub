@@ -1,0 +1,9 @@
+# Used by compose.caddy.yaml: HTTPS for your domain, everything passed to the Homebase Hub container.
+{$HUB_DOMAIN} {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000"
+	request_body {
+		max_size 512MB
+	}
+	reverse_proxy hub:80
+}

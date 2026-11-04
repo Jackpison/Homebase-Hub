@@ -26,7 +26,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 
 if (defined('HUB')) return;
-define('HUB', '1.72.3');
+define('HUB', '1.73.0');
 const HUB_MIN_PHP = '8.3';   // the oldest PHP this version supports and is tested on; an update zip carries it as "minPhp" in its file list
 
 /** When each PHP branch stops getting security fixes (https://www.php.net/supported-versions, checked 2026-10-23). Branches not listed are newer than this table. Add a row each November. */
@@ -106,7 +106,7 @@ hub_settle_layout();
 function hub_data_root(): string {
     static $root = null;
     if ($root !== null) return $root;
-    if (is_file(HUB_CORE . '/config.php')) include HUB_CORE . '/config.php';   // optional: define('HUB_DATA_DIR', '/path');
+    if (is_file(HUB_CORE . '/config.php')) include_once HUB_CORE . '/config.php';   // optional: define('HUB_DATA_DIR', '/path');
     $tries = [];
     if (defined('HUB_DATA_DIR')) $tries[] = rtrim((string)HUB_DATA_DIR, '/');
     $tries[] = HUB_PUBLIC . '/site-data';        // .../xyz.com/site-data  (travels with the site)
@@ -231,8 +231,9 @@ function hub_same_origin(): void {
     }
 }
 function hub_https(): bool {
+    $fwd = strtolower(trim(explode(',', (string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''))[0]));
     return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' && hub_from_cloudflare());
+        || ($fwd === 'https' && (hub_from_cloudflare() || hub_from_proxy()));
 }
 
 /* ======================= visitor IP (Cloudflare-aware) ======================= */
@@ -244,7 +245,9 @@ function hub_cf_ranges(): array {   // cloudflare.com/ips (check once a year)
         '2405:b500::/32','2405:8100::/32','2a06:98c0::/29','2c0f:f248::/32'];
 }
 function hub_ip_in(string $ip, string $cidr): bool {
-    [$net, $bits] = explode('/', $cidr);
+    if (strpos($cidr, '/') === false) $cidr .= strpos($cidr, ':') === false ? '/32' : '/128';   // one address
+    [$net, $bits] = explode('/', $cidr, 2);
+    if (!ctype_digit($bits)) return false;
     $a = @inet_pton($ip); $b = @inet_pton($net);
     if ($a === false || $b === false || strlen($a) !== strlen($b)) return false;
     $bits = (int)$bits; $bytes = intdiv($bits, 8); $rem = $bits % 8;
@@ -258,10 +261,47 @@ function hub_from_cloudflare(): bool {
     foreach (hub_cf_ranges() as $c) if (hub_ip_in($r, $c)) return true;
     return false;
 }
+/**
+ * (1.73.0) Your own reverse proxy (Caddy, nginx or Traefik in front of Docker or a VPS). HUB_TRUSTED_PROXY lists its
+ * addresses, comma separated, one address or a range each ("172.30.77.0/24, 10.0.0.5"). It is read from the environment
+ * (Docker, or fastcgi_param in nginx) or from define('HUB_TRUSTED_PROXY', '...') in web/hub/core/config.php.
+ * Not set means no proxy is believed, so a visitor can never fake their address or HTTPS with a header.
+ */
+function hub_trusted_proxies(): array {
+    if (!defined('HUB_TRUSTED_PROXY') && is_file(HUB_CORE . '/config.php')) include_once HUB_CORE . '/config.php';
+    $raw = defined('HUB_TRUSTED_PROXY') ? (string)constant('HUB_TRUSTED_PROXY') : (string)(getenv('HUB_TRUSTED_PROXY') ?: '');
+    $list = [];
+    foreach (preg_split('/[\s,]+/', $raw) ?: [] as $c) {
+        [$a, $b] = array_pad(explode('/', $c, 2), 2, null);
+        if ($a === '' || !filter_var($a, FILTER_VALIDATE_IP)) continue;
+        $max = strpos($a, ':') === false ? 32 : 128;
+        if ($b !== null && (!ctype_digit($b) || (int)$b > $max)) continue;
+        $list[] = $b === null ? $a : $a . '/' . (int)$b;
+    }
+    return $list;
+}
+function hub_proxied(string $ip): bool {
+    foreach (hub_trusted_proxies() as $c) if (hub_ip_in($ip, $c)) return true;
+    return false;
+}
+function hub_from_proxy(): bool { return hub_proxied((string)($_SERVER['REMOTE_ADDR'] ?? '')); }
+
 function hub_ip(): string {
     $r = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     $cf = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? '';
     if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP) && hub_from_cloudflare()) return $cf;
+    if (hub_from_proxy()) {
+        // X-Forwarded-For from your own proxy: read from the right, past your proxies (and Cloudflare, when it is in front of them);
+        // the first other address is the visitor. Anything further left could be written by the visitor and is never used.
+        $hops = array_reverse(array_map('trim', explode(',', (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''))));
+        foreach ($hops as $h) {
+            if (!filter_var($h, FILTER_VALIDATE_IP)) break;
+            if (hub_proxied($h)) continue;
+            $viaCf = false; foreach (hub_cf_ranges() as $c) if (hub_ip_in($h, $c)) { $viaCf = true; break; }
+            if ($viaCf && $cf !== '' && filter_var($cf, FILTER_VALIDATE_IP)) return $cf;
+            return $h;
+        }
+    }
     return $r;
 }
 

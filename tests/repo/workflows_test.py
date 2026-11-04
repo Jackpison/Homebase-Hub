@@ -108,7 +108,8 @@ check('W16c the security and next-PHP jobs stay on ubuntu-latest (the canary); t
       and sj['firefox']['runs-on'] == 'ubuntu-24.04' and sj['remind']['runs-on'] == 'ubuntu-24.04')
 db = open(os.path.join(ROOT, '.github', 'dependabot.yml'), encoding='utf-8').read()
 check('W16d Dependabot: once a month, one group per kind, a version only once it is 7 days old; for Tools only new major versions (the monthly maintenance takes the rest)',
-      db.count('interval: monthly') == 4 and 'interval: weekly' not in db and db.count('default-days: 7') == 4 and db.count('patterns: ["*"]') == 4
+      db.count('package-ecosystem:') == 6 and all(db.count(x) == 6 for x in ('interval: monthly', 'default-days: 7', 'patterns: ["*"]')) and 'interval: weekly' not in db
+      and 'package-ecosystem: docker\n' in db and 'package-ecosystem: docker-compose' in db
       and 'version-update:semver-minor' in db[db.index('directory: /tools-app'):])
 loose = []
 for f in FILES:

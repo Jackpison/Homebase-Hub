@@ -8,12 +8,12 @@ For changing the code itself, read `AGENTS.md`.
 
 | When | What | What you see |
 |---|---|---|
-| Every push and pull request | **CI** tests everything: PHP 8.3, 8.4 and 8.5, the updater, hostile update files, Apache, the secret check, and every page in Chromium and WebKit side by side. | A green tick or a red cross on the commit. |
+| Every push and pull request | **CI** tests everything: PHP 8.3, 8.4 and 8.5, the updater, hostile update files, Apache, nginx, the Docker image, the secret check, and every page in Chromium and WebKit side by side. | A green tick or a red cross on the commit. |
 | Every Monday | **Scheduled checks** (security and next PHP): (1) asks whether any library has a known security problem; (2) tries the next PHP version, still in development, so a break shows up months before hosts offer it. | An issue labelled `security` or `php`, only when something is wrong. |
 | Every Monday (Scheduled checks) | The security and next-PHP jobs run on `ubuntu-latest` on purpose; every other workflow is pinned to `ubuntu-24.04`. When GitHub moves `ubuntu-latest` to a new system and something breaks, that job fails first and opens an issue, so you can test and change the pin before CI itself is affected. | An issue labelled `security` or `php`, only when something is wrong. |
 | The 1st and 15th of every month | **Scheduled checks** (Firefox): runs the page tests in Firefox (CI covers Chromium and WebKit). | An issue labelled `browsers`, only when something is wrong. |
 | The 3rd of every month | **Monthly maintenance**: updates the libraries inside Tools (within their major version), rebuilds Tools, raises the version by one, writes the changelog, and opens a pull request. | A pull request "Monthly maintenance: X.Y.Z", or nothing when all is current. |
-| Monthly | **Dependabot** proposes updates for GitHub's own build steps, the build tools and the test tools (one pull request per kind, versions at least 7 days old), and new major versions of Tools' libraries. Security fixes come at once. | Pull requests from Dependabot. |
+| Monthly | **Dependabot** proposes updates for GitHub's own build steps, the build tools, the test tools, the Docker images (PHP and Caddy) (one pull request per kind, versions at least 7 days old), and new major versions of Tools' libraries. Security fixes come at once. | Pull requests from Dependabot. |
 | 15 November | **Scheduled checks** (PHP reminder): update the PHP support dates. | An issue "Check the PHP support dates". |
 | Daily, on each site (if switched on) | **Settings › Updates** checks GitHub for a new version. | "A new version is ready" in Settings. |
 
@@ -23,10 +23,12 @@ For changing the code itself, read `AGENTS.md`.
 2. Open **Monthly maintenance: X.Y.Z**. Wait until the **CI** run is green (about 10 minutes after it opened). Checks marked *action_required* can be ignored: GitHub holds the checks of a pull request that Actions opened, and the workflow starts its own CI run instead.
 3. Press **Merge pull request**, then **Confirm merge**. **Always merge before step 4:** the new version is only on `main` once merged, and a tag made earlier is refused ("The tag ... does not match the version in the code"; nothing is published). If that happened: delete that release and its tag on github.com, merge, and publish again.
 4. Go to **Releases › Draft a new release**. Under *Choose a tag* type `vX.Y.Z` (the same number), choose *Create new tag on publish*, target `main`, and press **Publish release**.
-5. GitHub builds the update file and adds it to the release by itself (a few minutes).
+5. GitHub builds the update file and adds it to the release by itself (a few minutes), then the Docker image (about 15 minutes more).
 6. On each of your sites: **Settings › Updates › Check Now**, then follow the buttons. The site downloads and checks the file, asks for your website password, and takes a snapshot first; **Go Back** undoes it.
 
 When there is no maintenance pull request, everything was already current. Nothing to do.
+
+**Once, after the first release with Docker (1.73.0):** GitHub makes a new image private. On github.com open your profile › **Packages › homebase-hub › Package settings**, and under *Danger Zone* choose **Change visibility › Public**. Without this nobody else can download the image.
 
 **Dependabot pull requests:** open each one. When its checks are green, press **Merge**. They change only the build and test tools, never your sites.
 
@@ -35,6 +37,7 @@ When there is no maintenance pull request, everything was already current. Nothi
 - **A maintenance or Dependabot pull request has a red check:** do not merge it. Leave a comment if you like, then close it. Next month tries again with newer versions, which often fixes it. If it keeps failing, it needs a person or an AI: give them this file, `AGENTS.md` and the link to the failed check.
 - **An issue "Monthly maintenance failed":** nothing reached `main`, and your sites are safe. Run it again later: **Actions › Monthly maintenance › Run workflow**. (The other calendar checks are under **Actions › Scheduled checks › Run workflow**, where you choose which one.) If it fails again, hand it over as above.
 - **…and the failed run says "GitHub Actions is not permitted to create or approve pull requests":** the update worked, but GitHub would not let it open the pull request. Turn it on once: **Settings › Actions › General › Workflow permissions**, tick **Allow GitHub Actions to create and approve pull requests**, **Save**. Then **Run workflow** again and close the issue.
+- **The release's job "publish the Docker image" failed:** the release and its zip are fine, and web hosts update as usual. Open the failed run and press **Re-run failed jobs**. If it fails again, hand it over.
 - **An issue labelled `security`:** a library has a known problem. If the monthly maintenance doesn't fix it within a month (or it's urgent), hand it over.
 - **An issue labelled `php`:** the next PHP version breaks something. You have months: hosts offer a new PHP about a year after it appears. Hand it over before your host switches.
 - **A site misbehaves after an update:** **Settings › Updates › Go Back** puts the previous version back.

@@ -356,12 +356,28 @@ function up_opcache_reset(): void { if (function_exists('opcache_reset')) @opcac
 function up_self_check(string $expect): ?bool {
     if (!function_exists('curl_init')) return null;
     $dir = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/' . UP_CORE . '/api.php'))), '/');
-    $url = (hub_https() ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $dir . '/api.php?action=state';
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 12, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_FOLLOWLOCATION => false, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_SSL_VERIFYHOST => 0, CURLOPT_USERAGENT => 'site-self-check']);
-    $body = (string)curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
-    $j = json_decode($body, true);
-    return $code === 200 && is_array($j) && isset($j['v']);
+    $host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+    $ask = function (string $url, array $hdr) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 12, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_FOLLOWLOCATION => false, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_SSL_VERIFYHOST => 0, CURLOPT_USERAGENT => 'site-self-check', CURLOPT_HTTPHEADER => $hdr]);
+        $body = (string)curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+        $j = json_decode($body, true);
+        return [$code, $code === 200 && is_array($j) && isset($j['v'])];
+    };
+    [$code, $ok] = $ask((hub_https() ? 'https' : 'http') . '://' . $host . $dir . '/api.php?action=state', []);
+    if ($code === 0) {
+        // (1.73.0) The site's own address could not be reached from the server itself (Docker with a mapped port, or a proxy in
+        // front): ask this web server directly on its own address and port instead. A site that answers wrongly still fails.
+        // Apache reports the port from the address in the browser, so the standard port is tried after it.
+        $addr = (string)($_SERVER['SERVER_ADDR'] ?? '');
+        $local = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        $ports = array_unique(array_filter([(int)($_SERVER['SERVER_PORT'] ?? 0), $local ? 443 : 80], fn ($p) => $p > 0 && $p < 65536));
+        if (filter_var($addr, FILTER_VALIDATE_IP)) foreach ($ports as $port) {
+            [$c2, $ok] = $ask(($local ? 'https' : 'http') . '://' . (strpos($addr, ':') !== false ? '[' . $addr . ']' : $addr) . ':' . $port . $dir . '/api.php?action=state', ['Host: ' . preg_replace('/[^A-Za-z0-9.:\[\]-]/', '', $host)]);
+            if ($c2 !== 0) break;   // this server answered: its answer counts, right or wrong
+        }
+    }
+    return $ok;
 }
 
 /** Applies the checked zip (Update) or the saved version ($fromPrevious: Go Back). */

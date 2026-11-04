@@ -169,7 +169,7 @@ Chrome, Edge, Firefox, Brave, Opera and Safari all export an .html file that Lin
 
 | You need | Details |
 |---|---|
-| **Hosting** | PHP 8.3 or newer (tested on 8.3, 8.4 and 8.5) |
+| **Hosting** | PHP 8.3 or newer (tested on 8.3, 8.4 and 8.5), or Docker |
 | **Access** | A file manager or FTP |
 | **HTTPS** | Recommended |
 | **Database** | None |
@@ -185,6 +185,14 @@ Chrome, Edge, Firefox, Brave, Opera and Safari all export an .html file that Lin
 
 > [!WARNING]
 > **Never delete `site-data`.** It holds all your data, and updates never touch it.
+
+### Docker or your own server
+
+```
+docker run -d --name homebase-hub -p 8080:80 -v hub-site:/var/www/html ghcr.io/jackpison/homebase-hub:latest
+```
+
+Or use [`compose.yaml`](deploy/docker/compose.yaml), or [`compose.caddy.yaml`](deploy/docker/compose.caddy.yaml) with its [`Caddyfile`](deploy/docker/Caddyfile) for HTTPS. The image runs on PCs, servers and Raspberry Pi. Updates work from Settings, as on any host. On a VPS, use [`deploy/apache`](deploy/apache/homebase-hub.conf) or [`deploy/nginx`](deploy/nginx/homebase-hub.conf). Every step is on the [Install page](https://jackpison.github.io/Homebase-Hub/install/).
 
 ### Updating
 
