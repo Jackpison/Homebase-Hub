@@ -10,7 +10,7 @@
     python3 tests/browser/settings_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8970)"""
 import os, sys, glob, re, json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
+from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, page_errors
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -36,7 +36,7 @@ try:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1280, 'height': 1000}); ctx.add_init_script("""window.__waits = []; const st = window.setTimeout;
             window.setTimeout = function (f, d, ...a) { if (d >= 100000) window.__waits.push(d); return st.call(window, f, d, ...a); };""")
-        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         why = browser_login(pg, s.base); check('S3 logged in', not why, why)
 
         pg.goto(s.base + '/web/settings/#updates'); wait_js(pg, "!!document.querySelector('.ix-card a[href^=\"https://github.com/\"]')", 20000)

@@ -7,7 +7,7 @@ import io, json, os, re, sys
 from urllib.parse import urljoin
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import Site, Checks, stop_all, browser_login, wait_js, until
+from helpers import Site, Checks, stop_all, browser_login, wait_js, until, page_errors
 from playwright.sync_api import sync_playwright
 from PIL import Image
 
@@ -81,7 +81,7 @@ try:
     with sync_playwright() as p:
         b = p.chromium.launch(args=['--no-sandbox']); print('browser: chromium %s' % b.version)
         ctx = b.new_context(viewport={'width': 1280, 'height': 1000}); pg = ctx.new_page()
-        errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        errs = []; page_errors(pg, errs)
         for label, site, path in (('top', s, '/'), ('Home', s, '/web/home/'), ('sub-folder Home', sub, '/hub/web/home/')):
             pg.goto(site.host + path)
             cdp = ctx.new_cdp_session(pg)

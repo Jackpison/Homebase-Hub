@@ -5,7 +5,7 @@ A small local server stands in for a calendar on the internet (port 8125, allowe
     python3 tests/browser/tasks_more_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8989)"""
 import datetime, http.server, os, sys, threading, zoneinfo
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
+from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, page_errors
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -28,7 +28,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1360, 'height': 900}); pg = ctx.new_page(); errs = []
-        pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        page_errors(pg, errs)
         why = browser_login(pg, s.base); check('R0 logged in', not why, why)
         pg.goto(s.base + '/web/tasks/'); wait_js(pg, "typeof T !== 'undefined' && typeof openEditor === 'function'", 20000)
 

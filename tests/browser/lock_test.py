@@ -4,7 +4,7 @@ card, a browser that has not unlocked, the CSV export of locked cards, and Remov
     python3 tests/browser/lock_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8977)"""
 import csv, glob, json, os, re, subprocess, sys, tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, PW, hold
+from helpers import SEED, PW, hold, page_errors
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, browser_unlock, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -37,7 +37,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1280, 'height': 900}, accept_downloads=True); ctx.add_init_script(CSP_REPORTER)
-        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         why = browser_login(pg, s.base); check('L1 logged in', not why, why)
         pg.goto(s.base + '/web/cards/'); wait_js(pg, "document.querySelectorAll('#list .row, #list tr').length > 0 || document.querySelector('#list').children.length > 0", 20000)
         check('L2 before a passphrase there is no offer to lock', pg.is_hidden('#lockbar'))

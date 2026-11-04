@@ -5,7 +5,7 @@ and what the server is left holding (nothing readable).
     python3 tests/browser/files_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8976)"""
 import glob, os, re, sys, tempfile, zipfile
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import FIX, hold
+from helpers import FIX, hold, page_errors
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, browser_unlock, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -33,7 +33,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1280, 'height': 900}, accept_downloads=True); ctx.add_init_script(CSP_REPORTER)
-        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         csp = []; pg.on('console', lambda m: csp.append(m.text[:160]) if m.type == 'error' and ('security policy' in m.text.lower() or 'Refused to' in m.text) else None)
         why = browser_login(pg, s.base); check('B0 logged in', not why, why)
         why = browser_set_passphrase(pg, s.base, PP); check('B1 the encryption passphrase is set', not why, why)

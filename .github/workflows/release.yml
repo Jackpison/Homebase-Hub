@@ -21,6 +21,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
+      - name: Check the tag matches the version in the code (first, before waiting for CI or building)
+        run: |
+          V=$(sed -n "s/^define('HUB', '\([^']*\)').*/\1/p" src/web/hub/core/lib/boot.php)
+          if [ -z "$V" ] || [ "v$V" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error title=Tag and version differ::The tag ${GITHUB_REF_NAME} does not match the version in the code (${V:-unknown}). Nothing was published. If a Monthly maintenance pull request is open, merge it first. Then delete this release and its tag on github.com and publish again with the tag v${V} or the merged version. See docs/MAINTAINING.md."
+            exit 1
+          fi
+          echo "Tag ${GITHUB_REF_NAME} = HUB ${V}"
       - name: Wait for CI on this commit; refuse unless every job passed
         env:
           GH_TOKEN: ${{ github.token }}
@@ -32,16 +40,16 @@ jobs:
         run: python3 scripts/release.py --check
       - name: Build
         run: npm ci --ignore-scripts && python3 scripts/build.py
+      - name: The zip carries the same version
+        run: |
+          set -- build/site-update-*.zip
+          V=${1##*site-update-}; V=${V%.zip}
+          [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "::error::The built zip is version $V, not ${GITHUB_REF_NAME#v}"; exit 1; }
       - name: Signed build note for the zip (it proves this repository's workflow built it; a failure here never stops a release)
         continue-on-error: true
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: build/site-update-*.zip
-      - name: Check the tag matches the version in the code
-        run: |
-          set -- build/site-update-*.zip
-          V=${1##*site-update-}; V=${V%.zip}
-          [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} does not match HUB $V"; exit 1; }
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}

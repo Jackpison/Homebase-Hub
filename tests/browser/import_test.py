@@ -6,7 +6,7 @@ Needs PHP 8.3+, Playwright and axe-core (npm ci). Fixtures are in tests/bookmark
 import os, re, sys, tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX
+from helpers import ROOT, FIX, page_errors
 from helpers import Site, Checks, stop_all, browser_name, launch, browser_login, wait_js, CSP_REPORTER, until
 from playwright.sync_api import sync_playwright
 
@@ -43,7 +43,7 @@ try:
         errs, refused, loads = [], [], []
         # "ResizeObserver loop completed with undelivered notifications" is the browser saying it put off a resize callback to the next
         # frame (WebKit, now and then, in CI): a notice by design, not an error of the page, so it is not counted
-        pg.on('pageerror', lambda e: None if 'ResizeObserver loop' in str(e) else errs.append(str(e)[:200]))
+        page_errors(pg, errs)
         pg.on('console', lambda m: refused.append(m.text[:200]) if m.type == 'error' and 'Refused' in m.text else None)
         pg.on('request', lambda r: loads.append(r.url) if 'links-import' in r.url else None)
         why = browser_login(pg, s.base)

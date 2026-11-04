@@ -5,7 +5,7 @@ Runs in Chromium only: the virtual authenticator is Chromium's.
     python3 tests/browser/passkey_test.py build/site-update-X.Y.Z.zip   (port 8980; the site is opened as http://localhost:8980, a secure address for passkeys)"""
 import base64, hashlib, hmac, json, os, struct, sys, time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import PW, hold
+from helpers import PW, hold, page_errors
 from helpers import Site, Checks, stop_all, wait_js, browser_name, launch, until, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -32,7 +32,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, 'chromium'); print('browser: chromium %s' % b.version)
         ctx = b.new_context(viewport={'width': 1280, 'height': 900}); ctx.add_init_script(CSP_REPORTER)
-        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         cdp = ctx.new_cdp_session(pg); cdp.send('WebAuthn.enable')
         auth = cdp.send('WebAuthn.addVirtualAuthenticator', {'options': {'protocol': 'ctap2', 'transport': 'internal', 'hasResidentKey': True, 'hasUserVerification': True, 'isUserVerified': True, 'automaticPresenceSimulation': True}})['authenticatorId']
         # log in with the password and the code (two-step is on)

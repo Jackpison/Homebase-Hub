@@ -70,12 +70,17 @@ jobs:
           case "$BRANCH" in maintenance/*) ;; *) echo "refusing to push to $BRANCH"; exit 1;; esac
           git push "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "HEAD:refs/heads/${BRANCH}" --force
           {
+            echo "> **Merge this first, then publish.** Version $NEXT is only on \`main\` once this is merged: a tag \`v$NEXT\` made before that is refused by the release."
+            echo
             echo "Monthly maintenance: version $NEXT."
             echo
             cat "$RUNNER_TEMP/plan.log"
             echo
-            echo "**What to do:** wait until CI is green on this pull request, then press **Merge**."
-            echo "Then publish the release: Releases > Draft a new release > tag \`v$NEXT\` (create on publish, target main) > Publish."
+            echo "**What to do:**"
+            echo "1. Wait until the **CI** run started by this workflow is green (checks marked *action_required* on this page can be ignored: GitHub holds checks of pull requests opened by Actions)."
+            echo "2. Press **Merge pull request**, then **Confirm merge**."
+            echo "3. Publish: Releases > Draft a new release > tag \`v$NEXT\` (create on publish, target main) > Publish."
+            echo
             echo "If CI is red: do not merge; open docs/MAINTAINING.md, section \"When something fails\"."
           } > "$RUNNER_TEMP/pr.md"
           gh pr create --repo "$REPO" --base main --head "$BRANCH" --title "Monthly maintenance: $NEXT" --body-file "$RUNNER_TEMP/pr.md" || gh pr edit "$BRANCH" --repo "$REPO" --body-file "$RUNNER_TEMP/pr.md"
@@ -88,5 +93,5 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           gh label create maintenance --repo "$REPO" --color 0E8A16 --description "Monthly maintenance" 2>/dev/null || true
-          printf 'The monthly maintenance could not finish on %s. Nothing was changed on main.\n\nRun: %s\n\nSee docs/MAINTAINING.md, section "When something fails".\n' "$(date -u +%Y-%m-%d)" "$RUN_URL" > "$RUNNER_TEMP/body.md"
+          printf 'The monthly maintenance could not finish on %s. Nothing was changed on main.\n\nRun: %s\n\nIf the run says "GitHub Actions is not permitted to create or approve pull requests": Settings > Actions > General > Workflow permissions > tick "Allow GitHub Actions to create and approve pull requests" > Save, then run it again.\n\nSee docs/MAINTAINING.md, section "When something fails".\n' "$(date -u +%Y-%m-%d)" "$RUN_URL" > "$RUNNER_TEMP/body.md"
           gh issue create --repo "$REPO" --title "Monthly maintenance failed" --label maintenance --body-file "$RUNNER_TEMP/body.md"

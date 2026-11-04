@@ -4,7 +4,7 @@ server is left holding (no readable copy, earlier versions included).
     python3 tests/browser/tabs_lock_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8978)"""
 import glob, json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, hold
+from helpers import SEED, hold, page_errors
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -33,7 +33,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1280, 'height': 900}); ctx.add_init_script(CSP_REPORTER)
-        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         why = browser_login(pg, s.base); check('T1 logged in', not why, why)
         pg.goto(s.base + '/web/links/'); wait_js(pg, "document.querySelectorAll('.tab').length > 1", 20000)
         pg.evaluate("document.getElementById('settingsBtn').click()")

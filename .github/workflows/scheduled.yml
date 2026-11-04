@@ -1,0 +1,223 @@
+name: Scheduled checks
+# The checks that run on a calendar, not on a push (one workflow since 2026-11; before, three):
+#   - every Monday: the bundled libraries and build tools against known security problems (issue "security"), and the next PHP
+#     version's development build (issue "php");
+#   - the 1st and 15th: the page tests in Firefox (issue "browsers");
+#   - 15 November: the yearly PHP support-dates checklist (issue "maintenance").
+# Each job runs only on its own schedule. By hand: Actions > Scheduled checks > Run workflow, and choose which check.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+    - cron: '41 5 1,15 * *'
+    - cron: '0 8 15 11 *'
+  workflow_dispatch:
+    inputs:
+      check:
+        description: Which check to run
+        type: choice
+        default: security
+        options: [security, next-php, firefox, php-reminder, all]
+permissions: {}
+concurrency:
+  group: scheduled-${{ github.event.schedule || inputs.check }}
+  cancel-in-progress: false
+jobs:
+  check:
+    if: github.event.schedule == '17 6 * * 1' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "security"]'), inputs.check))
+    runs-on: ubuntu-latest   # on purpose: the canary. Every other workflow is pinned to ubuntu-24.04; when GitHub moves the label, this one fails first and opens an issue
+    timeout-minutes: 15
+    name: security check (libraries and build tools)
+    permissions:
+      contents: read   # check out the repo
+      issues: write    # open or comment on the "security" issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24', cache: npm }
+      - name: Install the build tools
+        run: npm ci --ignore-scripts
+      - name: Bundled libraries (check_libraries.py --audit)
+        run: |
+          set -o pipefail
+          python3 tests/repo/check_libraries.py --audit 2>&1 | tee -a check.log
+      - name: Build tools (npm audit)
+        if: success() || failure()
+        run: |
+          set -o pipefail
+          echo "--- npm audit ---" >> check.log
+          npm audit --audit-level=moderate 2>&1 | tee -a check.log
+      - name: npm overrides that can go (a notice only)
+        if: success() || failure()
+        run: python3 scripts/overrides.py --github
+      - name: Open or update the issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create security --color B60205 --description "Security problems and checks" 2>/dev/null || true
+          {
+            echo "The weekly security check failed on $(date -u +%Y-%m-%d)."
+            echo
+            echo "Run: $RUN_URL"
+            echo
+            echo "Last lines of the log:"
+            echo
+            echo '```'
+            tail -n 60 check.log 2>/dev/null || echo "(no log)"
+            echo '```'
+          } > body.md
+          TITLE="Weekly security check failed"
+          NUM=$(gh issue list --state open --label security --search "\"$TITLE\" in:title" --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --body-file body.md
+          else
+            gh issue create --title "$TITLE" --label security --body-file body.md
+          fi
+  next-php:
+    if: github.event.schedule == '17 6 * * 1' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "next-php"]'), inputs.check))
+    # The next PHP version, early (1.59): PHP's newest development build checks every file and runs the unit tests.
+    # Hosts move to a new PHP about once a year; a break shows up here months before any site meets it.
+    # On a failure it opens one issue labelled "php" (or comments on the open one). The site's own CI is not affected.
+    runs-on: ubuntu-latest   # on purpose: the canary. Every other workflow is pinned to ubuntu-24.04; when GitHub moves the label, this one fails first and opens an issue
+    timeout-minutes: 20
+    name: next PHP version (development build)
+    permissions:
+      contents: read   # check out the repo
+      issues: write    # open or comment on the "php" issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: 'nightly', extensions: 'curl, zip, mbstring, gd' }
+      - name: Every PHP file, then the unit tests
+        run: |
+          set -o pipefail
+          php -v | head -1 | tee php.log
+          find src -name '*.php' -not -path '*/tools/*' -print0 | xargs -0 -n1 php -l 2>&1 | grep -v '^No syntax errors' | tee -a php.log || true
+          php tests/unit/run.php 2>&1 | tee -a php.log
+          ! grep -q '^PHP Parse error\|^Parse error\|^FAIL' php.log
+      - name: Open or update the issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create php --repo "$REPO" --color 5319E7 --description "PHP versions" 2>/dev/null || true
+          {
+            echo "The next PHP version (development build) finds a problem, on $(date -u +%Y-%m-%d). Sites are not affected yet: hosts will offer this PHP later."
+            echo
+            echo "Run: $RUN_URL"
+            echo
+            echo '```'
+            tail -n 60 php.log 2>/dev/null || echo "(no log)"
+            echo '```'
+          } > "$RUNNER_TEMP/php.md"
+          TITLE="Next PHP version: something breaks"
+          NUM=$(gh issue list --repo "$REPO" --state open --label php --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
+          if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/php.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label php --body-file "$RUNNER_TEMP/php.md"; fi
+  firefox:
+    if: github.event.schedule == '41 5 1,15 * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "firefox"]'), inputs.check))
+    # CI tests Chromium and WebKit on every push. On the 1st and 15th the same page tests run in Firefox, so a bug only Firefox shows is
+    # found within two weeks. Start it by hand (Actions > Scheduled checks > Run workflow > firefox) before a release that touched the layout or a window.
+    # On a failure it opens one issue labelled "browsers" (or comments on the open one). The site's own CI is not affected.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    name: browser tests (Firefox)
+    permissions:
+      contents: read   # check out the repo
+      issues: write    # open or comment on the "browsers" issue
+    env:
+      BROWSER: firefox   # the scripts read it from here, never pasted into the script text
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24', cache: npm }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
+      - name: npm packages
+        run: npm ci --ignore-scripts
+      - name: Python packages
+        run: pip install -r tests/requirements.txt
+      - name: Browser system packages from Ubuntu (up to 3 tries of 2 minutes)
+        timeout-minutes: 8
+        run: |
+          for i in 1 2 3; do
+            sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
+            sudo killall -q apt-get dpkg || true; sleep 10
+          done
+          exit 1
+      - name: The browser
+        timeout-minutes: 10
+        run: python -m playwright install "$BROWSER"
+      - name: Build the zip and the website
+        run: python3 scripts/build.py && python3 scripts/make-site.py --no-guide
+      - name: The page tests in this browser
+        run: |
+          set -o pipefail
+          fail=0
+          for t in import pages nav tools encrypt files lock tabs_lock tabs_kit settings_ui settings_look windows polish; do
+            python3 tests/browser/${t}_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1
+          done
+          python3 tests/browser/a11y_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1
+          python3 tests/browser/website_test.py build/site --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1
+          exit $fail
+      - name: Open or update the issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create browsers --repo "$REPO" --color 0E8A16 --description "Firefox and WebKit checks" 2>/dev/null || true
+          {
+            echo "The Firefox browser tests failed on $(date -u +%Y-%m-%d)."
+            echo
+            echo "Run: $RUN_URL"
+            echo
+            echo "Failing lines:"
+            echo
+            echo '```'
+            grep -E '^FAIL|Error|Traceback' browsers.log 2>/dev/null | tail -n 40 || echo "(no log)"
+            echo '```'
+          } > "$RUNNER_TEMP/browsers.md"
+          TITLE="Firefox browser tests failed"
+          NUM=$(gh issue list --repo "$REPO" --state open --label browsers --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
+          if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/browsers.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label browsers --body-file "$RUNNER_TEMP/browsers.md"; fi
+  remind:
+    if: github.event.schedule == '0 8 15 11 *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "php-reminder"]'), inputs.check))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      issues: write   # open the reminder issue
+    name: open the reminder issue
+    steps:
+      - name: Open the issue (once per year)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          YEAR=$(date -u +%Y)
+          TITLE="Check the PHP support dates"
+          if gh issue list --state all --search "\"$TITLE\" in:title created:>=$YEAR-01-01" --json title --jq ".[] | select(.title == \"$TITLE\") | .title" | grep -q .; then
+            echo "Already opened this year."; exit 0
+          fi
+          cat > body.md <<'EOF'
+          PHP has (or soon has) a new version. Go through this list once a year.
+
+          - [ ] Compare `hub_php_eol()` in `src/web/hub/core/lib/boot.php` with https://www.php.net/supported-versions and add the row for the new version.
+          - [ ] Decide whether `HUB_MIN_PHP` (same file) rises. The build carries it into the zip as `minPhp`.
+          - [ ] Update the PHP matrix in `.github/workflows/ci.yml` (`build`) and the PHP used by the other jobs.
+          - [ ] Update every "PHP 8.x" sentence: `README.md`, `src/web/hub/docs/README.txt`, `website/content/index.html`, `website/content/install.html`, and the guide (`scripts/make-guide.py`).
+          - [ ] Check test E6 in `tests/server/update_test.py` (it uses a fixed date) and the `hub_php_notice` checks in `tests/unit/logic_test.php`.
+          - [ ] Changelog entry (in the next release).
+          EOF
+          sed -i 's/^          //' body.md
+          gh label create maintenance --color 0E8A16 --description "Routine upkeep" 2>/dev/null || true
+          gh issue create --title "$TITLE" --label maintenance --body-file body.md

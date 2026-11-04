@@ -7,7 +7,7 @@ the What's New light, Erase Everything, the hover glow and the edit bar. 1.67.0:
     python3 tests/browser/polish_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8979)"""
 import json, os, re, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase
+from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, page_errors
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -24,7 +24,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1280, 'height': 860}, color_scheme='dark'); pg = ctx.new_page()
-        errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        errs = []; page_errors(pg, errs)
         # ---- (1.65.1) logged out: the Settings card and the login window ----
         pg.goto(s.base + '/web/settings/'); wait_js(pg, "!!document.querySelector('.ix-gcard')", 20000)
         gate = pg.evaluate("(() => { const b = document.getElementById('ix-glg'), t = document.createElement('i'); t.style.background = 'var(--ix-accent)'; document.body.appendChild(t); const acc = getComputedStyle(t).backgroundColor; t.remove(); return [!!document.querySelector('.ix-gcard .ix-llogo'), getComputedStyle(b).backgroundColor === acc, b.offsetHeight >= 44, getComputedStyle(document.querySelector('.ix-gate')).backgroundImage.includes('radial-gradient')]; })()")
@@ -92,7 +92,7 @@ try:
 
         # ---- swipe in Tasks (touch) ----
         tctx = b.new_context(viewport={'width': 390, 'height': 800}, has_touch=True, is_mobile=BROWSER != 'firefox', color_scheme='dark', storage_state=ctx.storage_state())
-        tp = tctx.new_page(); tp.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        tp = tctx.new_page(); page_errors(tp, errs)
         tp.goto(s.base + '/web/tasks/'); wait_js(tp, "!!(window.HUB && HUB.isAdmin()) && !!document.getElementById('qadd')", 20000)
         tp.fill('#qadd', 'Swipe me monthly 20 Nov'); tp.press('#qadd', 'Enter'); wait_js(tp, "[...document.querySelectorAll('.row[data-id]')].some(r => /Swipe me/.test(r.textContent))", 8000); tp.wait_for_timeout(500)
         def swipe(dx):
@@ -268,7 +268,7 @@ try:
             return { el: e ? (e.id || e.className.split(' ')[0]) : null, cls: e ? e.className : '', bf: c ? c.backdropFilter : '', gb: c ? c.getPropertyValue('--gb').trim() : '',
               map: f && e ? [f.getAttribute('href').slice(0, 18), f.getAttribute('width') === '100%' && f.getAttribute('height') === '100%', f.getAttribute('href').includes('width%3D%22' + Math.round(e.offsetWidth) + '%22')] : null,
               js: [...document.scripts].filter(x => /glass\.js/.test(x.src)).length, attr: document.documentElement.hasAttribute('data-ix-glass') }; })()"""
-        gp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); gp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(gp, s.base)
+        gp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); page_errors(gp, errs); browser_login(gp, s.base)
         gp.goto(s.base + '/web/links/'); wait_js(gp, "!!document.querySelector('#ix-bar .ix-links') && !!(window.HUB && HUB.isAdmin())", 20000); gp.wait_for_timeout(500)
         g0 = gp.evaluate(GL)
         check('P49 Bar Glass is off by default: no glass and glass.js is not even loaded (1.68.0)', g0['el'] is None and g0['js'] == 0 and not g0['attr'], g0)
@@ -319,7 +319,7 @@ try:
         gp.context.close()
         # ---- (1.68.2) Appearance > Glass tab; no line over the current page in the dock; Hide the Bar While Scrolling ----
         s.php("hub_settings_update(function ($x) { $x['glass'] = true; $x['nav'] = 'top'; return $x; });")
-        tp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); tp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(tp, s.base)
+        tp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); page_errors(tp, errs); browser_login(tp, s.base)
         tp.goto(s.base + '/web/settings/#glass'); wait_js(tp, "!!document.getElementById('ix-gx-bend') && !!document.querySelector('#ix-bar.glass-surface')", 20000); tp.wait_for_timeout(300)
         GX = """[getComputedStyle(document.getElementById('ix-bar')).backdropFilter, (document.querySelector('#ix-glass-f feDisplacementMap') || {getAttribute: () => ''}).getAttribute('scale'),
             document.documentElement.style.getPropertyValue('--ix-gb'), !!document.querySelector('#ix-sf:not([hidden])')]"""
@@ -358,7 +358,7 @@ try:
         tp.context.close()
         # ---- (1.68.4) one glass for the whole site: the Home widgets, Liquid only over photos, Where, Tone / Rim / Saturation ----
         s.php("hub_settings_update(function ($x) { $x['glass'] = true; $x['nav'] = 'top'; $x['homeBar'] = true; $x['glassFx'] = ['frost' => 14, 'tint' => 35, 'sat' => 120]; return $x; });")
-        op = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); op.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(op, s.base)
+        op = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); page_errors(op, errs); browser_login(op, s.base)
         WG = "(() => { const c = document.querySelector('.wchip, .wcard, .chip, .lg'); if (!c) return null; const st = getComputedStyle(c); return [st.backdropFilter || st.webkitBackdropFilter || '', st.backgroundColor]; })()"
         op.goto(s.base + '/'); until(lambda: op.evaluate(WG) is not None, 15000); op.wait_for_timeout(600); w1 = op.evaluate(WG)
         gs = op.evaluate("document.documentElement.style.getPropertyValue('--ix-gs')")
@@ -393,7 +393,7 @@ try:
         op.context.close()
         # ---- (1.68.5) Where > Settings Windows: the page shows through a glass window (a light layer behind it, 55% of its own colour) ----
         s.php("hub_settings_update(function ($x) { $x['glassFx'] = ['wwin' => 1, 'frost' => 0, 'tint' => 10]; return $x; });")
-        wp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); wp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(wp, s.base)
+        wp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); page_errors(wp, errs); browser_login(wp, s.base)
         wp.goto(s.base + '/web/links/'); wait_js(wp, "document.querySelectorAll('.cat').length > 0 && document.documentElement.hasAttribute('data-ix-gwin')", 20000)
         wp.evaluate("document.getElementById('settingsBtn').click()"); wp.wait_for_selector('#setDlg[open]'); wp.wait_for_timeout(400)
         WIN = """(() => { const d = document.getElementById('setDlg'), a = c => { const m = c.match(/[\\d.]+/g) || []; return m.length > 3 ? +m[3] : 1; };
@@ -406,7 +406,7 @@ try:
         check('P65 Where > Settings Windows: the window is see-through glass (55% of its own colour, 14 px frost) over a light layer, so the page shows through; off, windows are as before (1.68.5)',
               0.5 < wg[0] < 0.6 and 'blur(14px)' in wg[1] and wg[2] <= 0.2 and wn[0] > 0.95 and wn[2] >= 0.4, (wg, wn))
         # ---- (1.69.0) the Stepper (React Bits' Stepper, shell.js): Restore, Start Over, the passphrase, New Site Setup and the Home Tour ----
-        sp = b.new_context(viewport={'width': 1280, 'height': 900}).new_page(); sp.on('pageerror', lambda e: errs.append(str(e)[:200])); browser_login(sp, s.base)
+        sp = b.new_context(viewport={'width': 1280, 'height': 900}).new_page(); page_errors(sp, errs); browser_login(sp, s.base)
         sp.goto(s.base + '/web/settings/#backup/restore'); wait_js(sp, "!!document.querySelector('#ix-rst .ix-st-bars') && !!document.querySelector('#ix-imp')", 20000)
         bk = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'stepper-links.json')
         open(bk, 'w').write(json.dumps({'format': 'bookmarks-backup', 'version': 2, 'data': {'settings': {}, 'tabs': [{'id': 'rs1', 'title': 'From Backup', 'categories': [{'id': 'rc1', 'title': 'Saved', 'col': 0, 'links': [{'title': 'Restored Site', 'url': 'https://restored.example.com'}]}]}]}}))
@@ -480,7 +480,7 @@ try:
         sp.context.close()
         ns = Site(ZIP, 8974, setup=False)
         try:
-            np_ = b.new_context(viewport={'width': 1280, 'height': 860}).new_page(); np_.on('pageerror', lambda e: errs.append(str(e)[:200]))
+            np_ = b.new_context(viewport={'width': 1280, 'height': 860}).new_page(); page_errors(np_, errs)
             np_.goto(ns.base + '/web/links/'); wait_js(np_, "!!(window.HUB && HUB.login)", 20000)
             np_.evaluate("() => { HUB.login(); }"); wait_js(np_, "!!document.querySelector('#ix-setst .ix-st-next')", 20000)   # a new site: Log In opens the setup
             code = re.search(r'([A-Z0-9]{4}(?:-[A-Z0-9]{4})+|[A-Z0-9]{8,})', open(ns.dir + '/site-data/core/SETUP-CODE.php').read().split('?>')[-1]).group(1)

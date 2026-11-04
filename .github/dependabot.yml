@@ -1,11 +1,16 @@
 # GitHub proposes a pull request when an Action, a build tool (esbuild, axe-core, eslint) or a Python test package has a new version.
 # Read it, check that CI passes, and merge. Nothing here changes the site itself.
+# Once a month (2026-11; was weekly), one grouped pull request per kind. A version is proposed only once it is 7 days old (cooldown):
+# a hijacked package is usually found and pulled within days. Security updates are not held back by either.
+# Tools' libraries: the monthly maintenance already takes minor and patch versions; Dependabot only proposes a new major version.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "ci"
     groups:
@@ -14,7 +19,9 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "build"
     groups:
@@ -23,7 +30,9 @@ updates:
   - package-ecosystem: pip
     directory: /tests
     schedule:
-      interval: weekly
+      interval: monthly
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "test"
     groups:
@@ -32,9 +41,14 @@ updates:
   - package-ecosystem: npm
     directory: /tools-app
     schedule:
-      interval: weekly
+      interval: monthly
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "tools"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]   # the monthly maintenance does these
     groups:
       tools-libraries:
         patterns: ["*"]

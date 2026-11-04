@@ -15,9 +15,15 @@ permissions:
   contents: read
 jobs:
   codeql:
-    name: CodeQL (JavaScript)
+    # (2026-11) three languages side by side: the site's JavaScript, the Python of the build scripts and tests, and the workflow files
+    # themselves ("actions": untrusted input reaching a shell, a token with too much reach)
+    name: CodeQL (${{ matrix.language }})
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python, actions]
     permissions:
       contents: read
       security-events: write   # to show what it found under Security > Code scanning
@@ -26,11 +32,11 @@ jobs:
         with: { persist-credentials: false }
       - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
-          languages: javascript-typescript
+          languages: ${{ matrix.language }}
           build-mode: none
           config-file: ./.github/codeql/codeql-config.yml
       - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
-        with: { category: '/language:javascript-typescript' }
+        with: { category: '/language:${{ matrix.language }}' }
 
   semgrep:
     name: Semgrep (PHP and JavaScript)

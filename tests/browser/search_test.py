@@ -4,7 +4,7 @@ what a page has unlocked (its own memory, never stored), a small typo, groups wi
     python3 tests/browser/search_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8988)"""
 import os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch
+from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, page_errors
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -18,7 +18,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1360, 'height': 900}); pg = ctx.new_page(); errs = []
-        pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        page_errors(pg, errs)
         why = browser_login(pg, s.base); check('Q0 logged in', not why, why)
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!document.getElementById('ix-q') && !!(window.HUB && HUB.isAdmin())", 20000)
         def find(q, wait="!!document.querySelector('#ix-sres a.ix-r')"):

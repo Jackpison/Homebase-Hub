@@ -10,7 +10,7 @@ import json, os, re, subprocess, sys, tempfile, time, urllib.request, http.cooki
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED
+from helpers import SEED, page_errors
 from helpers import browser_name, launch, browser_login, wait_js, CSP_REPORTER, TRACK_REQUESTS, settle, until
 BROWSER = browser_name()
 SHOTS = None
@@ -43,7 +43,7 @@ if BROWSER != 'firefox': PHONE['is_mobile'] = True
 
 def open_page(ctx, path='/web/links/'):
     pg = ctx.new_page(); errs = []
-    pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+    page_errors(pg, errs)
     pg.goto(B + path, wait_until='domcontentloaded')
     wait_js(pg, "!!document.querySelector('#ix-bar .ix-links a') && !!(window.HUB && HUB.isAdmin && HUB.isAdmin())")
     settle(pg)

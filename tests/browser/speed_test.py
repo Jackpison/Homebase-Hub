@@ -6,7 +6,7 @@ heavier fails here, so it is noticed before a release, not after.
     python3 tests/browser/speed_test.py build/site-update-X.Y.Z.zip   (port 8983; Chromium only: it uses the DevTools throttling)"""
 import gzip, json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED
+from helpers import SEED, page_errors
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch
 from playwright.sync_api import sync_playwright
 import subprocess
@@ -27,7 +27,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, 'chromium'); print('browser: chromium %s' % b.version)
         ctx = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
-        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         why = browser_login(pg, s.base); check('V0 logged in (before slowing anything down)', not why, why)
         cdp = ctx.new_cdp_session(pg)
         cdp.send('Emulation.setCPUThrottlingRate', {'rate': 4})

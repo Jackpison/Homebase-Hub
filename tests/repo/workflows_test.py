@@ -23,7 +23,7 @@ def jobs(text):
         elif cur: out[cur].append(line)
     return out
 
-check('W0 the workflow folder has the six workflows', {os.path.basename(f) for f in FILES} >= {'ci.yml', 'pages.yml', 'release.yml', 'weekly-check.yml', 'php-eol-reminder.yml', 'maintenance.yml'}, [os.path.basename(f) for f in FILES])
+check('W0 the workflow folder has exactly the six workflows (the three on a calendar are one since 2026-11: scheduled.yml)', {os.path.basename(f) for f in FILES} == {'ci.yml', 'code-scanning.yml', 'pages.yml', 'release.yml', 'scheduled.yml', 'maintenance.yml'}, [os.path.basename(f) for f in FILES])
 unpinned, nocred, notime, scripts = [], [], [], []
 for f in FILES:
     name = os.path.basename(f); lines = open(f, encoding='utf-8').read().split('\n')
@@ -65,7 +65,7 @@ pushes = [l for l in mt.split('\n') if 'git push' in l]
 check('W11 the monthly maintenance runs only on its schedule or by hand, and pushes only a maintenance/ branch (never main)',
       'schedule:' in trig and 'workflow_dispatch:' in trig and not any(x in trig for x in ('push:', 'pull_request', 'workflow_run', 'issue')) and 'permissions: {}' in mt
       and len(pushes) == 1 and 'refs/heads/${BRANCH}' in pushes[0] and 'BRANCH="maintenance/' in mt and 'case "$BRANCH" in maintenance/*)' in mt and 'main' not in pushes[0], pushes)
-wk = open(os.path.join(ROOT, '.github', 'workflows', 'weekly-check.yml'), encoding='utf-8').read()
+wk = open(os.path.join(ROOT, '.github', 'workflows', 'scheduled.yml'), encoding='utf-8').read()
 check('W12 the weekly check also tries the next PHP version (development build) and reports a break in its own issue', 'next-php:' in wk and "php-version: 'nightly'" in wk and 'tests/unit/run.php' in wk and '--label php' in wk)
 cs = open(os.path.join(ROOT, '.github', 'workflows', 'code-scanning.yml'), encoding='utf-8').read()
 check('W13 CodeQL and Semgrep run on every push to main and every pull request, and weekly; a Semgrep finding fails the run', all(x in cs for x in ('push:', 'pull_request:', 'schedule:', 'github/codeql-action/analyze@', 'semgrep scan', '--error', 'security-events: write')))
@@ -76,13 +76,13 @@ ci_code = '\n'.join(l.split('   #')[0] for l in ci.split('\n') if not l.strip().
 check('W15 CI runs the browser tests in Chromium and WebKit, each in two halves (pages, tools), side by side; Firefox and the visual report job are not in CI',
       'browser: [chromium, webkit]' in bj and 'part: [pages, tools]' in bj and not re.search(r'firefox', ci_code, re.I) and 'visual' not in cij,
       [x for x in ('firefox', 'visual') if x in ci_code.lower() or x in cij])
-ff = open(os.path.join(ROOT, '.github', 'workflows', 'firefox-check.yml'), encoding='utf-8').read()
+ff = wk
 check('W16 Firefox runs on the 1st and 15th and by hand, runs the page tests and the accessibility check, and reports a failure in its own issue (label browsers)',
       "cron: '41 5 1,15 * *'" in ff and 'workflow_dispatch:' in ff and 'BROWSER: firefox' in ff and 'settings_look' in ff and 'a11y_test' in ff and 'website_test' in ff and '--label browsers' in ff
       and 'issues: write' in ff and 'timeout-minutes:' in ff and 'permissions: {}' in ff and not re.search(r'pull_request|push:', ff))
 check('W17 CI runs the secret check', 'tests/repo/secrets_test.py' in ci)
 check('W18 several browser tests run at once through run_parallel.py, and only the slow-phone test (it measures time) runs alone (-j 1)',
-      bj.count('tests/lib/run_parallel.py -j 3') == 2 and bj.count('tests/lib/run_parallel.py -j 2') == 2 and 'run_parallel.py -j 1 "slow phone|' in bj and 'speed_test' not in bj.replace('run_parallel.py -j 1 "slow phone|tests/browser/speed_test.py', '') and 'tests/repo/parallel_test.py' in ci)
+      bj.count('tests/lib/run_parallel.py --retry 1 -j 3') == 2 and bj.count('tests/lib/run_parallel.py --retry 1 -j 2') == 2 and 'run_parallel.py --retry 1 -j 1 "slow phone|' in bj and 'speed_test' not in bj.replace('run_parallel.py --retry 1 -j 1 "slow phone|tests/browser/speed_test.py', '') and 'tests/repo/parallel_test.py' in ci)
 check('W19 CI lints the Python (ruff, pinned, rules in ruff.toml) and the build job reads enough history for the commit-message secret check',
       'ruff==' in ci and '/tmp/rf/bin/ruff check' in ci and os.path.isfile(os.path.join(ROOT, 'ruff.toml')) and re.search(r'fetch-depth: 50', '\n'.join(cij['build'])))
 bad_names = []
@@ -91,11 +91,30 @@ for f in FILES:
         m = re.match(r'^\s*(?:-\s+)?name:\s+(.*)$', line)
         if m and m.group(1)[:1] not in ('"', "'") and re.search(r':(\s|$)|\s#', m.group(1)): bad_names.append('%s:%d' % (os.path.basename(f), i + 1))
 check('W20 no unquoted step or job name holds a colon and a space (or " #"): YAML reads that as a new key or a comment and CI does not start', not bad_names, bad_names)
+def jobs_of(text):   # {job: {'if': ..., 'runs-on': ...}} read from the job blocks (no YAML library needed)
+    out, cur = {}, None
+    for line in text[text.index('\njobs:\n'):].split('\n')[2:]:
+        m = re.match(r'^  ([\w-]+):\s*$', line)
+        if m: cur = out.setdefault(m.group(1), {}); continue
+        m = re.match(r'^    (if|runs-on):\s*(.+?)(\s+#.*)?$', line)
+        if m and cur is not None: cur[m.group(1)] = m.group(2)
+    return out
+sj = jobs_of(wk); crons = {'check': "'17 6 * * 1'", 'next-php': "'17 6 * * 1'", 'firefox': "'41 5 1,15 * *'", 'remind': "'0 8 15 11 *'"}
+gates = {j: str(sj.get(j, {}).get('if', '')) for j in crons}
+check('W16b every scheduled job runs only on its own schedule or when chosen by hand (Firefox never on the weekly run); a run by hand starts the security check unless told otherwise',
+      set(sj) == set(crons) and all(('github.event.schedule == ' + c) in gates[j] and "inputs.check" in gates[j] for j, c in crons.items())
+      and 'default: security' in wk and all(("cron: " + c) in wk for c in set(crons.values())), gates)
+check('W16c the security and next-PHP jobs stay on ubuntu-latest (the canary); the others are pinned', sj['check']['runs-on'] == 'ubuntu-latest' and sj['next-php']['runs-on'] == 'ubuntu-latest'
+      and sj['firefox']['runs-on'] == 'ubuntu-24.04' and sj['remind']['runs-on'] == 'ubuntu-24.04')
+db = open(os.path.join(ROOT, '.github', 'dependabot.yml'), encoding='utf-8').read()
+check('W16d Dependabot: once a month, one group per kind, a version only once it is 7 days old; for Tools only new major versions (the monthly maintenance takes the rest)',
+      db.count('interval: monthly') == 4 and 'interval: weekly' not in db and db.count('default-days: 7') == 4 and db.count('patterns: ["*"]') == 4
+      and 'version-update:semver-minor' in db[db.index('directory: /tools-app'):])
 loose = []
 for f in FILES:
     for i, line in enumerate(open(f, encoding='utf-8').read().split('\n')):
         m = re.match(r'^\s*runs-on:\s*(\S+)', line)
-        if m and m.group(1) != ('ubuntu-latest' if os.path.basename(f) == 'weekly-check.yml' else 'ubuntu-24.04'): loose.append('%s:%d %s' % (os.path.basename(f), i + 1, m.group(1)))
+        if m and m.group(1) != 'ubuntu-24.04' and not (os.path.basename(f) == 'scheduled.yml' and m.group(1) == 'ubuntu-latest'): loose.append('%s:%d %s' % (os.path.basename(f), i + 1, m.group(1)))
 check('W21 every job runs on ubuntu-24.04; only the weekly check uses ubuntu-latest, as the canary for the next move of that label', not loose and wk.count('runs-on: ubuntu-latest') >= 2, loose)
 check('W22 CI runs actionlint, downloaded at a fixed version and checked against its SHA-256 before it runs',
       re.search(r'actionlint/releases/download/v[0-9.]+/actionlint_[0-9.]+_linux_amd64\.tar\.gz', ci) and re.search(r'echo "[0-9a-f]{64}  actionlint\.tar\.gz" \| sha256sum -c -', ci) and './actionlint' in ci)

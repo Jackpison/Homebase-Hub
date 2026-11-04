@@ -45,6 +45,7 @@ python3 tests/repo/workflows_test.py
 python3 tests/repo/ci_status_test.py
 python3 tests/repo/ci_changes_test.py
 python3 tests/repo/releases_test.py
+python3 tests/repo/helpers_test.py && python3 tests/repo/fixed_waits_test.py      # one rule for page errors; fixed pauses in browser tests only go down
 pip install zizmor==1.30.1 && zizmor --offline --persona=auditor .github/workflows/
 curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.1.33/phpstan.phar
 echo "48caad125554d6b416159db71dd7fd890295ba1a24b3650b49e32752e24fd6a0  phpstan.phar" | sha256sum -c -
@@ -71,7 +72,7 @@ python3 tests/browser/visual_compare.py build/site-update-X.Y.Z.zip <previous re
 sudo sh tests/server/apache_setup.sh build/site-update-X.Y.Z.zip && python3 tests/server/apache_test.py
 ```
 
-All of them must pass. `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs them one after another with one summary table (`--quick`: lint, unit, repo and server checks only, for small changes; `--apache` adds the Apache test). CI runs the same checks on every pull request and on every push to `main`, with the browser tests in Chromium and WebKit, each in two halves side by side and several tests at once inside a half (`tests/lib/run_parallel.py`). Firefox runs on the 1st and 15th in `firefox-check.yml` (`--browser firefox` runs it by hand, and Actions > Firefox check > Run workflow starts it); run it before a release that changed layout or windows. On a docs-only change CI skips the slow jobs; `ci-ok` sums up every job.
+All of them must pass. `python3 tests/run_all.py build/site-update-X.Y.Z.zip` runs them one after another with one summary table (`--quick`: lint, unit, repo and server checks only, for small changes; `--apache` adds the Apache test). CI runs the same checks on every pull request and on every push to `main`, with the browser tests in Chromium and WebKit, each in two halves side by side and several tests at once inside a half (`tests/lib/run_parallel.py`). Firefox runs on the 1st and 15th in `scheduled.yml` (`--browser firefox` runs it by hand, and Actions > Scheduled checks > Run workflow > firefox starts it); run it before a release that changed layout or windows. On a docs-only change CI skips the slow jobs; `ci-ok` sums up every job.
 
 ## Release checklist
 

@@ -8,7 +8,7 @@
     python3 tests/browser/offline_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8984)"""
 import json, os, subprocess, sys, time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
+from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, page_errors
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -29,7 +29,7 @@ try:
           if (window.navigation) navigation.addEventListener('navigate', (e) => add('go ' + e.navigationType + ' ' + new URL(e.destination.url).pathname + ' from ' + location.pathname + ' ' + String(new Error().stack || '').split('\\n').slice(1, 4).join(' | ')));
         } catch (e) {} })()""")
         pg = ctx.new_page()
-        pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        page_errors(pg, errs)
         why = browser_login(pg, s.base); check('F0 logged in', not why, why)
 
         # two tasks to see (the demo data has none): added through the page, as a person would
@@ -49,13 +49,13 @@ try:
         pg.evaluate("sessionStorage.setItem('slowAt', 'web/tasks/api.php')")
         slow = {'n': 1}
         t0 = time.time(); pg.goto(s.base + '/web/tasks/', wait_until='domcontentloaded')
-        wait_js(pg, "typeof T !== 'undefined' && T.length > 0 && !!document.querySelector('#main .wk, #list .row')", 2000)
+        wait_js(pg, "typeof T !== 'undefined' && T.length > 0 && !!document.querySelector('#main .wk, #list .row')", 2000, fresh=False)
         early = [round(time.time() - t0, 2), pg.evaluate("document.documentElement.classList.contains('ix-stale')")]
         wait_js(pg, "!document.documentElement.classList.contains('ix-stale')", 10000)
         check('F2 Tasks: the list shows at once from the last copy while the fresh one takes 2.5 s (the page is marked as waiting), then the fresh list',
               early[0] < 2.2 and early[1] and slow['n'] >= 1, early)
         pg.evaluate("sessionStorage.setItem('slowAt', 'web/links/api.php?action=get')")
-        pg.goto(s.base + '/web/links/', wait_until='domcontentloaded'); wait_js(pg, "!!document.querySelector('#grid .col') && document.documentElement.classList.contains('ix-stale')", 3000)
+        pg.goto(s.base + '/web/links/', wait_until='domcontentloaded'); wait_js(pg, "!!document.querySelector('#grid .col') && document.documentElement.classList.contains('ix-stale')", 3000, fresh=False)
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_timeout(200)
         waiting = [pg.evaluate("document.body.classList.contains('editing')"), pg.evaluate("((document.getElementById('ix-toast') || {}).textContent || '')")]
         wait_js(pg, "!document.documentElement.classList.contains('ix-stale')", 10000); pg.evaluate("sessionStorage.removeItem('slowAt')")

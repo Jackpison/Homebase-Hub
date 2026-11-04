@@ -291,6 +291,28 @@ def settle(pg, timeout=10000):
     return False
 
 
+_CANCELLED = re.compile(r'(?:https?:)?//?(?:127\.0\.0\.1|localhost)(?::\d+)?/\S* due to access control checks')
+
+
+def cancelled_by_navigation(msg):
+    """True for WebKit's report of a request to the test site itself that a page change cut off ("<address> due to access control
+    checks"). The site never asks another server for anything (AGENTS.md), so for its own address that message only means a cancelled
+    request. Any other error, and this message for any other address, still counts."""
+    return bool(_CANCELLED.search(str(msg)))
+
+
+def harmless(msg):
+    """The two browser notices that are not page errors: a request cancelled by a page change (above), and WebKit's "ResizeObserver
+    loop completed with undelivered notifications" (a notice that a resize was handled on the next frame)."""
+    return cancelled_by_navigation(msg) or 'ResizeObserver loop' in str(msg)
+
+
+def page_errors(pg, sink, prefix=''):
+    """Collects the page's script errors into sink (a list), leaving out only the harmless() notices."""
+    pg.on('pageerror', lambda e: None if harmless(e) else sink.append(prefix + str(e)[:200]))
+    return sink
+
+
 def until(fn, timeout=10000, step=100):
     """Calls fn() until it returns something true (returned) or the time is up (returns the last result). For waits whose
     result a check reads next: a fixed pause either wastes time or is too short on a slow machine; this is neither."""
@@ -302,13 +324,18 @@ def until(fn, timeout=10000, step=100):
         time.sleep(step / 1000)
 
 
-def wait_js(pg, expr, timeout=15000, step=200):
+STALE = "document.documentElement.classList.contains('ix-stale')"
+
+
+def wait_js(pg, expr, timeout=15000, step=200, fresh=True):
     """Waits until a JavaScript expression is true in the page. Playwright's wait_for_function with a string runs eval
-    inside the page, which the site's security policy refuses; evaluate is not affected. Survives a page reload."""
+    inside the page, which the site's security policy refuses; evaluate is not affected. Survives a page reload.
+    fresh (1.72.0): also waits while the page still shows its last copy from this tab (instant pages, html.ix-stale), so a test
+    reads what the server has now, not what the page showed before a reload. fresh=False only for a test of that state itself."""
     end = time.time() + timeout / 1000
     while True:
         try:
-            if pg.evaluate(expr): return True
+            if pg.evaluate(expr) and (not fresh or not pg.evaluate(STALE)): return True
         except Exception:
             pass
         if time.time() > end: raise TimeoutError('waited %d ms for: %s' % (timeout, expr))

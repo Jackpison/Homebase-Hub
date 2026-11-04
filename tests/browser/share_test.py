@@ -6,7 +6,7 @@ or Discard. Runs in Chromium only (the share sheet and service workers on localh
     python3 tests/browser/share_test.py build/site-update-X.Y.Z.zip   (port 8982)"""
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import FIX
+from helpers import FIX, page_errors
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, browser_unlock, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -27,7 +27,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, 'chromium'); print('browser: chromium %s' % b.version)
         ctx = b.new_context(viewport={'width': 1280, 'height': 900}); ctx.add_init_script(CSP_REPORTER)
-        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         why = browser_login(pg, s.base); check('H0 logged in', not why, why)
         why = browser_set_passphrase(pg, s.base, PP); check('H1 the encryption passphrase is set', not why, why)
 

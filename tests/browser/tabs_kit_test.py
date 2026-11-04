@@ -4,7 +4,7 @@ Settings look, and a tab icon chosen from 16 (saved on the tab, kept by both ser
     python3 tests/browser/tabs_kit_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8986)"""
 import json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED
+from helpers import SEED, page_errors
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, settle, TRACK_REQUESTS
 from playwright.sync_api import sync_playwright
 
@@ -33,7 +33,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1280, 'height': 900}); ctx.add_init_script(TRACK_REQUESTS)
-        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         why = browser_login(pg, s.base); check('K0 logged in', not why, why)
 
         def edit_on():

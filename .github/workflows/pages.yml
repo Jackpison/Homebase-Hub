@@ -32,7 +32,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || true)
+          # the newest published release that has its zip and checksum: an empty release (a failed or wrong tag) is skipped
+          TAG=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=20" --jq '[.[] | select((.draft or .prerelease) | not) | .tag_name as $t | ("site-update-" + ($t | ltrimstr("v")) + ".zip") as $z | select(any(.assets[]; .name == $z) and any(.assets[]; .name == ($z + ".sha256")))][0].tag_name // empty' 2>/dev/null || true)
           {
             echo "tag=$TAG"
           } >> "$GITHUB_OUTPUT"

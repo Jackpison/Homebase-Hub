@@ -8,7 +8,7 @@
     python3 tests/browser/encrypt_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8975)"""
 import os, re, sys, glob, json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import PW, hold
+from helpers import PW, hold, page_errors
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until
 from playwright.sync_api import sync_playwright
 
@@ -38,7 +38,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         mk = lambda: b.new_context(viewport={'width': 1280, 'height': 900})
-        ctx = mk(); pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        ctx = mk(); pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         why = browser_login(pg, base); check('E0 logged in', not why, why)
         # cookies of this browser for the next contexts
         state = ctx.storage_state()

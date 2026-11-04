@@ -5,8 +5,8 @@ The versions are not written down in CI. They are worked out each time:
   first   the oldest PHP the site supports: HUB_MIN_PHP in src/web/hub/core/lib/boot.php
   last    the newest stable PHP: asked from php.net (releases/index.php?json), or, if php.net cannot be reached, the newest one boot.php knows
   between every minor version from the first to the last (8.3, 8.4, 8.5 today; 8.6 and so on the day they are released)
-  next    one minor version past the newest, tried when it can be installed. A failure there is a warning, never a red build: it is the heads-up
-          that a coming PHP breaks something, long before a host moves to it.
+  The coming version (still in development) is not tried here: the weekly Scheduled checks do that (scheduled.yml, job next-php) and open
+  an issue on a break. CI tried it too until 2026-11; it installed one more PHP on every push for a warning nobody acted on.
 For each version it runs the PHP lint on every file in src/ and the unit tests (tests/unit/run.php) with that version's own php.
 
     python3 tests/repo/php_matrix.py            check the versions that are installed here and say which are missing
@@ -99,7 +99,7 @@ def run_one(v, exe):
 
 if __name__ == '__main__':
     vs, nxt, lo, hi, src, known = versions()
-    print('PHP to check: %s (oldest supported %s, newest stable %s from %s); next, as a heads-up: %s' % (', '.join(vs), lo, hi, src, nxt))
+    print('PHP to check: %s (oldest supported %s, newest stable %s from %s); the next one (%s) is tried weekly in scheduled.yml' % (', '.join(vs), lo, hi, src, nxt))
     if '--list' in sys.argv: sys.exit(0)
     for v in vs:
         exe = binary(v)
@@ -110,17 +110,6 @@ if __name__ == '__main__':
         lint, ok, tail = run_one(v, exe)
         check('P%s PHP %s: all %d PHP files pass the lint' % (v, v, lint[0]), not lint[1], lint[1][:3])
         check('P%s PHP %s: the unit tests pass (%s)' % (v, v, tail), ok)
-    # the coming version: only a warning
-    exe = binary(nxt)
-    if not exe and '--install' in sys.argv and install(nxt): exe = binary(nxt)
-    if exe:
-        lint, ok, tail = run_one(nxt, exe)
-        if lint[1] or not ok:
-            print('::warning::PHP %s (not released as stable yet) breaks something: %s' % (nxt, (lint[1][:2] or [tail])))
-        else:
-            print('PASS PHP %s (the next version, a heads-up only): lint and unit tests pass' % nxt)
-    else:
-        print('NOTE PHP %s is not available to install yet' % nxt)
     # boot.php's end-of-support table must know the newest version, or Settings cannot tell when it stops getting fixes
     if vt(hi) > vt(known[-1]):
         print('::warning::boot.php hub_php_eol() has no end-of-support date for PHP %s yet: add it (and raise the test list).' % hi)

@@ -7,7 +7,7 @@ import io, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.request
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, SEED
+from helpers import ROOT, SEED, page_errors
 from helpers import browser_name, launch, browser_login, CSP_REPORTER, TRACK_REQUESTS, settle, until
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -55,9 +55,7 @@ try:
         pg = ctx.new_page(); errs = []; bad = []
         why = browser_login(pg, B, PW)
         check('P0 the browser logs in through the login dialog', why == '', why)
-        # WebKit reports a request of the page it is leaving, cut off by the navigation, as an error "... due to access control checks";
-        # the site makes no request to another origin, so on its own address that message only means a cancelled request
-        pg.on('pageerror', lambda e: None if ('due to access control checks' in str(e) and '/api.php?action=' in str(e)) else errs.append(str(e)[:200]))
+        page_errors(pg, errs)   # leaves out WebKit's report of a request cut off by a page change (helpers.cancelled_by_navigation)
         refused = []; tools_main = set()
         pg.on('console', lambda m: refused.append(m.text[:160]) if m.type in ('error', 'warning') and ('Content Security Policy' in m.text or 'Content-Security-Policy' in m.text or 'Refused to' in m.text or 'React error' in m.text) else None)
         pg.on('request', lambda r: tools_main.add(r.url.replace(B, '')) if '/tools/assets/app-' in r.url and r.url.split('?')[0].endswith('.js') else None)
@@ -173,7 +171,7 @@ try:
         hctx.add_init_script(TRACK_REQUESTS)
         outside = []; herr = []
         hctx.on('request', lambda r: outside.append(r.url) if not r.url.startswith((B, 'data:', 'blob:')) else None)
-        hp = hctx.new_page(); hp.on('pageerror', lambda e: herr.append(str(e)[:200]))
+        hp = hctx.new_page(); page_errors(hp, herr)
         hp.goto(B + '/web/home/', wait_until='domcontentloaded'); until(lambda: hp.evaluate("document.querySelectorAll('#wDock .wdb').length > 0"), 10000); settle(hp)
         dock = hp.evaluate("[...document.querySelectorAll('#wDock .wdb')].map(b => b.dataset.w)")
         check('P20 logged in, Home shows the clock and the Glass Dock with the six widgets that are on at first (Scratch Pad, World Clock and Weather are off)',
@@ -336,7 +334,7 @@ try:
         # tools sit in one shared pill at the bottom (Home's look), each page's Settings picks Icons Only or Icons and Text, and
         # Settings has no pencil at all.
         ectx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); ectx.add_cookies(cookies); ectx.route('**/*', handle); ectx.add_init_script(TRACK_REQUESTS)
-        ep = ectx.new_page(); eerr = []; ep.on('pageerror', lambda e: eerr.append(str(e)[:200]))
+        ep = ectx.new_page(); eerr = []; page_errors(ep, eerr)
         def emenu(app):
             ep.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); until(lambda: ep.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(ep)
             ep.click('#ix-editb'); until(lambda: ep.evaluate("!!document.querySelector('#ix-pop')"), 3000)
@@ -400,7 +398,7 @@ try:
         until(lambda: rp2.evaluate("!!document.querySelector('#ix-pop') || !!document.querySelector('#ix-dlg.open')"), 8000)
         race = rp2.evaluate("[!!document.querySelector('#ix-dlg.open'), [...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)]"); rctx2.close()
         check('P55 logged in, pressing the pencil before the page has heard from the server waits for it: the menu opens, no login box', early and race == [False, ['Edit This Page', 'Info Settings']], (early, race))
-        hctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); hctx.add_cookies(cookies); hctx.route('**/*', handle); hp2 = hctx.new_page(); herr2 = []; hp2.on('pageerror', lambda e: herr2.append(str(e)[:200]))
+        hctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); hctx.add_cookies(cookies); hctx.route('**/*', handle); hp2 = hctx.new_page(); herr2 = []; page_errors(hp2, herr2)
         hp2.goto(B + '/web/cards/', wait_until='domcontentloaded'); until(lambda: hp2.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(hp2)
         hp2.click('#ix-editb'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000)
         lines = hp2.evaluate("document.querySelectorAll('#ix-pop hr').length")
@@ -454,7 +452,7 @@ try:
         lctx2.close()
         check('P60 the login window shows the site logo and "Log In to <site name>", a password you can show and hide, a wide Log In button, a wrong password\'s message right under the field, and Trust This Browser not ticked',
               lw[0] and lw[1].startswith('Log In to ') and lw[2] and lw[3] and lw[4] and shownpw == ['text', 'true'] and hiddenpw == 'password' and lerr[0] and lerr[1] and lerr[2], (lw, shownpw, hiddenpw, lerr))
-        cctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); cctx.add_cookies(cookies); cctx.route('**/*', handle); cp = cctx.new_page(); cerr = []; cp.on('pageerror', lambda e: cerr.append(str(e)[:200]))
+        cctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); cctx.add_cookies(cookies); cctx.route('**/*', handle); cp = cctx.new_page(); cerr = []; page_errors(cp, cerr)
         cp.goto(B + '/web/cards/', wait_until='domcontentloaded'); cp.wait_for_selector('#list .row.item', timeout=15000); settle(cp)
         cp.click('#ix-editb'); until(lambda: cp.evaluate("!!document.querySelector('#ix-pop')"), 3000); cp.click('#ix-pop button'); until(lambda: cp.evaluate("!!document.getElementById('ix-ebar') && !document.getElementById('ix-ebar').hidden"), 5000)
         icons = cp.evaluate("[...document.querySelectorAll('#ix-ebar .ix-eb')].map(b => [b.getAttribute('aria-label'), b.querySelector('path').getAttribute('d')])")
@@ -495,7 +493,7 @@ try:
               el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [mk(x1, y1)] })); return el.tagName }"""
             gctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 780}, has_touch=True, is_mobile=True); gctx.add_cookies(cookies); gctx.route('**/*', handle)
             gctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
-            gp = gctx.new_page(); gerr = []; gp.on('pageerror', lambda e: gerr.append(str(e)[:200]))
+            gp = gctx.new_page(); gerr = []; page_errors(gp, gerr)
             ready = lambda: until(lambda: gp.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000)
             gp.goto(B + '/web/links/', wait_until='domcontentloaded'); ready(); gp.wait_for_selector('#tabs [role=tab]', timeout=10000); settle(gp)
             sel = lambda: gp.evaluate("(document.querySelector('#tabs [role=tab][aria-selected=true]') || {}).textContent || ''")
@@ -612,7 +610,7 @@ try:
         vctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
         vreq = []; vctx.on('request', lambda r: vreq.append(r.url.replace(B, '')))
         vctx.on('request', lambda r: outside.append(r.url) if not r.url.startswith((B, 'data:', 'blob:')) else None)
-        vp = vctx.new_page(); vp.on('pageerror', lambda e: herr.append(str(e)[:200])); vp.goto(B + '/web/home/', wait_until='domcontentloaded'); settle(vp)
+        vp = vctx.new_page(); page_errors(vp, herr); vp.goto(B + '/web/home/', wait_until='domcontentloaded'); settle(vp)
         html = vp.content()
         v = vp.evaluate("[window.PUB.widgets, !document.getElementById('clock').hidden, document.body.classList.contains('has-widgets'), document.documentElement.scrollWidth - innerWidth]")
         asked = [u for u in vreq if any(k in u for k in ('/tasks/api.php', '/info/api.php', 'action=pad', 'tools-list.json'))]

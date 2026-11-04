@@ -24,8 +24,8 @@ r = ov.report({'overrides': {'minimatch': '11.0.4'}}, lock)
 check('O3 every package accepts the pinned version by itself: the override can go', r and r[0][3] == 'can go', r)
 check('O4 no overrides: nothing to report', ov.report({}, lock) == [])
 
-wf = open(os.path.join(ROOT, '.github', 'workflows', 'weekly-check.yml')).read()
-check('O5 the weekly check runs scripts/overrides.py --github (a notice, never a failure)', 'scripts/overrides.py --github' in wf)
+wf = open(os.path.join(ROOT, '.github', 'workflows', 'scheduled.yml')).read()
+check('O5 the weekly security check (scheduled.yml) runs scripts/overrides.py --github (a notice, never a failure)', 'scripts/overrides.py --github' in wf)
 
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

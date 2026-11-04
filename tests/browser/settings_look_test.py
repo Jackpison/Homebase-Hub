@@ -7,7 +7,7 @@ wider than a 390 px phone on Files, on every Settings section and on Home, Links
     python3 tests/browser/settings_look_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8985)"""
 import os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, Site, Checks, stop_all, browser_login, browser_set_passphrase, browser_unlock, wait_js, browser_name, launch, until, CSP_REPORTER, hold
+from helpers import SEED, Site, Checks, stop_all, browser_login, browser_set_passphrase, browser_unlock, wait_js, browser_name, launch, until, CSP_REPORTER, hold, page_errors
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -52,7 +52,7 @@ try:
     with sync_playwright() as p:
         b = launch(p, BROWSER); print('browser: %s %s' % (BROWSER, b.version))
         ctx = b.new_context(viewport={'width': 1280, 'height': 900}); ctx.add_init_script(CSP_REPORTER)
-        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg = ctx.new_page(); errs = []; page_errors(pg, errs)
         why = browser_login(pg, s.base); check('L0 logged in', not why, why)
         why = browser_set_passphrase(pg, s.base, PP); check('L0b the encryption passphrase is set', not why, why)
 
@@ -301,7 +301,7 @@ try:
 
         # ---- phones: nothing wider than the screen ----
         ph = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=BROWSER != 'firefox', has_touch=True, storage_state=ctx.storage_state())
-        q = ph.new_page(); q.on('pageerror', lambda e: errs.append('phone: ' + str(e)[:200]))
+        q = ph.new_page(); page_errors(q, errs, 'phone: ')
         q.goto(s.base + '/web/files/'); wait_js(q, "window.__files && __files.state().started", 20000)
         q.evaluate("(() => { const b = document.querySelector('#lock button'); if (b) b.click(); })()"); browser_unlock(q, PP, keep=True)
         until(lambda: 'red.png' in q.inner_text('#list'), 15000)

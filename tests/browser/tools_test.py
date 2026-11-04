@@ -8,7 +8,7 @@ Needs PHP, Playwright and axe-core (npm ci). Port 8960."""
 import io, json, os, shutil, sys, zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import ROOT, FIX as FIXDIR
+from helpers import ROOT, FIX as FIXDIR, page_errors
 from helpers import Site, Checks, stop_all, browser_name, launch, wait_js, until, after
 from playwright.sync_api import sync_playwright
 
@@ -33,7 +33,7 @@ try:
         ctx = b.new_context(accept_downloads=True, viewport={'width': 1280, 'height': 900})
         ctx.add_init_script("if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tools.favorites.v1', JSON.stringify(['image-resize', 'nope'])); localStorage.setItem('tools.recent.v1', JSON.stringify([{id: 'pdf-merge'}])); sessionStorage.setItem('seeded', '1'); }")
         pg = ctx.new_page(); errs = []
-        pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        page_errors(pg, errs)
         pg.goto(U); wait_js(pg, "document.querySelectorAll('#root .tc').length > 0")
         n = pg.evaluate("new Set([...document.querySelectorAll('#root .tc .tcm')].map(a => a.getAttribute('href'))).size")
         check('N1 the home lists all %d tools, with no page error' % len(DATA['tools']), n == len(DATA['tools']) and not errs, (n, errs))
@@ -479,7 +479,7 @@ try:
         try: code = urllib.request.urlopen(s.base + '/web/hub/core/api.php?action=presets').status
         except urllib.error.HTTPError as e: code = e.code
         pc = b.new_context(accept_downloads=True, viewport={'width': 1280, 'height': 900}); pp = pc.new_page(); perr = []
-        pp.on('pageerror', lambda e: perr.append(str(e)[:200])); pp.on('dialog', lambda d: d.accept())
+        page_errors(pp, perr); pp.on('dialog', lambda d: d.accept())
         pp.goto(U + '#/tool/qr-generator'); until(lambda: 'Log in to save' in (pp.evaluate("(document.querySelector('#root .pbar') || {}).textContent || ''")), 8000)
         check('R1 logged out: a tool offers to log in to save presets, and the server gives nothing (401)', 'Log in to save' in pp.inner_text('#root .pbar') and code == 401, code)
         check('R2 logging in works from Tools', browser_login(pp, s.base) == '')
