@@ -271,7 +271,7 @@ const pills=c=>[c.network?`<span class="pill" style="color:${netColor(c.network)
 const HEADS=[["name","Card"],["owner","Holder"],["limit","Limit","num"],["fee","Charges","num"],["expiry","Expiry"],["","Details"]];
 function rowHtml(c){
   const rem=c.remark?`<span class="rm"> · ${esc(c.remark)}</span>`:"",fee=feeCell(c),exp=expCell(c);
-  return `<div class="row item" data-id="${c.id}">
+  return `<div class="row item" data-id="${esc(c.id)}">
     <div class="cn"><b>${linkTo(cardUrl(c),c.name)}</b><small>${linkTo(bankUrl(c),c.bank)}<span class="ho"> · ${dot(c.owner)}${esc(c.owner)}</span>${rem}</small></div>
     <div class="co">${dot(c.owner)}${esc(c.owner)}</div>
     <div class="num">${c.limit?inr(c.limit):"—"}</div>
@@ -279,7 +279,7 @@ function rowHtml(c){
     <div class="ce">${exp}</div>
     <div class="cd">${pills(c)}</div>
     <div class="ph2">${fee} · ${exp}</div>
-    <div class="ced"><button type="button" class="rowedit" data-id="${c.id}" aria-label="Edit ${esc(c.bank)} ${esc(c.name)}" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button></div>
+    <div class="ced"><button type="button" class="rowedit" data-id="${esc(c.id)}" aria-label="Edit ${esc(c.bank)} ${esc(c.name)}" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button></div>
   </div>`;
 }
 const ROW_BATCH=60;let cardJob=0,statsRolled=false;   // rows drawn per frame; a newer drawing stops an older one that is still adding rows

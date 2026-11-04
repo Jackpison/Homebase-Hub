@@ -139,13 +139,15 @@ try:
 
         # ----- hostile file -----
         open_dlg(); pv, er = choose('hostile.html')
-        check('I21 hostile file: 4 addresses that are not web links are skipped (javascript:, data:, file:, about:)', 'Found 8 links' in pv and '4 addresses that are not web links' in pv, pv)
+        check('I21 hostile file: 4 addresses that are not web links are skipped (javascript:, data:, file:, about:)', 'Found 9 links' in pv and '4 addresses that are not web links' in pv, pv)
         check('I22 a folder name with markup shows as text in the preview', 'Evil <b>Folder</b>' in pv and pg.evaluate("document.querySelectorAll('#impPrev b, #impPrev img, #impPrev script').length") == 0, pv[:200])
         pg.fill('#impName', 'Hostile'); done, er = go()
         t = tab_named(links_data(s), 'Hostile'); ls = [l for c in t['categories'] for l in c['links']]
         titles = [l['title'] for l in ls]
-        check('I23 only the 8 web links were saved, all http(s)', len(ls) == 8 and all(l['url'].startswith('https://safe.example.com/') for l in ls), [l['url'] for l in ls])
+        check('I23 only the 9 web links were saved, all http(s)', len(ls) == 9 and all(l['url'].startswith('https://safe.example.com/') for l in ls), [l['url'] for l in ls])
         check('I24 titles are kept as plain text (markup shown, never run)', "<script>window.__pwned='title'</script>" in titles and any(x.startswith('<img src=x onerror=') for x in titles), titles[:3])
+        check('I24b a picture tag hidden inside another ("<im<img>g ...>") is still taken out completely: no tag and no onerror in the title (2026-11)',
+              any(x.endswith('Nested Markup') for x in titles) and not any('nested img' in x or '<img' in x.replace('<img src=x onerror="window.__pwned=\'img\'">', '') for x in titles), titles)
         check('I25 control characters, the null byte and direction overrides are gone; a huge title is cut to 200; an empty one uses the host', all(not re.search(r'[\x00-\x1f\u202e\ufffd]', x) for x in titles) and max(map(len, titles)) == 200 and 'safe.example.com' in titles, [len(x) for x in titles])
         pg.wait_for_timeout(500)   # on purpose: I26 checks nothing from the file ran, so give a planted onerror time to fire
         markup = pg.evaluate("document.querySelectorAll('#grid img[src=\"x\"], #grid script, #grid b').length")

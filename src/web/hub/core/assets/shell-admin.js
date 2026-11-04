@@ -85,7 +85,8 @@
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
   var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
-  var SUB_OF = {};   // sub-tab -> its section (nav -> general, colors -> look)
+  var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
+  function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
   SECTIONS.forEach(function (x) { (x[4] || [[x[0]]]).forEach(function (t) { SUB_OF[t[0]] = x[0]; }); });
   var PAGE = null;                       // the page's own element when Settings runs as a page (web/settings/)
   function P() { return PAGE || D(); }
@@ -228,7 +229,7 @@
     if (id === 'files') id = 'check';
     if (id === 'telegram' && parts[1] === 'backups') { id = 'backup'; parts = ['backup']; }
     if (!PAGE) { location.href = K.ROOT + 'web/settings/#' + target; return; }
-    if (!SUB_OF[id]) id = 'overview';
+    if (!own(SUB_OF, id)) id = 'overview';
     if (id === 'backup' && parts[1]) parts[1] = { 'back-up': 'overview', 'export-data': 'export', 'earlier-versions': 'restore' }[parts[1]] || parts[1];   // the tabs of 1.60 and before
     if (parts[1]) TABSEL[id] = parts[1];
     pane(id);
@@ -309,6 +310,7 @@
     });
   }
   function mountPane(sub) {
+    if (!own(PANES, sub) || typeof PANES[sub] !== 'function') sub = 'overview';   // only a pane of ours runs, whatever the address says
     var pc = $('#ix-pc'); if (tabObs) { tabObs.disconnect(); tabObs = null; }
     if (TABBED[sub] || CARDIFY[sub]) { tabObs = new MutationObserver(function () { if (TABBED[sub]) tabify(pc, sub); if (CARDIFY[sub]) cardify(pc); }); tabObs.observe(pc, { childList: true }); }
     PANES[sub](pc); if (TABBED[sub]) tabify(pc, sub); if (CARDIFY[sub]) cardify(pc);
@@ -767,8 +769,9 @@
     var set = cur[m], def = COLOR_DEFAULT[m];
     var anyPg = PG_APPS.some(function (a) { return cur.pg[a[0]][m]; }) || Object.keys(draft.accentPg || {}).length > 0;
     var row = function (k, label, val, shown, attrs) {
-      return '<div class="ix-cr"><span>' + esc(label) + '</span><input type="color" ' + attrs + ' value="' + shown + '" aria-label="' + esc(label) + '">' +
-        '<input type="text" class="ix-hex" maxlength="7" placeholder="' + shown + '" value="' + (val || '') + '" spellcheck="false" aria-label="' + esc(label) + ', hex code">' +
+      val = /^#[0-9a-f]{6}$/i.test(String(val || '')) ? String(val) : ''; shown = /^#[0-9a-f]{6}$/i.test(String(shown || '')) ? String(shown) : '#000000';   // only a real colour code reaches the page
+      return '<div class="ix-cr"><span>' + esc(label) + '</span><input type="color" ' + attrs + ' value="' + esc(shown) + '" aria-label="' + esc(label) + '">' +
+        '<input type="text" class="ix-hex" maxlength="7" placeholder="' + esc(shown) + '" value="' + esc(val) + '" spellcheck="false" aria-label="' + esc(label) + ', hex code">' +
         '<button type="button" class="ix-ib ix-crx" title="Back to the Default"' + (val ? '' : ' hidden') + ' aria-label="Reset ' + esc(label) + '">↺</button></div>';
     };
     p.innerHTML = '<div class="ix-row" style="gap:10px">' + seg('cmode', [['dark', 'Dark Mode'], ['light', 'Light Mode']], m) +

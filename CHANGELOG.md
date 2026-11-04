@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.72.2 | Safer handling of a few values the security scan pointed out: Settings addresses, colour codes, card IDs and imported bookmarks |
 | 1.72.1 | Maintenance: 2 Tools libraries updated |
 | 1.72.0 | Faster and offline pages, search everywhere, more Tasks repeats and followed calendars, four new Home widgets, an Import Center, phone and accessibility fixes |
 | 1.71.0 | Smoother on phones: the page follows your finger when you swipe, quicker page changes, the bar hides without restyling the page, Home's next background waits |
@@ -136,6 +137,16 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.72.2
+
+### Security
+- **Settings:** an address such as `#constructor` opens the Overview instead of a broken page. Only the site's own sections can open.
+- **Settings › Appearance › Colors:** only real colour codes (like #1a2b3c) are put into the page.
+- **Cards:** every part of a card that goes into the page is escaped, including its ID.
+- **Links › Import Bookmarks:** picture and media tags in a bookmarks file are removed completely, also when one is hidden inside another, and event attributes are removed from the read file before anything is used.
 
 ---
 

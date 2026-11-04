@@ -104,6 +104,8 @@ try:
                   ('#telegram/backups', 'Backup & Restore', 'Back Up')]
         bad = [h for h, t, u in places if not at(h, h2 + " === %s && %s === %s" % (json.dumps(t), sel, json.dumps(u)))]
         check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages and #nav open Appearance > Bar; 1.70.0: #files opens Server Check, #changelog What\'s New, #telegram/backups Backup & Restore)', not bad, bad)
+        odd = [h for h in ('#constructor', '#__proto__', '#hasOwnProperty', '#toString/x') if not at(h, h2 + " === 'Overview'")]
+        check('S10d an address that is a built-in JavaScript name (#constructor, #__proto__ ...) opens the Overview, not a broken page (2026-11)', not odd, odd)
         ok = at('#chmap', sub + " === 'Version Map' && " + tabs + " === \"Update|What's New\"")
         check("S10b Updates > What's New holds Versions, Version Map and Notes", ok and pg.evaluate("[...document.querySelectorAll('#ix-pane .ix-subseg [role=tab]')].map(e => e.textContent).join('|')") == 'Versions|Version Map|Notes', pg.evaluate(sub))
         ok = at('#general', "!!document.querySelector('#ix-name')")
