@@ -2,7 +2,7 @@
 # The release workflow builds this with that version's site-update zip copied in as site.zip (see README.md here).
 # The first start copies the site into /var/www/html, a volume: from then on Settings > Updates and Go Back work
 # as on any host, and a newer image never overwrites a site that is already there.
-FROM php:8.4.27-apache-trixie@sha256:4af38a0245996e700e20ec211b9f1c44fb789ad8cc7d24c7ea81ff382b641052
+FROM php:8.5.11-apache-trixie@sha256:47e6d8849049375e0d19e81f1b391ed88828d4653e0d1b00822185b66b564e8b
 
 # the PHP extensions Health looks for that the base image does not have: gd (pictures), zip (updates, backups), intl
 RUN set -eux; \
@@ -10,7 +10,9 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends libfreetype-dev libicu-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libzip-dev; \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
-    docker-php-ext-install -j"$(nproc)" gd intl opcache zip; \
+    docker-php-ext-install -j"$(nproc)" gd intl zip; \
+    # opcache: built into PHP from 8.5 on, an extension to add before that
+    php -m | grep -qi '^Zend OPcache$' || docker-php-ext-install opcache; \
     apt-mark auto '.*' > /dev/null; apt-mark manual $savedAptMark; \
     find /usr/local/lib/php/extensions -type f -name '*.so' -exec ldd '{}' ';' \
       | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) next; gsub("^/(usr/)?", "", so); print so }' \
@@ -18,7 +20,7 @@ RUN set -eux; \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
     apt-get install -y --no-install-recommends unzip; \
     rm -rf /var/lib/apt/lists/*; \
-    php -m | grep -qi '^gd$'; php -m | grep -qi '^intl$'; php -m | grep -qi '^zip$'
+    php -m | grep -qi '^gd$'; php -m | grep -qi '^intl$'; php -m | grep -qi '^zip$'; php -m | grep -qi '^Zend OPcache$'
 
 RUN set -eux; \
     cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; \
