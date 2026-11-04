@@ -3,12 +3,18 @@
   python3 tests/browser/pages_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ and Playwright with Chromium (or --browser firefox|webkit); openpyxl is used to read the Excel file when it is installed.
 Nothing leaves this computer: every request to another site is blocked."""
-import io, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.request, http.cookiejar, zipfile
+import io, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.parse, urllib.request, http.cookiejar, zipfile
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, SEED, page_errors
 from helpers import browser_name, launch, browser_login, CSP_REPORTER, TRACK_REQUESTS, settle, until
+
+
+def host_of(body):
+    """The host of the "url" in a visit request's JSON body ('' if there is none): compared exactly, never as a piece of text."""
+    try: return urllib.parse.urlsplit(json.loads(body or '{}').get('url', '')).hostname or ''
+    except (ValueError, AttributeError): return ''
 BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 ZIP = sys.argv[1]; PORT = 8195; B = 'http://127.0.0.1:%d' % PORT; UA = 'PagesTest/1.0'; PW = 'correct horse battery staple'
@@ -657,7 +663,7 @@ try:
         check('P59 a visit count sits at the end of its row (not inside the link, beside the name), lined up with the others (1.53.8)',
               vpos and all(x[0] and x[1] and 0 <= x[2] <= 16 for x in vpos), vpos)
         check('P46 Links visit counts: a visitor\'s click counts (no number shown to them); you see it; Show Visit Counts off hides the numbers and your clicks still count',
-              'example.org' in ''.join(sent) and vis_badge == 0 and shown[:1] == ['1'] and after_off.get('counted') is True and after_off.get('count') == 2 and hidden == 0, (sent[:1], vis_badge, shown, after_off, hidden))
+              any(host_of(x) == 'example.org' for x in sent) and vis_badge == 0 and shown[:1] == ['1'] and after_off.get('counted') is True and after_off.get('count') == 2 and hidden == 0, (sent[:1], vis_badge, shown, after_off, hidden))
         b.close()
 finally:
     php.terminate(); shutil.rmtree(D, ignore_errors=True)

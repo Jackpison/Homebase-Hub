@@ -688,13 +688,13 @@ function renderSources(){
     const missingKey = s.key && !bgDraft.keys[s.key];
     let status = '';
     if (on && missingKey) status = `<div class="src-status bad">Needs your ${esc(ADMIN.keyInfo[s.key].name)} key (below)</div>`;
-    else if (on) status = `<div class="src-status ${st.error && !st.count ? 'bad' : ''}">${st.count} of ${st.target} ${s.video ? 'videos' : 'photos'} saved${st.error ? ` <span class="src-err">Last problem: ${esc(st.error)}</span>` : ''}</div>`;
+    else if (on) status = `<div class="src-status ${st.error && !st.count ? 'bad' : ''}">${Number(st.count) || 0} of ${Number(st.target) || 0} ${s.video ? 'videos' : 'photos'} saved${st.error ? ` <span class="src-err">Last problem: ${esc(st.error)}</span>` : ''}</div>`;
     return `<div class="g-row stack src-row">
       <div class="src-head">
         <span class="g-label">${esc(s.name)}<small>${esc(s.about)}</small></span>
         <span class="src-tools">
-          <button type="button" class="btn small ghost" data-preview="${k}">Preview</button>
-          <input type="checkbox" class="switch" data-src="${k}" ${on ? 'checked' : ''} aria-label="Use ${esc(s.name)}">
+          <button type="button" class="btn small ghost" data-preview="${esc(k)}">Preview</button>
+          <input type="checkbox" class="switch" data-src="${esc(k)}" ${on ? 'checked' : ''} aria-label="Use ${esc(s.name)}">
         </span>
       </div>${status}</div>`;
   }).join('');
@@ -709,15 +709,15 @@ function renderCustom(){
     const st = stats[k];
     let host = ''; try { host = new URL(c.url.replace(/\{[a-z]+\}/g, 'x')).hostname; } catch {}
     const status = !on ? '' : st
-      ? `<div class="src-status ${st.error && !st.count ? 'bad' : ''}">${st.count} of ${st.target} ${c.type === 'video' ? 'videos' : 'photos'} saved${st.error ? ` <span class="src-err">Last problem: ${esc(st.error)}</span>` : ''}</div>`
+      ? `<div class="src-status ${st.error && !st.count ? 'bad' : ''}">${Number(st.count) || 0} of ${Number(st.target) || 0} ${c.type === 'video' ? 'videos' : 'photos'} saved${st.error ? ` <span class="src-err">Last problem: ${esc(st.error)}</span>` : ''}</div>`
       : `<div class="src-status">Save to start downloading.</div>`;
     return `<div class="g-row stack src-row">
       <div class="src-head">
         <span class="g-label">${esc(c.name)}<small>${c.kind === 'image' ? 'Image address' : 'JSON API'} on ${esc(host)}${c.type === 'video' ? ', videos' : ''}</small></span>
         <span class="src-tools">
-          <button type="button" class="btn small ghost" data-cedit="${i}">Edit</button>
-          <button type="button" class="btn small ghost" data-preview="${k}">Preview</button>
-          <input type="checkbox" class="switch" data-src="${k}" ${on ? 'checked' : ''} aria-label="Use ${esc(c.name)}">
+          <button type="button" class="btn small ghost" data-cedit="${Number(i)}">Edit</button>
+          <button type="button" class="btn small ghost" data-preview="${esc(k)}">Preview</button>
+          <input type="checkbox" class="switch" data-src="${esc(k)}" ${on ? 'checked' : ''} aria-label="Use ${esc(c.name)}">
         </span>
       </div>${status}</div>`;
   }).join('');
@@ -765,7 +765,7 @@ async function previewSource(e){
       toast(err.message, true);
     }
   });
-  const btn = $(`[data-preview="${k}"]`); if (btn) btn.textContent = 'Preview';
+  const btn = $(`[data-preview="${esc(k)}"]`); if (btn) btn.textContent = 'Preview';
 }
 $('#sourceRows').addEventListener('click', previewSource);
 $('#customRows').addEventListener('click', previewSource);

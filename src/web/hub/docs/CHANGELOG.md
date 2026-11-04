@@ -146,7 +146,8 @@ Nothing to migrate by hand unless an entry says so.
 - **Settings:** an address such as `#constructor` opens the Overview instead of a broken page. Only the site's own sections can open.
 - **Settings › Appearance › Colors:** only real colour codes (like #1a2b3c) are put into the page.
 - **Cards:** every part of a card that goes into the page is escaped, including its ID.
-- **Links › Import Bookmarks:** picture and media tags in a bookmarks file are removed completely, also when one is hidden inside another, and event attributes are removed from the read file before anything is used.
+- **Links › Import Bookmarks:** picture and media tags in a bookmarks file are removed completely, also when one is hidden inside another, and event attributes (like onclick) are made harmless before the file is read.
+- **Home Settings › Backgrounds:** the picture sources' names and counts are put into the page as plain text.
 
 ---
 

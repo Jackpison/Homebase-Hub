@@ -47,11 +47,15 @@
     // Bookmark exports never hold pictures or event handlers. Take them out before parsing, so a hostile file cannot even make the
     // browser try one (a parsed document never runs them, but newer Chromium still reports the blocked onerror of an <img> in it).
     // (2026-11) Complete, not one pass: the tags are removed until nothing changes ("<im<img>g>" left an <img> after one pass), and any
-    // "<" still in front of such a name becomes text, so it can never turn into an element. Event attributes go on the parsed page below.
+    // "<" still in front of such a name becomes text, so it can never turn into an element. Event attributes: below.
     const MEDIA = /<\/?(img|image|picture|source|svg|video|audio|track|iframe|object|embed|link)\b[^>]*>/gi;
     let safe = text, was;
     do { was = safe; safe = safe.replace(MEDIA, ''); } while (safe !== was);
     safe = safe.replace(/<(?=\/?(?:img|image|picture|source|svg|video|audio|track|iframe|object|embed|link)\b)/gi, '&lt;');
+    // Event attributes are renamed before parsing (newer Chromium reports an inline handler in a parsed file as a refused script). Each tag
+    // is found whole, quoted values included (a ">" inside quotes does not end it), and every on...= in it is renamed in one pass: the new
+    // name ("data-x-on...") never starts a match again, so nothing is left behind.
+    safe = safe.replace(/<(?:[^>"']|"[^"]*"|'[^']*')*>/g, (tag) => tag.replace(/([\s/])on([a-z]+)(\s*=)/gi, '$1data-x-on$2$3'));
     const doc = new DOMParser().parseFromString(safe, 'text/html');   // a parsed document never runs scripts or loads images
     doc.querySelectorAll('*').forEach((el) => { for (const a of [...el.attributes]) if (/^on/i.test(a.name)) el.removeAttribute(a.name); });
     // the top list: where the first entry sits (inside the outer <DL> in most exports; straight in the page in some Safari ones)

@@ -4,6 +4,7 @@ nothing from a hostile file runs or appears as markup, undo through Earlier Vers
     python3 tests/browser/import_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]
 Needs PHP 8.3+, Playwright and axe-core (npm ci). Fixtures are in tests/bookmarks/. Port 8850."""
 import os, re, sys, tempfile
+from urllib.parse import urlsplit
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import ROOT, FIX, page_errors
@@ -144,7 +145,7 @@ try:
         pg.fill('#impName', 'Hostile'); done, er = go()
         t = tab_named(links_data(s), 'Hostile'); ls = [l for c in t['categories'] for l in c['links']]
         titles = [l['title'] for l in ls]
-        check('I23 only the 9 web links were saved, all http(s)', len(ls) == 9 and all(l['url'].startswith('https://safe.example.com/') for l in ls), [l['url'] for l in ls])
+        check('I23 only the 9 web links were saved, all http(s)', len(ls) == 9 and all(urlsplit(l['url']).scheme == 'https' and urlsplit(l['url']).hostname == 'safe.example.com' for l in ls), [l['url'] for l in ls])
         check('I24 titles are kept as plain text (markup shown, never run)', "<script>window.__pwned='title'</script>" in titles and any(x.startswith('<img src=x onerror=') for x in titles), titles[:3])
         check('I24b a picture tag hidden inside another ("<im<img>g ...>") is still taken out completely: no tag and no onerror in the title (2026-11)',
               any(x.endswith('Nested Markup') for x in titles) and not any('nested img' in x or '<img' in x.replace('<img src=x onerror="window.__pwned=\'img\'">', '') for x in titles), titles)
