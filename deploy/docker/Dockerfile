@@ -2,7 +2,7 @@
 # The release workflow builds this with that version's site-update zip copied in as site.zip (see README.md here).
 # The first start copies the site into /var/www/html, a volume: from then on Settings > Updates and Go Back work
 # as on any host, and a newer image never overwrites a site that is already there.
-FROM php:8.4.27-apache-trixie@sha256:4af38a0245996e700e20ec211b9f1c44fb789ad8cc7d24c7ea81ff382b641052
+FROM php:8.5.11-apache-trixie@sha256:47e6d8849049375e0d19e81f1b391ed88828d4653e0d1b00822185b66b564e8b
 
 # the PHP extensions Health looks for that the base image does not have: gd (pictures), zip (updates, backups), intl
 RUN set -eux; \
