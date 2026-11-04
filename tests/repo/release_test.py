@@ -73,9 +73,13 @@ try:
     check('a changelog section with a TODO marker is on top', re.search(r'^## (\S+)', log[log.index('---'):], re.M).group(1) == new and 'TODO' in log)
     check('a Version Map row is on top', re.search(r'^\| ---[^\n]*\n\| ' + re.escape(new) + r' \| TODO', log, re.M) is not None)
     check('the root CHANGELOG.md is a copy', rd(p(d, 'CHANGELOG.md')) == log)
+    check('the Umbrel app files name the new version (1.73.1)', ('version: "%s"' % new) in rd(p(d, 'deploy/umbrel/umbrel-app.yml')) and ('homebase-hub:%s\n' % new) in rd(p(d, 'deploy/umbrel/docker-compose.yml')))
     r = run(d, '--check'); check('the check fails while a TODO marker is left', r.returncode != 0 and 'TODO' in r.stdout, r.stdout)
     fill(d)
     r = run(d, '--check'); check('after filling in, the check passes', r.returncode == 0, r.stdout)
+    u = rd(p(d, 'deploy/umbrel/umbrel-app.yml')); wr(p(d, 'deploy/umbrel/umbrel-app.yml'), u.replace('version: "%s"' % new, 'version: "%s"' % old))
+    r = run(d, '--check'); check('the check fails when an Umbrel file names another version (1.73.1)', r.returncode != 0 and 'umbrel-app.yml names version' in r.stdout, r.stdout)
+    wr(p(d, 'deploy/umbrel/umbrel-app.yml'), u)
     git(d, 'add', '-A'); git(d, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '-qm', 'bumped')
 
     def broken(name, change, expect):

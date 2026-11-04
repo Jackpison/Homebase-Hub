@@ -1,0 +1,16 @@
+#!/bin/bash
+# Renews the PHP and nginx settings only. The site updates itself in Settings, Updates, so its files are never replaced here.
+source _common.sh
+source /usr/share/yunohost/helpers
+
+hub_php_settings
+[ -f "$install_dir/index.php" ] || ynh_die "No site in $install_dir"
+hub_config
+hub_owners
+
+ynh_script_progression "Renewing the PHP and nginx settings..."
+ynh_config_add_phpfpm
+ynh_config_add --template="nginx-maps.conf" --destination="/etc/nginx/conf.d/homebasehub-maps.conf"
+ynh_config_add_nginx
+
+ynh_script_progression "Upgrade of $app completed (update the site itself in Settings, Updates)"

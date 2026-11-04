@@ -4,7 +4,8 @@
   python3 scripts/release.py X.Y.Z     raise the version to X.Y.Z (must be higher than HUB; the working tree must be clean):
                                      HUB in boot.php, every ?v= of the old version in src (not Tools' own fingerprints,
                                      not the changelog, not web/hub/docs/src), a "## X.Y.Z" changelog section and a Version Map
-                                     row, both with a TODO marker for you to fill in, and the copy in the root CHANGELOG.md.
+                                     row, both with a TODO marker for you to fill in, the copy in the root CHANGELOG.md, and
+                                     the version in the Umbrel app files (deploy/umbrel).
   python3 scripts/release.py --check   fail if HUB, the ?v= on every page, the newest changelog heading, the top Version Map
                                      row and the root CHANGELOG.md disagree, if a TODO marker is left, or if src/site-data exists.
 
@@ -22,6 +23,9 @@ SKIP_FILES = [LOG]
 TEXT = ('.html', '.php', '.js', '.css', '.json', '.txt', '.md', '.htaccess', '.webmanifest', '.svg')
 SEMVER = re.compile(r'^\d+\.\d+\.\d+$')
 MARK = 'TODO'
+# app-store files that name the version (Umbrel wants the image's own version): the line, with the version as group 1
+PINS = [(os.path.join(ROOT, 'deploy', 'umbrel', 'umbrel-app.yml'), r'^version: "(\d+\.\d+\.\d+)"$'),
+        (os.path.join(ROOT, 'deploy', 'umbrel', 'docker-compose.yml'), r'^\s+image: ghcr\.io/jackpison/homebase-hub:(\d+\.\d+\.\d+)$')]
 
 
 def ver(s): return tuple(int(x) for x in s.split('.'))
@@ -95,6 +99,10 @@ def check():
         errs.append('root CHANGELOG.md is not a copy of src/web/hub/docs/CHANGELOG.md')
     r = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'tools-rev.py'), '--check'], cwd=ROOT, capture_output=True, text=True)
     if r.returncode != 0: errs.append('Tools fingerprint is stale: run python3 scripts/tools-rev.py --write')
+    for p, rx in PINS:
+        if not os.path.isfile(p): continue
+        m = re.search(rx, read(p), re.M)
+        if not m or m.group(1) != h: errs.append('%s names version %s, HUB is %s' % (os.path.relpath(p, ROOT), m and m.group(1), h))
     if errs:
         for e in errs: print('FAIL ' + e)
         sys.exit(1)
@@ -118,6 +126,11 @@ def bump(new):
         u = re.sub(r'\?v=' + re.escape(old) + r'(?![0-9A-Za-z.])', '?v=' + new, t)
         if u != t: write(p, u); n += 1
 
+    for p, rx in PINS:
+        if not os.path.isfile(p): continue
+        t = read(p)
+        write(p, re.sub(rx, lambda m: m.group(0).replace(m.group(1), new), t, count=1, flags=re.M))
+
     t = read(LOG)
     t = re.sub(r'(^## Version Map\s*\n.*?^\| ---[^\n]*\n)', lambda m: m.group(1) + '| %s | %s: one line for this version |\n' % (new, MARK), t, count=1, flags=re.M | re.S)
     skel = '## %s\n\n### %s\n\n- %s: describe the changes in plain words.\n\n---\n\n' % (new, MARK, MARK)
@@ -125,7 +138,7 @@ def bump(new):
     write(LOG, t); write(ROOT_LOG, t)
 
     r = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'tools-rev.py'), '--check'], cwd=ROOT)
-    print('Version %s -> %s: HUB, ?v= in %d file(s), changelog skeleton and Version Map row (fill in the %s markers), root CHANGELOG.md.' % (old, new, n, MARK))
+    print('Version %s -> %s: HUB, ?v= in %d file(s), changelog skeleton and Version Map row (fill in the %s markers), root CHANGELOG.md, deploy/umbrel.' % (old, new, n, MARK))
     if r.returncode != 0: sys.exit('Tools fingerprint is stale: run python3 scripts/tools-rev.py --write')
 
 

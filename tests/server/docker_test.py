@@ -6,7 +6,8 @@ Checks: the first start copies the site into the volume; every PHP extension Hea
 protect it (tests/server/apache_test.py runs against the container); setup and login work; an update and Go Back work inside
 the container, and its self-check reaches the site although the outside port differs; a new container on the same volume keeps
 the updated site and the data; HUB_TRUSTED_PROXY is the only way a forwarded HTTPS is believed; a volume with other files
-is refused."""
+is refused; compose.caddy.yaml gives HTTPS; a folder of the host works like a volume (Unraid, CasaOS, Umbrel), and the CasaOS file
+starts the site."""
 import json, os, re, subprocess, sys, tempfile, time, urllib.request, urllib.error
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import Checks, Client, PW, UA, mutate_zip, zip_version
@@ -17,7 +18,7 @@ CURV = zip_version(CUR); _p = CURV.split('.'); NEXTV = '%s.%s.%d' % (_p[0], _p[1
 NEW = mutate_zip(CUR, tempfile.mkdtemp() + '/next.zip', version=NEXTV)
 HERE = os.path.dirname(os.path.abspath(__file__))
 check = Checks()
-names, vols = [], []
+names, vols, binds = [], [], []
 
 def sh(*a, ok=True):
     r = subprocess.run(list(a), capture_output=True, text=True)
@@ -141,7 +142,40 @@ try:
     except Exception: ips = set()
     check('D14 ...the visitor\'s address comes from Caddy, and one the visitor writes in X-Forwarded-For is ignored', ips and '198.51.100.66' not in ips and '172.30.77.10' not in ips, (st, ips, b[:200]))
     subprocess.run(dc + ['down', '-v'], capture_output=True, env=env)
+
+    # a plain folder of the host instead of a volume, as Unraid, CasaOS and Umbrel do it (1.73.1)
+    host = tempfile.mkdtemp(prefix='hub-bind-'); binds.append(host)
+    sh('docker', 'rm', '-f', 'hubbind', ok=False)
+    sh('docker', 'run', '-d', '--name', 'hubbind', '-p', '127.0.0.1:8402:80', '-v', host + ':/var/www/html', IMG); names.append('hubbind')
+    Bb = 'http://127.0.0.1:8402'
+    for _ in range(100):
+        try: urllib.request.urlopen(Bb + '/web/hub/core/assets/speculation-rules.json', timeout=2); break
+        except Exception: time.sleep(0.3)
+    c = client(Bb); c.get('state')
+    raw = inside('hubbind', 'cat', '/var/www/html/site-data/core/SETUP-CODE.php')
+    code = re.search(r'\b([A-Z0-9]{4}-[A-Z0-9]{4})\b', raw)
+    r = c.post('setup', {'code': code.group(1) if code else '', 'password': PW})
+    check('D15 an empty folder of the host works like a volume: the site is copied in, belongs to the web server, and setup works',
+          os.path.isfile(os.path.join(host, 'index.php')) and inside('hubbind', 'stat', '-c', '%U', '/var/www/html/index.php').strip() == 'www-data' and r.get('ok'), (os.listdir(host)[:5], r))
+    sh('docker', 'rm', '-f', 'hubbind', ok=False)
+
+    # deploy/casaos/docker-compose.yml as shipped, only its folder and port moved (CasaOS makes /DATA itself)
+    cas = tempfile.mkdtemp(prefix='hub-casaos-'); binds.append(cas)
+    ov2 = tempfile.mkdtemp() + '/override.yaml'
+    open(ov2, 'w').write('services:\n  hub:\n    image: %s\n    ports: !override\n      - "127.0.0.1:8403:80"\n    volumes: !override\n      - %s:/var/www/html\n' % (IMG, cas))
+    dcc = ['docker', 'compose', '-p', 'hubcasaostest', '-f', os.path.join(D, '..', 'casaos', 'docker-compose.yml'), '-f', ov2]
+    cfg = subprocess.run(['docker', 'compose', '-f', os.path.join(D, '..', 'casaos', 'docker-compose.yml'), 'config', '-q'], capture_output=True, text=True, env=dict(os.environ, AppID='homebase-hub'))
+    up = subprocess.run(dcc + ['up', '-d'], capture_output=True, text=True, env=dict(os.environ, AppID='homebase-hub'))
+    ok = False
+    for _ in range(100):
+        try: ok = urllib.request.urlopen('http://127.0.0.1:8403/web/hub/core/api.php?action=state', timeout=2).status == 200; break
+        except Exception: time.sleep(0.3)
+    check('D16 the CasaOS file is a valid compose file, and it starts the site', cfg.returncode == 0 and up.returncode == 0 and ok and os.path.isfile(os.path.join(cas, 'index.php')), (cfg.stderr[-300:], up.stderr[-300:]))
+    subprocess.run(dcc + ['down'], capture_output=True, env=dict(os.environ, AppID='homebase-hub'))
 finally:
     for n in names: subprocess.run(['docker', 'rm', '-f', n], capture_output=True) if n != '__compose__' else None
     for v in vols: subprocess.run(['docker', 'volume', 'rm', '-f', v], capture_output=True)
+    for b in binds:   # the container made these files as www-data: remove them through Docker
+        subprocess.run(['docker', 'run', '--rm', '-v', b + ':/x', '--entrypoint', 'sh', IMG, '-c', 'rm -rf /x/* /x/.[!.]*'], capture_output=True)
+        subprocess.run(['rm', '-rf', b], capture_output=True)
 sys.exit(check.done())

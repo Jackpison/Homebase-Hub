@@ -1,0 +1,52 @@
+# Homebase Hub for YunoHost. Install from this folder's address:
+#   sudo yunohost app install https://github.com/Jackpison/Homebase-Hub/tree/main/deploy/yunohost
+# The package installs the newest release (its SHA-256 checked). After that the site updates itself in Settings, Updates,
+# so a YunoHost upgrade of this package only renews the web server and PHP settings, never the site.
+packaging_format = 2
+
+id = "homebasehub"
+name = "Homebase Hub"
+description.en = "Your own start page: links, notes, cards, tasks, encrypted files and 100+ tools"
+
+version = "1.73.1~ynh1"
+maintainers = ["Jackpison"]
+
+[upstream]
+license = "GPL-3.0-only"
+website = "https://jackpison.github.io/Homebase-Hub/"
+code = "https://github.com/Jackpison/Homebase-Hub"
+
+[integration]
+yunohost = ">= 12.1.17"
+helpers_version = "2.1"
+architectures = "all"
+multi_instance = false
+ldap = false
+sso = false
+disk = "100M"
+ram.build = "50M"
+ram.runtime = "100M"
+
+[install]
+    [install.domain]
+    # the site needs a whole domain (or subdomain) of its own, such as hub.example.com
+    type = "domain"
+    full_domain = true
+
+    [install.init_main_permission]
+    # visitors: anyone can open the page; the site has its own login
+    type = "group"
+    default = "visitors"
+
+[resources]
+    [resources.system_user]
+
+    [resources.install_dir]
+
+    [resources.data_dir]
+
+    [resources.permissions]
+    main.url = "/"
+
+    [resources.apt]
+    packages = "php8.3-fpm, php8.3-curl, php8.3-gd, php8.3-intl, php8.3-mbstring, php8.3-zip, unzip, curl"

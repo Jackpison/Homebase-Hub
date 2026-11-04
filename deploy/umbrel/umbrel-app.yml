@@ -1,0 +1,33 @@
+# Homebase Hub for umbrelOS. To list it in the Umbrel App Store these two files go into a folder named homebase-hub in a pull
+# request to github.com/getumbrel/umbrel-apps (with gallery pictures, and the image pinned by its digest). To use it before
+# that: a Community App Store (github.com/getumbrel/umbrel-community-app-store) with this folder in it.
+# release.py raises the version here and in docker-compose.yml with every release.
+manifestVersion: 1
+id: homebase-hub
+category: files
+name: Homebase Hub
+version: "1.73.1"
+tagline: Your own start page and personal hub
+description: >-
+  Links, notes, cards, tasks, encrypted files and more than 100 tools that run in your browser.
+  One password, and your data stays on your Umbrel.
+
+
+  After the install, open the app and click the key icon. It asks for a setup code: in umbrelOS open Settings,
+  Advanced settings, Terminal, choose Homebase Hub, and type cat site-data/core/SETUP-CODE.php
+releaseNotes: ""
+developer: Jackpison
+website: https://jackpison.github.io/Homebase-Hub/
+dependencies: []
+repo: https://github.com/Jackpison/Homebase-Hub
+support: https://github.com/Jackpison/Homebase-Hub/issues
+port: 8473
+gallery:
+  - 1.jpg
+  - 2.jpg
+  - 3.jpg
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+submitter: Jackpison
+submission: ""

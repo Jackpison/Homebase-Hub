@@ -3,6 +3,7 @@
 set -eu
 SITE=/var/www/html
 if [ ! -f "$SITE/index.php" ]; then
+  # shellcheck disable=SC2010
   if [ -n "$(ls -A "$SITE" 2>/dev/null | grep -v '^site-data$' || true)" ]; then
     echo "Homebase Hub: $SITE has files but no index.php. Use an empty volume (your data folder site-data may stay)." >&2
     exit 1

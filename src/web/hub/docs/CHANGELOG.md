@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.73.1 | One-command install on a VPS and Proxmox; ready files for Unraid, CasaOS, Umbrel and YunoHost; Synology and TrueNAS steps |
 | 1.73.0 | Docker and VPS: a ready image (with Caddy for HTTPS), nginx and Apache setups, and a safe way to run behind your own proxy |
 | 1.72.3 | Tools › Markdown Editor: the text box stays inside its card; Settings and tests take the last two security scan notes |
 | 1.72.2 | Safer handling of a few values the security scan pointed out: Settings addresses, colour codes, card IDs and imported bookmarks |
@@ -139,6 +140,16 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.73.1
+
+### New
+- **One command on a VPS:** `deploy/vps/install.sh` sets up a fresh Ubuntu 24.04 or Debian 13 server: Apache, PHP, the newest release (checked against its SHA-256) and HTTPS from Let's Encrypt. `--lan` installs it on a home network without a domain. It never replaces a site that is already there.
+- **Proxmox VE:** `deploy/proxmox/homebase-hub-lxc.sh`, run on the host, makes a small Debian 13 container that starts with the host and installs the site in it.
+- **App stores:** ready files for Unraid, CasaOS (and ZimaOS), Umbrel and YunoHost in `deploy/`. On YunoHost your data lives outside the site, so removing the app keeps it, and the site's own security headers are kept although YunoHost's web server would replace them.
+- **Synology and TrueNAS:** steps on the website's Install page, using the Docker image.
 
 ---
 

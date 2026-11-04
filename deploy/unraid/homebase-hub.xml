@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!-- Homebase Hub for Unraid. Unraid's Docker tab: Add Container, Template repositories, or copy this file to
+     /boot/config/plugins/dockerMan/templates-user/my-homebase-hub.xml and choose it under Add Container. -->
+<Container version="2">
+  <Name>Homebase-Hub</Name>
+  <Repository>ghcr.io/jackpison/homebase-hub:latest</Repository>
+  <Registry>https://github.com/Jackpison/Homebase-Hub/pkgs/container/homebase-hub</Registry>
+  <Network>bridge</Network>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/Jackpison/Homebase-Hub/issues</Support>
+  <Project>https://github.com/Jackpison/Homebase-Hub</Project>
+  <Overview>Your own start page and personal hub: links, notes, cards, tasks, encrypted files and more than 100 tools that run in your browser. One password, your data stays on your server. After the first start open the web page, click the key icon, and get the setup code from site-data/core/SETUP-CODE.php in the app's folder. Update it in the site itself: Settings, Updates (a newer image never replaces a site that is already there).</Overview>
+  <Category>Productivity: Tools: Cloud:</Category>
+  <WebUI>http://[IP]:[PORT:80]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/Jackpison/Homebase-Hub/main/deploy/unraid/homebase-hub.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/Jackpison/Homebase-Hub/main/src/web/hub/core/assets/brand/logo-512.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <Requires/>
+  <Config Name="Web port" Target="80" Default="8080" Mode="tcp" Description="The port you open the site on. For HTTPS (passkeys, phone install) put a reverse proxy such as Nginx Proxy Manager or SWAG in front." Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+  <Config Name="Site and data" Target="/var/www/html" Default="/mnt/user/appdata/homebase-hub" Mode="rw" Description="The site and your data (site-data). The first start copies the site in when the folder is empty. Back this folder up." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/homebase-hub</Config>
+  <Config Name="Trusted proxy" Target="HUB_TRUSTED_PROXY" Default="" Mode="" Description="Only with a reverse proxy in front: its address (for example 172.17.0.1), so the site sees each visitor's address and HTTPS. Leave empty otherwise." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+</Container>

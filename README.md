@@ -192,7 +192,7 @@ Chrome, Edge, Firefox, Brave, Opera and Safari all export an .html file that Lin
 docker run -d --name homebase-hub -p 8080:80 -v hub-site:/var/www/html ghcr.io/jackpison/homebase-hub:latest
 ```
 
-Or use [`compose.yaml`](deploy/docker/compose.yaml), or [`compose.caddy.yaml`](deploy/docker/compose.caddy.yaml) with its [`Caddyfile`](deploy/docker/Caddyfile) for HTTPS. The image runs on PCs, servers and Raspberry Pi. Updates work from Settings, as on any host. On a VPS, use [`deploy/apache`](deploy/apache/homebase-hub.conf) or [`deploy/nginx`](deploy/nginx/homebase-hub.conf). Every step is on the [Install page](https://jackpison.github.io/Homebase-Hub/install/).
+Or use [`compose.yaml`](deploy/docker/compose.yaml), or [`compose.caddy.yaml`](deploy/docker/compose.caddy.yaml) with its [`Caddyfile`](deploy/docker/Caddyfile) for HTTPS. The image runs on PCs, servers and Raspberry Pi. Updates work from Settings, as on any host. On a fresh Ubuntu or Debian VPS, [`deploy/vps/install.sh`](deploy/vps/install.sh) sets up everything, HTTPS included (or use [`deploy/apache`](deploy/apache/homebase-hub.conf) or [`deploy/nginx`](deploy/nginx/homebase-hub.conf) by hand). There is also a [Proxmox script](deploy/proxmox/homebase-hub-lxc.sh), and ready files for [Unraid](deploy/unraid/homebase-hub.xml), [CasaOS](deploy/casaos/docker-compose.yml), [Umbrel](deploy/umbrel) and [YunoHost](deploy/yunohost). Every step is on the [Install page](https://jackpison.github.io/Homebase-Hub/install/).
 
 ### Updating
 

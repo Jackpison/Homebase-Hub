@@ -1,0 +1,17 @@
+#!/bin/bash
+source _common.sh
+source /usr/share/yunohost/helpers
+
+hub_php_settings
+
+ynh_script_progression "Downloading the newest Homebase Hub (its SHA-256 checked)..."
+hub_download "$install_dir"
+hub_config
+hub_owners
+
+ynh_script_progression "Setting up PHP and nginx..."
+ynh_config_add_phpfpm
+ynh_config_add --template="nginx-maps.conf" --destination="/etc/nginx/conf.d/homebasehub-maps.conf"
+ynh_config_add_nginx
+
+ynh_script_progression "Installation of $app completed. Open https://$domain, click the key icon, and get the setup code with: sudo cat $data_dir/core/SETUP-CODE.php"

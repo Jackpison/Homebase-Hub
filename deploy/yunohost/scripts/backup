@@ -1,0 +1,12 @@
+#!/bin/bash
+source ../settings/scripts/_common.sh
+source /usr/share/yunohost/helpers
+
+ynh_print_info "Declaring files to be backed up..."
+ynh_backup "$install_dir"
+ynh_backup "$data_dir"
+ynh_backup "/etc/php/$php_version/fpm/pool.d/$app.conf"
+ynh_backup "/etc/nginx/conf.d/$domain.d/$app.conf"
+ynh_backup "/etc/nginx/conf.d/homebasehub-maps.conf"
+
+ynh_print_info "Backup script completed for $app"

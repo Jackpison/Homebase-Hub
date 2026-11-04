@@ -37,10 +37,22 @@ When there is no maintenance pull request, everything was already current. Nothi
 - **A maintenance or Dependabot pull request has a red check:** do not merge it. Leave a comment if you like, then close it. Next month tries again with newer versions, which often fixes it. If it keeps failing, it needs a person or an AI: give them this file, `AGENTS.md` and the link to the failed check.
 - **An issue "Monthly maintenance failed":** nothing reached `main`, and your sites are safe. Run it again later: **Actions › Monthly maintenance › Run workflow**. (The other calendar checks are under **Actions › Scheduled checks › Run workflow**, where you choose which one.) If it fails again, hand it over as above.
 - **…and the failed run says "GitHub Actions is not permitted to create or approve pull requests":** the update worked, but GitHub would not let it open the pull request. Turn it on once: **Settings › Actions › General › Workflow permissions**, tick **Allow GitHub Actions to create and approve pull requests**, **Save**. Then **Run workflow** again and close the issue.
+- **CI's "web servers" job failed in the install-script step:** usually Ubuntu's or Debian's package servers were slow. Re-run it; if it fails twice, hand it over.
 - **The release's job "build the Docker image (amd64 or arm64)" or "publish the Docker image" failed:** the release and its zip are fine, and web hosts update as usual. Open the failed run and press **Re-run failed jobs**. If it fails again, hand it over.
 - **An issue labelled `security`:** a library has a known problem. If the monthly maintenance doesn't fix it within a month (or it's urgent), hand it over.
 - **An issue labelled `php`:** the next PHP version breaks something. You have months: hosts offer a new PHP about a year after it appears. Hand it over before your host switches.
 - **A site misbehaves after an update:** **Settings › Updates › Go Back** puts the previous version back.
+
+## The app stores (Unraid, CasaOS, Umbrel, YunoHost)
+
+The ready files are in `deploy/`, and people can use them from there. A listing in each store's own catalogue is a pull request or form to that project, which only you can send, and which they review:
+
+- **Unraid:** Community Apps lists templates from a repository you register on the Unraid forum (`deploy/unraid/homebase-hub.xml`).
+- **CasaOS:** a pull request to github.com/IceWhaleTech/CasaOS-AppStore with `deploy/casaos/docker-compose.yml` as `Apps/HomebaseHub/docker-compose.yml`.
+- **Umbrel:** a pull request to github.com/getumbrel/umbrel-apps with the two files of `deploy/umbrel` in a folder `homebase-hub`, gallery pictures, and the image pinned by its digest (`ghcr.io/jackpison/homebase-hub:X.Y.Z@sha256:...`, shown on the package page). `release.py` keeps the version in these files up to date.
+- **YunoHost:** ask in the YunoHost forum to add `deploy/yunohost` to their apps catalogue (they usually move it into a `homebasehub_ynh` repository of their own).
+
+Each store then updates on its own schedule; the site itself always updates in Settings, Updates.
 
 ## Things only a person can decide
 

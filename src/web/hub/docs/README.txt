@@ -68,7 +68,12 @@ DOCKER OR YOUR OWN SERVER (VPS)
   The ready files are in deploy/docker on GitHub: compose.yaml (port 8080), or compose.caddy.yaml with its Caddyfile for HTTPS.
   The first start copies the site into a volume; update from Settings > Updates as on any host. Setup code:
   docker compose exec hub cat site-data/core/SETUP-CODE.php
-- A VPS with Apache: deploy/apache/homebase-hub.conf. With nginx: deploy/nginx/homebase-hub.conf. nginx ignores the
+- A fresh VPS with Ubuntu 24.04 or Debian 13: deploy/vps/install.sh sets up Apache, PHP, the newest release (its SHA-256
+  checked) and HTTPS: sudo bash install.sh hub.example.com (or --lan on a home network, without HTTPS).
+- Proxmox VE: deploy/proxmox/homebase-hub-lxc.sh, run on the host, makes a small container and runs install.sh in it.
+- Unraid, CasaOS, Umbrel and YunoHost: ready files in deploy/unraid, deploy/casaos, deploy/umbrel and deploy/yunohost.
+  Synology and TrueNAS run compose.yaml in their own Docker apps. The Install page on the website has the steps for each.
+- A VPS with Apache by hand: deploy/apache/homebase-hub.conf. With nginx: deploy/nginx/homebase-hub.conf. nginx ignores the
   .htaccess files, so without that file site-data would be open to anyone. The website's Install page has every step.
 - Behind your own proxy (Caddy, nginx, Traefik): set HUB_TRUSTED_PROXY to its address (an environment variable, or
   define('HUB_TRUSTED_PROXY', '10.0.0.5'); in web/hub/core/config.php), so the site sees each visitor's address and HTTPS.

@@ -260,11 +260,12 @@ jobs:
   apache:
     needs: changes
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
-    # The ready-made server setups in deploy/: Apache (the .htaccess files), nginx with PHP-FPM, and the Docker image with Caddy.
+    # The ready-made server setups in deploy/: Apache (the .htaccess files), nginx with PHP-FPM, the Docker image with Caddy,
+    # nginx as YunoHost sets it up, and the install scripts for a VPS and Proxmox.
     # Installing them takes a few minutes on a fresh runner, so this runs beside the other tests instead of after them.
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
-    name: web servers (Apache, nginx, Docker)
+    timeout-minutes: 50
+    name: web servers (Apache, nginx, Docker, install scripts)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
@@ -306,6 +307,13 @@ jobs:
           cp build/site-update-*.zip deploy/docker/site.zip
           docker build -t homebase-hub:ci deploy/docker
           python3 tests/server/docker_test.py homebase-hub:ci build/site-update-*.zip
+      - name: As YunoHost serves it (deploy/yunohost), the same checks
+        run: |
+          sudo sh tests/server/yunohost_setup.sh build/site-update-*.zip
+          python3 tests/server/apache_test.py http://127.0.0.1:8302
+      - name: The install script on fresh Debian 13 and Ubuntu 24.04, and the Proxmox script (deploy/vps, deploy/proxmox)
+        timeout-minutes: 20
+        run: python3 tests/server/vps_test.py build/site-update-*.zip
 
   ci-ok:
     # The one check that sums up CI: it fails when any job failed or was cancelled, and passes when every job passed

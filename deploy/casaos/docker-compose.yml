@@ -1,0 +1,49 @@
+# Homebase Hub for CasaOS (and ZimaOS). In CasaOS: App Store, Custom Install, Import, and paste this file.
+# The site and your data live in /DATA/AppData/homebase-hub/site. Update it in the site: Settings, Updates.
+name: homebase-hub
+services:
+  hub:
+    image: ghcr.io/jackpison/homebase-hub:latest
+    restart: unless-stopped
+    ports:
+      - target: 80
+        published: "8080"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /DATA/AppData/$AppID/site
+        target: /var/www/html
+    x-casaos:
+      ports:
+        - container: "80"
+          description:
+            en_us: The web page
+      volumes:
+        - container: /var/www/html
+          description:
+            en_us: The site and your data (site-data). Back this folder up.
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: hub
+  author: Jackpison
+  developer: Jackpison
+  category: Utilities
+  title:
+    en_us: Homebase Hub
+  tagline:
+    en_us: Your own start page and personal hub
+  description:
+    en_us: Links, notes, cards, tasks, encrypted files and more than 100 tools that run in your browser. One password, and your data stays on your own server.
+  icon: https://raw.githubusercontent.com/Jackpison/Homebase-Hub/main/src/web/hub/core/assets/brand/logo-512.png
+  thumbnail: https://raw.githubusercontent.com/Jackpison/Homebase-Hub/main/website/img/home-1.webp
+  screenshot_link:
+    - https://raw.githubusercontent.com/Jackpison/Homebase-Hub/main/website/img/home-1.webp
+    - https://raw.githubusercontent.com/Jackpison/Homebase-Hub/main/website/img/links.webp
+    - https://raw.githubusercontent.com/Jackpison/Homebase-Hub/main/website/img/info.webp
+  tips:
+    before_install:
+      en_us: After the install open the app and click the key icon. The setup code is in the Files app, in /DATA/AppData/homebase-hub/site/site-data/core/SETUP-CODE.php.
+  index: /
+  port_map: "8080"
