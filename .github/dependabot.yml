@@ -24,6 +24,10 @@ updates:
       default-days: 7
     commit-message:
       prefix: "build"
+    ignore:
+      # TypeScript 7 (the rewrite) finds 48 new errors in files.js and links-import.js (2026-11): moving to it is its own planned change
+      - dependency-name: "typescript"
+        versions: [">=7"]
     groups:
       build-tools:
         patterns: ["*"]

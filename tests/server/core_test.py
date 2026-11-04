@@ -3,7 +3,7 @@
 two-step login, trusted browsers, sessions, password change, Start Over, the login lockout, and the CSRF token on every
 changing action.   python3 tests/server/core_test.py build/site-update-X.Y.Z.zip
 Needs PHP 8.3+ with curl, zip, mbstring and openssl. Runs sites on ports 8700-8760."""
-import base64, hashlib, hmac, http.client, json, os, re, struct, subprocess, sys, time
+import base64, glob, hashlib, hmac, http.client, json, os, re, struct, subprocess, sys, time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import SEED
@@ -278,6 +278,48 @@ try:
     plain = anon.req(home, data=b'{"url":"photos/x.jpg"}', method='POST', hdr={'Content-Type': 'text/plain'})
     js = anon.req(home, data=b'{"url":"photos/x.jpg"}', method='POST', hdr={'Content-Type': 'application/json'})
     check('E5 Home\'s "seen" call refuses a text or form post and takes the page\'s JSON', plain.get('_status') == 415 and js.get('_status') in (None, 200) and 'removed' in js, (plain, js))
+
+    # E6-E8 (2026-11): the same sweep over every page's own API (Links, Info, Cards, Tasks, Files, Home). The actions are read from each
+    # api.php, so a new one is checked the day it is added. A visitor, and you without (or with a wrong) security token, get nothing private
+    # and change nothing; only the few public actions below answer them, by design.
+    PUBLIC = {('links', 'get'), ('links', 'visit'), ('links', 'logout'), ('home', 'state'), ('home', 'refill'), ('home', 'seen'), ('home', 'logout'), ('info', 'logout')}
+    # what such requests may touch on the server: sessions and the device list, visit counts, Home's picture queue and its cache, guard files
+    MAY_CHANGE = re.compile(r'^site-data/(sessions/|core/devices\.php$|links/(visits[^/]*|index\.html)$|home/(cache/|photos\.(php|json\.lock)$|refill\.lock$|seen[^/]*$))')
+    MARK = 'Sweep Private Link 7731'
+    subprocess.run(['php', SEED, s.dir], capture_output=True)   # Info gets a private tab "Trip Notes" ("Weekend in the Mountains")
+    s.php("hub_write_guarded(hub_dir('links') . '/bookmarks.php', ['settings' => new stdClass, 'tabs' => [['id' => 'pub', 'title' => 'Open', 'categories' => [['id' => 'c1', 'title' => 'One', 'col' => 0, 'links' => [['id' => 'l1', 'title' => 'Public One', 'url' => 'https://example.com/1']]]]], ['id' => 'sec', 'title' => 'Mine', 'private' => true, 'categories' => [['id' => 'c2', 'title' => 'Two', 'col' => 0, 'links' => [['id' => 'l2', 'title' => '" + MARK + "', 'url' => 'https://private.example/7731']]]]]]]);")
+    def page_actions(src):
+        n = set(re.findall(r"case '([a-z_]+)'", src)) | set(re.findall(r"\$action\s*===\s*'([a-z_]+)'", src))
+        n |= set(re.findall(r"action'\]\s*\?\?\s*''\)\s*[!=]==\s*'([a-z_]+)'", src)) | set(re.findall(r"\$b\['action'\]\s*===\s*'([a-z_]+)'", src))
+        for m in re.finditer(r"in_array\(\s*\$(?:action|b\['action'\][^,]*|d\['action'\][^,]*),\s*\[([^\]]*)\]", src): n |= set(re.findall(r"'([a-z_]+)'", m.group(1)))
+        return sorted(n | {'save'})
+    def tree():
+        out = {}
+        for f in glob.glob(s.dir + '/site-data/**/*', recursive=True):
+            if os.path.isfile(f): out[f[len(s.dir) + 1:]] = hashlib.sha256(open(f, 'rb').read()).hexdigest()
+        return out
+    anon = s.client('anonymous/2.0'); anon.get('state')
+    before = tree(); leaks, opened, unguarded, found = [], [], [], {}
+    for pg in ('links', 'info', 'cards', 'tasks', 'files', 'home'):
+        src = open('%s/web/%s/api.php' % (s.dir, pg)).read(); url = '%s/web/%s/api.php?action=' % (s.site_base, pg); found[pg] = page_actions(src)
+        for a in found[pg]:
+            body = json.dumps({'action': a}).encode(); h = {'Content-Type': 'application/json', 'X-Requested-With': 'bookmarks'}
+            for who, r in (('visitor GET', anon.req(url + a)), ('visitor POST', anon.req(url + a, data=body, method='POST', hdr=h))):
+                txt = json.dumps(r)
+                if MARK in txt or 'Weekend in the Mountains' in txt or 'private.example' in txt: leaks.append((pg, a, who))
+                if who == 'visitor POST' and (pg, a) not in PUBLIC and anon.last_status < 400: opened.append((pg, a, anon.last_status))
+            if a == 'logout' or (pg, a) in PUBLIC: continue   # logging out the test's own session would end the sweep; the public ones answer anyone
+            for who, extra in (('no token', {}), ('wrong token', {'X-Hub-CSRF': 'f' * 64})):
+                s.req(url + a, data=body, method='POST', hdr=dict(h, **extra))
+                if s.last_status < 400: unguarded.append((pg, a, who, s.last_status))
+    after = tree(); changed = sorted(f for f in set(before) | set(after) if before.get(f) != after.get(f) and not MAY_CHANGE.match(f))
+    n = sum(len(v) for v in found.values())
+    check('E6 the six page APIs: every action (%d found) gives a visitor nothing private (the private Links tab and Info tab stay out of every answer)' % n,
+          n >= 60 and all(len(found[p]) >= (1 if p == 'cards' else 5) for p in found) and not leaks, (leaks, {p: len(v) for p, v in found.items()}))
+    check('E7 ...a visitor\'s change is refused, except the public actions (Links get/visit, Home state/refill/seen, logout); you, without the security token or with a wrong one, are refused too',
+          not opened and not unguarded, (opened, unguarded))
+    check('E8 ...and none of those requests changed anything on the server (only sessions, visit counts and Home\'s picture queue may move)', not changed, changed)
+    check('E9 you are still logged in after the sweep, and you still see your private Links tab', s.get('state').get('admin') is True and MARK in json.dumps(s.req(s.site_base + '/web/links/api.php?action=get')), s.get('state'))
 finally:
     stop_all()
 sys.exit(check.done())
