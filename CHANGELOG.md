@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.72.1 | Maintenance: 2 Tools libraries updated |
 | 1.72.0 | Faster and offline pages, search everywhere, more Tasks repeats and followed calendars, four new Home widgets, an Import Center, phone and accessibility fixes |
 | 1.71.0 | Smoother on phones: the page follows your finger when you swipe, quicker page changes, the bar hides without restyling the page, Home's next background waits |
 | 1.70.0 | Settings sorted: Bar tab in Appearance, Accent Color in Colors, Text Sizes in Look, Start Here in Overview, Telegram backups in Backup, Files in Server Check, What's New in Updates |
@@ -135,6 +136,16 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.72.1
+
+### Maintenance
+
+- **Tools libraries updated** (each within its own major version, so nothing should change in how Tools work):
+  - @neslinesli93/qpdf-wasm 0.3.0 → 0.3.1
+  - pdfjs-dist 6.4.299 → 6.5.438
 
 ---
 
