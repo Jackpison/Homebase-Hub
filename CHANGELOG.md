@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.72.3 | Tools › Markdown Editor: the text box stays inside its card; Settings and tests take the last two security scan notes |
 | 1.72.2 | Safer handling of a few values the security scan pointed out: Settings addresses, colour codes, card IDs and imported bookmarks |
 | 1.72.1 | Maintenance: 2 Tools libraries updated |
 | 1.72.0 | Faster and offline pages, search everywhere, more Tasks repeats and followed calendars, four new Home widgets, an Import Center, phone and accessibility fixes |
@@ -137,6 +138,16 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.72.3
+
+### Fixes
+- **Tools › Markdown Editor:** the text box now fits inside its card, below the Bold to Quote buttons, instead of running past the bottom of the card.
+
+### Security
+- **Settings:** the sections open from a fixed list, as the security scan asked; the screen is the same.
 
 ---
 

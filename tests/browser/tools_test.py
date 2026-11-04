@@ -367,6 +367,9 @@ try:
         check('C19 ...saves as HTML named after its heading', name == 'hi.html' and b'<h1>Hi</h1>' in data and b'javascript:' not in data, name)
         pg.reload(); wait_js(pg, "!!document.querySelector('#root .md h1')", 10000)
         check('C20 ...and keeps the draft after a reload', pg.input_value('#root textarea').startswith('# Hi'))
+        fit = pg.evaluate("""(() => { const t = document.querySelector('#root .mdgrid .area'), p = t.closest('.panel'), b = p.querySelector('.row'); const a = t.getBoundingClientRect(), q = p.getBoundingClientRect(), r = b.getBoundingClientRect();
+            return { inside: a.bottom <= q.bottom - 10 && a.left >= q.left && a.right <= q.right, gap: Math.round(a.top - r.bottom), tall: Math.round(a.height) }; })()""")
+        check('C20a ...the text box stays inside its card, below the buttons', fit['inside'] and fit['gap'] >= 8 and fit['tall'] >= 400, fit)
         pg.get_by_label('Markdown text').fill('- Milk\n- Bread\n  - Brown\n- [x] Pay rent\n- [ ] Call the bank\n\n1. First\n2. Second')
         until(lambda: pg.evaluate("document.querySelectorAll('#root .md ol > li').length") == 2, 3000)
         ml = pg.evaluate("""(() => { const m = document.querySelector('#root .md'), li = [...m.querySelectorAll(':scope > ul > li')];
