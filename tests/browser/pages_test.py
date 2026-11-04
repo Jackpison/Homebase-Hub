@@ -519,7 +519,7 @@ try:
               el.dispatchEvent(new TouchEvent(kind, { bubbles: true, touches: kind === 'touchend' ? [] : [t], changedTouches: [t] })); }"""
             LAYER = "(() => { const m = [...document.body.children].find(e => !e.matches('#ix-bar,#ix-ebar,script,style,link,template,dialog') && e.getBoundingClientRect().height > 100); return [m ? m.style.transform : '?', (document.getElementById('ix-bar') || {style: {}}).style.transform, document.documentElement.classList.contains('ix-swiping')]; })()"
             gp.evaluate(TOUCH, ['touchstart', 300, 520]); gp.evaluate(TOUCH, ['touchmove', 285, 521]); gp.evaluate(TOUCH, ['touchmove', 230, 522])
-            until(lambda: gp.evaluate(LAYER)[0] != '', 2000)   # the page moves on the next frame
+            until(lambda: gp.evaluate(LAYER)[0] == 'translate3d(-70px, 0px, 0px)', 3000)   # the page follows on the next frame: wait for the last move, not the first (a busy CI runner drew only -15 px once)
             mid = gp.evaluate(LAYER)
             gp.wait_for_timeout(450); gp.evaluate(TOUCH, ['touchend', 230, 522]); gp.wait_for_timeout(400)
             after = gp.evaluate(LAYER); stay = '/web/links/' in gp.url
