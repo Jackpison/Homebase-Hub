@@ -85,6 +85,7 @@
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
   var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
+  var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
   SECTIONS.forEach(function (x) { (x[4] || [[x[0]]]).forEach(function (t) { SUB_OF[t[0]] = x[0]; }); });
@@ -310,10 +311,10 @@
     });
   }
   function mountPane(sub) {
-    if (!own(PANES, sub) || typeof PANES[sub] !== 'function') sub = 'overview';   // only a pane of ours runs, whatever the address says
+    var draw = PANE_FN.get(sub); if (typeof draw !== 'function') { sub = 'overview'; draw = PANE_FN.get(sub); }   // only a pane of ours runs, whatever the address says
     var pc = $('#ix-pc'); if (tabObs) { tabObs.disconnect(); tabObs = null; }
     if (TABBED[sub] || CARDIFY[sub]) { tabObs = new MutationObserver(function () { if (TABBED[sub]) tabify(pc, sub); if (CARDIFY[sub]) cardify(pc); }); tabObs.observe(pc, { childList: true }); }
-    PANES[sub](pc); if (TABBED[sub]) tabify(pc, sub); if (CARDIFY[sub]) cardify(pc);
+    draw(pc); if (TABBED[sub]) tabify(pc, sub); if (CARDIFY[sub]) cardify(pc);
   }
   function slug(t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
   function tabify(pc, sub) {

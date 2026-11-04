@@ -637,7 +637,7 @@ try:
         off = (lp.evaluate("[...document.querySelectorAll('.ico')].map(e => e.textContent + (e.querySelector('img') ? '+img' : ''))"), list(lout))
         check('P30 Links: Icons from Google is off at first, so links without a saved icon show their letter and the browser asks Google nothing', off[0] == ['E', 'O'] and not off[1], off)
         links_data(True); lout.clear(); lp.reload(wait_until='domcontentloaded'); lp.wait_for_selector('.ico', timeout=10000); settle(lp)
-        check('P31 ...turned on, the browser asks the favicon service for those icons', len([u for u in lout if u.startswith('https://www.google.com/s2/favicons')]) == 2, lout)
+        check('P31 ...turned on, the browser asks the favicon service for those icons', len([u for u in lout if urllib.parse.urlsplit(u).hostname == 'www.google.com' and urllib.parse.urlsplit(u).path.startswith('/s2/favicons')]) == 2, lout)
         lctx.close()
         # P46: visit counts (1.53). A visitor's click counts; only the logged-in owner sees the number; Show Visit Counts off
         # hides it and the clicks still count; an encrypted tab's links are never sent.

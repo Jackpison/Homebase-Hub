@@ -149,7 +149,7 @@ try:
         check('I24 titles are kept as plain text (markup shown, never run)', "<script>window.__pwned='title'</script>" in titles and any(x.startswith('<img src=x onerror=') for x in titles), titles[:3])
         check('I24b a picture tag hidden inside another ("<im<img>g ...>") is still taken out completely: no tag and no onerror in the title (2026-11)',
               any(x.endswith('Nested Markup') for x in titles) and not any('nested img' in x or '<img' in x.replace('<img src=x onerror="window.__pwned=\'img\'">', '') for x in titles), titles)
-        check('I25 control characters, the null byte and direction overrides are gone; a huge title is cut to 200; an empty one uses the host', all(not re.search(r'[\x00-\x1f\u202e\ufffd]', x) for x in titles) and max(map(len, titles)) == 200 and 'safe.example.com' in titles, [len(x) for x in titles])
+        check('I25 control characters, the null byte and direction overrides are gone; a huge title is cut to 200; an empty one uses the host', all(not re.search(r'[\x00-\x1f\u202e\ufffd]', x) for x in titles) and max(map(len, titles)) == 200 and any(x == 'safe.example.com' for x in titles), [len(x) for x in titles])
         pg.wait_for_timeout(500)   # on purpose: I26 checks nothing from the file ran, so give a planted onerror time to fire
         markup = pg.evaluate("document.querySelectorAll('#grid img[src=\"x\"], #grid script, #grid b').length")
         check('I26 nothing from the file ran or became markup on the page', pg.evaluate("window.__pwned === undefined") and markup == 0 and not errs, (pg.evaluate("window.__pwned"), markup, errs))
