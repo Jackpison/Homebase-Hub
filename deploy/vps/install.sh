@@ -20,7 +20,7 @@ DOMAIN=''; LAN=0; EMAIL=''; ZIP=''; HTTPS=1
 say() { printf '\n== %s\n' "$*"; }
 die() { printf 'Homebase Hub install: %s\n' "$*" >&2; exit 1; }
 help() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0; }
-need() { [ $# -ge 2 ] && [ -n "$2" ] || die "$1 needs a value"; }
+need() { if [ $# -lt 2 ] || [ -z "$2" ]; then die "$1 needs a value"; fi; }
 
 while [ $# -gt 0 ]; do
   case "$1" in

@@ -13,7 +13,7 @@ REPO=Jackpison/Homebase-Hub
 ID=''; STORAGE=local-lvm; TSTORE=local; BRIDGE=vmbr0; MEMORY=1024; DISK=8; DOMAIN=''
 
 die() { printf 'Homebase Hub on Proxmox: %s\n' "$*" >&2; exit 1; }
-need() { [ $# -ge 2 ] && [ -n "$2" ] || die "$1 needs a value"; }
+need() { if [ $# -lt 2 ] || [ -z "$2" ]; then die "$1 needs a value"; fi; }
 while [ $# -gt 0 ]; do
   case "$1" in
     --id) need "$@"; ID=$2; shift ;;

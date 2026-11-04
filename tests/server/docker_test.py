@@ -156,7 +156,7 @@ try:
     code = re.search(r'\b([A-Z0-9]{4}-[A-Z0-9]{4})\b', raw)
     r = c.post('setup', {'code': code.group(1) if code else '', 'password': PW})
     check('D15 an empty folder of the host works like a volume: the site is copied in, belongs to the web server, and setup works',
-          os.path.isfile(os.path.join(host, 'index.php')) and inside('hubbind', 'stat', '-c', '%U', '/var/www/html/index.php').strip() == 'www-data' and r.get('ok'), (os.listdir(host)[:5], r))
+          inside('hubbind', 'stat', '-c', '%U', '/var/www/html/index.php').strip() == 'www-data' and r.get('ok'), r)   # the host folder now belongs to www-data: look from inside
     sh('docker', 'rm', '-f', 'hubbind', ok=False)
 
     # deploy/casaos/docker-compose.yml as shipped, only its folder and port moved (CasaOS makes /DATA itself)
@@ -170,7 +170,9 @@ try:
     for _ in range(100):
         try: ok = urllib.request.urlopen('http://127.0.0.1:8403/web/hub/core/api.php?action=state', timeout=2).status == 200; break
         except Exception: time.sleep(0.3)
-    check('D16 the CasaOS file is a valid compose file, and it starts the site', cfg.returncode == 0 and up.returncode == 0 and ok and os.path.isfile(os.path.join(cas, 'index.php')), (cfg.stderr[-300:], up.stderr[-300:]))
+    cid = subprocess.run(dcc + ['ps', '-q', 'hub'], capture_output=True, text=True, env=dict(os.environ, AppID='homebase-hub')).stdout.strip()
+    mounted = inside(cid, 'sh', '-c', 'test -f /var/www/html/index.php && echo yes').strip() if cid else ''
+    check('D16 the CasaOS file is a valid compose file, and it starts the site', cfg.returncode == 0 and up.returncode == 0 and ok and mounted == 'yes', (cfg.stderr[-300:], up.stderr[-300:], mounted))
     subprocess.run(dcc + ['down'], capture_output=True, env=dict(os.environ, AppID='homebase-hub'))
 finally:
     for n in names: subprocess.run(['docker', 'rm', '-f', n], capture_output=True) if n != '__compose__' else None
