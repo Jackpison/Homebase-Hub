@@ -115,8 +115,17 @@ loose = []
 for f in FILES:
     for i, line in enumerate(open(f, encoding='utf-8').read().split('\n')):
         m = re.match(r'^\s*runs-on:\s*(\S+)', line)
-        if m and m.group(1) != 'ubuntu-24.04' and not (os.path.basename(f) == 'scheduled.yml' and m.group(1) == 'ubuntu-latest'): loose.append('%s:%d %s' % (os.path.basename(f), i + 1, m.group(1)))
-check('W21 every job runs on ubuntu-24.04; only the weekly check uses ubuntu-latest, as the canary for the next move of that label', not loose and wk.count('runs-on: ubuntu-latest') >= 2, loose)
+        if m and m.group(1) != 'ubuntu-24.04' and not (os.path.basename(f) == 'scheduled.yml' and m.group(1) == 'ubuntu-latest') \
+                and not (os.path.basename(f) == 'release.yml' and line.strip() == 'runs-on: ${{ matrix.runner }}'): loose.append('%s:%d %s' % (os.path.basename(f), i + 1, m.group(1)))
+runners = re.findall(r'runner: (\S+) \}', rel)
+check('W21 every job runs on ubuntu-24.04 (the Docker build also on ubuntu-24.04-arm); only the weekly check uses ubuntu-latest, as the canary for the next move of that label',
+      not loose and wk.count('runs-on: ubuntu-latest') >= 2 and rel.count('runs-on: ${{ matrix.runner }}') == 1 and runners == ['ubuntu-24.04', 'ubuntu-24.04-arm'], (loose, runners))
+rj = jobs(rel)
+dk, dt = '\n'.join(rj.get('docker', [])), '\n'.join(rj.get('docker-tags', []))
+check('W25 the Docker image: amd64 and arm64 each built on its own machine (no emulation) from the checked release zip, pushed by digest; docker-tags needs both, tags X.Y.Z, X.Y and latest, and alone may sign',
+      'needs: release' in dk and 'sha256sum -c' in dk and 'push-by-digest=true' in dk and 'platforms: linux/${{ matrix.arch }}' in dk and 'qemu' not in rel.lower()
+      and 'attestations' not in dk and 'id-token' not in dk and 'needs: docker' in dt and '[ "$n" = 2 ]' in dt
+      and all(t in dt for t in ('-t "$IMG:$V"', '-t "$IMG:${V%.*}"', '-t "$IMG:latest"', 'attestations: write', 'subject-digest: ${{ steps.tag.outputs.digest }}')), sorted(rj))
 check('W22 CI runs actionlint, downloaded at a fixed version and checked against its SHA-256 before it runs',
       re.search(r'actionlint/releases/download/v[0-9.]+/actionlint_[0-9.]+_linux_amd64\.tar\.gz', ci) and re.search(r'echo "[0-9a-f]{64}  actionlint\.tar\.gz" \| sha256sum -c -', ci) and './actionlint' in ci)
 other = ''.join(open(f, encoding='utf-8').read() for f in FILES if not f.endswith('release.yml'))

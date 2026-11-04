@@ -23,7 +23,7 @@ For changing the code itself, read `AGENTS.md`.
 2. Open **Monthly maintenance: X.Y.Z**. Wait until the **CI** run is green (about 10 minutes after it opened). Checks marked *action_required* can be ignored: GitHub holds the checks of a pull request that Actions opened, and the workflow starts its own CI run instead.
 3. Press **Merge pull request**, then **Confirm merge**. **Always merge before step 4:** the new version is only on `main` once merged, and a tag made earlier is refused ("The tag ... does not match the version in the code"; nothing is published). If that happened: delete that release and its tag on github.com, merge, and publish again.
 4. Go to **Releases › Draft a new release**. Under *Choose a tag* type `vX.Y.Z` (the same number), choose *Create new tag on publish*, target `main`, and press **Publish release**.
-5. GitHub builds the update file and adds it to the release by itself (a few minutes), then the Docker image (about 15 minutes more).
+5. GitHub builds the update file and adds it to the release by itself (a few minutes), then the Docker image (about 5 minutes more: PCs and ARM boards are built side by side, each on its own kind of machine).
 6. On each of your sites: **Settings › Updates › Check Now**, then follow the buttons. The site downloads and checks the file, asks for your website password, and takes a snapshot first; **Go Back** undoes it.
 
 When there is no maintenance pull request, everything was already current. Nothing to do.
@@ -37,7 +37,7 @@ When there is no maintenance pull request, everything was already current. Nothi
 - **A maintenance or Dependabot pull request has a red check:** do not merge it. Leave a comment if you like, then close it. Next month tries again with newer versions, which often fixes it. If it keeps failing, it needs a person or an AI: give them this file, `AGENTS.md` and the link to the failed check.
 - **An issue "Monthly maintenance failed":** nothing reached `main`, and your sites are safe. Run it again later: **Actions › Monthly maintenance › Run workflow**. (The other calendar checks are under **Actions › Scheduled checks › Run workflow**, where you choose which one.) If it fails again, hand it over as above.
 - **…and the failed run says "GitHub Actions is not permitted to create or approve pull requests":** the update worked, but GitHub would not let it open the pull request. Turn it on once: **Settings › Actions › General › Workflow permissions**, tick **Allow GitHub Actions to create and approve pull requests**, **Save**. Then **Run workflow** again and close the issue.
-- **The release's job "publish the Docker image" failed:** the release and its zip are fine, and web hosts update as usual. Open the failed run and press **Re-run failed jobs**. If it fails again, hand it over.
+- **The release's job "build the Docker image (amd64 or arm64)" or "publish the Docker image" failed:** the release and its zip are fine, and web hosts update as usual. Open the failed run and press **Re-run failed jobs**. If it fails again, hand it over.
 - **An issue labelled `security`:** a library has a known problem. If the monthly maintenance doesn't fix it within a month (or it's urgent), hand it over.
 - **An issue labelled `php`:** the next PHP version breaks something. You have months: hosts offer a new PHP about a year after it appears. Hand it over before your host switches.
 - **A site misbehaves after an update:** **Settings › Updates › Go Back** puts the previous version back.

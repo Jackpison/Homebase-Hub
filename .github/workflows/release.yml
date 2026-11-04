@@ -70,17 +70,21 @@ jobs:
 
   docker:
     # After the release: the Docker image (deploy/docker) with exactly the released zip inside, for PCs and servers (amd64)
-    # and Raspberry Pi and other ARM boards (arm64), at ghcr.io/<owner>/homebase-hub as X.Y.Z, X.Y and latest.
+    # and Raspberry Pi and other ARM boards (arm64). Each is built on its own kind of machine (no emulation, a few minutes)
+    # and pushed without a tag; docker-tags then joins them under X.Y.Z, X.Y and latest at ghcr.io/<owner>/homebase-hub.
     # The release itself is already published when this runs, so a failure here never holds it back.
-    name: publish the Docker image
+    name: "build the Docker image (${{ matrix.arch }})"
     needs: release
-    runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    strategy:
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     permissions:
       contents: read       # read the release's zip
       packages: write      # push the image to GitHub's registry
-      id-token: write      # for the signed build note (attestation) of the image
-      attestations: write  # store that note with the image
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
@@ -92,31 +96,74 @@ jobs:
           gh release download "${GITHUB_REF_NAME}" -p "site-update-$V.zip" -p "site-update-$V.zip.sha256" -D /tmp/rel
           (cd /tmp/rel && sha256sum -c "site-update-$V.zip.sha256")
           cp "/tmp/rel/site-update-$V.zip" deploy/docker/site.zip
-      - name: Image name and tags
-        id: tags
-        run: |
-          V=${GITHUB_REF_NAME#v}; IMG="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/homebase-hub"
-          { echo "img=$IMG"; echo "tags=$IMG:$V,$IMG:${V%.*},$IMG:latest"; } >> "$GITHUB_OUTPUT"
-      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
-        with: { platforms: arm64 }
+      - name: Image name
+        id: img
+        run: echo "img=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/homebase-hub" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
-      - name: Build for amd64 and arm64, and push
+      - name: Build and push (by its digest, no tag yet)
         id: push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: deploy/docker
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.tags.outputs.tags }}
+          platforms: linux/${{ matrix.arch }}
+          outputs: type=image,name=${{ steps.img.outputs.img }},push-by-digest=true,name-canonical=true,push=true
+      - name: Keep the digest for docker-tags
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          case "$DIGEST" in sha256:*) ;; *) echo "no digest from the build"; exit 1;; esac
+          mkdir -p /tmp/digests && touch "/tmp/digests/${DIGEST#sha256:}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: digest-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  docker-tags:
+    # Joins the amd64 and arm64 images into one name (Docker picks the right one by itself) and tags it X.Y.Z, X.Y and latest.
+    name: publish the Docker image
+    needs: docker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      packages: write      # tag the image in GitHub's registry
+      id-token: write      # for the signed build note (attestation) of the image
+      attestations: write  # store that note with the image
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Tag both images as one
+        id: tag
+        run: |
+          V=${GITHUB_REF_NAME#v}; IMG="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/homebase-hub"
+          cd /tmp/digests
+          n=$(find . -maxdepth 1 -type f -regextype posix-extended -regex './[0-9a-f]{64}' | wc -l)
+          [ "$n" = 2 ] || { echo "expected 2 digests, found $n"; ls -la; exit 1; }
+          refs=(); for d in *; do refs+=("$IMG@sha256:$d"); done
+          docker buildx imagetools create -t "$IMG:$V" -t "$IMG:${V%.*}" -t "$IMG:latest" "${refs[@]}"
+          docker buildx imagetools inspect "$IMG:$V"
+          D=$(docker buildx imagetools inspect "$IMG:$V" --format '{{json .Manifest}}' | jq -r .digest)
+          case "$D" in sha256:*) ;; *) echo "no digest for $IMG:$V"; exit 1;; esac
+          { echo "img=$IMG"; echo "digest=$D"; } >> "$GITHUB_OUTPUT"
       - name: Signed build note for the image (a failure here never stops it)
         continue-on-error: true
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-name: ${{ steps.tags.outputs.img }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-name: ${{ steps.tag.outputs.img }}
+          subject-digest: ${{ steps.tag.outputs.digest }}
           push-to-registry: true
