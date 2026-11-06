@@ -96,6 +96,15 @@ try:
         # back online the page loads itself again: wait for that new page, or the next goto collides with it
         wait_js(pg, "!window.__beforeOnline && document.readyState === 'complete' && !document.documentElement.classList.contains('ix-offline') && !document.getElementById('ix-offl')", 15000)
         check('F8 back online the note goes and the page loads fresh', True)
+        # 1.73.2: a flicker (offline, online, offline within a moment) must not reload the page; one steady "online" still does, after a short wait
+        pg.evaluate("window.__flick = 1; for (const e of ['offline', 'online', 'offline']) window.dispatchEvent(new Event(e))")
+        pg.evaluate("new Promise(r => setTimeout(r, 2300))")   # shows that nothing happens: longer than the page's wait before it reloads
+        flick = pg.evaluate("[window.__flick, document.documentElement.classList.contains('ix-offline')]")
+        check('F8b offline, online, offline in a flash: the page does not reload and keeps its offline note', flick == [1, True], flick)
+        pg.evaluate("window.dispatchEvent(new Event('online'))")
+        soon = pg.evaluate("window.__flick")
+        wait_js(pg, "!window.__flick && document.readyState === 'complete' && !document.documentElement.classList.contains('ix-offline')", 15000)
+        check('F8c a steady "online" reloads the page, but not at the same instant', soon == 1)
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "!!(window.HUB && HUB.logout && HUB.isAdmin())", 20000)
         pg.evaluate("window.HUB.logout()"); pg.wait_for_load_state('load'); pg.wait_for_timeout(1500)
         after = pg.evaluate("caches.open('hub-offline').then(c => c.match(location.origin + '/web/tasks/api.php')).then(r => r ? r.json() : null).then(j => [j ? !!j.auth : null, " + SNAPS + "])")

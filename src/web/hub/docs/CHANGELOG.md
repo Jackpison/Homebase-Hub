@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.73.2 | A page no longer reloads itself by mistake when the connection flickers; the Docker image moves to PHP 8.5.11 |
 | 1.73.1 | One-command install on a VPS and Proxmox; ready files for Unraid, CasaOS, Umbrel and YunoHost; Synology and TrueNAS steps |
 | 1.73.0 | Docker and VPS: a ready image (with Caddy for HTTPS), nginx and Apache setups, and a safe way to run behind your own proxy |
 | 1.72.3 | Tools › Markdown Editor: the text box stays inside its card; Settings and tests take the last two security scan notes |
@@ -140,6 +141,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.73.2
+
+### Fixed
+
+- When the connection dropped and came back, the page reloaded at once. If the browser said "online" too early, or the connection flickered, that reload could pull you back to the page you had just left. The page now waits a moment (1.5 seconds), checks that you are still online, and only then reloads. A flicker does not reload it.
+
+### Changed
+
+- The Docker image now runs on PHP 8.5.11.
 
 ---
 

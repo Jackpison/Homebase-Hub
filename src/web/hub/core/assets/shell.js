@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.73.1" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.73.2" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -2053,8 +2053,12 @@
       n.textContent = 'Offline: showing your last copy. Changes can’t be saved until you are back online.';
       document.body.appendChild(n);
     } else if (!on && n) n.remove();
-    if (was && !on && !editing()) location.reload();   // back online: the page fetches everything fresh
+    clearTimeout(backTimer);
+    if (was && !on) backTimer = setTimeout(function () {   // back online: the page fetches everything fresh, once the connection has held for a moment (1.73.2: a flicker, or an "online" the browser reports too early, must not reload a page you are leaving)
+      if (navigator.onLine !== false && !H.classList.contains('ix-offline') && !editing()) location.reload();
+    }, 1500);
   }
+  var backTimer = 0;
   addEventListener('offline', function () { offlineNote(true); });
   addEventListener('online', function () { offlineNote(false); });
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.hub === 'offline') offlineNote(true); });
