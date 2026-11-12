@@ -73,8 +73,8 @@ check('W13b Semgrep is pinned to one version and has time enough for big files (
 check('W14 CI runs the JavaScript type check', 'npx tsc -p config/tsconfig.json' in ci)
 bj = '\n'.join(cij['browsers'])
 ci_code = '\n'.join(l.split('   #')[0] for l in ci.split('\n') if not l.strip().startswith('#'))   # the comments may say Firefox
-check('W15 CI runs the browser tests in Chromium and WebKit, each in two halves (pages, tools), side by side; Firefox and the visual report job are not in CI',
-      'browser: [chromium, webkit]' in bj and 'part: [pages, tools]' in bj and not re.search(r'firefox', ci_code, re.I) and 'visual' not in cij,
+check('W15 CI runs the browser tests in Chromium and WebKit: the pages half on every push, the tools half when the matrix from ci_changes.py says so (Tools, designs, a release, a manual run); Firefox and the visual report job are not in CI',
+      'fromJSON(needs.changes.outputs.matrix)' in bj and 'browser: [chromium, webkit]' in bj and 'part: [pages] or [pages, tools]' in bj and not re.search(r'firefox', ci_code, re.I) and 'visual' not in cij,
       [x for x in ('firefox', 'visual') if x in ci_code.lower() or x in cij])
 ff = wk
 check('W16 Firefox runs on the 1st and 15th and by hand, runs the page tests and the accessibility check, and reports a failure in its own issue (label browsers)',
@@ -99,13 +99,14 @@ def jobs_of(text):   # {job: {'if': ..., 'runs-on': ...}} read from the job bloc
         m = re.match(r'^    (if|runs-on):\s*(.+?)(\s+#.*)?$', line)
         if m and cur is not None: cur[m.group(1)] = m.group(2)
     return out
-sj = jobs_of(wk); crons = {'check': "'17 6 * * 1'", 'next-php': "'17 6 * * 1'", 'firefox': "'41 5 1,15 * *'", 'designs': "'23 6 1 * *'", 'remind': "'0 8 15 11 *'"}
+sj = jobs_of(wk); crons = {'check': "'17 6 * * 1'", 'next-php': "'17 6 * * 1'", 'firefox': "'41 5 1,15 * *'", 'designs': "'23 6 1 * *'", 'full-ci': "'47 3 * * *'", 'remind': "'0 8 15 11 *'"}
 gates = {j: str(sj.get(j, {}).get('if', '')) for j in crons}
 check('W16b every scheduled job runs only on its own schedule or when chosen by hand (Firefox never on the weekly run); a run by hand starts the security check unless told otherwise',
       set(sj) == set(crons) and all(('github.event.schedule == ' + c) in gates[j] and "inputs.check" in gates[j] for j, c in crons.items())
       and 'default: security' in wk and all(("cron: " + c) in wk for c in set(crons.values())), gates)
+check('W16e the daily full CI only starts ci.yml on main (actions: write, nothing else) and runs when chosen by hand too', 'gh workflow run ci.yml --ref main' in wk and 'actions: write' in wk and "inputs.check" in str(sj['full-ci'].get('if', '')))
 check('W16c the security and next-PHP jobs stay on ubuntu-latest (the canary); the others are pinned', sj['check']['runs-on'] == 'ubuntu-latest' and sj['next-php']['runs-on'] == 'ubuntu-latest'
-      and sj['firefox']['runs-on'] == 'ubuntu-24.04' and sj['designs']['runs-on'] == 'ubuntu-24.04' and sj['remind']['runs-on'] == 'ubuntu-24.04')
+      and sj['firefox']['runs-on'] == 'ubuntu-24.04' and sj['designs']['runs-on'] == 'ubuntu-24.04' and sj['full-ci']['runs-on'] == 'ubuntu-24.04' and sj['remind']['runs-on'] == 'ubuntu-24.04')
 db = open(os.path.join(ROOT, '.github', 'dependabot.yml'), encoding='utf-8').read()
 check('W16d Dependabot: once a month, one group per kind, a version only once it is 7 days old; for Tools only new major versions (the monthly maintenance takes the rest)',
       db.count('package-ecosystem:') == 6 and all(db.count(x) == 6 for x in ('interval: monthly', 'default-days: 7', 'patterns: ["*"]')) and 'interval: weekly' not in db

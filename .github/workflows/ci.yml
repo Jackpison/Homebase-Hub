@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.c.outputs.code }}
+      matrix: ${{ steps.c.outputs.matrix }}   # the browser jobs: the pages half always; the tools half when it matters (scripts/ci_changes.py)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false, fetch-depth: 0 }
@@ -142,7 +143,9 @@ jobs:
   browsers:
     needs: changes
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
-    # Every page in a real browser: Chromium and WebKit (every iPhone browser uses it), each in two halves (pages, tools), four jobs side by side.
+    # Every page in a real browser: Chromium and WebKit (every iPhone browser uses it), each in two halves (pages, tools), side by side.
+    # A push runs the light set: the pages half only (two jobs, about 4 minutes). The tools half (Tools, Files, the designs, the slow-phone test) joins it when Tools or the
+    # Animated Designs changed, when a release is being prepared, and on a manual run; scheduled.yml starts that manual run every day, so the whole set is checked daily.
     # Inside a half several tests run at the same time (tests/lib/run_parallel.py): each test has its own port and /tmp folder.
     # Chromium runs three at once, WebKit two: with three, WebKit cancelled requests and missed timings on a busy runner (1.61.10).
     # Only the slow-phone test runs alone, because it measures time. Firefox runs on the 1st and 15th in scheduled.yml. A failed batch test runs once more, alone (--retry 1): passing then, it shows as a 'flaky' warning.
@@ -150,9 +153,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
-      matrix:
-        browser: [chromium, webkit]
-        part: [pages, tools]
+      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}   # browser: [chromium, webkit], part: [pages] or [pages, tools] (scripts/ci_changes.py)
     timeout-minutes: 25
     name: browser (${{ matrix.browser }}, ${{ matrix.part }})
     env:

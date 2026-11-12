@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Tells CI whether a push or pull request changed anything besides docs, so the slow jobs can skip themselves on a
-docs-only change. Prints "code=true|false" and "app=true|false" (for $GITHUB_OUTPUT). Any doubt means true: run everything.
+docs-only change. Prints "code=true|false", "app=true|false" and "matrix=<JSON>" (for $GITHUB_OUTPUT). Any doubt means true: run everything.
 app: the site, Tools or the visual check itself changed, so the "visual changes" report is worth making.
   python3 scripts/ci_changes.py            reads EVENT, BEFORE (push) and BASE (pull request) from the environment
 Docs: *.md files outside src/, except CHANGELOG.md (the release check reads it), and .github/ISSUE_TEMPLATE/.
+matrix: the browser jobs of CI. Every push runs the light set (the pages half, in Chromium and WebKit); the tools half joins it when Tools or the
+Animated Designs changed, when a release is being prepared (the version and the changelog change together), on a manual run and when the changes
+cannot be listed. The daily run in scheduled.yml starts CI by hand, so every day the whole set runs too.
 website/** is not docs: the Pages workflow runs no tests, so CI's website test must."""
-import os, re, subprocess, sys
+import json, os, re, subprocess, sys
 
 
 def is_doc(path):
@@ -26,6 +29,16 @@ def code_changed(files):
     return True if not files else not all(is_doc(f) for f in files)
 
 
+TOOLS_PATHS = ('tools-app/', 'src/web/tools/', 'src/web/home/designs')
+
+
+def browser_parts(files):
+    """The halves of the browser tests this push runs: always 'pages'; 'tools' too when it matters (see the top of this file)."""
+    if not files: return ['pages', 'tools']
+    release = 'src/web/hub/core/lib/boot.php' in files and 'CHANGELOG.md' in files
+    return ['pages', 'tools'] if release or any(f.startswith(TOOLS_PATHS) for f in files) else ['pages']
+
+
 def changed_files():
     event = os.environ.get('EVENT', '')
     base = os.environ.get('BASE', '') if event == 'pull_request' else os.environ.get('BEFORE', '') if event == 'push' else ''
@@ -44,3 +57,4 @@ if __name__ == '__main__':
     print('Changed: %s' % ('(could not tell: run everything)' if files is None else ', '.join(files[:20]) or '(nothing)'), file=sys.stderr)
     print('code=%s' % ('true' if code else 'false'))
     print('app=%s' % ('true' if app_changed(files) else 'false'))
+    print('matrix=%s' % json.dumps({'browser': ['chromium', 'webkit'], 'part': browser_parts(files)}, separators=(',', ':')))

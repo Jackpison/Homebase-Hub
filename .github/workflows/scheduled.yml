@@ -3,6 +3,7 @@ name: Scheduled checks
 #   - every Monday: the bundled libraries and build tools against known security problems (issue "security"), and the next PHP
 #     version's development build (issue "php");
 #   - the 1st and 15th: the page tests in Firefox (issue "browsers");
+#   - every day: the whole CI, with the tools half of the browser tests (a push runs only the light set, see ci.yml);
 #   - the 1st of the month: the Animated Designs test in full, all 15 drawn (every push runs a quicker version; issue "browsers");
 #   - 15 November: the yearly PHP support-dates checklist (issue "maintenance").
 # Each job runs only on its own schedule. By hand: Actions > Scheduled checks > Run workflow, and choose which check.
@@ -11,6 +12,7 @@ on:
     - cron: '17 6 * * 1'
     - cron: '41 5 1,15 * *'
     - cron: '23 6 1 * *'
+    - cron: '47 3 * * *'
     - cron: '0 8 15 11 *'
   workflow_dispatch:
     inputs:
@@ -18,7 +20,7 @@ on:
         description: Which check to run
         type: choice
         default: security
-        options: [security, next-php, firefox, designs, php-reminder, all]
+        options: [security, next-php, firefox, designs, full-ci, php-reminder, all]
 permissions: {}
 concurrency:
   group: scheduled-${{ github.event.schedule || inputs.check }}
@@ -257,6 +259,21 @@ jobs:
           TITLE="Firefox browser tests failed"
           NUM=$(gh issue list --repo "$REPO" --state open --label browsers --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
           if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/browsers.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label browsers --body-file "$RUNNER_TEMP/browsers.md"; fi
+  full-ci:
+    if: github.event.schedule == '47 3 * * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "full-ci"]'), inputs.check))
+    # A push runs the light browser set (the pages half). Every day CI is started by hand on main, which runs everything, the tools half too
+    # (scripts/ci_changes.py: a manual run has no base to compare, so nothing is skipped). A red run shows in the Actions tab and the usual mail.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    name: start the whole CI (daily)
+    permissions:
+      actions: write   # start the CI workflow
+    steps:
+      - name: Start CI on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run ci.yml --ref main
   remind:
     if: github.event.schedule == '0 8 15 11 *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "php-reminder"]'), inputs.check))
     runs-on: ubuntu-24.04
