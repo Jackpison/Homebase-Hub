@@ -3,12 +3,14 @@ name: Scheduled checks
 #   - every Monday: the bundled libraries and build tools against known security problems (issue "security"), and the next PHP
 #     version's development build (issue "php");
 #   - the 1st and 15th: the page tests in Firefox (issue "browsers");
+#   - the 1st of the month: the Animated Designs test in full, all 15 drawn (every push runs a quicker version; issue "browsers");
 #   - 15 November: the yearly PHP support-dates checklist (issue "maintenance").
 # Each job runs only on its own schedule. By hand: Actions > Scheduled checks > Run workflow, and choose which check.
 on:
   schedule:
     - cron: '17 6 * * 1'
     - cron: '41 5 1,15 * *'
+    - cron: '23 6 1 * *'
     - cron: '0 8 15 11 *'
   workflow_dispatch:
     inputs:
@@ -16,7 +18,7 @@ on:
         description: Which check to run
         type: choice
         default: security
-        options: [security, next-php, firefox, php-reminder, all]
+        options: [security, next-php, firefox, designs, php-reminder, all]
 permissions: {}
 concurrency:
   group: scheduled-${{ github.event.schedule || inputs.check }}
@@ -168,6 +170,71 @@ jobs:
           python3 tests/browser/a11y_test.py build/site-update-*.zip --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1
           python3 tests/browser/website_test.py build/site --browser "$BROWSER" 2>&1 | tee -a browsers.log || fail=1
           exit $fail
+      - name: Open or update the issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create browsers --repo "$REPO" --color 0E8A16 --description "Firefox and WebKit checks" 2>/dev/null || true
+          {
+            echo "The Firefox browser tests failed on $(date -u +%Y-%m-%d)."
+            echo
+            echo "Run: $RUN_URL"
+            echo
+            echo "Failing lines:"
+            echo
+            echo '```'
+            grep -E '^FAIL|Error|Traceback' browsers.log 2>/dev/null | tail -n 40 || echo "(no log)"
+            echo '```'
+          } > "$RUNNER_TEMP/browsers.md"
+          TITLE="Firefox browser tests failed"
+          NUM=$(gh issue list --repo "$REPO" --state open --label browsers --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
+          if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/browsers.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label browsers --body-file "$RUNNER_TEMP/browsers.md"; fi
+  designs:
+    if: github.event.schedule == '23 6 1 * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "designs"]'), inputs.check))
+    # Every push runs a quick designs test (4 designs drawn). Once a month all 15 are drawn, with the long phone and Reduce Motion loops (the designs are drawn by software in CI, so it is slow).
+    # On a failure it opens one issue labelled \"browsers\" (or comments on the open one).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    name: Animated Designs (all of them)
+    permissions:
+      contents: read   # check out the repo
+      issues: write    # open or comment on the "browsers" issue
+    env:
+      BROWSER: chromium   # the scripts read it from here, never pasted into the script text
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24', cache: npm }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
+      - name: npm packages
+        run: npm ci --ignore-scripts
+      - name: Python packages
+        run: pip install -r tests/requirements.txt
+      - name: Browser system packages from Ubuntu (up to 3 tries of 2 minutes)
+        timeout-minutes: 8
+        run: |
+          for i in 1 2 3; do
+            sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
+            sudo killall -q apt-get dpkg || true; sleep 10
+          done
+          exit 1
+      - name: The browser
+        timeout-minutes: 10
+        run: python -m playwright install "$BROWSER"
+      - name: Build the zip and the website
+        run: python3 scripts/build.py && python3 scripts/make-site.py --no-guide
+      - name: The designs test, in full
+        run: |
+          set -o pipefail
+          python3 tests/browser/designs_test.py build/site-update-*.zip --browser "$BROWSER" --full 2>&1 | tee -a browsers.log
       - name: Open or update the issue
         if: failure()
         env:

@@ -4,7 +4,9 @@
   * every design (but the WebGPU one, which needs a real GPU) draws something when it starts
   * Background > Animated Designs: Preview shows a design without saving; switching a design off and your options are kept by Save Background
   * a phone is never given the computers-only designs (their files are not even requested); Reduce Motion keeps to the designs that can stand still
-    python3 tests/browser/designs_test.py build/site-update-X.Y.Z.zip     (Chromium only: it needs WebGL; port 8988)"""
+    python3 tests/browser/designs_test.py build/site-update-X.Y.Z.zip [--full]     (Chromium only: it needs WebGL; port 8988)
+Every push runs the quick version (4 designs drawn, short phone and Reduce Motion loops: software-drawn designs are slow in CI); the monthly
+Scheduled checks run --full (all 15 drawn, longer loops)."""
 import json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, until, page_errors, CSP_REPORTER
@@ -12,7 +14,8 @@ from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
 if browser_name() != 'chromium': print('designs_test: WebGL here needs Chromium; nothing to check in this browser'); sys.exit(0)
-ZIP = sys.argv[1]; check = Checks()
+ZIP = sys.argv[1]; check = Checks(); FULL = '--full' in sys.argv
+QUICK = {'iridescence', 'orb', 'balatro', 'crystalized-ball'}   # one that draws with plain WebGL, two shaders, one with the ogl library
 ARGS = ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']
 COLORS = """async (b64) => { const bin = atob(b64), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
   const bm = await createImageBitmap(new Blob([a], { type: 'image/png' })), c = document.createElement('canvas'); c.width = 40; c.height = 25;
@@ -46,7 +49,7 @@ try:
             until(look, 25000, 300); return seen[0]
         weak = {}
         for i in sorted(reg):
-            if reg[i]['gpu']: continue
+            if reg[i]['gpu'] or (not FULL and i not in QUICK): continue
             pg2.goto(s.base + '/web/home/designs/manifest.json')
             pg2.evaluate("() => { document.body.innerHTML = ''; const c = document.createElement('div'); c.id = 'c'; Object.assign(c.style, { position: 'fixed', inset: '0', background: '#000' }); document.body.appendChild(c); }")
             if os.path.isfile(os.path.join(s.dir, 'web/home/designs', i + '.css')): pg2.add_style_tag(url=s.base + '/web/home/designs/%s.css' % i)
@@ -56,7 +59,7 @@ try:
             canv = pg2.evaluate("document.querySelectorAll('#c canvas').length")
             pg2.evaluate("window.__r && window.__r.destroy()"); gone = pg2.evaluate("document.querySelectorAll('#c canvas').length")
             if ok is not True or n < 12 or not canv or gone: weak[i] = (ok, n, canv, gone)
-        check('H2 each design starts, draws something (more than 12 colours on screen), and takes its canvas away when it stops (%d designs)' % len([i for i in reg if not reg[i]['gpu']]), not weak and not errs2, (weak, errs2))
+        check('H2 each design starts, draws something (more than 12 colours on screen), and takes its canvas away when it stops (%d designs)' % len([i for i in reg if not reg[i]['gpu'] and (FULL or i in QUICK)]), not weak and not errs2, (weak, errs2))
         pg2.close()
 
         # the Background sheet: Preview does not save; switching off and options are kept by Save Background
@@ -87,7 +90,7 @@ try:
         pp.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
         wait_js(pp, "!!document.getElementById('nextBg') && !!window.PUB", 60000)
         have = pp.evaluate("(PUB.bg.own || []).map(i => i.url)")
-        for _ in range(14):
+        for _ in range(14 if FULL else 8):
             pp.evaluate("document.getElementById('nextBg').click()"); until(lambda: not pp.evaluate("document.getElementById('nextBg').classList.contains('spin')"), 15000)
         heavy = [i for i in reg if reg[i]['desktop']]
         check('H7 on a phone the computers-only designs (Hyperspeed, Aero Shards) are on the list but never asked for; the others are', all('design:' + i in have for i in heavy) and not [u for u in asked if any('/%s.' % i in u for i in heavy)] and len([u for u in asked if u.endswith('.js') or '.js?' in u]) >= 2, (asked[:6], perr))
@@ -98,7 +101,7 @@ try:
         rp = rm.new_page(); rp.on('request', lambda r: asked2.append(r.url) if '/designs/' in r.url and '.js' in r.url else None)
         rp.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
         wait_js(rp, "!!document.getElementById('nextBg') && !!window.PUB", 60000)
-        for _ in range(12):
+        for _ in range(12 if FULL else 6):
             rp.evaluate("document.getElementById('nextBg').click()"); until(lambda: not rp.evaluate("document.getElementById('nextBg').classList.contains('spin')"), 15000)
         moving = [i for i in reg if not reg[i]['still']]
         check('H8 with Reduce Motion only the designs that can stand still are fetched', asked2 and not [u for u in asked2 if any('/%s.js' % i in u for i in moving)], asked2)

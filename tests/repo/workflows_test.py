@@ -99,13 +99,13 @@ def jobs_of(text):   # {job: {'if': ..., 'runs-on': ...}} read from the job bloc
         m = re.match(r'^    (if|runs-on):\s*(.+?)(\s+#.*)?$', line)
         if m and cur is not None: cur[m.group(1)] = m.group(2)
     return out
-sj = jobs_of(wk); crons = {'check': "'17 6 * * 1'", 'next-php': "'17 6 * * 1'", 'firefox': "'41 5 1,15 * *'", 'remind': "'0 8 15 11 *'"}
+sj = jobs_of(wk); crons = {'check': "'17 6 * * 1'", 'next-php': "'17 6 * * 1'", 'firefox': "'41 5 1,15 * *'", 'designs': "'23 6 1 * *'", 'remind': "'0 8 15 11 *'"}
 gates = {j: str(sj.get(j, {}).get('if', '')) for j in crons}
 check('W16b every scheduled job runs only on its own schedule or when chosen by hand (Firefox never on the weekly run); a run by hand starts the security check unless told otherwise',
       set(sj) == set(crons) and all(('github.event.schedule == ' + c) in gates[j] and "inputs.check" in gates[j] for j, c in crons.items())
       and 'default: security' in wk and all(("cron: " + c) in wk for c in set(crons.values())), gates)
 check('W16c the security and next-PHP jobs stay on ubuntu-latest (the canary); the others are pinned', sj['check']['runs-on'] == 'ubuntu-latest' and sj['next-php']['runs-on'] == 'ubuntu-latest'
-      and sj['firefox']['runs-on'] == 'ubuntu-24.04' and sj['remind']['runs-on'] == 'ubuntu-24.04')
+      and sj['firefox']['runs-on'] == 'ubuntu-24.04' and sj['designs']['runs-on'] == 'ubuntu-24.04' and sj['remind']['runs-on'] == 'ubuntu-24.04')
 db = open(os.path.join(ROOT, '.github', 'dependabot.yml'), encoding='utf-8').read()
 check('W16d Dependabot: once a month, one group per kind, a version only once it is 7 days old; for Tools only new major versions (the monthly maintenance takes the rest)',
       db.count('package-ecosystem:') == 6 and all(db.count(x) == 6 for x in ('interval: monthly', 'default-days: 7', 'patterns: ["*"]')) and 'interval: weekly' not in db
