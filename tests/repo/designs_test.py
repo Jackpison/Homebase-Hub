@@ -31,9 +31,10 @@ big = {i: os.path.getsize(os.path.join(OUT, i + '.js')) for i in built if os.pat
 check('D6 a design for every device stays under 120 KB, a computers-only one under 800 KB', not big, big)
 heavy = [i for i in built if os.path.getsize(os.path.join(OUT, i + '.js')) > 120000]
 check('D7 whatever is over 120 KB is marked computers only (it is never offered or fetched on a phone)', all(reg[i]['desktop'] for i in heavy), heavy)
+check('D8b every design has a stylesheet too, even an empty one (Home always asks for it: a missing file is a 404 and a console error on a real server)', all(os.path.isfile(os.path.join(OUT, i + '.css')) for i in reg), [i for i in reg if not os.path.isfile(os.path.join(OUT, i + '.css'))])
 check('D8 each design has a built file with a settings list', all(os.path.isfile(os.path.join(OUT, i + '.js')) and reg[i]['options'] for i in reg))
 if len(sys.argv) > 1:
     z = zipfile.ZipFile(sys.argv[1]); names = z.namelist()
     have = sorted(n[len('web/home/designs/'):-3] for n in names if n.startswith('web/home/designs/') and n.endswith('.js'))
-    check('D9 the zip carries every built design and the list, and no source (%d files)' % len(have), have == built and 'web/home/designs/designs.json' in names and not [n for n in names if 'designs-src' in n], (have, [n for n in names if 'designs-src' in n]))
+    check('D9 the zip carries every built design and the list, and no source (%d files)' % len(have), have == built and all('web/home/designs/%s.css' % i in names for i in built) and 'web/home/designs/designs.json' in names and not [n for n in names if 'designs-src' in n], (have, [n for n in names if 'designs-src' in n]))
 sys.exit(check.done())

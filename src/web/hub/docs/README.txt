@@ -137,8 +137,8 @@ and Tools (rename, reorder or hide them in Settings > Appearance > Bar).
 - Home widgets (1.72.0, off until you switch them on in Edit > Settings > Widgets): Upcoming Bills (priced tasks still to pay
   this month), Recent Links (the links you opened on this device), Recent Files (once Files has opened them in that tab) and
   Server Status (the same overview as Settings).
-- Home Animated Designs (1.74.0): sixteen live backgrounds from React Bits (Home > Edit > Background > Animated Designs). A new site starts with them;
-  Starter and Online Photos stay. Switch a design off to leave it out, press Preview to see it (nothing is saved until Save Background),
+- Home Animated Designs (1.74.0): sixteen live backgrounds from React Bits (Home > Edit > Background > Animated Designs). They are a choice: a new
+  site still starts with the Starter photos, and Online Photos stays. Switch a design off to leave it out, press Preview to see it (nothing is saved until Save Background),
   Options changes its colours and speed. Hyperspeed and Aero Shards are for computers only. With Reduce Motion on only the designs that can
   stand still are used. The files keep the React Bits licence (MIT + Commons Clause), not the GPL: see THIRD-PARTY.md.
 - Settings is a page of its own (web/settings/, the gear in the bar). A menu on the left: Overview, then three groups: Web Setting (General;

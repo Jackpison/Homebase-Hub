@@ -41,7 +41,7 @@ def build(i):
                         '--log-level=error'], cwd=ROOT, capture_output=True, text=True)
     if r.returncode: sys.exit('build-designs.py: %s failed:\n%s' % (i, r.stderr))
     css = os.path.join(OUT, i + '.css')
-    if os.path.isfile(css) and not open(css).read().strip().replace(BANNER, '').strip(): os.remove(css)
+    if not os.path.isfile(css): open(css, 'w').write(BANNER + '\n')   # a design without styles still has its file: the page always asks for it (a missing one would be a 404 and a console error)
 
 
 if __name__ == '__main__':

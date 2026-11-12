@@ -42,7 +42,7 @@ $st = starter_list();
 t('Starter lists its three photos in order, the mountains first', array_column($st, 'url') === ['starter/mountains.jpg', 'starter/abstract.webp', 'starter/forest-lake.jpg'] && $st[0]['type'] === 'image', json_encode(array_column($st, 'url')));
 @unlink($site . '/web/home/starter/mountains.jpg');
 t('a background whose file is missing is left out', array_column(starter_list(), 'url')[0] === 'starter/abstract.webp');
-t('a new site starts with the Animated Designs (1.74.0), and Starter is still a choice', default_site()['bg']['theme'] === 'designs' && default_site()['bg']['starterOff'] === false && clean_site(['bg' => ['theme' => 'starter']])['bg']['theme'] === 'starter');
+t('a new site starts with the Starter theme (the Animated Designs, 1.74.0, are a choice)', default_site()['bg']['theme'] === 'starter' && default_site()['bg']['starterOff'] === false);
 t('a site saved before themes existed keeps Online Photos', clean_site(['bg' => ['dim' => 0.3]])['bg']['theme'] === 'online');
 t('Remove (starterOff) always means Online Photos', clean_site(['bg' => ['theme' => 'starter', 'starterOff' => true]])['bg']['theme'] === 'online');
 t('an unknown theme falls back to Online Photos', clean_site(['bg' => ['theme' => 'nope']])['bg']['theme'] === 'online');

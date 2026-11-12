@@ -96,7 +96,7 @@ function default_site(): array
             'motion'       => true,
             'rotate'       => 0,
             'custom'       => [],
-            'theme'        => 'designs',   // a new site starts with the Animated Designs (1.74.0); a site that chose Starter or Online Photos keeps it
+            'theme'        => 'starter',   // a new site starts with the Starter photos; the Animated Designs (1.74.0) are one click away in Background
             'designs'      => [],          // (1.74.0) per design: ['on' => in the rotation, 'opts' => your options]; missing = on, with the design's own settings
             'starterOff'   => false,
             'themes'       => [],          // your own themes: [{id, name, items: ['uploads/…']}]

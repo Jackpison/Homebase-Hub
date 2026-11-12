@@ -49,7 +49,7 @@ t('the theme takes every design', count(designs_items([])) === 16);
 $s = ['bg' => ['designs' => ['orb' => ['on' => false, 'opts' => []]]]];
 $ids = array_map(fn($x) => $x['url'], designs_items($s));
 t('a design that is switched off is left out; the rest keep their order', count($ids) === 15 && !in_array('design:orb', $ids, true) && $ids === array_values(array_filter(array_map(fn($k) => 'design:' . $k, array_keys($reg)), fn($u) => $u !== 'design:orb')));
-t('the theme is a valid choice, and a new site starts with it', theme_ok('designs', false, []) && default_site()['bg']['theme'] === 'designs');
+t('the theme is a valid choice, and a new site does NOT start with it (Starter photos stay the default)', theme_ok('designs', false, []) && default_site()['bg']['theme'] === 'starter');
 t('a site that chose Starter or Online Photos keeps it', clean_site(['bg' => ['theme' => 'starter']])['bg']['theme'] === 'starter' && clean_site(['bg' => ['theme' => 'online']])['bg']['theme'] === 'online' && clean_site(['bg' => ['theme' => 'designs']])['bg']['theme'] === 'designs');
 t('a theme that does not exist becomes Online Photos', clean_site(['bg' => ['theme' => 'nope']])['bg']['theme'] === 'online');
 t('the page gets the designs\' items for the theme', array_column(theme_items('designs', [], [], []), 'url') === array_map(fn($k) => 'design:' . $k, array_keys($reg)));

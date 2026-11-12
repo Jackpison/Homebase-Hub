@@ -149,7 +149,7 @@ Nothing to migrate by hand unless an entry says so.
 
 ### New
 
-- **Animated Designs for Home.** Sixteen live backgrounds, drawn in your browser: Iridescence, Flux Lines, Galaxy, Crystal Ball, Pattern Waves, Gradient Waves, Topography, Light Tunnel, Lightfall, Lightning, Hyperspeed, Ballpit, Orb, Letter Glitch, Balatro and Aero Shards. A new site starts with them. Starter and Online Photos stay as they were, and a site that chose one keeps it.
+- **Animated Designs for Home.** Sixteen live backgrounds, drawn in your browser: Iridescence, Flux Lines, Galaxy, Crystal Ball, Pattern Waves, Gradient Waves, Topography, Light Tunnel, Lightfall, Lightning, Hyperspeed, Ballpit, Orb, Letter Glitch, Balatro and Aero Shards. They are a choice: a new site still starts with the Starter photos, and Starter and Online Photos stay as they were.
 - **Home Settings > Background > Animated Designs.** Each design has a switch (in or out of the rotation), **Preview** (shows it at once, saves nothing) and **Options** (colours, speed and a few more, inside safe limits). Your own themes can take designs along with your uploads.
 - **Kind to phones and slow machines.** Hyperspeed and Aero Shards are for computers only: they are never offered or downloaded on a phone, and Aero Shards also needs WebGPU. With Reduce Motion on, only the designs that can stand still are used. A design's files are fetched only when it is on screen, and a phone draws at a lower pixel ratio.
 - **Credit and licence.** Each design shows "From React Bits" in the corner. The files keep the React Bits licence (MIT with the Commons Clause), not the GPL; this is written in `THIRD-PARTY.md` and on the Licence page.

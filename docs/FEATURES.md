@@ -84,7 +84,7 @@ Names in **bold** are the names the screen shows.
 
 ## 8b. Animated Designs on Home (1.74.0)
 
-- [x] Sixteen live backgrounds from React Bits (Iridescence, Flux Lines, Galaxy, Crystal Ball, Pattern Waves, Gradient Waves, Topography, Light Tunnel, Lightfall, Lightning, Hyperspeed, Ballpit, Orb, Letter Glitch, Balatro, Aero Shards). A new site starts with them; Starter and Online Photos stay.
+- [x] Sixteen live backgrounds from React Bits (Iridescence, Flux Lines, Galaxy, Crystal Ball, Pattern Waves, Gradient Waves, Topography, Light Tunnel, Lightfall, Lightning, Hyperspeed, Ballpit, Orb, Letter Glitch, Balatro, Aero Shards). They are a choice: a new site still starts with the Starter photos; Online Photos stays.
 - [x] Home Settings > Background: **Animated Designs** with a switch for each design, **Preview** (not saved) and **Options** (colours, speed, a few more per design). Your own themes can take designs too.
 - [x] Hyperspeed and Aero Shards (WebGPU) are for computers only: never offered or fetched on a phone. Reduce Motion keeps to the designs that can stand still.
 - *Screenshots:* Home with a design; the Background sheet with Animated Designs; an Options sheet. *Website:* the Home page has an Animated designs tile; About says the files keep the React Bits licence.

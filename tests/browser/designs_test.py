@@ -22,20 +22,21 @@ COLORS = """async (b64) => { const bin = atob(b64), a = new Uint8Array(bin.lengt
   const x = c.getContext('2d'); x.drawImage(bm, 0, 0, 40, 25); const d = x.getImageData(0, 0, 40, 25).data, s = new Set();
   for (let i = 0; i < d.length; i += 4) s.add(d[i] + ',' + d[i + 1] + ',' + d[i + 2]); return s.size; }"""
 try:
-    s = Site(ZIP, 8988, home_theme=None)   # the real default: the Animated Designs
+    s = Site(ZIP, 8988, home_theme='designs')   # a new site starts on Starter; this one is switched to the Animated Designs
     subprocess.run(['php', SEED, s.dir], capture_output=True)
     reg = json.load(open(os.path.join(s.dir, 'web/home/designs/designs.json')))
     site_bg = lambda: json.loads(s.php("require '%s/web/home/lib.php'; echo json_encode(load_site()['bg']);" % s.dir))
     with sync_playwright() as p:
         b = p.chromium.launch(args=ARGS); print('browser: chromium', b.version)
         ctx = b.new_context(viewport={'width': 1280, 'height': 800}); ctx.add_init_script(CSP_REPORTER)
+        failed = []; ctx.on('response', lambda r: failed.append('%d %s' % (r.status, r.url)) if '/designs/' in r.url and r.status >= 400 else None)
         errs = []; pg = ctx.new_page(); page_errors(pg, errs)
         pg.on('console', lambda m: errs.append(m.text[:200]) if m.type == 'error' and 'security policy' in m.text else None)
         pg.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
         try: wait_js(pg, "!!document.querySelector('#bg > .design canvas')", 20000)
         except Exception: pass
         st = pg.evaluate("[PUB.bg.theme, (PUB.bg.own || []).length, document.querySelectorAll('#bg > .design canvas').length, document.getElementById('creditText').textContent]")
-        check('H1 a new site starts with the Animated Designs: one is drawn behind the page, with its credit, and nothing is refused', st[0] == 'designs' and st[1] == 16 and st[2] >= 1 and st[3] == 'From React Bits' and not errs, (st, errs))
+        check('H1 with the Animated Designs chosen, one is drawn behind the page, with its credit, and nothing is refused', st[0] == 'designs' and st[1] == 16 and st[2] >= 1 and st[3] == 'From React Bits' and not errs, (st, errs))
 
         pg.goto('about:blank')   # its animation stops, so the next page has the processor to itself
         # every design draws: its files are loaded by hand in a blank page of the site (the same address, so the same security policy)
@@ -105,6 +106,7 @@ try:
             rp.evaluate("document.getElementById('nextBg').click()"); until(lambda: not rp.evaluate("document.getElementById('nextBg').classList.contains('spin')"), 15000)
         moving = [i for i in reg if not reg[i]['still']]
         check('H8 with Reduce Motion only the designs that can stand still are fetched', asked2 and not [u for u in asked2 if any('/%s.js' % i in u for i in moving)], asked2)
+        check('H9 no file of a design was missing or refused (a design without styles still has a stylesheet)', not failed, failed[:4])
         rm.close(); b.close()
 finally:
     stop_all()
