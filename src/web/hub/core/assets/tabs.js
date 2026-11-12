@@ -6,6 +6,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
+// @ts-check
 /* The tabs of Links and Info (1.63.0): one code base for what they share, each page keeps its own look.
      HubTabs.icons / iconSvg   the 16 icons a tab can wear (the id is saved on the tab; empty = the page's own icon)
      HubTabs.drag(row, opts)   drag the tabs of a row to reorder them (mouse: move; touch: press, hold, drag; Alt+Left/Right from the keyboard)
@@ -48,7 +49,7 @@
      click that ends it is ignored (the page checks it in its click handler). */
   function drag(row, o) {
     o = o || {}; var sel = o.item || '.tabi', skip = o.skip || '.pen', st = null, raf = 0, noClick = false;
-    function ids() { return [].map.call(row.querySelectorAll(sel), function (x) { return x.dataset.t; }); }
+    function ids() { return /** @type {any[]} */ ([]).map.call(row.querySelectorAll(sel), function (x) { return x.dataset.t; }); }
     function same(a, b) { return a.join() === b.join(); }
     row.addEventListener('pointerdown', function (e) {
       if (!o.enabled() || e.button > 0 || e.target.closest(skip)) return;
@@ -162,12 +163,12 @@
     wire();
   }
   function setColor(key, v) { var el = $('ht' + key), tx = $('ht' + key + 'Tx'); cur[key.toLowerCase()] = v; tx.value = v || ''; tx.classList.remove('bad'); if (v) el.value = v; else el.value = key === 'Color' ? cur.colorShown || '#d4a72c' : '#ffffff'; $('ht' + key + 'Def').disabled = !v; }
-  function setLayout(v) { cur.layout = v; [].forEach.call(dlg.querySelectorAll('.hubt-lay'), function (b) { var on = b.dataset.lay === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; }); }
+  function setLayout(v) { cur.layout = v; /** @type {any[]} */ ([]).forEach.call(dlg.querySelectorAll('.hubt-lay'), function (b) { var on = b.dataset.lay === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; }); }
   // (1.64.1) the 16 icons stay folded away; the row shows the one in use (its picture and name) and opens the picker
   function iconOpen(on) { var b = $('htIcoBtn'); b.setAttribute('aria-expanded', String(on)); $('htIcons').hidden = !on; }
   function setIcon(v) {
     cur.icon = v;
-    [].forEach.call(dlg.querySelectorAll('.hubt-ico'), function (b) { var on = b.dataset.i === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; });
+    /** @type {any[]} */ ([]).forEach.call(dlg.querySelectorAll('.hubt-ico'), function (b) { var on = b.dataset.i === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; });
     var info = ICONS.filter(function (i) { return i.id === v; })[0];
     $('htIcoCur').innerHTML = (info ? iconSvg(info.id, 'hubt-svg') : (cur.cfg && cur.cfg.iconDefault ? iconSvg(cur.cfg.iconDefault, 'hubt-svg') : '')) + '<span>' + (info ? esc(info.name) : 'Default') + '</span>';
   }

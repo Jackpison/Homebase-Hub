@@ -6,6 +6,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License (the LICENSE file) for more details.
  */
+// @ts-check
 /* The Import Center (1.72.0): reads what other apps export, here in the browser, and turns it into what a page of this site keeps.
    Nothing is sent anywhere by reading: Settings > Backup & Restore > Import shows a preview, and the page it goes to adds what you keep
    (through its own save, so locked Cards stay locked), with Undo.
@@ -108,7 +109,7 @@
       else if (name === 'DTSTART') {
         var m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})\d{2}(Z?))?/.exec(val); if (!m) return;
         if (!m[4]) { ev.due = m[1] + '-' + m[2] + '-' + m[3]; ev.time = ''; return; }
-        var d = m[6] ? new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5])) : new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
+        var d = m[6] ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5])) : new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
         ev.due = ymd(d); ev.time = pad(d.getHours()) + ':' + pad(d.getMinutes());
       }
     });
@@ -174,6 +175,7 @@
     });
   }
   /* ---------- cards (CSV) ---------- */
+  /** @type {[string, RegExp][]} */
   var CARD_FIELDS = [['bank', /bank|issuer/], ['name', /^(card|card name|name|product)$/], ['network', /network|scheme|visa|master/], ['variant', /variant|tier/], ['kind', /kind|credit.?debit/],
     ['type', /^type$|fee type|ltf/], ['limit', /limit/], ['fee', /fee|annual/], ['expiry', /expir|valid/], ['owner', /owner|holder|person|member/], ['remark', /remark|note|comment/]];
   function cardMap(head) {
@@ -199,14 +201,14 @@
     return Promise.all(files.map(function (f) {
       return /\.zip$/i.test(f.name) ? f.arrayBuffer().then(unzip) : Promise.resolve([{ name: f.name, file: f }]);
     })).then(function (lists) {
-      var all = [].concat.apply([], lists);
+      var all = /** @type {any[]} */ ([]).concat.apply([], lists);
       return Promise.all(all.map(function (f) { return readText(f).then(function (t) { return { name: f.name, text: t }; }); }));
     }).then(function (all) {
       var by = function (re) { return all.filter(function (f) { return re.test(f.name); }); };
       var icsF = all.filter(function (f) { return /\.ics$/i.test(f.name) || /^BEGIN:VCALENDAR/m.test(f.text.slice(0, 200)); });
-      if (icsF.length) return { kind: 'calendar', label: 'Calendar', to: 'tasks', items: [].concat.apply([], icsF.map(function (f) { return ics(f.text); })) };
+      if (icsF.length) return { kind: 'calendar', label: 'Calendar', to: 'tasks', items: /** @type {any[]} */ ([]).concat.apply([], icsF.map(function (f) { return ics(f.text); })) };
       var keep = by(/\.json$/i).map(function (f) { try { return [JSON.parse(f.text), f.name]; } catch (e) { return null; } }).filter(function (x) { return x && x[0] && (x[0].textContent != null || x[0].listContent) && 'isTrashed' in x[0]; });
-      if (keep.length) return { kind: 'keep', label: 'Google Keep', to: 'info', items: keep.map(function (x) { return keepNote(x[0], x[1]); }).filter(Boolean) };
+      if (keep.length) return { kind: 'keep', label: 'Google Keep', to: 'info', items: /** @type {any[]} */ (keep).map(function (x) { return keepNote(x[0], x[1]); }).filter(Boolean) };
       var csvs = by(/\.csv$/i).map(function (f) { return csv(f.text); });
       for (var i = 0; i < csvs.length; i++) {
         var hl = csvs[i].head.map(function (h) { return h.toLowerCase(); });
@@ -215,7 +217,7 @@
         if (Object.keys(cardMap(csvs[i].head)).length >= 2) return { kind: 'cards', label: 'Cards Spreadsheet', to: 'cards', head: csvs[i].head, map: cardMap(csvs[i].head), items: cards(csvs[i]), csv: csvs[i] };
       }
       var html = by(/\.html?$/i), bm = html.filter(function (f) { return /<a\s[^>]*href=["']?https?:/i.test(f.text) && (/NETSCAPE-Bookmark|<DT>/i.test(f.text) || /time_added|Pocket/i.test(f.text)); });
-      if (bm.length) return { kind: /time_added|Pocket/i.test(bm[0].text) ? 'pocket' : 'bookmarks', label: /time_added|Pocket/i.test(bm[0].text) ? 'Pocket' : 'Bookmarks', to: 'links', items: [].concat.apply([], bm.map(function (f) { return linksHtml(f.text); })) };
+      if (bm.length) return { kind: /time_added|Pocket/i.test(bm[0].text) ? 'pocket' : 'bookmarks', label: /time_added|Pocket/i.test(bm[0].text) ? 'Pocket' : 'Bookmarks', to: 'links', items: /** @type {any[]} */ ([]).concat.apply([], bm.map(function (f) { return linksHtml(f.text); })) };
       var notes = by(/\.(md|markdown|txt|html?)$/i);
       if (notes.length) return { kind: by(/\.md$/i).length && notes.some(function (f) { return /\s[0-9a-f]{32}\.md$/i.test(f.name); }) ? 'notion' : 'notes', label: notes.some(function (f) { return /\s[0-9a-f]{32}\.md$/i.test(f.name); }) ? 'Notion' : 'Notes',
         to: 'info', items: notes.map(function (f) { return mdNote(f.name, f.text); }).filter(function (n) { return n.title || n.notes; }) };
