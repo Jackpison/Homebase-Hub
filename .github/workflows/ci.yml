@@ -239,9 +239,8 @@ jobs:
             "share|tests/browser/share_test.py build/site-update-*.zip" \
             "offline|tests/browser/offline_test.py build/site-update-*.zip --browser chromium" \
             "tasks more|tests/browser/tasks_more_test.py build/site-update-*.zip --browser chromium" \
-            "import center|tests/browser/importer_test.py build/site-update-*.zip --browser chromium" \
-            "designs|tests/browser/designs_test.py build/site-update-*.zip --browser chromium" || rc=1
-          python3 tests/lib/run_parallel.py --retry 1 -j 1 "slow phone|tests/browser/speed_test.py build/site-update-*.zip" || rc=1
+            "import center|tests/browser/importer_test.py build/site-update-*.zip --browser chromium" || rc=1
+          python3 tests/lib/run_parallel.py --retry 1 -j 1 "slow phone|tests/browser/speed_test.py build/site-update-*.zip" "designs|tests/browser/designs_test.py build/site-update-*.zip --browser chromium" || rc=1   # alone: the designs are drawn by software here and take the whole processor
           exit $rc
       - name: Tools half in WebKit (several tests at once)
         if: matrix.browser == 'webkit' && matrix.part == 'tools' && steps.build.outcome == 'success'

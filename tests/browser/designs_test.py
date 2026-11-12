@@ -76,7 +76,8 @@ try:
         saved = until(lambda: (site_bg().get('designs') or {}).get('orb', {}).get('on') is False, 10000)
         d = site_bg().get('designs') or {}
         check('H5 Save Background keeps a design switched off and your colour (only the options the design lists)', saved and d['orb']['opts'].get('colors', [None])[0] == '#112233' and len(d['orb']['opts']['colors']) == 3, d)
-        pg.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
+        pg.goto('about:blank')   # the design on screen stops, so the next load has the processor to itself
+        pg.goto(s.base + '/web/home/', wait_until='commit', timeout=90000); wait_js(pg, "!!window.PUB", 60000)
         own = pg.evaluate("(PUB.bg.own || []).map(i => i.url)")
         check('H6 the saved choice reaches the page: Orb is out of the rotation, the other 15 are in', 'design:orb' not in own and len(own) == 15, own)
 
