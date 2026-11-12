@@ -85,8 +85,9 @@
         '<div class="ix-cl-bar"><div class="ix-cl-search">' + svg(ICON.search) + '<input type="search" id="ix-clq" placeholder="Search the Changelog" aria-label="Search the Changelog" autocomplete="off" spellcheck="false"></div>' +
           '<button type="button" class="ix-btn" id="ix-clall">Expand All</button><button type="button" class="ix-btn" id="ix-clnone">Collapse All</button></div>' +
         '<div class="ix-pcount" id="ix-clcount" aria-live="polite"></div>' +
-        '<div id="ix-cll">' + shown.map(function (e, i) {
-          return '<details class="ix-cl" data-i="' + i + '"' + (i === 0 ? ' open' : '') + '><summary><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
+        '<div id="ix-cll" class="ix-tl">' + shown.map(function (e, i) {
+          var ci = shown.findIndex(function (x) { return x.ver === cur; }), st = ci < 0 || i > ci ? 'done' : i === ci ? 'now' : 'up';   // (1.75.0) a timeline: newer than yours (not yet), yours, and the ones you have passed
+          return '<details class="ix-cl ' + st + '" data-i="' + i + '"' + (i === 0 ? ' open' : '') + '><summary><i class="ix-cl-m" aria-hidden="true"></i><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
             (e.ver === cur ? '<span class="ix-pill good">Installed</span>' : '') + (e.date ? '<span class="ix-cl-date">' + esc(e.date) + '</span>' : '') +
             '<span class="ix-cl-d">' + mdInline(e.summary || e.label || '') + '</span></summary><div class="ix-cl-b ix-md"></div></details>'; }).join('') + '</div>' +
         '<p class="ix-note ix-pnone" id="ix-clnone2" hidden>Nothing in the changelog matches that. Try a shorter word.</p>';

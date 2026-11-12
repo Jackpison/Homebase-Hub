@@ -296,6 +296,7 @@ function render() {
   if (list.length && !grid) box.append(h("div", { class: "lh", "aria-hidden": "true" }, h("span"), h("span", { text: "Name" }), h("span", { text: "Size" }), h("span", { text: "Date" }), h("span")));
   for (const i of list) box.append(row(i));
   const none = $("none"); none.hidden = list.length > 0;
+  none.classList.toggle("zone", !list.length && !q && (tab === "files" || !tab));   // (1.75.0) an empty folder is a drop zone
   if (!list.length) {
     none.replaceChildren(...(tab === "trash" ? [h("b", { text: "The Trash is empty" }), "Things you remove wait here, and are removed for good after " + D.settings.trashDays + " days."]
       : q ? [h("b", { text: "Nothing found" }), "No file or folder has that in its name."]

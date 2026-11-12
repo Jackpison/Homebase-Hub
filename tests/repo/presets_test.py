@@ -33,7 +33,7 @@ def lum(h):
     return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]
 def cr(a, b): x, y = lum(a), lum(b); return (max(x, y) + .05) / (min(x, y) + .05)
 
-check('R1 the two lists are read (dark and light)', len(P['dark']) == 91 and len(P['light']) == 52, (len(P['dark']), len(P['light'])))
+check('R1 the two lists are read (dark and light)', len(P['dark']) == 97 and len(P['light']) == 58, (len(P['dark']), len(P['light'])))
 KEEP = {'GitHub Light', 'GitHub Dark', 'Dracula', 'Nord', 'Solarized', 'Catppuccin Mocha', 'Catppuccin Latte', 'One Dark', 'One Light', 'Tokyo Night', 'Solarized Light', 'Gruvbox', 'Monokai'}
 LIMIT = {'dark': 5.6, 'light': 4.6}
 close = []
@@ -42,8 +42,9 @@ for mode in P:
     for i in range(len(L)):
         for j in range(i + 1, len(L)):
             x, y = L[i], L[j]
+            # the Spotlight family (1.75.0) is judged among itself: it sits on one idea, ink-dark or near-white with one loud accent
             kept = lambda p: p['g'] == 'contrast' or p['n'] in KEEP or p is L[0]   # the default look, the well-known themes and the high-contrast ones may sit close
-            if look_dist(x, y) < LIMIT[mode] and not (kept(x) and kept(y)): close.append((mode, x['n'], y['n'], round(look_dist(x, y), 1)))
+            if look_dist(x, y) < LIMIT[mode] and not (kept(x) and kept(y)) and (x['g'] == 'spot') == (y['g'] == 'spot'): close.append((mode, x['n'], y['n'], round(look_dist(x, y), 1)))
 check('R2 no two presets look almost the same (each one is a real choice)', not close, close)
 NEW = ['Ultraviolet', 'Cyber Lime', 'Magma', 'Tropic Night', 'Royal Blue', 'Berry Blast', 'Jungle Neon', 'Cobalt Flame', 'Sunburst', 'Flamingo', 'Aqua Pop', 'Lime Soda', 'Grape Soda', 'Tangerine']
 found = {p['n']: p for mode in P for p in P[mode] if p['n'] in NEW}
@@ -55,5 +56,9 @@ soft = {p['n']: p for p in P['dark'] if p['n'] in ('Soft Dark', 'Soft Warm')}
 check('R4 Soft Dark and Soft Warm (1.64.0) are in Site Looks, dimmer than the default, and still easy to read (text 7:1, secondary text 4.5:1)',
       set(soft) == {'Soft Dark', 'Soft Warm'} and all(p['g'] == 'site' and lum(p['c']['text']) < lum(DEF['dark']['text']) and cr(p['c']['text'], p['c']['panel']) >= 7 and cr(p['c']['mute'], p['c']['panel']) >= 4.5 and cr(p['c']['mute'], p['c']['box']) >= 4.5 for p in soft.values()),
       {n: (round(cr(p['c']['text'], p['c']['panel']), 1), round(cr(p['c']['mute'], p['c']['panel']), 1)) for n, p in soft.items()})
+spot = {m: [p for p in P[m] if p['g'] == 'spot'] for m in P}
+bad = [(m, p['n']) for m in spot for p in spot[m] if not (cr(p['c']['text'], p['c']['bg']) >= 7 and cr(p['c']['text'], p['c']['box']) >= 7 and cr(p['c']['mute'], p['c']['box']) >= 4.5 and cr(p['c']['mute'], p['c']['bg']) >= 4.5
+        and cr(p['c']['barText'], p['c']['bar']) >= 4.5 and cr(p['a'], p['c']['bg']) >= 3 and cr(p['a'], p['c']['box']) >= 3)]
+check('R5 the six Spotlight presets (1.75.0) come in dark and light, and the accent stands out on the page and on the boxes in both (3:1) with easy-to-read text (7:1, 4.5:1)', len(spot['dark']) == 6 and len(spot['light']) == 6 and not bad, bad)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

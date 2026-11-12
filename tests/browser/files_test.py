@@ -40,6 +40,7 @@ try:
 
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
         check('B2 a new Files page says there is nothing yet, and shows the limit', 'No files yet' in pg.inner_text('#none') and '5 GB' in pg.inner_text('#usage'), pg.inner_text('#usage'))
+        check('B2b an empty Files page is a drop zone (a dashed area with an upload tile and the Upload Your First File button)', pg.evaluate("document.getElementById('none').classList.contains('zone') && getComputedStyle(document.getElementById('none')).borderStyle === 'dashed' && !!document.querySelector('#none .btn.pri')"))
         check('B3 the Files tab is in the bar between Tasks and Tools', pg.evaluate("[...document.querySelectorAll('.ix-links a, #ix-bar a')].map(a => a.textContent.trim()).filter(Boolean)").count('Files') >= 1)
 
         # ---- upload a small file: the first use asks for the passphrase ----

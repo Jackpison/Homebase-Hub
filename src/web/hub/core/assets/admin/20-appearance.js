@@ -121,7 +121,7 @@
     ['Text', 'Headings, body text, and quieter labels and hints.', [['text', 'Text'], ['mute', 'Secondary Text']]]
   ];
   /* Presets: n = name, g = group, c = colors (left out = the built-in color), a = accent ('' = keep yours). */
-  var PRESET_GROUPS = [['mine', 'My Presets'], ['site', 'Site Looks'], ['classic', 'Editor Classics'], ['modern', 'Modern'], ['vivid', 'Vivid'], ['neon', 'Neon'], ['soft', 'Soft'], ['pastel', 'Pastel'], ['earth', 'Earthy'], ['mono', 'Monochrome'], ['retro', 'Retro'], ['contrast', 'High Contrast']];
+  var PRESET_GROUPS = [['mine', 'My Presets'], ['site', 'Site Looks'], ['classic', 'Editor Classics'], ['modern', 'Modern'], ['vivid', 'Vivid'], ['neon', 'Neon'], ['soft', 'Soft'], ['pastel', 'Pastel'], ['earth', 'Earthy'], ['mono', 'Monochrome'], ['retro', 'Retro'], ['contrast', 'High Contrast'], ['spot', 'Spotlight']];
   var PRESETS = {
     dark: [
       { n: 'AMOLED', g: 'site', c: {  }, a: '' },
@@ -214,7 +214,13 @@
       { n: 'Dusk Pastel', g: 'pastel', c: { bg: '#1a1627', box: '#221c33', panel: '#2a233e', line: '#3e3559', text: '#eeebf4', mute: '#b4b0c0', bar: '#161221', barText: '#b4b0c0' }, a: '#b8c0ff' },
       { n: 'Cotton Night', g: 'pastel', c: { bg: '#25181f', box: '#301f28', panel: '#3b2630', line: '#563947', text: '#f3ecf0', mute: '#beb1b8', bar: '#1f141a', barText: '#beb1b8' }, a: '#ffc8dd' },
       { n: 'Mint Night', g: 'pastel', c: { bg: '#16221e', box: '#1d2d28', panel: '#243831', line: '#375249', text: '#ecf3f1', mute: '#b1beba', bar: '#121c19', barText: '#b1beba' }, a: '#b5ead7' },
-      { n: 'Peach Night', g: 'pastel', c: { bg: '#261c17', box: '#31241e', panel: '#3c2d25', line: '#574238', text: '#f3eeec', mute: '#beb5b1', bar: '#201713', barText: '#beb5b1' }, a: '#ffcba4' }],
+      { n: 'Peach Night', g: 'pastel', c: { bg: '#261c17', box: '#31241e', panel: '#3c2d25', line: '#574238', text: '#f3eeec', mute: '#beb5b1', bar: '#201713', barText: '#beb5b1' }, a: '#ffcba4' },
+      { n: 'Spotlight Ember', g: 'spot', c: { bg: '#0f0703', box: '#180c07', panel: '#22120b', line: '#3f2418', text: '#f8f3f1', mute: '#c6b2a9', bar: '#0b0502', barText: '#c6b2a9' }, a: '#ff6a3d' },
+      { n: 'Spotlight Lime', g: 'spot', c: { bg: '#0b0f03', box: '#131807', panel: '#1c220b', line: '#333f18', text: '#f6f8f1', mute: '#bdc6a9', bar: '#080b02', barText: '#bdc6a9' }, a: '#b6f23a' },
+      { n: 'Spotlight Sky', g: 'spot', c: { bg: '#03090f', box: '#071018', panel: '#0b1822', line: '#182d3f', text: '#f1f5f8', mute: '#a9b9c6', bar: '#02070b', barText: '#a9b9c6' }, a: '#38bdf8' },
+      { n: 'Spotlight Violet', g: 'spot', c: { bg: '#07030f', box: '#0c0718', panel: '#120b22', line: '#24183f', text: '#f3f1f8', mute: '#b2a9c6', bar: '#05020b', barText: '#b2a9c6' }, a: '#a78bfa' },
+      { n: 'Spotlight Pink', g: 'spot', c: { bg: '#0f030a', box: '#180712', panel: '#220b1a', line: '#3f1831', text: '#f8f1f6', mute: '#c6a9bb', bar: '#0b0207', barText: '#c6a9bb' }, a: '#f472b6' },
+      { n: 'Spotlight Gold', g: 'spot', c: { bg: '#0f0b03', box: '#181307', panel: '#221c0b', line: '#3f3318', text: '#f8f6f1', mute: '#c6bda9', bar: '#0b0802', barText: '#c6bda9' }, a: '#fbbf24' }],
     light: [
       { n: 'Paper', g: 'site', c: {  }, a: '' },
       { n: 'Solarized Light', g: 'classic', c: { bg: '#fdf6e3', box: '#fffaf0', panel: '#fffaf0', line: '#e6dfc8', text: '#253f46', mute: '#56696f', bar: '#eee8d5', barText: '#4e6167' }, a: '#268bd2' },
@@ -267,7 +273,13 @@
       { n: 'Retro Paper', g: 'retro', c: { bg: '#f5e6c8', box: '#fbf0da', panel: '#fdf6e6', line: '#d9c294', text: '#3b2a14', mute: '#6a5330', bar: '#ecd9b0', barText: '#5e4a2a' }, a: '#d4470d' },
       { n: 'Old Terminal Light', g: 'retro', c: { bg: '#e8f5e9', box: '#f3fbf4', panel: '#ffffff', line: '#b8dcbc', text: '#0b3d12', mute: '#2f6b3a', bar: '#d4ecd7', barText: '#2a5f34' }, a: '#1b9e3a' },
       { n: 'Blue Contrast', g: 'contrast', c: { bg: '#ffffff', box: '#ffffff', panel: '#ffffff', line: '#4a4a4a', text: '#000000', mute: '#262626', bar: '#ffffff', barText: '#111111' }, a: '#0e6fff' },
-      { n: 'Warm Contrast', g: 'contrast', c: { bg: '#fffdf5', box: '#ffffff', panel: '#ffffff', line: '#5c4a00', text: '#000000', mute: '#2e2500', bar: '#fffdf5', barText: '#1a1500' }, a: '#a46b00' }]
+      { n: 'Warm Contrast', g: 'contrast', c: { bg: '#fffdf5', box: '#ffffff', panel: '#ffffff', line: '#5c4a00', text: '#000000', mute: '#2e2500', bar: '#fffdf5', barText: '#1a1500' }, a: '#a46b00' },
+      { n: 'Spotlight Ember', g: 'spot', c: { bg: '#fceee8', box: '#ffffff', panel: '#f9e5dc', line: '#e3c3b5', text: '#22120b', mute: '#624b41', bar: '#fbe4da', barText: '#624b41' }, a: '#d9441a' },
+      { n: 'Spotlight Lime', g: 'spot', c: { bg: '#f6fce8', box: '#ffffff', panel: '#f0f9dc', line: '#d5e3b5', text: '#1c220b', mute: '#586241', bar: '#f1fbda', barText: '#586241' }, a: '#4d7c0f' },
+      { n: 'Spotlight Sky', g: 'spot', c: { bg: '#e8f3fc', box: '#ffffff', panel: '#dcecf9', line: '#b5cee3', text: '#0b1822', mute: '#415362', bar: '#daecfb', barText: '#415362' }, a: '#0369a1' },
+      { n: 'Spotlight Violet', g: 'spot', c: { bg: '#eee8fc', box: '#ffffff', panel: '#e5dcf9', line: '#c3b5e3', text: '#120b22', mute: '#4b4162', bar: '#e4dafb', barText: '#4b4162' }, a: '#6d28d9' },
+      { n: 'Spotlight Pink', g: 'spot', c: { bg: '#fce8f5', box: '#ffffff', panel: '#f9dcee', line: '#e3b5d2', text: '#220b1a', mute: '#624156', bar: '#fbdaef', barText: '#624156' }, a: '#be185d' },
+      { n: 'Spotlight Gold', g: 'spot', c: { bg: '#fcf6e8', box: '#ffffff', panel: '#f9f0dc', line: '#e3d5b5', text: '#221c0b', mute: '#625841', bar: '#fbf1da', barText: '#625841' }, a: '#b45309' }]
   };
   var lsGet = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
   var lsSet = function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} };

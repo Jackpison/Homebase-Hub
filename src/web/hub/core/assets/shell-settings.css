@@ -326,18 +326,12 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-ocs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 #ix-page .ix-oc{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0;transition:border-color .18s,transform .18s}
 #ix-page .ix-oc:hover{border-color:var(--ix-line2)}
-#ix-page .ix-oh{display:flex;justify-content:space-between;align-items:center;gap:10px}
-#ix-page .ix-oh b{font-size:15.5px}
-#ix-page .ix-ol{color:var(--ix-tx);font-size:14px;line-height:1.4}
 #ix-page .ix-os{color:var(--ix-mu);font-size:13px;line-height:1.4}
 #ix-page .ix-oc .ix-btn{align-self:flex-start;margin-top:auto;padding:4px 0 0;border:0;background:none;box-shadow:none;color:var(--ix-accent-tx);font-weight:600;font-size:13.5px}
 #ix-page .ix-oc .ix-btn::after{content:" →";transition:margin-left .18s}
 #ix-page .ix-oc .ix-btn:hover::after{margin-left:3px}
 #ix-page .ix-als{background:var(--ix-s1);border:1px solid color-mix(in srgb,var(--ix-accent) 40%,var(--ix-line));border-radius:18px;padding:14px 18px;margin:0 0 18px;display:flex;flex-direction:column;gap:8px}
 #ix-page .ix-als.ok{flex-direction:row;align-items:center;gap:10px;border-color:var(--ix-line)}
-#ix-page .ix-al{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-#ix-page .ix-al>span:nth-child(2){flex:1 1 260px}
-#ix-page .ix-ali{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ix-soft);color:var(--ix-accent-tx);font-weight:700;font-size:13px}
 #ix-page .ix-pill.bad{color:var(--ix-err);border-color:color-mix(in srgb,var(--ix-err) 45%,transparent)}
 /* tabs made from accordions */
 #ix-page .ix-tabbed>.ix-tabbar{margin:0 0 6px;overflow-x:auto;scrollbar-width:none}
@@ -390,7 +384,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page a{color:var(--ix-accent-tx)}
 #ix-page .ix-btn,#ix-page button{color:inherit}
 /* ===== cards,fields and chips shared by Encryption,Telegram setup and Backup ===== */
-#ix-page .ix-ec{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:20px;padding:22px 24px;margin:0 0 16px;max-width:780px}
+#ix-page .ix-ec{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:20px;padding:22px 24px;margin:0 0 16px;max-width:var(--ix-cw)}
 #ix-page .ix-ec.good{border-color:color-mix(in srgb,var(--ix-ok) 40%,var(--ix-line))}
 #ix-page .ix-ec.danger{border-color:color-mix(in srgb,var(--ix-err) 40%,var(--ix-line))}
 #ix-page .ix-ec-h{display:flex;gap:14px;align-items:flex-start}
@@ -418,7 +412,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-codes{margin:12px 0}
 #ix-page .ix-codes .ix-mono{display:inline-block;padding:12px 16px;border-radius:12px;background:var(--ix-bg);border:1px dashed var(--ix-accent);font:700 18px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;color:var(--ix-tx)}
 /* Telegram setup: numbered steps */
-#ix-page .ix-stps{list-style:none;margin:6px 0 18px;padding:0;max-width:780px}
+#ix-page .ix-stps{list-style:none;margin:6px 0 18px;padding:0;max-width:var(--ix-cw)}
 #ix-page .ix-stp{display:grid;grid-template-columns:36px minmax(0,1fr);gap:0 16px;position:relative;padding:0 0 22px}
 #ix-page .ix-stp:not(:last-child)::before{content:"";position:absolute;left:17px;top:38px;bottom:2px;width:2px;background:var(--ix-line)}
 #ix-page .ix-stn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--ix-s2);color:var(--ix-mu);border:1px solid var(--ix-line2)}
@@ -442,14 +436,14 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-bkp .ix-tabs{margin:8px 0 0 30px}
 /* ---- 1.33.0: a more modern Settings look: tab headers,hero cards,status tiles,check rows,device rows,the Changelog ---- */
 #ix-page [hidden]{display:none!important}
-#ix-page .ix-th{display:flex;gap:14px;align-items:center;margin:4px 0 18px;max-width:780px}
+#ix-page .ix-th{display:flex;gap:14px;align-items:center;margin:4px 0 18px;max-width:var(--ix-cw)}
 #ix-page .ix-th-i{flex:none;width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:var(--ix-soft);color:var(--ix-accent-tx);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ix-accent) 28%,transparent)}
 #ix-page .ix-th-i svg,#ix-page .ix-tile-i svg,#ix-page .ix-hero-i svg,#ix-page .ix-dev-i svg,#ix-page .ix-empty-i svg,#ix-page .ix-ec-i svg,#ix-page .ix-psearch+svg,#ix-page .ix-cl-search svg,#ix-page .ix-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 #ix-page .ix-btn svg{width:16px;height:16px}
 #ix-page .ix-th-t{font-size:21px;font-weight:800;letter-spacing:-.01em;color:var(--ix-tx);line-height:1.2}
 #ix-page .ix-th-d{margin:4px 0 0;color:var(--ix-mu);font-size:14px;max-width:64ch}
-#ix-page .ix-sect{margin:22px 0 10px;font-size:11.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ix-mu2);max-width:780px}
-#ix-page .ix-hero{display:flex;gap:22px;align-items:center;padding:22px 26px;border-radius:22px;border:1px solid var(--ix-line);background:var(--ix-s1);margin:0 0 16px;max-width:780px;box-shadow:0 1px 0 color-mix(in srgb,var(--ix-accent) 14%,transparent) inset}
+#ix-page .ix-sect{margin:22px 0 10px;font-size:11.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ix-mu2);max-width:var(--ix-cw)}
+#ix-page .ix-hero{display:flex;gap:22px;align-items:center;padding:22px 26px;border-radius:22px;border:1px solid var(--ix-line);background:var(--ix-s1);margin:0 0 16px;max-width:var(--ix-cw);box-shadow:0 1px 0 color-mix(in srgb,var(--ix-accent) 14%,transparent) inset}
 #ix-page .ix-hero-i{flex:none;width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:var(--ix-soft);color:var(--ix-accent-tx)}
 #ix-page .ix-hero-i.good{background:color-mix(in srgb,var(--ix-ok) 15%,transparent);color:var(--ix-ok)}
 #ix-page .ix-hero-i svg{width:30px;height:30px}
@@ -463,7 +457,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-ring>*{position:relative;line-height:1.1}
 #ix-page .ix-ring b{font-size:28px;font-weight:800;color:var(--ix-tx)}
 #ix-page .ix-ring small{font-size:11.5px;color:var(--ix-mu);font-weight:700}
-#ix-page .ix-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:0 0 6px;max-width:780px}
+#ix-page .ix-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:0 0 6px;max-width:var(--ix-cw)}
 #ix-page .ix-tile{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:16px;border:1px solid var(--ix-line);background:var(--ix-s1);color:var(--ix-tx);font:inherit;cursor:pointer;min-width:0;transition:border-color .15s,background-color .15s,transform .15s}
 #ix-page .ix-tile:hover{border-color:var(--ix-accent);background:var(--ix-soft);transform:translateY(-1px)}
 #ix-page .ix-tile-i{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--ix-s2);color:var(--ix-mu)}
@@ -474,7 +468,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-tile-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
 #ix-page .ix-tile-h b{font-size:14.5px;font-weight:700}
 #ix-page .ix-tile small{color:var(--ix-mu);font-size:12.5px;line-height:1.45}
-#ix-page .ix-checks{border:1px solid var(--ix-line);border-radius:16px;overflow:hidden;background:var(--ix-s1);max-width:780px}
+#ix-page .ix-checks{border:1px solid var(--ix-line);border-radius:16px;overflow:hidden;background:var(--ix-s1);max-width:var(--ix-cw)}
 #ix-page .ix-chkrow{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-bottom:1px solid var(--ix-line);font-size:14px}
 #ix-page .ix-chkrow:last-child{border-bottom:0}
 #ix-page .ix-chkrow>span{flex:none;width:22px;height:22px;margin-top:1px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:color-mix(in srgb,var(--ix-ok) 18%,transparent);color:var(--ix-ok)}
@@ -483,7 +477,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-chkrow>div{min-width:0;color:var(--ix-mu)}
 #ix-page .ix-chkrow b{color:var(--ix-tx)}
 #ix-page .ix-chkrow small{display:block;margin-top:2px;color:var(--ix-mu);font-size:13px}
-#ix-page .ix-trio,#ix-page .ix-duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;max-width:780px;margin:0 0 16px}
+#ix-page .ix-trio,#ix-page .ix-duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;max-width:var(--ix-cw);margin:0 0 16px}
 #ix-page .ix-duo{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 #ix-page .ix-duo>.ix-ec{margin:0;max-width:none}
 #ix-page .ix-mini{padding:14px 16px;border-radius:16px;border:1px solid var(--ix-line);background:var(--ix-s1)}
@@ -497,14 +491,14 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-meter i.warn{background:var(--ix-accent)}
 #ix-page .ix-meter i.good{background:var(--ix-ok)}
 #ix-page .ix-meterw small{display:block;min-height:18px;margin-top:6px;color:var(--ix-mu);font-size:12.5px}
-#ix-page .ix-devs{display:flex;flex-direction:column;gap:10px;max-width:780px}
+#ix-page .ix-devs{display:flex;flex-direction:column;gap:10px;max-width:var(--ix-cw)}
 #ix-page .ix-dev{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--ix-line);border-radius:16px;background:var(--ix-s1)}
 #ix-page .ix-dev-i{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--ix-s2);color:var(--ix-mu)}
 #ix-page .ix-dev-i svg{width:20px;height:20px}
 #ix-page .ix-dev-b{flex:1;min-width:0}
 #ix-page .ix-dev-b b{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14.5px}
 #ix-page .ix-dev-b small{display:block;margin-top:2px;color:var(--ix-mu);font-size:12.5px}
-#ix-page .ix-empty{text-align:center;padding:34px 20px;border:1px dashed var(--ix-line2);border-radius:20px;color:var(--ix-mu);max-width:780px}
+#ix-page .ix-empty{text-align:center;padding:34px 20px;border:1px dashed var(--ix-line2);border-radius:20px;color:var(--ix-mu);max-width:var(--ix-cw)}
 #ix-page .ix-empty b{display:block;color:var(--ix-tx);font-size:16px;margin:8px 0 4px}
 #ix-page .ix-empty p{margin:0 auto;max-width:44ch}
 #ix-page .ix-empty-i{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--ix-s2);color:var(--ix-mu)}
@@ -521,11 +515,11 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-pcount{font-size:12.5px;color:var(--ix-mu);margin:8px 0 10px;min-height:16px}
 #ix-page .ix-pnone{margin:14px 0}
 /* Changelog */
-#ix-page .ix-cl-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 6px;max-width:880px}
+#ix-page .ix-cl-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 6px;max-width:var(--ix-cw)}
 #ix-page .ix-cl-search{position:relative;flex:1;min-width:220px}
 #ix-page .ix-cl-search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ix-mu2);pointer-events:none}
 #ix-page .ix-cl-search input{padding-left:40px!important;border-radius:999px!important;height:42px!important}
-#ix-page .ix-cl{border:1px solid var(--ix-line);border-radius:16px;background:var(--ix-s1);margin:0 0 10px;max-width:880px;overflow:hidden}
+#ix-page .ix-cl{border:1px solid var(--ix-line);border-radius:16px;background:var(--ix-s1);margin:0 0 10px;max-width:var(--ix-cw);overflow:hidden}
 #ix-page .ix-cl>summary{list-style:none;display:flex;gap:10px;align-items:center;padding:14px 46px 14px 18px;cursor:pointer;position:relative;flex-wrap:wrap}
 #ix-page .ix-cl>summary::-webkit-details-marker{display:none}
 #ix-page .ix-cl>summary::after{content:"";position:absolute;right:20px;top:50%;width:8px;height:8px;margin-top:-6px;border-right:2px solid var(--ix-mu);border-bottom:2px solid var(--ix-mu);transform:rotate(45deg);transition:transform .15s}
@@ -551,7 +545,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-tblw th{text-align:left;padding:10px 14px;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ix-mu2);background:var(--ix-s2);white-space:nowrap}
 #ix-page .ix-tblw td{padding:10px 14px;border-top:1px solid var(--ix-line);vertical-align:top;color:var(--ix-tx)}
 #ix-page .ix-tblw td:first-child{white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums}
-#ix-page .ix-vmap{max-width:880px}
+#ix-page .ix-vmap{max-width:var(--ix-cw)}
 #ix-page .ix-vmap tr.cur td{background:var(--ix-soft)}
 #ix-page .ix-linkb{border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--ix-accent-tx);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 @media (max-width:600px){#ix-page .ix-hero{flex-direction:column;align-items:flex-start;padding:18px}#ix-page .ix-th-t{font-size:19px}#ix-page .ix-dev{flex-wrap:wrap}#ix-page .ix-cl>summary{padding-left:14px}#ix-page .ix-cl-b{padding:2px 14px 14px}}
@@ -571,7 +565,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-ec.ix-auto .ix-ec-b>.ix-tg:last-child{border-bottom:0;padding-bottom:0}
 #ix-page .ix-ec.ix-auto .ix-ec-b>.ix-note:last-child{margin-bottom:0}
 #ix-page .ix-ec.ix-auto .ix-ec-d{font-size:13.5px}
-#ix-page .ix-ec.ix-new{max-width:880px;position:relative;isolation:isolate}
+#ix-page .ix-ec.ix-new{max-width:var(--ix-cw);position:relative;isolation:isolate}
 /* (1.65.1) What's New: a calm border with one light that runs around it twice when the card appears (instead of the heavy accent outline) */
 @property --ix-beam{syntax:"<angle>";inherits:false;initial-value:0deg}
 #ix-page .ix-ec.ix-new::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;
@@ -594,13 +588,8 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-exts span{border-radius:999px}
 
 /* ---- 1.36.0: jump chips and the setup banner on the Overview, and the Guided Setup steps ---- */
-#ix-page .ix-jchips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;max-width:880px}
-#ix-page .ix-jchip{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--ix-line);background:var(--ix-s1);color:var(--ix-tx);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;transition:border-color .15s,background-color .15s}
-#ix-page .ix-jchip:hover{border-color:var(--ix-accent);background:var(--ix-soft)}
-#ix-page .ix-dot{width:8px;height:8px;border-radius:50%;background:var(--ix-mu2);flex:none}
-#ix-page .ix-dot.good{background:var(--ix-ok)}#ix-page .ix-dot.warn{background:var(--ix-accent)}
 #ix-page .ix-setupb{border-color:color-mix(in srgb,var(--ix-accent) 45%,var(--ix-line))}
-#ix-page .ix-steps{display:flex;flex-direction:column;gap:10px;max-width:780px;margin:0 0 16px}
+#ix-page .ix-steps{display:flex;flex-direction:column;gap:10px;max-width:var(--ix-cw);margin:0 0 16px}
 #ix-page .ix-step{margin:0;max-width:none;padding:0;overflow:hidden}
 #ix-page .ix-step.open{border-color:color-mix(in srgb,var(--ix-accent) 55%,var(--ix-line))}
 #ix-page .ix-steph{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;padding:16px 18px;cursor:pointer;color:inherit;font:inherit;margin:0}
@@ -654,8 +643,8 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 #ix-page .ix-sect,#ix-page .ix-cgrp>h4{display:flex;align-items:center;gap:10px;color:var(--ix-accent-tx,var(--ix-accent))}
 #ix-page .ix-sect::after,#ix-page .ix-cgrp>h4::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--ix-accent) 55%,transparent),transparent)}
 /* (1.61.6) one width for every tab: cards, folds, tables and step lists all stop at the same edge */
-#ix-page #ix-pc>:not(.ix-tabbar),#ix-page #ix-pc>.ix-tabbar~*{max-width:780px}   /* the tab row itself may be wider */
-#ix-page .ix-sf{max-width:780px}
+#ix-page #ix-pc>:not(.ix-tabbar),#ix-page #ix-pc>.ix-tabbar~*{max-width:var(--ix-cw)}   /* the tab row itself may be wider */
+#ix-page .ix-sf{max-width:var(--ix-cw)}
 /* (1.61.6) phones: the tabs of a section wrap onto more lines as small pills, so none is cut off at the right edge */
 @media (max-width:760px){
 }
@@ -849,7 +838,7 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-ec.ix-auto .ix-ec-b>.ix-tg{padding:13px 0}
 #ix-page .ix-ec.ix-auto .ix-ec-b>.ix-tg:first-child{padding-top:8px}
 @media (max-width:600px){#ix-page .ix-phs{width:100%}#ix-page .ix-pht{width:42px;height:42px}#ix-page .ix-ph .ix-phx h2{font-size:22px}}
-#ix-page .ix-phr{max-width:780px}
+#ix-page .ix-phr{max-width:var(--ix-cw)}
 
 /* (1.75.0) Tabs and segmented buttons: a track, and one solid pill that slides to the open tab (white on dark, dark on light), as in the mock-up */
 #ix-page .ix-subt{padding:4px;gap:0;background:var(--ix-s2);border-radius:16px}
@@ -863,3 +852,86 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-subseg{border-radius:14px;padding:4px}
 #ix-page .ix-subseg button{border-radius:10px;padding:8px 16px}
 #ix-page .ix-subseg button[aria-selected="true"]{background:var(--ix-tx);color:var(--ix-bg);font-weight:600}
+
+/* (1.75.0) What's New as a timeline: a line down the left, a tick for versions you have passed, a filled dot for yours, a hollow one for newer ones;
+   the version, when, and under it what it brought */
+#ix-page .ix-tl{position:relative;max-width:var(--ix-cw);padding-left:6px}
+#ix-page .ix-tl::before{content:"";position:absolute;left:17px;top:18px;bottom:18px;width:2px;background:var(--ix-line)}
+#ix-page .ix-tl .ix-cl{border:0;border-radius:0;background:none;margin:0;overflow:visible}
+#ix-page .ix-tl .ix-cl>summary{padding:12px 40px 12px 40px;gap:4px 10px;align-items:baseline}
+#ix-page .ix-tl .ix-cl>summary:hover{background:none}
+#ix-page .ix-tl .ix-cl>summary::after{right:6px}
+#ix-page .ix-tl .ix-cl-m{position:absolute;left:5px;top:15px;width:24px;height:24px;border-radius:50%;background:var(--ix-bg);display:grid;place-items:center}
+#ix-page .ix-tl .ix-cl.done .ix-cl-m::before{content:"";width:6px;height:11px;border:solid var(--ix-tx);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+#ix-page .ix-tl .ix-cl.now .ix-cl-m::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--ix-accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--ix-accent) 25%,transparent)}
+#ix-page .ix-tl .ix-cl.up .ix-cl-m::before{content:"";width:11px;height:11px;border-radius:50%;border:2px solid var(--ix-mu2)}
+#ix-page .ix-tl .ix-cl.up .ix-cl-v{color:var(--ix-mu)}
+#ix-page .ix-tl .ix-cl-v{font-size:15.5px;font-weight:700}
+#ix-page .ix-tl .ix-cl-date{font-size:13px}
+#ix-page .ix-tl .ix-cl-d{flex:1 1 100%;order:3;font-size:14px;color:var(--ix-mu)}
+#ix-page .ix-tl .ix-cl-b{margin:2px 0 8px 40px;padding:4px 18px 14px;border:1px solid var(--ix-line);border-radius:14px;background:var(--ix-s1)}
+
+/* (1.75.0) the small boxes (Security tiles, Overview cards): a soft top light, a lift and an accent edge on hover, an even rhythm */
+#ix-page .ix-tile,#ix-page .ix-oc{border-radius:18px;background:linear-gradient(180deg,color-mix(in srgb,var(--ix-tx) 4%,var(--ix-s1)),var(--ix-s1));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ix-tx) 7%,transparent);transition:border-color .18s,transform .18s,box-shadow .18s,background .18s}
+#ix-page .ix-tile{padding:16px 18px;gap:14px;align-items:center;min-height:92px}
+#ix-page .ix-tile:hover,#ix-page .ix-oc:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--ix-accent) 55%,var(--ix-line));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ix-tx) 7%,transparent),0 14px 28px -16px rgba(0,0,0,.7)}
+#ix-page .ix-tile:focus-visible{outline:2px solid var(--ix-accent);outline-offset:2px}
+#ix-page .ix-tile-i{width:44px;height:44px;border-radius:13px}
+#ix-page .ix-tile-h b{font-size:15px}
+#ix-page .ix-tile small{font-size:13px}
+#ix-page .ix-oc{padding:16px 18px;gap:8px}
+#ix-page .ix-oc .ix-btn{padding-top:6px}
+
+/* (1.75.0) the Settings content uses the room it has (it stopped at 780 px and left a wide empty strip on the right) */
+#ix-page{--ix-cw:1040px}
+
+/* (1.75.0) Overview as boxes side by side (like the features-card mock-up): the big one with four parts to pick, Health, Protection Steps, and what needs a look */
+#ix-page .ix-bento{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr);gap:16px;max-width:var(--ix-cw)}
+#ix-page .ix-bb{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:22px;padding:22px;min-width:0;display:flex;flex-direction:column;gap:6px}
+#ix-page .ix-bmain{grid-row:span 2}
+#ix-page .ix-bwide{grid-column:2 / -1}
+#ix-page .ix-bbadge{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;border:1px solid var(--ix-line2);background:var(--ix-s2);font-size:13px;font-weight:600}
+#ix-page .ix-bbadge svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ix-page .ix-bb h3{margin:14px 0 0;font-size:28px;letter-spacing:-.015em}
+#ix-page .ix-bb h4{margin:8px 0 0;font-size:17px}
+#ix-page .ix-bsub{margin:0 0 8px;color:var(--ix-mu);font-size:14px}
+#ix-page .ix-bh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#ix-page .ix-bwide .ix-bh{justify-content:flex-start}#ix-page .ix-bwide .ix-bh h4{margin:0}
+#ix-page .ix-bi{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:var(--ix-s3);border:1px solid var(--ix-line2)}
+#ix-page .ix-bi svg,#ix-page .ix-bpi svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ix-page .ix-blive{padding:4px 11px;border-radius:999px;background:var(--ix-s3);font-size:12.5px;font-weight:700;color:var(--ix-mu)}
+#ix-page .ix-blive.good{color:var(--ix-ok)}#ix-page .ix-blive.warn{color:var(--ix-accent-tx,var(--ix-accent))}
+#ix-page .ix-bpick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 12px}
+#ix-page .ix-bp{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:16px;border-radius:16px;text-align:left;font:inherit;color:var(--ix-tx);cursor:pointer;background:var(--ix-s2);border:1px solid var(--ix-line);box-shadow:none}
+#ix-page .ix-bp:hover{transform:none;border-color:var(--ix-line2)}
+#ix-page .ix-bp[aria-pressed="true"]{background:var(--ix-s3);border-color:color-mix(in srgb,var(--ix-accent) 55%,var(--ix-line2))}
+#ix-page .ix-bpi{margin-bottom:8px;color:var(--ix-mu)}
+#ix-page .ix-bp[aria-pressed="true"] .ix-bpi{color:var(--ix-accent-tx,var(--ix-accent))}
+#ix-page .ix-bp b{font-size:15px}
+#ix-page .ix-bp small{font-size:12.5px;color:var(--ix-mu)}
+#ix-page .ix-bp small.good{color:var(--ix-ok)}#ix-page .ix-bp small.warn{color:var(--ix-accent-tx,var(--ix-accent))}
+#ix-page .ix-bsel{margin-top:auto;padding:16px 18px;border-radius:16px;background:var(--ix-s2);border:1px solid var(--ix-line);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+#ix-page .ix-bsel small{font:12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ix-mu2)}
+#ix-page .ix-bsel h4{margin:0;font-size:19px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#ix-page .ix-bsel p{margin:0;color:var(--ix-tx);font-size:14px}#ix-page .ix-bsel p.ix-os{color:var(--ix-mu);font-size:13.5px}
+#ix-page .ix-bsel .ix-btn{margin-top:8px}
+#ix-page .ix-bm{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:12px;background:var(--ix-s2);border:1px solid var(--ix-line);font-size:13.5px}
+#ix-page .ix-bm span{color:var(--ix-mu)}#ix-page .ix-bm b{font-weight:700}
+#ix-page .ix-bm b.good{color:var(--ix-ok)}#ix-page .ix-bm b.warn{color:var(--ix-accent-tx,var(--ix-accent))}
+#ix-page .ix-bb>.ix-btn{align-self:flex-start;margin-top:10px}
+#ix-page .ix-bbar{height:8px;border-radius:4px;background:var(--ix-s3);overflow:hidden}
+#ix-page .ix-bbar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--ix-accent),var(--ix-ok))}
+#ix-page .ix-bcode{list-style:none;counter-reset:b;margin:10px 0 0;padding:6px 14px;border-radius:14px;background:var(--ix-bg);border:1px solid var(--ix-line)}
+#ix-page .ix-bcode li{counter-increment:b;display:flex;align-items:center;gap:12px;padding:9px 0;font-size:13.5px}
+#ix-page .ix-bcode li::before{content:counter(b);width:18px;text-align:right;font:12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ix-mu2)}
+#ix-page .ix-bcode li span{flex:1}
+#ix-page .ix-bcode li+li{border-top:1px solid var(--ix-line)}
+#ix-page .ix-bwide.ok .ix-bi{color:var(--ix-ok)}
+@media (max-width:1100px){#ix-page .ix-bento{grid-template-columns:1fr 1fr}#ix-page .ix-bmain{grid-column:1 / -1;grid-row:auto}#ix-page .ix-bwide{grid-column:1 / -1}}
+@media (max-width:600px){#ix-page .ix-bento{grid-template-columns:1fr}#ix-page .ix-bb h3{font-size:24px}}
+#ix-page .ix-bb h3{color:var(--ix-tx)}
+#ix-page .ix-bb.ix-als{display:flex;flex-direction:column;align-items:stretch;gap:6px;margin:0;border:1px solid var(--ix-line);background:var(--ix-s1);padding:22px}#ix-page .ix-bb.ix-als .ix-bsub{margin:4px 0 0}
+#ix-page .ix-newbody{max-height:170px}
+#ix-page .ix-ec.ix-new{padding:18px 22px}
+#ix-page .ix-bb>.ix-btn{margin-top:auto;align-self:flex-start}
+#ix-page .ix-bb .ix-bbar+.ix-btn{margin-top:14px}

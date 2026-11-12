@@ -211,38 +211,50 @@
       OV = j; decorateNav();
       var pr = j.protect, tg = j.telegram, bk = j.backup, up = j.update, fl = j.files, now = Date.now() / 1000;
       var run = tg.cronLast && now - tg.cronLast < 1800;
-      var card = function (go, title, pill, cls, l1, l2, action) {
-        return '<div class="ix-oc"><div class="ix-oh"><b>' + title + '</b><span class="ix-pill ' + cls + '">' + esc(pill) + '</span></div><div class="ix-ol">' + l1 + '</div>' + (cls === 'good' ? '' : '<div class="ix-os">' + l2 + '</div>') +
-          '<button type="button" class="ix-btn ix-ovgo" data-go="' + go + '">' + action + '</button></div>'; };   // (1.74.2) compact: the detail line only when something needs a look
+      /* (1.75.0) the Overview as a few boxes side by side: the big one picks one of four parts (Security, Backup, Telegram, Updates) and says
+         more about it below; next to it how the site is doing right now and how far the protection steps are; under them what needs a look. */
       var onNames = [['Password']].concat(pr.items.filter(function (x) { return x.on; }).map(function (x) { return [x.title]; })).map(function (x) { return x[0].toLowerCase(); });
       var n = fl ? fl.extra + fl.changed : 0;
-      var cards = [
-        card('general', 'Site', 'Set up', 'good', '<b>' + esc(j.siteName) + '</b>' + (j.logo ? ', with your logo.' : ', no logo yet.'), 'Name, logo, time zone and the pages in your bar.', 'Open General'),
-        card('security', 'Security', pr.on + ' of ' + pr.total + ' on', pr.on >= pr.total ? 'good' : 'warn', 'On: ' + esc(onNames.join(', ')) + '.', pr.next ? '<b>Next best step:</b> ' + esc(pr.next.next) : 'Everything we recommend is on.', 'Review Security'),
-        !tg.ready
-          ? card('telegram', 'Telegram', 'Not Set Up', '', 'Get reminders, login alerts and backups on your phone.', 'It takes about two minutes: make a bot, send it one message, done.', 'Set Up Telegram')
-          : card('telegram', 'Telegram', run ? 'Running' : 'Needs a Look', run ? 'good' : 'warn', run ? 'The schedule last ran ' + esc(ago(tg.cronLast)) + '.' : (tg.cronLast ? 'The schedule stopped ' + esc(ago(tg.cronLast)) + '.' : 'The schedule has never run.'),
-              (tg.on ? 'Daily message at ' + hourLbl(tg.hour) + '. ' : 'Daily message is off. ') + (tg.lastSent ? 'Last message ' + esc(ago(tg.lastSent)) + '.' : 'Nothing sent yet.'), 'Open Telegram'),
-        card('backup', 'Backup & Restore', bk.last ? ago(bk.last) : 'No Backup Yet', (bk.every > 0 && (!bk.last || (now - bk.last) / 86400 >= bk.every)) || !bk.last ? 'warn' : 'good',
-              bk.tg ? 'A backup goes to Telegram ' + ({ 1: 'every day', 3: 'every 3 days', 7: 'every week', 14: 'every 2 weeks', 30: 'every month' }[bk.tg] || 'regularly') + (bk.enc ? ', encrypted.' : ', not encrypted.') : 'Download one file that restores everything.', 'A backup holds your pages, settings, Telegram and domain watch.', 'Back Up Now'),
-        card('updates', 'Updates', up.staged ? 'Update Ready' : up.newer ? 'New Version' : n ? n + ' to check' : 'Up to Date', up.staged || up.newer || n ? 'warn' : 'good',
-              up.staged ? 'Version <b>' + esc(up.staged.version) + '</b> is checked and waiting for you.' : up.newer ? 'Version <b>' + esc(up.newer) + '</b> is available on GitHub. You have <b>' + esc(j.version) + '</b>.' : 'You have version <b>' + esc(j.version) + '</b>.',
-              !up.hasManifest ? 'Update once with the File Manager, then the site can update itself.' : fl ? (n ? n + ' file' + (n > 1 ? 's' : '') + ' to look at in Files.' : 'Every file on your server belongs to this version.') : 'Upload a new zip here. No File Manager, nothing to delete by hand.', up.staged ? 'Review the Update' : 'Update the Site'),
-        card('health', 'Health', 'PHP ' + j.php.split('.').slice(0, 2).join('.'), '', (j.https ? 'HTTPS is on.' : '<b>HTTPS is off.</b>') + ' Version ' + esc(j.version) + '.', 'Disk use, speed, errors, your domains and what your hosting allows.', 'Open Health')
+      var bkLate = (bk.every > 0 && (!bk.last || (now - bk.last) / 86400 >= bk.every)) || !bk.last;
+      var parts = [
+        { id: 'security', go: 'security', title: 'Security', icon: ICON.shield, pill: pr.on + ' of ' + pr.total + ' on', cls: pr.on >= pr.total ? 'good' : 'warn', l1: 'On: ' + esc(onNames.join(', ')) + '.',
+          l2: pr.next ? '<b>Next best step:</b> ' + esc(pr.next.next) : 'Everything we recommend is on.', action: 'Review Security' },
+        { id: 'backup', go: 'backup', title: 'Backup', icon: ICON.box, pill: bk.last ? ago(bk.last) : 'None yet', cls: bkLate ? 'warn' : 'good',
+          l1: bk.tg ? 'A backup goes to Telegram ' + ({ 1: 'every day', 3: 'every 3 days', 7: 'every week', 14: 'every 2 weeks', 30: 'every month' }[bk.tg] || 'regularly') + (bk.enc ? ', encrypted.' : ', not encrypted.') : 'Download one file that restores everything.',
+          l2: 'A backup holds your pages, settings, Telegram and domain watch.', action: 'Back Up Now' },
+        { id: 'telegram', go: 'telegram', title: 'Telegram', icon: ICON.send, pill: !tg.ready ? 'Not set up' : run ? 'Running' : 'Needs a look', cls: !tg.ready ? '' : run ? 'good' : 'warn',
+          l1: !tg.ready ? 'Get reminders, login alerts and backups on your phone.' : run ? 'The schedule last ran ' + esc(ago(tg.cronLast)) + '.' : (tg.cronLast ? 'The schedule stopped ' + esc(ago(tg.cronLast)) + '.' : 'The schedule has never run.'),
+          l2: !tg.ready ? 'It takes about two minutes: make a bot, send it one message, done.' : (tg.on ? 'Daily message at ' + hourLbl(tg.hour) + '. ' : 'Daily message is off. ') + (tg.lastSent ? 'Last message ' + esc(ago(tg.lastSent)) + '.' : 'Nothing sent yet.'),
+          action: !tg.ready ? 'Set Up Telegram' : 'Open Telegram' },
+        { id: 'updates', go: 'updates', title: 'Updates', icon: ICON.up, pill: up.staged ? 'Update ready' : up.newer ? 'New version' : n ? n + ' to check' : 'Up to date', cls: up.staged || up.newer || n ? 'warn' : 'good',
+          l1: up.staged ? 'Version <b>' + esc(up.staged.version) + '</b> is checked and waiting for you.' : up.newer ? 'Version <b>' + esc(up.newer) + '</b> is available on GitHub. You have <b>' + esc(j.version) + '</b>.' : 'You have version <b>' + esc(j.version) + '</b>.',
+          l2: !up.hasManifest ? 'Update once with the File Manager, then the site can update itself.' : fl ? (n ? n + ' file' + (n > 1 ? 's' : '') + ' to look at in Files.' : 'Every file on your server belongs to this version.') : 'Upload a new zip here. No File Manager, nothing to delete by hand.',
+          action: up.staged ? 'Review the Update' : 'Update the Site' }
       ];
-      var al = (j.alerts || []).slice(0, 4).map(function (a) {
-        return '<div class="ix-al ' + a.level + '"><span class="ix-ali">' + (a.level === 'info' ? 'i' : '!') + '</span><span>' + esc(a.text) + '</span><button type="button" class="ix-btn" data-go="' + a.go + '">Open</button></div>'; }).join('');
-      var stp = setupSteps(j), stDone = stp.filter(function (x) { return x.done; }).length;
-      var chip = function (id, label, cls) { return '<button type="button" class="ix-jchip" data-go="' + id + '"><i class="ix-dot ' + (cls || '') + '"></i>' + label + '</button>'; };
-      var chips = '<div class="ix-jchips" role="navigation" aria-label="Jump to">' +
-        chip('security', 'Security', pr.on >= pr.total ? 'good' : 'warn') + chip('telegram', 'Telegram', tg.ready ? (run ? 'good' : 'warn') : '') +
-        chip('backup', 'Backup', bk.last ? 'good' : 'warn') + chip('look', 'Appearance', '') + chip('updates', 'Updates', up.staged || up.newer || n ? 'warn' : 'good') +
-        chip('health', 'Health', j.https ? 'good' : 'warn') + chip('changelog', 'What\'s New', '') + '</div>';
-      var banner = stDone < stp.length ? '<div class="ix-hero ix-setupb"><div class="ix-ring" style="--p:' + Math.round(stDone / stp.length * 100) + '"><b>' + stDone + '</b><small>of ' + stp.length + '</small></div>' +
-        '<div class="ix-hero-t"><div class="ix-hero-h">Protect Your Site Step by Step</div><p>' + stDone + ' of ' + stp.length + ' steps are done. Next: <b>' + esc(stp.filter(function (x) { return !x.done; })[0].title) + '</b>.</p>' +
-        '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn pri" data-go="setup">' + (stDone > 1 ? 'Continue Setup' : 'Start Guided Setup') + '</button></div></div></div>' : '';
-      p.innerHTML = chips + banner + (al ? '<div class="ix-als">' + (j.alerts.length > 1 ? '<b>' + j.alerts.length + ' things to look at</b>' : '<b>1 thing to look at</b>') + al + '</div>' : '<div class="ix-als ok"><span class="ix-ok">✓</span><b>Nothing needs your attention.</b></div>') +
-        '<div class="ix-ocs">' + cards.join('') + '</div>';
+      var pick = (parts.filter(function (x) { return x.cls === 'warn'; })[0] || parts[0]).id;   // opens on the first part that needs a look
+      var al = (j.alerts || []).slice(0, 4), stp = setupSteps(j), stDone = stp.filter(function (x) { return x.done; }).length, nextStep = stp.filter(function (x) { return !x.done; })[0];
+      var rowM = function (k, v, cls) { return '<div class="ix-bm"><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b></div>'; };
+      var detail = function (x) { return '<div class="ix-bsel" id="ix-bsel"><small>Selected</small><h4>' + x.title + ' <span class="ix-pill ' + x.cls + '">' + esc(x.pill) + '</span></h4><p>' + x.l1 + '</p>' + (x.cls === 'good' ? '' : '<p class="ix-os">' + x.l2 + '</p>') +
+        '<button type="button" class="ix-btn pri ix-ovgo" data-go="' + x.go + '">' + x.action + '</button></div>'; };
+      p.innerHTML = '<div class="ix-bento">' +
+        '<section class="ix-bb ix-bmain"><span class="ix-bbadge">' + svg(ICON.site) + esc(j.siteName) + '</span><h3>How Your Site Stands</h3><p class="ix-bsub">Pick a part to see more.</p>' +
+          '<div class="ix-bpick ix-ocs" role="group" aria-label="Parts of your site">' + parts.map(function (x) {
+            return '<button type="button" class="ix-bp ix-oc" data-pick="' + x.id + '" aria-pressed="' + (x.id === pick) + '"><i class="ix-bpi">' + svg(x.icon) + '</i><b>' + x.title + '</b><small class="' + x.cls + '">' + esc(x.pill) + '</small></button>'; }).join('') + '</div>' +
+          detail(parts.filter(function (x) { return x.id === pick; })[0]) + '</section>' +
+        '<section class="ix-bb"><div class="ix-bh"><span class="ix-bi">' + svg(ICON.pulse) + '</span><span class="ix-blive ' + (j.https ? 'good' : 'warn') + '">' + (j.https ? 'Live' : 'No HTTPS') + '</span></div><h4>Health</h4><p class="ix-bsub">Right now</p>' +
+          rowM('HTTPS', j.https ? 'On' : 'Off', j.https ? 'good' : 'warn') + rowM('PHP', esc(j.php.split('.').slice(0, 2).join('.'))) + rowM('Version', esc(j.version)) + rowM('Files to check', String(n), n ? 'warn' : '') +
+          '<button type="button" class="ix-btn ix-ovgo" data-go="health">Open Health</button></section>' +
+        '<section class="ix-bb"><div class="ix-bh"><span class="ix-bi">' + svg(ICON.shield) + '</span><span class="ix-blive ' + (stDone >= stp.length ? 'good' : 'warn') + '">' + stDone + ' of ' + stp.length + '</span></div><h4>Protection Steps</h4>' +
+          '<p class="ix-bsub">' + (nextStep ? 'Next: <b>' + esc(nextStep.title) + '</b>' : 'All steps are done.') + '</p><div class="ix-bbar"><i style="width:' + Math.round(100 * stDone / stp.length) + '%"></i></div>' +
+          (nextStep ? '<button type="button" class="ix-btn pri ix-ovgo ix-setupb" data-go="setup">' + (stDone > 1 ? 'Continue Setup' : 'Start Guided Setup') + '</button>' : '<button type="button" class="ix-btn ix-ovgo" data-go="setup">Open Start Here</button>') + '</section>' +
+        '<section class="ix-bb ix-bwide ix-als' + (al.length ? '' : ' ok') + '"><div class="ix-bh"><span class="ix-bi">' + svg(al.length ? ICON.warn : ICON.check) + '</span><h4>' + (al.length ? (j.alerts.length > 1 ? j.alerts.length + ' things to look at' : '1 thing to look at') : 'Nothing needs your attention.') + '</h4></div>' +
+          (al.length ? '<ol class="ix-bcode">' + al.map(function (a) { return '<li class="' + a.level + '"><span>' + esc(a.text) + '</span><button type="button" class="ix-btn" data-go="' + a.go + '">Open</button></li>'; }).join('') + '</ol>' : '<p class="ix-bsub">Everything checked here looks fine.</p>') + '</section>' +
+        '</div>';
+      p.querySelectorAll('[data-pick]').forEach(function (b) { b.onclick = function () {
+        p.querySelectorAll('[data-pick]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var cur = p.querySelector('#ix-bsel'), d = document.createElement('div'); d.innerHTML = detail(parts.filter(function (x) { return x.id === b.dataset.pick; })[0]);
+        cur.replaceWith(d.firstChild); p.querySelector('#ix-bsel .ix-ovgo').onclick = function () { go(this.dataset.go); };
+      }; });
       p.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
       whatsNew(p, j.version);
     }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });

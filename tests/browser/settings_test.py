@@ -141,7 +141,7 @@ try:
         pg.click('#ix-pc [data-seg="cmode"] [data-v="light"]'); wait_js(pg, "document.querySelector('#ix-pc [data-seg=cmode] [data-v=light]').getAttribute('aria-pressed') === 'true' && document.querySelectorAll('#ix-pc .ix-preset').length > 0", 5000)
         n += pg.evaluate("document.querySelectorAll('#ix-pc .ix-preset').length")   # and the light-mode list
         pg.click('#ix-pc [data-seg="cmode"] [data-v="dark"]'); wait_js(pg, "document.querySelector('#ix-pc [data-seg=cmode] [data-v=dark]').getAttribute('aria-pressed') === 'true'", 5000)
-        check('S15 Appearance > Presets has all 143 presets (dark and light together; 1.59 removed near-duplicates and added vivid ones; 1.64 added Soft Dark and Soft Warm)', n == 143, n)
+        check('S15 Appearance > Presets has all 155 presets (dark and light together; 1.59 removed near-duplicates and added vivid ones; 1.64 added Soft Dark and Soft Warm; 1.75 added six Spotlight looks in dark and light)', n == 155, n)
         # a font chosen in Look survives a later save made after changing only the accent
         at('#look', "!!document.querySelector('#ix-font')")
         pg.select_option('#ix-font', 'georgia'); pg.click('#ix-save'); until(lambda: s.get('state').get('font') == 'georgia', 5000)

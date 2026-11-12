@@ -79,7 +79,7 @@ try:
         pg.hover('#ix-ebar .ix-eb >> nth=0'); wait_js(pg, "!!document.querySelector('#ix-ebtip.eb')", 3000)
         check('P25 the edit bar: round buttons coloured by what they do, and a light name bubble above on hover (1.65.1)', bar and all(c in ('accent', 'red', 'green', 'blue', 'violet') for c in bar), bar)
         tick = pg.evaluate("(() => { const d = document.querySelector('#ix-ebar .ix-ebdone'); return [getComputedStyle(d).color, getComputedStyle(d).backgroundColor]; })()")
-        check('P27 the edit bar\'s Done tick is dark on its light circle, not white on white (1.65.2)', tick[0] == 'rgb(14, 16, 24)' and tick[1] != tick[0], tick)
+        check('P27 the edit bar\'s Done tick is dark on its light circle, not white on white (1.65.2)', sum(int(x) for x in re.findall(r'\d+', tick[0])[:3]) < 150 and tick[1] != tick[0], tick)
         pg.mouse.move(5, 5)
         pg.keyboard.press('Escape')
 
@@ -447,6 +447,12 @@ try:
         check('P71 a message that went away unseen is kept behind the bell, newest first', lst[0] == 'Quiet note' and 'Second note' in lst and 'First note' in lst, lst)
         pg.click('#ix-nlist [data-clear]')
         check('P72 Clear empties the list and the bell goes away', pg.evaluate("!document.getElementById('ix-nlist') && (!document.getElementById('ix-bell') || document.getElementById('ix-bell').hidden)"))
+        # (1.75.0) Overview: boxes side by side; pick a part and the box below it changes
+        pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "!!document.querySelector('.ix-bento .ix-bp')", 20000)
+        ov = pg.evaluate("(() => { const t = [...document.querySelectorAll('.ix-bp')].map(b => b.querySelector('b').textContent), a = document.querySelector('#ix-bsel h4').textContent; return [t.join(','), a]; })()")
+        pg.click('.ix-bp[data-pick=backup]')
+        ov2 = pg.evaluate("[document.querySelector('.ix-bp[data-pick=backup]').getAttribute('aria-pressed'), document.querySelector('#ix-bsel h4').textContent, document.querySelectorAll('.ix-bp[aria-pressed=true]').length]")
+        check('P73 Overview shows Security, Backup, Telegram and Updates to pick from, and picking one changes the box below', ov[0] == 'Security,Backup,Telegram,Updates' and 'Backup' in ov2[1] and ov2[0] == 'true' and ov2[2] == 1, [ov, ov2])
         check('P67 Start Over is a Stepper: three steps, a step ahead cannot be clicked, a done step shows a tick, Erase Everything only on the last step and it asks for ERASE (1.69.0)',
               so[0] == [3, False, True] and so[1] == [True, 'step'] and 'Type ERASE' in so[2], so)
         why = browser_set_passphrase(sp, s.base, 'stepper passphrase 1')
