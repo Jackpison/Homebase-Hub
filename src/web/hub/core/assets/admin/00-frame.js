@@ -248,11 +248,13 @@
     curSub = sub; P().setAttribute('data-view', 'detail');
     try { sessionStorage.setItem('ix-sec', sub); if (location.hash !== '#' + sub) history.replaceState(null, '', '#' + sub); } catch (e) {}
     var box = $('#ix-pane'); box.scrollTop = 0; window.scrollTo(0, 0);
-    box.innerHTML = '<div class="ix-ph"><button type="button" class="ix-back" aria-label="Back to All Settings">‹ Settings</button><h2>' + s[1] + '</h2><p>' + s[3] + '</p>' +
+    // (1.74.3) one header for every section: its tile, the name, what it is for, and on the right its status (and a next step where there is one)
+    box.innerHTML = '<div class="ix-ph" data-sec="' + sec + '"><button type="button" class="ix-back" aria-label="Back to All Settings">‹ Settings</button>' +
+      '<div class="ix-phr"><span class="ix-pht" aria-hidden="true">' + tileSvg((SEC_TILE[sec] || ['', ''])[1]) + '</span><div class="ix-phx"><h2>' + s[1] + '</h2><p>' + s[3] + '</p></div><div class="ix-phs" id="ix-phs" hidden></div></div>' +
       tabs + '</div><div id="ix-pc" class="ix-anim"></div>';
     box.querySelector('.ix-back').onclick = function () { P().setAttribute('data-view', 'list'); try { history.replaceState(null, '', location.pathname); } catch (e) {} window.scrollTo(0, 0); };
     bindSubTabs(box, subs);
-    mountPane(sub); subMark(); markDirty();
+    mountPane(sub); subMark(); markDirty(); paintHead();
   }
   /* The tabs along the top of a section. A tab can hold a few tabs of its own when its third field names a group: each group is
      then one tab, and a group with more than one part gets a small row of its own below. (Updates uses one: What's New.) */

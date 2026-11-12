@@ -828,3 +828,25 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-pgdot{width:7px;height:7px;border-radius:50%;background:var(--ix-accent);flex:none}
 #ix-page .ix-pgrows{display:grid;grid-template-columns:1fr 1fr;column-gap:32px}
 @media (max-width:760px){#ix-page .ix-pgrows{grid-template-columns:1fr}}
+
+/* (1.74.3) one header for every Settings section: tile, name, what it is for, and the status on the right */
+#ix-page .ix-phr{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#ix-page .ix-pht{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--sc,var(--ix-accent));box-shadow:0 6px 16px -6px var(--sc,var(--ix-accent))}
+#ix-page .ix-pht svg{width:25px;height:25px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ix-page .ix-phx{flex:1;min-width:200px}
+#ix-page .ix-ph .ix-phx h2{margin:0 0 2px;font-size:26px}
+#ix-page .ix-ph .ix-phx p{margin:0;font-size:14.5px}
+#ix-page .ix-phs{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#ix-page .ix-phs[hidden]{display:none}
+#ix-page .ix-phc{padding:5px 12px;border-radius:999px;border:1px solid var(--ix-line2);font-size:13px;font-weight:700;color:var(--ix-mu)}
+#ix-page .ix-phc.good{color:var(--ix-ok);border-color:color-mix(in srgb,var(--ix-ok) 45%,var(--ix-line))}
+#ix-page .ix-phc.warn{color:var(--ix-accent-tx,var(--ix-accent));border-color:color-mix(in srgb,var(--ix-accent) 50%,var(--ix-line))}
+#ix-page .ix-phb{width:110px;height:6px;border-radius:3px;background:var(--ix-s3);overflow:hidden}
+#ix-page .ix-phb i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ix-accent),var(--ix-ok))}
+#ix-page .ix-ph .ix-subt,#ix-page .ix-ph .ix-subseg{margin-top:16px}
+/* cards: a head, a thin line, then the rows (each row: name and hint on the left, its control on the right) */
+#ix-page .ix-ec.ix-auto .ix-ec-b{margin-top:16px;padding-top:6px;border-top:1px solid var(--ix-line)}
+#ix-page .ix-ec.ix-auto .ix-ec-b>.ix-tg{padding:13px 0}
+#ix-page .ix-ec.ix-auto .ix-ec-b>.ix-tg:first-child{padding-top:8px}
+@media (max-width:600px){#ix-page .ix-phs{width:100%}#ix-page .ix-pht{width:42px;height:42px}#ix-page .ix-ph .ix-phx h2{font-size:22px}}
+#ix-page .ix-phr{max-width:780px}

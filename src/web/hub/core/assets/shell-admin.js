@@ -248,11 +248,13 @@
     curSub = sub; P().setAttribute('data-view', 'detail');
     try { sessionStorage.setItem('ix-sec', sub); if (location.hash !== '#' + sub) history.replaceState(null, '', '#' + sub); } catch (e) {}
     var box = $('#ix-pane'); box.scrollTop = 0; window.scrollTo(0, 0);
-    box.innerHTML = '<div class="ix-ph"><button type="button" class="ix-back" aria-label="Back to All Settings">‹ Settings</button><h2>' + s[1] + '</h2><p>' + s[3] + '</p>' +
+    // (1.74.3) one header for every section: its tile, the name, what it is for, and on the right its status (and a next step where there is one)
+    box.innerHTML = '<div class="ix-ph" data-sec="' + sec + '"><button type="button" class="ix-back" aria-label="Back to All Settings">‹ Settings</button>' +
+      '<div class="ix-phr"><span class="ix-pht" aria-hidden="true">' + tileSvg((SEC_TILE[sec] || ['', ''])[1]) + '</span><div class="ix-phx"><h2>' + s[1] + '</h2><p>' + s[3] + '</p></div><div class="ix-phs" id="ix-phs" hidden></div></div>' +
       tabs + '</div><div id="ix-pc" class="ix-anim"></div>';
     box.querySelector('.ix-back').onclick = function () { P().setAttribute('data-view', 'list'); try { history.replaceState(null, '', location.pathname); } catch (e) {} window.scrollTo(0, 0); };
     bindSubTabs(box, subs);
-    mountPane(sub); subMark(); markDirty();
+    mountPane(sub); subMark(); markDirty(); paintHead();
   }
   /* The tabs along the top of a section. A tab can hold a few tabs of its own when its third field names a group: each group is
      then one tab, and a group with more than one part gets a small row of its own below. (Updates uses one: What's New.) */
@@ -1241,7 +1243,18 @@
     pill('overview', al ? al + ' to see' : '', al ? 'warn' : '');
     pill('look', S.theme === 'auto' ? 'Auto' : S.theme === 'light' ? 'Light' : 'Dark', '');
     pill('health', OV.https ? 'OK' : 'No HTTPS', OV.https ? 'good' : 'warn');
-    var sv = PAGE.querySelector('[data-sver]'); if (sv) sv.textContent = ' · v' + OV.version;
+    var sv = PAGE.querySelector('[data-sver]'); if (sv) sv.textContent = ' · v' + OV.version;    paintHead();
+  }
+  /* (1.74.3) the status on the right of the section header: the same words and colour as the pill in the left panel; Security adds a bar
+     and, when the next step is HTTPS (which is set up with the host, in Health), a button to it */
+  function paintHead() {
+    var h = PAGE && PAGE.querySelector('#ix-phs'), box = h && h.closest('.ix-ph'); if (!h || !OV) return;
+    var sec = box.dataset.sec, pill = PAGE.querySelector('[data-pill="' + sec + '"]'), txt = pill ? pill.textContent : '', cls = pill && /good|warn/.test(pill.className) ? (/good/.test(pill.className) ? 'good' : 'warn') : '';
+    if (sec === 'overview' || sec === 'look' || !txt) { h.hidden = true; h.innerHTML = ''; return; }
+    var pr = OV.protect, bar = sec === 'security' ? '<span class="ix-phb"><i style="width:' + Math.round(100 * (pr.on + 1) / (pr.total + 1)) + '%"></i></span>' : '';
+    var nx = sec === 'security' && pr.next && pr.next.key === 'https' ? '<button type="button" class="ix-btn pri" data-phgo="health">Fix Next: HTTPS</button>' : '';
+    h.innerHTML = '<span class="ix-phc ' + cls + '">' + esc(txt) + '</span>' + bar + nx; h.hidden = false;
+    var b = h.querySelector('[data-phgo]'); if (b) b.onclick = function () { go(b.dataset.phgo); };
   }
   /* (1.70.0) Overview > Start Here: Guided Setup, then Install on Your Phone and Keyboard Shortcuts */
   function pStart(p) {
