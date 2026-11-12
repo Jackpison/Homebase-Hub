@@ -55,7 +55,6 @@ credited again in a comment where it is used (`hub/core/assets/shell.css`).
 | Erase button (X slides across) | Backup & Restore › Start Over (1.65.1) | https://uiverse.io/cssbuttons-io/stupid-impala-51 | cssbuttons-io |
 | Edit bar (round buttons, name bubble) | the edit bar of Links, Info and Home (1.65.1) | https://uiverse.io/firemonste_8052/lucky-catfish-97 | firemonste_8052 |
 | Accent Color picker (squares that swell around the mouse) | Settings › Appearance › Look (1.65.3) | https://uiverse.io/Cobp/horrible-quail-18 | Cobp |
-| Search box border (a gradient edge that turns and spins) | The top bar's search (1.67.0) | https://uiverse.io/Lakshay-art/curvy-earwig-22 | Lakshay-art |
 | Hover glow (toned down) | buttons that had no hover change (1.65.1) | https://uiverse.io/mrhyddenn/moody-badger-62 | mrhyddenn |
 | Link field (a label in front, a copy icon with a COPY tip) | Links › Address, Files › Share Link, Health › Domains, Telegram › Setup, the recovery and two-step keys (1.69.1) | https://uiverse.io/Bodyhc/itchy-dodo-49 | Bodyhc |
 

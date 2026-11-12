@@ -264,6 +264,12 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
 
 
 .group{background:var(--s-bg2);border-radius:16px;overflow:hidden}
+/* Background sheet tabs (1.74.1): Main, Animated, Sources, Uploads */
+.bgtabs{display:flex;gap:2px;padding:3px;margin:0 22px 4px;background:var(--s-bg2);border-radius:var(--r-ctl);overflow-x:auto;scrollbar-width:none}
+.bgtabs button{flex:1 0 auto;background:none;border:0;border-radius:9px;padding:8px 14px;cursor:pointer;font:inherit;font-size:.9rem;font-weight:500;color:var(--s-mute);white-space:nowrap}
+.bgtabs button[aria-selected="true"]{background:var(--s-bg);color:var(--s-ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.bgp{display:flex;flex-direction:column;gap:18px}
+.bgp[hidden]{display:none}
 .g-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;width:100%;text-align:left;background:none;border:0;color:inherit}
 .g-row + .g-row{border-top:1px solid var(--s-line)}
 .g-row.stack{flex-direction:column;align-items:stretch;gap:9px}
@@ -360,18 +366,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .thumbs.pick .thumb{cursor:pointer;outline:2px solid transparent;outline-offset:-2px}
 .thumbs.pick .thumb.sel{outline-color:var(--accent)}
 .thumbs.pick input{position:absolute;top:8px;right:8px;width:20px;height:20px;accent-color:var(--accent)}
-/* Welcome Text: fades in, then fades away over 3 s while the links fade in */
-#welcome{position:fixed;inset:0;z-index:4;display:grid;place-items:center;margin:0;padding:0 24px;text-align:center;pointer-events:none;
-  color:#fff;font-size:clamp(34px,7vw,88px);font-weight:700;line-height:1.1;letter-spacing:-.02em;text-wrap:balance;text-shadow:0 4px 30px rgba(0,0,0,.6);
-  opacity:0;transform:scale(.97);transition:opacity .8s ease,transform 4.4s ease}
-#welcome[hidden]{display:none}
-#welcome.in{opacity:1;transform:scale(1)}
-#welcome.out{opacity:0;transition:opacity 3s ease,transform 4.4s ease}
-.stage{transition:opacity 1.6s ease}
-html.hl-welcome .stage,html.hl-welcome .wdock,html.hl-welcome .wcards{opacity:0}
-.wdock,.wcards{transition:opacity 1.6s ease}
 @media (prefers-reduced-motion:reduce){
-  #welcome,#welcome.out{transform:none;transition:opacity 1s linear}
   #bg > .kb{animation:none}
   .sheet[open],.wpanel{animation:none}
 }

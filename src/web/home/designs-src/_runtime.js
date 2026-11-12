@@ -68,10 +68,14 @@ export function start(Component, props, container) {
   d.queue = () => { if (d.queued || d.dead) return; d.queued = true; Promise.resolve().then(() => { d.queued = false; if (!d.dead) render(false); }); };
   render(true);
   // the page's pointer events go on to the design (it sits under the page): the components read them from their own element
-  const root = d.tree instanceof Node ? d.tree : container, fwd = ['pointermove', 'pointerdown', 'pointerup', 'mousemove', 'mousedown', 'mouseup'];
+  const root = d.tree instanceof Node ? d.tree : container, fwd = ['pointermove', 'mousemove'];   // (1.74.1) movement only: a forwarded press reached the page's click-away handlers (they run in the capture phase) and closed menus and sheets as they were pressed
+  const KEYS = ['clientX', 'clientY', 'screenX', 'screenY', 'button', 'buttons', 'ctrlKey', 'shiftKey', 'altKey', 'metaKey', 'pointerId', 'pointerType', 'isPrimary', 'width', 'height', 'pressure', 'movementX', 'movementY'];
   const pass = (e) => {
     if (d.dead || e.__hubFwd || e.target instanceof Element && e.target.closest('input,textarea,select')) return;
-    let ev; try { ev = new (e.constructor)(e.type, e); } catch (x) { return; }
+    // the copy does not bubble, so only the design's own element sees it
+    const init = { bubbles: false, cancelable: false };
+    for (const k of KEYS) if (k in e) init[k] = e[k];
+    let ev; try { ev = new (e.constructor)(e.type, init); } catch (x) { return; }
     ev.__hubFwd = true; root.dispatchEvent(ev);
   };
   const live = fwd.filter(() => matchMedia('(pointer: fine)').matches);

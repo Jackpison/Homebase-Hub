@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.74.1 | Animated designs no longer block menus and page changes, Background has four tabs and a Mix Everything theme, Home's Welcome Text and the search shine are gone, and the top bar and sidebar highlight the current page like the dock |
 | 1.74.0 | Animated Designs for Home: sixteen live backgrounds from React Bits with options and Preview; one glass behind the clock on an iPhone app |
 | 1.73.2 | A page no longer reloads itself by mistake when the connection flickers; the Docker image moves to PHP 8.5.11 |
 | 1.73.1 | One-command install on a VPS and Proxmox; ready files for Unraid, CasaOS, Umbrel and YunoHost; Synology and TrueNAS steps |
@@ -142,6 +143,22 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.74.1
+
+### Fixed
+- With an animated design on Home, menus and sheets closed the moment you pressed them, so you could not open another page. Designs now only follow the mouse and never receive presses.
+
+### New
+- **Background has four tabs:** Main (the theme and the look), Animated, Sources and Uploads. It opens on the tab you used last.
+- **Mix Everything:** a theme that takes turns between Starter, your uploads, the animated designs and the online photos.
+- The top bar and the sidebar show the current page as a tinted pill with a thin ring, like the dock. The line under it is gone.
+
+### Removed
+- Home's Welcome Text. A saved text is dropped the next time you save.
+- The shining border, glow and turning light on the search box.
 
 ---
 

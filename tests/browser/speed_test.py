@@ -77,7 +77,7 @@ try:
         hp.goto(s.base + '/'); wait_js(hp, "!!(window.HUB && HUB.isAdmin()) && !!document.getElementById('editBtn')", 30000)
         hc = hp.context.new_cdp_session(hp); hc.send('Network.enable'); hc.send('Network.emulateNetworkConditions', {'offline': False, 'latency': 1500, 'downloadThroughput': -1, 'uploadThroughput': -1})   # every answer takes 1.5 s
         hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#ix-ebar:not([hidden])', timeout=15000)
-        hp.evaluate("document.querySelector('[data-open=settingsSheet]').click()"); hp.wait_for_selector('#settingsSheet[open]'); hp.fill('#sWelcome', 'Hello there'); hp.click('#saveSettings')
+        hp.evaluate("document.querySelector('[data-open=settingsSheet]').click()"); hp.wait_for_selector('#settingsSheet[open]'); hp.fill('#sTitle', 'Hello there'); hp.click('#saveSettings')
         wait_js(hp, "!document.getElementById('settingsSheet').open", 1000)
         check('V14 Home Settings: the window closes at once, not after the server answers', hp.evaluate("!document.getElementById('settingsSheet').open"))
         # a web host's firewall answers with its own 403 page: say so, stay logged in, keep the change (1.64.6)

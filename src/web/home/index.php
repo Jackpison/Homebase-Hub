@@ -71,8 +71,8 @@ if (!empty($site['private']) && !hub_admin()) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.74.0">
-<script src="../hub/core/assets/shell.js?v=1.74.0" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.74.1">
+<script src="../hub/core/assets/shell.js?v=1.74.1" data-app="home"></script>
 <link rel="icon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <link rel="stylesheet" href="<?= $v('assets/app.css') ?>">
@@ -94,8 +94,8 @@ if (!empty($site['private']) && !hub_admin()) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.74.0">
-<script src="../hub/core/assets/shell.js?v=1.74.0" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.74.1">
+<script src="../hub/core/assets/shell.js?v=1.74.1" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <?php if ($logoOk): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png"><?php endif; ?>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
@@ -122,7 +122,6 @@ if (!empty($site['private']) && !hub_admin()) {
 
 <div id="bg" aria-hidden="true"></div>
 <div id="scrim"></div>
-<p id="welcome" aria-hidden="true" hidden></p>
 
 <!-- While editing, the shared edit bar (shell.js) shows Background, Widgets, Home Settings and Done. These are its buttons. -->
 <div class="toolbar" id="toolbar" data-hub-ebar hidden>
@@ -170,8 +169,6 @@ if (!empty($site['private']) && !hub_admin()) {
         <div class="group">
           <label class="g-row stack"><span class="g-label">Page Title<small>Shown in the browser tab. The logo comes from the main Settings.</small></span>
             <input type="text" id="sTitle" maxlength="80"></label>
-          <label class="g-row stack"><span class="g-label">Welcome Text<small>Fades in when Home opens. Empty for none.</small></span>
-            <input type="text" id="sWelcome" maxlength="80" placeholder="Welcome Home"></label>
           <div class="g-row"><span class="g-label">Home Tour<small>A short look at the clock, the bar, the widgets and Settings.</small></span>
             <button type="button" class="btn" id="sTour">Take the Tour</button></div>
         </div>
@@ -252,17 +249,45 @@ if (!empty($site['private']) && !hub_admin()) {
 <dialog class="sheet wide" id="bgSheet">
   <div class="sheet-in">
     <header class="sh"><h2>Background</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
+    <div class="bgtabs" role="tablist" aria-label="Background Settings">
+      <button type="button" role="tab" id="bgt-main" aria-controls="bgp-main" aria-selected="true" data-bgt="main">Main</button>
+      <button type="button" role="tab" id="bgt-animated" aria-controls="bgp-animated" aria-selected="false" tabindex="-1" data-bgt="animated">Animated</button>
+      <button type="button" role="tab" id="bgt-sources" aria-controls="bgp-sources" aria-selected="false" tabindex="-1" data-bgt="sources">Sources</button>
+      <button type="button" role="tab" id="bgt-uploads" aria-controls="bgp-uploads" aria-selected="false" tabindex="-1" data-bgt="uploads">Uploads</button>
+    </div>
     <div class="sb">
+      <div class="bgp" role="tabpanel" id="bgp-main" aria-labelledby="bgt-main">
+      <section>
+        <h3>Theme</h3>
+        <p class="hint">Pick what Home takes turns with. <b>Mix Everything</b> takes turns between all of them. Photos, uploads and designs each have their own tab.</p>
+        <div class="themes" id="themeRows"></div>
+      </section>
+      <section>
+        <h3>Look</h3>
+        <div class="group">
+          <label class="g-row"><span class="g-label">Slow Zoom<small>Gently moves the photo.</small></span>
+            <input type="checkbox" class="switch" id="bgMotion"></label>
+          <div class="g-row stack"><span class="g-label">Darken <b id="dimVal"></b><small>Keeps the clock and widgets readable on bright photos.</small></span>
+            <input type="range" id="bgDim" min="0" max="80" step="5"></div>
+          <div class="g-row stack"><span class="g-label">Change Background</span>
+            <div class="seg" id="bgRotate">
+              <button type="button" data-v="0">On Refresh</button>
+              <button type="button" data-v="1">1 min</button>
+              <button type="button" data-v="5">5 min</button>
+              <button type="button" data-v="15">15 min</button>
+              <button type="button" data-v="30">30 min</button>
+            </div></div>
+        </div>
+      </section>
+      </div>
+      <div class="bgp" role="tabpanel" id="bgp-animated" aria-labelledby="bgt-animated" hidden>
       <section>
         <h3>Animated Designs</h3>
         <p class="hint">Backgrounds drawn live, from <a href="https://reactbits.dev" target="_blank" rel="noopener noreferrer">React Bits</a>. Switch a design off to leave it out of the rotation. The heaviest ones are for computers only, and with Reduce Motion on they stand still.</p>
         <div class="designs" id="designRows"></div>
       </section>
-      <section>
-        <h3>Theme</h3>
-        <p class="hint">Backgrounds Home takes turns with.</p>
-        <div class="themes" id="themeRows"></div>
-      </section>
+      </div>
+      <div class="bgp" role="tabpanel" id="bgp-sources" aria-labelledby="bgt-sources" hidden>
       <section>
         <h3>Photo Sources</h3>
         <p class="hint">Saved on your server so they load fast.</p>
@@ -282,6 +307,8 @@ if (!empty($site['private']) && !hub_admin()) {
         <div class="group" id="customRows"></div>
         <button type="button" class="btn" id="addCustom">Add Custom Source</button>
       </section>
+      </div>
+      <div class="bgp" role="tabpanel" id="bgp-uploads" aria-labelledby="bgt-uploads" hidden>
       <section>
         <h3>Your Uploads</h3>
         <div class="drop" id="drop" tabindex="0" role="button">
@@ -297,23 +324,7 @@ if (!empty($site['private']) && !hub_admin()) {
           <input type="range" id="bgVideo" min="0" max="100" step="5">
           <small class="hint">Applies when Pixabay videos are on. Videos are skipped for visitors with data saver turned on.</small></label>
       </section>
-      <section>
-        <h3>Look</h3>
-        <div class="group">
-          <label class="g-row"><span class="g-label">Slow Zoom<small>Gently moves the photo.</small></span>
-            <input type="checkbox" class="switch" id="bgMotion"></label>
-          <div class="g-row stack"><span class="g-label">Darken <b id="dimVal"></b><small>Keeps the clock and widgets readable on bright photos.</small></span>
-            <input type="range" id="bgDim" min="0" max="80" step="5"></div>
-          <div class="g-row stack"><span class="g-label">Change Background</span>
-            <div class="seg" id="bgRotate">
-              <button type="button" data-v="0">On Refresh</button>
-              <button type="button" data-v="1">1 min</button>
-              <button type="button" data-v="5">5 min</button>
-              <button type="button" data-v="15">15 min</button>
-              <button type="button" data-v="30">30 min</button>
-            </div></div>
-        </div>
-      </section>
+      </div>
     </div>
     <footer class="sf"><span></span><div class="sf-r">
       <button type="button" class="btn" data-close>Cancel</button>

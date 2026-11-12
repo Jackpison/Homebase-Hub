@@ -158,14 +158,11 @@ try:
         ph = pp.evaluate("({sw: document.documentElement.scrollWidth - innerWidth, head: getComputedStyle(document.querySelector('#list .row.head')).display, tall: Math.max(...[...document.querySelectorAll('#list .row.item')].map(r => r.getBoundingClientRect().height))})")
         check('P15 Cards on a phone: nothing scrolls sideways, no column headings, and each card takes two short lines', ph['sw'] <= 1 and ph['head'] == 'none' and ph['tall'] < 80, ph)
         pctx.close()
-        # P17: Home's Welcome Text shows once per visit, in the middle, and is gone after about 4.5 seconds
+        # P17: Home no longer has a Welcome Text (removed in 1.74.0): nothing fades in, the clock is there at once, and Home Settings has no such field
         wctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); wctx.add_cookies(cookies); wctx.route('**/*', handle)
-        wp = wctx.new_page(); wp.goto(B + '/', wait_until='domcontentloaded'); until(lambda: wp.evaluate("!!document.querySelector('#welcome.in')"), 5000)
-        w1 = wp.evaluate("(() => { const e = document.querySelector('#welcome'); return e ? [e.textContent, e.classList.contains('in'), getComputedStyle(document.querySelector('.stage')).opacity] : null })()")
-        until(lambda: wp.evaluate("!document.querySelector('#welcome')"), 8000); gone = wp.evaluate("!document.querySelector('#welcome')")   # it fades away by itself after about 4.5 s
-        wp.reload(wait_until='domcontentloaded'); wp.wait_for_timeout(600)   # on purpose: P17 checks the welcome does NOT come back, so give it the time it took the first time
-        again = wp.evaluate("!!document.querySelector('#welcome.in')")
-        check('P17 Home shows "Welcome Home" in the middle with the clock hidden, it fades away, and not again on a reload', w1 and w1[0] == 'Welcome Home' and w1[1] and float(w1[2]) < 0.2 and gone and not again, (w1, gone, again))
+        wp = wctx.new_page(); wp.goto(B + '/', wait_until='domcontentloaded'); wp.wait_for_selector('.stage', state='attached', timeout=10000)
+        w1 = wp.evaluate("[!!document.getElementById('welcome'), !!document.getElementById('sWelcome'), document.documentElement.classList.contains('hl-welcome'), getComputedStyle(document.querySelector('.stage')).opacity, window.PUB.welcome === undefined]")
+        check('P17 Home has no Welcome Text: no words fade in, the clock shows at once, and Home Settings has no such field', w1 == [False, False, False, '1', True], w1)
         bgnow = wp.evaluate("(() => { const n = document.querySelector('#bg .on'); return n ? (n.currentSrc || n.src) : '' })()")
         check('P18 a new site shows the Starter theme (its own pictures, nothing downloaded from other sites)', '/web/home/starter/' in bgnow and not wp.evaluate("window.PUB.bg.photos.length") and wp.evaluate("window.PUB.bg.theme") == 'starter', bgnow)
         check('P19 Home names its own settings Home Settings (pencil menu and window), and has the theme editor and Import', wp.evaluate("!!document.querySelector('[data-hub=item][data-hub-label=\"Home Settings\"]') && document.querySelector('#settingsSheet h2').textContent === 'Home Settings' && !!document.getElementById('themeSheet') && !!document.getElementById('themeFile')"))

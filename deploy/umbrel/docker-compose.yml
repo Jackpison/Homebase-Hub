@@ -8,7 +8,7 @@ services:
       APP_PORT: 80
       PROXY_AUTH_ADD: "false"
   web:
-    image: ghcr.io/jackpison/homebase-hub:1.74.0
+    image: ghcr.io/jackpison/homebase-hub:1.74.1
     restart: on-failure
     volumes:
       - ${APP_DATA_DIR}/data/site:/var/www/html

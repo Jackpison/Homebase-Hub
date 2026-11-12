@@ -1,5 +1,5 @@
 <?php
-// Home: which background comes next (each browser remembers the ones it showed lately), and the Welcome Text setting.
+// Home: which background comes next (each browser remembers the ones it showed lately), and the removed Welcome Text setting.
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
 require $site . '/web/home/lib.php';
@@ -31,11 +31,10 @@ t('ten picks from five: each one twice, and no repeat within the first five', co
 $index = file_get_contents($site . '/web/home/index.php');
 t('the first background on the page uses the same choice', strpos($index, 'bg_pick_fresh($list, $seen)') !== false && strpos($index, "\$_COOKIE['hl_seen']") !== false);
 
-// Welcome Text
-t('a new site says Welcome Home', default_site()['welcome'] === 'Welcome Home');
-t('a site saved before the setting existed also gets it', clean_site(['title' => 'Home'])['welcome'] === 'Welcome Home');
-t('empty means no welcome text', clean_site(['welcome' => ''])['welcome'] === '');
-t('the text is kept to 80 characters', mb_strlen(clean_site(['welcome' => str_repeat('a', 200)])['welcome']) === 80);
+// The Welcome Text was removed in 1.74.0: a site saved with it loses it quietly
+t('a new site has no welcome setting', !array_key_exists('welcome', default_site()));
+t('an old saved welcome text is dropped when the site is cleaned', !array_key_exists('welcome', clean_site(['title' => 'Home', 'welcome' => 'Hi'])));
+t('the public data carries no welcome text', !array_key_exists('welcome', public_payload()));
 
 // Starter theme
 $st = starter_list();
@@ -66,3 +65,13 @@ t('Starter also takes turns with your uploads', count(theme_items('starter', $th
 t('Online Photos has no fixed list', theme_items('online', $th, $ups) === []);
 $api = file_get_contents($site . '/web/home/api.php');
 t('an upload tells the page its new address (used by Import)', substr_count($api, "'file' => 'uploads/' . \$name") === 2);
+
+// Mix Everything (1.74.1): Starter (if kept), your uploads and the designs together; the online photos stay downloaded
+$up = [['url' => 'uploads/aaaaaaaaaaaaaaaa.jpg', 'type' => 'image', 'credit' => 'Your upload', 'own' => true]];
+$mix = theme_items('mix', [], $up, ['bg' => ['starterOff' => false, 'designs' => []]]);
+$urls = array_column($mix, 'url');
+t('Mix Everything is a theme a site may choose', theme_ok('mix', false, []) && theme_ok('mix', true, []));
+t('Mix Everything holds the Starter photos, the upload and the designs', in_array('uploads/aaaaaaaaaaaaaaaa.jpg', $urls, true) && count(array_filter($mix, fn($i) => ($i['type'] ?? '') === 'design')) > 0 && count($mix) > count($up) + 3, count($mix));
+$noStarter = theme_items('mix', [], $up, ['bg' => ['starterOff' => true, 'designs' => []]]);
+t('with Starter removed, Mix Everything leaves it out', count($noStarter) === count($mix) - count(starter_list()), count($noStarter));
+t('a saved site keeps the Mix Everything choice', clean_site(['bg' => ['theme' => 'mix']])['bg']['theme'] === 'mix');

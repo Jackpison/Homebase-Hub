@@ -69,6 +69,12 @@ try:
         pg.evaluate("document.querySelector('[data-open=bgSheet]').click()"); wait_js(pg, "document.querySelectorAll('#designRows .dz').length === 16", 15000)
         rows = pg.evaluate("[...document.querySelectorAll('#designRows .dz')].map(r => [r.dataset.id, r.querySelector('.dz-sw') ? getComputedStyle(r.querySelector('.dz-sw')).backgroundImage.slice(0, 15) : ''])")
         check('H3 Background lists the 16 designs, each with a colour swatch (the swatches are not blocked) and the Animated Designs theme card is In Use', len(rows) == 16 and all(r[1].startswith('linear-gradient') for r in rows) and pg.evaluate("!!document.querySelector('.theme.on[data-theme=designs]')"), rows[:2])
+        tabs = pg.evaluate("""(() => { const vis = id => !document.getElementById('bgp-' + id).hidden, out = [];
+          out.push(['main', vis('main'), vis('animated'), !!document.querySelector('#bgp-main #themeRows'), !!document.querySelector('#bgp-main #bgDim'), !!document.querySelector('#themeRows [data-theme=mix]')]);
+          for (const id of ['animated', 'sources', 'uploads']) { document.querySelector('[data-bgt=' + id + ']').click(); out.push([id, vis(id), vis('main'), document.querySelector('[data-bgt=' + id + ']').getAttribute('aria-selected')]); }
+          out.push([!!document.querySelector('#bgp-animated #designRows'), !!document.querySelector('#bgp-sources #sourceRows'), !!document.querySelector('#bgp-sources #customRows'), !!document.querySelector('#bgp-uploads #drop')]);
+          document.querySelector('[data-bgt=main]').click(); return out; })()""")
+        check('H11 Background has four tabs: Main (theme with Mix Everything, and the look), Animated, Sources, Uploads; each shows only its own part', tabs[0] == ['main', True, False, True, True, True] and tabs[1] == ['animated', True, False, 'true'] and tabs[2] == ['sources', True, False, 'true'] and tabs[3] == ['uploads', True, False, 'true'] and tabs[4] == [True, True, True, True], tabs)
         pg.evaluate("document.querySelector('#designRows [data-id=galaxy] [data-z=preview]').click()")
         shown = until(lambda: pg.evaluate("!!document.querySelector('#bg > .design.on') && document.querySelector('#creditText').textContent === 'From React Bits'"), 15000)
         check('H4 Preview shows that design at once and saves nothing', shown and site_bg() == before, (shown,))
@@ -107,6 +113,16 @@ try:
         moving = [i for i in reg if not reg[i]['still']]
         check('H8 with Reduce Motion only the designs that can stand still are fetched', asked2 and not [u for u in asked2 if any('/%s.js' % i in u for i in moving)], asked2)
         check('H9 no file of a design was missing or refused (a design without styles still has a stylesheet)', not failed, failed[:4])
+        # H10 (1.74.1): with a design on screen the menus can be clicked. The design used to be handed a copy of every press, and the page's
+        # click-away handler took it for a click outside, so the corner menu closed as it was pressed and no page could be opened.
+        nv = ctx.new_page(); nv.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
+        wait_js(nv, "!!document.querySelector('#bg > .design canvas') && !!document.querySelector('[data-ix=corner]')", 60000)
+        nv.click('[data-ix=corner]', timeout=60000); nv.wait_for_selector('#ix-pop', timeout=30000)
+        nv.click('#ix-pop >> text=Links', timeout=60000)
+        try: nv.wait_for_url('**/web/links/**', timeout=90000, wait_until='commit'); moved = True
+        except Exception: moved = False
+        check('H10 with a design on screen the corner menu stays open when pressed and takes you to another page', moved, nv.url)
+        nv.close()
         rm.close(); b.close()
 finally:
     stop_all()

@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.74.0" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.74.1" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -774,7 +774,7 @@
         '<button type="button" class="ix-fab" data-ix="sheet" aria-label="Search and Menu" title="Search and Menu">' + svg(ICON.search) + '</button>';
     } else {
       html = '<button type="button" class="ix-ib ix-menu" data-ix="menu" aria-label="Pages" title="Pages">' + svg(ICON.menu) + '</button>' + brand + links +
-        '<div class="ix-search" id="ix-sbox"><span class="ix-sglow" aria-hidden="true"></span><span class="ix-sring" aria-hidden="true"></span><span class="ix-spk" aria-hidden="true"></span>' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + (matchMedia('(hover:hover) and (pointer:fine)').matches ? 'Search · ? Shortcuts' : 'Search') + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
+        '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + (matchMedia('(hover:hover) and (pointer:fine)').matches ? 'Search · ? Shortcuts' : 'Search') + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
           '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
         '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + theme + edit + me + '</div>';
     }

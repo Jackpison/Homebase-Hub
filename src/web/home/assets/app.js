@@ -170,6 +170,11 @@ const BG = {
     const images = all.filter(i => i.type !== 'video');
     const ups = (PUB.uploads || []).filter(u => !(saveData && u.type === 'video'));
 
+    if (PUB.bg.theme === 'mix'){   // (1.74.1) Mix Everything: your own backgrounds, the designs and the online photos take turns, each kind in turn
+      const mine = (PUB.bg.own || []).filter(i => !(saveData && i.type === 'video' && !i.poster) && designOk(i));
+      const kinds = [mine, images, videos].filter(l => l.length);
+      return kinds.length ? pick(fresh(pick(kinds))) : null;
+    }
     if (PUB.bg.theme && PUB.bg.theme !== 'online'){   // a theme (Starter or your own): its backgrounds take turns
       const mine = (PUB.bg.own || []).filter(i => !(saveData && i.type === 'video' && !i.poster) && designOk(i));
       return mine.length ? pick(fresh(mine)) : null;
@@ -439,7 +444,6 @@ function openSheetFor(id){
 function openSettings(){
   settingsDraft = { title:ADMIN.title, icon:ADMIN.icon };   // (1.68.4) the glass is set in Settings > Appearance > Glass
   $('#sTitle').value = settingsDraft.title;
-  $('#sWelcome').value = ADMIN.welcome ?? 'Welcome Home';
   $('#sHomeBar').checked = homeBarOn();
   $('#sPrivate').checked = !!ADMIN.private;
   openSheet('settingsSheet');
@@ -504,9 +508,8 @@ async function fillNotePicker(){
   } catch { sel.innerHTML = '<option value="">None</option>' + (val ? `<option value="${esc(val)}">The note you chose</option>` : ''); sel.value = val; }
 }
 $('#saveSettings').addEventListener('click', e => withBusy(e.currentTarget, async () => {
-  const prev = { title:ADMIN.title, icon:ADMIN.icon, welcome:ADMIN.welcome, private:ADMIN.private };
+  const prev = { title:ADMIN.title, icon:ADMIN.icon, private:ADMIN.private };
   ADMIN.title = $('#sTitle').value.trim() || 'Home';
-  ADMIN.welcome = $('#sWelcome').value.trim();
   ADMIN.private = $('#sPrivate').checked;
   ADMIN.icon = '';   // no separate start page icon any more: the site logo is used
   const bar = $('#sHomeBar').checked, barChanged = bar !== homeBarOn();
@@ -540,8 +543,23 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
    BACKGROUND SHEET
    ====================================================================== */
 let bgDraft = null;
+/* The Background sheet's tabs: Main, Animated, Sources, Uploads. The sheet opens on the tab you used last. */
+let bgTab = 'main';
+function showBgTab(/** @type {string} */ id, /** @type {boolean} */ focus){
+  bgTab = id;
+  document.querySelectorAll('#bgSheet [data-bgt]').forEach(el => { const b = /** @type {HTMLElement} */ (el), on = b.dataset.bgt === id; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; if (on && focus) b.focus(); });
+  document.querySelectorAll('#bgSheet .bgp').forEach(el => { /** @type {HTMLElement} */ (el).hidden = el.id !== 'bgp-' + id; });
+  const sb = document.querySelector('#bgSheet .sb'); if (sb) sb.scrollTop = 0;
+}
+$('#bgSheet .bgtabs').addEventListener('click', e => { const b = /** @type {HTMLElement | null} */ (/** @type {Element} */ (e.target).closest('[data-bgt]')); if (b) showBgTab(b.dataset.bgt || 'main', false); });
+$('#bgSheet .bgtabs').addEventListener('keydown', e => {
+  const ids = [...document.querySelectorAll('#bgSheet [data-bgt]')].map(b => /** @type {HTMLElement} */ (b).dataset.bgt || ''), i = ids.indexOf(bgTab);
+  const k = /** @type {KeyboardEvent} */ (e).key;
+  const to = k === 'ArrowRight' ? (i + 1) % ids.length : k === 'ArrowLeft' ? (i + ids.length - 1) % ids.length : k === 'Home' ? 0 : k === 'End' ? ids.length - 1 : -1;
+  if (to < 0) return; e.preventDefault(); showBgTab(ids[to], true);
+});
 function openBg(){
-  bgDraft = structuredClone(ADMIN.bg);
+  bgDraft = structuredClone(ADMIN.bg); showBgTab(bgTab, false);
   bgDraft.custom = bgDraft.custom || [];
   customDirty = false;
   renderDesigns(); renderThemes(); renderSources(); renderKeys(); renderCustom();
@@ -568,9 +586,11 @@ function renderThemes(){
     return `<div class="theme${on === id ? ' on' : ''}" data-theme="${id}"><div class="theme-mos" data-n="${m.n}">${m.html}</div>
     <div class="theme-b"><b>${name}${on === id ? ' <span class="pill">In Use</span>' : ''}</b><small>${about}</small><div class="theme-acts">${acts}</div></div></div>`; };
   const dids = Object.keys(ADMIN.designsInfo || {});
+  const mixCard = card('mix', 'Mix Everything', 'Takes turns between all of it: Starter, your uploads, the animated designs and the online photos.', '<span class="theme-ph">Photos · Uploads · Designs</span>',
+    on === 'mix' ? '' : '<button type="button" class="btn small primary" data-t="use-mix">Use</button>');
   const dcard = dids.length ? card('designs', 'Animated Designs', dids.filter(id => dzDraft(id).on).length + ' of ' + dids.length + ' designs, drawn live', dids.slice(0, 5).map(id => `<span class="dz-chip" style="--dzg:${esc(dzGrad(id))}"></span>`),
       on === 'designs' ? '' : '<button type="button" class="btn small primary" data-t="use-designs">Use</button>') : '';
-  $('#themeRows').innerHTML = dcard + (off
+  $('#themeRows').innerHTML = mixCard + dcard + (off
       ? `<div class="theme off"><div class="theme-b"><b>Starter</b><small>Removed. It comes with the app, so you can bring it back.</small><div class="theme-acts"><button type="button" class="btn small" data-t="back">Bring Back Starter</button></div></div></div>`
       : card('starter', 'Starter', esc(what || 'Comes with the app') + (st[0]?.type === 'video' ? ' · ' + esc(st[0].credit) + ' first' : ''), st.map(thumb),
           (on === 'starter' ? '' : '<button type="button" class="btn small primary" data-t="use-starter">Use</button>') + '<button type="button" class="btn small danger" data-t="remove">Remove</button>'))
@@ -593,6 +613,7 @@ $('#themeRows').addEventListener('click', e => {
   const t = b.dataset.t;
   if (t === 'use-starter') bgDraft.theme = 'starter';
   else if (t === 'use-designs') bgDraft.theme = 'designs';
+  else if (t === 'use-mix') bgDraft.theme = 'mix';
   else if (t === 'use-online') bgDraft.theme = 'online';
   else if (t === 'remove'){ bgDraft.starterOff = true; bgDraft.theme = 'online'; }
   else if (t === 'back'){ bgDraft.starterOff = false; bgDraft.theme = 'starter'; }
@@ -1613,22 +1634,6 @@ function setWidgets(cfg){
 }
 
 /* ======================================================================
-   WELCOME TEXT: once per visit, in the middle; the clock and widgets fade in as it slowly fades away (Settings > Page > Welcome Text)
-   ====================================================================== */
-function welcome(){
-  const el = $('#welcome'), text = String(PUB.welcome ?? '').trim();
-  if (!el || !text) return;
-  try { if (sessionStorage.getItem('hl-welcomed')) return; sessionStorage.setItem('hl-welcomed', '1'); } catch (x) {}
-  el.textContent = text; el.hidden = false;
-  const st = $('.stage'); if (st) st.style.transition = 'none';   // hide the clock at once, then let it fade in
-  document.documentElement.classList.add('hl-welcome');
-  if (st) { void st.offsetWidth; st.style.transition = ''; }
-  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
-  setTimeout(() => { el.classList.add('out'); document.documentElement.classList.remove('hl-welcome'); }, 1200);
-  setTimeout(() => el.remove(), 4400);   // 1.2 s on screen, then 3 s to fade away
-}
-
-/* ======================================================================
    HOME TOUR (1.69.0): four cards in the Stepper (shell.js), each lighting up a part of the page. It opens once, on the first visit
    after the site is set up (New Site Setup leaves "hl-tour-due"), and any time from Home Settings > Take the Tour.
    ====================================================================== */
@@ -1666,7 +1671,6 @@ document.addEventListener('visibilitychange', () => {
   if (wOn('recent')) loadRecent(); if (wOn('files')) loadFilesW(); if (wOn('status')) loadStatus();
   if (wOn('today') || wOn('calendar') || wOn('bills')) loadTasks(); else renderWidgets();
 });
-welcome();
 // ?bg=picsum | bing | wikimedia | wallhaven | artic | unsplash | pixabay | pixabay_video | upload  forces a source (handy for testing)
 BG.start();
 $('#nextBg').addEventListener('click', () => BG.next());

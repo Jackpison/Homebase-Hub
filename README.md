@@ -124,7 +124,7 @@ Every picture is the running app. Dark is the default and light is one click awa
 </tr>
 <tr>
 <td valign="top"><img src="website/img/cards-holders.webp" alt="Cards Holders window" width="100%"><br><sub><b>Cards, Holders.</b> Rename, add, or delete a holder with no cards.</sub></td>
-<td valign="top"><img src="website/img/home-settings.webp" alt="Home Settings window" width="100%"><br><sub><b>Home Settings.</b> The title, the welcome text, the bar and the glass.</sub></td>
+<td valign="top"><img src="website/img/home-settings.webp" alt="Home Settings window" width="100%"><br><sub><b>Home Settings.</b> The title, the bar and the glass.</sub></td>
 </tr>
 <tr>
 <td valign="top"><img src="website/img/links-edit.webp" alt="Links while editing, with the edit bar at the bottom" width="100%"><br><sub><b>Editing.</b> Every page edits the same way, with its tools in one bar at the bottom.</sub></td>

@@ -47,7 +47,6 @@ const API_KEYS = [
 ];
 const ROTATE_CHOICES = [0, 1, 5, 15, 30];
 const BG_REMEMBER = 30;   // each browser remembers this many backgrounds it showed last, and shows them again only when nothing else is left
-const WELCOME_DEFAULT = 'Welcome Home';
 /* The Starter theme: backgrounds that come with the app (web/home/starter/), in the order a new site shows them.
    An entry may be a video with a 'poster' (its still picture); the owner chose photos only, to keep updates small (25 Oct 2026). */
 const STARTER = [
@@ -102,7 +101,6 @@ function default_site(): array
             'themes'       => [],          // your own themes: [{id, name, items: ['uploads/…']}]
         ],
         'panel' => ['opacity' => 0.40, 'blur' => 22, 'tint' => 'light'],
-        'welcome' => WELCOME_DEFAULT,
         'widgets' => clean_widgets([]),
     ];
 }
@@ -209,8 +207,6 @@ function clean_site(array $in): array
             'blur'    => max(0, min(40, (int) ($pn['blur'] ?? $def['panel']['blur']))),
             'tint'    => in_array($pn['tint'] ?? '', GLASS_TINTS, true) ? $pn['tint'] : 'light',   // 1.51.2: Light (see-through), Dark or Solid
         ],
-        // the words that fade in the middle when Home opens; empty = none (a site saved before 1.49 gets the default)
-        'welcome' => array_key_exists('welcome', $in) ? str_clip($in['welcome'], 80) : WELCOME_DEFAULT,
         'linksMoved' => max(0, (int) ($in['linksMoved'] ?? 0)),
         'widgets' => clean_widgets($in['widgets'] ?? []),
     ];
@@ -519,13 +515,12 @@ function public_payload(): array
     $theme = $s['bg']['theme'] ?? 'online';
     $uploads = array_map(fn($u) => ['url' => $u['url'], 'type' => $u['type'], 'credit' => 'Your upload', 'own' => true], list_uploads());
     $own = theme_items($theme, $s['bg']['themes'] ?? [], $uploads, $s);
-    if ($theme !== 'online') { $photos = []; $need = false; }   // Starter and your own themes use only their own backgrounds: nothing is downloaded
+    if ($theme !== 'online' && $theme !== 'mix') { $photos = []; $need = false; }   // Starter and your own themes use only their own backgrounds: nothing is downloaded
     return [
         'title'   => $s['title'],
         'icon'    => '',   // no separate start page icon: the site logo is used
         'private' => !empty($s['private']),
         'panel'   => $s['panel'],
-        'welcome' => $s['welcome'] ?? WELCOME_DEFAULT,
         'clock'   => $s['widgets']['clock'],   // the big clock and greeting are for everyone; the widgets themselves are not
         'bg'      => [
             'uploadChance' => $s['bg']['uploadChance'],
@@ -568,7 +563,7 @@ function clean_themes($in): array
 function theme_ok(string $theme, bool $starterOff, array $themes): bool
 {
     if ($theme === 'starter') return !$starterOff;
-    if ($theme === 'online') return true;
+    if ($theme === 'online' || $theme === 'mix') return true;   // (1.74.1) Mix Everything: Starter (if kept), your uploads, the designs and the online photos together
     if ($theme === 'designs') return designs_registry() !== [];
     return str_starts_with($theme, 't:') && in_array(substr($theme, 2), array_column($themes, 'id'), true);
 }
@@ -577,6 +572,7 @@ function theme_items(string $theme, array $themes, array $uploads, array $site =
 {
     if ($theme === 'starter') return array_merge(starter_list(), $uploads);
     if ($theme === 'designs') return designs_items($site);
+    if ($theme === 'mix') return array_merge(empty($site['bg']['starterOff']) ? starter_list() : [], $uploads, designs_items($site));
     if (!str_starts_with($theme, 't:')) return [];
     foreach ($themes as $t) if ('t:' . $t['id'] === $theme) {
         $byUrl = array_column($uploads, null, 'url');

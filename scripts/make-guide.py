@@ -157,9 +157,9 @@ story += chapter('4', 'Home', 'Your start page: the first thing you see when you
  P('Everyone sees the clock. While you are logged in, Home also shows widgets in frosted glass: %s (with Quick Add, and a tick to mark a task done), %s, %s (one box from Info), %s, %s, %s, %s, %s and %s. Visitors never receive your widgets or their data.' % (C('Today'), C('Countdown'), C('Pinned Note'), C('Recent Tools'), C('Month Calendar'), C('Scratch Pad'), C('Quote of the Day'), C('World Clock'), C('Weather'))),
  steps(['Open editing: a row of buttons appears at the bottom. Choose %s (the four squares).' % C('Widgets'), 'Pick %s (chips under the clock and a dock) or %s (small cards along the bottom).' % (C('Glass Dock'), C('Glance and Expand')),
         'Turn widgets on or off and move them up or down; set the countdown, the pinned note, the World Clock places and your town for Weather. %s off hides them all.' % C('Show Widgets'), 'Press %s.' % C('Save Widgets')]),
- P('%s (the gear in that row) has the page title, the welcome text, %s and the glass look.' % (C('Home Settings'), C('Show the Bar on the Home Page'))),
+ P('%s (the gear in that row) has the page title, %s and the glass look.' % (C('Home Settings'), C('Show the Bar on the Home Page'))),
  Tip('Weather is off at first. Once you turn it on and type your town, your server asks Open-Meteo for the forecast, at most every 30 minutes. Nothing else on Home contacts another site.'),
- shot('home-settings', 'Home Settings: the title, the welcome text, the bar, and the glass (Light, Dark or Solid, how see-through, and the blur).'),
+ shot('home-settings', 'Home Settings: the title, the bar, and the glass (Light, Dark or Solid, how see-through, and the blur).'),
  P('Up to version 1.50 Home had its own list of links. Version 1.51 copies them once into Links, in a category called %s.' % C('From Home')),
  shot('home-3', 'What a visitor sees: the clock on another photo from the rotation, and no widgets.'))
 
