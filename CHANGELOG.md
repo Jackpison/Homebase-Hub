@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.74.2 | Settings: pill sub-tabs, Security in four tabs, a new Overview and Colors, per-page colors always shown; smoother sliders; a flatter phone top bar; quicker CI |
 | 1.74.1 | Animated designs no longer block menus and page changes, Background has four tabs and a Mix Everything theme, Home's Welcome Text and the search shine are gone, and the top bar and sidebar highlight the current page like the dock |
 | 1.74.0 | Animated Designs for Home: sixteen live backgrounds from React Bits with options and Preview; one glass behind the clock on an iPhone app |
 | 1.73.2 | A page no longer reloads itself by mistake when the connection flickers; the Docker image moves to PHP 8.5.11 |
@@ -143,6 +144,28 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.74.2
+
+### Settings
+
+- Sub-tabs are pills with a dot on the open one. On a phone they scroll sideways and the open tab stays in view.
+- **Security** has four tabs instead of eight.
+- **Overview** has shorter cards and shows a detail line only when something needs attention.
+- **Colors** is two columns with round swatches and small hex fields.
+- **Different Colors per Page** is always shown: pick a page, then set its Background and Accent. A dot marks pages with their own colors.
+
+### Changed
+
+- Sliders are smoother everywhere and fill as you drag.
+- On a phone the top bar is flat, with no glass strip behind the icons.
+
+### Behind the scenes
+
+- The server and Apache checks run only when files they depend on change, and the whole set runs once a day.
+- The security scan skips the third-party Animated Designs code.
 
 ---
 
