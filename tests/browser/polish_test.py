@@ -344,6 +344,15 @@ try:
         tp.goto(s.base + '/web/links/'); wait_js(tp, "!!document.querySelector('#ix-bar .ix-pline')", 20000); tp.wait_for_timeout(300)
         tl = tp.evaluate("getComputedStyle(document.querySelector('#ix-bar .ix-pline')).display")
         check('P59 the dock has no line over the current page; the top bar keeps it (1.68.2)', dl == 'none' and tl != 'none', (dl, tl))
+        # (1.73.3) iPhone app: behind the clock a solid strip sat next to the glass bar (two shades). With Bar Glass on, the glass covers the clock while the bar shows
+        STRIP = "getComputedStyle(document.documentElement, '::before').opacity"
+        plain = tp.evaluate(STRIP)
+        s.php("hub_settings_update(function ($x) { $x['glass'] = true; $x['nav'] = 'top'; return $x; });")
+        tp.goto(s.base + '/web/links/'); wait_js(tp, "!!document.querySelector('#ix-bar.glass-surface')", 20000)
+        shown = tp.evaluate(STRIP); tp.evaluate("document.documentElement.classList.add('ix-hide')"); hidden = tp.evaluate(STRIP)
+        s.php("hub_settings_update(function ($x) { $x['glass'] = false; return $x; });")
+        check('P59b Bar Glass on: no solid strip behind the clock while the bar shows (one glass), the strip is back when the bar slides away; glass off: the strip stays (1.73.3)',
+              (plain, shown, hidden) == ('1', '0', '1'), (plain, shown, hidden))
         HID = """async () => { document.documentElement.style.scrollBehavior = 'auto'; document.body.style.minHeight = '4000px'; scrollTo(0, 0); await new Promise(r => setTimeout(r, 150));
             for (let i = 1; i <= 8; i++) { scrollTo(0, i * 60); await new Promise(r => setTimeout(r, 40)); } await new Promise(r => setTimeout(r, 300));
             const h = document.documentElement.classList.contains('ix-hide'); scrollTo(0, 0); return h; }"""

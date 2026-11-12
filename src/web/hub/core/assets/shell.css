@@ -93,6 +93,9 @@ html.ix-hide[data-ix-nav="top"] #ix-bar{transform:translateY(calc(-100% - 2px))}
 /* On an iPhone app (status bar over the page) a strip in the bar's colour stays behind the clock, also while the bar is slid away,
    so the page never scrolls under the clock. It is 0 px tall everywhere else. */
 html[data-ix-bar][data-ix-nav="top"]:not([data-ix-app="home"])::before{content:"";position:fixed;z-index:2147482999;top:0;left:0;right:0;height:var(--ix-safe-top);background:var(--ix-barbg,var(--ix-bg));pointer-events:none}
+/* (1.73.3) With Bar Glass on, that solid strip and the glass bar were two shades (a darker band behind the clock on an iPhone app). While the bar
+   shows, the glass itself covers the clock area; the strip is back as soon as the bar slides away. */
+html[data-ix-glass][data-ix-nav="top"]:not(.ix-hide)::before{opacity:0}
 html[data-ix-nav="top"] .ix-tools{margin-left:0}
 html[data-ix-app="home"][data-ix-nav="top"] #ix-bar{background:color-mix(in srgb,var(--ix-barbg,#000) 55%,transparent);border-color:rgba(255,255,255,.08);color:#f2f2f2}
 /* ---------- Sidebar: a slim rail ---------- */
