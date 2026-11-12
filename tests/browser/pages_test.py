@@ -163,6 +163,7 @@ try:
         wp = wctx.new_page(); wp.goto(B + '/', wait_until='domcontentloaded'); wp.wait_for_selector('.stage', state='attached', timeout=10000)
         w1 = wp.evaluate("[!!document.getElementById('welcome'), !!document.getElementById('sWelcome'), document.documentElement.classList.contains('hl-welcome'), getComputedStyle(document.querySelector('.stage')).opacity, window.PUB.welcome === undefined]")
         check('P17 Home has no Welcome Text: no words fade in, the clock shows at once, and Home Settings has no such field', w1 == [False, False, False, '1', True], w1)
+        until(lambda: wp.evaluate("!!document.querySelector('#bg .on')"), 15000)   # the background fades in a moment after the page starts (slower in WebKit)
         bgnow = wp.evaluate("(() => { const n = document.querySelector('#bg .on'); return n ? (n.currentSrc || n.src) : '' })()")
         check('P18 a new site shows the Starter theme (its own pictures, nothing downloaded from other sites)', '/web/home/starter/' in bgnow and not wp.evaluate("window.PUB.bg.photos.length") and wp.evaluate("window.PUB.bg.theme") == 'starter', bgnow)
         check('P19 Home names its own settings Home Settings (pencil menu and window), and has the theme editor and Import', wp.evaluate("!!document.querySelector('[data-hub=item][data-hub-label=\"Home Settings\"]') && document.querySelector('#settingsSheet h2').textContent === 'Home Settings' && !!document.getElementById('themeSheet') && !!document.getElementById('themeFile')"))
