@@ -355,21 +355,70 @@
       return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; });
     });
   }
-  var toastT;
-  /* The one message box of every page (1.59: Home and Links use it too). bad: a problem (red, stays longer); sticky: stays until the next message. */
-  function toast(msg, bad, sticky, act) {   // act: {label, run} adds one button, such as Undo
+  /* (1.75.0) The one place every message of the site appears: cards in the bottom right corner, newest at the bottom, each with a tile, the message,
+     where it came from and when. A message that goes away on its own is still kept in the list behind the bell (this tab's last 30), so
+     nothing is missed when it was not looked at. Hovering a card keeps it; the cross closes it. toast() keeps its old form, so every page
+     and every pane calls it the same way. bad: a problem (red, stays longer); sticky: stays until closed; act: {label, run} adds a button, such as Undo. */
+  var NOTE_MAX = 4, NOTE_KEEP = 30, noteHist = [], noteSeen = 0;
+  try { noteHist = JSON.parse(sessionStorage.getItem('ix-notes') || '[]').filter(function (n) { return n && typeof n.m === 'string'; }).slice(-NOTE_KEEP); noteSeen = +sessionStorage.getItem('ix-notes-seen') || 0; } catch (e) {}
+  var NOTE_SRC = { home: 'Home', links: 'Links', info: 'Info', cards: 'Cards', tasks: 'Tasks', files: 'Files', tools: 'Tools', settings: 'Settings' };
+  var NOTE_ICON = { bad: 'M12 3l10 18H2zM12 10v5M12 18h.01', ok: 'M5 12l5 5 9-10', act: 'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3' };
+  function noteSave() { try { sessionStorage.setItem('ix-notes', JSON.stringify(noteHist.slice(-NOTE_KEEP))); sessionStorage.setItem('ix-notes-seen', String(noteSeen)); } catch (e) {} }
+  function noteAgo(ts) { var s = Math.max(0, Math.round((Date.now() - ts) / 1000)); return s < 45 ? 'now' : s < 3600 ? Math.round(s / 60) + 'm ago' : Math.round(s / 3600) + 'h ago'; }
+  function noteTile(kind) { return '<span class="ix-nt ' + kind + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + NOTE_ICON[kind] + '"/></svg></span>'; }
+  function noteBell() {
+    var b = document.getElementById('ix-bell'), n = noteHist.length - noteSeen, box = document.getElementById('ix-toast'), live = box && box.querySelector('.ix-nc');
+    if (n <= 0 || live) { if (b) b.hidden = true; return; }
+    if (!b) {
+      b = document.createElement('button'); b.type = 'button'; b.id = 'ix-bell'; b.setAttribute('aria-label', 'Messages you may have missed');
+      b.onclick = function () { noteList(); }; document.body.appendChild(b);
+    }
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b>' + Math.min(n, 9) + (n > 9 ? '+' : '') + '</b>'; b.hidden = false;
+  }
+  /* the list behind the bell: the last messages of this tab, newest first */
+  function noteList() {
+    var old = document.getElementById('ix-nlist'); if (old) { old.remove(); return; }
+    noteSeen = noteHist.length; noteSave(); noteBell();
+    var l = document.createElement('div'); l.id = 'ix-nlist'; l.setAttribute('role', 'dialog'); l.setAttribute('aria-label', 'Messages');
+    l.innerHTML = '<div class="ix-nlh"><b>Messages</b><span>' + (noteHist.length ? 'This tab, newest first' : 'Nothing yet') + '</span><button type="button" class="ix-nlc" ' + (noteHist.length ? '' : 'hidden ') + 'data-clear>Clear</button><button type="button" class="ix-nlx" aria-label="Close">×</button></div><div class="ix-nlb">' +
+      noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '">' + noteTile(n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
+    [].forEach.call(l.querySelectorAll('.ix-nm'), function (m, i) { m.textContent = noteHist[noteHist.length - 1 - i].m; });
+    document.body.appendChild(l);
+    l.querySelector('.ix-nlx').onclick = function () { l.remove(); };
+    var c = l.querySelector('[data-clear]'); if (c) c.onclick = function () { noteHist = []; noteSeen = 0; noteSave(); l.remove(); };
+    l.querySelector('.ix-nlx').focus();
+    l.addEventListener('keydown', function (e) { if (e.key === 'Escape') { l.remove(); } });
+  }
+  function toast(msg, bad, sticky, act) {
+    msg = String(msg == null ? '' : msg); if (!msg) return;
     var t = document.getElementById('ix-toast');
     if (!t) { t = document.createElement('div'); t.id = 'ix-toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); }
-    // a page's open modal <dialog> is drawn above everything: the message goes inside it so it can be seen
+    // a page's open modal <dialog> is drawn above everything: the messages go inside it so they can be seen
     var host = [].slice.call(document.querySelectorAll('dialog[open]')).pop() || document.body;
     if (t.parentNode !== host) host.appendChild(t);
-    t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.add('on'); clearTimeout(toastT);
+    var list = document.getElementById('ix-nlist'); if (list) list.remove();
+    var same = [].filter.call(t.children, function (c) { return c.dataset.msg === msg; })[0];   // the same message again: one card, kept longer
+    if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
+    else { noteHist.push({ m: msg, b: !!bad, s: NOTE_SRC[APP] || 'Homebase Hub', ts: Date.now() }); noteHist = noteHist.slice(-NOTE_KEEP); noteSave(); }
+    var c = document.createElement('div'), kind = bad ? 'bad' : act ? 'act' : 'ok';
+    c.className = 'ix-nc' + (bad ? ' bad' : ''); c.dataset.msg = msg;
+    c.innerHTML = noteTile(kind) + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(NOTE_SRC[APP] || 'Homebase Hub') + ' · now</small></div><button type="button" class="ix-nx" aria-label="Close message">×</button>';
+    c.querySelector('.ix-nm').textContent = msg;
+    var gone = function () { clearTimeout(+c.dataset.tm); c.classList.remove('in'); setTimeout(function () { c.remove(); if (!t.querySelector('.ix-nc')) { t.classList.remove('on'); } noteBell(); }, 160); };
+    var arm = function (ms) { clearTimeout(+c.dataset.tm); if (!sticky) c.dataset.tm = String(setTimeout(gone, ms)); };
     if (act && act.label) {
       var ab = document.createElement('button'); ab.type = 'button'; ab.className = 'ix-tact'; ab.textContent = act.label;
-      ab.onclick = function () { t.classList.remove('on'); clearTimeout(toastT); act.run(); };
-      t.appendChild(ab);
+      ab.onclick = function () { noteSeen = noteHist.length; noteSave(); gone(); act.run(); };
+      c.insertBefore(ab, c.querySelector('.ix-nx'));
     }
-    if (!sticky) toastT = setTimeout(function () { t.classList.remove('on'); }, bad ? 6000 : act ? 7000 : 3200);
+    c.querySelector('.ix-nx').onclick = function () { noteSeen = noteHist.length; noteSave(); gone(); };
+    c.addEventListener('pointerenter', function () { clearTimeout(+c.dataset.tm); });
+    c.addEventListener('pointerleave', function () { arm(2500); });
+    t.appendChild(c); t.classList.add('on');
+    while (t.children.length > NOTE_MAX) { clearTimeout(+t.firstChild.dataset.tm); t.removeChild(t.firstChild); }
+    requestAnimationFrame(function () { c.classList.add('in'); });
+    var bell = document.getElementById('ix-bell'); if (bell) bell.hidden = true;
+    arm(bad ? 7000 : act ? 8000 : 4500);
   }
   function remember(st) {
     var keep = {}; ['siteName', 'logo', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'editBar', 'colors', 'font', 'fontCustom', 'sizes', 'pages', 'backupEvery', 'backupLast', 'tz'].forEach(function (k) { if (k in st) keep[k] = st[k]; });

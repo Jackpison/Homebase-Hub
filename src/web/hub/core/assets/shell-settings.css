@@ -850,3 +850,16 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-ec.ix-auto .ix-ec-b>.ix-tg:first-child{padding-top:8px}
 @media (max-width:600px){#ix-page .ix-phs{width:100%}#ix-page .ix-pht{width:42px;height:42px}#ix-page .ix-ph .ix-phx h2{font-size:22px}}
 #ix-page .ix-phr{max-width:780px}
+
+/* (1.75.0) Tabs and segmented buttons: a track, and one solid pill that slides to the open tab (white on dark, dark on light), as in the mock-up */
+#ix-page .ix-subt{padding:4px;gap:0;background:var(--ix-s2);border-radius:16px}
+#ix-page .ix-subt button{padding:9px 20px;border-radius:12px;font-weight:600;transition:color .2s}
+#ix-page .ix-subt button[aria-selected="true"]{background:none;box-shadow:none;color:var(--ix-bg)}
+#ix-page .ix-subt button[aria-selected="true"]::before{display:none}
+#ix-page .ix-subt .ix-subi,#ix-page .ix-subi{display:block;top:4px;bottom:4px;height:auto;left:0;border-radius:12px;background:var(--ix-tx);box-shadow:0 2px 8px -2px rgba(0,0,0,.5);z-index:0}
+#ix-page .ix-seg{background:var(--ix-s2);border-radius:14px;padding:4px;gap:2px}
+#ix-page .ix-seg button{border-radius:10px;padding:8px 16px;transition:background .2s,color .2s}
+#ix-page .ix-seg button[aria-pressed="true"]{background:var(--ix-tx);color:var(--ix-bg);box-shadow:0 2px 8px -2px rgba(0,0,0,.5)}
+#ix-page .ix-subseg{border-radius:14px;padding:4px}
+#ix-page .ix-subseg button{border-radius:10px;padding:8px 16px}
+#ix-page .ix-subseg button[aria-selected="true"]{background:var(--ix-tx);color:var(--ix-bg);font-weight:600}

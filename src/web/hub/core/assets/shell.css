@@ -290,13 +290,10 @@ html.ix-swiping,html.ix-swiping body{overflow-x:hidden}
 @media (max-width:700px){#ix-dlg{padding:0;place-items:end stretch}#ix-dlg .ix-box{border-radius:18px 18px 0 0;width:100%}#ix-dlg .ix-box.wide{height:calc(100dvh - 20px)}}
 #ix-dlg input[type=checkbox],#ix-dlg input[type=radio]{accent-color:var(--ix-accent);width:17px;height:17px;margin:0}
 #ix-dlg .ix-ver .ix-btn{height:32px;font-size:13px;margin-left:auto}
-#ix-toast{position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-14px);opacity:0;z-index:2147483003;background:var(--ix-s1);color:var(--ix-tx);border:1px solid var(--ix-line2);border-left:3px solid var(--ix-accent);padding:11px 16px;border-radius:10px;font:14px var(--ix-font);box-shadow:0 10px 30px rgba(0,0,0,.5);transition:.2s;pointer-events:none;max-width:calc(100vw - 32px)}
-#ix-toast.on{opacity:1;transform:translateX(-50%)}
-#ix-toast.bad{border-left-color:var(--ix-err);color:var(--ix-err)}
 /* messages appear at the top of the page,just under the bar,so they never cover the editing bars at the bottom */
-html[data-ix-bar][data-ix-nav="top"] #ix-toast,html[data-ix-bar][data-ix-nav="top"] .toast{top:calc(var(--ix-top-now) + 14px)!important}
-html.ix-hide[data-ix-bar][data-ix-nav="top"] #ix-toast,html.ix-hide[data-ix-bar][data-ix-nav="top"] .toast{top:calc(var(--ix-safe-top) + 14px)!important}
-html:has(dialog[open],#ix-dlg.open) #ix-toast,html:has(dialog[open],#ix-dlg.open) .toast{top:auto!important;bottom:24px}
+html[data-ix-bar][data-ix-nav="top"] .toast{top:calc(var(--ix-top-now) + 14px)!important}
+html.ix-hide[data-ix-bar][data-ix-nav="top"] .toast{top:calc(var(--ix-safe-top) + 14px)!important}
+html:has(dialog[open],#ix-dlg.open) .toast{top:auto!important;bottom:24px}
 /* while a dialog is open,the message goes below it */
 #ix-fontc{margin-top:8px}
 /* ---------- PAGE CONTRACT: a page marks its own controls,the bar takes them over ----------
@@ -350,7 +347,6 @@ html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!impo
 #ix-private h1{font-size:24px;margin:0 0 8px}
 #ix-private p{color:var(--ix-mu);margin:0 0 22px}
 #ix-private button{height:44px;padding:0 26px;border-radius:11px;border:0;background:var(--ix-accent);color:var(--ix-ink);font:700 15px var(--ix-font);cursor:pointer}
-@media (prefers-reduced-motion:reduce){#ix-toast{transition:none}}
 /* ---------- smoothness everywhere ----------
    Low-specificity defaults,so a page's own transitions still win where it has them. */
 @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}:where(button,a,input,select,textarea,summary,label,[role="button"],[role="tab"]){transition:background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease,opacity .18s ease,transform .18s ease}:where(img){transition:opacity .25s ease}:where(button:not(:disabled),[role="button"]):active{transform:scale(.985)}dialog[open]{animation:ix-pop .2s cubic-bezier(0,0,.2,1)}dialog[open]::backdrop{animation:ix-fade-in .2s ease}.sheet[open]{animation:ix-pop .22s cubic-bezier(0,0,.2,1)}html[data-ix-app="info"] main.boxes:not([hidden]),html[data-ix-app="tasks"] :is(#vlist,#van,#vdone):not([hidden]),html[data-ix-app="links"] #grid.swap,html[data-ix-app="tools"] #main>*{animation:ix-rise .28s cubic-bezier(0,0,.2,1)}#ix-toast{transition:opacity .25s ease,transform .25s ease}}
@@ -619,8 +615,6 @@ kbd{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 7p
 #ix-savepill{position:fixed;left:14px;bottom:14px;z-index:2147483001;padding:6px 13px;border-radius:99px;background:var(--ix-s1,#1b1b1b);color:var(--ix-tx,#eee);border:1px solid var(--ix-line2,#333);font:600 12.5px system-ui,sans-serif;opacity:0;transform:translateY(6px);transition:opacity .15s,transform .15s;pointer-events:none}
 #ix-savepill.on{opacity:1;transform:none}
 #ix-savepill.saved{color:#6fe0a6}#ix-savepill.failed{color:#ff8a8a;border-color:#ff8a8a}
-#ix-toast .ix-tact{margin-left:14px;border:0;background:none;color:var(--ix-accent,#ffc21a);font:700 inherit;cursor:pointer;text-decoration:underline}
-#ix-toast:has(.ix-tact){pointer-events:auto}
 @media (prefers-reduced-motion:reduce){#ix-savepill{transition:none}}
 dialog.sheet .sb h3{display:flex;align-items:center;gap:10px;color:color-mix(in srgb,var(--ix-accent,#ffc21a) 32%,currentColor)!important;opacity:1!important}
 /* (1.61.9) one button shape on every page (Links, Info, Cards, Tasks, Files, Tools, Home and every window): rounded 12 px, bold,
@@ -980,3 +974,33 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.14)}
   html[data-ix-nav="top"]:not([data-ix-glass]):not([data-ix-app="home"]) #ix-bar{background:var(--ix-barbg,var(--ix-bg));-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom-color:color-mix(in srgb,var(--ix-line) 55%,transparent)}
   html[data-ix-nav="top"] #ix-bar .ix-tools{background:none;box-shadow:none;padding:0;gap:2px}
 }
+
+/* (1.75.0) Messages: cards in the bottom right corner (tile, message, source and time), the bell for what was missed, the list behind it */
+#ix-toast{position:fixed;right:16px;bottom:16px;z-index:2147483003;display:none;flex-direction:column;gap:10px;width:min(380px,calc(100vw - 32px));pointer-events:none;font:14px var(--ix-font)}
+#ix-toast.on{display:flex}
+html[data-ix-nav="dock"] #ix-toast,html[data-ix-nav="dock"] #ix-bell{bottom:calc(var(--ix-dock) + 34px + env(safe-area-inset-bottom,0px))}
+.ix-nc{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--ix-line2);border-radius:16px;background:var(--ix-s1);color:var(--ix-tx);box-shadow:0 12px 32px -8px rgba(0,0,0,.55);pointer-events:auto;opacity:0;transform:translateY(10px) scale(.98);transition:opacity .16s ease,transform .18s ease}
+.ix-nc.in{opacity:1;transform:none}
+#ix-nlist .ix-nc{opacity:1;transform:none;box-shadow:none;background:var(--ix-s2)}
+.ix-nc.bad{border-color:color-mix(in srgb,var(--ix-err) 45%,var(--ix-line2))}
+.ix-nt{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--ix-accent);color:#111}
+.ix-nt.bad{background:var(--ix-err);color:#fff}.ix-nt.ok{background:var(--ix-ok,#22c55e);color:#06210f}
+.ix-nt svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ix-nb{flex:1;min-width:0}
+.ix-nm{font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.ix-nb small{display:block;margin-top:2px;color:var(--ix-mu);font-size:12.5px}
+.ix-nx{flex:none;width:26px;height:26px;border:0;border-radius:8px;background:none;color:var(--ix-mu);font-size:18px;line-height:1;cursor:pointer}
+.ix-nx:hover{background:var(--ix-s3);color:var(--ix-tx)}
+.ix-nc .ix-tact{flex:none;border:0;border-radius:9px;background:var(--ix-s3);color:var(--ix-accent,#ffc21a);font:700 13px var(--ix-font);padding:7px 12px;cursor:pointer}
+#ix-bell{position:fixed;right:16px;bottom:16px;z-index:2147483002;width:44px;height:44px;border-radius:50%;border:1px solid var(--ix-line2);background:var(--ix-s1);color:var(--ix-tx);display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 24px -6px rgba(0,0,0,.55)}
+#ix-bell[hidden]{display:none}
+#ix-bell svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ix-bell b{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ix-accent);color:#111;font:700 11px/18px var(--ix-font);text-align:center}
+#ix-nlist{position:fixed;right:16px;bottom:16px;z-index:2147483004;width:min(400px,calc(100vw - 32px));max-height:min(520px,calc(100vh - 32px));display:flex;flex-direction:column;border:1px solid var(--ix-line2);border-radius:18px;background:var(--ix-s1);color:var(--ix-tx);box-shadow:0 18px 48px -10px rgba(0,0,0,.65);font:14px var(--ix-font)}
+html[data-ix-nav="dock"] #ix-nlist{bottom:calc(var(--ix-dock) + 34px + env(safe-area-inset-bottom,0px))}
+.ix-nlh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--ix-line)}
+.ix-nlh span{flex:1;color:var(--ix-mu);font-size:12.5px}
+.ix-nlh button{border:0;background:none;color:var(--ix-mu);font:600 13px var(--ix-font);cursor:pointer;border-radius:8px;padding:5px 8px}
+.ix-nlh .ix-nlx{font-size:20px;line-height:1}
+.ix-nlb{overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+@media (prefers-reduced-motion:reduce){.ix-nc{transition:none}}
