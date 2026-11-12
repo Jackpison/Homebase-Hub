@@ -259,7 +259,7 @@ if (!empty($site['private']) && !hub_admin()) {
       <div class="bgp" role="tabpanel" id="bgp-main" aria-labelledby="bgt-main">
       <section>
         <h3>Theme</h3>
-        <p class="hint">Pick what Home takes turns with. <b>Mix Everything</b> takes turns between all of them. Photos, uploads and designs each have their own tab.</p>
+        <p class="hint">Pick what Home takes turns with. The photo sources, your uploads and the designs each have their own tab.</p>
         <div class="themes" id="themeRows"></div>
       </section>
       <section>

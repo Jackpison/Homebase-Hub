@@ -586,7 +586,7 @@ function renderThemes(){
     return `<div class="theme${on === id ? ' on' : ''}" data-theme="${id}"><div class="theme-mos" data-n="${m.n}">${m.html}</div>
     <div class="theme-b"><b>${name}${on === id ? ' <span class="pill">In Use</span>' : ''}</b><small>${about}</small><div class="theme-acts">${acts}</div></div></div>`; };
   const dids = Object.keys(ADMIN.designsInfo || {});
-  const mixCard = card('mix', 'Mix Everything', 'Takes turns between all of it: Starter, your uploads, the animated designs and the online photos.', '<span class="theme-ph">Photos · Uploads · Designs</span>',
+  const mixCard = card('mix', 'Mix Everything', 'A bit of everything, in turn', [...st.slice(0, 2).map(thumb), ...dids.slice(0, 3).map(id => `<span class="dz-chip" style="--dzg:${esc(dzGrad(id))}"></span>`)],
     on === 'mix' ? '' : '<button type="button" class="btn small primary" data-t="use-mix">Use</button>');
   const dcard = dids.length ? card('designs', 'Animated Designs', dids.filter(id => dzDraft(id).on).length + ' of ' + dids.length + ' designs, drawn live', dids.slice(0, 5).map(id => `<span class="dz-chip" style="--dzg:${esc(dzGrad(id))}"></span>`),
       on === 'designs' ? '' : '<button type="button" class="btn small primary" data-t="use-designs">Use</button>') : '';

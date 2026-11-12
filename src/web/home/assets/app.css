@@ -265,7 +265,7 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
 
 .group{background:var(--s-bg2);border-radius:16px;overflow:hidden}
 /* Background sheet tabs (1.74.1): Main, Animated, Sources, Uploads */
-.bgtabs{display:flex;gap:2px;padding:3px;margin:0 22px 4px;background:var(--s-bg2);border-radius:var(--r-ctl);overflow-x:auto;scrollbar-width:none}
+.bgtabs{flex:none;display:flex;gap:2px;padding:3px;margin:0 22px 4px;background:var(--s-bg2);border-radius:var(--r-ctl);overflow-x:auto;scrollbar-width:none}
 .bgtabs button{flex:1 0 auto;background:none;border:0;border-radius:9px;padding:8px 14px;cursor:pointer;font:inherit;font-size:.9rem;font-weight:500;color:var(--s-mute);white-space:nowrap}
 .bgtabs button[aria-selected="true"]{background:var(--s-bg);color:var(--s-ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .bgp{display:flex;flex-direction:column;gap:18px}
@@ -328,10 +328,12 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 }
 
 /* Background > Theme cards */
-.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:8px}
-.theme{border:1px solid var(--s-line,rgba(255,255,255,.12));border-radius:14px;overflow:hidden;background:var(--s-bg2);display:grid}
+.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:8px;align-items:start}
+.theme{border:1px solid var(--s-line,rgba(255,255,255,.12));border-radius:14px;overflow:hidden;background:var(--s-bg2);display:grid;align-content:start}
 .theme.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
-.theme-mos{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:#000;height:106px}
+.theme-mos{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:#000;height:64px}
+.theme-mos{overflow:hidden}
+.theme-mos > *{min-width:0;min-height:0}
 .theme-mos img{width:100%;height:100%;object-fit:cover;display:block}
 .theme-mos img:first-child{grid-row:1/3}
 .theme-ph{grid-column:1/-1;grid-row:1/3;display:grid;place-items:center;color:var(--s-mute);font-size:.82rem;background:var(--s-bg3)}
@@ -352,7 +354,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .dz-cols input[type=color],#designOpts input[type=color]{width:44px;height:34px;padding:0;border:1px solid var(--s-line,rgba(255,255,255,.2));border-radius:8px;background:none;cursor:pointer}
 .thumb.dzp{display:block}
 .thumb.dzp .dz-sw{width:100%;height:100%;border-radius:0;box-shadow:none}
-.theme-b{padding:10px 12px;display:grid;gap:4px}
+.theme-b{padding:8px 10px;display:grid;gap:3px}
 .theme-b small{color:var(--s-mute);font-size:.82rem}
 .theme-b .pill{font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink);margin-left:4px;vertical-align:middle}
 .theme-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
