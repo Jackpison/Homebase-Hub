@@ -54,7 +54,7 @@ jobs:
       - name: Library safety check
         run: python3 tests/repo/check_libraries.py
       - name: Workflow files keep their safety settings (pinned Actions, no kept token, time limits) and no secret is in the repo
-        run: python3 tests/repo/workflows_test.py && python3 tests/repo/secrets_test.py && python3 tests/repo/parallel_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py && python3 tests/repo/releases_test.py && python3 tests/repo/maintain_test.py && python3 tests/repo/presets_test.py && python3 tests/repo/tools_list_test.py && python3 tests/repo/root_test.py && python3 tests/repo/speculation_test.py && python3 tests/repo/overrides_test.py && python3 tests/repo/helpers_test.py && python3 tests/repo/fixed_waits_test.py && python3 tests/repo/deploy_test.py
+        run: python3 tests/repo/workflows_test.py && python3 tests/repo/secrets_test.py && python3 tests/repo/parallel_test.py && python3 tests/repo/ci_status_test.py && python3 tests/repo/ci_changes_test.py && python3 tests/repo/releases_test.py && python3 tests/repo/maintain_test.py && python3 tests/repo/presets_test.py && python3 tests/repo/tools_list_test.py && python3 tests/repo/root_test.py && python3 tests/repo/speculation_test.py && python3 tests/repo/overrides_test.py && python3 tests/repo/helpers_test.py && python3 tests/repo/fixed_waits_test.py && python3 tests/repo/deploy_test.py && python3 tests/repo/designs_test.py
       - name: Workflow check (zizmor, strictest setting)
         run: python3 -m venv /tmp/zz && /tmp/zz/bin/pip install -q zizmor==1.30.1 && /tmp/zz/bin/zizmor --offline --persona=auditor .github/workflows/
       - name: Workflow check (actionlint, with shellcheck on the shell steps; the download is checked against its SHA-256)
@@ -239,7 +239,8 @@ jobs:
             "share|tests/browser/share_test.py build/site-update-*.zip" \
             "offline|tests/browser/offline_test.py build/site-update-*.zip --browser chromium" \
             "tasks more|tests/browser/tasks_more_test.py build/site-update-*.zip --browser chromium" \
-            "import center|tests/browser/importer_test.py build/site-update-*.zip --browser chromium" || rc=1
+            "import center|tests/browser/importer_test.py build/site-update-*.zip --browser chromium" \
+            "designs|tests/browser/designs_test.py build/site-update-*.zip --browser chromium" || rc=1
           python3 tests/lib/run_parallel.py --retry 1 -j 1 "slow phone|tests/browser/speed_test.py build/site-update-*.zip" || rc=1
           exit $rc
       - name: Tools half in WebKit (several tests at once)

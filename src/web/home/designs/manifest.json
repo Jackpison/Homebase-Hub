@@ -1,0 +1,66 @@
+{
+ "aero-shards": {
+  "src": "187e2e986121d390",
+  "bytes": 229916
+ },
+ "balatro": {
+  "src": "fb109b9458b61372",
+  "bytes": 18255
+ },
+ "ballpit": {
+  "src": "d5f3214f2697220e",
+  "bytes": 26060
+ },
+ "crystalized-ball": {
+  "src": "be94045b952f8824",
+  "bytes": 86793
+ },
+ "flux-lines": {
+  "src": "9e121f34bffdbc98",
+  "bytes": 13864
+ },
+ "galaxy": {
+  "src": "d883775486c812e7",
+  "bytes": 17305
+ },
+ "gradient-waves": {
+  "src": "5b7744464dc931a3",
+  "bytes": 16978
+ },
+ "hyperspeed": {
+  "src": "7cb644e9199fe07d",
+  "bytes": 578313
+ },
+ "iridescence": {
+  "src": "d04777153f7b98eb",
+  "bytes": 13658
+ },
+ "letter-glitch": {
+  "src": "80901c648b48978a",
+  "bytes": 20773
+ },
+ "light-tunnel": {
+  "src": "8a3d7a18b6c117fe",
+  "bytes": 15378
+ },
+ "lightfall": {
+  "src": "3177714e54fa08c4",
+  "bytes": 21256
+ },
+ "lightning": {
+  "src": "89718e3c03c61255",
+  "bytes": 17550
+ },
+ "orb": {
+  "src": "bea6af31b26fd95e",
+  "bytes": 16119
+ },
+ "pattern-waves": {
+  "src": "51dac188cf646795",
+  "bytes": 75196
+ },
+ "topography": {
+  "src": "7711b4b4a3dd815a",
+  "bytes": 41039
+ }
+}

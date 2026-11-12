@@ -71,8 +71,8 @@ if (!empty($site['private']) && !hub_admin()) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.73.2">
-<script src="../hub/core/assets/shell.js?v=1.73.2" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.74.0">
+<script src="../hub/core/assets/shell.js?v=1.74.0" data-app="home"></script>
 <link rel="icon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <link rel="manifest" href="../hub/core/api.php?action=manifest">
 <link rel="stylesheet" href="<?= $v('assets/app.css') ?>">
@@ -94,8 +94,8 @@ if (!empty($site['private']) && !hub_admin()) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title><?= $h($site['title']) ?></title>
-<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.73.2">
-<script src="../hub/core/assets/shell.js?v=1.73.2" data-app="home"></script>
+<link rel="stylesheet" href="../hub/core/assets/shell.css?v=1.74.0">
+<script src="../hub/core/assets/shell.js?v=1.74.0" data-app="home"></script>
 <link rel="icon" id="favicon" href="<?= $h($favicon) ?>" type="<?= $iconType ?>" sizes="any">
 <?php if ($logoOk): ?><link rel="apple-touch-icon" href="<?= $h($favicon) ?>"><?php else: ?><link rel="apple-touch-icon" href="../hub/core/assets/brand/apple-touch-icon.png"><?php endif; ?>
 <!-- install on a phone or computer: Settings > General > Install on Your Phone -->
@@ -254,6 +254,11 @@ if (!empty($site['private']) && !hub_admin()) {
     <header class="sh"><h2>Background</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
     <div class="sb">
       <section>
+        <h3>Animated Designs</h3>
+        <p class="hint">Backgrounds drawn live, from <a href="https://reactbits.dev" target="_blank" rel="noopener noreferrer">React Bits</a>. Switch a design off to leave it out of the rotation. The heaviest ones are for computers only, and with Reduce Motion on they stand still.</p>
+        <div class="designs" id="designRows"></div>
+      </section>
+      <section>
         <h3>Theme</h3>
         <p class="hint">Backgrounds Home takes turns with.</p>
         <div class="themes" id="themeRows"></div>
@@ -318,13 +323,24 @@ if (!empty($site['private']) && !hub_admin()) {
 </dialog>
 
 
+<dialog class="sheet" id="designSheet">
+  <form method="dialog" class="sheet-in" id="designForm">
+    <header class="sh"><h2 id="designTitle">Design</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
+    <div class="sb" id="designOpts"></div>
+    <footer class="sf">
+      <button type="button" class="btn" id="designReset">Reset</button>
+      <div class="sf-r"><button type="submit" class="btn primary">Done</button></div>
+    </footer>
+  </form>
+</dialog>
+
 <dialog class="sheet wide" id="themeSheet">
   <form method="dialog" class="sheet-in" id="themeForm">
     <header class="sh"><h2 id="themeTitle">New Theme</h2><button type="button" class="x" data-close aria-label="Close">✕</button></header>
     <div class="sb">
       <label class="field"><span>Name</span><input type="text" id="tName" maxlength="40" placeholder="My Theme" required></label>
       <div class="field"><span>Backgrounds <b id="tCount"></b></span>
-        <small class="hint">Tick the uploads this theme takes turns with. To add pictures or videos, drop them under Your Uploads first.</small>
+        <small class="hint">Tick the uploads and animated designs this theme takes turns with. To add pictures or videos, drop them under Your Uploads first.</small>
         <div class="thumbs pick" id="tPick"></div></div>
     </div>
     <footer class="sf">

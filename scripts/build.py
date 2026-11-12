@@ -39,6 +39,7 @@ def main():
             sys.exit('Refusing to build: %s exists in the source tree (it is private data and must never be shipped). Delete it.' % bad)
     shutil.rmtree(OUT, ignore_errors=True)
     shutil.copytree(os.path.join(ROOT, 'src'), TREE)
+    shutil.rmtree(os.path.join(TREE, 'web', 'home', 'designs-src'), ignore_errors=True)   # the React Bits sources and the small runtime (scripts/build-designs.py): the built files in web/home/designs/ ship
     shutil.rmtree(os.path.join(TREE, 'web', 'hub', 'core', 'assets', 'admin'), ignore_errors=True)   # the parts of shell-admin.js (scripts/make-admin.py): the joined file is what ships
     held = []
     for dp, dn, fns in os.walk(TREE):

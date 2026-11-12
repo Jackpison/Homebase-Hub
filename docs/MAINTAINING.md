@@ -30,6 +30,8 @@ When there is no maintenance pull request, everything was already current. Nothi
 
 **Once, after the first release with Docker (1.73.0):** GitHub makes a new image private. On github.com open your profile › **Packages › homebase-hub › Package settings**, and under *Danger Zone* choose **Change visibility › Public**. Without this nobody else can download the image.
 
+**A Dependabot pull request for `ogl`, `three` or `vgpu` fails the designs check** (the Home Animated Designs are built into the site from those): close it and run `python3 scripts/build-designs.py` yourself (or ask for it), then commit the rebuilt `src/web/home/designs/`.
+
 **Dependabot pull requests:** open each one. When its checks are green, press **Merge**. They change only the build and test tools, never your sites.
 
 ## When something fails

@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.74.0 | Animated Designs for Home: sixteen live backgrounds from React Bits with options and Preview; one glass behind the clock on an iPhone app |
 | 1.73.2 | A page no longer reloads itself by mistake when the connection flickers; the Docker image moves to PHP 8.5.11 |
 | 1.73.1 | One-command install on a VPS and Proxmox; ready files for Unraid, CasaOS, Umbrel and YunoHost; Synology and TrueNAS steps |
 | 1.73.0 | Docker and VPS: a ready image (with Caddy for HTTPS), nginx and Apache setups, and a safe way to run behind your own proxy |
@@ -141,6 +142,27 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.74.0
+
+### New
+
+- **Animated Designs for Home.** Sixteen live backgrounds, drawn in your browser: Iridescence, Flux Lines, Galaxy, Crystal Ball, Pattern Waves, Gradient Waves, Topography, Light Tunnel, Lightfall, Lightning, Hyperspeed, Ballpit, Orb, Letter Glitch, Balatro and Aero Shards. A new site starts with them. Starter and Online Photos stay as they were, and a site that chose one keeps it.
+- **Home Settings > Background > Animated Designs.** Each design has a switch (in or out of the rotation), **Preview** (shows it at once, saves nothing) and **Options** (colours, speed and a few more, inside safe limits). Your own themes can take designs along with your uploads.
+- **Kind to phones and slow machines.** Hyperspeed and Aero Shards are for computers only: they are never offered or downloaded on a phone, and Aero Shards also needs WebGPU. With Reduce Motion on, only the designs that can stand still are used. A design's files are fetched only when it is on screen, and a phone draws at a lower pixel ratio.
+- **Credit and licence.** Each design shows "From React Bits" in the corner. The files keep the React Bits licence (MIT with the Commons Clause), not the GPL; this is written in `THIRD-PARTY.md` and on the Licence page.
+
+### Fixed
+
+- **iPhone app:** with Bar Glass on, the clock area looked like a darker band above the bar. One glass now covers both while the bar shows.
+
+### Behind the scenes
+
+- Settings' script is cut into labelled parts (`assets/admin/`) and joined into the same single file at build time: nothing runs differently. The parts are not in the zip.
+- More of the JavaScript is type-checked (`tabs.js`, `importer.js`).
+- The designs are built by `scripts/build-designs.py` from the React Bits sources, run without React by a small runtime; new tests check each design draws, the licence banner, size limits and that nothing is fetched.
 
 ---
 

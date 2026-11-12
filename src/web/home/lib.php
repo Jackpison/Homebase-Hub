@@ -96,7 +96,8 @@ function default_site(): array
             'motion'       => true,
             'rotate'       => 0,
             'custom'       => [],
-            'theme'        => 'starter',   // a new site starts with the Starter theme; sites from before 1.48.9 keep Online Photos
+            'theme'        => 'designs',   // a new site starts with the Animated Designs (1.74.0); a site that chose Starter or Online Photos keeps it
+            'designs'      => [],          // (1.74.0) per design: ['on' => in the rotation, 'opts' => your options]; missing = on, with the design's own settings
             'starterOff'   => false,
             'themes'       => [],          // your own themes: [{id, name, items: ['uploads/…']}]
         ],
@@ -200,6 +201,7 @@ function clean_site(array $in): array
             'custom'       => $custom,
             'starterOff'   => $starterOff = (bool) ($b['starterOff'] ?? false),
             'themes'       => $themes = clean_themes($b['themes'] ?? []),
+            'designs'      => clean_designs($b['designs'] ?? []),
             'theme'        => theme_ok((string) ($b['theme'] ?? ''), $starterOff, $themes) ? (string) $b['theme'] : 'online',
         ],
         'panel' => [
@@ -516,7 +518,7 @@ function public_payload(): array
     }
     $theme = $s['bg']['theme'] ?? 'online';
     $uploads = array_map(fn($u) => ['url' => $u['url'], 'type' => $u['type'], 'credit' => 'Your upload', 'own' => true], list_uploads());
-    $own = theme_items($theme, $s['bg']['themes'] ?? [], $uploads);
+    $own = theme_items($theme, $s['bg']['themes'] ?? [], $uploads, $s);
     if ($theme !== 'online') { $photos = []; $need = false; }   // Starter and your own themes use only their own backgrounds: nothing is downloaded
     return [
         'title'   => $s['title'],
@@ -532,6 +534,7 @@ function public_payload(): array
             'motion'       => $s['bg']['motion'],
             'rotate'       => $s['bg']['rotate'],
             'theme'        => $theme,
+            'dv'           => (int) @filemtime(__DIR__ . '/designs/manifest.json'),   // changes with a new release: the designs' files are fetched again
             'own'          => $own,   // the theme's backgrounds, in order (empty for Online Photos)
             'photos'       => $photos,
             'refill'       => $need,
@@ -552,6 +555,7 @@ function clean_themes($in): array
         if (!is_array($t) || !preg_match('/^[a-f0-9]{8}$/', (string) ($t['id'] ?? '')) || isset($ids[$t['id']])) continue;
         $items = [];
         foreach (is_array($t['items'] ?? null) ? $t['items'] : [] as $u) {
+            if (is_string($u) && preg_match('~^design:[a-z0-9-]{3,30}$~', $u) && isset(designs_registry()[substr($u, 7)]) && !in_array($u, $items, true)) $items[] = $u;   // (1.74.0) an animated design in a theme
             if (is_string($u) && preg_match('~^uploads/[a-f0-9]{16}\.(jpg|png|webp|gif|avif|mp4|webm)$~', $u) && is_file(UPLOAD_DIR . '/' . substr($u, 8)) && !in_array($u, $items, true)) $items[] = $u;
             if (count($items) >= MAX_THEME_ITEMS) break;
         }
@@ -565,18 +569,76 @@ function theme_ok(string $theme, bool $starterOff, array $themes): bool
 {
     if ($theme === 'starter') return !$starterOff;
     if ($theme === 'online') return true;
+    if ($theme === 'designs') return designs_registry() !== [];
     return str_starts_with($theme, 't:') && in_array(substr($theme, 2), array_column($themes, 'id'), true);
 }
 /** The backgrounds of the theme in use: Starter's own plus your uploads, or the uploads you chose for your theme. */
-function theme_items(string $theme, array $themes, array $uploads): array
+function theme_items(string $theme, array $themes, array $uploads, array $site = []): array
 {
     if ($theme === 'starter') return array_merge(starter_list(), $uploads);
+    if ($theme === 'designs') return designs_items($site);
     if (!str_starts_with($theme, 't:')) return [];
     foreach ($themes as $t) if ('t:' . $t['id'] === $theme) {
         $byUrl = array_column($uploads, null, 'url');
-        return array_values(array_filter(array_map(fn($u) => $byUrl[$u] ?? null, $t['items'])));
+        return array_values(array_filter(array_map(fn($u) => str_starts_with($u, 'design:') ? design_item(substr($u, 7), $site) : ($byUrl[$u] ?? null), $t['items'])));
     }
     return [];
+}
+
+/* ================= animated designs (1.74.0) =================
+   Backgrounds drawn live in the browser (React Bits components, run without React): the list, their settings and the limits of each
+   option are in designs/designs.json; the code of each is designs/<id>.js, loaded only for the one on screen. */
+function designs_registry(): array
+{
+    static $r = null;
+    if ($r === null) { $j = json_decode((string) @file_get_contents(__DIR__ . '/designs/designs.json'), true); $r = is_array($j) ? $j : []; }
+    return $r;
+}
+function design_hex($v): ?string { return is_string($v) && preg_match('/^#[0-9a-fA-F]{6}$/', $v) ? strtolower($v) : null; }
+/** Your options for one design: only the ones it lists, each inside its limits (a colour, 1 to max colours, a number on its step, one of its choices). */
+function design_clean_opts(string $id, $in): array
+{
+    $out = []; $in = is_array($in) ? $in : [];
+    foreach (designs_registry()[$id]['options'] ?? [] as $o) {
+        $k = $o['k']; if (!array_key_exists($k, $in)) continue;
+        $v = $in[$k];
+        if ($o['type'] === 'color') { if (($c = design_hex($v)) !== null) $out[$k] = $c; }
+        elseif ($o['type'] === 'colors') {
+            $l = array_values(array_filter(array_map('design_hex', is_array($v) ? array_slice($v, 0, (int) $o['max']) : [])));
+            if ($l) $out[$k] = $l;
+        } elseif ($o['type'] === 'range') {
+            if (is_numeric($v)) { $n = max($o['min'], min($o['max'], (float) $v)); $out[$k] = round(round(($n - $o['min']) / $o['step']) * $o['step'] + $o['min'], 4) + 0; }
+        } elseif ($o['type'] === 'choice') { if (is_string($v) && in_array($v, $o['choices'], true)) $out[$k] = $v; }
+    }
+    return $out;
+}
+function clean_designs($in): array
+{
+    $out = [];
+    foreach (is_array($in) ? $in : [] as $id => $d) {
+        if (!is_string($id) || !isset(designs_registry()[$id]) || !is_array($d)) continue;
+        $out[$id] = ['on' => ($d['on'] ?? true) !== false, 'opts' => design_clean_opts($id, $d['opts'] ?? [])];
+    }
+    return $out;
+}
+/** One design as a background the page can show: the design's own settings with your options on top. */
+function design_item(string $id, array $site): ?array
+{
+    $d = designs_registry()[$id] ?? null; if (!$d) return null;
+    $mine = $site['bg']['designs'][$id]['opts'] ?? [];
+    return ['url' => 'design:' . $id, 'type' => 'design', 'credit' => 'From React Bits', 'link' => $d['link'], 'src' => 'design',
+            'design' => ['id' => $id, 'props' => array_merge($d['defaults'], design_clean_opts($id, $mine)), 'desktop' => (bool) $d['desktop'], 'gpu' => (string) $d['gpu'],
+                         'still' => (bool) $d['still'], 'dpr' => (bool) $d['dpr']]];
+}
+/** The Animated Designs theme: every design that is on (all of them until you switch one off), in the list's order. */
+function designs_items(array $site): array
+{
+    $out = [];
+    foreach (array_keys(designs_registry()) as $id) {
+        if (($site['bg']['designs'][$id]['on'] ?? true) === false) continue;
+        if ($i = design_item($id, $site)) $out[] = $i;
+    }
+    return $out;
 }
 
 /** The Starter theme's backgrounds whose files are here (a video arrives one release after its still picture). */

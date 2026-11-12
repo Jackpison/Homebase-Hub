@@ -53,6 +53,37 @@ const portraitMQ = matchMedia('(max-aspect-ratio: 3/4)');
 const bgSrc = item => media(item.p && portraitMQ.matches ? item.url.replace(/\.(jpe?g|png|webp)$/i, '-p.jpg') : item.url);
 portraitMQ.addEventListener?.('change', () => document.querySelectorAll('#bg > img[data-p]').forEach((/** @type {HTMLImageElement} */ n) => { n.src = bgSrc({ url:n.dataset.u, p:1 }); }));
 
+/* ---------- animated designs (1.74.0) ----------
+   A design is drawn live in the browser (designs/<id>.js, with its small .css, loaded only when it is on screen). Computers only for the heavy
+   ones; Reduce Motion keeps to the designs that can stand still; a phone gets a lower pixel ratio. */
+const isPhone = () => matchMedia('(pointer: coarse)').matches || Math.min(innerWidth, innerHeight) < 700;
+const designOk = i => i.type !== 'design' || !((i.design.desktop && isPhone()) || (i.design.gpu === 'webgpu' && !(/** @type {any} */ (navigator).gpu)) || (REDUCED && !i.design.still));
+const DESIGNS = {
+  files: {},   // id -> the promise of its files
+  need(id){
+    return this.files[id] ||= new Promise((res, rej) => {
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = `designs/${id}.css?v=${PUB.bg.dv || 0}`; css.onerror = () => {}; document.head.appendChild(css);
+      const js = document.createElement('script'); js.src = `designs/${id}.js?v=${PUB.bg.dv || 0}`;
+      js.onload = () => (/** @type {any} */ (window).HubDesigns?.[id] ? res(true) : rej(new Error('design')));
+      js.onerror = () => { delete this.files[id]; rej(new Error('design')); };
+      document.head.appendChild(js);
+    });
+  },
+  async load(item){
+    const d = item.design; await this.need(d.id);
+    const node = /** @type {any} */ (document.createElement('div')); node.className = 'design'; node.setAttribute('aria-hidden', 'true');
+    const props = { ...d.props }; if (d.dpr) props.dpr = isPhone() ? 1.5 : 2;
+    node._start = () => {
+      try {
+        node._run = /** @type {any} */ (window).HubDesigns[d.id].start(node, props);
+        if (REDUCED && d.still) setTimeout(() => node._run?.update({ paused:true }), 1500);   // one still picture
+      } catch { node.remove(); }
+    };
+    node._stop = () => { try { node._run?.destroy(); } catch {} node._run = null; };
+    return node;
+  },
+};
+
 const BG = {
   el: $('#bg'),
   token: 0,
@@ -72,6 +103,7 @@ const BG = {
   wait(on){ this.busy(on); this.el.classList.toggle('wait', on); },
 
   load(item, wait = 20000){
+    if (item.type === 'design') return DESIGNS.load(item);
     return new Promise((res, rej) => {
       // a video with a still picture: the picture shows at once, and stays where the video can't play (AV1 on an older browser, data saver, Reduce Motion)
       if (item.type === 'video' && item.poster){
@@ -109,11 +141,12 @@ const BG = {
     const old = [...this.el.children];
     if (node.tagName === 'IMG' && motionOn()) node.classList.add('kb');
     this.el.appendChild(node);
+    if (node._start) node._start();
     if (node.tagName === 'VIDEO') node.play().catch(() => {});
     requestAnimationFrame(() => requestAnimationFrame(() => {
       node.classList.add('on');
       old.forEach(n => n.classList.remove('on'));
-      setTimeout(() => old.forEach(n => n.remove()), 1800);
+      setTimeout(() => old.forEach(n => { n.remove(); if (n._stop) n._stop(); }), 1800);
     }));
     this.credit(item.credit, item.link);
     this.cur = item.url;
@@ -138,7 +171,7 @@ const BG = {
     const ups = (PUB.uploads || []).filter(u => !(saveData && u.type === 'video'));
 
     if (PUB.bg.theme && PUB.bg.theme !== 'online'){   // a theme (Starter or your own): its backgrounds take turns
-      const mine = (PUB.bg.own || []).filter(i => !(saveData && i.type === 'video' && !i.poster));
+      const mine = (PUB.bg.own || []).filter(i => !(saveData && i.type === 'video' && !i.poster) && designOk(i));
       return mine.length ? pick(fresh(mine)) : null;
     }
     if (ups.length && (Math.random() < PUB.bg.uploadChance || (!images.length && !videos.length))) return pick(fresh(ups));
@@ -248,6 +281,7 @@ const BG = {
     let first = PUB.first;
     if (force === 'upload' && PUB.uploads.length) first = pick(PUB.uploads);
     else if (force && (PUB.bg.photos || []).some(p => p.src === force)) first = pick(PUB.bg.photos.filter(p => p.src === force));
+    if (first && !designOk(first)) first = this.pick();   // (1.74.0) the server chose a design this device cannot run (a computers-only one on a phone)
     if (first) this.show(first);
     if (PUB.bg.refill) setTimeout(() => this.refill(!first), first ? 4000 : 0);
     this.schedule();
@@ -510,7 +544,7 @@ function openBg(){
   bgDraft = structuredClone(ADMIN.bg);
   bgDraft.custom = bgDraft.custom || [];
   customDirty = false;
-  renderThemes(); renderSources(); renderKeys(); renderCustom();
+  renderDesigns(); renderThemes(); renderSources(); renderKeys(); renderCustom();
   $('#bgQuery').value = bgDraft.query;
   $('#bgVideo').value = Math.round(bgDraft.videoChance * 100);
   $('#videoVal').textContent = $('#bgVideo').value + '%';
@@ -533,7 +567,10 @@ function renderThemes(){
   const card = (id, name, about, thumbs, acts) => { const m = Array.isArray(thumbs) ? mosaic(thumbs) : { n:0, html:thumbs };
     return `<div class="theme${on === id ? ' on' : ''}" data-theme="${id}"><div class="theme-mos" data-n="${m.n}">${m.html}</div>
     <div class="theme-b"><b>${name}${on === id ? ' <span class="pill">In Use</span>' : ''}</b><small>${about}</small><div class="theme-acts">${acts}</div></div></div>`; };
-  $('#themeRows').innerHTML = (off
+  const dids = Object.keys(ADMIN.designsInfo || {});
+  const dcard = dids.length ? card('designs', 'Animated Designs', dids.filter(id => dzDraft(id).on).length + ' of ' + dids.length + ' designs, drawn live', dids.slice(0, 5).map(id => `<span class="dz-chip" style="--dzg:${esc(dzGrad(id))}"></span>`),
+      on === 'designs' ? '' : '<button type="button" class="btn small primary" data-t="use-designs">Use</button>') : '';
+  $('#themeRows').innerHTML = dcard + (off
       ? `<div class="theme off"><div class="theme-b"><b>Starter</b><small>Removed. It comes with the app, so you can bring it back.</small><div class="theme-acts"><button type="button" class="btn small" data-t="back">Bring Back Starter</button></div></div></div>`
       : card('starter', 'Starter', esc(what || 'Comes with the app') + (st[0]?.type === 'video' ? ' · ' + esc(st[0].credit) + ' first' : ''), st.map(thumb),
           (on === 'starter' ? '' : '<button type="button" class="btn small primary" data-t="use-starter">Use</button>') + '<button type="button" class="btn small danger" data-t="remove">Remove</button>'))
@@ -543,8 +580,9 @@ function renderThemes(){
         const ups = (ADMIN.uploadsAdmin || []).filter(u => t.items.includes(u.url));
         const th = ups.length ? ups.map(u => u.type === 'video' ? `<video src="${esc(media(u.url))}#t=0.5" muted preload="metadata"></video>` : `<img src="${esc(media(u.url))}" alt="" loading="lazy">`) : '<span class="theme-ph">No backgrounds yet</span>';
         const id = 't:' + t.id;
-        return card(id, esc(t.name), ups.length + (ups.length === 1 ? ' background' : ' backgrounds') + ' · your own', th,
-          (on === id || !ups.length ? '' : `<button type="button" class="btn small primary" data-t="use" data-id="${t.id}">Use</button>`)
+        const dn = t.items.filter(u => u.startsWith('design:') && dzInfo()[u.slice(7)]).length;
+        return card(id, esc(t.name), (ups.length + dn) + ((ups.length + dn) === 1 ? ' background' : ' backgrounds') + ' · your own', dn && !ups.length ? t.items.filter(u => u.startsWith('design:') && dzInfo()[u.slice(7)]).map(u => `<span class="dz-chip" style="--dzg:${esc(dzGrad(u.slice(7)))}"></span>`) : th,
+          (on === id || !(ups.length + dn) ? '' : `<button type="button" class="btn small primary" data-t="use" data-id="${t.id}">Use</button>`)
           + `<button type="button" class="btn small" data-t="edit" data-id="${t.id}">Edit</button><button type="button" class="btn small" data-t="export" data-id="${t.id}"${ups.length ? '' : ' disabled'}>Export</button>`);
       }).join('')
     + ((bgDraft.themes || []).length < 8 ? `<div class="theme new"><div class="theme-mos"><span class="theme-ph">+</span></div><div class="theme-b"><b>New Theme</b><small>Make one from your uploads, or import a theme file.</small>
@@ -554,6 +592,7 @@ $('#themeRows').addEventListener('click', e => {
   const b = e.target.closest('[data-t]'); if (!b) return;
   const t = b.dataset.t;
   if (t === 'use-starter') bgDraft.theme = 'starter';
+  else if (t === 'use-designs') bgDraft.theme = 'designs';
   else if (t === 'use-online') bgDraft.theme = 'online';
   else if (t === 'remove'){ bgDraft.starterOff = true; bgDraft.theme = 'online'; }
   else if (t === 'back'){ bgDraft.starterOff = false; bgDraft.theme = 'starter'; }
@@ -564,6 +603,78 @@ $('#themeRows').addEventListener('click', e => {
   else if (t === 'export') return withBusy(b, () => exportTheme(bgDraft.themes.find(x => x.id === b.dataset.id)));
   renderThemes();
 });
+
+/* ---------- Animated Designs (1.74.0): the list in Background, Preview, and each design's options ---------- */
+const dzInfo = () => ADMIN.designsInfo || {};
+const dzDraft = id => { if (!bgDraft.designs || Array.isArray(bgDraft.designs)) bgDraft.designs = {}; return (bgDraft.designs[id] ||= { on:true, opts:{} }); };   // an empty list arrives from PHP as [], which cannot carry named entries
+const dzProps = id => ({ ...dzInfo()[id].defaults, ...dzDraft(id).opts });
+const dzColors = id => {
+  const p = dzProps(id), out = [];
+  dzInfo()[id].options.forEach(o => { if (o.type === 'color') out.push(p[o.k]); else if (o.type === 'colors') out.push(...(p[o.k] || [])); });
+  ['horizonColor', 'waveColor', 'color', 'color1', 'color2', 'color3'].forEach(k => { if (typeof p[k] === 'string' && !out.includes(p[k])) out.push(p[k]); });
+  return out.filter(c => /^#[0-9a-f]{6}$/i.test(c)).slice(0, 3);
+};
+const dzGrad = id => { const c = dzColors(id); while (c.length < 2) c.push('#14141c'); return `linear-gradient(135deg,#0b0b12 0%,${c[0]} 50%,${c[1]} 100%)`; };
+function dzItem(id){
+  const d = dzInfo()[id];
+  return { url:'design:' + id, type:'design', credit:'From React Bits', link:d.link, src:'design', design:{ id, props:dzProps(id), desktop:d.desktop, gpu:d.gpu, still:d.still, dpr:d.dpr } };
+}
+function dzShow(id){ BG.nextUp = null; BG.preloading = null; BG.show(dzItem(id), { count:false }); }
+function renderDesigns(){
+  const ids = Object.keys(dzInfo());
+  $('#designRows').innerHTML = ids.map(id => {
+    const d = dzInfo()[id], here = designOk({ type:'design', design:d }), st = dzDraft(id);
+    return `<div class="dz${here ? '' : ' nope'}" data-id="${id}"><span class="dz-sw" aria-hidden="true" style="--dzg:${esc(dzGrad(id))}"></span>
+      <div class="dz-b"><b>${esc(d.name)}${d.desktop ? ' <span class="pill soft">Computers Only</span>' : ''}${BG.cur === 'design:' + id ? ' <span class="pill">On Screen</span>' : ''}</b><small>${esc(d.about)}${here ? '' : ' Not available on this device.'}</small></div>
+      <div class="dz-a"><label class="dz-on"><input type="checkbox" class="switch" data-z="on"${st.on ? ' checked' : ''} aria-label="Include ${esc(d.name)} in Animated Designs"></label>
+      <button type="button" class="btn small" data-z="preview"${here ? '' : ' disabled'}>Preview</button><button type="button" class="btn small" data-z="opts">Options</button></div></div>`;
+  }).join('');
+}
+let dzEdit = '', dzTimer = 0;
+function drawDesignOpts(){
+  const id = dzEdit, d = dzInfo()[id], p = dzProps(id);
+  $('#designTitle').textContent = d.name;
+  $('#designOpts').innerHTML = d.options.map(o => {
+    if (o.type === 'color') return `<label class="field"><span>${esc(o.label)}</span><input type="color" data-o="${o.k}" value="${esc(p[o.k])}"></label>`;
+    if (o.type === 'colors'){
+      const l = p[o.k] || [];
+      return `<div class="field"><span>${esc(o.label)}</span><div class="dz-cols">${l.map((c, i) => `<input type="color" data-o="${o.k}" data-i="${i}" value="${esc(c)}" aria-label="${esc(o.label)} ${i + 1}">`).join('')}
+        ${l.length < o.max ? `<button type="button" class="btn small" data-oa="${o.k}">Add Color</button>` : ''}${l.length > 1 ? `<button type="button" class="btn small" data-or="${o.k}">Remove Last</button>` : ''}</div></div>`;
+    }
+    if (o.type === 'range') return `<label class="field"><span>${esc(o.label)} <b data-v="${o.k}">${+p[o.k]}</b></span><input type="range" data-o="${o.k}" min="${o.min}" max="${o.max}" step="${o.step}" value="${+p[o.k]}"></label>`;
+    return `<div class="field"><span>${esc(o.label)}</span><div class="seg" role="radiogroup" aria-label="${esc(o.label)}">${o.choices.map(c => `<button type="button" role="radio" data-oc="${o.k}" data-v="${esc(c)}" aria-checked="${p[o.k] === c}">${esc(c[0].toUpperCase() + c.slice(1))}</button>`).join('')}</div></div>`;
+  }).join('');
+}
+function dzSet(k, v){
+  const st = dzDraft(dzEdit); st.opts = { ...st.opts, [k]:v };
+  renderDesigns(); renderThemes();
+  clearTimeout(dzTimer); dzTimer = setTimeout(() => dzShow(dzEdit), 350);   // the background follows your change
+}
+$('#designRows').addEventListener('click', e => {
+  const b = /** @type {HTMLElement | null} */ (/** @type {Element} */ (e.target).closest('button[data-z]')); if (!b) return;
+  const id = /** @type {HTMLElement} */ (b.closest('[data-id]')).dataset.id;
+  if (b.dataset.z === 'preview') dzShow(id);
+  else if (b.dataset.z === 'opts'){ dzEdit = id; drawDesignOpts(); openSheet('designSheet'); }
+});
+$('#designRows').addEventListener('change', e => {
+  const c = /** @type {HTMLInputElement | null} */ (/** @type {Element} */ (e.target).closest('input[data-z="on"]')); if (!c) return;
+  dzDraft(/** @type {HTMLElement} */ (c.closest('[data-id]')).dataset.id).on = c.checked; renderThemes();
+});
+$('#designOpts').addEventListener('input', e => {
+  const t = /** @type {HTMLInputElement} */ (e.target), k = t.dataset.o; if (!k) return;
+  const o = dzInfo()[dzEdit].options.find(x => x.k === k);
+  if (o.type === 'range'){ const q = $('[data-v="' + k + '"]'); if (q) q.textContent = t.value; dzSet(k, +t.value); }
+  else if (o.type === 'color') dzSet(k, t.value);
+  else if (o.type === 'colors'){ const l = [...dzProps(dzEdit)[k]]; l[+t.dataset.i] = t.value; dzSet(k, l); }
+});
+$('#designOpts').addEventListener('click', e => {
+  const b = /** @type {HTMLElement | null} */ (/** @type {Element} */ (e.target).closest('button')); if (!b) return;
+  if (b.dataset.oc){ dzSet(b.dataset.oc, b.dataset.v); drawDesignOpts(); }
+  else if (b.dataset.oa){ const l = [...dzProps(dzEdit)[b.dataset.oa]]; l.push(l[l.length - 1]); dzSet(b.dataset.oa, l); drawDesignOpts(); }
+  else if (b.dataset.or){ const l = [...dzProps(dzEdit)[b.dataset.or]]; l.pop(); dzSet(b.dataset.or, l); drawDesignOpts(); }
+});
+$('#designReset').addEventListener('click', () => { dzDraft(dzEdit).opts = {}; drawDesignOpts(); renderDesigns(); renderThemes(); dzShow(dzEdit); });
+$('#designForm').addEventListener('submit', () => closeSheet('designSheet'));
 
 /* Your own theme: a name and the uploads it takes turns with. Kept in bgDraft until Save Background. */
 let themeEdit = null;
@@ -578,10 +689,11 @@ function openTheme(id){
 }
 function drawThemePick(){
   const ups = ADMIN.uploadsAdmin || [];
-  $('#tPick').innerHTML = ups.length ? ups.map(u => `<label class="thumb${themeEdit.items.includes(u.url) ? ' sel' : ''}">
+  const designs = Object.keys(dzInfo()).map(id => `<label class="thumb dzp${themeEdit.items.includes('design:' + id) ? ' sel' : ''}"><span class="dz-sw" aria-hidden="true" style="--dzg:${esc(dzGrad(id))}"></span><span class="badge">${esc(dzInfo()[id].name)}</span>
+      <input type="checkbox" data-u="design:${id}"${themeEdit.items.includes('design:' + id) ? ' checked' : ''} aria-label="Use ${esc(dzInfo()[id].name)}"></label>`).join('');
+  $('#tPick').innerHTML = ups.map(u => `<label class="thumb${themeEdit.items.includes(u.url) ? ' sel' : ''}">
       ${u.type === 'video' ? `<video src="${esc(media(u.url))}#t=0.5" muted preload="metadata"></video><span class="badge">Video</span>` : `<img src="${esc(media(u.url))}" alt="" loading="lazy">`}
-      <input type="checkbox" data-u="${esc(u.url)}"${themeEdit.items.includes(u.url) ? ' checked' : ''} aria-label="Use this background"></label>`).join('')
-    : '<p class="hint">No uploads yet. Close this, drop pictures or videos under Your Uploads, then make the theme.</p>';
+      <input type="checkbox" data-u="${esc(u.url)}"${themeEdit.items.includes(u.url) ? ' checked' : ''} aria-label="Use this background"></label>`).join('') + designs;
   $('#tCount').textContent = themeEdit.items.length ? '(' + themeEdit.items.length + ' chosen)' : '';
 }
 $('#tPick').addEventListener('change', e => {

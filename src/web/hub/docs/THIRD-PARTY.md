@@ -1,6 +1,6 @@
 # Third-party code
 
-Every bundled component is compatible with GPL-3.0. Each keeps its own licence and copyright; where a file carries a header, it is kept.
+Every bundled component is compatible with GPL-3.0, with one exception the owner has accepted: the React Bits files (below) keep their own licence, MIT + Commons Clause, and are **not** under the GPL. Each component keeps its own licence and copyright; where a file carries a header, it is kept.
 
 | Component | Where | Licence | How it was confirmed |
 |---|---|---|---|
@@ -17,9 +17,11 @@ Every bundled component is compatible with GPL-3.0. Each keeps its own licence a
 | U-2-Net `u2netp.onnx` | Tools `vendor/` | Apache-2.0 | Upstream xuebinqin/U-2-Net is Apache-2.0 and its author said the weights follow the repo licence |
 | libheif-js 1.23.5 (libheif, WebAssembly) | Tools (`t-libheif-bundle-*.js`) | **LGPL-3.0** | npm package; libheif is LGPL. Combining with GPL-3.0 is allowed |
 | @jsquash/avif 2.1.1 (libavif encoder, `avif_enc.wasm`) | Tools | Apache-2.0 (the package); BSD-2-Clause (libavif) | npm package |
+| **React Bits** by David Haz: GlassSurface (`hub/core/assets/glass.js`, 1.68.0) and the 16 Animated Designs for Home (`web/home/designs/`, 1.74.0): Iridescence, Flux Lines, Galaxy, Crystal Ball, Pattern Waves, Gradient Waves, Topography, Light Tunnel, Lightfall, Lightning, Hyperspeed, Ballpit, Orb, Letter Glitch, Balatro, Aero Shards | Home, Settings | **MIT + Commons Clause** (not GPL). The files keep their banner; the full text is at the top of `glass.js` | reactbits.dev (the free, not the Pro, components); the owner confirmed the site allows publishing them. They run without React (`designs-src/_runtime.js`) |
+| ogl 1.0.11, three 0.187.0, vgpu 0.6.0 | bundled into Crystal Ball and Pattern Waves (ogl), Hyperspeed (three), Aero Shards (vgpu) | Unlicense (ogl); MIT (three, vgpu) | npm packages |
 | exifr 7.1.3, utif2 4.1.0, fflate 0.8.3, qrcode-generator 2.0.4, @noble/hashes 2.4.0 | Tools | MIT | npm packages |
 
-Tools is built from its source in `tools-app/` (pinned in `tools-app/package-lock.json`); the bundled files keep their licence comments.
+The Animated Designs are built from `src/web/home/designs-src/` by `scripts/build-designs.py` (versions pinned in `package-lock.json`); Tools is built from its source in `tools-app/` (pinned in `tools-app/package-lock.json`); the bundled files keep their licence comments.
 
 If you find an entry that is wrong, please open an issue.
 

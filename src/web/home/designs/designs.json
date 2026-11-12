@@ -1,0 +1,728 @@
+{
+ "aero-shards": {
+  "name": "Aero Shards",
+  "about": "Glass shards drifting in space (computers with WebGPU only).",
+  "link": "https://reactbits.dev/backgrounds/aero-shards",
+  "desktop": true,
+  "gpu": "webgpu",
+  "still": true,
+  "dpr": true,
+  "defaults": {
+   "shardColor": "#896ABD",
+   "accentColor": "#A855F7",
+   "placement": "full",
+   "material": "glass",
+   "markers": "plus",
+   "count": 1300,
+   "depthOfField": 0.75,
+   "vignette": 0.3,
+   "mouseInteraction": true,
+   "pulseOnClick": true,
+   "holdToGather": true
+  },
+  "options": [
+   {
+    "k": "shardColor",
+    "label": "Shards",
+    "type": "color"
+   },
+   {
+    "k": "accentColor",
+    "label": "Accent",
+    "type": "color"
+   },
+   {
+    "k": "count",
+    "label": "Shards",
+    "type": "range",
+    "min": 400,
+    "max": 2000,
+    "step": 100
+   }
+  ]
+ },
+ "balatro": {
+  "name": "Balatro",
+  "about": "A swirling pixel pattern in three colours.",
+  "link": "https://reactbits.dev/backgrounds/balatro",
+  "desktop": false,
+  "gpu": "",
+  "still": false,
+  "dpr": false,
+  "defaults": {
+   "color1": "#DE443B",
+   "color2": "#006BB4",
+   "color3": "#162325",
+   "swirl": 0.25,
+   "pixelSize": 1.5,
+   "mouseInteraction": true
+  },
+  "options": [
+   {
+    "k": "color1",
+    "label": "Color 1",
+    "type": "color"
+   },
+   {
+    "k": "color2",
+    "label": "Color 2",
+    "type": "color"
+   },
+   {
+    "k": "color3",
+    "label": "Color 3",
+    "type": "color"
+   }
+  ]
+ },
+ "ballpit": {
+  "name": "Ballpit",
+  "about": "Soft balls tumbling and drifting.",
+  "link": "https://reactbits.dev/backgrounds/ballpit",
+  "desktop": false,
+  "gpu": "",
+  "still": false,
+  "dpr": true,
+  "defaults": {
+   "count": 200,
+   "colors": [
+    "#ffffff"
+   ],
+   "material": "satin",
+   "gravity": 0,
+   "drift": 0.4,
+   "followCursor": true,
+   "grab": true,
+   "clickEffect": "burst"
+  },
+  "options": [
+   {
+    "k": "colors",
+    "label": "Colors",
+    "type": "colors",
+    "max": 3
+   },
+   {
+    "k": "material",
+    "label": "Finish",
+    "type": "choice",
+    "choices": [
+     "satin",
+     "matte",
+     "gloss",
+     "frosted",
+     "metal"
+    ]
+   },
+   {
+    "k": "count",
+    "label": "Balls",
+    "type": "range",
+    "min": 50,
+    "max": 300,
+    "step": 10
+   }
+  ]
+ },
+ "crystalized-ball": {
+  "name": "Crystal Ball",
+  "about": "A glowing ball of cracking light.",
+  "link": "https://reactbits.dev/backgrounds/crystalized-ball",
+  "desktop": false,
+  "gpu": "",
+  "still": true,
+  "dpr": false,
+  "defaults": {
+   "preset": "plasma",
+   "color": "#F25BD0",
+   "size": 0.7,
+   "crackle": 0.85,
+   "fill": 0.5,
+   "interactive": true,
+   "hoverStrength": 0.7
+  },
+  "options": [
+   {
+    "k": "preset",
+    "label": "Look",
+    "type": "choice",
+    "choices": [
+     "plasma",
+     "aurora",
+     "nebula",
+     "ember",
+     "frost",
+     "solar",
+     "eclipse",
+     "abyss"
+    ]
+   },
+   {
+    "k": "color",
+    "label": "Color",
+    "type": "color"
+   },
+   {
+    "k": "size",
+    "label": "Size",
+    "type": "range",
+    "min": 0.4,
+    "max": 1,
+    "step": 0.05
+   }
+  ]
+ },
+ "flux-lines": {
+  "name": "Flux Lines",
+  "about": "Glowing lines of a flowing fluid.",
+  "link": "https://reactbits.dev/backgrounds/flux-lines",
+  "desktop": false,
+  "gpu": "",
+  "still": true,
+  "dpr": true,
+  "defaults": {
+   "colors": [
+    "#ffffff",
+    "#ffffff",
+    "#ffffff"
+   ],
+   "glow": 2,
+   "rimWidth": 0.2,
+   "lineWidth": 1,
+   "flowDirection": "down",
+   "mouseInteraction": true,
+   "clickSwirl": true,
+   "speed": 0.5
+  },
+  "options": [
+   {
+    "k": "colors",
+    "label": "Colors",
+    "type": "colors",
+    "max": 3
+   },
+   {
+    "k": "speed",
+    "label": "Speed",
+    "type": "range",
+    "min": 0.1,
+    "max": 2,
+    "step": 0.1
+   },
+   {
+    "k": "glow",
+    "label": "Glow",
+    "type": "range",
+    "min": 0.5,
+    "max": 4,
+    "step": 0.1
+   }
+  ]
+ },
+ "galaxy": {
+  "name": "Galaxy",
+  "about": "A field of stars that drift past.",
+  "link": "https://reactbits.dev/backgrounds/galaxy",
+  "desktop": false,
+  "gpu": "",
+  "still": false,
+  "dpr": true,
+  "defaults": {
+   "density": 1,
+   "glowIntensity": 0.3,
+   "flareIntensity": 1,
+   "starSpeed": 0.5,
+   "mouseRepulsion": true,
+   "clickWarp": true
+  },
+  "options": [
+   {
+    "k": "density",
+    "label": "Stars",
+    "type": "range",
+    "min": 0.3,
+    "max": 2,
+    "step": 0.1
+   },
+   {
+    "k": "starSpeed",
+    "label": "Speed",
+    "type": "range",
+    "min": 0,
+    "max": 2,
+    "step": 0.1
+   },
+   {
+    "k": "glowIntensity",
+    "label": "Glow",
+    "type": "range",
+    "min": 0,
+    "max": 1,
+    "step": 0.05
+   }
+  ]
+ },
+ "gradient-waves": {
+  "name": "Gradient Waves",
+  "about": "Slow waves of colour on a horizon.",
+  "link": "https://reactbits.dev/backgrounds/gradient-waves",
+  "desktop": false,
+  "gpu": "",
+  "still": true,
+  "dpr": true,
+  "defaults": {
+   "horizonColor": "#5227FF",
+   "waveColor": "#FF9FFC",
+   "crestColor": "#FFFFFF",
+   "speed": 0.4,
+   "amplitude": 2.5,
+   "relief": 1,
+   "lightAngle": 120,
+   "mouseInteraction": true,
+   "swellOnClick": true
+  },
+  "options": [
+   {
+    "k": "horizonColor",
+    "label": "Horizon",
+    "type": "color"
+   },
+   {
+    "k": "waveColor",
+    "label": "Waves",
+    "type": "color"
+   },
+   {
+    "k": "speed",
+    "label": "Speed",
+    "type": "range",
+    "min": 0.1,
+    "max": 1.5,
+    "step": 0.05
+   }
+  ]
+ },
+ "hyperspeed": {
+  "name": "Hyperspeed",
+  "about": "A road of light at speed (computers only).",
+  "link": "https://reactbits.dev/backgrounds/hyperspeed",
+  "desktop": true,
+  "gpu": "",
+  "still": false,
+  "dpr": false,
+  "defaults": {
+   "curve": "winding",
+   "curvature": 1,
+   "speed": 1,
+   "boost": 3,
+   "fov": 90,
+   "boostFov": 130,
+   "lanes": 3,
+   "roadWidth": 10,
+   "medianWidth": 2,
+   "density": 40,
+   "trailLength": 1,
+   "lightSize": 1,
+   "poles": 20,
+   "dust": 100,
+   "glow": 0.6,
+   "reflections": 0.5,
+   "roadOpacity": 0.1,
+   "steer": 0.35,
+   "tailColors": [
+    "#d856bf",
+    "#6750a2",
+    "#c247ac"
+   ],
+   "headColors": [
+    "#03b3c3",
+    "#0e5ea5",
+    "#324555"
+   ],
+   "poleColors": [
+    "#03b3c3"
+   ],
+   "interactive": true
+  },
+  "options": [
+   {
+    "k": "curve",
+    "label": "Road",
+    "type": "choice",
+    "choices": [
+     "straight",
+     "gentle",
+     "winding",
+     "hills",
+     "racing",
+     "deep"
+    ]
+   },
+   {
+    "k": "speed",
+    "label": "Speed",
+    "type": "range",
+    "min": 0.3,
+    "max": 2,
+    "step": 0.1
+   },
+   {
+    "k": "density",
+    "label": "Traffic",
+    "type": "range",
+    "min": 10,
+    "max": 80,
+    "step": 5
+   }
+  ]
+ },
+ "iridescence": {
+  "name": "Iridescence",
+  "about": "Soft colour that shifts like oil on water.",
+  "link": "https://reactbits.dev/backgrounds/iridescence",
+  "desktop": false,
+  "gpu": "",
+  "still": true,
+  "dpr": false,
+  "defaults": {
+   "color": "#8099cc",
+   "hueShift": 0,
+   "saturation": 1,
+   "brightness": 1.5,
+   "contrast": 1,
+   "speed": 1,
+   "scale": 1,
+   "detail": 8,
+   "warp": 1,
+   "rotation": 0,
+   "mouseReact": true,
+   "amplitude": 0.1,
+   "stir": 0.5,
+   "sheen": 0.3,
+   "clickSwirl": true,
+   "grain": 0,
+   "fade": 0
+  },
+  "options": [
+   {
+    "k": "color",
+    "label": "Color",
+    "type": "color"
+   },
+   {
+    "k": "speed",
+    "label": "Speed",
+    "type": "range",
+    "min": 0.2,
+    "max": 3,
+    "step": 0.1
+   },
+   {
+    "k": "scale",
+    "label": "Scale",
+    "type": "range",
+    "min": 0.5,
+    "max": 2,
+    "step": 0.1
+   }
+  ]
+ },
+ "letter-glitch": {
+  "name": "Letter Glitch",
+  "about": "A grid of glitching letters.",
+  "link": "https://reactbits.dev/backgrounds/letter-glitch",
+  "desktop": false,
+  "gpu": "",
+  "still": false,
+  "dpr": true,
+  "defaults": {
+   "glitchColors": [
+    "#ffffff",
+    "#61dca3"
+   ],
+   "glitchAmount": 0.5,
+   "speed": 1,
+   "flow": 0.5,
+   "clickEffect": "tear"
+  },
+  "options": [
+   {
+    "k": "glitchColors",
+    "label": "Colors",
+    "type": "colors",
+    "max": 3
+   },
+   {
+    "k": "speed",
+    "label": "Speed",
+    "type": "range",
+    "min": 0.3,
+    "max": 2,
+    "step": 0.1
+   },
+   {
+    "k": "glitchAmount",
+    "label": "Glitch",
+    "type": "range",
+    "min": 0,
+    "max": 1,
+    "step": 0.05
+   }
+  ]
+ },
+ "light-tunnel": {
+  "name": "Light Tunnel",
+  "about": "Cables of light running into the distance.",
+  "link": "https://reactbits.dev/backgrounds/light-tunnel",
+  "desktop": false,
+  "gpu": "",
+  "still": false,
+  "dpr": true,
+  "defaults": {
+   "cableColor": "#ffffff",
+   "pulseColor": "#ffffff",
+   "cableCount": 56,
+   "pulseDensity": 0.5,
+   "flowDirection": "inward",
+   "mouseInteraction": true,
+   "clickSurge": true
+  },
+  "options": [
+   {
+    "k": "cableColor",
+    "label": "Cables",
+    "type": "color"
+   },
+   {
+    "k": "pulseColor",
+    "label": "Pulses",
+    "type": "color"
+   },
+   {
+    "k": "cableCount",
+    "label": "Cables",
+    "type": "range",
+    "min": 20,
+    "max": 100,
+    "step": 2
+   }
+  ]
+ },
+ "lightfall": {
+  "name": "Lightfall",
+  "about": "Streaks of light falling through the dark.",
+  "link": "https://reactbits.dev/backgrounds/lightfall",
+  "desktop": false,
+  "gpu": "",
+  "still": true,
+  "dpr": true,
+  "defaults": {
+   "colors": [
+    "#ffffff"
+   ],
+   "backgroundColor": "#94a3b8",
+   "speed": 0.3,
+   "streakCount": 2,
+   "streakWidth": 0.8,
+   "twinkle": 0.3,
+   "backgroundGlow": 0.1,
+   "headGlow": 0.6,
+   "bloom": 0.35,
+   "mouseInteraction": true,
+   "holdToWarp": true,
+   "intro": true
+  },
+  "options": [
+   {
+    "k": "colors",
+    "label": "Colors",
+    "type": "colors",
+    "max": 3
+   },
+   {
+    "k": "backgroundColor",
+    "label": "Background",
+    "type": "color"
+   },
+   {
+    "k": "speed",
+    "label": "Speed",
+    "type": "range",
+    "min": 0.1,
+    "max": 1,
+    "step": 0.05
+   }
+  ]
+ },
+ "lightning": {
+  "name": "Lightning",
+  "about": "Bolts of lightning that flicker and branch.",
+  "link": "https://reactbits.dev/backgrounds/lightning",
+  "desktop": false,
+  "gpu": "",
+  "still": true,
+  "dpr": true,
+  "defaults": {
+   "color": "#4d6bff",
+   "bolts": 1,
+   "spread": 0.6,
+   "branches": 0.5,
+   "xOffset": 0,
+   "angle": 0,
+   "size": 1,
+   "thickness": 1,
+   "glow": 1,
+   "intensity": 1,
+   "speed": 1,
+   "flicker": 0.6,
+   "mouseInteraction": true,
+   "mouseStrength": 1,
+   "clickStrike": true,
+   "intro": true,
+   "fade": 0,
+   "opacity": 1,
+   "lightMode": false
+  },
+  "options": [
+   {
+    "k": "color",
+    "label": "Color",
+    "type": "color"
+   },
+   {
+    "k": "bolts",
+    "label": "Bolts",
+    "type": "range",
+    "min": 1,
+    "max": 4,
+    "step": 1
+   },
+   {
+    "k": "speed",
+    "label": "Speed",
+    "type": "range",
+    "min": 0.3,
+    "max": 2,
+    "step": 0.1
+   }
+  ]
+ },
+ "orb": {
+  "name": "Orb",
+  "about": "A glowing orb that follows the pointer.",
+  "link": "https://reactbits.dev/backgrounds/orb",
+  "desktop": false,
+  "gpu": "",
+  "still": true,
+  "dpr": true,
+  "defaults": {
+   "colors": [
+    "#9c43fe",
+    "#4cc2e9",
+    "#101499"
+   ],
+   "hoverIntensity": 1,
+   "trail": 1,
+   "rotateOnHover": true,
+   "followCursor": true
+  },
+  "options": [
+   {
+    "k": "colors",
+    "label": "Colors",
+    "type": "colors",
+    "max": 3
+   }
+  ]
+ },
+ "pattern-waves": {
+  "name": "Pattern Waves",
+  "about": "Rippling patterns of light.",
+  "link": "https://reactbits.dev/backgrounds/pattern-waves",
+  "desktop": false,
+  "gpu": "",
+  "still": true,
+  "dpr": false,
+  "defaults": {
+   "preset": "silk",
+   "color": "#ffffff",
+   "backgroundColor": "#000000",
+   "fade": "edges",
+   "interactive": true,
+   "cursorSize": 50,
+   "cursorStrength": 0.6
+  },
+  "options": [
+   {
+    "k": "preset",
+    "label": "Look",
+    "type": "choice",
+    "choices": [
+     "silk",
+     "ocean",
+     "pond",
+     "lines",
+     "terminal",
+     "mesh"
+    ]
+   },
+   {
+    "k": "color",
+    "label": "Color",
+    "type": "color"
+   },
+   {
+    "k": "backgroundColor",
+    "label": "Background",
+    "type": "color"
+   }
+  ]
+ },
+ "topography": {
+  "name": "Topography",
+  "about": "Contour lines of a moving landscape.",
+  "link": "https://reactbits.dev/backgrounds/topography",
+  "desktop": false,
+  "gpu": "",
+  "still": false,
+  "dpr": true,
+  "defaults": {
+   "color": "#4f7cff",
+   "lineCount": 22,
+   "lineWidth": 1.2,
+   "elevation": 1,
+   "foreground": 0.2,
+   "tilt": 32,
+   "speed": 0.25,
+   "direction": "forward",
+   "glow": 0.6,
+   "depthOfField": 0.4,
+   "fog": 0.35,
+   "hoverEffect": "lift",
+   "clickEffect": "pulse"
+  },
+  "options": [
+   {
+    "k": "color",
+    "label": "Color",
+    "type": "color"
+   },
+   {
+    "k": "speed",
+    "label": "Speed",
+    "type": "range",
+    "min": 0,
+    "max": 1,
+    "step": 0.05
+   },
+   {
+    "k": "lineCount",
+    "label": "Lines",
+    "type": "range",
+    "min": 10,
+    "max": 40,
+    "step": 1
+   }
+  ]
+ }
+}

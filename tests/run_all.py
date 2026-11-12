@@ -44,7 +44,7 @@ run('ESLint', ['npx', 'eslint', 'src', 'tools-app'])
 run('TypeScript check', ['sh', '-c', 'npx tsc -p config/tsconfig.json && npx tsc -p config/tsconfig.links.json && npx tsc -p config/tsconfig.home.json && npx tsc -p config/tsconfig.cards.json && npx tsc -p config/tsconfig.tasks.json && npx tsc -p config/tsconfig.info.json'])
 run('Unit tests', ['php', 'tests/unit/run.php'])
 run('Version agrees everywhere', [PY, 'scripts/release.py', '--check'])
-for t in ('release_test', 'workflows_test', 'secrets_test', 'dead_code_test', 'parallel_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test', 'presets_test', 'overrides_test', 'helpers_test', 'fixed_waits_test', 'tools_list_test', 'tscheck_test', 'root_test', 'speculation_test', 'php_matrix', 'build_test'):
+for t in ('release_test', 'workflows_test', 'secrets_test', 'dead_code_test', 'designs_test', 'parallel_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test', 'presets_test', 'overrides_test', 'helpers_test', 'fixed_waits_test', 'tools_list_test', 'tscheck_test', 'root_test', 'speculation_test', 'php_matrix', 'build_test'):
     run('repo/' + t, [PY, 'tests/repo/%s.py' % t])
 run('Library check', [PY, 'tests/repo/check_libraries.py'])
 SG = os.environ.get('SEMGREP') or shutil.which('semgrep')
@@ -67,8 +67,8 @@ run('Core', [PY, 'tests/server/core_test.py', ZIP])
 run('Files (server)', [PY, 'tests/server/files_test.py', ZIP])
 
 if not QUICK:
-    for t in ('import', 'app', 'settings', 'tools', 'pages', 'nav', 'a11y', 'encrypt', 'files', 'lock', 'tabs_lock', 'tabs_kit', 'settings_ui', 'settings_look', 'windows', 'polish', 'passkey', 'share', 'offline', 'search', 'tasks_more', 'importer', 'speed'):
-        if BROWSER and t in ('app', 'settings'): continue   # Chromium only
+    for t in ('import', 'app', 'settings', 'tools', 'pages', 'nav', 'a11y', 'encrypt', 'files', 'lock', 'tabs_lock', 'tabs_kit', 'settings_ui', 'settings_look', 'windows', 'polish', 'passkey', 'share', 'offline', 'search', 'tasks_more', 'importer', 'designs', 'speed'):
+        if BROWSER and t in ('app', 'settings', 'designs'): continue   # Chromium only
         run('browser/' + t + (' (%s)' % BROWSER if BROWSER else ''), [PY, 'tests/browser/%s_test.py' % t, ZIP] + ([] if t in ('app',) else b))
     run('Website build', [PY, 'scripts/make-site.py', '--no-guide'])
     run('browser/website' + (' (%s)' % BROWSER if BROWSER else ''), [PY, 'tests/browser/website_test.py', 'build/site'] + b)

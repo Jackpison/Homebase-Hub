@@ -45,6 +45,7 @@ function admin_payload(): array
     $s['sourceInfo'] = all_sources($s);
     $s['keyInfo'] = API_KEYS;
     $s['poolStats'] = pool_stats($s);
+    $s['designsInfo'] = designs_registry();   // (1.74.0) the animated designs: name, settings, the limits of each option
     $s['starterInfo'] = starter_list();   // for the Theme cards, also while Online Photos is in use
     $s['limits'] = ['maxKeywords' => MAX_KEYWORDS, 'maxViews' => MAX_VIEWS, 'maxCustom' => MAX_CUSTOM_SOURCES,
                     'maxUploadMB' => MAX_UPLOAD_MB, 'piece' => upload_piece_bytes()];
