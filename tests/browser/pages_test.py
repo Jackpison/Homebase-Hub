@@ -166,8 +166,14 @@ try:
         wp.reload(wait_until='domcontentloaded'); wp.wait_for_timeout(600)   # on purpose: P17 checks the welcome does NOT come back, so give it the time it took the first time
         again = wp.evaluate("!!document.querySelector('#welcome.in')")
         check('P17 Home shows "Welcome Home" in the middle with the clock hidden, it fades away, and not again on a reload', w1 and w1[0] == 'Welcome Home' and w1[1] and float(w1[2]) < 0.2 and gone and not again, (w1, gone, again))
-        bgnow = wp.evaluate("(() => { const n = document.querySelector('#bg .on'); return n ? (n.currentSrc || n.src) : '' })()")
-        check('P18 a new site shows the Starter theme (its own pictures, nothing downloaded from other sites)', '/web/home/starter/' in bgnow and not wp.evaluate("window.PUB.bg.photos.length") and wp.evaluate("window.PUB.bg.theme") == 'starter', bgnow)
+        ds = wp.evaluate("[window.PUB.bg.theme, window.PUB.bg.photos.length, (window.PUB.bg.own || []).length]")
+        check('P18 a new site starts with the Animated Designs (drawn in the browser, 16 of them, nothing downloaded from other sites) (1.74.0)', ds == ['designs', 0, 16], ds)
+        # the Starter theme still works for a site that chose it, and the checks below (photos, refresh) run on it
+        subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['bg']['theme'] = 'starter'; write_json(SITE_FILE, clean_site($s));" % D], check=True)
+        wp2 = wctx.new_page(); wp2.goto(B + '/', wait_until='domcontentloaded'); until(lambda: wp2.evaluate("!!document.querySelector('#bg .on')"), 10000)
+        bgnow = wp2.evaluate("(() => { const n = document.querySelector('#bg .on'); return n ? (n.currentSrc || n.src || '') : '' })()")
+        check('P18b a site that chose Starter shows its own pictures, nothing downloaded from other sites', '/web/home/starter/' in bgnow and not wp2.evaluate("window.PUB.bg.photos.length") and wp2.evaluate("window.PUB.bg.theme") == 'starter', bgnow)
+        wp2.close()
         check('P19 Home names its own settings Home Settings (pencil menu and window), and has the theme editor and Import', wp.evaluate("!!document.querySelector('[data-hub=item][data-hub-label=\"Home Settings\"]') && document.querySelector('#settingsSheet h2').textContent === 'Home Settings' && !!document.getElementById('themeSheet') && !!document.getElementById('themeFile')"))
         wctx.close()
         # P20-P28: Home's widgets (1.51). Logged in: the Glass Dock, Quick Add, Done, Settings > Widgets, the Scratch Pad, Recent Tools,

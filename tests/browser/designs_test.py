@@ -19,7 +19,7 @@ COLORS = """async (b64) => { const bin = atob(b64), a = new Uint8Array(bin.lengt
   const x = c.getContext('2d'); x.drawImage(bm, 0, 0, 40, 25); const d = x.getImageData(0, 0, 40, 25).data, s = new Set();
   for (let i = 0; i < d.length; i += 4) s.add(d[i] + ',' + d[i + 1] + ',' + d[i + 2]); return s.size; }"""
 try:
-    s = Site(ZIP, 8988)
+    s = Site(ZIP, 8988, home_theme=None)   # the real default: the Animated Designs
     subprocess.run(['php', SEED, s.dir], capture_output=True)
     reg = json.load(open(os.path.join(s.dir, 'web/home/designs/designs.json')))
     site_bg = lambda: json.loads(s.php("require '%s/web/home/lib.php'; echo json_encode(load_site()['bg']);" % s.dir))
@@ -28,7 +28,7 @@ try:
         ctx = b.new_context(viewport={'width': 1280, 'height': 800}); ctx.add_init_script(CSP_REPORTER)
         errs = []; pg = ctx.new_page(); page_errors(pg, errs)
         pg.on('console', lambda m: errs.append(m.text[:200]) if m.type == 'error' and 'security policy' in m.text else None)
-        pg.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000)
+        pg.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
         try: wait_js(pg, "!!document.querySelector('#bg > .design canvas')", 20000)
         except Exception: pass
         st = pg.evaluate("[PUB.bg.theme, (PUB.bg.own || []).length, document.querySelectorAll('#bg > .design canvas').length, document.getElementById('creditText').textContent]")
@@ -60,7 +60,7 @@ try:
         pg2.close()
 
         # the Background sheet: Preview does not save; switching off and options are kept by Save Background
-        before = site_bg(); why = browser_login(pg, s.base); pg.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000); wait_js(pg, "!!document.querySelector('[data-hub=toggle]')", 20000)
+        before = site_bg(); why = browser_login(pg, s.base); pg.goto(s.base + '/web/home/', wait_until='commit', timeout=90000); wait_js(pg, "!!document.querySelector('[data-hub=toggle]')", 20000)
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); wait_js(pg, "document.body.classList.contains('editing')", 15000)
         pg.evaluate("document.querySelector('[data-open=bgSheet]').click()"); wait_js(pg, "document.querySelectorAll('#designRows .dz').length === 16", 15000)
         rows = pg.evaluate("[...document.querySelectorAll('#designRows .dz')].map(r => [r.dataset.id, r.querySelector('.dz-sw') ? getComputedStyle(r.querySelector('.dz-sw')).backgroundImage.slice(0, 15) : ''])")
@@ -76,14 +76,15 @@ try:
         saved = until(lambda: (site_bg().get('designs') or {}).get('orb', {}).get('on') is False, 10000)
         d = site_bg().get('designs') or {}
         check('H5 Save Background keeps a design switched off and your colour (only the options the design lists)', saved and d['orb']['opts'].get('colors', [None])[0] == '#112233' and len(d['orb']['opts']['colors']) == 3, d)
-        pg.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000)
+        pg.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
         own = pg.evaluate("(PUB.bg.own || []).map(i => i.url)")
         check('H6 the saved choice reaches the page: Orb is out of the rotation, the other 15 are in', 'design:orb' not in own and len(own) == 15, own)
 
         # a phone: no computers-only design is ever requested
         ph = b.new_context(**p.devices['Pixel 7']); ph.add_init_script(CSP_REPORTER); asked = []
         pp = ph.new_page(); pp.on('request', lambda r: asked.append(r.url) if '/designs/' in r.url else None); perr = []; page_errors(pp, perr)
-        pp.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000)
+        pp.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
+        wait_js(pp, "!!document.getElementById('nextBg') && !!window.PUB", 60000)
         have = pp.evaluate("(PUB.bg.own || []).map(i => i.url)")
         for _ in range(14):
             pp.evaluate("document.getElementById('nextBg').click()"); until(lambda: not pp.evaluate("document.getElementById('nextBg').classList.contains('spin')"), 15000)
@@ -94,7 +95,8 @@ try:
         # Reduce Motion: only the designs that can stand still
         rm = b.new_context(viewport={'width': 1280, 'height': 800}, reduced_motion='reduce'); asked2 = []
         rp = rm.new_page(); rp.on('request', lambda r: asked2.append(r.url) if '/designs/' in r.url and '.js' in r.url else None)
-        rp.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000)
+        rp.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
+        wait_js(rp, "!!document.getElementById('nextBg') && !!window.PUB", 60000)
         for _ in range(12):
             rp.evaluate("document.getElementById('nextBg').click()"); until(lambda: not rp.evaluate("document.getElementById('nextBg').classList.contains('spin')"), 15000)
         moving = [i for i in reg if not reg[i]['still']]

@@ -113,7 +113,7 @@ class Client:
 class Site(Client):
     """A site installed from a zip and served by PHP's built-in server. The constructor sets it up with PW and logs in.
     sub='hub' installs it in a sub-folder (/hub/)."""
-    def __init__(self, zp, port, sub='', setup=True, prepend=True):
+    def __init__(self, zp, port, sub='', setup=True, prepend=True, home_theme='starter'):
         self.port = port
         self.root = '/tmp/site%d' % port
         shutil.rmtree(self.root, ignore_errors=True); os.makedirs(self.root)
@@ -133,6 +133,9 @@ class Site(Client):
             except urllib.error.HTTPError: break
             except Exception: time.sleep(0.1)
         if setup: self.setup()
+        # (1.74.0) a new site starts with the Animated Designs, which keep a software-rendered CI browser busy and slow every other check down:
+        # the tests use the light Starter pictures as before; only designs_test (home_theme=None) and pages_test's P18 look at the real default
+        if setup and home_theme: self.php("require '%s/web/home/lib.php'; $s = load_site(); $s['bg']['theme'] = '%s'; write_json(SITE_FILE, clean_site($s));" % (self.dir, home_theme))
 
     def setup(self, pw=PW):
         self.get('state')
