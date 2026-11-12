@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.c.outputs.code }}
+      servers: ${{ steps.c.outputs.servers }}   # the server and web-server jobs only run when something they test changed (scripts/ci_changes.py)
       matrix: ${{ steps.c.outputs.matrix }}   # the browser jobs: the pages half always; the tools half when it matters (scripts/ci_changes.py)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -89,7 +90,7 @@ jobs:
 
   server:
     needs: changes
-    if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.servers == 'true'   # skipped on a docs-only change and when no PHP, deploy or build file changed
     # Updates, hostile zips and the core features: PHP and Python only, no browser to install. Runs beside the browser jobs.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -260,7 +261,7 @@ jobs:
 
   apache:
     needs: changes
-    if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.servers == 'true'   # skipped on a docs-only change and when no PHP, deploy or build file changed
     # The ready-made server setups in deploy/: Apache (the .htaccess files), nginx with PHP-FPM, the Docker image with Caddy,
     # nginx as YunoHost sets it up, and the install scripts for a VPS and Proxmox.
     # Installing them takes a few minutes on a fresh runner, so this runs beside the other tests instead of after them.

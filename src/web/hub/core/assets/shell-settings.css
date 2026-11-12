@@ -153,7 +153,17 @@
 #ix-page .ix-cgrp{border:1px solid var(--ix-line);border-radius:14px;padding:12px 14px 6px;margin-top:14px;background:color-mix(in srgb,var(--ix-s2) 40%,transparent)}
 #ix-page .ix-cgrp h4{margin:0;font-size:14.5px;color:var(--ix-tx)}
 #ix-page .ix-cgrp>p{margin:2px 0 10px;font-size:12.5px;color:var(--ix-mu)}
-#ix-page .ix-cgrp .ix-cr .ix-hex{width:92px}
+/* (1.74.2) Colors: two columns of light rows, a round swatch, a small code field and a small reset (the big dark boxes made it heavy) */
+#ix-page .ix-cgrp{display:grid;grid-template-columns:1fr 1fr;column-gap:32px;max-width:none;padding:14px 18px 8px}
+#ix-page .ix-cgrp>h4,#ix-page .ix-cgrp>p{grid-column:1/-1}
+#ix-page .ix-cgrp .ix-cr{margin:0;padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--ix-line) 60%,transparent);gap:12px}
+#ix-page .ix-cgrp .ix-cr input[type=color]{width:30px;height:30px;padding:0;border:0;border-radius:50%;background:none;box-shadow:0 0 0 2px var(--ix-line2);overflow:hidden;flex:none}
+#ix-page .ix-cgrp .ix-cr input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+#ix-page .ix-cgrp .ix-cr input[type=color]::-webkit-color-swatch{border:0;border-radius:50%}
+#ix-page .ix-cgrp .ix-cr input[type=color]::-moz-color-swatch{border:0;border-radius:50%}
+#ix-page .ix-cgrp .ix-cr .ix-hex{width:78px;height:30px;padding:0 8px;border:0;border-radius:8px;background:var(--ix-s2);font:12.5px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-align:center;text-transform:lowercase}
+#ix-page .ix-cgrp .ix-cr .ix-crx{width:28px;height:28px;font-size:15px;color:var(--ix-mu)}
+@media (max-width:760px){#ix-page .ix-cgrp{grid-template-columns:1fr}}
 #ix-page .ix-crx{width:30px!important;height:30px!important;border:0;background:none;cursor:pointer;font-size:15px}
 #ix-page .ix-crx:hover{color:var(--ix-accent-tx)!important;background:var(--ix-soft)}
 #ix-page .ix-crx[hidden]{display:grid!important;visibility:hidden}
@@ -266,10 +276,14 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-tss-cards [data-s="title"]{font-weight:800;letter-spacing:.01em}
 #ix-page .ix-tss-cards [data-s="box"]{font-weight:700;color:var(--ix-accent-tx)}
 /* ---------- Settings: sub-tabs and smooth changes ---------- */
-#ix-page .ix-subt{position:relative;display:flex;gap:4px;margin:14px 0 2px;border-bottom:1px solid var(--ix-line)}
-#ix-page .ix-subt button{position:relative;z-index:1;border:0;background:none;color:var(--ix-mu);font:inherit;font-size:14px;font-weight:600;padding:9px 14px 11px;cursor:pointer;border-radius:8px 8px 0 0}
+/* (1.74.2) the tabs along the top of a section: a track with a lifted pill for the open tab and a dot in the accent colour */
+#ix-page .ix-subt{position:relative;display:flex;gap:2px;margin:14px 0 6px;padding:4px;width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none;border-radius:14px;background:var(--ix-s2);box-shadow:inset 0 0 0 1px var(--ix-line)}
+#ix-page .ix-subt::-webkit-scrollbar{display:none}
+#ix-page .ix-subt button{position:relative;z-index:1;flex:none;border:0;background:none;color:var(--ix-mu);font:inherit;font-size:14px;font-weight:600;padding:8px 16px;cursor:pointer;border-radius:10px;white-space:nowrap;transition:background .18s,color .18s,box-shadow .18s}
 #ix-page .ix-subt button:hover{color:var(--ix-tx)}
-#ix-page .ix-subt button[aria-selected="true"]{color:var(--ix-accent-tx)}
+#ix-page .ix-subt button[aria-selected="true"]{color:var(--ix-tx);background:var(--ix-s3);box-shadow:0 1px 3px rgba(0,0,0,.35),inset 0 0 0 1px color-mix(in srgb,var(--ix-accent) 45%,transparent)}
+#ix-page .ix-subt button[aria-selected="true"]::before{content:"";display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--ix-accent);vertical-align:1px}
+#ix-page .ix-subt .ix-subi{display:none}
 #ix-page .ix-subi{position:absolute;left:0;bottom:-1px;height:2px;width:0;border-radius:2px;background:var(--ix-accent);transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1)}
 #ix-page .ix-anim{animation:ix-pane .26s cubic-bezier(.2,.8,.2,1)}
 #ix-page .ix-box{animation:ix-box-in .24s cubic-bezier(.2,.8,.2,1)}
@@ -309,13 +323,16 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-cardh{display:flex;justify-content:space-between;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin-bottom:6px}
 #ix-page h4{margin:20px 0 8px;font-size:14.5px;color:var(--ix-tx)}
 #ix-page .ix-mu{color:var(--ix-mu);font-size:13.5px}
-#ix-page .ix-ocs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
-#ix-page .ix-oc{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+#ix-page .ix-ocs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+#ix-page .ix-oc{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0;transition:border-color .18s,transform .18s}
+#ix-page .ix-oc:hover{border-color:var(--ix-line2)}
 #ix-page .ix-oh{display:flex;justify-content:space-between;align-items:center;gap:10px}
-#ix-page .ix-oh b{font-size:17px}
-#ix-page .ix-ol{color:var(--ix-tx)}
-#ix-page .ix-os{color:var(--ix-mu);font-size:14px;flex:1}
-#ix-page .ix-oc .ix-btn{align-self:flex-start;margin-top:6px}
+#ix-page .ix-oh b{font-size:15.5px}
+#ix-page .ix-ol{color:var(--ix-tx);font-size:14px;line-height:1.4}
+#ix-page .ix-os{color:var(--ix-mu);font-size:13px;line-height:1.4}
+#ix-page .ix-oc .ix-btn{align-self:flex-start;margin-top:auto;padding:4px 0 0;border:0;background:none;box-shadow:none;color:var(--ix-accent-tx);font-weight:600;font-size:13.5px}
+#ix-page .ix-oc .ix-btn::after{content:" →";transition:margin-left .18s}
+#ix-page .ix-oc .ix-btn:hover::after{margin-left:3px}
 #ix-page .ix-als{background:var(--ix-s1);border:1px solid color-mix(in srgb,var(--ix-accent) 40%,var(--ix-line));border-radius:18px;padding:14px 18px;margin:0 0 18px;display:flex;flex-direction:column;gap:8px}
 #ix-page .ix-als.ok{flex-direction:row;align-items:center;gap:10px;border-color:var(--ix-line)}
 #ix-page .ix-al{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -568,7 +585,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-mypre .ix-dev{padding:8px 12px}
 #ix-page .ix-mypre .ix-dev-i{width:22px;height:22px;border-radius:50%}
 #ix-page label.ix-btn{cursor:pointer}
-#ix-page .ix-cgrp{border-radius:18px;padding:16px 18px 8px;background:var(--ix-s1);margin-top:14px;max-width:780px}
+#ix-page .ix-cgrp{border-radius:18px;padding:16px 18px 8px;background:var(--ix-s1);margin-top:14px}
 #ix-page .ix-cgrp h4{font-size:15px;font-weight:800}
 #ix-page .ix-bkstat,#ix-page .ix-wsite,#ix-page .ix-part{border-radius:16px;background:var(--ix-s1)}
 #ix-page .ix-hc{border-radius:16px;background:var(--ix-s1)}
@@ -641,10 +658,6 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 #ix-page .ix-sf{max-width:780px}
 /* (1.61.6) phones: the tabs of a section wrap onto more lines as small pills, so none is cut off at the right edge */
 @media (max-width:760px){
-  #ix-page .ix-subt{flex-wrap:wrap;overflow:visible;gap:6px;border-bottom:0;padding-bottom:4px}
-  #ix-page .ix-subt button{padding:7px 12px;border:1px solid var(--ix-line);border-radius:999px;font-size:13.5px}
-  #ix-page .ix-subt button[aria-selected="true"]{border-color:var(--ix-accent);background:color-mix(in srgb,var(--ix-accent) 14%,transparent)}
-  #ix-page .ix-subt .ix-subi{display:none}
 }
 /* (1.61.6) phones: nothing inside a section may make the page wider than the screen (Firefox and WebKit measured 6 px on Presets and
    Domains, from nothing visible); clip, not hidden, so the page does not get a second scroll box and the Save bar stays sticky */
@@ -807,3 +820,11 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-imrow small{display:block;color:var(--ix-mu);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ix-page .ix-immap{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin:10px 0}
 #ix-page .ix-immap label{display:grid;gap:4px;font-size:12.5px;color:var(--ix-mu)}
+
+/* (1.74.2) Colors > Different Colors per Page: always shown; pick a page, then its two colors (a dot marks a page with its own) */
+#ix-page .ix-pgc{display:block;padding:16px 18px 10px}
+#ix-page .ix-pgc .ix-seg{margin:2px 0 12px;max-width:100%}
+#ix-page .ix-pgc .ix-seg button{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;font-size:13.5px}
+#ix-page .ix-pgdot{width:7px;height:7px;border-radius:50%;background:var(--ix-accent);flex:none}
+#ix-page .ix-pgrows{display:grid;grid-template-columns:1fr 1fr;column-gap:32px}
+@media (max-width:760px){#ix-page .ix-pgrows{grid-template-columns:1fr}}

@@ -93,6 +93,7 @@
   function P() { return PAGE || D(); }
   var OV = null;                         // what the Overview last learned: the little status labels in the menu come from it
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
+  var TABMERGE = { security: [['Sign-In', ['password', 'passkeys', 'two-step-login', 'login-approval']], ['Data Protection', ['encryption']], ['Devices', ['trusted-browsers', 'devices']]] };   // (1.74.2) Security: eight tabs become four
   var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Back Up' };   // sections whose accordions become tabs, and the name of their first tab
   var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
   var draft;
@@ -284,6 +285,7 @@
     var t = $('#ix-pane .ix-subt'); if (!t) return;
     var on = t.querySelector('[aria-selected="true"]'), i = t.querySelector('.ix-subi');
     if (on && i) { i.style.width = on.offsetWidth + 'px'; i.style.transform = 'translateX(' + on.offsetLeft + 'px)'; }
+    if (on) t.scrollLeft = Math.max(0, on.offsetLeft - (t.clientWidth - on.offsetWidth) / 2);   // (1.74.2) on a phone the strip scrolls: the open tab is brought into view
   }
   /* The long sections (Security, Telegram, Backup) are drawn as a list of folded parts. Here each part becomes a tab and the status
      above them becomes the first tab, so only one thing is on screen at a time. The parts keep working as they were: they are only shown and hidden. */
@@ -324,25 +326,35 @@
     var rest = kids.filter(function (k) { return accs.indexOf(k) < 0; }), tabs = [];
     if (rest.length) {
       var st = document.createElement('div'); st.className = 'ix-tpane'; st.dataset.tab = 'overview'; pc.insertBefore(st, accs[0]);
-      rest.forEach(function (k) { st.appendChild(k); }); tabs.push({ id: 'overview', title: TABBED[sub] || 'Overview', el: st });
+      rest.forEach(function (k) { st.appendChild(k); }); tabs.push({ id: 'overview', title: TABBED[sub] || 'Overview', els: [st] });
     }
     accs.forEach(function (a) {
       var sm = a.querySelector(':scope > summary'), t = sm && sm.querySelector('span') ? sm.querySelector('span').textContent : (sm ? sm.textContent : 'Tab'), cap = sm && sm.querySelector('small');
-      a.classList.add('ix-tpane'); a.dataset.tab = slug(t); a.dataset.cap = cap ? cap.textContent : ''; tabs.push({ id: a.dataset.tab, title: t, el: a });
+      a.classList.add('ix-tpane'); a.dataset.tab = slug(t); a.dataset.cap = cap ? cap.textContent : ''; tabs.push({ id: a.dataset.tab, title: t, els: [a] });
     });
+    if (TABMERGE[sub]) {   // some parts share one tab: they are shown one under the other, all open
+      var lead = tabs.filter(function (t) { return t.id === 'overview'; }), merged = [], used = {};
+      TABMERGE[sub].forEach(function (m) {
+        var els = []; tabs.forEach(function (t) { if (m[1].indexOf(t.id) >= 0) { els = els.concat(t.els); used[t.id] = 1; } });
+        if (!els.length) return; var id = slug(m[0]); els.forEach(function (e) { e.dataset.tab = id; }); merged.push({ id: id, title: m[0], els: els, ids: m[1] });
+      });
+      tabs = lead.concat(merged, tabs.filter(function (t) { return t.id !== 'overview' && !used[t.id]; }));
+    }
     var bar = document.createElement('div'); bar.className = 'ix-tabbar ix-subt'; bar.setAttribute('role', 'tablist');
     bar.innerHTML = tabs.map(function (t) { return '<button type="button" role="tab" data-tab="' + t.id + '">' + esc(t.title) + '</button>'; }).join('') + '<i class="ix-subi"></i>';
     pc.classList.add('ix-tabbed'); pc.insertBefore(bar, pc.firstChild);
     function show(id) {
       TABSEL[sub] = id;
-      tabs.forEach(function (t) { var on = t.id === id; t.el.classList.toggle('ix-on', on); if (t.el.tagName === 'DETAILS') t.el.open = on; });
+      tabs.forEach(function (t) { var on = t.id === id; t.els.forEach(function (e) { e.classList.toggle('ix-on', on); if (e.tagName === 'DETAILS') e.open = on; }); });
       bar.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === id ? 'true' : 'false'); });
       var on = bar.querySelector('[aria-selected="true"]'), i = bar.querySelector('.ix-subi');
       if (on && i) { i.style.width = on.offsetWidth + 'px'; i.style.transform = 'translateX(' + on.offsetLeft + 'px)'; }
+      if (on) bar.scrollLeft = Math.max(0, on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2);
     }
     bar.querySelectorAll('button').forEach(function (b) { b.onclick = function () { show(b.dataset.tab); }; });
     if (!pc.__tg) { pc.__tg = true; pc.addEventListener('toggle', function (e) { var d = e.target; if (d && d.matches && d.matches('details.ix-tpane') && d.open && !d.classList.contains('ix-on')) { var b = pc.querySelector('.ix-tabbar [data-tab="' + d.dataset.tab + '"]'); if (b) b.click(); } }, true); }
-    var want = TABSEL[sub]; show(tabs.some(function (t) { return t.id === want; }) ? want : tabs[0].id);
+    var want = TABSEL[sub], hit = tabs.filter(function (t) { return t.id === want || (t.ids && t.ids.indexOf(want) >= 0); })[0];   // an old address like #security/encryption opens the tab that now holds it
+    show(hit ? hit.id : tabs[0].id);
   }
   function seg(name, opts, val) {
     return '<div class="ix-seg" data-seg="' + name + '">' + opts.map(function (o) {

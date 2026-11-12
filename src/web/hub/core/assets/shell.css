@@ -961,3 +961,22 @@ html:not([data-ix-nav="top"]) #ix-offl{top:max(12px,env(safe-area-inset-top))}
 html.ix-offline [data-hub=toggle],html.ix-stale [data-hub=toggle]{opacity:.55}
 /* (1.72.0) read by screen readers only (shell.js announce) */
 .ix-sr{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
+
+/* (1.74.2) sliders everywhere: a thick track that fills up to the knob, a big knob with a soft ring that grows while it is held.
+   --p (the filled part) is set by shell.js (fillRanges) when the slider moves, appears or is drawn again. */
+input[type=range]{--p:50%;--rc:var(--ix-accent,var(--accent,#ffc21a));-webkit-appearance:none;appearance:none;height:28px;margin:0;padding:0;border:0;background:none;cursor:pointer;touch-action:pan-y;outline:0;accent-color:var(--rc)}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:linear-gradient(90deg,var(--rc),color-mix(in srgb,var(--rc) 78%,#fff)) 0/var(--p) 100% no-repeat,color-mix(in srgb,currentColor 18%,transparent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 3px rgba(0,0,0,.5),0 0 0 5px color-mix(in srgb,var(--rc) 24%,transparent);transition:transform .15s cubic-bezier(.2,.8,.2,1),box-shadow .15s}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);box-shadow:0 2px 6px rgba(0,0,0,.5),0 0 0 9px color-mix(in srgb,var(--rc) 28%,transparent)}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 1px 3px rgba(0,0,0,.5),0 0 0 4px var(--rc)}
+input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:color-mix(in srgb,currentColor 18%,transparent)}
+input[type=range]::-moz-range-progress{height:8px;border-radius:99px;background:var(--rc)}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.5),0 0 0 5px color-mix(in srgb,var(--rc) 24%,transparent);transition:transform .15s cubic-bezier(.2,.8,.2,1),box-shadow .15s}
+input[type=range]:active::-moz-range-thumb{transform:scale(1.14)}
+@media (prefers-reduced-motion:reduce){input[type=range]::-webkit-slider-thumb,input[type=range]::-moz-range-thumb{transition:none}}
+/* (1.74.2) top bar on a phone: flat, in the page's colour, and no box round the buttons (a grey glassy band with a bright line looked heavy).
+   Bar Glass, when switched on, keeps its own look. */
+@media (max-width:760px){
+  html[data-ix-nav="top"]:not([data-ix-glass]):not([data-ix-app="home"]) #ix-bar{background:var(--ix-barbg,var(--ix-bg));-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom-color:color-mix(in srgb,var(--ix-line) 55%,transparent)}
+  html[data-ix-nav="top"] #ix-bar .ix-tools{background:none;box-shadow:none;padding:0;gap:2px}
+}

@@ -265,9 +265,10 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
 
 .group{background:var(--s-bg2);border-radius:16px;overflow:hidden}
 /* Background sheet tabs (1.74.1): Main, Animated, Sources, Uploads */
-.bgtabs{flex:none;display:flex;gap:2px;padding:3px;margin:0 22px 4px;background:var(--s-bg2);border-radius:var(--r-ctl);overflow-x:auto;scrollbar-width:none}
-.bgtabs button{flex:1 0 auto;background:none;border:0;border-radius:9px;padding:8px 14px;cursor:pointer;font:inherit;font-size:.9rem;font-weight:500;color:var(--s-mute);white-space:nowrap}
-.bgtabs button[aria-selected="true"]{background:var(--s-bg);color:var(--s-ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.bgtabs{flex:none;display:flex;gap:2px;padding:4px;margin:0 22px 4px;background:var(--s-bg2);border-radius:14px;box-shadow:inset 0 0 0 1px var(--s-line,rgba(255,255,255,.08));overflow-x:auto;scrollbar-width:none}
+.bgtabs button{flex:1 0 auto;background:none;border:0;border-radius:10px;padding:8px 14px;transition:background .18s,color .18s,box-shadow .18s;cursor:pointer;font:inherit;font-size:.9rem;font-weight:500;color:var(--s-mute);white-space:nowrap}
+.bgtabs button[aria-selected="true"]{background:var(--s-bg);color:var(--s-ink);box-shadow:0 1px 3px rgba(0,0,0,.35),inset 0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent)}
+.bgtabs button[aria-selected="true"]::before{content:"";display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--accent);vertical-align:1px}
 .bgp{display:flex;flex-direction:column;gap:18px}
 .bgp[hidden]{display:none}
 .g-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;width:100%;text-align:left;background:none;border:0;color:inherit}

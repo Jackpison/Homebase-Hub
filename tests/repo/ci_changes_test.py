@@ -4,7 +4,7 @@
 import json, os, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
-from ci_changes import is_doc, code_changed, app_changed, browser_parts
+from ci_changes import is_doc, code_changed, app_changed, browser_parts, servers_changed
 
 res = []
 def check(name, ok, extra=''):
@@ -35,6 +35,8 @@ with tempfile.TemporaryDirectory() as t:   # a tiny repo: one code commit, then 
     check('X10 a push of a docs-only commit: code=false, app=false', rt(c1) == ['code=false', 'app=false'], rt(c1))
     open(os.path.join(t, 'a.php'), 'w').write('2'); g('add', '-A'); g('commit', '-qm', 'code again')
     check('X11 a push of docs plus a later code commit: code=true', rt(c1)[0] == 'code=true' and rt(c2)[0] == 'code=true')
+check('X18 the server and web-server jobs run for PHP, .htaccess, the engine, deploy, scripts and their own tests', all(servers_changed([f]) for f in ('src/web/links/api.php', 'src/.htaccess', 'src/web/hub/core/assets/shell.js', 'deploy/docker/Dockerfile', 'scripts/build.py', 'tests/server/core_test.py', '.github/workflows/ci.yml')))
+check('X19 ...and not for a page script, a style, a design, Tools or a browser test; any doubt runs them', not servers_changed(['src/web/home/assets/app.js', 'src/web/home/assets/app.css', 'src/web/home/designs/orb.js', 'src/web/tools/index.html', 'tests/browser/pages_test.py', 'tools-app/src/main.js']) and servers_changed(None) and servers_changed([]))
 check('X14 an ordinary push runs the light browser set: the pages half only', browser_parts(['src/web/links/assets/links.js', 'src/web/hub/core/assets/shell.css']) == ['pages'])
 check('X15 Tools, the Animated Designs, a release (version and changelog together), a manual run or any doubt add the tools half', all(browser_parts(f) == ['pages', 'tools'] for f in (['tools-app/src/main.js'], ['src/web/tools/index.html'], ['src/web/home/designs/orb.js'], ['src/web/home/designs-src/orb/Orb.jsx'], ['src/web/hub/core/lib/boot.php', 'CHANGELOG.md', 'README.md'], None, [])))
 check('X16 a version change without the changelog is not a release', browser_parts(['src/web/hub/core/lib/boot.php']) == ['pages'])

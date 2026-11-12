@@ -201,8 +201,8 @@
       var pr = j.protect, tg = j.telegram, bk = j.backup, up = j.update, fl = j.files, now = Date.now() / 1000;
       var run = tg.cronLast && now - tg.cronLast < 1800;
       var card = function (go, title, pill, cls, l1, l2, action) {
-        return '<div class="ix-oc"><div class="ix-oh"><b>' + title + '</b><span class="ix-pill ' + cls + '">' + esc(pill) + '</span></div><div class="ix-ol">' + l1 + '</div><div class="ix-os">' + l2 + '</div>' +
-          '<button type="button" class="ix-btn" data-go="' + go + '">' + action + '</button></div>'; };
+        return '<div class="ix-oc"><div class="ix-oh"><b>' + title + '</b><span class="ix-pill ' + cls + '">' + esc(pill) + '</span></div><div class="ix-ol">' + l1 + '</div>' + (cls === 'good' ? '' : '<div class="ix-os">' + l2 + '</div>') +
+          '<button type="button" class="ix-btn ix-ovgo" data-go="' + go + '">' + action + '</button></div>'; };   // (1.74.2) compact: the detail line only when something needs a look
       var onNames = [['Password']].concat(pr.items.filter(function (x) { return x.on; }).map(function (x) { return [x.title]; })).map(function (x) { return x[0].toLowerCase(); });
       var n = fl ? fl.extra + fl.changed : 0;
       var cards = [

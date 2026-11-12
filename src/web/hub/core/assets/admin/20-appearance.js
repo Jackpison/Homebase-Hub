@@ -272,7 +272,7 @@
   var lsGet = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
   var lsSet = function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} };
   var presetAccent = lsGet('ix-pacc') !== '0', presetGroup = lsGet('ix-pgroup') || 'all';   // remembered in this browser
-  var colorMode = '';
+  var colorMode = '', pgSel = 'home';
   /* the preset gallery: group chips (remembered), then the presets of that group, or all of them under headings */
   /* the looks you saved (kept with your settings, so they are in every backup) are listed with the built-in ones */
   function presetList(m) {
@@ -325,6 +325,10 @@
     var m = colorMode || (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'); colorMode = m;
     var set = cur[m], def = COLOR_DEFAULT[m];
     var anyPg = PG_APPS.some(function (a) { return cur.pg[a[0]][m]; }) || Object.keys(draft.accentPg || {}).length > 0;
+    var pgs = [['home', 'Start Page']].concat(PG_APPS);
+    var own = function (id) { return !!((cur.pg[id] && cur.pg[id][m]) || (draft.accentPg || {})[id]); };
+    if (!pgs.some(function (a) { return a[0] === pgSel; })) pgSel = 'home';
+    var pgBg = pgSel === 'home' ? '' : cur.pg[pgSel][m], pgAc = (draft.accentPg || {})[pgSel];
     var row = function (k, label, val, shown, attrs) {
       val = /^#[0-9a-f]{6}$/i.test(String(val || '')) ? String(val) : ''; shown = /^#[0-9a-f]{6}$/i.test(String(shown || '')) ? String(shown) : '#000000';   // only a real colour code reaches the page
       return '<div class="ix-cr"><span>' + esc(label) + '</span><input type="color" ' + attrs + ' value="' + esc(shown) + '" aria-label="' + esc(label) + '">' +
@@ -339,21 +343,21 @@
           return row(k[0], k[1], set[k[0]], set[k[0]] || def[k[0]], 'data-k="' + k[0] + '"');
         }).join('') + '</div>';
       }).join('') +
-      '<details class="ix-acc" id="ix-pgc"' + (anyPg ? ' open' : '') + '><summary><span>Different Colors per Page</span><small>' + (anyPg ? 'Some pages have their own colors' : 'Every page uses the colors above') + '</small></summary><div class="ix-accb">' +
-        '<div class="ix-cgrp"><h4>Page Backgrounds</h4><p>A different background for one page, for example a lighter tone for Info. Replaces the page background there.</p>' +
-        PG_APPS.map(function (a) { var v = cur.pg[a[0]][m]; return row('', a[1], v, v || set.bg || def.bg, 'data-pg="' + a[0] + '"'); }).join('') + '</div>' +
-        '<div class="ix-cgrp"><h4>Page Accents</h4><p>A different accent color for one page: its buttons, highlights and the bar\'s current tab. Empty uses the accent above.</p>' +
-        [['home', 'Start Page']].concat(PG_APPS).map(function (a) { var v = (draft.accentPg || {})[a[0]]; return row('', a[1], v, v || draft.accent || '#ffc21a', 'data-ap="' + a[0] + '"'); }).join('') + '</div>' +
-      '</div></details>' +
+      '<div class="ix-cgrp ix-pgc" id="ix-pgc"><h4>Different Colors per Page</h4><p>' + (anyPg ? 'The dot marks pages with colors of their own.' : 'Every page uses the colors above. Pick a page to give it its own.') + '</p>' +
+        seg('pgsel', pgs.map(function (a) { return [a[0], esc(a[1]) + (own(a[0]) ? '<i class="ix-pgdot" aria-label="has its own colors"></i>' : '')]; }), pgSel) +
+        '<div class="ix-pgrows">' +
+          (pgSel === 'home' ? '' : row('', 'Background', pgBg, pgBg || set.bg || def.bg, 'data-pg="' + pgSel + '"')) +
+          row('', 'Accent', pgAc, pgAc || draft.accent || '#ffc21a', 'data-ap="' + pgSel + '"') +
+        '</div></div>' +
       '<p class="ix-note">Tab colors: the pencil on each tab.</p>';
-    bindSeg(p, function (k, v) { if (k === 'cmode') { colorMode = v; K.previewTheme(v); pColors(p); } });
+    bindSeg(p, function (k, v) { if (k === 'cmode') { colorMode = v; K.previewTheme(v); pColors(p); } else if (k === 'pgsel') { pgSel = v; pColors(p); } });
     p.querySelectorAll('.ix-cr').forEach(function (r) {
       var sw = r.querySelector('input[type=color]'), tx = r.querySelector('.ix-hex'), x = r.querySelector('.ix-crx');
       var put = function (v) {
         if (sw.dataset.ap) { draft.accentPg = draft.accentPg || {}; if (v) draft.accentPg[sw.dataset.ap] = v; else delete draft.accentPg[sw.dataset.ap]; }
         else if (sw.dataset.pg) { if (v) cur.pg[sw.dataset.pg][m] = v; else delete cur.pg[sw.dataset.pg][m]; }
         else { if (v) set[sw.dataset.k] = v; else delete set[sw.dataset.k]; }
-        x.hidden = !v; preview();
+        x.hidden = !v; preview(); if (sw.dataset.pg || sw.dataset.ap) { var d = p.querySelector('[data-seg=pgsel] [aria-pressed=true]'); if (d) { var had = d.querySelector('.ix-pgdot'), id = sw.dataset.pg || sw.dataset.ap; if (own(id) && !had) d.insertAdjacentHTML('beforeend', '<i class="ix-pgdot" aria-label="has its own colors"></i>'); else if (!own(id) && had) had.remove(); } }
       };
       bindHex(sw, tx, put, true);
       x.onclick = function () { tx.value = ''; sw.value = tx.placeholder; put(''); };

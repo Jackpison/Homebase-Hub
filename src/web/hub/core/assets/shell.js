@@ -2262,6 +2262,19 @@
   }
   window.HubVault = { keeper: keeper, ENC: ENC, ok: ok, b64: b64, ub64: ub64, rnd: rnd, isEnc: isEnc, kek: kek, wrap: wrap, unwrapOne: unwrapOne, unwrap: unwrap, normRec: normRec,
     useKey: useKey, seal: seal, unseal: unseal, openDeep: openDeep, devSave: devSave, devLoad: devLoad, devForget: devForget, devDropAll: devDropAll };
+  /* (1.74.2) sliders: --p, the part of the track to fill, follows the value (the look is in shell.css). It is set when a slider moves, appears,
+     or a window opens with new values in it. */
+  function fillRanges() {
+    document.querySelectorAll('input[type=range]').forEach(function (r) {
+      var mn = +r.min || 0, mx = r.max === '' ? 100 : +r.max, v = (mx > mn ? Math.min(100, Math.max(0, (+r.value - mn) / (mx - mn) * 100)) : 0).toFixed(1) + '%';
+      if (r.style.getPropertyValue('--p') !== v) r.style.setProperty('--p', v);
+    });
+  }
+  var fillT = 0;
+  function fillQ() { if (!fillT) fillT = requestAnimationFrame(function () { fillT = 0; fillRanges(); }); }
+  document.addEventListener('input', function (e) { if (e.target && e.target.type === 'range') fillQ(); }, true);
+  new MutationObserver(fillQ).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['open', 'hidden'] });
+  fillQ();
 })();
 
 /* ---------- 16. HubSite: the site key (1.61.0) ----------

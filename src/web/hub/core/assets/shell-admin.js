@@ -93,6 +93,7 @@
   function P() { return PAGE || D(); }
   var OV = null;                         // what the Overview last learned: the little status labels in the menu come from it
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
+  var TABMERGE = { security: [['Sign-In', ['password', 'passkeys', 'two-step-login', 'login-approval']], ['Data Protection', ['encryption']], ['Devices', ['trusted-browsers', 'devices']]] };   // (1.74.2) Security: eight tabs become four
   var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Back Up' };   // sections whose accordions become tabs, and the name of their first tab
   var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
   var draft;
@@ -284,6 +285,7 @@
     var t = $('#ix-pane .ix-subt'); if (!t) return;
     var on = t.querySelector('[aria-selected="true"]'), i = t.querySelector('.ix-subi');
     if (on && i) { i.style.width = on.offsetWidth + 'px'; i.style.transform = 'translateX(' + on.offsetLeft + 'px)'; }
+    if (on) t.scrollLeft = Math.max(0, on.offsetLeft - (t.clientWidth - on.offsetWidth) / 2);   // (1.74.2) on a phone the strip scrolls: the open tab is brought into view
   }
   /* The long sections (Security, Telegram, Backup) are drawn as a list of folded parts. Here each part becomes a tab and the status
      above them becomes the first tab, so only one thing is on screen at a time. The parts keep working as they were: they are only shown and hidden. */
@@ -324,25 +326,35 @@
     var rest = kids.filter(function (k) { return accs.indexOf(k) < 0; }), tabs = [];
     if (rest.length) {
       var st = document.createElement('div'); st.className = 'ix-tpane'; st.dataset.tab = 'overview'; pc.insertBefore(st, accs[0]);
-      rest.forEach(function (k) { st.appendChild(k); }); tabs.push({ id: 'overview', title: TABBED[sub] || 'Overview', el: st });
+      rest.forEach(function (k) { st.appendChild(k); }); tabs.push({ id: 'overview', title: TABBED[sub] || 'Overview', els: [st] });
     }
     accs.forEach(function (a) {
       var sm = a.querySelector(':scope > summary'), t = sm && sm.querySelector('span') ? sm.querySelector('span').textContent : (sm ? sm.textContent : 'Tab'), cap = sm && sm.querySelector('small');
-      a.classList.add('ix-tpane'); a.dataset.tab = slug(t); a.dataset.cap = cap ? cap.textContent : ''; tabs.push({ id: a.dataset.tab, title: t, el: a });
+      a.classList.add('ix-tpane'); a.dataset.tab = slug(t); a.dataset.cap = cap ? cap.textContent : ''; tabs.push({ id: a.dataset.tab, title: t, els: [a] });
     });
+    if (TABMERGE[sub]) {   // some parts share one tab: they are shown one under the other, all open
+      var lead = tabs.filter(function (t) { return t.id === 'overview'; }), merged = [], used = {};
+      TABMERGE[sub].forEach(function (m) {
+        var els = []; tabs.forEach(function (t) { if (m[1].indexOf(t.id) >= 0) { els = els.concat(t.els); used[t.id] = 1; } });
+        if (!els.length) return; var id = slug(m[0]); els.forEach(function (e) { e.dataset.tab = id; }); merged.push({ id: id, title: m[0], els: els, ids: m[1] });
+      });
+      tabs = lead.concat(merged, tabs.filter(function (t) { return t.id !== 'overview' && !used[t.id]; }));
+    }
     var bar = document.createElement('div'); bar.className = 'ix-tabbar ix-subt'; bar.setAttribute('role', 'tablist');
     bar.innerHTML = tabs.map(function (t) { return '<button type="button" role="tab" data-tab="' + t.id + '">' + esc(t.title) + '</button>'; }).join('') + '<i class="ix-subi"></i>';
     pc.classList.add('ix-tabbed'); pc.insertBefore(bar, pc.firstChild);
     function show(id) {
       TABSEL[sub] = id;
-      tabs.forEach(function (t) { var on = t.id === id; t.el.classList.toggle('ix-on', on); if (t.el.tagName === 'DETAILS') t.el.open = on; });
+      tabs.forEach(function (t) { var on = t.id === id; t.els.forEach(function (e) { e.classList.toggle('ix-on', on); if (e.tagName === 'DETAILS') e.open = on; }); });
       bar.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === id ? 'true' : 'false'); });
       var on = bar.querySelector('[aria-selected="true"]'), i = bar.querySelector('.ix-subi');
       if (on && i) { i.style.width = on.offsetWidth + 'px'; i.style.transform = 'translateX(' + on.offsetLeft + 'px)'; }
+      if (on) bar.scrollLeft = Math.max(0, on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2);
     }
     bar.querySelectorAll('button').forEach(function (b) { b.onclick = function () { show(b.dataset.tab); }; });
     if (!pc.__tg) { pc.__tg = true; pc.addEventListener('toggle', function (e) { var d = e.target; if (d && d.matches && d.matches('details.ix-tpane') && d.open && !d.classList.contains('ix-on')) { var b = pc.querySelector('.ix-tabbar [data-tab="' + d.dataset.tab + '"]'); if (b) b.click(); } }, true); }
-    var want = TABSEL[sub]; show(tabs.some(function (t) { return t.id === want; }) ? want : tabs[0].id);
+    var want = TABSEL[sub], hit = tabs.filter(function (t) { return t.id === want || (t.ids && t.ids.indexOf(want) >= 0); })[0];   // an old address like #security/encryption opens the tab that now holds it
+    show(hit ? hit.id : tabs[0].id);
   }
   function seg(name, opts, val) {
     return '<div class="ix-seg" data-seg="' + name + '">' + opts.map(function (o) {
@@ -716,7 +728,7 @@
   var lsGet = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
   var lsSet = function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} };
   var presetAccent = lsGet('ix-pacc') !== '0', presetGroup = lsGet('ix-pgroup') || 'all';   // remembered in this browser
-  var colorMode = '';
+  var colorMode = '', pgSel = 'home';
   /* the preset gallery: group chips (remembered), then the presets of that group, or all of them under headings */
   /* the looks you saved (kept with your settings, so they are in every backup) are listed with the built-in ones */
   function presetList(m) {
@@ -769,6 +781,10 @@
     var m = colorMode || (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'); colorMode = m;
     var set = cur[m], def = COLOR_DEFAULT[m];
     var anyPg = PG_APPS.some(function (a) { return cur.pg[a[0]][m]; }) || Object.keys(draft.accentPg || {}).length > 0;
+    var pgs = [['home', 'Start Page']].concat(PG_APPS);
+    var own = function (id) { return !!((cur.pg[id] && cur.pg[id][m]) || (draft.accentPg || {})[id]); };
+    if (!pgs.some(function (a) { return a[0] === pgSel; })) pgSel = 'home';
+    var pgBg = pgSel === 'home' ? '' : cur.pg[pgSel][m], pgAc = (draft.accentPg || {})[pgSel];
     var row = function (k, label, val, shown, attrs) {
       val = /^#[0-9a-f]{6}$/i.test(String(val || '')) ? String(val) : ''; shown = /^#[0-9a-f]{6}$/i.test(String(shown || '')) ? String(shown) : '#000000';   // only a real colour code reaches the page
       return '<div class="ix-cr"><span>' + esc(label) + '</span><input type="color" ' + attrs + ' value="' + esc(shown) + '" aria-label="' + esc(label) + '">' +
@@ -783,21 +799,21 @@
           return row(k[0], k[1], set[k[0]], set[k[0]] || def[k[0]], 'data-k="' + k[0] + '"');
         }).join('') + '</div>';
       }).join('') +
-      '<details class="ix-acc" id="ix-pgc"' + (anyPg ? ' open' : '') + '><summary><span>Different Colors per Page</span><small>' + (anyPg ? 'Some pages have their own colors' : 'Every page uses the colors above') + '</small></summary><div class="ix-accb">' +
-        '<div class="ix-cgrp"><h4>Page Backgrounds</h4><p>A different background for one page, for example a lighter tone for Info. Replaces the page background there.</p>' +
-        PG_APPS.map(function (a) { var v = cur.pg[a[0]][m]; return row('', a[1], v, v || set.bg || def.bg, 'data-pg="' + a[0] + '"'); }).join('') + '</div>' +
-        '<div class="ix-cgrp"><h4>Page Accents</h4><p>A different accent color for one page: its buttons, highlights and the bar\'s current tab. Empty uses the accent above.</p>' +
-        [['home', 'Start Page']].concat(PG_APPS).map(function (a) { var v = (draft.accentPg || {})[a[0]]; return row('', a[1], v, v || draft.accent || '#ffc21a', 'data-ap="' + a[0] + '"'); }).join('') + '</div>' +
-      '</div></details>' +
+      '<div class="ix-cgrp ix-pgc" id="ix-pgc"><h4>Different Colors per Page</h4><p>' + (anyPg ? 'The dot marks pages with colors of their own.' : 'Every page uses the colors above. Pick a page to give it its own.') + '</p>' +
+        seg('pgsel', pgs.map(function (a) { return [a[0], esc(a[1]) + (own(a[0]) ? '<i class="ix-pgdot" aria-label="has its own colors"></i>' : '')]; }), pgSel) +
+        '<div class="ix-pgrows">' +
+          (pgSel === 'home' ? '' : row('', 'Background', pgBg, pgBg || set.bg || def.bg, 'data-pg="' + pgSel + '"')) +
+          row('', 'Accent', pgAc, pgAc || draft.accent || '#ffc21a', 'data-ap="' + pgSel + '"') +
+        '</div></div>' +
       '<p class="ix-note">Tab colors: the pencil on each tab.</p>';
-    bindSeg(p, function (k, v) { if (k === 'cmode') { colorMode = v; K.previewTheme(v); pColors(p); } });
+    bindSeg(p, function (k, v) { if (k === 'cmode') { colorMode = v; K.previewTheme(v); pColors(p); } else if (k === 'pgsel') { pgSel = v; pColors(p); } });
     p.querySelectorAll('.ix-cr').forEach(function (r) {
       var sw = r.querySelector('input[type=color]'), tx = r.querySelector('.ix-hex'), x = r.querySelector('.ix-crx');
       var put = function (v) {
         if (sw.dataset.ap) { draft.accentPg = draft.accentPg || {}; if (v) draft.accentPg[sw.dataset.ap] = v; else delete draft.accentPg[sw.dataset.ap]; }
         else if (sw.dataset.pg) { if (v) cur.pg[sw.dataset.pg][m] = v; else delete cur.pg[sw.dataset.pg][m]; }
         else { if (v) set[sw.dataset.k] = v; else delete set[sw.dataset.k]; }
-        x.hidden = !v; preview();
+        x.hidden = !v; preview(); if (sw.dataset.pg || sw.dataset.ap) { var d = p.querySelector('[data-seg=pgsel] [aria-pressed=true]'); if (d) { var had = d.querySelector('.ix-pgdot'), id = sw.dataset.pg || sw.dataset.ap; if (own(id) && !had) d.insertAdjacentHTML('beforeend', '<i class="ix-pgdot" aria-label="has its own colors"></i>'); else if (!own(id) && had) had.remove(); } }
       };
       bindHex(sw, tx, put, true);
       x.onclick = function () { tx.value = ''; sw.value = tx.placeholder; put(''); };
@@ -1387,8 +1403,8 @@
       var pr = j.protect, tg = j.telegram, bk = j.backup, up = j.update, fl = j.files, now = Date.now() / 1000;
       var run = tg.cronLast && now - tg.cronLast < 1800;
       var card = function (go, title, pill, cls, l1, l2, action) {
-        return '<div class="ix-oc"><div class="ix-oh"><b>' + title + '</b><span class="ix-pill ' + cls + '">' + esc(pill) + '</span></div><div class="ix-ol">' + l1 + '</div><div class="ix-os">' + l2 + '</div>' +
-          '<button type="button" class="ix-btn" data-go="' + go + '">' + action + '</button></div>'; };
+        return '<div class="ix-oc"><div class="ix-oh"><b>' + title + '</b><span class="ix-pill ' + cls + '">' + esc(pill) + '</span></div><div class="ix-ol">' + l1 + '</div>' + (cls === 'good' ? '' : '<div class="ix-os">' + l2 + '</div>') +
+          '<button type="button" class="ix-btn ix-ovgo" data-go="' + go + '">' + action + '</button></div>'; };   // (1.74.2) compact: the detail line only when something needs a look
       var onNames = [['Password']].concat(pr.items.filter(function (x) { return x.on; }).map(function (x) { return [x.title]; })).map(function (x) { return x[0].toLowerCase(); });
       var n = fl ? fl.extra + fl.changed : 0;
       var cards = [
@@ -1798,7 +1814,8 @@
         '<div class="ix-ring ' + (todo ? '' : 'ok') + '" style="--p:' + pct + '"><b>' + count + '</b><small>of ' + total + '</small></div>' +
         '<div class="ix-hero-t"><div class="ix-hero-h">' + (todo ? (count / total < 0.5 ? 'Your Site Needs More Protection' : 'A Good Start, With Room to Grow') : 'Everything Recommended Is On') + '</div>' +
           '<p>' + (todo ? '<b>Next best step:</b> ' + esc(todo[2]) : 'Your website password and every extra protection are on. Nothing to do here.') + '</p>' +
-          '<div class="ix-chips" style="margin-top:12px"><span class="ix-chip on"><b>Password</b>on</span>' + have.map(function (x) { return '<span class="ix-chip' + (x[1] ? ' on' : '') + '"><b>' + x[0].replace(/^./, function (c) { return c.toUpperCase(); }) + '</b>' + (x[1] ? 'on' : 'off') + '</span>'; }).join('') + '</div></div>';
+          '</div>';   // (1.74.2) the row of status chips is gone: the cards below say the same
+
       var trN = (a.trusted || []).length;
       p.querySelector('#ix-stiles').innerHTML =
         tile('pw', ICON.key, 'Password', 'Set', 'good', 'One password for every page.') +

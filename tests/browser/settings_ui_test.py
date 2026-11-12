@@ -133,10 +133,13 @@ try:
 
         # ---- Colors: shorter ----
         pg.goto(s.base + '/web/settings/#colors'); wait_js(pg, "!!document.querySelector('#ix-pgc')", 20000)
-        col = pg.evaluate("(() => { const d = document.getElementById('ix-pgc'); return [d.open, [...document.querySelectorAll('.ix-cr')].filter(e => e.checkVisibility()).length, document.body.innerText.includes('Same Look on Every Page'), !document.querySelector('[data-sa]') && document.querySelectorAll('.ix-apk [data-c]').length === 10]; })()")
-        check('U18 the Colors tab shows Accent Color (the ten-color picker, 1.70.0) and 8 color rows, with the per-page colors folded away', col == [False, 8, False, True], col)
-        pg.click('#ix-pgc summary')
-        check('U19 Different Colors per Page holds the page backgrounds and accents', pg.evaluate("document.querySelectorAll('#ix-pgc .ix-cr').length") >= 10)
+        col = pg.evaluate("(() => { const d = document.getElementById('ix-pgc'); return [!!d.checkVisibility(), [...document.querySelectorAll('.ix-cr')].filter(e => e.checkVisibility()).length, document.body.innerText.includes('Same Look on Every Page'), !document.querySelector('[data-sa]') && document.querySelectorAll('.ix-apk [data-c]').length === 10]; })()")
+        check('U18 the Colors tab shows Accent Color (the ten-color picker, 1.70.0) and 8 color rows, and the per-page colors always shown (Start Page: one Accent row)', col == [True, 9, False, True], col)
+        pg.click('#ix-pgc [data-seg=pgsel] button[data-v=info]')
+        n19 = pg.evaluate("[document.querySelectorAll('#ix-pgc .ix-cr').length, !!document.querySelector('#ix-pgc [data-pg=info]'), !!document.querySelector('#ix-pgc [data-ap=info]')]")
+        pg.fill('#ix-pgc [data-pg=info] + .ix-hex', '#223344')
+        pg.dispatch_event('#ix-pgc [data-pg=info] + .ix-hex', 'change')
+        check('U19 Different Colors per Page: pick a page, set its own background and accent; a dot marks it', n19 == [2, True, True] and pg.evaluate("!!document.querySelector('#ix-pgc [data-v=info] .ix-pgdot')"), n19)
 
         # ---- Backup: four tabs ----
         pg.goto(s.base + '/web/settings/#backup'); wait_js(pg, "!!document.querySelector('#ix-exp')", 20000)

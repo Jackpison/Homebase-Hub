@@ -311,11 +311,13 @@ try:
         wide = []
         for sec in ('overview', 'setup', 'general', 'nav', 'look', 'themes', 'colors', 'glass', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates', 'changelog', 'chmap'):
             q.goto(s.base + '/web/settings/#' + sec); wait_js(q, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); q.wait_for_timeout(300)
-            r = q.evaluate("[Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.max(0, ...[...document.querySelectorAll('.ix-subt button')].map(b => Math.round(b.getBoundingClientRect().right)))]")
-            if r[0] > 0 or r[1] > 390:   # name what sticks out, so a failure in Firefox or WebKit (CI only) says where to look
+            r = q.evaluate("""(() => { const strips = [...document.querySelectorAll('.ix-subt')], act = document.querySelector('.ix-subt [aria-selected=true]'), st = act && act.parentElement;
+                return [Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.max(0, ...strips.map(b => Math.round(b.getBoundingClientRect().right))),
+                        st ? (act.offsetLeft >= st.scrollLeft - 1 && act.offsetLeft + act.offsetWidth <= st.scrollLeft + st.clientWidth + 1 ? 0 : 1) : 0]; })()""")
+            if r[0] > 0 or r[1] > 390 or r[2]:   # name what sticks out, so a failure in Firefox or WebKit (CI only) says where to look
                 r.append(q.evaluate("[...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > innerWidth + 0.5; }).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '.' + String(e.className).trim().split(/\\s+/).slice(0, 2).join('.') + ' ' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).slice(0, 5)"))
                 wide.append((sec, r))
-        check('L26 phone, Settings: no section is wider than the screen, and every sub-tab is in view (they wrap)', not wide, wide)
+        check('L26 phone, Settings: no section is wider than the screen; the sub-tab strip fits and scrolls, with the open tab in view', not wide, wide)
         wide = []
         for path, ready in (('/', "!!document.getElementById('settingsSheet')"), ('/web/links/', "!!document.querySelector('#grid')"), ('/web/info/', "!!document.querySelector('.boxes')"),
                             ('/web/cards/', "!!document.querySelector('#list')"), ('/web/tasks/', "!!document.querySelector('#list')"), ('/web/tools/', "!!document.querySelector('#app, main, body')")):

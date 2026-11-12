@@ -25,7 +25,8 @@
         '<div class="ix-ring ' + (todo ? '' : 'ok') + '" style="--p:' + pct + '"><b>' + count + '</b><small>of ' + total + '</small></div>' +
         '<div class="ix-hero-t"><div class="ix-hero-h">' + (todo ? (count / total < 0.5 ? 'Your Site Needs More Protection' : 'A Good Start, With Room to Grow') : 'Everything Recommended Is On') + '</div>' +
           '<p>' + (todo ? '<b>Next best step:</b> ' + esc(todo[2]) : 'Your website password and every extra protection are on. Nothing to do here.') + '</p>' +
-          '<div class="ix-chips" style="margin-top:12px"><span class="ix-chip on"><b>Password</b>on</span>' + have.map(function (x) { return '<span class="ix-chip' + (x[1] ? ' on' : '') + '"><b>' + x[0].replace(/^./, function (c) { return c.toUpperCase(); }) + '</b>' + (x[1] ? 'on' : 'off') + '</span>'; }).join('') + '</div></div>';
+          '</div>';   // (1.74.2) the row of status chips is gone: the cards below say the same
+
       var trN = (a.trusted || []).length;
       p.querySelector('#ix-stiles').innerHTML =
         tile('pw', ICON.key, 'Password', 'Set', 'good', 'One password for every page.') +

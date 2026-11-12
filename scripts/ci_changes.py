@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Tells CI whether a push or pull request changed anything besides docs, so the slow jobs can skip themselves on a
-docs-only change. Prints "code=true|false", "app=true|false" and "matrix=<JSON>" (for $GITHUB_OUTPUT). Any doubt means true: run everything.
+docs-only change. Prints "code=true|false", "app=true|false", "servers=true|false" and "matrix=<JSON>" (for $GITHUB_OUTPUT). Any doubt means true: run everything.
 app: the site, Tools or the visual check itself changed, so the "visual changes" report is worth making.
   python3 scripts/ci_changes.py            reads EVENT, BEFORE (push) and BASE (pull request) from the environment
 Docs: *.md files outside src/, except CHANGELOG.md (the release check reads it), and .github/ISSUE_TEMPLATE/.
@@ -27,6 +27,16 @@ def app_changed(files):
 def code_changed(files):
     """files: changed paths, or None when they could not be listed (then run everything)."""
     return True if not files else not all(is_doc(f) for f in files)
+
+
+SERVER_PATHS = ('deploy/', 'tests/server/', 'tests/lib/', 'scripts/', '.github/', 'src/web/hub/')
+
+
+def servers_changed(files):
+    """The Apache, nginx, Docker, install-script and update/hostile-zip jobs: only when something they test changed (any PHP or .htaccess, the engine, the build
+    and deploy files, their tests). A change to a page's script, style or text leaves them out. Any doubt runs them."""
+    if not files: return True
+    return any(f.startswith(SERVER_PATHS) or f.endswith(('.php', '.htaccess')) for f in files)
 
 
 TOOLS_PATHS = ('tools-app/', 'src/web/tools/', 'src/web/home/designs')
@@ -57,4 +67,5 @@ if __name__ == '__main__':
     print('Changed: %s' % ('(could not tell: run everything)' if files is None else ', '.join(files[:20]) or '(nothing)'), file=sys.stderr)
     print('code=%s' % ('true' if code else 'false'))
     print('app=%s' % ('true' if app_changed(files) else 'false'))
+    print('servers=%s' % ('true' if servers_changed(files) else 'false'))
     print('matrix=%s' % json.dumps({'browser': ['chromium', 'webkit'], 'part': browser_parts(files)}, separators=(',', ':')))
