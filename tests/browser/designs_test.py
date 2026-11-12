@@ -31,7 +31,6 @@ try:
         pg.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000)
         try: wait_js(pg, "!!document.querySelector('#bg > .design canvas')", 20000)
         except Exception: pass
-        pg.wait_for_timeout(1200)
         st = pg.evaluate("[PUB.bg.theme, (PUB.bg.own || []).length, document.querySelectorAll('#bg > .design canvas').length, document.getElementById('creditText').textContent]")
         check('H1 a new site starts with the Animated Designs: one is drawn behind the page, with its credit, and nothing is refused', st[0] == 'designs' and st[1] == 16 and st[2] >= 1 and st[3] == 'From React Bits' and not errs, (st, errs))
 
@@ -39,6 +38,12 @@ try:
         # every design draws: its files are loaded by hand in a blank page of the site (the same address, so the same security policy)
         pg2 = ctx.new_page(); pg2.set_viewport_size({'width': 800, 'height': 500}); errs2 = []; page_errors(pg2, errs2)
         pg2.on('console', lambda m: errs2.append(m.text[:200]) if m.type == 'error' and 'security policy' in m.text else None)
+        def drawn(page):
+            """The most colours seen on screen, waiting until there are more than 12 (a design draws a moment after it starts)."""
+            seen = [0]
+            def look():
+                seen[0] = page.evaluate(COLORS, __import__('base64').b64encode(page.screenshot(timeout=90000)).decode()); return seen[0] >= 12
+            until(look, 25000, 300); return seen[0]
         weak = {}
         for i in sorted(reg):
             if reg[i]['gpu']: continue
@@ -47,8 +52,7 @@ try:
             if os.path.isfile(os.path.join(s.dir, 'web/home/designs', i + '.css')): pg2.add_style_tag(url=s.base + '/web/home/designs/%s.css' % i)
             pg2.add_script_tag(url=s.base + '/web/home/designs/%s.js' % i)
             ok = pg2.evaluate("(d) => { try { window.__r = HubDesigns[d[0]].start(document.getElementById('c'), d[1]); return true; } catch (e) { return String(e); } }", [i, reg[i]['defaults']])
-            pg2.wait_for_timeout(1500)
-            n = pg2.evaluate(COLORS, __import__('base64').b64encode(pg2.screenshot(timeout=90000)).decode()) if ok is True else 0
+            n = drawn(pg2) if ok is True else 0
             canv = pg2.evaluate("document.querySelectorAll('#c canvas').length")
             pg2.evaluate("window.__r && window.__r.destroy()"); gone = pg2.evaluate("document.querySelectorAll('#c canvas').length")
             if ok is not True or n < 12 or not canv or gone: weak[i] = (ok, n, canv, gone)
@@ -56,7 +60,7 @@ try:
         pg2.close()
 
         # the Background sheet: Preview does not save; switching off and options are kept by Save Background
-        before = site_bg(); why = browser_login(pg, s.base); pg.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000); pg.wait_for_timeout(500)
+        before = site_bg(); why = browser_login(pg, s.base); pg.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000); wait_js(pg, "!!document.querySelector('[data-hub=toggle]')", 20000)
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); wait_js(pg, "document.body.classList.contains('editing')", 15000)
         pg.evaluate("document.querySelector('[data-open=bgSheet]').click()"); wait_js(pg, "document.querySelectorAll('#designRows .dz').length === 16", 15000)
         rows = pg.evaluate("[...document.querySelectorAll('#designRows .dz')].map(r => [r.dataset.id, r.querySelector('.dz-sw') ? getComputedStyle(r.querySelector('.dz-sw')).backgroundImage.slice(0, 15) : ''])")
@@ -82,7 +86,7 @@ try:
         pp.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000)
         have = pp.evaluate("(PUB.bg.own || []).map(i => i.url)")
         for _ in range(14):
-            pp.evaluate("document.getElementById('nextBg').click()"); pp.wait_for_timeout(500)
+            pp.evaluate("document.getElementById('nextBg').click()"); until(lambda: not pp.evaluate("document.getElementById('nextBg').classList.contains('spin')"), 15000)
         heavy = [i for i in reg if reg[i]['desktop']]
         check('H7 on a phone the computers-only designs (Hyperspeed, Aero Shards) are on the list but never asked for; the others are', all('design:' + i in have for i in heavy) and not [u for u in asked if any('/%s.' % i in u for i in heavy)] and len([u for u in asked if u.endswith('.js') or '.js?' in u]) >= 2, (asked[:6], perr))
         ph.close()
@@ -92,7 +96,7 @@ try:
         rp = rm.new_page(); rp.on('request', lambda r: asked2.append(r.url) if '/designs/' in r.url and '.js' in r.url else None)
         rp.goto(s.base + '/web/home/', wait_until='domcontentloaded', timeout=60000)
         for _ in range(12):
-            rp.evaluate("document.getElementById('nextBg').click()"); rp.wait_for_timeout(450)
+            rp.evaluate("document.getElementById('nextBg').click()"); until(lambda: not rp.evaluate("document.getElementById('nextBg').classList.contains('spin')"), 15000)
         moving = [i for i in reg if not reg[i]['still']]
         check('H8 with Reduce Motion only the designs that can stand still are fetched', asked2 and not [u for u in asked2 if any('/%s.js' % i in u for i in moving)], asked2)
         rm.close(); b.close()
