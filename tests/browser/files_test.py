@@ -223,6 +223,7 @@ try:
         check('B46 Shared Links is empty until a file has a link, with a hint', pg.is_visible('#none') and 'No share links' in pg.inner_text('#none'), pg.inner_text('#none'))
         pg.click('#tabs button[data-t=files]')
         pg.click('#newb'); check('B47 New offers Upload Files and New Folder', pg.inner_text('.pm') .replace('\n', ' ').count('Upload Files') == 1 and 'New Folder' in pg.inner_text('.pm')); pg.keyboard.press('Escape')
+        if pg.is_visible('.uph .ubtn'): pg.click('.uph .ubtn')   # the finished uploads sit over the last rows; clear them first
         menu(pg, 'pack.zip', 'Move to Trash'); until(lambda: 'pack.zip' not in names(pg), 10000)
         pg.wait_for_selector('#ix-toast.on .ix-tact', timeout=5000)
         check('B48 Move to Trash says so, with an Undo button', 'Moved to the Trash' in pg.inner_text('#ix-toast') and 'Undo' in pg.inner_text('#ix-toast'), pg.inner_text('#ix-toast'))
