@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.78.1 | Settings: Data Protection and Telegram Setup in the Sign-In style, Two-Step scan side by side, Look tab renamed; smoother pages, folds and hovers everywhere |
 | 1.78.0 | Settings: Sign-In boxes redesigned, Look and Bar in one tab, a clearer Telegram Setup, click-to-copy commands, an Activity log of what was done; Start Here and Domains and Uptime are gone |
 | 1.77.5 | Info: an unlocked encrypted tab in the Document layout no longer shows its lock bar on top of the Outline |
 | 1.77.4 | Backup & Restore › Back Up is one hero box with Download Backup, and the reminder is a row |
@@ -153,6 +154,19 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.78.1
+
+### Settings
+- **Data Protection** (Encryption, Change Passphrase, Recovery Key, Remove Encryption) uses the same two-sided cards as Sign-In.
+- **Telegram Setup** is one box with two numbered rows: Create Your Bot, then Connect and Test. Step 2 shows Done as soon as your chat is connected.
+- **Two-Step Login**: on the scan screen, Step 2 sits beside Step 1 instead of under it.
+- The **Look & Bar** tab is called **Look** again.
+
+### Smoother everywhere
+- Cards and Files rise in like the other pages, every fold (details) eases open and shut, and cards, rows and tiles ease their colour and shadow when you point at them. Nothing runs when your device asks for less motion.
 
 ---
 
