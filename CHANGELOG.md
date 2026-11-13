@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.75.0 | One message stack in the bottom right with a bell for missed ones, sliding-pill tabs, a wider Settings with one header and a box-style Overview, a timeline for What's New, six Spotlight presets, and a Files drop zone |
 | 1.74.2 | Settings: pill sub-tabs, Security in four tabs, a new Overview and Colors, per-page colors always shown; smoother sliders; a flatter phone top bar; quicker CI |
 | 1.74.1 | Animated designs no longer block menus and page changes, Background has four tabs and a Mix Everything theme, Home's Welcome Text and the search shine are gone, and the top bar and sidebar highlight the current page like the dock |
 | 1.74.0 | Animated Designs for Home: sixteen live backgrounds from React Bits with options and Preview; one glass behind the clock on an iPhone app |
@@ -144,6 +145,35 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.75.0
+
+### Messages
+
+- Every message of the site now appears as a card in the bottom right corner, with a tile, the message, where it came from and when.
+- A message that goes away on its own is kept behind a small bell (this tab's last 30), so nothing is missed. Hover a card to keep it; the cross closes it.
+
+### Settings
+
+- The content uses the room it has instead of stopping at 780 px.
+- Every section has the same header: its tile, name and status. Security adds a **Fix Next: HTTPS** button when that is the next step.
+- **Overview** is a set of boxes: pick Security, Backup, Telegram or Updates and read more below; Health, Protection Steps and what needs a look sit beside it.
+- **What's New** (Versions) is a timeline: a tick for versions you have passed, a filled dot for yours, a hollow one for newer ones.
+- The small boxes (Security tiles, Overview cards) have a softer look, a lift and an accent edge on hover.
+- Tabs and segmented buttons have a solid pill that slides to the open tab.
+
+### Looks
+
+- **Spotlight:** six presets (Ember, Lime, Sky, Violet, Pink, Gold), each in dark and light, with one loud accent that stands out on the page and the boxes. The text is easy to read in all of them.
+- The edit bar at the bottom follows the bar colors and Bar Glass, like the rest of the site.
+- About a dozen icons (key, lock, shield, bell, home, file and others) are sharper.
+
+### Files
+
+- An empty folder is a drop zone with an upload tile.
+- The storage bar is a card.
 
 ---
 
