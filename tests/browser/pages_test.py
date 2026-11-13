@@ -293,14 +293,14 @@ try:
         soft_reduce = glass({}, reduce=True); light = glass({'tone': 1, 'tint': 30}); solid = glass({'solid': 1}); glass({})
         check('P40 one glass (1.68.4): the Home widgets follow Settings > Appearance > Glass: Soft stays see-through and blurred even when the computer asks to reduce transparency; Tone Light is a light see-through tint; Solid is not see-through',
               soft_reduce[1] < 0.5 and soft_reduce[2] and light[0] > 200 and light[1] < 0.5 and light[2] and solid[1] > 0.85 and not solid[2], (soft_reduce, light, solid))
-        # P48: Settings > Overview after an update shows What's New from a small answer (the newest version only, 1.53.1)
+        # P48: Settings opens on General without loading the changelog (1.77.2: What's New left with the Overview)
         wctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); wctx.add_cookies(cookies); wctx.route('**/*', handle); wctx.add_init_script(TRACK_REQUESTS)
         wsz = []; wp = wctx.new_page(); wp.on('requestfinished', lambda r: wsz.append((r.url, len(r.response().body() or b''))) if 'action=changelog' in r.url else None)
-        wp.goto(B + '/web/settings/', wait_until='domcontentloaded'); until(lambda: wp.evaluate("!!document.querySelector('.ix-new')"), 15000, 200)
-        wn = wp.evaluate("(document.querySelector('.ix-new .ix-ec-t') || {}).textContent || ''")
+        wp.goto(B + '/web/settings/', wait_until='domcontentloaded'); until(lambda: wp.evaluate("!!document.querySelector('#ix-name')"), 15000, 200); wp.wait_for_timeout(500)
+        wn = wp.evaluate("(document.querySelector('#ix-pane .ix-ph h2') || {}).textContent || ''")
         wctx.close()
-        check("P48 Settings > Overview shows What's New for this version, loading only its notes (not the whole changelog)",
-              ver in wn and wsz and all('latest=1' in u and n < 20000 for u, n in wsz), (wn, [(u[-40:], n) for u, n in wsz]))
+        check("P48 Settings opens on General and does not load the changelog until Updates > Changelog is opened",
+              wn == 'General' and not wsz, (wn, [(u[-40:], n) for u, n in wsz]))
         # P49: the shared encryption of encrypted tabs (shell.js HubVault, 1.53.2; before, Links, Info and Settings each had a copy).
         # It opens what the old copies made (tests/fixtures/vault-vectors.json), and what it makes opens with plain WebCrypto
         # written here, apart from the site's code: so the stored format did not change.

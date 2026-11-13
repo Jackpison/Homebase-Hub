@@ -88,8 +88,8 @@ try:
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "document.querySelectorAll('#ix-page .ix-snav [data-sec]').length > 0", 20000)
         menu = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav [data-sec] span')].map(e => e.textContent)")
         groups = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav .ix-sgl')].map(e => e.textContent)")
-        check('S9 the Settings menu: Web Setting (General, Appearance), Data Setting (Security, Telegram, Backup & Restore), System Setting (Health, Updates, Features)',
-              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Health', 'Updates', 'Features'] and groups == ['Web', 'Data', 'System'], (menu, groups))
+        check('S9 the Settings menu: Web Setting (General, Appearance), Data Setting (Security, Telegram, Backup & Restore, Logs), System Setting (Health, Updates, Features)',
+              menu == ['General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Logs', 'Health', 'Updates', 'Features'] and groups == ['Web', 'Data', 'System'], (menu, groups))
         def at(h, expr):
             pg.goto(s.base + '/web/settings/' + h)
             try: wait_js(pg, expr, 10000); return True
@@ -100,17 +100,17 @@ try:
         sub = "[...document.querySelectorAll('#ix-pane .ix-subseg [aria-selected=true]')].map(e => e.textContent).join('')"
         places = [('#updates', 'Updates', 'Update'), ('#files', 'Health', 'Server Check'), ('#health', 'Health', 'Overview'), ('#domains', 'Health', 'Domains and Uptime'), ('#check', 'Health', 'Server Check'),
                   ('#changelog', 'Updates', "Changelog"), ('#system', 'Updates', 'Update'), ('#look', 'Appearance', 'Look'), ('#themes', 'Appearance', 'Presets'),
-                  ('#colors', 'Appearance', 'Colors'), ('#glass', 'Appearance', 'Glass'), ('#nav', 'Appearance', 'Bar'), ('#pages', 'Appearance', 'Bar'), ('#setup', 'Overview', 'Start Here'),
+                  ('#colors', 'Appearance', 'Colors'), ('#glass', 'Appearance', 'Glass'), ('#nav', 'Appearance', 'Bar'), ('#pages', 'Appearance', 'Bar'), ('#setup', 'General', 'Start Here'), ('#logs', 'Logs', 'Notifications'),
                   ('#telegram/backups', 'Backup & Restore', 'Back Up')]
         bad = [h for h, t, u in places if not at(h, h2 + " === %s && %s === %s" % (json.dumps(t), sel, json.dumps(u)))]
         check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages and #nav open Appearance > Bar; 1.70.0: #files opens Server Check, #changelog Changelog, #telegram/backups Backup & Restore)', not bad, bad)
-        odd = [h for h in ('#constructor', '#__proto__', '#hasOwnProperty', '#toString/x') if not at(h, h2 + " === 'Overview'")]
-        check('S10d an address that is a built-in JavaScript name (#constructor, #__proto__ ...) opens the Overview, not a broken page (2026-11)', not odd, odd)
+        odd = [h for h in ('#constructor', '#__proto__', '#hasOwnProperty', '#toString/x') if not at(h, h2 + " === 'General'")]
+        check('S10d an address that is a built-in JavaScript name (#constructor, #__proto__ ...) opens General, not a broken page (2026-11)', not odd, odd)
         ok = at('#changelog', tabs + " === \"Update|Changelog\"")
         check("S10b Updates has two tabs, Update and Changelog (1.77.1: Versions and Version Map are one list; the Notes moved to Features)", ok and pg.evaluate("document.querySelectorAll('#ix-pane .ix-subseg').length") == 0, pg.evaluate(sub))
         ok = at('#general', "!!document.querySelector('#ix-name')")
         gen = pg.evaluate("[[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent), document.querySelectorAll('#ix-pane .ix-subt').length]")
-        check('S10c General is one page: Site Name, Site Logo and Time Zone, no tabs', ok and gen == [['Site Name', 'Site Logo', 'Time Zone'], 0], gen)
+        check('S10c General holds Site Name, Site Logo and Time Zone, with the two tabs General and Start Here (1.77.2)', ok and gen == [['Site Name', 'Site Logo', 'Time Zone'], 1] and pg.evaluate(tabs) == 'General|Start Here', gen)
         ok = at('#nav', tabs + " === 'Look|Bar|Colors|Presets|Glass' && !!document.querySelector('#ix-pc #ix-tabl .ix-pgr') && !!document.querySelector('#ix-pc .ix-navpick')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
         check('S11 Appearance > Bar holds Navigation Style (with the two bar switches) and the Tabs list', ok and cards == ['Navigation Style', 'Tabs'] and pg.evaluate("!!document.querySelector('#ix-hb') && !!document.querySelector('#ix-bh')"), (pg.evaluate(tabs), cards))
@@ -130,8 +130,10 @@ try:
         check('S14 Colors holds Accent Color: 10 colors (the 1.65.3 picker) and your own, and no second Accent row', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 10 and pg.evaluate("!!document.querySelector('#ix-acc') && !document.querySelector('[data-sa]')"))
         ok = at('#glass', "!!document.querySelector('#ix-glass2')")
         check('S14b the glass on/off switch is on the Glass tab (Glass on the Bar)', ok)
-        ok = at('#setup', "!!document.querySelector('#ix-pc .ix-wzhost') && !!document.querySelector('#ix-pc .ix-help #ix-inst') && !!document.querySelector('#ix-pc .ix-help #ix-keysb')")
-        check('S14c Overview > Start Here: Guided Setup, then Install on Your Phone and Keyboard Shortcuts', ok)
+        ok = at('#setup', "!!document.querySelector('#ix-pc .ix-wzhost')")
+        check('S14c General > Start Here holds the Guided Setup', ok)
+        ok = at('#features', "!!document.querySelector('#ix-pc .ix-help #ix-inst') && !!document.querySelector('#ix-pc .ix-help #ix-keysb')")
+        check('S14e Features ends with Install on Your Phone and Keyboard Shortcuts (1.77.2)', ok)
         ok = at('#check', "!!document.querySelector('#ix-pc .ix-scbox .ix-checks') && !!document.querySelector('#ix-pc #ix-fnb') && !!document.querySelector('#ix-pc .ix-fls .ix-chgs, #ix-pc .ix-fls .ix-status')")
         check('S14d Health > Server Check ends with Files That Do Not Belong', ok)
         at('#look', "!!document.querySelector('#ix-font')")

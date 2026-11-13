@@ -38,8 +38,8 @@ try:
         # ---- switches and the theme switch ----
         pg.goto(s.base + '/web/links/'); wait_js(pg, "document.querySelectorAll('.cat').length > 0", 20000)
         pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]')
-        sw = pg.evaluate("(() => { const c = document.querySelector('#setDlg input.ix-sw'), r = {width: c.offsetWidth, height: c.offsetHeight}, st = getComputedStyle(c), k = getComputedStyle(c, '::after'); return [c.type, Math.round(r.width), Math.round(r.height), st.backgroundColor, k.backgroundImage.includes('gradient')]; })()")
-        check('P1 the on/off switch is a real checkbox, 52 x 26, a white track and a metal knob', sw[:3] == ['checkbox', 52, 26] and sw[3] == 'rgb(255, 255, 255)' and sw[4], sw)
+        sw = pg.evaluate("(() => { const c = document.querySelector('#setDlg input.ix-sw'), r = {width: c.offsetWidth, height: c.offsetHeight}, st = getComputedStyle(c), k = getComputedStyle(c, '::after'); return [c.type, Math.round(r.width), Math.round(r.height), k.backgroundColor, k.boxShadow !== 'none']; })()")
+        check('P1 the on/off switch is a real checkbox, 52 x 26, a recessed track and a white pill with a shadow (1.77.2)', sw[:3] == ['checkbox', 52, 26] and sw[3] == 'rgb(255, 255, 255)' and sw[4], sw)
         rt = pg.evaluate("(() => { const t = document.querySelector('#setDlg .ix-rt'), st = getComputedStyle(t); return [st.backgroundImage.includes('gradient'), getComputedStyle(t.querySelector('svg')).stroke]; })()")
         check('P38 the rows of a page Settings window have solid colour tiles with a white icon, like the Settings menu (1.66.1)', rt == [True, 'rgb(255, 255, 255)'], rt)
         pg.keyboard.press('Escape')
@@ -57,8 +57,8 @@ try:
         tip = pg.evaluate("(() => { const t = document.getElementById('ix-ebtip'), st = getComputedStyle(t); return [t.textContent, st.opacity, st.borderTopWidth !== '0px' || st.borderBottomWidth !== '0px', !document.querySelector('#ix-bar [data-ix=theme]').hasAttribute('title')]; })()")
         check('P4 an icon-only bar button shows the dark-glass tooltip with an accent line (and no second browser tooltip)', tip[0].startswith('Switch to') and float(tip[1]) > .9 and tip[2] and tip[3], tip)
         pg.mouse.move(5, 500)
-        sweep = pg.evaluate("(() => { const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Test'; document.body.appendChild(b); const a = getComputedStyle(b, '::after'); const r = [a.content, a.transform !== 'none']; b.remove(); return r; })()")
-        check('P5 text buttons carry the slanted hover fill (hidden until hovered)', sweep[0] in ('""', "''") and sweep[1], sweep)
+        sweep = pg.evaluate("(() => { const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Test'; document.body.appendChild(b); const a = getComputedStyle(b, '::after'); const r = [a.content, a.clipPath.startsWith('polygon')]; b.remove(); return r; })()")
+        check('P5 text buttons carry the corner sweep hover fill (clipped away until hovered, 1.77.2)', sweep[0] in ('""', "''") and sweep[1], sweep)
 
         # ---- Hold to Delete (Links: the delete button of a link) ----
         pg.keyboard.press('e'); wait_js(pg, "document.body.classList.contains('editing') && !!document.querySelector('.row [data-hold]')", 10000)
@@ -121,7 +121,7 @@ try:
         pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
 
         # ---- (1.65.1) Settings > Start Here (General before 1.70.0): Keyboard Shortcuts; closing that window and changing section still works ----
-        pg.goto(s.base + '/web/settings/#setup'); wait_js(pg, "!!document.getElementById('ix-keysb')", 20000)
+        pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "!!document.getElementById('ix-keysb')", 20000)
         pg.click('#ix-keysb'); wait_js(pg, "!!document.querySelector('#ix-dlg.open .ix-keys')", 5000)
         pg.keyboard.press('Escape'); pg.evaluate("location.hash = 'backup'")
         until(lambda: pg.evaluate("!!document.getElementById('ix-exp')"), 8000)
@@ -142,12 +142,6 @@ try:
         check('P23 a button that showed no change on hover (Cards: More Filters) now glows softly', g1 != g0 and g1 != 'none', (g0, g1))
         pg.mouse.move(5, 5)
 
-        # ---- (1.65.1) What's New ----
-        pg.evaluate("localStorage.removeItem('ix-seen-ver')"); pg.goto(s.base + '/web/settings/#overview')   # one load: a reload would cancel the Overview's own request (WebKit reports that as a page error)
-        wait_js(pg, "!!document.querySelector('.ix-ec.ix-new')", 20000)
-        bm = pg.evaluate("(() => { const st = getComputedStyle(document.querySelector('.ix-ec.ix-new'), '::before'); return [st.animationName, st.backgroundImage.includes('conic-gradient')]; })()")
-        check('P24 What\'s New: a light runs around a calm border (no heavy outline)', bm == ['ix-beam', True], bm)
-        pg.wait_for_load_state('networkidle')
 
         # ---- (1.65.3) the Accent Color picker (Appearance > Colors since 1.70.0) ----
         pg.goto(s.base + '/web/settings/#colors'); wait_js(pg, "document.querySelectorAll('.ix-apk [data-c]').length === 10", 20000); pg.wait_for_timeout(400)
@@ -184,7 +178,7 @@ try:
         check('P33 Guided Setup: a bar of five steps, one step on screen, Next moves the bar on', g0[0] == 5 and g0[2] == 1 and g0[3] == 1 and g1 != g0[1], (g0, g1))
         pg.goto(s.base + '/web/settings/#telegram/setup'); wait_js(pg, "!!document.querySelector('.ix-tl')", 20000)
         t0 = pg.evaluate("[[...document.querySelectorAll('.ix-tl > li')].filter(e => e.checkVisibility()).length, document.querySelectorAll('.ix-sbar, .ix-sbnav').length]")
-        check('P34 Telegram Setup is a timeline: the four steps listed together with their state, no step bar and no Back / Next', t0 == [4, 0], t0)
+        check('P34 Telegram Setup is a timeline: the three steps listed together with their state, no step bar and no Back / Next', t0 == [3, 0], t0)
         pg.goto(s.base + '/web/settings/#updates'); wait_js(pg, "!!document.querySelector('.ix-sbar.locked')", 20000)
         u0 = pg.evaluate("[document.querySelectorAll('.ix-sbar.locked .ix-sbi').length, document.querySelectorAll('.ix-sbar.locked button').length, document.querySelector('.ix-sbar.locked .ix-sbi.now b').textContent]")
         check('P35 Updates: the same bar shows where an update is, with no clickable steps', u0 == [4, 0, 'Upload the Zip'], u0)
@@ -447,12 +441,6 @@ try:
         check('P71 a message that went away unseen is kept behind the bell, newest first', lst[0] == 'Quiet note' and 'Second note' in lst and 'First note' in lst, lst)
         pg.click('#ix-nlist [data-clear]')
         check('P72 Clear empties the list; the bell stays on the page (quiet, no number) so messages can be read again later (1.77.2)', pg.evaluate("!document.getElementById('ix-nlist') && !!document.getElementById('ix-bell') && !document.getElementById('ix-bell').hidden && !document.querySelector('#ix-bell b')"))
-        # (1.75.0) Overview: boxes side by side; pick a part and the box below it changes
-        pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "!!document.querySelector('.ix-bento .ix-bp')", 20000)
-        ov = pg.evaluate("(() => { const t = [...document.querySelectorAll('.ix-bp')].map(b => b.querySelector('b').textContent), a = document.querySelector('#ix-bsel h4').textContent; return [t.join(','), a]; })()")
-        pg.click('.ix-bp[data-pick=backup]')
-        ov2 = pg.evaluate("[document.querySelector('.ix-bp[data-pick=backup]').getAttribute('aria-pressed'), document.querySelector('#ix-bsel h4').textContent, document.querySelectorAll('.ix-bp[aria-pressed=true]').length]")
-        check('P73 Overview shows Security, Backup, Telegram and Updates to pick from, and picking one changes the box below', ov[0] == 'Security,Backup,Telegram,Updates' and 'Backup' in ov2[1] and ov2[0] == 'true' and ov2[2] == 1, [ov, ov2])
         check('P67 Start Over is a Stepper: three steps, a step ahead cannot be clicked, a done step shows a tick, Erase Everything only on the last step and it asks for ERASE (1.69.0)',
               so[0] == [3, False, True] and so[1] == [True, 'step'] and 'Type ERASE' in so[2], so)
         why = browser_set_passphrase(sp, s.base, 'stepper passphrase 1')
@@ -467,6 +455,7 @@ try:
         rf += sp.evaluate("[window.__cp === document.getElementById('ix-rcode').value, document.querySelector('#ix-ercopy .ix-uf-tip').textContent, document.getElementById('ix-ercopy').classList.contains('done')]")
         check('P70 the recovery key sits in the link field: "Key" in front, read-only, and its copy icon copies the key and says COPIED (1.69.1)', rf == ['Key', True, True, True, 'COPIED', True], rf)
         sp.goto(s.base + '/web/settings/#telegram/setup'); wait_js(sp, "!!document.getElementById('nt-url')", 20000); sp.evaluate(CLIP)
+        sp.click('#nt-schb'); sp.wait_for_selector('#nt-url', state='visible')   # (1.77.2) the schedule lines open from a toggle
         tg = sp.evaluate("['nt-cmd', 'nt-url'].map(id => { const i = document.getElementById(id); return [i.closest('.ix-uf').querySelector('.ix-uf-px').textContent, i.value]; })")
         sp.locator('#nt-url').locator('xpath=..').locator('.ix-uf-cp').click(); sp.wait_for_timeout(150); cp = sp.evaluate('window.__cp') or ''
         check('P71 Telegram > Setup: the two cron lines are link fields ("Cron", "curl"); the key in the address shows as dots, and Copy gives the whole curl line with the real key (1.69.1)',

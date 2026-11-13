@@ -94,7 +94,7 @@ try:
         regs = pg.evaluate("navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(r => r.map(x => x.scope)) : []")
         check('no service worker for the site (no offline mode); only Tools keeps its own', not [x for x in regs if not x.rstrip('/').endswith('/web/tools')], regs)
         why = browser_login(pg, s.base)
-        pg.goto(s.base + '/web/settings/#setup'); wait_js(pg, "!!document.querySelector('#ix-inst')", 15000)   # (1.70.0) Overview > Start Here (General before)
+        pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "!!document.querySelector('#ix-inst')", 15000)   # (1.70.0) Overview > Start Here (General before)
         card = pg.get_by_text('Install on Your Phone', exact=True)
         hidden = pg.evaluate("!document.querySelector('.ix-help .ix-how').open && !document.querySelector('.ix-help .ix-how .ix-steps').checkVisibility()")
         pg.click('.ix-help .ix-how > summary')
