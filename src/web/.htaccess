@@ -15,7 +15,7 @@ Options -Indexes
     Header always set X-Robots-Tag "noindex, nofollow"
   </FilesMatch>
 </IfModule>
-# A script, style or picture asked for with its version in the address (?v=1.77.0) never changes under that address, so the
+# A script, style or picture asked for with its version in the address (?v=1.77.1) never changes under that address, so the
 # browser keeps it for a year without asking the server again (1.67.1). A file asked for without a version is checked as before.
 # The condition needs Apache 2.4.10 or newer; older servers skip this block instead of failing.
 <IfModule mod_headers.c>

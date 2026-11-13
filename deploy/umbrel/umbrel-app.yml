@@ -6,7 +6,7 @@ manifestVersion: 1
 id: homebase-hub
 category: files
 name: Homebase Hub
-version: "1.77.0"
+version: "1.77.1"
 tagline: Your own start page and personal hub
 description: >-
   Links, notes, cards, tasks, encrypted files and more than 100 tools that run in your browser.

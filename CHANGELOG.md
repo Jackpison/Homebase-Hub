@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.77.1 | A Dropbox-style Files page, a Features showcase, a simpler Telegram setup, a Changelog tab, and the E key turns editing off again |
 | 1.77.0 | Cloud Backup: an encrypted copy of the site sent to a WebDAV folder, on a schedule |
 | 1.76.0 | What's New by series with filters, a Features section, and a Files storage limit you can set to any size |
 | 1.75.0 | One message stack in the bottom right with a bell for missed ones, sliding-pill tabs, a wider Settings with one header and a box-style Overview, a timeline for What's New, six Spotlight presets, and a Files drop zone |
@@ -147,6 +148,28 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.77.1
+
+### Files
+
+- A Dropbox-style Files page: a **Suggested** row, a **Who Can See It** column, and quick actions when you point at a file.
+- The storage limit has quick choices (5, 10, 25, 50, 100 GB or No Limit) and a number with MB, GB or TB, and shows the free space on your server.
+
+### Settings
+
+- **Features** is a showcase now: a banner, a coloured card for each page and numbered highlights. The old Notes moved to its bottom as **Good to Know**.
+- **What's New** is now **Changelog**: one list of every version, with the one you have marked **Installed**. Versions and Version Map are merged.
+- **Telegram › Setup** is a plain checklist, and it no longer gets stuck after the test message arrives. **Instant Replies** shows the commands in a grid.
+- The six boxes in **Health** have icons and clearer text.
+- **Security** no longer flashes an earlier look right after it loads.
+- Fields in Start Over and other long forms are narrower and match the rest of Settings.
+
+### Keyboard
+
+- Pressing **E** turns editing on and off on Home and Info, as it already did on Links.
 
 ---
 
