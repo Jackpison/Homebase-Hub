@@ -1030,3 +1030,17 @@ html[data-ix-glass]:not([data-ix-gsolid]) #ix-ebar{background:color-mix(in srgb,
 :is(#ix-bar,#ix-spot) .ix-search input:focus,#ix-page .ix-ssearch input:focus,#ix-page .ix-cl-search input:focus,.ix-psearch:focus-within{background:color-mix(in srgb,var(--ix-tx) 11%,var(--ix-field,transparent))!important;box-shadow:0 0 0 3px var(--ix-soft),0 8px 22px -12px rgba(0,0,0,.6)}
 #ix-page .ix-ssearch input{padding-left:16px}
 @media (prefers-reduced-motion:no-preference){:is(#ix-bar,#ix-spot) .ix-search{transition:flex-basis .25s ease,max-width .25s ease}:is(#ix-bar) .ix-search:focus-within{max-width:560px}#ix-page .ix-ssearch input:focus{transform:scale(1.015)}}
+
+/* (1.78.1) the feel of Settings on every page: Cards and Files rise in like Info, Tasks and Links already do; every fold (details) eases open and
+   shut instead of jumping; cards, rows and tiles ease their colour and shadow when you point at them; the focus ring eases in. Nothing moves
+   sideways or changes size, and none of it runs when the device asks for less motion. */
+@media (prefers-reduced-motion:no-preference){
+  html[data-ix-app="cards"] #list:not([hidden]),html[data-ix-app="files"] #list:not([hidden]){animation:ix-rise .28s cubic-bezier(0,0,.2,1)}
+  @supports (interpolate-size:allow-keywords){
+    :root{interpolate-size:allow-keywords}
+    details::details-content{height:0;overflow:clip;transition:height .28s cubic-bezier(.2,.8,.2,1),content-visibility .28s allow-discrete}
+    details[open]::details-content{height:auto}
+  }
+  :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{transition:outline-offset .15s ease,box-shadow .15s ease}
+  :where(.card,.cat,.box,.row,.tile,.item,.task,.fcard,.widget,.chip){transition:background-color .18s ease,border-color .18s ease,box-shadow .22s ease,opacity .18s ease}
+}
