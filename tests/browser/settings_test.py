@@ -88,8 +88,8 @@ try:
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "document.querySelectorAll('#ix-page .ix-snav [data-sec]').length > 0", 20000)
         menu = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav [data-sec] span')].map(e => e.textContent)")
         groups = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-snav .ix-sgl')].map(e => e.textContent)")
-        check('S9 the Settings menu: Web Setting (General, Appearance), Data Setting (Security, Telegram, Backup & Restore), System Setting (Health, Updates)',
-              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Health', 'Updates'] and groups == ['Web', 'Data', 'System'], (menu, groups))
+        check('S9 the Settings menu: Web Setting (General, Appearance), Data Setting (Security, Telegram, Backup & Restore), System Setting (Health, Updates, Features)',
+              menu == ['Overview', 'General', 'Appearance', 'Security', 'Telegram', 'Backup & Restore', 'Health', 'Updates', 'Features'] and groups == ['Web', 'Data', 'System'], (menu, groups))
         def at(h, expr):
             pg.goto(s.base + '/web/settings/' + h)
             try: wait_js(pg, expr, 10000); return True

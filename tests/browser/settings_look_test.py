@@ -149,7 +149,7 @@ try:
         pg.goto(s.base + '/web/settings/#changelog'); wait_js(pg, "!!document.querySelector('#ix-cll details.ix-cg')", 20000)
         cg = pg.evaluate("(() => [document.querySelectorAll('#ix-cll details.ix-cg').length, document.querySelectorAll('#ix-cll details.ix-cg[open]').length, document.querySelectorAll('.ix-fchip').length, !!document.querySelector('.ix-clhero')])()")
         check('L27 What\'s New: versions grouped by series (only the one you have is open), filter chips and the version you have on top', cg[0] > 1 and cg[1] == 1 and cg[2] == 6 and cg[3], cg)
-        pg.click('.ix-fchip[data-t=Fixes]'); pg.wait_for_timeout(200)
+        pg.click('.ix-fchip[data-t=Fixes]'); wait_js(pg, "document.getElementById('ix-clcount').textContent.length > 0", 5000)
         fx = pg.evaluate("(() => [...document.querySelectorAll('#ix-cll details.ix-cl')].filter(d => !d.hidden).length)()")
         check('L27b the Fixes chip hides the versions that fixed nothing', 0 < fx < pg.evaluate("document.querySelectorAll('#ix-cll details.ix-cl').length"), fx)
         pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-fcard').length === 7", 20000)
