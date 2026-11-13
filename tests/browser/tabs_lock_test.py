@@ -98,7 +98,7 @@ try:
               const r = e => m.querySelector(e).getBoundingClientRect(), eb = r('.encbar'), ol = r('.outline'), bx = r('.bxs');
               return [getComputedStyle(m.querySelector('.encbar')).display !== 'none', eb.bottom <= ol.top + 1, eb.bottom <= bx.top + 1, ol.left < bx.left]; })()""")
         wide = doc_order()
-        pg.set_viewport_size({'width': 600, 'height': 900}); pg.wait_for_timeout(300)
+        pg.set_viewport_size({'width': 600, 'height': 900}); wait_js(pg, "getComputedStyle(document.querySelector('.boxes:not([hidden]) .outline')).flexDirection === 'row'", 5000)
         narrow = pg.evaluate("""(() => { const m = document.querySelector('.boxes:not([hidden])'), r = e => m.querySelector(e).getBoundingClientRect(), eb = r('.encbar'), ol = r('.outline'), bx = r('.bxs'); return [eb.bottom <= ol.top + 1, ol.bottom <= bx.top + 1]; })()""")
         pg.set_viewport_size({'width': 1280, 'height': 900})
         check('T13b Info, an unlocked encrypted tab in the Document layout: the bar is above the Outline and the page (and above them on a phone, with the Outline before the page)', wide == [True, True, True, True] and narrow == [True, True], (wide, narrow))
