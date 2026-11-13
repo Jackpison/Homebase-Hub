@@ -4,10 +4,9 @@ docs-only change. Prints "code=true|false", "app=true|false", "servers=true|fals
 app: the site, Tools or the visual check itself changed, so the "visual changes" report is worth making.
   python3 scripts/ci_changes.py            reads EVENT, BEFORE (push) and BASE (pull request) from the environment
 Docs: *.md files outside src/, except CHANGELOG.md (the release check reads it), and .github/ISSUE_TEMPLATE/.
-matrix: the browser jobs of CI. CI tests Chromium only. Every push runs the light set (the pages half); the tools half joins it when Tools or the
-Animated Designs changed, when a release is being prepared (the version and the changelog change together), on a manual run and when the changes
-cannot be listed. The weekly run in scheduled.yml starts CI by hand, so every week the whole set runs too. WebKit and Firefox run in scheduled.yml
-(WebKit every Monday, Firefox on the 1st), not here.
+A push or pull request runs the light set: quick checks, the PHP builds and the pages half of the browser tests (Chromium). The heavy work (the update and
+hostile-zip server tests, Apache, nginx, Docker, the install scripts, and the tools and more halves of the browser tests) runs only on a run started by hand:
+scheduled.yml starts one every Monday (full-ci), and you can start one before a release (Actions > CI > Run workflow). WebKit and Firefox run in scheduled.yml.
 website/** is not docs: the Pages workflow runs no tests, so CI's website test must."""
 import json, os, re, subprocess, sys
 
@@ -30,24 +29,9 @@ def code_changed(files):
     return True if not files else not all(is_doc(f) for f in files)
 
 
-SERVER_PATHS = ('deploy/', 'tests/server/', 'tests/lib/', 'scripts/', '.github/', 'src/web/hub/')
-
-
-def servers_changed(files):
-    """The Apache, nginx, Docker, install-script and update/hostile-zip jobs: only when something they test changed (any PHP or .htaccess, the engine, the build
-    and deploy files, their tests). A change to a page's script, style or text leaves them out. Any doubt runs them."""
-    if not files: return True
-    return any(f.startswith(SERVER_PATHS) or f.endswith(('.php', '.htaccess')) for f in files)
-
-
-TOOLS_PATHS = ('tools-app/', 'src/web/tools/', 'src/web/home/designs')
-
-
-def browser_parts(files):
-    """The halves of the browser tests this push runs: always 'pages'; 'tools' and 'more' too (two jobs side by side) when it matters (see the top of this file)."""
-    if not files: return ['pages', 'tools', 'more']
-    release = 'src/web/hub/core/lib/boot.php' in files and 'CHANGELOG.md' in files
-    return ['pages', 'tools', 'more'] if release or any(f.startswith(TOOLS_PATHS) for f in files) else ['pages']
+def browser_parts(full):
+    """The halves of the browser tests this run does: 'pages' always; 'tools' and 'more' (two jobs side by side) only on a full run."""
+    return ['pages', 'tools', 'more'] if full else ['pages']
 
 
 def changed_files():
@@ -64,9 +48,10 @@ def changed_files():
 
 if __name__ == '__main__':
     files = changed_files()
+    full = os.environ.get('EVENT', '') == 'workflow_dispatch'   # only a run started by hand (every Monday, or before a release you want covered) does the heavy work
     code = code_changed(files)
     print('Changed: %s' % ('(could not tell: run everything)' if files is None else ', '.join(files[:20]) or '(nothing)'), file=sys.stderr)
     print('code=%s' % ('true' if code else 'false'))
     print('app=%s' % ('true' if app_changed(files) else 'false'))
-    print('servers=%s' % ('true' if servers_changed(files) else 'false'))
-    print('matrix=%s' % json.dumps({'browser': ['chromium'], 'part': browser_parts(files)}, separators=(',', ':')))
+    print('servers=%s' % ('true' if full else 'false'))
+    print('matrix=%s' % json.dumps({'browser': ['chromium'], 'part': browser_parts(full)}, separators=(',', ':')))

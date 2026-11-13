@@ -44,8 +44,8 @@ jobs:
             echo "- Run started by: \`$EVENT\`"
             echo "- Quick checks (lint, unit tests, repo checks, build): always"
             echo "- Everything else (docs-only changes skip it): $CODE"
-            echo "- Server, Apache, nginx, Docker, install scripts: $SERVERS"
-            echo "- Browser jobs: \`$MATRIX\` (the tools half joins for Tools, the designs, a release, or a manual run)"
+            echo "- Server, Apache, nginx, Docker, install scripts (full run only): $SERVERS"
+            echo "- Browser jobs: \`$MATRIX\` (a push runs the pages half; the tools and more halves join a run started by hand)"
             echo "- The other browsers: weekly and monthly, in Scheduled checks, not here."
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -127,7 +127,7 @@ jobs:
 
   server:
     needs: [changes, quick]
-    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.servers == 'true'   # skipped on a docs-only change and when no PHP, deploy or build file changed
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.servers == 'true'   # a run started by hand only (Monday full-ci, or before a release): never on a push
     # Updates, hostile zips and the core features: PHP and Python only, no browser to install. Runs beside the browser jobs.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -279,7 +279,7 @@ jobs:
 
   apache:
     needs: [changes, quick]
-    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.servers == 'true'   # skipped on a docs-only change and when no PHP, deploy or build file changed
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.servers == 'true'   # a run started by hand only (Monday full-ci, or before a release): never on a push
     # The ready-made server setups in deploy/: Apache (the .htaccess files), nginx with PHP-FPM, the Docker image with Caddy,
     # nginx as YunoHost sets it up, and the install scripts for a VPS and Proxmox.
     # Installing them takes a few minutes on a fresh runner, so this runs beside the other tests instead of after them.
