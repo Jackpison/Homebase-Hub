@@ -99,11 +99,10 @@
       });
       var curKey = now ? now.ver.split('.').slice(0, 2).join('.') : '';
       var row = function (e, i) {
-        return '<details class="ix-cl" data-i="' + i + '"><summary><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
-          (e.ver === cur ? '<span class="ix-pill good">Installed</span>' : '') +
-          clTags(e).slice(0, 3).map(function (t) { return '<span class="ix-cl-tag">' + esc(t) + '</span>'; }).join('') +
-          (e.date ? '<span class="ix-cl-date">' + esc(clDay(e.date)) + '</span>' : '') +
-          '<span class="ix-cl-d">' + mdInline(e.summary || e.label || '') + '</span></summary><div class="ix-cl-b ix-md"></div></details>';
+        return '<details class="ix-cl' + (e.ver === cur ? ' cur' : '') + '" data-i="' + i + '"><summary><span class="ix-cl-l"><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
+          (e.date ? '<span class="ix-cl-date">' + esc(clDay(e.date)) + '</span>' : '') + '</span><span class="ix-cl-m"><span class="ix-cl-d">' + mdInline(e.summary || e.label || '') + '</span><span class="ix-cl-tags">' +
+          (e.ver === cur ? '<span class="ix-sd ix-sd-live">Installed</span>' : '') +
+          clTags(e).slice(0, 3).map(function (t) { return '<span class="ix-cl-tag">' + esc(t) + '</span>'; }).join('') + '</span></span></summary><div class="ix-cl-b ix-md"></div></details>';
       };
       p.innerHTML = (now ? '<div class="ix-hero ix-clhero"><span class="ix-hero-i good">' + svg(ICON.log) + '</span><div class="ix-hero-t"><div class="ix-hero-h">You Have Version ' + esc(cur) + '</div>' +
           '<p>' + mdInline(now.summary || now.label || 'Read what is in this version.') + '</p></div><button type="button" class="ix-btn pri" id="ix-clnow">Read the Notes</button></div>' : '') +

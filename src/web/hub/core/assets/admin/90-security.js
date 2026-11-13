@@ -108,8 +108,8 @@
         return '<div class="ix-dev"><span class="ix-dev-i" aria-hidden="true">' + svg(ICON.key) + '</span><div class="ix-dev-b"><b>' + esc(k.name) + '</b><small>Added ' + esc(when1(k.at)) + ' · Last used ' + esc(when1(k.last)) + '</small></div>' +
           '<button type="button" class="ix-btn" data-pkren="' + esc(k.id) + '">Rename</button><button type="button" data-hold class="ix-btn danger" data-pkdel="' + esc(k.id) + '">Remove</button></div>'; }).join('') + '</div>'
         : '<p class="ix-note">No passkey yet. Add one below, on this device or with a security key.</p>';
-      b.innerHTML = tabHead(ICON.device, 'Passkeys', 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in.') +
-        ecCard(keys.length ? 'good' : '', ICON.shield, keys.length ? 'Passkeys On' : 'No Passkeys Yet', 'Your device must check that it is you (fingerprint, face or PIN) every time. Nothing a passkey leaves on your server can log anyone in.', list) +
+      // (1.77.2) no separate header and no "No Passkeys Yet" card: your passkeys are rows, and Add a Passkey is one card under them
+      b.innerHTML = tabHead(ICON.device, 'Passkeys', 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in.') + list +
         (can ? ecCard('', ICON.key, 'Add a Passkey', 'Your browser or phone asks which device or key to use. Adding or removing a passkey needs your website password.',
           '<div id="ix-pkst"></div><p class="ix-err" id="ix-pke"></p>')
           : ecCard('warn', ICON.lock, 'Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.' + (keys.length ? ' You can still remove the ones you have: type your website password below.' : ''),

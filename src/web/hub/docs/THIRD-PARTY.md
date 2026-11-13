@@ -49,9 +49,9 @@ credited again in a comment where it is used (`hub/core/assets/shell.css`).
 
 | What | Where in the site | Original | Author |
 |---|---|---|---|
-| On/off switch (white track, metal knob) | every on/off switch | https://uiverse.io/Yaya12085/bright-dolphin-91 | Yaya12085 |
+| On/off switch (recessed track, sliding pill, accent color) | every on/off switch | https://uiverse.io/Galahhad | Galahhad |
+| Button hover (a colour sweeps in diagonally) | text buttons | https://uiverse.io/doniaskima | doniaskima |
 | Loader (three bouncing dots) | waiting states | https://uiverse.io/mobinkakei/grumpy-turtle-41 | mobinkakei |
-| Button hover (slanted fill) | text buttons | https://uiverse.io/CristianMontoya98/nasty-fish-9 | CristianMontoya98 |
 | Erase button (X slides across) | Backup & Restore › Start Over (1.65.1) | https://uiverse.io/cssbuttons-io/stupid-impala-51 | cssbuttons-io |
 | Edit bar (round buttons, name bubble) | the edit bar of Links, Info and Home (1.65.1) | https://uiverse.io/firemonste_8052/lucky-catfish-97 | firemonste_8052 |
 | Accent Color picker (squares that swell around the mouse) | Settings › Appearance › Look (1.65.3) | https://uiverse.io/Cobp/horrible-quail-18 | Cobp |

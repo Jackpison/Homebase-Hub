@@ -20,6 +20,7 @@ BOOT = 'src/web/hub/core/lib/boot.php'
 BROWSER_MAP = [
     ('src/web/files/*', ['files_test']),
     ('src/web/settings/*', ['settings_test', 'settings_look_test', 'polish_test']),
+    ('src/web/hub/core/assets/admin/90-security.js', ['passkey_test', 'lock_test']),
     ('src/web/hub/core/assets/admin/*', ['settings_test', 'settings_look_test', 'polish_test']),
     ('src/web/hub/core/assets/shell-settings.css', ['settings_test', 'settings_look_test', 'polish_test']),
     ('src/web/hub/core/assets/shell-admin.js', ['settings_test', 'settings_look_test', 'polish_test']),

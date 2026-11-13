@@ -13,7 +13,7 @@ def check(name, ok, extra=''):
 
 # CSS classes a script builds from pieces: tasks.js ("s-" + status, "k-" + list, "gk-" + n, "mg r" + rows), the Settings page ("ix-tss-" + style),
 # Cards ("h-" + column), Info ("c-" + colour name).
-DYNAMIC = re.compile(r'^(gk-\d|k-[a-z]+|s-(late|paused|today|up)|r[56]|ix-tss-[a-z]+|h-(expiry|owner)|c-(red|orange|yellow|green|blue|purple|grey))$')
+DYNAMIC = re.compile(r'^(gk-\d|k-[a-z]+|s-(late|paused|today|up)|r[56]|ix-tss-[a-z]+|ix-sd-(building|ready|error|queued|live)|h-(expiry|owner)|c-(red|orange|yellow|green|blue|purple|grey))$')
 SKIP = ('src/web/tools/', '/vendor/', '/assets/admin/')   # admin/ = the parts of shell-admin.js, which is read joined
 IMG = ('.png', '.jpg', '.webp', '.woff2', '.pdf', '.heic', '.zip', '.ico', '.svg')
 

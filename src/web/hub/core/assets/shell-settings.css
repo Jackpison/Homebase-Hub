@@ -413,16 +413,6 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-codes{margin:12px 0}
 #ix-page .ix-codes .ix-mono{display:inline-block;padding:12px 16px;border-radius:12px;background:var(--ix-bg);border:1px dashed var(--ix-accent);font:700 18px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;color:var(--ix-tx)}
 /* Telegram setup: numbered steps */
-#ix-page .ix-stps{list-style:none;margin:6px 0 18px;padding:0;max-width:var(--ix-cw)}
-#ix-page .ix-stp{display:grid;grid-template-columns:36px minmax(0,1fr);gap:0 16px;position:relative;padding:0 0 22px}
-#ix-page .ix-stp:not(:last-child)::before{content:"";position:absolute;left:17px;top:38px;bottom:2px;width:2px;background:var(--ix-line)}
-#ix-page .ix-stn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--ix-s2);color:var(--ix-mu);border:1px solid var(--ix-line2)}
-#ix-page .ix-stp.now .ix-stn{background:var(--ix-soft);color:var(--ix-accent-tx);border-color:var(--ix-accent)}
-#ix-page .ix-stp.done .ix-stn{background:var(--ix-accent);color:var(--ix-ink);border-color:var(--ix-accent)}
-#ix-page .ix-stt{font-size:16px;font-weight:700;margin:6px 0 4px}
-#ix-page .ix-stp.done .ix-stt{color:var(--ix-mu)}
-#ix-page .ix-stb p{margin:0 0 10px;color:var(--ix-mu)}
-#ix-page .ix-stb code{padding:1px 6px;border-radius:6px;background:var(--ix-s2)}
 /* Back Up */
 #ix-page .ix-bkh{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 10px}
 #ix-page .ix-bkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
@@ -935,20 +925,7 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-bb .ix-bbar+.ix-btn{margin-top:14px}
 
 /* (1.76.0, 1.77.1) Features: a banner, a tinted card for each page, and for each page a coloured header and numbered highlights */
-#ix-page .ix-fban{display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:24px 26px;border-radius:24px;border:1px solid var(--ix-line);max-width:var(--ix-cw);margin:0 0 16px;background:radial-gradient(120% 140% at 0% 0%,color-mix(in srgb,var(--ix-accent) 22%,transparent),transparent 60%),var(--ix-s1)}
-#ix-page .ix-fban-h{font-size:24px;font-weight:800;letter-spacing:-.01em}
-#ix-page .ix-fban-t p{margin:6px 0 0;color:var(--ix-mu);font-size:14px;max-width:52ch}
-#ix-page .ix-fban-s{display:flex;gap:10px}
-#ix-page .ix-fban-s span{display:flex;flex-direction:column;align-items:center;min-width:84px;padding:10px 14px;border-radius:16px;background:color-mix(in srgb,var(--ix-tx) 6%,transparent);color:var(--ix-mu);font-size:12px}
-#ix-page .ix-fban-s b{font-size:22px;color:var(--ix-tx);line-height:1.1}
 #ix-page .ix-fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:var(--ix-cw)}
-#ix-page .ix-fcard{text-align:left;display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:22px;border:1px solid color-mix(in srgb,var(--fc) 30%,var(--ix-line));background:linear-gradient(160deg,color-mix(in srgb,var(--fc) 16%,transparent),transparent 55%),var(--ix-s1);color:var(--ix-tx);font:inherit;cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}
-#ix-page .ix-fcard:hover{transform:translateY(-3px);border-color:var(--fc);box-shadow:0 14px 30px -18px var(--fc)}
-#ix-page .ix-fcard-h{display:flex;gap:12px;align-items:center}
-#ix-page .ix-fcard-h b{flex:1;font-size:17px}
-#ix-page .ix-fcard-p{color:var(--ix-mu);font-size:13.5px;line-height:1.5}
-#ix-page .ix-fcard-m{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
-#ix-page .ix-fcard-m i{font-style:normal;font-size:12px;padding:3px 10px;border-radius:999px;background:color-mix(in srgb,var(--fc) 14%,transparent);color:var(--ix-tx)}
 #ix-page .ix-fhero-i{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff;box-shadow:0 8px 18px -8px rgba(0,0,0,.6)}
 #ix-page .ix-fhero-i svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 #ix-page .ix-fhero{display:flex;gap:18px;align-items:center;padding:24px 26px;border-radius:24px;border:1px solid color-mix(in srgb,var(--fc) 35%,var(--ix-line));background:radial-gradient(120% 160% at 0% 0%,color-mix(in srgb,var(--fc) 26%,transparent),transparent 62%),var(--ix-s1);max-width:var(--ix-cw);margin:0 0 16px}
@@ -963,8 +940,7 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-fhl-n{flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:var(--fc)}
 #ix-page .ix-fhl-c b{display:block;font-size:14.5px;margin-bottom:4px}
 #ix-page .ix-fhl-c p{margin:0;color:var(--ix-mu);font-size:13.5px;line-height:1.5}
-@media (max-width:600px){#ix-page .ix-fhero{flex-wrap:wrap}#ix-page .ix-fban-s{width:100%}}
-
+@media (max-width:600px){#ix-page .ix-fhero{flex-wrap:wrap}}
 /* (1.77.0) Cloud Backup: the fields in two columns, and the small labels beside the two choices */
 #ix-page .ix-fdgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin:0 0 10px}
 #ix-page .ix-lab{color:var(--ix-mu);font-size:13px;font-weight:600;margin:0 6px 0 0}
@@ -974,9 +950,6 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page #ix-cloud .ix-row{flex-wrap:wrap}
 
 /* (1.77.1) Telegram: Setup as a plain checklist, Instant Replies with one short note, the commands as a tidy grid */
-#ix-page .ix-stps.ix-plain>li{display:flex;gap:14px;padding:14px 0;border-top:1px solid var(--ix-line)}
-#ix-page .ix-stps.ix-plain>li:first-child{border-top:0}
-#ix-page .ix-stps.ix-plain>li:not(.done):not(.now){opacity:.55}
 #ix-page .ix-hknote{margin:10px 2px 14px;max-width:var(--ix-cw);line-height:1.55}
 #ix-page .ix-hknote .ix-cf{display:block;margin-top:6px;color:var(--ix-mu2);font-size:12.5px}
 #ix-page .ix-hknote code{overflow-wrap:anywhere}
@@ -988,4 +961,39 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 /* (1.77.1) a field in a card is as wide as a field needs to be, not the whole page (Start Over, passwords, tokens) */
 #ix-page .ix-fd{max-width:520px}
 #ix-page .ix-fdgrid .ix-fd{max-width:none}
-#ix-page .ix-fnotes{margin:26px 0 10px;font-size:16px}
+/* (1.77.2) shared parts: the status dot, the row card and the timeline */
+#ix-page .ix-sd{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ix-mu);white-space:nowrap;--sd:var(--ix-mu2)}
+#ix-page .ix-sd::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--sd);box-shadow:0 0 0 4px color-mix(in srgb,var(--sd) 22%,transparent)}
+#ix-page .ix-sd-building{--sd:#f59e0b}#ix-page .ix-sd-ready{--sd:#2dd4bf}#ix-page .ix-sd-error{--sd:#f87171}#ix-page .ix-sd-queued{--sd:#9ca3af}#ix-page .ix-sd-live{--sd:#38bdf8}
+#ix-page .ix-rcl{display:grid;gap:10px;max-width:var(--ix-cw);margin:0 0 16px}
+#ix-page .ix-rc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding:16px 18px;border:1px solid var(--ix-line);border-radius:16px;background:var(--ix-s1)}
+#ix-page .ix-rc-i{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--ix-s2);color:var(--ix-tx)}
+#ix-page .ix-rc-i svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ix-page .ix-rc-t b{display:block;font-size:15.5px}
+#ix-page .ix-rc-t small{display:block;margin-top:2px;color:var(--ix-mu);font-size:13.5px;line-height:1.45}
+#ix-page .ix-rc-a{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+#ix-page .ix-rc-x{grid-column:1/-1;padding:4px 2px 2px}
+@media (max-width:600px){#ix-page .ix-rc{grid-template-columns:auto minmax(0,1fr)}#ix-page .ix-rc-a{grid-column:1/-1;justify-content:flex-start}}
+#ix-page .ix-tl{list-style:none;position:relative;margin:10px 0 18px 18px;padding:0;border-left:1px solid var(--ix-line2);max-width:var(--ix-cw)}
+#ix-page .ix-tls{position:relative;padding:0 0 26px 40px}
+#ix-page .ix-tls:last-child{padding-bottom:0}
+#ix-page .ix-tl-n{position:absolute;left:0;top:0;transform:translateX(-50%);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--ix-s2);color:var(--ix-mu);border:1px solid var(--ix-line2);box-shadow:0 0 0 7px var(--ix-bg)}
+#ix-page .ix-tls.open>.ix-tl-n{border-color:var(--ix-accent);color:var(--ix-accent-tx);background:var(--ix-soft)}
+#ix-page .ix-tls.done>.ix-tl-n{background:var(--ix-accent);border-color:var(--ix-accent);color:var(--ix-ink)}
+#ix-page .ix-tl-t{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;font-size:16.5px;font-weight:650}
+#ix-page .ix-tls.done>.ix-tl-t{cursor:pointer}
+#ix-page .ix-tls:not(.done):not(.open)>.ix-tl-t{color:var(--ix-mu)}
+#ix-page .ix-tl-s{margin-top:-4px;color:var(--ix-mu);font-size:13.5px}
+#ix-page .ix-tl-b{display:none;margin-top:6px}
+#ix-page .ix-tls.open>.ix-tl-b{display:block}
+#ix-page .ix-tl-b p{margin:0 0 10px;color:var(--ix-mu)}
+#ix-page .ix-tl-b code{padding:1px 6px;border-radius:6px;background:var(--ix-s2)}
+/* Changelog as a timeline: the version and date on the left, a line with a dot, the title and tags on the right */
+#ix-page .ix-cg .ix-cl>summary{display:grid;grid-template-columns:84px minmax(0,1fr);gap:0 22px;align-items:start;padding:14px 34px 14px 0}
+#ix-page .ix-cl-l{display:flex;flex-direction:column;gap:3px;text-align:right}
+#ix-page .ix-cl-m{position:relative;display:flex;flex-direction:column;gap:7px;border-left:1px solid var(--ix-line2);padding:0 0 4px 24px}
+#ix-page .ix-cl-m::before{content:"";position:absolute;left:-6px;top:6px;width:11px;height:11px;border-radius:50%;border:2px solid var(--ix-accent);background:var(--ix-s1)}
+#ix-page .ix-cl.cur .ix-cl-m::before{background:var(--ix-accent)}
+#ix-page .ix-cl-m .ix-cl-d{flex:none}
+#ix-page .ix-cl-tags{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#ix-page .ix-cg .ix-cl-b{margin:0 0 10px 106px}

@@ -26,6 +26,11 @@
   function ecCard(cls, icon, title, desc, bodyHtml, pill) {
     return '<section class="ix-ec ' + cls + '"><div class="ix-ec-h">' + (icon ? '<span class="ix-ec-i">' + svg(icon) + '</span>' : '') + '<div><div class="ix-ec-t">' + title + (pill || '') + '</div>' + (desc ? '<div class="ix-ec-d">' + desc + '</div>' : '') + '</div></div>' + (bodyHtml ? '<div class="ix-ec-b">' + bodyHtml + '</div>' : '') + '</section>';
   }
+  /* (1.77.2) one row card for every list of things (Features, Good to Know, ...): an icon tile, a title and a line, and what you can do on the right. */
+  function rowCard(o) {
+    return '<div class="ix-rc' + (o.cls ? ' ' + o.cls : '') + '"' + (o.id ? ' id="' + o.id + '"' : '') + '><span class="ix-rc-i"' + (o.color ? ' style="background:' + o.color + ';color:#fff"' : '') + '>' + svg(o.ic) + '</span><div class="ix-rc-t"><b>' + o.title + '</b>' + (o.desc ? '<small>' + o.desc + '</small>' : '') + '</div>' +
+      (o.act ? '<div class="ix-rc-a">' + o.act + '</div>' : '') + (o.body ? '<div class="ix-rc-x"' + (o.hide ? ' hidden' : '') + '>' + o.body + '</div>' : '') + '</div>';
+  }
   function ecField(id, label, type, auto, hint, wrapId, extra) {
     return '<div class="ix-fd"' + (wrapId ? ' id="' + wrapId + '" hidden' : '') + '><label for="' + id + '">' + label + '</label><input type="' + type + '" id="' + id + '" autocomplete="' + auto + '"' + (extra || '') + '>' + (hint ? '<small>' + hint + '</small>' : '') + '</div>';
   }

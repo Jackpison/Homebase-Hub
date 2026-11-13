@@ -1122,22 +1122,23 @@
 
         acc('bot', 'Setup', ready ? 'Connected to ' + esc(n.chatName || n.chat) + '. The schedule (a cron job) is what sends messages on time.' : 'Four short steps: make a bot, connect it, check it, add the schedule.',
           tabHead(ICON.gear, 'Setup', 'Four short steps: make a bot, connect it, check it, add the schedule.') + (function () {
-            var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on, cur = !d1 ? 1 : !d3 ? 3 : !d4 ? 4 : 0;
-            var stp = function (num, done, now, title, body) {
-              return '<li class="ix-stp' + (done ? ' done' : now ? ' now' : '') + '"><span class="ix-stn">' + (done ? '✓' : num) + '</span><div class="ix-stb"><div class="ix-stt">' + title + '</div>' + body + '</div></li>'; };
-            return '<ol class="ix-stps ix-plain">' +
-              stp(1, d1, cur === 1, 'Make a Bot', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It then gives you a <b>token</b>: a long line of letters and numbers.</p>') +
-              stp(2, d1, false, 'Paste Its Token', '<div class="ix-fd">' + '<label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
+            var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on;
+            var stp = function (num, done, open, title, sum, body) {
+              return '<li class="ix-tls' + (done ? ' done' : '') + (open ? ' open' : '') + '"><span class="ix-tl-n">' + (done ? '✓' : num) + '</span><div class="ix-tl-t"' + (done ? ' role="button" tabindex="0"' : '') + '>' + title + '<span class="ix-sd ix-sd-' + (done ? 'ready' : open ? 'building' : 'queued') + '">' + (done ? 'Done' : open ? 'Next' : 'Waiting') + '</span></div>' +
+                (done && sum ? '<div class="ix-tl-s">' + sum + '</div>' : '') + '<div class="ix-tl-b">' + body + '</div></li>'; };
+            return '<ol class="ix-tl">' +
+              stp(1, d1, !d1, 'Make a Bot', 'Done', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It then gives you a <b>token</b>: a long line of letters and numbers.</p>') +
+              stp(2, d1, !d1, 'Paste Its Token', 'Saved (' + esc(n.tokenHint || 'hidden') + ')', '<div class="ix-fd">' + '<label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
                 '<button type="button" class="ix-btn pri" id="nt-st">Save Token</button>' + (n.hasToken ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div><small>It stays on your server and is only used to talk to Telegram.</small></div>') +
-              stp(3, d3, cur === 3, 'Connect Your Chat', '<p>Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.</p>' +
+              stp(3, d3, d1 && !d3, 'Connect Your Chat', 'Connected to ' + esc(n.chatName || n.chat || ''), '<p>Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.</p>' +
                 '<div class="ix-row"><button type="button" class="ix-btn" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button></div>' +
                 '<div class="ix-status">' + (n.chat ? '<span class="ix-ok">✓</span><span><b>Connected to</b> ' + esc(n.chatName || n.chat) + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '</span>' : '<span>!</span><span>No chat yet. Send <code>/start</code> to your bot first.</span>') + '</div>' +
                 (chats && chats.length > 1 ? '<div class="ix-row">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '')) +
-              stp(4, d4, cur === 4, 'Send a Test', tested && d4
-                ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Test message sent.</b> It should be in Telegram now. If it is, setup is done.</span></div>' +
+              stp(4, d4, d3, 'Send a Test', tested ? 'Test message sent' : 'Ready', tested && d4
+                ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Test message sent.</b> It should be in Telegram now.</span></div>' +
                   '<div class="ix-row"><button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button><button type="button" class="ix-btn" id="nt-test">Send Another Test</button></div>'
                 : '<p>You should get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' +
-                  '<div class="ix-row"><button type="button" class="ix-btn" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div>') +
+                  '<div class="ix-row"><button type="button" class="ix-btn' + (ready && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div>') +
               '</ol>' +
               ecCard('', ICON.clock, 'Keep It on Schedule', 'Messages and reminders are sent by a scheduled job (a cron job). Without one they only go out while one of your pages is open.',
                 '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +
@@ -1203,6 +1204,7 @@
       p.querySelectorAll('[data-chat]').forEach(function (b) { b.onclick = function () {
         call('notify_save', { chat: b.dataset.chat }, b).then(function (j) { if (j) { j.chatName = j.chatName || b.dataset.name; call('notify_test', { chatName: b.dataset.name }).then(function (k) { draw(k || j, null, k ? 'Chat saved and a test message sent.' : ''); }); } });
       }; });
+      p.querySelectorAll('.ix-tls.done>.ix-tl-t').forEach(function (h) { h.onclick = function () { h.parentNode.classList.toggle('open'); }; h.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h.click(); } }; });
       p.querySelector('#nt-test').onclick = function () { call('notify_test', {}, this).then(function (j) { if (j) { tested = true; draw(j, null, 'Test message sent. Check Telegram.'); } }); };
       p.querySelector('#nt-now').onclick = function () { call('notify_run', {}, this).then(function (j) { if (j) draw(j, null, j.note || 'Done.', !j.ok); }); };
       p.querySelectorAll('[data-k]').forEach(function (c) { c.onchange = function () {
@@ -1581,11 +1583,10 @@
       });
       var curKey = now ? now.ver.split('.').slice(0, 2).join('.') : '';
       var row = function (e, i) {
-        return '<details class="ix-cl" data-i="' + i + '"><summary><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
-          (e.ver === cur ? '<span class="ix-pill good">Installed</span>' : '') +
-          clTags(e).slice(0, 3).map(function (t) { return '<span class="ix-cl-tag">' + esc(t) + '</span>'; }).join('') +
-          (e.date ? '<span class="ix-cl-date">' + esc(clDay(e.date)) + '</span>' : '') +
-          '<span class="ix-cl-d">' + mdInline(e.summary || e.label || '') + '</span></summary><div class="ix-cl-b ix-md"></div></details>';
+        return '<details class="ix-cl' + (e.ver === cur ? ' cur' : '') + '" data-i="' + i + '"><summary><span class="ix-cl-l"><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
+          (e.date ? '<span class="ix-cl-date">' + esc(clDay(e.date)) + '</span>' : '') + '</span><span class="ix-cl-m"><span class="ix-cl-d">' + mdInline(e.summary || e.label || '') + '</span><span class="ix-cl-tags">' +
+          (e.ver === cur ? '<span class="ix-sd ix-sd-live">Installed</span>' : '') +
+          clTags(e).slice(0, 3).map(function (t) { return '<span class="ix-cl-tag">' + esc(t) + '</span>'; }).join('') + '</span></span></summary><div class="ix-cl-b ix-md"></div></details>';
       };
       p.innerHTML = (now ? '<div class="ix-hero ix-clhero"><span class="ix-hero-i good">' + svg(ICON.log) + '</span><div class="ix-hero-t"><div class="ix-hero-h">You Have Version ' + esc(cur) + '</div>' +
           '<p>' + mdInline(now.summary || now.label || 'Read what is in this version.') + '</p></div><button type="button" class="ix-btn pri" id="ix-clnow">Read the Notes</button></div>' : '') +
@@ -1691,19 +1692,20 @@
   ];
   FEATS.forEach(function (f) { PANES['ft-' + f.id] = function (p) { pFeature(p, f); }; PANE_FN.set('ft-' + f.id, PANES['ft-' + f.id]); });   // (the tabs themselves are listed in SECTIONS)
   function pFeatures(p) {
-    p.innerHTML = '<div class="ix-fban"><div class="ix-fban-t"><div class="ix-fban-h">Seven Pages. One Home.</div><p>Everything below runs on your own server, with your data kept in one folder you can copy, back up and take with you.</p></div>' +
-      '<div class="ix-fban-s"><span><b>7</b>pages</span><span><b>100+</b>tools</span><span><b>0</b>trackers</span></div></div>' +
-      '<div class="ix-fgrid">' + FEATS.map(function (f) {
-      return '<button type="button" class="ix-fcard" style="--fc:' + f.c + '" data-ft="' + f.id + '"><span class="ix-fcard-h"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><b>' + esc(f.name) + '</b>' +
-        (f.hl.some(function (h) { return h[2]; }) ? '<span class="ix-cl-tag">New</span>' : '') + '</span>' +
-        '<span class="ix-fcard-p">' + esc(f.lead) + '</span><span class="ix-fcard-m">' + f.hl.slice(0, 3).map(function (h) { return '<i>' + esc(h[0]) + '</i>'; }).join('') + '</span></button>';
+    p.innerHTML = '<div class="ix-rcl">' + FEATS.map(function (f) {
+      return rowCard({ ic: f.ic, color: f.c, title: esc(f.name) + (f.hl.some(function (h) { return h[2]; }) ? ' <span class="ix-cl-tag">New</span>' : ''), desc: esc(f.lead),
+        act: '<button type="button" class="ix-btn" data-ft="' + f.id + '">See More</button>' });
     }).join('') + '</div>';
     p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
-    // (1.77.1) the notes that used to be a tab of What's New: how updating works and a few things worth knowing
+    // (1.77.2) the notes that used to be a tab of What's New (how updating works and a few things worth knowing), as the same row cards
     var nb = document.createElement('div'); p.appendChild(nb);
     clLoad().then(function (cl) {
       if (!cl.notes.length) return;
-      nb.innerHTML = '<h3 class="ix-fnotes">Good to Know</h3>' + cl.notes.map(function (x) { return '<section class="ix-ec"><div class="ix-ec-h"><span class="ix-ec-i">' + svg(ICON.info) + '</span><div><div class="ix-ec-t">' + esc(x.title) + '</div></div></div><div class="ix-ec-b ix-md">' + mdBlocks(x.body) + '</div></section>'; }).join('');
+      nb.innerHTML = '<div class="ix-sect">Good to Know</div><div class="ix-rcl">' + cl.notes.map(function (x, i) {
+        return rowCard({ ic: ICON.info, title: esc(x.title), act: '<button type="button" class="ix-btn" data-note="' + i + '" aria-expanded="false">Read</button>', body: '<div class="ix-md">' + mdBlocks(x.body) + '</div>', hide: true });
+      }).join('') + '</div>';
+      nb.querySelectorAll('[data-note]').forEach(function (b) { b.onclick = function () {
+        var x = b.closest('.ix-rc').querySelector('.ix-rc-x'), open = x.hidden; x.hidden = !open; b.textContent = open ? 'Hide' : 'Read'; b.setAttribute('aria-expanded', open ? 'true' : 'false'); }; });
     }).catch(function () {});
   }
   function pFeature(p, f) {
@@ -1882,6 +1884,11 @@
   function ecCard(cls, icon, title, desc, bodyHtml, pill) {
     return '<section class="ix-ec ' + cls + '"><div class="ix-ec-h">' + (icon ? '<span class="ix-ec-i">' + svg(icon) + '</span>' : '') + '<div><div class="ix-ec-t">' + title + (pill || '') + '</div>' + (desc ? '<div class="ix-ec-d">' + desc + '</div>' : '') + '</div></div>' + (bodyHtml ? '<div class="ix-ec-b">' + bodyHtml + '</div>' : '') + '</section>';
   }
+  /* (1.77.2) one row card for every list of things (Features, Good to Know, ...): an icon tile, a title and a line, and what you can do on the right. */
+  function rowCard(o) {
+    return '<div class="ix-rc' + (o.cls ? ' ' + o.cls : '') + '"' + (o.id ? ' id="' + o.id + '"' : '') + '><span class="ix-rc-i"' + (o.color ? ' style="background:' + o.color + ';color:#fff"' : '') + '>' + svg(o.ic) + '</span><div class="ix-rc-t"><b>' + o.title + '</b>' + (o.desc ? '<small>' + o.desc + '</small>' : '') + '</div>' +
+      (o.act ? '<div class="ix-rc-a">' + o.act + '</div>' : '') + (o.body ? '<div class="ix-rc-x"' + (o.hide ? ' hidden' : '') + '>' + o.body + '</div>' : '') + '</div>';
+  }
   function ecField(id, label, type, auto, hint, wrapId, extra) {
     return '<div class="ix-fd"' + (wrapId ? ' id="' + wrapId + '" hidden' : '') + '><label for="' + id + '">' + label + '</label><input type="' + type + '" id="' + id + '" autocomplete="' + auto + '"' + (extra || '') + '>' + (hint ? '<small>' + hint + '</small>' : '') + '</div>';
   }
@@ -2017,8 +2024,8 @@
         return '<div class="ix-dev"><span class="ix-dev-i" aria-hidden="true">' + svg(ICON.key) + '</span><div class="ix-dev-b"><b>' + esc(k.name) + '</b><small>Added ' + esc(when1(k.at)) + ' · Last used ' + esc(when1(k.last)) + '</small></div>' +
           '<button type="button" class="ix-btn" data-pkren="' + esc(k.id) + '">Rename</button><button type="button" data-hold class="ix-btn danger" data-pkdel="' + esc(k.id) + '">Remove</button></div>'; }).join('') + '</div>'
         : '<p class="ix-note">No passkey yet. Add one below, on this device or with a security key.</p>';
-      b.innerHTML = tabHead(ICON.device, 'Passkeys', 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in.') +
-        ecCard(keys.length ? 'good' : '', ICON.shield, keys.length ? 'Passkeys On' : 'No Passkeys Yet', 'Your device must check that it is you (fingerprint, face or PIN) every time. Nothing a passkey leaves on your server can log anyone in.', list) +
+      // (1.77.2) no separate header and no "No Passkeys Yet" card: your passkeys are rows, and Add a Passkey is one card under them
+      b.innerHTML = tabHead(ICON.device, 'Passkeys', 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in.') + list +
         (can ? ecCard('', ICON.key, 'Add a Passkey', 'Your browser or phone asks which device or key to use. Adding or removing a passkey needs your website password.',
           '<div id="ix-pkst"></div><p class="ix-err" id="ix-pke"></p>')
           : ecCard('warn', ICON.lock, 'Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.' + (keys.length ? ' You can still remove the ones you have: type your website password below.' : ''),

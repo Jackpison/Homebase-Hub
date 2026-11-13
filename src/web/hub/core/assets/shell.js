@@ -389,6 +389,17 @@
     l.querySelector('.ix-nlx').focus();
     l.addEventListener('keydown', function (e) { if (e.key === 'Escape') { l.remove(); } });
   }
+  /* runs a change to a list and slides every item that stayed from where it was to where it is now (a spring-like curve) */
+  function flip(box, change) {
+    var before = new Map(); [].forEach.call(box.children, function (ch) { before.set(ch, ch.getBoundingClientRect().top); });
+    change();
+    if (reduced()) return;
+    [].forEach.call(box.children, function (ch) {
+      var b = before.get(ch); if (b == null || !ch.animate) return;
+      var d = b - ch.getBoundingClientRect().top;
+      if (d) ch.animate([{ translate: '0 ' + d + 'px' }, { translate: '0 0' }], { duration: 450, easing: 'cubic-bezier(.3,1.25,.5,1)' });
+    });
+  }
   function toast(msg, bad, sticky, act) {
     msg = String(msg == null ? '' : msg); if (!msg) return;
     var t = document.getElementById('ix-toast');
@@ -404,7 +415,7 @@
     c.className = 'ix-nc' + (bad ? ' bad' : ''); c.dataset.msg = msg;
     c.innerHTML = noteTile(kind) + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(NOTE_SRC[APP] || 'Homebase Hub') + ' · now</small></div><button type="button" class="ix-nx" aria-label="Close message">×</button>';
     c.querySelector('.ix-nm').textContent = msg;
-    var gone = function () { clearTimeout(+c.dataset.tm); c.classList.remove('in'); setTimeout(function () { c.remove(); if (!t.querySelector('.ix-nc')) { t.classList.remove('on'); } noteBell(); }, 160); };
+    var gone = function () { clearTimeout(+c.dataset.tm); c.classList.remove('in'); setTimeout(function () { flip(t, function () { c.remove(); }); if (!t.querySelector('.ix-nc')) { t.classList.remove('on'); } noteBell(); }, 160); };
     var arm = function (ms) { clearTimeout(+c.dataset.tm); if (!sticky) c.dataset.tm = String(setTimeout(gone, ms)); };
     if (act && act.label) {
       var ab = document.createElement('button'); ab.type = 'button'; ab.className = 'ix-tact'; ab.textContent = act.label;
@@ -414,8 +425,11 @@
     c.querySelector('.ix-nx').onclick = function () { noteSeen = noteHist.length; noteSave(); gone(); };
     c.addEventListener('pointerenter', function () { clearTimeout(+c.dataset.tm); });
     c.addEventListener('pointerleave', function () { arm(2500); });
-    t.appendChild(c); t.classList.add('on');
-    while (t.children.length > NOTE_MAX) { clearTimeout(+t.firstChild.dataset.tm); t.removeChild(t.firstChild); }
+    // (1.77.2) like Magic UI's Animated List: the newest message is on top and springs in from nothing; the others slide to their new place
+    flip(t, function () {
+      t.insertBefore(c, t.firstChild); t.classList.add('on');
+      while (t.children.length > NOTE_MAX) { clearTimeout(+t.lastChild.dataset.tm); t.removeChild(t.lastChild); }
+    });
     requestAnimationFrame(function () { c.classList.add('in'); });
     var bell = document.getElementById('ix-bell'); if (bell) bell.hidden = true;
     arm(bad ? 7000 : act ? 8000 : 4500);
@@ -1034,14 +1048,21 @@
     var m = document.querySelector('meta[name="theme-color"]'); if (m && APP !== 'tools') m.setAttribute('content', t === 'light' ? '#f6f5f1' : '#000000');
     drawBar();
   }
-  function setTheme(t) {
+  /* (1.77.2) like Magic UI's Animated Theme Toggler: the new theme grows as a circle from the button you pressed (from the middle without one) */
+  function setTheme(t, from) {
     if (t !== 'light') t = 'dark';
     if (H.getAttribute('data-theme') === t && ls.get('hub-theme') === t) return;
     if (reduced()) return applyTheme(t);
     if (document.startViewTransition) {
-      H.classList.add('ix-vt');
+      var r = from && from.getBoundingClientRect ? from.getBoundingClientRect() : null,
+          x = r ? r.left + r.width / 2 : innerWidth / 2, y = r ? r.top + r.height / 2 : innerHeight / 2,
+          rad = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+      H.classList.add('ix-vt', 'ix-circ');
       var vt = document.startViewTransition(function () { applyTheme(t); });
-      var done = function () { H.classList.remove('ix-vt'); };
+      var done = function () { H.classList.remove('ix-vt', 'ix-circ'); };
+      vt.ready.then(function () {
+        H.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + rad + 'px at ' + x + 'px ' + y + 'px)'] }, { duration: 550, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' });
+      }).catch(function () {});
       vt.finished.then(done, done);
     } else {
       H.classList.add('ix-fade'); applyTheme(t);
@@ -1675,7 +1696,7 @@
     if (k === 'spotx') { if (spot) spot.classList.remove('open'); return; }
     if (k === 'menu') return drawer(true, b);
     if (k === 'sheet') return sheet(true, b);
-    if (k === 'theme') { if (inPanel) closePanels(); return setTheme(themeNow() === 'light' ? 'dark' : 'light'); }
+    if (k === 'theme') { if (inPanel) closePanels(); return setTheme(themeNow() === 'light' ? 'dark' : 'light', inPanel ? null : b); }
     if (k === 'login') return login().then(function () { location.reload(); }, function () {});
     if (k === 'logout') return logout();
     if (k === 'search') { closePanels(); return openSpot(); }

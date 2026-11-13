@@ -61,19 +61,20 @@
   ];
   FEATS.forEach(function (f) { PANES['ft-' + f.id] = function (p) { pFeature(p, f); }; PANE_FN.set('ft-' + f.id, PANES['ft-' + f.id]); });   // (the tabs themselves are listed in SECTIONS)
   function pFeatures(p) {
-    p.innerHTML = '<div class="ix-fban"><div class="ix-fban-t"><div class="ix-fban-h">Seven Pages. One Home.</div><p>Everything below runs on your own server, with your data kept in one folder you can copy, back up and take with you.</p></div>' +
-      '<div class="ix-fban-s"><span><b>7</b>pages</span><span><b>100+</b>tools</span><span><b>0</b>trackers</span></div></div>' +
-      '<div class="ix-fgrid">' + FEATS.map(function (f) {
-      return '<button type="button" class="ix-fcard" style="--fc:' + f.c + '" data-ft="' + f.id + '"><span class="ix-fcard-h"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><b>' + esc(f.name) + '</b>' +
-        (f.hl.some(function (h) { return h[2]; }) ? '<span class="ix-cl-tag">New</span>' : '') + '</span>' +
-        '<span class="ix-fcard-p">' + esc(f.lead) + '</span><span class="ix-fcard-m">' + f.hl.slice(0, 3).map(function (h) { return '<i>' + esc(h[0]) + '</i>'; }).join('') + '</span></button>';
+    p.innerHTML = '<div class="ix-rcl">' + FEATS.map(function (f) {
+      return rowCard({ ic: f.ic, color: f.c, title: esc(f.name) + (f.hl.some(function (h) { return h[2]; }) ? ' <span class="ix-cl-tag">New</span>' : ''), desc: esc(f.lead),
+        act: '<button type="button" class="ix-btn" data-ft="' + f.id + '">See More</button>' });
     }).join('') + '</div>';
     p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
-    // (1.77.1) the notes that used to be a tab of What's New: how updating works and a few things worth knowing
+    // (1.77.2) the notes that used to be a tab of What's New (how updating works and a few things worth knowing), as the same row cards
     var nb = document.createElement('div'); p.appendChild(nb);
     clLoad().then(function (cl) {
       if (!cl.notes.length) return;
-      nb.innerHTML = '<h3 class="ix-fnotes">Good to Know</h3>' + cl.notes.map(function (x) { return '<section class="ix-ec"><div class="ix-ec-h"><span class="ix-ec-i">' + svg(ICON.info) + '</span><div><div class="ix-ec-t">' + esc(x.title) + '</div></div></div><div class="ix-ec-b ix-md">' + mdBlocks(x.body) + '</div></section>'; }).join('');
+      nb.innerHTML = '<div class="ix-sect">Good to Know</div><div class="ix-rcl">' + cl.notes.map(function (x, i) {
+        return rowCard({ ic: ICON.info, title: esc(x.title), act: '<button type="button" class="ix-btn" data-note="' + i + '" aria-expanded="false">Read</button>', body: '<div class="ix-md">' + mdBlocks(x.body) + '</div>', hide: true });
+      }).join('') + '</div>';
+      nb.querySelectorAll('[data-note]').forEach(function (b) { b.onclick = function () {
+        var x = b.closest('.ix-rc').querySelector('.ix-rc-x'), open = x.hidden; x.hidden = !open; b.textContent = open ? 'Hide' : 'Read'; b.setAttribute('aria-expanded', open ? 'true' : 'false'); }; });
     }).catch(function () {});
   }
   function pFeature(p, f) {

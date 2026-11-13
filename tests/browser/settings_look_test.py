@@ -152,8 +152,8 @@ try:
         pg.click('.ix-fchip[data-t=Fixes]'); wait_js(pg, "document.getElementById('ix-clcount').textContent.length > 0", 5000)
         fx = pg.evaluate("(() => [...document.querySelectorAll('#ix-cll details.ix-cl')].filter(d => !d.hidden).length)()")
         check('L27b the Fixes chip hides the versions that fixed nothing', 0 < fx < pg.evaluate("document.querySelectorAll('#ix-cll details.ix-cl').length"), fx)
-        pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-fcard').length === 7", 20000)
-        check('L28 Features: a card for each of the seven pages, and a tab for each', pg.evaluate("document.querySelectorAll('#ix-pane .ix-subt [role=tab]').length") == 8)
+        pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-rc [data-ft]').length === 7", 20000)
+        check('L28 Features: a row card for each of the seven pages (and the Good to Know notes below), and a tab for each', pg.evaluate("document.querySelectorAll('#ix-pane .ix-subt [role=tab]').length") == 8)
         pg.goto(s.base + '/web/settings/#ft-files'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-fhl-c').length >= 5", 20000)
         check('L29 Features > Files shows what Files offers (highlights and an Open Files button) and holds no settings', pg.evaluate("[document.querySelectorAll('#ix-pc input,#ix-pc select').length, /Open Files/.test(document.querySelector('#ix-pc .ix-fhero a').textContent)]") == [0, True])
 

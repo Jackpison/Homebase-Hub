@@ -247,6 +247,8 @@ html[data-ix-app="home"][data-ix-nav="dock"] .ix-pill{background:color-mix(in sr
 ::view-transition-new(ix-bar){animation:none}
 html.ix-vt::view-transition-old(root){animation:ix-fade-out .32s ease both}
 html.ix-vt::view-transition-new(root){animation:ix-fade-in .32s ease both}
+html.ix-circ::view-transition-old(root),html.ix-circ::view-transition-new(root){animation:none;mix-blend-mode:normal}   /* (1.77.2) the theme grows as a circle from the button: the animation is set in shell.js */
+html.ix-circ::view-transition-new(root){z-index:2}
 @keyframes ix-fade-out{to{opacity:0}}
 @keyframes ix-fade-in{from{opacity:0}}
 html.ix-fade,html.ix-fade *,html.ix-fade *::before,html.ix-fade *::after{transition:background-color .3s ease,color .3s ease,border-color .3s ease,fill .3s ease,stroke .3s ease,box-shadow .3s ease!important}
@@ -555,20 +557,17 @@ dialog.ix-sdlg>form{display:flex;flex-direction:column;min-height:0;flex:1;paddi
 .ix-sgc-h{display:none!important}
 .ix-srow>.ix-sgc{max-width:100%}
 @media (max-width:480px){.ix-srow>.ix-sgc{width:100%}.ix-sgc>button{flex:1}}
-/* (1.65.0) The on/off switch everywhere (windows, the Settings page, Home's sheets): adapted from Uiverse.io by Yaya12085, "bright-dolphin-91"
-   (https://uiverse.io/Yaya12085/bright-dolphin-91, MIT; see web/hub/docs/THIRD-PARTY.md): a white recessed track and a metal knob that turns black when on
-   and tilts a little on hover. Scaled from 120 x 60 to 52 x 26; still a real checkbox (keyboard, screen readers, forms). */
-input.ix-sw,#ix-page .ix-tg input[type=checkbox],input.switch{appearance:none;-webkit-appearance:none;flex:none;position:relative;width:52px;height:26px;margin:0;padding:0;border:0;border-radius:13px;cursor:pointer;
-  background:#fff;box-shadow:inset 0 0 3px 2px #fff,inset 0 0 9px 1px rgba(0,0,0,.49),4px 8px 14px rgba(0,0,0,.1),inset 0 0 0 1.5px rgba(0,0,0,.3);transition:transform .4s}
-input.ix-sw::after,#ix-page .ix-tg input[type=checkbox]::after,input.switch::after{content:"";position:absolute;top:4px;left:4px;width:18px;height:18px;border-radius:50%;transform:none;
-  background-color:#000;background-image:linear-gradient(130deg,#757272 10%,#fff 11%,#726f6f 62%);box-shadow:0 1px 1px rgba(0,0,0,.3),4px 4px 5px rgba(0,0,0,.3);transition:left .4s,background .4s}
-input.ix-sw:checked,#ix-page .ix-tg input[type=checkbox]:checked,input.switch:checked{background:#fff}
-input.ix-sw:checked::after,#ix-page .ix-tg input[type=checkbox]:checked::after,input.switch:checked::after{left:30px;transform:none;background-color:#000;background-image:linear-gradient(315deg,#000 0%,#414141 70%)}
-input.ix-sw:hover:not(:disabled),#ix-page .ix-tg input[type=checkbox]:hover:not(:disabled),input.switch:hover:not(:disabled){transform:perspective(100px) rotateX(5deg) rotateY(-5deg)}
-input.ix-sw:checked:hover:not(:disabled),#ix-page .ix-tg input[type=checkbox]:checked:hover:not(:disabled),input.switch:checked:hover:not(:disabled){transform:perspective(100px) rotateX(-5deg) rotateY(5deg)}
+/* (1.77.2) The on/off switch everywhere (windows, the Settings page, Home's sheets): adapted from Uiverse.io by Galahhad (a recessed track and a pill that
+   slides; pressing it squeezes the pill to the middle). It turns the theme's accent color when on. Still a real checkbox (keyboard, screen readers, forms), still 52 x 26. */
+input.ix-sw,#ix-page .ix-tg input[type=checkbox],input.switch{appearance:none;-webkit-appearance:none;flex:none;position:relative;box-sizing:border-box;width:52px;height:26px;margin:0;padding:0;border:3px solid transparent;border-radius:13px;cursor:pointer;overflow:hidden;
+  background-color:var(--ix-s3,#9a9a9a);box-shadow:inset 0 0 8px rgba(0,0,0,.35);transition:background-color .3s}
+input.ix-sw::after,#ix-page .ix-tg input[type=checkbox]::after,input.switch::after{content:"";position:absolute;inset:0;border-radius:13px;background:#fff;transform:translateX(-23px);box-shadow:0 0 8px 2px rgba(0,0,0,.3);transition:transform .3s}
+input.ix-sw:checked,#ix-page .ix-tg input[type=checkbox]:checked,input.switch:checked{background-color:var(--ix-accent,#2196f3)}
+input.ix-sw:checked::after,#ix-page .ix-tg input[type=checkbox]:checked::after,input.switch:checked::after{transform:translateX(23px)}
+input.ix-sw:active:not(:disabled)::after,#ix-page .ix-tg input[type=checkbox]:active:not(:disabled)::after,input.switch:active:not(:disabled)::after{transform:translateX(0)}
 input.ix-sw:focus-visible,#ix-page .ix-tg input[type=checkbox]:focus-visible,input.switch:focus-visible{outline:2px solid var(--ix-accent,currentColor);outline-offset:3px}
 input.ix-sw:disabled,#ix-page .ix-tg input[type=checkbox]:disabled,input.switch:disabled{opacity:.5;cursor:not-allowed}
-@media (prefers-reduced-motion:reduce){input.ix-sw,input.ix-sw::after,#ix-page .ix-tg input[type=checkbox],#ix-page .ix-tg input[type=checkbox]::after,input.switch,input.switch::after{transition:none}input.ix-sw:hover,input.switch:hover,#ix-page .ix-tg input[type=checkbox]:hover{transform:none!important}}
+@media (prefers-reduced-motion:reduce){input.ix-sw,input.ix-sw::after,#ix-page .ix-tg input[type=checkbox],#ix-page .ix-tg input[type=checkbox]::after,input.switch,input.switch::after{transition:none}}
 @media (max-width:480px){.ix-srow{flex-wrap:wrap}.ix-srow>select{width:100%}}
 
 /* ---------- the pages' own windows (dialogs): one look, set here (1.59) ----------
@@ -692,18 +691,18 @@ label.ix-srow{cursor:pointer}
 .ix-ob .hint{display:block;margin-top:6px}
 .ix-sdlg .ix-sb details.ix-opt+details.ix-opt{margin-top:12px;padding-top:12px;border-top:1px solid color-mix(in srgb,currentColor 9%,transparent)}
 
-/* ---------- (1.65.0) the button hover: a slanted fill sweeps across and the text changes colour. Adapted from Uiverse.io by
-   CristianMontoya98, "nasty-fish-9" (https://uiverse.io/CristianMontoya98/nasty-fish-9, MIT). Every text button on every page (the same
+/* ---------- (1.77.2) the button hover: a colour sweeps in diagonally from the lower right corner and the text changes colour. Adapted from Uiverse.io by
+   doniaskima, "btn-31" (https://uiverse.io/doniaskima). It was Uiverse's CristianMontoya98 "nasty-fish-9" slanted fill from 1.65.0 to 1.77.1. Every text button on every page (the same
    list as the shared button look above); icon buttons, choice buttons and disabled ones keep theirs. Your accent fills a plain button,
    white fills the main one, red a delete button. Only with a mouse (no hover on touch screens), and keyboard focus gets it too. ---------- */
 :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn){position:relative;isolation:isolate;overflow:hidden}
 :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold]):not(.ix-erase)::after{
-  content:"";position:absolute;z-index:-1;left:-34px;right:-34px;top:0;bottom:0;background:var(--ix-accent,#ffc21a);transform:skewX(-45deg) scale(0,1);transition:transform .45s;pointer-events:none}
+  content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;background:var(--ix-accent,#ffc21a);clip-path:polygon(100% 100%,100% 100%,100% 100%,100% 100%);transition:clip-path .28s ease;pointer-events:none}
 :where(html .btn.pri,html .btn.primary,html .ix-btn.pri,html .ix-sdlg .ix-sf button.pri,html .ix-sdlg .ix-sf [type=submit],html .ix-sdlg .act .pri,html .ix-sdlg .df .pri,html .ix-sdlg .df .primary)::after{background:#fff}
 :where(html .btn.danger,html .ix-btn.danger,html .ix-sdlg .danger)::after{background:#e5484d}
 @media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
-  :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold]):not(.ix-erase):not(:disabled):is(:hover,:focus-visible)::after{transform:skewX(-45deg) scale(1,1)}
-  :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold]):not(.ix-erase):not(:disabled):is(:hover,:focus-visible){color:var(--ix-ink,#000)!important;transition:color .45s}
+  :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold]):not(.ix-erase):not(:disabled):is(:hover,:focus-visible)::after{clip-path:polygon(100% 0,0 0,0 100%,100% 100%)}
+  :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold]):not(.ix-erase):not(:disabled):is(:hover,:focus-visible){color:var(--ix-ink,#000)!important;transition:color .28s}
   :where(html .btn.pri,html .btn.primary,html .ix-btn.pri,html .ix-sdlg .ix-sf button.pri,html .ix-sdlg .ix-sf [type=submit],html .ix-sdlg .act .pri,html .ix-sdlg .df .pri,html .ix-sdlg .df .primary):not(:disabled):is(:hover,:focus-visible){color:#111!important}
   :where(html .btn.danger,html .ix-btn.danger,html .ix-sdlg .danger):not(:disabled):is(:hover,:focus-visible){color:#fff!important}
 }
@@ -979,7 +978,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.14)}
 #ix-toast{position:fixed;right:16px;bottom:16px;z-index:2147483003;display:none;flex-direction:column;gap:10px;width:min(380px,calc(100vw - 32px));pointer-events:none;font:14px var(--ix-font)}
 #ix-toast.on{display:flex}
 html[data-ix-nav="dock"] #ix-toast,html[data-ix-nav="dock"] #ix-bell{bottom:calc(var(--ix-dock) + 34px + env(safe-area-inset-bottom,0px))}
-.ix-nc{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--ix-line2);border-radius:16px;background:var(--ix-s1);color:var(--ix-tx);box-shadow:0 12px 32px -8px rgba(0,0,0,.55);pointer-events:auto;opacity:0;transform:translateY(10px) scale(.98);transition:opacity .16s ease,transform .18s ease}
+.ix-nc{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--ix-line2);border-radius:16px;background:var(--ix-s1);color:var(--ix-tx);box-shadow:0 12px 32px -8px rgba(0,0,0,.55);pointer-events:auto;opacity:0;transform:scale(0);transform-origin:top center;transition:opacity .2s ease,transform .45s cubic-bezier(.34,1.45,.5,1)}
 .ix-nc.in{opacity:1;transform:none}
 #ix-nlist .ix-nc{opacity:1;transform:none;box-shadow:none;background:var(--ix-s2)}
 .ix-nc.bad{border-color:color-mix(in srgb,var(--ix-err) 45%,var(--ix-line2))}
@@ -1016,3 +1015,4 @@ html[data-theme="light"] #ix-ebar{box-shadow:0 10px 30px rgba(20,20,20,.16)}
 html[data-ix-glass]:not([data-ix-gsolid]) #ix-ebar{background:color-mix(in srgb,var(--ix-gtc,var(--ix-barbg,var(--ix-bg))) var(--ix-gt,20%),hsl(0 0% 100% / .07));
   backdrop-filter:blur(max(12px,var(--ix-gb,3px))) saturate(calc(var(--ix-gs,1) * 1.4)) brightness(1.04);-webkit-backdrop-filter:blur(max(12px,var(--ix-gb,3px))) saturate(calc(var(--ix-gs,1) * 1.4)) brightness(1.04);
   border-color:transparent;box-shadow:inset 0 1px 0 0 rgba(255,255,255,calc(var(--ix-grim,.35) * .86)),0 0 2px 1px rgba(255,255,255,calc(var(--ix-grim,.35) * .8)) inset,0 8px 24px rgba(17,17,26,calc(var(--ix-gsh,.3) * .5)),0 16px 56px rgba(17,17,26,calc(var(--ix-gsh,.3) * .5))}
+
