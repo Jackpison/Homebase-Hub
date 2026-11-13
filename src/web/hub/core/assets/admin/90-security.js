@@ -175,7 +175,7 @@
       var cnt = function (n, has, hint) { return has ? n + ' ' + (n === 1 ? 'tab' : 'tabs') + ' encrypted' : hint; };
       var card = ecCard, chip = ecChip;
       var fd = function (id, label, auto, hint, wrapId) { return ecField(id, label, 'password', auto, hint, wrapId); };
-      var chips = '<div class="ix-chips">' +
+      var chips = '<div class="ix-chips" style="margin-top:0">' +
         chip('Info Tabs', cnt(st.tabs, !!st.vault, on ? 'none locked yet' : 'none'), !!st.vault && st.tabs > 0) +
         chip('Links Tabs', cnt(st.lenc, !!st.lvault, on ? 'none locked yet' : 'none'), !!st.lvault && st.lenc > 0) +
         chip('Files, Cards, Presets', st.sv ? (st.svUse.length ? st.svUse.join(', ') + ' locked' : 'ready') : (on ? 'ready' : 'none'), !!st.sv && st.svUse.length > 0) +
@@ -184,26 +184,26 @@
       var older = (!on && (st.vault || st.lvault || bk.set)) ? '<p class="ix-note">Some locked data still uses an older key. Setting the passphrase moves it all.</p>' : '';
       var html;
       if (!on) {
-        html = card('intro', ICON.shield, 'Lock Your Private Tabs and Backups', 'One passphrase locks your Files, Cards and saved presets, the encrypted tabs in Info and Links, and your backup files. Only you can unlock them, even if someone copies your server.', chips) + older +
-          card('', ICON.key, 'Set a Passphrase', 'Three steps: the passphrase, your website password to confirm it is you, then a recovery key in case you ever forget it.',
+        html = card('ix-split intro', ICON.shield, 'Lock Your Private Tabs and Backups', 'One passphrase locks your Files, Cards and saved presets, the encrypted tabs in Info and Links, and your backup files. Only you can unlock them, even if someone copies your server.', chips) + older +
+          card('ix-split', ICON.key, 'Set a Passphrase', 'Three steps: the passphrase, your website password to confirm it is you, then a recovery key in case you ever forget it.',
             '<div id="ix-encst"></div><p class="ix-err" id="ix-ee"></p>');
       } else {
-        html = card('good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
-          card('', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
+        html = card('ix-split good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
+          card('ix-split', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
             '<div class="ix-frm">' + fd('ix-ccur', 'Current Passphrase or Recovery Key', 'off') + fd('ix-cpw', 'Website Password', 'current-password') + fd('ix-cn1', 'New Passphrase', 'new-password') + fd('ix-cn2', 'Type It Again', 'new-password') + '</div>' +
             '<div class="ix-fact"><p class="ix-err" id="ix-ce"></p><button type="button" class="ix-btn pri" id="ix-cgo">Change Passphrase</button></div>') +
-          '<div id="ix-rec">' + card('', ICON.box, 'Recovery Key', 'A spare way in. If you ever forget the passphrase, this code opens your Files, Cards, presets and locked tabs and lets you set a new passphrase. Keep it somewhere safe (print it, or put it in a password manager): anyone who has it can open them.',
+          '<div id="ix-rec">' + card('ix-split', ICON.box, 'Recovery Key', 'A spare way in. If you ever forget the passphrase, this code opens your Files, Cards, presets and locked tabs and lets you set a new passphrase. Keep it somewhere safe (print it, or put it in a password manager): anyone who has it can open them.',
             '<div class="ix-frm">' + fd('ix-rpp', 'Your Passphrase', 'off') + fd('ix-rpw', 'Website Password', 'current-password') + '</div>' +
             '<div class="ix-fact"><p class="ix-err" id="ix-re"></p><button type="button" class="ix-btn pri" id="ix-rmk">' + (st.rec ? 'Make a New Recovery Key' : 'Create Recovery Key') + '</button>' +
             (st.rec ? '<button type="button" data-hold class="ix-btn danger" id="ix-rdel">Remove Recovery Key</button>' : '') + '</div><div id="ix-rshow"></div>',
             '<span class="ix-pill ' + (st.rec ? 'good' : '') + '">' + (st.rec ? (st.recGap ? 'Make a New One' : 'Created') : 'Not Created') + '</span>') +
           (st.recGap ? '<p class="ix-note">Your recovery key is older than Files and Cards. Make a new one below.</p>' : '') + '</div>' +
-          '<form id="ix-ef">' + card('danger', ICON.out, 'Remove Encryption', 'Locked tabs turn back into normal private tabs (still hidden from visitors) and backup files stop being locked. To use a different passphrase, change it above instead.',
+          '<form id="ix-ef">' + card('ix-split danger', ICON.out, 'Remove Encryption', 'Locked tabs turn back into normal private tabs (still hidden from visitors) and backup files stop being locked. To use a different passphrase, change it above instead.',
             '<div class="ix-frm">' + fd('ix-ecur', 'Your Passphrase', 'off') + fd('ix-epw', 'Website Password', 'current-password') + '</div>' +
             fd('ix-eold', 'Earlier Passphrase', 'off', 'The one your existing locked tabs use now.', 'ix-eoldw') +
             '<div class="ix-fact"><p class="ix-err" id="ix-ee"></p><button type="button" data-hold class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
       }
-      b.innerHTML = tabHead(ICON.lock, 'Encryption', 'One passphrase locks your Files, Cards and saved presets, your private tabs in Info and Links, and your backup files. Only you can unlock them.') + html;
+      b.innerHTML = html;
       var er = b.querySelector('#ix-ee'), val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
       var run = function (btn, msg, work, ok) {
         btn.disabled = true; er.textContent = msg;
@@ -643,11 +643,11 @@
     box.querySelector('#ix-on').onclick = function () {
       api('twostep_begin', {}).then(function (j) {
         if (!j.ok) { toast(j.error); return; }
-        box.innerHTML = head + tsBar(1) + ecCard('', ICON.device, 'Step 1: Scan the Code', 'Scan this with your authenticator app, or on your phone tap <a href="' + esc(j.uri) + '">open in app</a>. You can also type the key by hand.',
+        box.innerHTML = head + tsBar(1) + '<div class="ix-duo">' + ecCard('', ICON.device, 'Step 1: Scan the Code', 'Scan this with your authenticator app, or on your phone tap <a href="' + esc(j.uri) + '">open in app</a>. You can also type the key by hand.',
             '<div class="ix-qr" id="ix-qr"></div>' + linkField({ value: j.secret.replace(/(.{4})/g, '$1 ').trim(), copyText: j.secret, prefix: 'Key', readonly: true, label: 'Two-step key', cls: 'ix-uf-key', wrap: true })) +
           ecCard('', ICON.check, 'Step 2: Type the 6-Digit Code', 'The app now shows a code that changes every 30 seconds. Type the current one to finish.',
             '<div class="ix-fd"><label for="ix-tc">6-Digit Code</label><input type="text" id="ix-tc" inputmode="numeric" autocomplete="one-time-code" maxlength="7" style="max-width:220px"></div>' +
-            '<p class="ix-err" id="ix-te2"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-en">Turn On</button></div>') + '<div id="ix-rcs"></div>';
+            '<p class="ix-err" id="ix-te2"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-en">Turn On</button></div>') + '</div><div id="ix-rcs"></div>';
         qr(box.querySelector('#ix-qr'), j.uri);
         box.querySelector('#ix-tc').addEventListener('focus', function () { [].forEach.call(box.querySelectorAll('.ix-sbi'), function (x, k) { x.classList.toggle('now', k === 2); x.classList.toggle('done', k < 2); }); });
         box.querySelector('#ix-en').onclick = function () {

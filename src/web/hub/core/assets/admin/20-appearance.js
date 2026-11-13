@@ -1,4 +1,4 @@
-  /* Appearance > Look & Bar: the theme, the font and the text sizes, then the bar (style, behaviour, tabs; they had a tab of their own before 1.78.0). Accent Color is on Colors, the glass switch on Glass. */
+  /* Appearance > Look: the theme, the font and the text sizes, then the bar (style, behaviour, tabs; they had a tab of their own before 1.78.0). Accent Color is on Colors, the glass switch on Glass. */
   function pLook(p) {
     p.innerHTML = '<h3>Theme</h3><p>The default look. The sun/moon button in the bar changes it just for you.</p>' +
       seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +

@@ -353,7 +353,7 @@ try:
         for theme in ('dark', 'light'):
             tc = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=BROWSER != 'firefox', has_touch=True, storage_state=ctx.storage_state())   # one context per theme: the order of several init scripts is not defined
             tc.add_init_script("try { localStorage.setItem('hub-theme', '%s'); } catch (e) {}" % theme); tq = tc.new_page()
-            for sec in ('look', 'themes', 'backup'):   # (1.78.0) the bar switches are on Appearance > Look & Bar
+            for sec in ('look', 'themes', 'backup'):   # (1.78.0) the bar switches are on Appearance > Look
                 tq.goto(s.base + '/web/settings/#' + sec); wait_js(tq, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); tq.wait_for_timeout(500)
                 got = tq.evaluate("[document.documentElement.dataset.theme || '', ...[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => e.offsetWidth + 'x' + e.offsetHeight)]")
                 seen.add(got[0])

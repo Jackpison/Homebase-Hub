@@ -15,7 +15,7 @@
  *   search     SEARCH: add a line here for every new setting
  *   General    helpCards (shown in Features), pGeneral, textSizes
  *   Appearance pLook, barHtml, accentHtml, pColors, PRESETS / PRESET_GROUPS (data), pThemes, pGlass
- *   Bar        pBar (bar settings and tabs, the second half of Look & Bar), tabEditor
+ *   Bar        pBar (bar settings and tabs, the second half of Look), tabEditor
  *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles)
  *   Menu       decorateNav, paintHead, stepBar
  *   Changelog mdInline, mdBlocks, clParse, pChangelog (a tab of Updates)
@@ -54,7 +54,7 @@
   // [id, name, icon, what it is for (shown under the title), sub-tabs [[id, name]], menu group]
   var SECTIONS = [
     ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone.', null, 'Web Setting'],
-    ['look', 'Appearance', ICON.palette, 'The theme, font, bar and tabs, colors and glass.', [['look', 'Look & Bar'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
+    ['look', 'Appearance', ICON.palette, 'The theme, font, bar and tabs, colors and glass.', [['look', 'Look'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
     ['security', 'Security', ICON.shield, 'Login, passkeys and encryption.', null, 'Data Setting'],
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
@@ -232,7 +232,7 @@
     target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'general';
     if (id === 'remind') id = 'telegram';
     if (id === 'system') id = 'updates';   // the System section of 1.48 is Updates, Health and Changelog again
-    if (id === 'pages' || id === 'nav') id = 'look';   // Pages (1.48.5) and the Bar tab (1.78.0) are now part of Look & Bar
+    if (id === 'pages' || id === 'nav') id = 'look';   // Pages (1.48.5) and the Bar tab (1.78.0) are now part of Look
     if (id === 'domains') id = 'health';   // Domains and Uptime was removed in 1.78.0
     if (id === 'setup') id = 'general';   // Start Here was removed in 1.78.0
     // (1.70.0) the moves: Updates > Files is part of Health > Server Check; Telegram > Backups is part of Backup & Restore

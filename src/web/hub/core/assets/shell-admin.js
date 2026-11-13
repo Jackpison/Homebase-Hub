@@ -15,7 +15,7 @@
  *   search     SEARCH: add a line here for every new setting
  *   General    helpCards (shown in Features), pGeneral, textSizes
  *   Appearance pLook, barHtml, accentHtml, pColors, PRESETS / PRESET_GROUPS (data), pThemes, pGlass
- *   Bar        pBar (bar settings and tabs, the second half of Look & Bar), tabEditor
+ *   Bar        pBar (bar settings and tabs, the second half of Look), tabEditor
  *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles)
  *   Menu       decorateNav, paintHead, stepBar
  *   Changelog mdInline, mdBlocks, clParse, pChangelog (a tab of Updates)
@@ -54,7 +54,7 @@
   // [id, name, icon, what it is for (shown under the title), sub-tabs [[id, name]], menu group]
   var SECTIONS = [
     ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone.', null, 'Web Setting'],
-    ['look', 'Appearance', ICON.palette, 'The theme, font, bar and tabs, colors and glass.', [['look', 'Look & Bar'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
+    ['look', 'Appearance', ICON.palette, 'The theme, font, bar and tabs, colors and glass.', [['look', 'Look'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
     ['security', 'Security', ICON.shield, 'Login, passkeys and encryption.', null, 'Data Setting'],
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
@@ -232,7 +232,7 @@
     target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'general';
     if (id === 'remind') id = 'telegram';
     if (id === 'system') id = 'updates';   // the System section of 1.48 is Updates, Health and Changelog again
-    if (id === 'pages' || id === 'nav') id = 'look';   // Pages (1.48.5) and the Bar tab (1.78.0) are now part of Look & Bar
+    if (id === 'pages' || id === 'nav') id = 'look';   // Pages (1.48.5) and the Bar tab (1.78.0) are now part of Look
     if (id === 'domains') id = 'health';   // Domains and Uptime was removed in 1.78.0
     if (id === 'setup') id = 'general';   // Start Here was removed in 1.78.0
     // (1.70.0) the moves: Updates > Files is part of Health > Server Check; Telegram > Backups is part of Backup & Restore
@@ -464,7 +464,7 @@
       api('logo', { remove: true }).then(function (j) { if (j.ok) { S.logo = draft.logo = ''; remember(S); redraw(); subPane('general'); toast('Logo removed.'); } });
     };
   }
-  /* Appearance > Look & Bar: the theme, the font and the text sizes, then the bar (style, behaviour, tabs; they had a tab of their own before 1.78.0). Accent Color is on Colors, the glass switch on Glass. */
+  /* Appearance > Look: the theme, the font and the text sizes, then the bar (style, behaviour, tabs; they had a tab of their own before 1.78.0). Accent Color is on Colors, the glass switch on Glass. */
   function pLook(p) {
     p.innerHTML = '<h3>Theme</h3><p>The default look. The sun/moon button in the bar changes it just for you.</p>' +
       seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
@@ -1028,7 +1028,7 @@
     tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp'));
     p.querySelector('#ix-tabreset').onclick = function () { draft.pages = []; tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp')); preview(); markDirty(true); };
   }
-  /* Settings > Appearance > Bar, the Tabs part (1.67.2; General > Tabs before 1.70.0, on Look & Bar since 1.78.0): one row per page with its colour tile (as in the bar), its name and a switch; drag a row to move it.
+  /* Settings > Appearance > Bar, the Tabs part (1.67.2; General > Tabs before 1.70.0, on Look since 1.78.0): one row per page with its colour tile (as in the bar), its name and a switch; drag a row to move it.
      A strip above shows the bar as it will look. Home is not listed: the logo and site name lead there (the dock shows it first). */
   var GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg>';
   function tabEditor(box, strip) {
@@ -1128,19 +1128,23 @@
           (function () {
             var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on;
             var pill = function (done, open) { return '<span class="ix-pill ' + (done ? 'good' : open ? 'warn' : '') + '">' + (done ? 'Done' : open ? 'Next' : 'Waiting') + '</span>'; };
-            // (1.78.0) two cards, one for each step: what to do, the fields and buttons in one row, and a Done mark when it is finished
-            return ecCard(d1 ? 'good' : '', ICON.key, '1. Create Your Bot', d1 ? 'Token saved (' + esc(n.tokenHint || 'hidden') + '). Paste a new one to replace it.' :
+            // (1.78.1) one box, two rows: each row has its number, what to do and its state on the left, the fields and buttons on the right
+            var row = function (num, done, title, state, desc, body) {
+              return '<div class="ix-srow' + (done ? ' done' : '') + '"><div class="ix-srow-h"><span class="ix-srow-n">' + (done ? '✓' : num) + '</span><div><div class="ix-srow-t">' + title + state + '</div><div class="ix-srow-d">' + desc + '</div></div></div><div class="ix-srow-b">' + body + '</div></div>';
+            };
+            return ecCard('', ICON.gear, 'Set Up Your Bot', 'Two short steps: create a bot, then connect your chat and send a test.',
+              row(1, d1, 'Create Your Bot', pill(d1, !d1), d1 ? 'Token saved (' + esc(n.tokenHint || 'hidden') + '). Paste a new one to replace it.' :
                 'In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It gives you a <b>token</b>, a long line of letters and numbers. Paste it here.',
-              '<div class="ix-fact ix-fbot"><div class="ix-fd ix-fdw"><label for="nt-tok">Bot Token</label><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '"></div>' +
-                '<button type="button" class="ix-btn pri" id="nt-st">' + (d1 ? 'Replace Token' : 'Save Token') + '</button>' + (d1 ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div>' +
-                '<p class="ix-note">It stays on your server and is only used to talk to Telegram.</p>', pill(d1, !d1)) +
-              ecCard(d4 ? 'good' : '', ICON.send, '2. Connect and Test', d3 ? 'Connected to <b>' + esc(n.chatName || n.chat) + '</b>' + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '. Send a test any time.' :
+                '<div class="ix-fact ix-fbot"><div class="ix-fd ix-fdw"><label for="nt-tok">Bot Token</label><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '"></div>' +
+                  '<button type="button" class="ix-btn pri" id="nt-st">' + (d1 ? 'Replace Token' : 'Save Token') + '</button>' + (d1 ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div>' +
+                  '<p class="ix-note">It stays on your server and is only used to talk to Telegram.</p>') +
+              row(2, d3, 'Connect and Test', pill(d3, d1), d3 ? 'Connected to <b>' + esc(n.chatName || n.chat) + '</b>. Send a test any time.' :
                 'Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.',
-              '<div class="ix-row"><button type="button" class="ix-btn' + (n.hasToken && !d3 ? ' pri' : '') + '" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button>' +
-                '<button type="button" class="ix-btn' + (d3 && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>' + (tested ? 'Send Another Test' : 'Send Test') + '</button>' +
-                (tested && d4 ? '<button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button>' : '') + '</div>' +
-                (chats && chats.length > 1 ? '<div class="ix-row" style="margin-top:10px">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '') +
-                (tested && d4 ? '<p class="ix-note"><span class="ix-ok">✓</span> <b>Test message sent.</b> It should be in Telegram now.</p>' : d3 ? '<p class="ix-note">You get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' : ''), pill(d3 && (tested || !!n.lastSent), d1)) +
+                '<div class="ix-row"><button type="button" class="ix-btn' + (n.hasToken && !d3 ? ' pri' : '') + '" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button>' +
+                  '<button type="button" class="ix-btn' + (d3 && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>' + (tested ? 'Send Another Test' : 'Send Test') + '</button>' +
+                  (tested && d4 ? '<button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button>' : '') + '</div>' +
+                  (chats && chats.length > 1 ? '<div class="ix-row" style="margin-top:10px">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '') +
+                  (tested && d4 ? '<p class="ix-note"><span class="ix-ok">✓</span> <b>Test message sent.</b> It should be in Telegram now.</p>' : d3 ? '<p class="ix-note">You get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' : ''))) +
               '<div class="ix-rcl">' + rowCard({ ic: ICON.clock, title: 'Keep It on Schedule', desc: 'Messages go out on time only if your host runs a small job every 10 minutes (a cron job).',
                 act: '<button type="button" class="ix-btn" id="nt-schb" aria-expanded="false">Show the Command</button>', hide: true, id: 'nt-sch',
                 body: '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +
@@ -1926,7 +1930,7 @@
       var cnt = function (n, has, hint) { return has ? n + ' ' + (n === 1 ? 'tab' : 'tabs') + ' encrypted' : hint; };
       var card = ecCard, chip = ecChip;
       var fd = function (id, label, auto, hint, wrapId) { return ecField(id, label, 'password', auto, hint, wrapId); };
-      var chips = '<div class="ix-chips">' +
+      var chips = '<div class="ix-chips" style="margin-top:0">' +
         chip('Info Tabs', cnt(st.tabs, !!st.vault, on ? 'none locked yet' : 'none'), !!st.vault && st.tabs > 0) +
         chip('Links Tabs', cnt(st.lenc, !!st.lvault, on ? 'none locked yet' : 'none'), !!st.lvault && st.lenc > 0) +
         chip('Files, Cards, Presets', st.sv ? (st.svUse.length ? st.svUse.join(', ') + ' locked' : 'ready') : (on ? 'ready' : 'none'), !!st.sv && st.svUse.length > 0) +
@@ -1935,26 +1939,26 @@
       var older = (!on && (st.vault || st.lvault || bk.set)) ? '<p class="ix-note">Some locked data still uses an older key. Setting the passphrase moves it all.</p>' : '';
       var html;
       if (!on) {
-        html = card('intro', ICON.shield, 'Lock Your Private Tabs and Backups', 'One passphrase locks your Files, Cards and saved presets, the encrypted tabs in Info and Links, and your backup files. Only you can unlock them, even if someone copies your server.', chips) + older +
-          card('', ICON.key, 'Set a Passphrase', 'Three steps: the passphrase, your website password to confirm it is you, then a recovery key in case you ever forget it.',
+        html = card('ix-split intro', ICON.shield, 'Lock Your Private Tabs and Backups', 'One passphrase locks your Files, Cards and saved presets, the encrypted tabs in Info and Links, and your backup files. Only you can unlock them, even if someone copies your server.', chips) + older +
+          card('ix-split', ICON.key, 'Set a Passphrase', 'Three steps: the passphrase, your website password to confirm it is you, then a recovery key in case you ever forget it.',
             '<div id="ix-encst"></div><p class="ix-err" id="ix-ee"></p>');
       } else {
-        html = card('good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
-          card('', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
+        html = card('ix-split good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
+          card('ix-split', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
             '<div class="ix-frm">' + fd('ix-ccur', 'Current Passphrase or Recovery Key', 'off') + fd('ix-cpw', 'Website Password', 'current-password') + fd('ix-cn1', 'New Passphrase', 'new-password') + fd('ix-cn2', 'Type It Again', 'new-password') + '</div>' +
             '<div class="ix-fact"><p class="ix-err" id="ix-ce"></p><button type="button" class="ix-btn pri" id="ix-cgo">Change Passphrase</button></div>') +
-          '<div id="ix-rec">' + card('', ICON.box, 'Recovery Key', 'A spare way in. If you ever forget the passphrase, this code opens your Files, Cards, presets and locked tabs and lets you set a new passphrase. Keep it somewhere safe (print it, or put it in a password manager): anyone who has it can open them.',
+          '<div id="ix-rec">' + card('ix-split', ICON.box, 'Recovery Key', 'A spare way in. If you ever forget the passphrase, this code opens your Files, Cards, presets and locked tabs and lets you set a new passphrase. Keep it somewhere safe (print it, or put it in a password manager): anyone who has it can open them.',
             '<div class="ix-frm">' + fd('ix-rpp', 'Your Passphrase', 'off') + fd('ix-rpw', 'Website Password', 'current-password') + '</div>' +
             '<div class="ix-fact"><p class="ix-err" id="ix-re"></p><button type="button" class="ix-btn pri" id="ix-rmk">' + (st.rec ? 'Make a New Recovery Key' : 'Create Recovery Key') + '</button>' +
             (st.rec ? '<button type="button" data-hold class="ix-btn danger" id="ix-rdel">Remove Recovery Key</button>' : '') + '</div><div id="ix-rshow"></div>',
             '<span class="ix-pill ' + (st.rec ? 'good' : '') + '">' + (st.rec ? (st.recGap ? 'Make a New One' : 'Created') : 'Not Created') + '</span>') +
           (st.recGap ? '<p class="ix-note">Your recovery key is older than Files and Cards. Make a new one below.</p>' : '') + '</div>' +
-          '<form id="ix-ef">' + card('danger', ICON.out, 'Remove Encryption', 'Locked tabs turn back into normal private tabs (still hidden from visitors) and backup files stop being locked. To use a different passphrase, change it above instead.',
+          '<form id="ix-ef">' + card('ix-split danger', ICON.out, 'Remove Encryption', 'Locked tabs turn back into normal private tabs (still hidden from visitors) and backup files stop being locked. To use a different passphrase, change it above instead.',
             '<div class="ix-frm">' + fd('ix-ecur', 'Your Passphrase', 'off') + fd('ix-epw', 'Website Password', 'current-password') + '</div>' +
             fd('ix-eold', 'Earlier Passphrase', 'off', 'The one your existing locked tabs use now.', 'ix-eoldw') +
             '<div class="ix-fact"><p class="ix-err" id="ix-ee"></p><button type="button" data-hold class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
       }
-      b.innerHTML = tabHead(ICON.lock, 'Encryption', 'One passphrase locks your Files, Cards and saved presets, your private tabs in Info and Links, and your backup files. Only you can unlock them.') + html;
+      b.innerHTML = html;
       var er = b.querySelector('#ix-ee'), val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
       var run = function (btn, msg, work, ok) {
         btn.disabled = true; er.textContent = msg;
@@ -2394,11 +2398,11 @@
     box.querySelector('#ix-on').onclick = function () {
       api('twostep_begin', {}).then(function (j) {
         if (!j.ok) { toast(j.error); return; }
-        box.innerHTML = head + tsBar(1) + ecCard('', ICON.device, 'Step 1: Scan the Code', 'Scan this with your authenticator app, or on your phone tap <a href="' + esc(j.uri) + '">open in app</a>. You can also type the key by hand.',
+        box.innerHTML = head + tsBar(1) + '<div class="ix-duo">' + ecCard('', ICON.device, 'Step 1: Scan the Code', 'Scan this with your authenticator app, or on your phone tap <a href="' + esc(j.uri) + '">open in app</a>. You can also type the key by hand.',
             '<div class="ix-qr" id="ix-qr"></div>' + linkField({ value: j.secret.replace(/(.{4})/g, '$1 ').trim(), copyText: j.secret, prefix: 'Key', readonly: true, label: 'Two-step key', cls: 'ix-uf-key', wrap: true })) +
           ecCard('', ICON.check, 'Step 2: Type the 6-Digit Code', 'The app now shows a code that changes every 30 seconds. Type the current one to finish.',
             '<div class="ix-fd"><label for="ix-tc">6-Digit Code</label><input type="text" id="ix-tc" inputmode="numeric" autocomplete="one-time-code" maxlength="7" style="max-width:220px"></div>' +
-            '<p class="ix-err" id="ix-te2"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-en">Turn On</button></div>') + '<div id="ix-rcs"></div>';
+            '<p class="ix-err" id="ix-te2"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-en">Turn On</button></div>') + '</div><div id="ix-rcs"></div>';
         qr(box.querySelector('#ix-qr'), j.uri);
         box.querySelector('#ix-tc').addEventListener('focus', function () { [].forEach.call(box.querySelectorAll('.ix-sbi'), function (x, k) { x.classList.toggle('now', k === 2); x.classList.toggle('done', k < 2); }); });
         box.querySelector('#ix-en').onclick = function () {

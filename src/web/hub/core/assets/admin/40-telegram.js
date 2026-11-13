@@ -50,19 +50,23 @@
           (function () {
             var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on;
             var pill = function (done, open) { return '<span class="ix-pill ' + (done ? 'good' : open ? 'warn' : '') + '">' + (done ? 'Done' : open ? 'Next' : 'Waiting') + '</span>'; };
-            // (1.78.0) two cards, one for each step: what to do, the fields and buttons in one row, and a Done mark when it is finished
-            return ecCard(d1 ? 'good' : '', ICON.key, '1. Create Your Bot', d1 ? 'Token saved (' + esc(n.tokenHint || 'hidden') + '). Paste a new one to replace it.' :
+            // (1.78.1) one box, two rows: each row has its number, what to do and its state on the left, the fields and buttons on the right
+            var row = function (num, done, title, state, desc, body) {
+              return '<div class="ix-srow' + (done ? ' done' : '') + '"><div class="ix-srow-h"><span class="ix-srow-n">' + (done ? '✓' : num) + '</span><div><div class="ix-srow-t">' + title + state + '</div><div class="ix-srow-d">' + desc + '</div></div></div><div class="ix-srow-b">' + body + '</div></div>';
+            };
+            return ecCard('', ICON.gear, 'Set Up Your Bot', 'Two short steps: create a bot, then connect your chat and send a test.',
+              row(1, d1, 'Create Your Bot', pill(d1, !d1), d1 ? 'Token saved (' + esc(n.tokenHint || 'hidden') + '). Paste a new one to replace it.' :
                 'In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It gives you a <b>token</b>, a long line of letters and numbers. Paste it here.',
-              '<div class="ix-fact ix-fbot"><div class="ix-fd ix-fdw"><label for="nt-tok">Bot Token</label><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '"></div>' +
-                '<button type="button" class="ix-btn pri" id="nt-st">' + (d1 ? 'Replace Token' : 'Save Token') + '</button>' + (d1 ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div>' +
-                '<p class="ix-note">It stays on your server and is only used to talk to Telegram.</p>', pill(d1, !d1)) +
-              ecCard(d4 ? 'good' : '', ICON.send, '2. Connect and Test', d3 ? 'Connected to <b>' + esc(n.chatName || n.chat) + '</b>' + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '. Send a test any time.' :
+                '<div class="ix-fact ix-fbot"><div class="ix-fd ix-fdw"><label for="nt-tok">Bot Token</label><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '"></div>' +
+                  '<button type="button" class="ix-btn pri" id="nt-st">' + (d1 ? 'Replace Token' : 'Save Token') + '</button>' + (d1 ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div>' +
+                  '<p class="ix-note">It stays on your server and is only used to talk to Telegram.</p>') +
+              row(2, d3, 'Connect and Test', pill(d3, d1), d3 ? 'Connected to <b>' + esc(n.chatName || n.chat) + '</b>. Send a test any time.' :
                 'Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.',
-              '<div class="ix-row"><button type="button" class="ix-btn' + (n.hasToken && !d3 ? ' pri' : '') + '" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button>' +
-                '<button type="button" class="ix-btn' + (d3 && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>' + (tested ? 'Send Another Test' : 'Send Test') + '</button>' +
-                (tested && d4 ? '<button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button>' : '') + '</div>' +
-                (chats && chats.length > 1 ? '<div class="ix-row" style="margin-top:10px">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '') +
-                (tested && d4 ? '<p class="ix-note"><span class="ix-ok">✓</span> <b>Test message sent.</b> It should be in Telegram now.</p>' : d3 ? '<p class="ix-note">You get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' : ''), pill(d3 && (tested || !!n.lastSent), d1)) +
+                '<div class="ix-row"><button type="button" class="ix-btn' + (n.hasToken && !d3 ? ' pri' : '') + '" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button>' +
+                  '<button type="button" class="ix-btn' + (d3 && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>' + (tested ? 'Send Another Test' : 'Send Test') + '</button>' +
+                  (tested && d4 ? '<button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button>' : '') + '</div>' +
+                  (chats && chats.length > 1 ? '<div class="ix-row" style="margin-top:10px">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '') +
+                  (tested && d4 ? '<p class="ix-note"><span class="ix-ok">✓</span> <b>Test message sent.</b> It should be in Telegram now.</p>' : d3 ? '<p class="ix-note">You get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' : ''))) +
               '<div class="ix-rcl">' + rowCard({ ic: ICON.clock, title: 'Keep It on Schedule', desc: 'Messages go out on time only if your host runs a small job every 10 minutes (a cron job).',
                 act: '<button type="button" class="ix-btn" id="nt-schb" aria-expanded="false">Show the Command</button>', hide: true, id: 'nt-sch',
                 body: '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +

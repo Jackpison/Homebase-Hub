@@ -172,8 +172,8 @@ try:
 
         # ---- (1.66.0) Telegram Setup, Updates (a step bar that is not clickable) ----
         pg.goto(s.base + '/web/settings/#telegram/setup'); wait_js(pg, "!!document.querySelector('#nt-tok')", 20000)
-        t0 = pg.evaluate("[[...document.querySelectorAll('.ix-tpane.ix-on .ix-ec-t, [data-tg=bot] .ix-ec-t')].map(e => e.firstChild.textContent), document.querySelectorAll('.ix-sbar, .ix-sbnav').length, document.querySelectorAll('[data-tg=bot] .ix-ec .ix-pill').length]")
-        check('P34 Telegram Setup is two cards, 1. Create Your Bot and 2. Connect and Test, each with its state, no step bar and no Back / Next (1.78.0)', t0 == [['1. Create Your Bot', '2. Connect and Test'], 0, 2], t0)
+        t0 = pg.evaluate("[[...document.querySelectorAll('[data-tg=bot] .ix-srow-t')].map(e => e.firstChild.textContent), document.querySelectorAll('.ix-sbar, .ix-sbnav').length, document.querySelectorAll('[data-tg=bot] .ix-ec .ix-srow .ix-pill').length, document.querySelectorAll('[data-tg=bot] .ix-ec').length]")
+        check('P34 Telegram Setup is one box with two numbered rows, Create Your Bot and Connect and Test, each with its state, no step bar and no Back / Next (1.78.1)', t0 == [['Create Your Bot', 'Connect and Test'], 0, 2, 1], t0)
         pg.goto(s.base + '/web/settings/#updates'); wait_js(pg, "!!document.querySelector('.ix-sbar.locked')", 20000)
         u0 = pg.evaluate("[document.querySelectorAll('.ix-sbar.locked .ix-sbi').length, document.querySelectorAll('.ix-sbar.locked button').length, document.querySelector('.ix-sbar.locked .ix-sbi.now b').textContent]")
         check('P35 Updates: the same bar shows where an update is, with no clickable steps', u0 == [4, 0, 'Upload the Zip'], u0)

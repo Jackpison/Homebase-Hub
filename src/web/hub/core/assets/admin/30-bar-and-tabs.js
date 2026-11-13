@@ -5,7 +5,7 @@
     tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp'));
     p.querySelector('#ix-tabreset').onclick = function () { draft.pages = []; tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp')); preview(); markDirty(true); };
   }
-  /* Settings > Appearance > Bar, the Tabs part (1.67.2; General > Tabs before 1.70.0, on Look & Bar since 1.78.0): one row per page with its colour tile (as in the bar), its name and a switch; drag a row to move it.
+  /* Settings > Appearance > Bar, the Tabs part (1.67.2; General > Tabs before 1.70.0, on Look since 1.78.0): one row per page with its colour tile (as in the bar), its name and a switch; drag a row to move it.
      A strip above shows the bar as it will look. Home is not listed: the logo and site name lead there (the dock shows it first). */
   var GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg>';
   function tabEditor(box, strip) {
