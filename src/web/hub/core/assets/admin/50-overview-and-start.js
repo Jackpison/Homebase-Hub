@@ -71,7 +71,7 @@
   }
   /* (1.66.0) One step bar for every step-by-step screen: thin bars with the step names under them. Done steps fill with the accent, the
      current one is bright, the ones to come are dim, a skipped one is dashed. o.keys: a data-open key per step (Guided Setup) or o.show (the
-     step whose card shows; bindStepBar switches it); o.locked: the bar only shows where you are (Updates, Two-Step Login). Phones show
+     step whose card shows); o.locked: the bar only shows where you are (Updates, Two-Step Login). Phones show
      only "2 of 4 · Name" under the bars. */
   function stepBar(names, at, o) {
     o = o || {};
@@ -82,24 +82,6 @@
       return o.locked ? '<span role="listitem" class="ix-sbi' + st + '" aria-label="' + esc(lab) + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><b>' + esc(n) + '</b></span>'
         : '<button type="button" role="listitem" class="ix-sbi' + st + '"' + attr + ' aria-label="' + esc(lab) + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><b>' + esc(n) + '</b></button>';
     }).join('') + '</div><div class="ix-sbph">' + (at + 1) + ' of ' + names.length + ' · ' + esc(names[Math.max(0, at)] || '') + '</div>';
-  }
-  /* Telegram Setup: the bar shows one step's card at a time (no redraw); Back and Next under it */
-  function bindStepBar(root, list, start) {
-    var bar = root.querySelector('.ix-sbar'), items = [].slice.call(list.children), ph = root.querySelector('.ix-sbph');
-    if (!bar || !items.length) return;
-    var names = [].map.call(bar.querySelectorAll('.ix-sbi b'), function (b) { return b.textContent; });
-    var show = function (n) {
-      n = Math.max(0, Math.min(items.length - 1, n));
-      items.forEach(function (li, i) { li.hidden = i !== n; if (i === n) li.classList.add('ix-sin'); });
-      [].forEach.call(bar.querySelectorAll('.ix-sbi'), function (b, i) { b.classList.toggle('now', i === n); if (i === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
-      if (ph) ph.textContent = (n + 1) + ' of ' + names.length + ' · ' + names[n];
-      list.dataset.at = String(n);
-      var bk = root.querySelector('[data-sb="back"]'), nx = root.querySelector('[data-sb="next"]');
-      if (bk) bk.disabled = n === 0; if (nx) nx.disabled = n === items.length - 1;
-    };
-    bar.addEventListener('click', function (e) { var b = e.target.closest('[data-stp]'); if (b) show(+b.dataset.stp); });
-    root.addEventListener('click', function (e) { var b = e.target.closest('[data-sb]'); if (b) show(+list.dataset.at + (b.dataset.sb === 'next' ? 1 : -1)); });
-    show(start == null ? Math.max(0, [].indexOf.call(bar.querySelectorAll('.ix-sbi'), bar.querySelector('.ix-sbi.now'))) : start);
   }
   function pSetup(p) {
     p.innerHTML = spinRow('Checking your setup…');

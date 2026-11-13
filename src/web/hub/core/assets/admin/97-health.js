@@ -2,8 +2,12 @@
   function daysLeft(d) { if (!d) return null; return Math.round((new Date(d + 'T12:00:00') - new Date()) / 864e5); }
   function leftText(n) { return n === null ? '' : n < 0 ? 'ended ' + -n + ' days ago' : n === 0 ? 'ends today' : n + (n === 1 ? ' day' : ' days') + ' left'; }
   function leftCls(n, warn) { return n === null ? '' : n < 0 ? 'bad' : n <= warn ? 'warn' : 'good'; }
+  /* (1.77.1) the six boxes: a coloured tile with an icon, a status dot, the number big, and a line under it */
+  var HC_ICON = { 'Version': [ICON.upload, '#14b8a6'], 'Schedule': [ICON.clock, '#3b82f6'], 'Last Backup': [ICON.box, '#f97316'], 'Domains': [ICON.send, '#a855f7'], 'Disk Used': [ICON.grid, '#0ea5e9'], 'PHP Errors': [ICON.warn, '#f43f5e'] };
   function hCard(label, val, sub, cls, go) {
-    return '<' + (go ? 'button type="button" data-go="' + go + '"' : 'div') + ' class="ix-hc ' + (cls || '') + '"><small>' + label + '</small><b>' + val + '</b><span>' + sub + '</span></' + (go ? 'button' : 'div') + '>';
+    var ic = HC_ICON[label] || [ICON.pulse, '#888'];
+    return '<' + (go ? 'button type="button" data-go="' + go + '"' : 'div') + ' class="ix-hc ' + (cls || '') + '"><span class="ix-hc-i" style="background:' + ic[1] + '">' + svg(ic[0]) + '</span>' +
+      '<span class="ix-hc-t"><small>' + label + '</small><b>' + val + '</b><span>' + sub + '</span></span><i class="ix-hc-d" aria-hidden="true"></i></' + (go ? 'button' : 'div') + '>';
   }
   /* Settings > Health: Overview, Domains and Uptime, Server Check */
   function health(sub) { go(sub || 'health'); }

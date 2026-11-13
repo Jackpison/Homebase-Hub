@@ -371,7 +371,7 @@
     var devAcc = acc('dev'); drawDevices();
     devAcc.addEventListener('toggle', function () { if (devAcc.open) drawDevices(); });
 
-    overview(); load();
+    load();   // (1.77.1) drawn once, when the data is there: it used to draw with empty values first, and then change
   }
   /* POST to Info's own API (encrypted tabs live there) with the site's security token. Resolves the fetch Response. */
   function infoApi(b) {

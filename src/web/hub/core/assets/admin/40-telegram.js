@@ -25,6 +25,7 @@
       }
       return '<div class="ix-sect">Right Now</div><div class="ix-checks">' + rows.join('') + '</div>';
     }
+    var tested = false;   // (1.77.1) a test message was sent in this visit: step 4 then says so and points to what comes next
     function draw(n, chats, msg, err) {
       var ready = n.hasToken && n.chat;
       if (msg) toast(msg);   // the message is also shown on the Status tab, but you may be on another tab when it arrives
@@ -50,7 +51,7 @@
             var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on, cur = !d1 ? 1 : !d3 ? 3 : !d4 ? 4 : 0;
             var stp = function (num, done, now, title, body) {
               return '<li class="ix-stp' + (done ? ' done' : now ? ' now' : '') + '"><span class="ix-stn">' + (done ? '✓' : num) + '</span><div class="ix-stb"><div class="ix-stt">' + title + '</div>' + body + '</div></li>'; };
-            return stepBar(['Make a Bot', 'Paste Its Token', 'Connect Your Chat', 'Send a Test'], cur ? cur - 1 : 3, { show: true, done: [d1, d1, d3, d4] }) + '<ol class="ix-stps ix-one">' +
+            return '<ol class="ix-stps ix-plain">' +
               stp(1, d1, cur === 1, 'Make a Bot', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It then gives you a <b>token</b>: a long line of letters and numbers.</p>') +
               stp(2, d1, false, 'Paste Its Token', '<div class="ix-fd">' + '<label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
                 '<button type="button" class="ix-btn pri" id="nt-st">Save Token</button>' + (n.hasToken ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div><small>It stays on your server and is only used to talk to Telegram.</small></div>') +
@@ -58,9 +59,12 @@
                 '<div class="ix-row"><button type="button" class="ix-btn" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button></div>' +
                 '<div class="ix-status">' + (n.chat ? '<span class="ix-ok">✓</span><span><b>Connected to</b> ' + esc(n.chatName || n.chat) + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '</span>' : '<span>!</span><span>No chat yet. Send <code>/start</code> to your bot first.</span>') + '</div>' +
                 (chats && chats.length > 1 ? '<div class="ix-row">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '')) +
-              stp(4, d4, cur === 4, 'Send a Test', '<p>You should get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' +
-                '<div class="ix-row"><button type="button" class="ix-btn" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div>') +
-              '</ol><div class="ix-row ix-sbnav"><button type="button" class="ix-btn" data-sb="back">Back</button><span></span><button type="button" class="ix-btn" data-sb="next">Next</button></div>' +
+              stp(4, d4, cur === 4, 'Send a Test', tested && d4
+                ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Test message sent.</b> It should be in Telegram now. If it is, setup is done.</span></div>' +
+                  '<div class="ix-row"><button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button><button type="button" class="ix-btn" id="nt-test">Send Another Test</button></div>'
+                : '<p>You should get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' +
+                  '<div class="ix-row"><button type="button" class="ix-btn" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div>') +
+              '</ol>' +
               ecCard('', ICON.clock, 'Keep It on Schedule', 'Messages and reminders are sent by a scheduled job (a cron job). Without one they only go out while one of your pages is open.',
                 '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +
                 linkField({ id: 'nt-cmd', value: n.cronCmd, prefix: 'Cron', readonly: true, label: 'Cron job command', cls: 'ix-uf-gap' }) +   // (1.69.1) the link field
@@ -89,12 +93,11 @@
           tabHead(ICON.pulse, 'Instant Replies', 'Tap Done or Snooze under reminders, or send commands. Only your own chat is answered.') +
           ecCard(n.hook ? 'good' : '', ICON.pulse, 'Instant Replies', n.hook ? 'Telegram sends each message straight to your site, so the bot answers at once.' : 'The site checks for messages every few minutes and whenever a page is open.',
             '<label class="ix-tg"><span>Instant Replies<small>' + (n.hook ? 'On.' + (n.hookInfo && n.hookInfo.error ? ' <span class="ix-err">Telegram reports: ' + esc(n.hookInfo.error) + '</span>' : '') : 'Off.') + '</small></span><input type="checkbox" id="nt-hook"' + (n.hook ? ' checked' : '') + (n.hasToken ? '' : ' disabled') + '></label>') +
-          '<div class="ix-duo"><div class="ix-mini"><b>When It Is On</b><p>Answers at once, and Approve in Telegram logs you in within a second. Needs https; if replies stop behind Cloudflare, add a WAF rule that skips <code>/web/hub/core/telegram.php</code>.</p></div>' +
-            '<div class="ix-mini"><b>When It Is Off</b><p>Everything still works, a few minutes slower.</p></div></div>' +
+          '<p class="ix-note ix-hknote">On: answers at once, and <b>Approve in Telegram</b> logs you in within a second (needs https). Off: everything still works, a few minutes slower. <span class="ix-cf">Behind Cloudflare? If replies stop, add a WAF rule that skips <code>/web/hub/core/telegram.php</code>.</span></p>' +
           ecCard('', ICON.cmd, 'Commands', 'Send any of these to your bot.',
-            '<div class="ix-cmds"><code>/today</code><span>Overdue and today, with Done buttons</span><code>/week</code><span>The next 7 days</span><code>/next</code><span>The next 10 tasks</span>' +
-            '<code>/add Netflix 649 monthly 5 Nov</code><span>A new task</span><code>/done Netflix</code><span>Mark one done</span><code>/snooze Netflix 2h</code><span>Pause its reminders</span>' +
-            '<code>/backup</code><span>A backup file now</span><code>/status</code><span>A quick health check</span></div>'));
+            '<div class="ix-cmdg">' + [['/today', 'Overdue and today, with Done buttons'], ['/week', 'The next 7 days'], ['/next', 'The next 10 tasks'], ['/add Netflix 649 monthly 5 Nov', 'A new task'],
+              ['/done Netflix', 'Mark one done'], ['/snooze Netflix 2h', 'Pause its reminders'], ['/backup', 'A backup file now'], ['/status', 'A quick health check']].map(function (c) {
+              return '<div class="ix-cmdc"><code>' + esc(c[0]) + '</code><span>' + esc(c[1]) + '</span></div>'; }).join('') + '</div>'));
       p.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { if (x.dataset.go === 'bk') { go('backup'); return; } var d = p.querySelector('details[data-tg="' + x.dataset.go + '"]'); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
       var call = function (action, body, btn, wait) {
         if (btn) btn.disabled = true;
@@ -108,7 +111,6 @@
         });
       };
       var tok = p.querySelector('#nt-tok');
-      var sl = p.querySelector('.ix-stps.ix-one'); if (sl) bindStepBar(sl.parentNode, sl);   // (1.66.0) one step at a time
       p.querySelector('#nt-st').onclick = function () {
         if (!tok.value.trim()) { tok.focus(); return; }
         call('notify_save', { token: tok.value.trim() }, this).then(function (j) { if (j) draw(j, null, 'Token saved. Now send /start to your bot and click Find My Chat.'); });
@@ -127,7 +129,7 @@
       p.querySelectorAll('[data-chat]').forEach(function (b) { b.onclick = function () {
         call('notify_save', { chat: b.dataset.chat }, b).then(function (j) { if (j) { j.chatName = j.chatName || b.dataset.name; call('notify_test', { chatName: b.dataset.name }).then(function (k) { draw(k || j, null, k ? 'Chat saved and a test message sent.' : ''); }); } });
       }; });
-      p.querySelector('#nt-test').onclick = function () { call('notify_test', {}, this).then(function (j) { if (j) draw(j, null, 'Test message sent. Check Telegram.'); }); };
+      p.querySelector('#nt-test').onclick = function () { call('notify_test', {}, this).then(function (j) { if (j) { tested = true; draw(j, null, 'Test message sent. Check Telegram.'); } }); };
       p.querySelector('#nt-now').onclick = function () { call('notify_run', {}, this).then(function (j) { if (j) draw(j, null, j.note || 'Done.', !j.ok); }); };
       p.querySelectorAll('[data-k]').forEach(function (c) { c.onchange = function () {
         var o = {}; o[c.dataset.k] = c.checked;

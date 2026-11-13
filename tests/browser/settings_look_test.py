@@ -329,7 +329,7 @@ try:
         fp = q.evaluate("[Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.round(document.getElementById('det').getBoundingClientRect().height), getComputedStyle(document.getElementById('det')).overflowY]")
         check('L25 phone, Files: nothing wider than the screen; the details sheet takes at most half the screen and scrolls inside', fp[0] <= 0 and fp[1] <= 844 // 2 + 2 and fp[2] == 'auto', fp)
         wide = []
-        for sec in ('overview', 'setup', 'general', 'nav', 'look', 'themes', 'colors', 'glass', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates', 'changelog', 'chmap'):
+        for sec in ('overview', 'setup', 'general', 'nav', 'look', 'themes', 'colors', 'glass', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates', 'changelog'):
             q.goto(s.base + '/web/settings/#' + sec); wait_js(q, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); q.wait_for_timeout(300)
             r = q.evaluate("""(() => { const strips = [...document.querySelectorAll('.ix-subt')], act = document.querySelector('.ix-subt [aria-selected=true]'), st = act && act.parentElement;
                 return [Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.max(0, ...strips.map(b => Math.round(b.getBoundingClientRect().right))),

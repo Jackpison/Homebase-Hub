@@ -45,7 +45,8 @@ const ICONS = {
   edit: "M4 20h4L19 9l-4-4L4 16zM13 7l4 4",
   x: "M6 6l12 12M18 6L6 18",
   lock: "M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3",
-  up: "M12 16V4M7 9l5-5 5 5M5 20h14"
+  up: "M12 16V4M7 9l5-5 5 5M5 20h14",
+  star: "M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"
 };
 const svg = (name, cls) => { const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("aria-hidden", "true"); if (cls) s.setAttribute("class", cls); const p = document.createElementNS(NS, "path"); p.setAttribute("d", ICONS[name] || ICONS.file); s.appendChild(p); return s; };
 const h = (tag, attrs, ...kids) => {
@@ -291,9 +292,11 @@ function render() {
   else if (!unlocked && D.items.length) { lock.hidden = false; lock.append(h("p", {}, h("b", { text: "Your files are locked. " }), "Type your encryption passphrase to see their names and open them."), h("button", { type: "button", class: "btn pri", text: "Unlock", onclick: () => { ensureKey(); } })); }
   else lock.hidden = true;
   /* rows */
+  for (const x of document.querySelectorAll("#app .sug")) x.remove();
   const list = shown(), box = $("list"), grid = D.settings.view === "grid";
   box.className = "list" + (grid ? " grid" : ""); box.replaceChildren();
-  if (list.length && !grid) box.append(h("div", { class: "lh", "aria-hidden": "true" }, h("span"), h("span", { text: "Name" }), h("span", { text: "Size" }), h("span", { text: "Date" }), h("span")));
+  if (list.length && !grid) box.append(h("div", { class: "lh", "aria-hidden": "true" }, h("span"), h("span", { text: "Name" }), h("span", { text: "Who Can See It" }), h("span", { text: "Size" }), h("span", { text: "Modified" }), h("span")));
+  const sug = suggested(); if (sug) $("drop").before(sug);
   for (const i of list) box.append(row(i));
   const none = $("none"); none.hidden = list.length > 0;
   none.classList.toggle("zone", !list.length && !q && (tab === "files" || !tab));   // (1.75.0) an empty folder is a drop zone
@@ -309,6 +312,24 @@ function render() {
   $("sync").textContent = D.items.length ? "Saved on your server, locked" : "";
 }
 
+/** (1.77.1) "Suggested for You": the newest files as cards above the list, in My Files at the top level (not while searching, not in a folder). */
+function suggested() {
+  if (tab !== "files" || cwd || q || !unlocked) return null;
+  const top = live().filter(i => i.t === "f").sort((a, b) => dateOf(b) - dateOf(a)).slice(0, 5);
+  if (top.length < 2) return null;
+  const ago = ms => { const d = Math.floor((Date.now() - ms) / 86400000); return d <= 0 ? "today" : d === 1 ? "yesterday" : when(ms); };
+  const sec = h("section", { class: "sug", "aria-label": "Suggested for you" }, h("div", { class: "sugh" }, h("h2", { text: "Suggested for You" }), h("small", { text: "Your newest files" })),
+    h("div", { class: "sugl" }, top.map(i => {
+      const shared = D.shares.some(x => x.id === i.id);
+      const c = h("button", { type: "button", class: "sugc", title: nameOf(i), onclick: () => pick1(i.id), ondblclick: () => openItem(i) },
+        h("span", { class: "sugi ico " + icoOf(i) + " fc" }, icoBody(i, "m")),
+        h("span", { class: "sugn", text: nameOf(i) }), h("small", { text: (shared ? "Shared · " : "") + "Added " + ago(dateOf(i)) }));
+      queueMicrotask(() => { const ic = c.querySelector(".ico"); if (ic) thumbWatch(ic, i); });
+      return c;
+    })));
+  return sec;
+}
+
 function row(i) {
   const isD = i.t === "d", name = nameOf(i), sz = sizeOf(i), at = dateOf(i);
   const where = q && i.p ? pathOf(i.p).map(nameOf).join(" / ") : "";
@@ -318,8 +339,13 @@ function row(i) {
   const open = h("button", { type: "button", class: "nm", title: name, onclick: () => { if (i.t === "d" || tab === "trash") return openItem(i); pick1(i.id); } },
     h("span", { class: "ico " + icoOf(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, D.settings.view === "grid" ? "m" : "s")), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
   const more = h("button", { type: "button", class: "ib more", "aria-label": "More for " + name, "aria-haspopup": "menu", onclick: e => menu(e.currentTarget, i) }, svg("more"));
+  const shared = D.shares.some(x => x.id === i.id);
+  const quick = tab === "trash" ? null : h("span", { class: "qa" },
+    i.t === "f" && D.settings.shares ? h("button", { type: "button", class: "qb", "aria-label": "Share " + name, onclick: e => { e.stopPropagation(); shareBox(i); } }, "Share") : null,
+    h("button", { type: "button", class: "ib qb", "aria-label": "Download " + name, title: "Download", onclick: e => { e.stopPropagation(); download([i.id]); } }, svg("down")),
+    i.t === "f" ? h("button", { type: "button", class: "ib qb", "aria-label": ((meta(i) || {}).st ? "Unstar " : "Star ") + name, title: "Star", "aria-pressed": String(!!(meta(i) || {}).st), onclick: e => { e.stopPropagation(); star(i); } }, svg("star")) : null);
   const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : ""), "data-id": i.id, ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); menu(more, i); } },
-    ck, open, h("span", { class: "cell sz num", text: isD ? "" : fmt(sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), more, h("span", { class: "cell meta", text: sub }));
+    ck, open, h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" : "Only you" }), h("span", { class: "cell sz num", text: isD ? "" : fmt(sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), quick, more, h("span", { class: "cell meta", text: sub }));
   if (D.settings.view === "grid") { const ic = open.querySelector(".ico"); if (ic) queueMicrotask(() => thumbWatch(ic, i)); }
   return el;
 }

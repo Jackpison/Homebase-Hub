@@ -18,7 +18,7 @@
  *   Bar        pNav (bar settings and tabs), tabEditor
  *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles), pDomains
  *   Overview   pOverview, whatsNew, decorateNav, pStart (Start Here: pSetup, Guided Setup, WZ, setupSteps)
- *   What's New mdInline, mdBlocks, clParse, pChangelog, pChMap, pChNotes (tabs of Updates)
+ *   Changelog mdInline, mdBlocks, clParse, pChangelog (a tab of Updates)
  *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles (shown in Health > Server Check)
  *   building blocks (used by every pane)  ecCard, ecField, ecChip, tabHead, tile, checkRow, spinRow
  *   Security   pSecurity, VK (devices), PP (password and encryption flows)
@@ -60,8 +60,8 @@
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
     ['health', 'Health', ICON.pulse, 'Version, speed, errors, domains and a check of your server.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
-    // (1.70.0) the Changelog is the What's New tab of Updates: one tab along the top, with Versions, Version Map and Notes below it
-    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Versions', 'What\'s New'], ['chmap', 'Version Map', 'What\'s New'], ['chnotes', 'Notes', 'What\'s New']], 'System Setting'],
+    // (1.77.1) Updates has two tabs: Update and Changelog (one list of every version; the old Notes moved to Features)
+    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Changelog']], 'System Setting'],
     // (1.76.0) Features: what the site does, page by page, with the settings of each part (Files' work right there)
     ['features', 'Features', ICON.grid, 'What the site offers, page by page.', [['features', 'All'], ['ft-home', 'Home'], ['ft-links', 'Links'], ['ft-info', 'Info'], ['ft-cards', 'Cards'], ['ft-tasks', 'Tasks'], ['ft-files', 'Files'], ['ft-tools', 'Tools']], 'System Setting']];
   /* (1.66.0) the left panel in the "System tiles" look: a solid colour tile with a white icon for each section (icons from Lucide,
@@ -87,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes, features: pFeatures };
+  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -203,7 +203,7 @@
     ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
     ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'check', 'extra changed missing leftover files'],
     ['Health', 'health', 'disk speed errors log'], ['Domains and Uptime', 'domains', 'expiry ssl hosting renewal'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
-    ['What\'s New', 'changelog', 'changelog versions history what changed new'], ['Version Map', 'chmap', 'all versions changelog'], ['Version Notes', 'chnotes', 'notes changelog']
+    ['Changelog', 'changelog', 'changelog versions history what changed new version map'], ['Good to Know', 'features', 'notes how updating works']
   ];
   function bindSearch(host) {
     var q = host.querySelector('#ix-ss'), box = host.querySelector('#ix-sres'); if (!q) return;
@@ -262,7 +262,7 @@
     mountPane(sub); subMark(); markDirty(); paintHead();
   }
   /* The tabs along the top of a section. A tab can hold a few tabs of its own when its third field names a group: each group is
-     then one tab, and a group with more than one part gets a small row of its own below. (Updates uses one: What's New.) */
+     then one tab, and a group with more than one part gets a small row of its own below.  */
   function grpOf(t) { return t[2] || t[1]; }
   function subTabs(subs, sub) {
     var cur = subs.filter(function (t) { return t[0] === sub; })[0] || subs[0], cg = grpOf(cur), groups = [];
@@ -1099,6 +1099,7 @@
       }
       return '<div class="ix-sect">Right Now</div><div class="ix-checks">' + rows.join('') + '</div>';
     }
+    var tested = false;   // (1.77.1) a test message was sent in this visit: step 4 then says so and points to what comes next
     function draw(n, chats, msg, err) {
       var ready = n.hasToken && n.chat;
       if (msg) toast(msg);   // the message is also shown on the Status tab, but you may be on another tab when it arrives
@@ -1124,7 +1125,7 @@
             var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on, cur = !d1 ? 1 : !d3 ? 3 : !d4 ? 4 : 0;
             var stp = function (num, done, now, title, body) {
               return '<li class="ix-stp' + (done ? ' done' : now ? ' now' : '') + '"><span class="ix-stn">' + (done ? '✓' : num) + '</span><div class="ix-stb"><div class="ix-stt">' + title + '</div>' + body + '</div></li>'; };
-            return stepBar(['Make a Bot', 'Paste Its Token', 'Connect Your Chat', 'Send a Test'], cur ? cur - 1 : 3, { show: true, done: [d1, d1, d3, d4] }) + '<ol class="ix-stps ix-one">' +
+            return '<ol class="ix-stps ix-plain">' +
               stp(1, d1, cur === 1, 'Make a Bot', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It then gives you a <b>token</b>: a long line of letters and numbers.</p>') +
               stp(2, d1, false, 'Paste Its Token', '<div class="ix-fd">' + '<label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
                 '<button type="button" class="ix-btn pri" id="nt-st">Save Token</button>' + (n.hasToken ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div><small>It stays on your server and is only used to talk to Telegram.</small></div>') +
@@ -1132,9 +1133,12 @@
                 '<div class="ix-row"><button type="button" class="ix-btn" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button></div>' +
                 '<div class="ix-status">' + (n.chat ? '<span class="ix-ok">✓</span><span><b>Connected to</b> ' + esc(n.chatName || n.chat) + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '</span>' : '<span>!</span><span>No chat yet. Send <code>/start</code> to your bot first.</span>') + '</div>' +
                 (chats && chats.length > 1 ? '<div class="ix-row">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '')) +
-              stp(4, d4, cur === 4, 'Send a Test', '<p>You should get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' +
-                '<div class="ix-row"><button type="button" class="ix-btn" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div>') +
-              '</ol><div class="ix-row ix-sbnav"><button type="button" class="ix-btn" data-sb="back">Back</button><span></span><button type="button" class="ix-btn" data-sb="next">Next</button></div>' +
+              stp(4, d4, cur === 4, 'Send a Test', tested && d4
+                ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Test message sent.</b> It should be in Telegram now. If it is, setup is done.</span></div>' +
+                  '<div class="ix-row"><button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button><button type="button" class="ix-btn" id="nt-test">Send Another Test</button></div>'
+                : '<p>You should get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' +
+                  '<div class="ix-row"><button type="button" class="ix-btn" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div>') +
+              '</ol>' +
               ecCard('', ICON.clock, 'Keep It on Schedule', 'Messages and reminders are sent by a scheduled job (a cron job). Without one they only go out while one of your pages is open.',
                 '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +
                 linkField({ id: 'nt-cmd', value: n.cronCmd, prefix: 'Cron', readonly: true, label: 'Cron job command', cls: 'ix-uf-gap' }) +   // (1.69.1) the link field
@@ -1163,12 +1167,11 @@
           tabHead(ICON.pulse, 'Instant Replies', 'Tap Done or Snooze under reminders, or send commands. Only your own chat is answered.') +
           ecCard(n.hook ? 'good' : '', ICON.pulse, 'Instant Replies', n.hook ? 'Telegram sends each message straight to your site, so the bot answers at once.' : 'The site checks for messages every few minutes and whenever a page is open.',
             '<label class="ix-tg"><span>Instant Replies<small>' + (n.hook ? 'On.' + (n.hookInfo && n.hookInfo.error ? ' <span class="ix-err">Telegram reports: ' + esc(n.hookInfo.error) + '</span>' : '') : 'Off.') + '</small></span><input type="checkbox" id="nt-hook"' + (n.hook ? ' checked' : '') + (n.hasToken ? '' : ' disabled') + '></label>') +
-          '<div class="ix-duo"><div class="ix-mini"><b>When It Is On</b><p>Answers at once, and Approve in Telegram logs you in within a second. Needs https; if replies stop behind Cloudflare, add a WAF rule that skips <code>/web/hub/core/telegram.php</code>.</p></div>' +
-            '<div class="ix-mini"><b>When It Is Off</b><p>Everything still works, a few minutes slower.</p></div></div>' +
+          '<p class="ix-note ix-hknote">On: answers at once, and <b>Approve in Telegram</b> logs you in within a second (needs https). Off: everything still works, a few minutes slower. <span class="ix-cf">Behind Cloudflare? If replies stop, add a WAF rule that skips <code>/web/hub/core/telegram.php</code>.</span></p>' +
           ecCard('', ICON.cmd, 'Commands', 'Send any of these to your bot.',
-            '<div class="ix-cmds"><code>/today</code><span>Overdue and today, with Done buttons</span><code>/week</code><span>The next 7 days</span><code>/next</code><span>The next 10 tasks</span>' +
-            '<code>/add Netflix 649 monthly 5 Nov</code><span>A new task</span><code>/done Netflix</code><span>Mark one done</span><code>/snooze Netflix 2h</code><span>Pause its reminders</span>' +
-            '<code>/backup</code><span>A backup file now</span><code>/status</code><span>A quick health check</span></div>'));
+            '<div class="ix-cmdg">' + [['/today', 'Overdue and today, with Done buttons'], ['/week', 'The next 7 days'], ['/next', 'The next 10 tasks'], ['/add Netflix 649 monthly 5 Nov', 'A new task'],
+              ['/done Netflix', 'Mark one done'], ['/snooze Netflix 2h', 'Pause its reminders'], ['/backup', 'A backup file now'], ['/status', 'A quick health check']].map(function (c) {
+              return '<div class="ix-cmdc"><code>' + esc(c[0]) + '</code><span>' + esc(c[1]) + '</span></div>'; }).join('') + '</div>'));
       p.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { if (x.dataset.go === 'bk') { go('backup'); return; } var d = p.querySelector('details[data-tg="' + x.dataset.go + '"]'); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
       var call = function (action, body, btn, wait) {
         if (btn) btn.disabled = true;
@@ -1182,7 +1185,6 @@
         });
       };
       var tok = p.querySelector('#nt-tok');
-      var sl = p.querySelector('.ix-stps.ix-one'); if (sl) bindStepBar(sl.parentNode, sl);   // (1.66.0) one step at a time
       p.querySelector('#nt-st').onclick = function () {
         if (!tok.value.trim()) { tok.focus(); return; }
         call('notify_save', { token: tok.value.trim() }, this).then(function (j) { if (j) draw(j, null, 'Token saved. Now send /start to your bot and click Find My Chat.'); });
@@ -1201,7 +1203,7 @@
       p.querySelectorAll('[data-chat]').forEach(function (b) { b.onclick = function () {
         call('notify_save', { chat: b.dataset.chat }, b).then(function (j) { if (j) { j.chatName = j.chatName || b.dataset.name; call('notify_test', { chatName: b.dataset.name }).then(function (k) { draw(k || j, null, k ? 'Chat saved and a test message sent.' : ''); }); } });
       }; });
-      p.querySelector('#nt-test').onclick = function () { call('notify_test', {}, this).then(function (j) { if (j) draw(j, null, 'Test message sent. Check Telegram.'); }); };
+      p.querySelector('#nt-test').onclick = function () { call('notify_test', {}, this).then(function (j) { if (j) { tested = true; draw(j, null, 'Test message sent. Check Telegram.'); } }); };
       p.querySelector('#nt-now').onclick = function () { call('notify_run', {}, this).then(function (j) { if (j) draw(j, null, j.note || 'Done.', !j.ok); }); };
       p.querySelectorAll('[data-k]').forEach(function (c) { c.onchange = function () {
         var o = {}; o[c.dataset.k] = c.checked;
@@ -1292,7 +1294,7 @@
   }
   /* (1.66.0) One step bar for every step-by-step screen: thin bars with the step names under them. Done steps fill with the accent, the
      current one is bright, the ones to come are dim, a skipped one is dashed. o.keys: a data-open key per step (Guided Setup) or o.show (the
-     step whose card shows; bindStepBar switches it); o.locked: the bar only shows where you are (Updates, Two-Step Login). Phones show
+     step whose card shows); o.locked: the bar only shows where you are (Updates, Two-Step Login). Phones show
      only "2 of 4 · Name" under the bars. */
   function stepBar(names, at, o) {
     o = o || {};
@@ -1303,24 +1305,6 @@
       return o.locked ? '<span role="listitem" class="ix-sbi' + st + '" aria-label="' + esc(lab) + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><b>' + esc(n) + '</b></span>'
         : '<button type="button" role="listitem" class="ix-sbi' + st + '"' + attr + ' aria-label="' + esc(lab) + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><b>' + esc(n) + '</b></button>';
     }).join('') + '</div><div class="ix-sbph">' + (at + 1) + ' of ' + names.length + ' · ' + esc(names[Math.max(0, at)] || '') + '</div>';
-  }
-  /* Telegram Setup: the bar shows one step's card at a time (no redraw); Back and Next under it */
-  function bindStepBar(root, list, start) {
-    var bar = root.querySelector('.ix-sbar'), items = [].slice.call(list.children), ph = root.querySelector('.ix-sbph');
-    if (!bar || !items.length) return;
-    var names = [].map.call(bar.querySelectorAll('.ix-sbi b'), function (b) { return b.textContent; });
-    var show = function (n) {
-      n = Math.max(0, Math.min(items.length - 1, n));
-      items.forEach(function (li, i) { li.hidden = i !== n; if (i === n) li.classList.add('ix-sin'); });
-      [].forEach.call(bar.querySelectorAll('.ix-sbi'), function (b, i) { b.classList.toggle('now', i === n); if (i === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
-      if (ph) ph.textContent = (n + 1) + ' of ' + names.length + ' · ' + names[n];
-      list.dataset.at = String(n);
-      var bk = root.querySelector('[data-sb="back"]'), nx = root.querySelector('[data-sb="next"]');
-      if (bk) bk.disabled = n === 0; if (nx) nx.disabled = n === items.length - 1;
-    };
-    bar.addEventListener('click', function (e) { var b = e.target.closest('[data-stp]'); if (b) show(+b.dataset.stp); });
-    root.addEventListener('click', function (e) { var b = e.target.closest('[data-sb]'); if (b) show(+list.dataset.at + (b.dataset.sb === 'next' ? 1 : -1)); });
-    show(start == null ? Math.max(0, [].indexOf.call(bar.querySelectorAll('.ix-sbi'), bar.querySelector('.ix-sbi.now'))) : start);
   }
   function pSetup(p) {
     p.innerHTML = spinRow('Checking your setup…');
@@ -1497,7 +1481,7 @@
   }
 
   /* ---------- Changelog: web/hub/docs/CHANGELOG.md, read through the API (the docs folder is closed to browsers) ---------- */
-  var CL = null, CLWANT = '';             // the parsed file (kept while Settings is open), and a version another tab asked to see
+  var CL = null;             // the parsed file (kept while Settings is open)
   function mdInline(src) {                // everything is escaped first; only code, bold, italic and web links are turned back into markup
     return String(src).split(/(`[^`]+`)/).map(function (part) {
       if (part.charAt(0) === '`' && part.length > 2 && part.charAt(part.length - 1) === '`') return '<code>' + esc(part.slice(1, -1)) + '</code>';
@@ -1641,27 +1625,6 @@
         setTimeout(function () { hit.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60);
       };
       var nb = p.querySelector('#ix-clnow'); if (nb) nb.onclick = function () { reveal(now.ver); };
-      if (CLWANT) { var want = CLWANT; CLWANT = ''; reveal(want); }          // sent here from the Version Map
-    }).catch(clFail(p));
-  }
-  function pChMap(p) {
-    p.innerHTML = spinRow('Reading the changelog…');
-    clLoad().then(function (cl) {
-      var open = {}; cl.entries.forEach(function (e) { open[e.ver] = 1; });
-      p.innerHTML = tabHead(ICON.clock, 'Version Map', 'Every version in one line. Click a version to read the full story.') +
-        '<div class="ix-tblw ix-vmap"><table><thead><tr><th>Version</th><th>What It Brought</th></tr></thead><tbody>' +
-        cl.mapRows.map(function (r) {
-          var first = r[0].split(/\s/)[0], link = open[first] || cl.entries.some(function (e) { return e.ver.indexOf(first) === 0; });
-          return '<tr' + (r[0] === cl.version ? ' class="cur"' : '') + '><td>' + (link ? '<button type="button" class="ix-linkb" data-v="' + esc(first) + '">' + esc(r[0]) + '</button>' : esc(r[0])) + (r[0] === cl.version ? ' <span class="ix-pill good">Installed</span>' : '') + '</td><td>' + mdInline(r[1]) + '</td></tr>'; }).join('') + '</tbody></table></div>';
-      p.querySelectorAll('[data-v]').forEach(function (b) { b.onclick = function () { CLWANT = b.dataset.v; subPane('changelog'); }; });
-    }).catch(clFail(p));
-  }
-  function pChNotes(p) {
-    p.innerHTML = spinRow('Reading the changelog…');
-    clLoad().then(function (cl) {
-      p.innerHTML = tabHead(ICON.info, 'Notes', 'How updating works, and a few things worth knowing.') +
-        (cl.notes.length ? cl.notes.map(function (x) { return '<section class="ix-ec"><div class="ix-ec-h"><span class="ix-ec-i">' + svg(ICON.info) + '</span><div><div class="ix-ec-t">' + esc(x.title) + '</div></div></div><div class="ix-ec-b ix-md">' + mdBlocks(x.body) + '</div></section>'; }).join('')
-          : '<div class="ix-empty"><b>No Notes</b></div>');
     }).catch(clFail(p));
   }
 
@@ -1711,7 +1674,7 @@
         ["Tasks Settings", "Your currency, when a task counts as due soon, what the page opens on, and how dates look."]] },
     { id: "files", name: "Files", c: "#0ea5e9", ic: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', url: "web/files/",
       lead: "Keep documents, photos and anything else on your own server, in folders you name. Each file is locked in your browser before it is sent, so the server only ever holds scrambled data.",
-      hl: [["Folders, search and preview", "Make folders, search by name, and open a picture, a PDF or a text file without downloading it. A folder downloads as one zip."],
+      hl: [["Suggested for You", "Your newest files sit above the list as cards, so what you were just working on is one click away.", 1], ["Point and act", "Share, Download and Star appear when you point at a row, and the list says who can see each file.", 1], ["Folders, search and preview", "Make folders, search by name, and open a picture, a PDF or a text file without downloading it. A folder downloads as one zip."],
         ["Locked before it leaves your browser", "Every file has its own key, and the name is locked too. Your passphrase unlocks them; the server never gets it."],
         ["Share links you control", "Make a link for one file and choose when it ends. The key sits after the # in the address, so it is never sent to your server. Switch share links off to end them all."],
         ["Starred and Recent", "Star the files you reach for, and see the newest ones under Recent."],
@@ -1728,16 +1691,25 @@
   ];
   FEATS.forEach(function (f) { PANES['ft-' + f.id] = function (p) { pFeature(p, f); }; PANE_FN.set('ft-' + f.id, PANES['ft-' + f.id]); });   // (the tabs themselves are listed in SECTIONS)
   function pFeatures(p) {
-    p.innerHTML = '<div class="ix-fgrid">' + FEATS.map(function (f) {
-      return '<button type="button" class="ix-fcard" data-ft="' + f.id + '"><span class="ix-fcard-h"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><b>' + esc(f.name) + '</b></span>' +
-        '<span class="ix-fcard-p">' + esc(f.lead) + '</span><span class="ix-fcard-m">' + f.hl.slice(0, 3).map(function (h) { return esc(h[0]); }).join(' · ') + '</span></button>';
+    p.innerHTML = '<div class="ix-fban"><div class="ix-fban-t"><div class="ix-fban-h">Seven Pages. One Home.</div><p>Everything below runs on your own server, with your data kept in one folder you can copy, back up and take with you.</p></div>' +
+      '<div class="ix-fban-s"><span><b>7</b>pages</span><span><b>100+</b>tools</span><span><b>0</b>trackers</span></div></div>' +
+      '<div class="ix-fgrid">' + FEATS.map(function (f) {
+      return '<button type="button" class="ix-fcard" style="--fc:' + f.c + '" data-ft="' + f.id + '"><span class="ix-fcard-h"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><b>' + esc(f.name) + '</b>' +
+        (f.hl.some(function (h) { return h[2]; }) ? '<span class="ix-cl-tag">New</span>' : '') + '</span>' +
+        '<span class="ix-fcard-p">' + esc(f.lead) + '</span><span class="ix-fcard-m">' + f.hl.slice(0, 3).map(function (h) { return '<i>' + esc(h[0]) + '</i>'; }).join('') + '</span></button>';
     }).join('') + '</div>';
     p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
+    // (1.77.1) the notes that used to be a tab of What's New: how updating works and a few things worth knowing
+    var nb = document.createElement('div'); p.appendChild(nb);
+    clLoad().then(function (cl) {
+      if (!cl.notes.length) return;
+      nb.innerHTML = '<h3 class="ix-fnotes">Good to Know</h3>' + cl.notes.map(function (x) { return '<section class="ix-ec"><div class="ix-ec-h"><span class="ix-ec-i">' + svg(ICON.info) + '</span><div><div class="ix-ec-t">' + esc(x.title) + '</div></div></div><div class="ix-ec-b ix-md">' + mdBlocks(x.body) + '</div></section>'; }).join('');
+    }).catch(function () {});
   }
   function pFeature(p, f) {
-    p.innerHTML = '<div class="ix-fhero"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
-      '<a class="ix-btn" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
-      '<div class="ix-fhl">' + f.hl.map(function (h) { return '<div class="ix-fhl-c"><b>' + esc(h[0]) + '</b><p>' + esc(h[1]) + '</p></div>'; }).join('') + '</div>';
+    p.innerHTML = '<div class="ix-fhero" style="--fc:' + f.c + '"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
+      '<a class="ix-btn pri" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
+      '<div class="ix-fhl">' + f.hl.map(function (h, i) { return '<div class="ix-fhl-c" style="--fc:' + f.c + '"><span class="ix-fhl-n">' + (i + 1) + '</span><div><b>' + esc(h[0]) + (h[2] ? ' <span class="ix-cl-tag">New</span>' : '') + '</b><p>' + esc(h[1]) + '</p></div></div>'; }).join('') + '</div>';
   }
   /* ---------- Updates ---------- */
   function rnd16() { var a = new Uint8Array(8); crypto.getRandomValues(a); return [].map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
@@ -2308,7 +2280,7 @@
     var devAcc = acc('dev'); drawDevices();
     devAcc.addEventListener('toggle', function () { if (devAcc.open) drawDevices(); });
 
-    overview(); load();
+    load();   // (1.77.1) drawn once, when the data is there: it used to draw with empty values first, and then change
   }
   /* POST to Info's own API (encrypted tabs live there) with the site's security token. Resolves the fetch Response. */
   function infoApi(b) {
@@ -3076,8 +3048,12 @@
   function daysLeft(d) { if (!d) return null; return Math.round((new Date(d + 'T12:00:00') - new Date()) / 864e5); }
   function leftText(n) { return n === null ? '' : n < 0 ? 'ended ' + -n + ' days ago' : n === 0 ? 'ends today' : n + (n === 1 ? ' day' : ' days') + ' left'; }
   function leftCls(n, warn) { return n === null ? '' : n < 0 ? 'bad' : n <= warn ? 'warn' : 'good'; }
+  /* (1.77.1) the six boxes: a coloured tile with an icon, a status dot, the number big, and a line under it */
+  var HC_ICON = { 'Version': [ICON.upload, '#14b8a6'], 'Schedule': [ICON.clock, '#3b82f6'], 'Last Backup': [ICON.box, '#f97316'], 'Domains': [ICON.send, '#a855f7'], 'Disk Used': [ICON.grid, '#0ea5e9'], 'PHP Errors': [ICON.warn, '#f43f5e'] };
   function hCard(label, val, sub, cls, go) {
-    return '<' + (go ? 'button type="button" data-go="' + go + '"' : 'div') + ' class="ix-hc ' + (cls || '') + '"><small>' + label + '</small><b>' + val + '</b><span>' + sub + '</span></' + (go ? 'button' : 'div') + '>';
+    var ic = HC_ICON[label] || [ICON.pulse, '#888'];
+    return '<' + (go ? 'button type="button" data-go="' + go + '"' : 'div') + ' class="ix-hc ' + (cls || '') + '"><span class="ix-hc-i" style="background:' + ic[1] + '">' + svg(ic[0]) + '</span>' +
+      '<span class="ix-hc-t"><small>' + label + '</small><b>' + val + '</b><span>' + sub + '</span></span><i class="ix-hc-d" aria-hidden="true"></i></' + (go ? 'button' : 'div') + '>';
   }
   /* Settings > Health: Overview, Domains and Uptime, Server Check */
   function health(sub) { go(sub || 'health'); }

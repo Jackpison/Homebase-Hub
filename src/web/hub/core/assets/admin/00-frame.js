@@ -18,7 +18,7 @@
  *   Bar        pNav (bar settings and tabs), tabEditor
  *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles), pDomains
  *   Overview   pOverview, whatsNew, decorateNav, pStart (Start Here: pSetup, Guided Setup, WZ, setupSteps)
- *   What's New mdInline, mdBlocks, clParse, pChangelog, pChMap, pChNotes (tabs of Updates)
+ *   Changelog mdInline, mdBlocks, clParse, pChangelog (a tab of Updates)
  *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles (shown in Health > Server Check)
  *   building blocks (used by every pane)  ecCard, ecField, ecChip, tabHead, tile, checkRow, spinRow
  *   Security   pSecurity, VK (devices), PP (password and encryption flows)
@@ -60,8 +60,8 @@
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
     ['health', 'Health', ICON.pulse, 'Version, speed, errors, domains and a check of your server.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
-    // (1.70.0) the Changelog is the What's New tab of Updates: one tab along the top, with Versions, Version Map and Notes below it
-    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Versions', 'What\'s New'], ['chmap', 'Version Map', 'What\'s New'], ['chnotes', 'Notes', 'What\'s New']], 'System Setting'],
+    // (1.77.1) Updates has two tabs: Update and Changelog (one list of every version; the old Notes moved to Features)
+    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Changelog']], 'System Setting'],
     // (1.76.0) Features: what the site does, page by page, with the settings of each part (Files' work right there)
     ['features', 'Features', ICON.grid, 'What the site offers, page by page.', [['features', 'All'], ['ft-home', 'Home'], ['ft-links', 'Links'], ['ft-info', 'Info'], ['ft-cards', 'Cards'], ['ft-tasks', 'Tasks'], ['ft-files', 'Files'], ['ft-tools', 'Tools']], 'System Setting']];
   /* (1.66.0) the left panel in the "System tiles" look: a solid colour tile with a white icon for each section (icons from Lucide,
@@ -87,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes, features: pFeatures };
+  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -203,7 +203,7 @@
     ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
     ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'check', 'extra changed missing leftover files'],
     ['Health', 'health', 'disk speed errors log'], ['Domains and Uptime', 'domains', 'expiry ssl hosting renewal'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
-    ['What\'s New', 'changelog', 'changelog versions history what changed new'], ['Version Map', 'chmap', 'all versions changelog'], ['Version Notes', 'chnotes', 'notes changelog']
+    ['Changelog', 'changelog', 'changelog versions history what changed new version map'], ['Good to Know', 'features', 'notes how updating works']
   ];
   function bindSearch(host) {
     var q = host.querySelector('#ix-ss'), box = host.querySelector('#ix-sres'); if (!q) return;
@@ -262,7 +262,7 @@
     mountPane(sub); subMark(); markDirty(); paintHead();
   }
   /* The tabs along the top of a section. A tab can hold a few tabs of its own when its third field names a group: each group is
-     then one tab, and a group with more than one part gets a small row of its own below. (Updates uses one: What's New.) */
+     then one tab, and a group with more than one part gets a small row of its own below.  */
   function grpOf(t) { return t[2] || t[1]; }
   function subTabs(subs, sub) {
     var cur = subs.filter(function (t) { return t[0] === sub; })[0] || subs[0], cg = grpOf(cur), groups = [];

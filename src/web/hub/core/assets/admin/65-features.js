@@ -44,7 +44,7 @@
         ["Tasks Settings", "Your currency, when a task counts as due soon, what the page opens on, and how dates look."]] },
     { id: "files", name: "Files", c: "#0ea5e9", ic: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', url: "web/files/",
       lead: "Keep documents, photos and anything else on your own server, in folders you name. Each file is locked in your browser before it is sent, so the server only ever holds scrambled data.",
-      hl: [["Folders, search and preview", "Make folders, search by name, and open a picture, a PDF or a text file without downloading it. A folder downloads as one zip."],
+      hl: [["Suggested for You", "Your newest files sit above the list as cards, so what you were just working on is one click away.", 1], ["Point and act", "Share, Download and Star appear when you point at a row, and the list says who can see each file.", 1], ["Folders, search and preview", "Make folders, search by name, and open a picture, a PDF or a text file without downloading it. A folder downloads as one zip."],
         ["Locked before it leaves your browser", "Every file has its own key, and the name is locked too. Your passphrase unlocks them; the server never gets it."],
         ["Share links you control", "Make a link for one file and choose when it ends. The key sits after the # in the address, so it is never sent to your server. Switch share links off to end them all."],
         ["Starred and Recent", "Star the files you reach for, and see the newest ones under Recent."],
@@ -61,14 +61,23 @@
   ];
   FEATS.forEach(function (f) { PANES['ft-' + f.id] = function (p) { pFeature(p, f); }; PANE_FN.set('ft-' + f.id, PANES['ft-' + f.id]); });   // (the tabs themselves are listed in SECTIONS)
   function pFeatures(p) {
-    p.innerHTML = '<div class="ix-fgrid">' + FEATS.map(function (f) {
-      return '<button type="button" class="ix-fcard" data-ft="' + f.id + '"><span class="ix-fcard-h"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><b>' + esc(f.name) + '</b></span>' +
-        '<span class="ix-fcard-p">' + esc(f.lead) + '</span><span class="ix-fcard-m">' + f.hl.slice(0, 3).map(function (h) { return esc(h[0]); }).join(' · ') + '</span></button>';
+    p.innerHTML = '<div class="ix-fban"><div class="ix-fban-t"><div class="ix-fban-h">Seven Pages. One Home.</div><p>Everything below runs on your own server, with your data kept in one folder you can copy, back up and take with you.</p></div>' +
+      '<div class="ix-fban-s"><span><b>7</b>pages</span><span><b>100+</b>tools</span><span><b>0</b>trackers</span></div></div>' +
+      '<div class="ix-fgrid">' + FEATS.map(function (f) {
+      return '<button type="button" class="ix-fcard" style="--fc:' + f.c + '" data-ft="' + f.id + '"><span class="ix-fcard-h"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><b>' + esc(f.name) + '</b>' +
+        (f.hl.some(function (h) { return h[2]; }) ? '<span class="ix-cl-tag">New</span>' : '') + '</span>' +
+        '<span class="ix-fcard-p">' + esc(f.lead) + '</span><span class="ix-fcard-m">' + f.hl.slice(0, 3).map(function (h) { return '<i>' + esc(h[0]) + '</i>'; }).join('') + '</span></button>';
     }).join('') + '</div>';
     p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
+    // (1.77.1) the notes that used to be a tab of What's New: how updating works and a few things worth knowing
+    var nb = document.createElement('div'); p.appendChild(nb);
+    clLoad().then(function (cl) {
+      if (!cl.notes.length) return;
+      nb.innerHTML = '<h3 class="ix-fnotes">Good to Know</h3>' + cl.notes.map(function (x) { return '<section class="ix-ec"><div class="ix-ec-h"><span class="ix-ec-i">' + svg(ICON.info) + '</span><div><div class="ix-ec-t">' + esc(x.title) + '</div></div></div><div class="ix-ec-b ix-md">' + mdBlocks(x.body) + '</div></section>'; }).join('');
+    }).catch(function () {});
   }
   function pFeature(p, f) {
-    p.innerHTML = '<div class="ix-fhero"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
-      '<a class="ix-btn" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
-      '<div class="ix-fhl">' + f.hl.map(function (h) { return '<div class="ix-fhl-c"><b>' + esc(h[0]) + '</b><p>' + esc(h[1]) + '</p></div>'; }).join('') + '</div>';
+    p.innerHTML = '<div class="ix-fhero" style="--fc:' + f.c + '"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
+      '<a class="ix-btn pri" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
+      '<div class="ix-fhl">' + f.hl.map(function (h, i) { return '<div class="ix-fhl-c" style="--fc:' + f.c + '"><span class="ix-fhl-n">' + (i + 1) + '</span><div><b>' + esc(h[0]) + (h[2] ? ' <span class="ix-cl-tag">New</span>' : '') + '</b><p>' + esc(h[1]) + '</p></div></div>'; }).join('') + '</div>';
   }

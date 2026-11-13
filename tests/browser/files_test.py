@@ -174,6 +174,8 @@ try:
 
         # ---- the limit ----
         pg.click('#crumbs button:first-child')
+        sg = pg.evaluate("(() => [document.querySelectorAll('#app .sug .sugc').length, document.querySelectorAll('#list .row .qa').length > 0, [...document.querySelectorAll('#list .row .cell.vis')].every(c => /^(Only you|Anyone with the link)$/.test(c.textContent)), (document.querySelector('#list .lh') || {}).textContent])()")
+        check('B34c the top of My Files shows "Suggested for You" cards, each row says who can see it, and has Share / Download / Star for when you point at it', 2 <= sg[0] <= 5 and sg[1] and sg[2] and 'Who Can See It' in sg[3], sg)
         pg.evaluate("document.getElementById('psets').click()"); pg.wait_for_selector('#dlim')
         fs = pg.evaluate("(() => { const d = document.getElementById('dlg'); const o = document.getElementById('donly'), sh = document.getElementById('dsh'); return [d.classList.contains('ix-sdlg'), !!d.querySelector('.ix-sh .ix-sx'), !!d.querySelector('.ix-sb'), o.checked, o.disabled, o.classList.contains('ix-sw'), sh.classList.contains('ix-sw'), d.querySelector('.ix-sh h2').textContent]; })()")
         check('B34b Files Settings is the shared Settings window: a close X, Only Me locked on, Share Links as a switch', fs == [True, True, True, True, True, True, True, 'Files Settings'], fs)

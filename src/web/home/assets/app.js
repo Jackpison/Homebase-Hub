@@ -1676,7 +1676,7 @@ BG.start();
 $('#nextBg').addEventListener('click', () => BG.next());
 addEventListener('keydown', e => {
   if (/** @type {Element} */ (e.target).matches('input, textarea') || $$('dialog[open]').length) return;
-  if (e.key === 'e' && !editing) $('#editBtn').click();
+  if (e.key === 'e') { if (editing) exitEdit(); else $('#editBtn').click(); }
   if (e.key === 'Escape' && editing) exitEdit();
 });
 })();

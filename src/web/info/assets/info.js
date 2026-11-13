@@ -992,6 +992,7 @@ function setEdit(on){
 }
 function renderAuth(){$("eLogout").hidden=!(server&&locked&&authed)}
 $("editBtn").onclick=()=>{
+  if(EDIT){if(openEdits()){setStatus("Save or cancel the box you're editing first.");return}setEdit(false);return}   // the E key turns editing off again
   if(!loaded){setStatus("Still loading. Try again in a moment.");return}
   if(server&&!locked){HUB.login().then(()=>location.reload(),()=>{});return}   // a new site: the login box sets the password
   guard(()=>setEdit(true));

@@ -1,5 +1,5 @@
   /* ---------- Changelog: web/hub/docs/CHANGELOG.md, read through the API (the docs folder is closed to browsers) ---------- */
-  var CL = null, CLWANT = '';             // the parsed file (kept while Settings is open), and a version another tab asked to see
+  var CL = null;             // the parsed file (kept while Settings is open)
   function mdInline(src) {                // everything is escaped first; only code, bold, italic and web links are turned back into markup
     return String(src).split(/(`[^`]+`)/).map(function (part) {
       if (part.charAt(0) === '`' && part.length > 2 && part.charAt(part.length - 1) === '`') return '<code>' + esc(part.slice(1, -1)) + '</code>';
@@ -143,27 +143,6 @@
         setTimeout(function () { hit.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60);
       };
       var nb = p.querySelector('#ix-clnow'); if (nb) nb.onclick = function () { reveal(now.ver); };
-      if (CLWANT) { var want = CLWANT; CLWANT = ''; reveal(want); }          // sent here from the Version Map
-    }).catch(clFail(p));
-  }
-  function pChMap(p) {
-    p.innerHTML = spinRow('Reading the changelog…');
-    clLoad().then(function (cl) {
-      var open = {}; cl.entries.forEach(function (e) { open[e.ver] = 1; });
-      p.innerHTML = tabHead(ICON.clock, 'Version Map', 'Every version in one line. Click a version to read the full story.') +
-        '<div class="ix-tblw ix-vmap"><table><thead><tr><th>Version</th><th>What It Brought</th></tr></thead><tbody>' +
-        cl.mapRows.map(function (r) {
-          var first = r[0].split(/\s/)[0], link = open[first] || cl.entries.some(function (e) { return e.ver.indexOf(first) === 0; });
-          return '<tr' + (r[0] === cl.version ? ' class="cur"' : '') + '><td>' + (link ? '<button type="button" class="ix-linkb" data-v="' + esc(first) + '">' + esc(r[0]) + '</button>' : esc(r[0])) + (r[0] === cl.version ? ' <span class="ix-pill good">Installed</span>' : '') + '</td><td>' + mdInline(r[1]) + '</td></tr>'; }).join('') + '</tbody></table></div>';
-      p.querySelectorAll('[data-v]').forEach(function (b) { b.onclick = function () { CLWANT = b.dataset.v; subPane('changelog'); }; });
-    }).catch(clFail(p));
-  }
-  function pChNotes(p) {
-    p.innerHTML = spinRow('Reading the changelog…');
-    clLoad().then(function (cl) {
-      p.innerHTML = tabHead(ICON.info, 'Notes', 'How updating works, and a few things worth knowing.') +
-        (cl.notes.length ? cl.notes.map(function (x) { return '<section class="ix-ec"><div class="ix-ec-h"><span class="ix-ec-i">' + svg(ICON.info) + '</span><div><div class="ix-ec-t">' + esc(x.title) + '</div></div></div><div class="ix-ec-b ix-md">' + mdBlocks(x.body) + '</div></section>'; }).join('')
-          : '<div class="ix-empty"><b>No Notes</b></div>');
     }).catch(clFail(p));
   }
 
