@@ -80,7 +80,7 @@ And around the pages:
 |---|---|
 | ⚙️&nbsp;**Settings** | Guided Setup for protection, 141 looks and your own colours, backup and restore, updates and health checks |
 | ✈️&nbsp;**[Telegram](#telegram)** | A daily digest, Due Now messages with Done, Skip and Snooze buttons, and backup files sent to your chat |
-| 📱&nbsp;**On your phone** | Add the site to the home screen of a phone or computer and it opens like an app, with its own icon and no browser bars (Settings > Overview > Start Here > Install on Your Phone). Swipe between pages. Nothing is kept offline: your data always comes from your server |
+| 📱&nbsp;**On your phone** | Add the site to the home screen of a phone or computer and it opens like an app, with its own icon and no browser bars (Settings > Features > Install on Your Phone). Swipe between pages. Nothing is kept offline: your data always comes from your server |
 | 🛡️&nbsp;**[Security](#security-in-short)** | One password, optional two-step login, encrypted tabs and backups, and checked updates you can undo |
 
 <p align="right"><a href="#readme-top">↑ Back to top</a></p>
@@ -181,7 +181,7 @@ Chrome, Edge, Firefox, Brave, Opera and Safari all export an .html file that Lin
 3. Open your domain and click the key icon. Enter the setup code from `site-data/core/SETUP-CODE.php` and choose a password.
 
 > [!TIP]
-> Open **Settings > Overview > Guided Setup** next. It walks you through a strong password, two-step login, an encryption passphrase, a first backup and Telegram, one step at a time.
+> Open **Settings > General > Start Here** next. It walks you through a strong password, two-step login, an encryption passphrase, a first backup and Telegram, one step at a time.
 
 > [!WARNING]
 > **Never delete `site-data`.** It holds all your data, and updates never touch it.
@@ -282,7 +282,7 @@ Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari. On Links, p
 <details>
 <summary><b>Does it work offline?</b></summary>
 <br>
-Only if you switch it on, one device at a time. Offline Reading (Settings > Overview > Start Here) keeps a read-only copy of Home, Links, Info, Cards and Tasks on that device; Log Out deletes it. Off (the default), your data always comes from your server, and only what you send with the phone's Share button waits in the browser, for a day at most.
+Only if you switch it on, one device at a time. Offline Reading (Settings > Features) keeps a read-only copy of Home, Links, Info, Cards and Tasks on that device; Log Out deletes it. Off (the default), your data always comes from your server, and only what you send with the phone's Share button waits in the browser, for a day at most.
 </details>
 
 <details>

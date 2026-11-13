@@ -89,10 +89,26 @@ Names in **bold** are the names the screen shows.
 - [x] Hyperspeed and Aero Shards (WebGPU) are for computers only: never offered or fetched on a phone. Reduce Motion keeps to the designs that can stand still.
 - *Screenshots:* Home with a design; the Background sheet with Animated Designs; an Options sheet. *Website:* the Home page has an Animated designs tile; About says the files keep the React Bits licence.
 
-## 9. Settings Overview (1.53.1)
+## 9. Settings, regrouped (1.53.1 to 1.77.4)
 
-- [x] **What's New** loads only the newest version's notes (faster); the full Changelog opens from it.
-- *Screenshot:* `s-overview` right after an update (What's New card).
+- [x] **Overview is gone** (1.77.2). **Start Here** (the Guided Setup) is a tab of **General**; **Install on Your Phone**, **Keyboard Shortcuts** and **Offline Reading** are at the bottom of **Features**. The old **What's New** card went with it; **Updates > Changelog** lists every version, with the installed one marked.
+- [x] **Logs** (1.77.2), a section of its own: **Notifications** (every message the site showed, kept even after it closed, grouped by day, All or Problems), **Sign-Ins** and **PHP Errors**.
+- [x] **Features** (1.77.3): each page is a row with **Open** and **See More**; a page's tab lists its highlights and **Related Settings** buttons that open the matching settings (Home: Look, Colors, Glass; Links: Back Up, Export, Import; Files: Encryption, Back Up; Tasks: Telegram Messages, Instant Replies).
+- [x] **Telegram > Setup** (1.77.3) is one box with two steps (create the bot; connect your chat and send a test), each with a status (Done, Next, Waiting). **Keep It on Schedule** is a row below it.
+- [x] **Backup & Restore > Back Up** (1.77.4) opens with one box (when the last full backup was, **Download Backup**), then a reminder row, then Telegram and Cloud Backup.
+- [x] **Health**'s six boxes are shorter (1.77.2).
+- *Screenshots to retake:* `s-overview` is gone (use General, Features and Logs); Telegram Setup, Backup and Features.
+
+## 9b. The bell and the look (1.77.2)
+
+- [x] The **bell** is always there, on every page. Each message has a coloured icon that matches what happened and slides in; missed ones stay in the list until you clear it.
+- [x] One look for **search boxes**, **on/off switches** (the accent colour when on) and **buttons** (a colour sweeps in from the corner when you point at them). Light and dark switch with a circle that grows from the button.
+
+## 9c. Files (1.77.2)
+
+- [x] The **details panel** on the right is open by default: it shows what is in the folder, with **Select All** (also above the list). It no longer repeats **Share** and **More**.
+- [x] **Share Link** is one window: your links on top, then how long the next one lasts. Making a link copies it.
+- *Screenshots to retake:* `files-settings`, the Files page with the details panel, the Share window.
 
 ## 10. For the people who keep it running (1.53.2 to 1.59.0)
 
