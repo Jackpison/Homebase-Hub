@@ -140,7 +140,7 @@ try:
         for sec in ('general', 'look', 'backup', 'updates', 'security'):
             pg.goto(s.base + '/web/settings/#' + sec); wait_js(pg, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); pg.wait_for_timeout(500)
             widths[sec] = pg.evaluate("Math.max(...[...document.querySelectorAll('#ix-pc > *')].filter(e => !e.classList.contains('ix-tabbar') && e.offsetParent).map(e => Math.round(e.getBoundingClientRect().width)))")
-        check('L19 every section stops at the same width (the content width, 1040 px at most)', len(set(widths.values())) == 1 and all(w <= 1041 for w in widths.values()), widths)
+        check('L19 every section stops at the same width (the content width, 1160 px at most)', len(set(widths.values())) == 1 and all(w <= 1161 for w in widths.values()), widths)
         pg.goto(s.base + '/web/settings/#colors'); wait_js(pg, "!!document.querySelector('#ix-pc .ix-seg')", 20000)
         gap = pg.evaluate("(() => { const s = document.querySelector('#ix-pc .ix-row .ix-seg'), b = [...document.querySelectorAll('#ix-pc .ix-row button')].find(x => /^Reset/.test(x.textContent)); return Math.round(b.getBoundingClientRect().left - s.getBoundingClientRect().right); })()")
         check('L20 Colors: Reset sits next to the Dark/Light choice', 0 <= gap <= 30, gap)

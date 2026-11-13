@@ -883,7 +883,7 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-oc .ix-btn{padding-top:6px}
 
 /* (1.75.0) the Settings content uses the room it has (it stopped at 780 px and left a wide empty strip on the right) */
-#ix-page{--ix-cw:1040px}
+#ix-page{--ix-cw:1160px}
 
 /* (1.75.0) Overview as boxes side by side (like the features-card mock-up): the big one with four parts to pick, Health, Protection Steps, and what needs a look */
 #ix-page .ix-bento{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr);gap:16px;max-width:var(--ix-cw)}

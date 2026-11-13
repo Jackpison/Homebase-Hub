@@ -407,7 +407,7 @@ html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!impo
 @supports (interpolate-size:allow-keywords){#ix-dlg{interpolate-size:allow-keywords}}
 @media (prefers-reduced-motion:reduce){#ix-dlg.open,#ix-dlg .ix-box,#ix-dlg.closing,#ix-dlg.closing .ix-box{animation:none}}
 /* ===================== Settings as a page (web/settings/) ===================== */
-html[data-ix-app="settings"] .wrap{max-width:1240px;margin:0 auto;padding:18px 18px 40px}
+html[data-ix-app="settings"] .wrap{max-width:1480px;margin:0 auto;padding:18px 18px 40px}
 .ix-ld{color:var(--ix-mu)}
 /* the Settings page paints its own page,like every other page does: dark and light follow the theme,and the Colors you chose */
 html[data-ix-app="settings"]{color-scheme:dark}
