@@ -440,6 +440,7 @@ try:
         check('P70 messages are cards in the bottom right corner, and the same message twice is one card', nc[0] == 2 and nc[1] <= 24 and nc[2] <= 24 and nc[3], nc)
         pg.click('#ix-toast .ix-nc >> nth=0 >> .ix-nx'); pg.click('#ix-toast .ix-nc >> nth=0 >> .ix-nx')
         wait_js(pg, "!document.querySelector('#ix-toast .ix-nc')", 5000)
+        pg.mouse.move(5, 5)   # a card that appears under a resting pointer is held (hover keeps it), so the pointer goes away first
         pg.evaluate("HUB.toast('Quiet note')"); wait_js(pg, "!document.querySelector('#ix-toast .ix-nc')", 9000)
         wait_js(pg, "!!document.querySelector('#ix-bell') && !document.querySelector('#ix-bell').hidden", 5000)
         pg.click('#ix-bell'); pg.wait_for_selector('#ix-nlist .ix-nc')
