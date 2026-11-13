@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.76.0 | What's New by series with filters, a Features section, and a Files storage limit you can set to any size |
 | 1.75.0 | One message stack in the bottom right with a bell for missed ones, sliding-pill tabs, a wider Settings with one header and a box-style Overview, a timeline for What's New, six Spotlight presets, and a Files drop zone |
 | 1.74.2 | Settings: pill sub-tabs, Security in four tabs, a new Overview and Colors, per-page colors always shown; smoother sliders; a flatter phone top bar; quicker CI |
 | 1.74.1 | Animated designs no longer block menus and page changes, Background has four tabs and a Mix Everything theme, Home's Welcome Text and the search shine are gone, and the top bar and sidebar highlight the current page like the dock |
@@ -145,6 +146,30 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.76.0
+
+### What's New
+
+- The versions are grouped by series (1.75, 1.74 and so on). The series you are on is open; the rest are closed. Each version is one line with its tags and a short summary.
+- The version you have sits on top, with a **Read the Notes** button.
+- Filter chips (All, New, Fixes, Settings, Files, Security) show only the versions that have that kind of change. Search, Expand All and Collapse All stay.
+- This replaces the timeline of 1.75.0.
+
+### Features
+
+- A new section in System: **Features**. It has a card for each page (Home, Links, Info, Cards, Tasks, Files and Tools) and a tab for each one, saying what the page does and where its settings are.
+- **Files** has its settings right there: Storage Limit, Share Links, Keep Deleted Files and Default View. They save as soon as you change them.
+
+### Files
+
+- The **Storage Limit** is a size you pick (5, 10, 25, 50 or 100 GB, or No Limit) or type yourself, in MB, GB or TB. It shows what is used and what the server has left, and says so when the limit is more than the server can hold. It is in Files Settings and in Features.
+
+### Settings
+
+- The Settings page is wider (up to 1480 px, with the content up to 1160 px), so less room is left empty on each side.
 
 ---
 

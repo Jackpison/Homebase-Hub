@@ -153,7 +153,7 @@ try:
         fx = pg.evaluate("(() => [...document.querySelectorAll('#ix-cll details.ix-cl')].filter(d => !d.hidden).length)()")
         check('L27b the Fixes chip hides the versions that fixed nothing', 0 < fx < pg.evaluate("document.querySelectorAll('#ix-cll details.ix-cl').length"), fx)
         pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-fcard').length === 7", 20000)
-        check('L28 Features: a card for each of the seven pages, and a tab for each', pg.evaluate("document.querySelectorAll('#ix-pane .ix-subt [data-sub]').length") == 8)
+        check('L28 Features: a card for each of the seven pages, and a tab for each', pg.evaluate("document.querySelectorAll('#ix-pane .ix-subt [role=tab]').length") == 8)
         pg.goto(s.base + '/web/settings/#ft-files'); wait_js(pg, "!!document.getElementById('ix-flnum')", 20000)
         pg.click('#ix-flch [data-b]:nth-child(3)'); pg.fill('#ix-flnum', '1.5'); pg.select_option('#ix-flun', 'TB'); pg.click('#ix-flsave')
         until(lambda: pg.evaluate("fetch('../files/api.php?action=list').then(r => r.json()).then(j => j.settings.limit)") == 1649267441664, 10000)
