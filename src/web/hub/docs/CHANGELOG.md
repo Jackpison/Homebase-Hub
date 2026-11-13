@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.77.4 | Backup & Restore › Back Up is one hero box with Download Backup, and the reminder is a row |
 | 1.77.3 | Telegram Setup in one box with two steps, and every Features row opens its page and its related settings |
 | 1.77.2 | A Logs section, always-visible Notifications with colourful icons, Overview folded into General, a timeline for Telegram Setup, a Files details panel with Select All, and a simpler Share Link window |
 | 1.77.1 | A Dropbox-style Files page, a Features showcase, a simpler Telegram setup, a Changelog tab, and the E key turns editing off again |
@@ -150,6 +151,15 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.77.4
+
+### Settings
+
+- **Backup & Restore › Back Up** opens with one box: when the last full backup was, a short note on what a backup is, and the **Download Backup** button. The old three-box strip is gone.
+- **Remind Me to Back Up** is a row with its own menu, followed by Telegram and Cloud Backup.
 
 ---
 
