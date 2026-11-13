@@ -456,7 +456,7 @@ try:
         check('P71 Telegram > Setup: the two cron lines are link fields ("Cron", "curl"); the key in the address shows as dots, and Copy gives the whole curl line with the real key (1.69.1)',
               tg[0][0] == 'Cron' and 'cron.php' in tg[0][1] and tg[1][0] == 'curl' and 'key=•••••' in tg[1][1] and cp.startswith('curl -s "http') and 'key=' in cp and '•' not in cp and cp.endswith('"'), (tg, len(cp)))
         sp.goto(s.base + '/web/settings/#telegram/instant-replies'); wait_js(sp, "document.querySelectorAll('.ix-cmdc').length > 0", 20000); sp.evaluate(CLIP)
-        sp.click('.ix-cmdc >> nth=3'); sp.wait_for_timeout(150)
+        sp.click('.ix-cmdc >> nth=3'); wait_js(sp, "window.__cp !== null && !!document.querySelector('.ix-cmdc.ok')", 5000)
         cm = sp.evaluate("[window.__cp, (document.querySelector('.ix-cmdc.ok em') || {}).textContent, document.querySelectorAll('button.ix-cmdc').length]")
         check('P71b Telegram > Instant Replies: each of the 8 commands is a button, and a click copies it (1.78.0)', cm == ['/add Netflix 649 monthly 5 Nov', 'Copied', 8], cm)
         sp.goto(s.base + '/web/links/'); wait_js(sp, "document.querySelectorAll('.cat').length > 0", 20000); sp.evaluate(CLIP)
