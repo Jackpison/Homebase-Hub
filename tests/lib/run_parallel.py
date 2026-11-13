@@ -8,7 +8,7 @@ A word with * in it is expanded like a shell would (the zip's name has a version
 --retry 1 (CI): a test that failed runs once more, alone, after the others. Passing then, it counts as passed, but its first try is
 shown as warnings and named in a "flaky" warning (and in the job summary), so a test that needs the second try is never hidden.
 A real failure fails twice and stays red. More than one retry is refused: a test that needs more is broken."""
-import concurrent.futures, glob, os, shlex, subprocess, sys, time
+import concurrent.futures, glob, os, re, shlex, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -47,7 +47,7 @@ def main(argv):
         results = list(ex.map(one, specs))   # map keeps the order given, whichever test ends first
     # the second try: one at a time, so a test that only failed because others slowed it down gets the machine to itself
     again = {i: one(specs[i]) for i, r in enumerate(results) if r[1] != 0} if retry else {}
-    bad, flaky = 0, []
+    bad, flaky, failed = 0, [], []
     for i, (title, code, out, secs) in enumerate(results):
         if i in again and again[i][1] == 0:
             print('::group::%s (%d s, failed, then passed alone in %d s)' % (title, secs, again[i][3]), flush=True)
@@ -64,10 +64,20 @@ def main(argv):
             print('--- second try, alone: failed again ---', flush=True); show(title, again[i][2]); code = again[i][1]
         else: show(title, out)
         print('::endgroup::', flush=True)
-        if code != 0: bad += 1
+        if code != 0:
+            bad += 1
+            last = again[i][2] if i in again else out
+            why = [l for l in last.splitlines() if l.startswith('FAIL ')] or [l for l in last.splitlines() if re.search(r'Error|Timeout|waiting for|line \d+, in <module>', l)][-3:] or [l for l in last.splitlines() if l.strip()][-2:]
+            failed.append((title, why[:4]))
     print('%d of %d tests passed%s, %d s in all (one after another: %d s)' % (len(results) - bad, len(results),
           ' (%d only on a second try: %s)' % (len(flaky), ', '.join(f[0] for f in flaky)) if flaky else '', time.time() - t0, sum(r[3] for r in results)), flush=True)
     summary = os.environ.get('GITHUB_STEP_SUMMARY')
+    if failed:   # the answer first: which test, and the line that says why (the long output is in the groups above)
+        print('\nFAILED TESTS:', flush=True)
+        for ti, why in failed: print('  %s: %s' % (ti, ' | '.join(w.strip() for w in why)[:500]), flush=True)
+        if summary:
+            with open(summary, 'a') as f:
+                f.write('### Failed tests\n\n' + ''.join('- **%s**: `%s`\n' % (ti, ' | '.join(w.strip() for w in why)[:300].replace('`', "'")) for ti, why in failed) + '\n')
     if flaky and summary:
         with open(summary, 'a') as f:
             f.write('### Passed only on a second try (flaky: fix the test)\n\n' + ''.join('- **%s**: %s\n' % (t, '; '.join(x[:200] for x in fl) or 'crashed') for t, fl in flaky) + '\n')

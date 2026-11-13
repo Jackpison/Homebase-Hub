@@ -20,6 +20,7 @@ PNG = open(os.path.join(FIX, 'fixture-image.png'), 'rb').read()
 def names(pg): return pg.evaluate("[...document.querySelectorAll('#list .row .nm')].map(e => e.getAttribute('title'))")
 def row(pg, name): return pg.locator('#list .row', has=pg.locator('.nm[title="%s"]' % name))
 def menu(pg, name, item):
+    if pg.is_visible('.uph .ubtn'): pg.click('.uph .ubtn')   # finished uploads sit over the last rows: clear them, so the click never depends on where the panel is
     row(pg, name).locator('.more').click(); pg.locator('.pm button', has_text=item).first.click()
 def wait_names(pg, want, timeout=15000): return until(lambda: all(w in names(pg) for w in want), timeout)
 def upload(pg, name, data, mime='application/octet-stream'): pg.set_input_files('#pick', {'name': name, 'mimeType': mime, 'buffer': data})
@@ -223,7 +224,6 @@ try:
         check('B46 Shared Links is empty until a file has a link, with a hint', pg.is_visible('#none') and 'No share links' in pg.inner_text('#none'), pg.inner_text('#none'))
         pg.click('#tabs button[data-t=files]')
         pg.click('#newb'); check('B47 New offers Upload Files and New Folder', pg.inner_text('.pm') .replace('\n', ' ').count('Upload Files') == 1 and 'New Folder' in pg.inner_text('.pm')); pg.keyboard.press('Escape')
-        if pg.is_visible('.uph .ubtn'): pg.click('.uph .ubtn')   # the finished uploads sit over the last rows; clear them first
         menu(pg, 'pack.zip', 'Move to Trash'); until(lambda: 'pack.zip' not in names(pg), 10000)
         pg.wait_for_selector('#ix-toast.on .ix-tact', timeout=5000)
         check('B48 Move to Trash says so, with an Undo button', 'Moved to the Trash' in pg.inner_text('#ix-toast') and 'Undo' in pg.inner_text('#ix-toast'), pg.inner_text('#ix-toast'))

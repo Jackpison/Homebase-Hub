@@ -49,6 +49,40 @@ jobs:
             echo "- The other browsers: weekly and monthly, in Scheduled checks, not here."
           } >> "$GITHUB_STEP_SUMMARY"
 
+  quick:
+    # The fast lane (about 2 minutes): lint, types, unit tests, version and dead-code checks. The slow jobs below wait for it, so a lint or
+    # unit failure shows up at once and no browser minutes are spent on a build that is already broken. scripts/precheck.py runs the same
+    # checks on your own computer before you push.
+    name: quick checks
+    needs: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false, fetch-depth: 50 }
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24', cache: npm }
+      - name: PHP 8.3 - lint
+        run: find src -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+      - name: PHP 8.3 - unit tests (Telegram snooze, /add, dates, update names, backup encryption)
+        run: php tests/unit/run.php
+      - name: Version agrees everywhere (scripts/release.py --check) and its own test
+        run: python3 scripts/release.py --check && python3 tests/repo/release_test.py
+      - name: npm packages
+        run: npm ci --ignore-scripts
+      - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
+        run: npx eslint src tools-app
+      - name: TypeScript check (the files that start with ts-check - keys, locked data, share links)
+        run: npx tsc -p config/tsconfig.json && npx tsc -p config/tsconfig.links.json && npx tsc -p config/tsconfig.home.json && npx tsc -p config/tsconfig.cards.json && npx tsc -p config/tsconfig.tasks.json && npx tsc -p config/tsconfig.info.json && python3 tests/repo/tscheck_test.py
+      - name: Dead code (a PHP function, constant, JavaScript function or CSS class that nothing uses)
+        run: python3 tests/repo/dead_code_test.py
+      - name: Python lint (ruff, for syntax errors and unused or undefined names in tests and scripts)
+        run: python3 -m venv /tmp/rf && /tmp/rf/bin/pip install -q ruff==0.14.0 && /tmp/rf/bin/ruff check
+      - name: The push checker's own test
+        run: python3 tests/repo/precheck_test.py
+
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -61,10 +95,6 @@ jobs:
         with: { php-version: '8.3' }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: '24', cache: npm }
-      - name: PHP 8.3 - lint
-        run: find src -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
-      - name: PHP 8.3 - unit tests (Telegram snooze, /add, dates, update names, backup encryption)
-        run: php tests/unit/run.php
       - name: PHPStan (static analysis)
         run: |
           curl -fsSL -o phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.1.33/phpstan.phar
@@ -82,20 +112,10 @@ jobs:
           echo "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757  actionlint.tar.gz" | sha256sum -c -
           tar xzf actionlint.tar.gz actionlint
           ./actionlint -color
-      - name: Python lint (ruff, for syntax errors and unused or undefined names in tests and scripts)
-        run: python3 -m venv /tmp/rf && /tmp/rf/bin/pip install -q ruff==0.14.0 && /tmp/rf/bin/ruff check
-      - name: Dead code (a PHP function, constant, JavaScript function or CSS class that nothing uses)
-        run: python3 tests/repo/dead_code_test.py
-      - name: Version agrees everywhere (scripts/release.py --check) and its own test
-        run: python3 scripts/release.py --check && python3 tests/repo/release_test.py
       - name: Build
         run: npm ci --ignore-scripts && python3 scripts/build.py
       - name: Tools is exactly what tools-app builds (no stale library in the committed files)
         run: python3 scripts/build-tools.py --check
-      - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
-        run: npx eslint src tools-app
-      - name: TypeScript check (the files that start with ts-check - keys, locked data, share links)
-        run: npx tsc -p config/tsconfig.json && npx tsc -p config/tsconfig.links.json && npx tsc -p config/tsconfig.home.json && npx tsc -p config/tsconfig.cards.json && npx tsc -p config/tsconfig.tasks.json && npx tsc -p config/tsconfig.info.json && python3 tests/repo/tscheck_test.py
       - name: Check zip name and changelog
         run: |
           set -- build/site-update-*.zip
@@ -106,7 +126,7 @@ jobs:
         run: python3 tests/repo/php_matrix.py --install
 
   server:
-    needs: changes
+    needs: [changes, quick]
     if: needs.changes.outputs.code == 'true' && needs.changes.outputs.servers == 'true'   # skipped on a docs-only change and when no PHP, deploy or build file changed
     # Updates, hostile zips and the core features: PHP and Python only, no browser to install. Runs beside the browser jobs.
     runs-on: ubuntu-24.04
@@ -159,7 +179,7 @@ jobs:
           python3 tests/server/files_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "files server"
 
   browsers:
-    needs: changes
+    needs: [changes, quick]
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
     # Every page in a real browser: Chromium, in two halves (pages, tools), side by side. WebKit (every iPhone browser uses it) runs every Monday and Firefox on the
     # 1st of the month, in scheduled.yml. A push runs the light set: the pages half only (one job, about 4 minutes). The tools half (Tools, Files, the designs, the slow-phone test) joins it when Tools or the
@@ -251,7 +271,7 @@ jobs:
           exit $rc
 
   apache:
-    needs: changes
+    needs: [changes, quick]
     if: needs.changes.outputs.code == 'true' && needs.changes.outputs.servers == 'true'   # skipped on a docs-only change and when no PHP, deploy or build file changed
     # The ready-made server setups in deploy/: Apache (the .htaccess files), nginx with PHP-FPM, the Docker image with Caddy,
     # nginx as YunoHost sets it up, and the install scripts for a VPS and Proxmox.
@@ -311,11 +331,15 @@ jobs:
   ci-ok:
     # The one check that sums up CI: it fails when any job failed or was cancelled, and passes when every job passed
     # or was skipped (a docs-only change). The check to require on main if required checks are ever turned on.
+    # When something failed, the run's summary page names each failed job and step first, so you do not open the logs to find out what.
     name: ci-ok
-    needs: [changes, build, server, browsers, apache]
+    needs: [changes, quick, build, server, browsers, apache]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read   # list this run's jobs to name the failed ones
     steps:
       - env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
@@ -324,3 +348,17 @@ jobs:
           for r in $RESULTS; do
             case "$r" in success|skipped) ;; *) echo "A job ended as: $r"; exit 1 ;; esac
           done
+      - name: Name what failed (the run's summary page)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            echo "### What failed"
+            echo
+            gh api "repos/$REPO/actions/runs/$RUN/jobs?per_page=100" --jq '.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | select(.name != "ci-ok") | "- **\(.name)**: " + ([.steps[] | select(.conclusion == "failure") | .name] | join(", ") | if . == "" then .conclusion else . end)' || echo "- (could not list the jobs)"
+            echo
+            echo "A failed browser test is named with its reason under **Failed tests** in that job's own summary."
+          } >> "$GITHUB_STEP_SUMMARY"
