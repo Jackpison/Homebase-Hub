@@ -1,93 +1,74 @@
-  /* ---------- Features (1.76.0): what the site does, page by page, and the settings of each part, in one place ----------
-     Files' settings (storage limit, Trash, share links, view) work right here. The other pages say where theirs are. */
+  /* ---------- Features (1.76.0): a showcase of what the site offers, page by page (the same words as the website's feature pages).
+     It holds no settings: each page keeps its own (Files Settings in Files, Home Settings in Home, and so on). ---------- */
   var FEATS = [
-    { id: 'home', name: 'Home', c: '#3b82f6', ic: ICON.home, url: 'web/home/', lead: 'Your own start page: a clock, your day in frosted-glass widgets, and background photos that change. Show it with the bar, or without it.',
-      tags: ['Widgets', 'Photos that change', 'Animated designs', 'Glass', 'Search from anywhere'],
-      where: [['Show the Bar on the Home Page', 'Off keeps the home page clean.', 'go', 'nav'], ['Colors and Glass', 'The look of the glass widgets.', 'go', 'glass'], ['Widgets, photos and designs', 'On the Home page itself, in its Settings.', 'url', 'web/home/']] },
-    { id: 'links', name: 'Links', c: '#22c55e', ic: 'M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7', url: 'web/links/', lead: 'Bookmarks in tabs and categories, with icons saved on your server. Bring yours from any browser in a minute.',
-      tags: ['Import with a preview', 'Easy to undo', 'Encrypted tabs', 'Most opened'],
-      where: [['Tabs in the bar', 'Which pages show, and in what order.', 'go', 'nav'], ['Import Center', 'Bring links from a browser, Raindrop or Pocket.', 'go', 'backup'], ['Colors and sizes', 'On the Links page, in its Settings.', 'url', 'web/links/']] },
-    { id: 'info', name: 'Info', c: '#a855f7', ic: ICON.log, url: 'web/info/', lead: 'Notes in tabs. Each tab holds 1 to 12 boxes, or is written as one document with an outline.',
-      tags: ['Boxes', 'Document tabs', 'Export as PDF or text', 'Undo after a delete'],
-      where: [['Encryption for locked tabs', 'One passphrase for locked tabs and files.', 'go', 'security'], ['Tab layout and boxes', 'On the Info page, in its Settings.', 'url', 'web/info/']] },
-    { id: 'cards', name: 'Cards', c: '#ec4899', ic: 'M3 6h18v12H3zM3 10h18', url: 'web/cards/', lead: 'Your cards in a table you can search and filter, with the yearly charges added up.',
-      tags: ['Searchable table', 'Yearly charges', 'Export to Excel', 'Sent only after login'],
-      where: [['Encryption', 'Card details are locked in your browser.', 'go', 'security'], ['Holders and Banks', 'On the Cards page, in its Settings.', 'url', 'web/cards/']] },
-    { id: 'tasks', name: 'Tasks', c: '#f59e0b', ic: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9', url: 'web/tasks/', lead: 'Add a task in plain words, set it to repeat, and let Telegram nudge you with Done, Skip and Snooze.',
-      tags: ['Plain words', 'Repeats', 'Calendar link', 'Year in Review'],
-      where: [['Telegram reminders', 'Done, Skip and Snooze on your phone.', 'go', 'telegram'], ['Time zone', 'Today and due times follow it.', 'go', 'general'], ['Calendar, repeats and analytics', 'On the Tasks page, in its Settings.', 'url', 'web/tasks/']] },
-    { id: 'files', name: 'Files', c: '#0ea5e9', ic: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', url: 'web/files/', lead: 'Keep documents, photos and anything else on your own server. Each file is locked in your browser before it is sent, so the server only ever holds scrambled data.',
-      tags: ['Locked in your browser', 'Share links', 'Trash', 'Starred and Recent', 'Share from your phone'], live: true,
-      where: [['Encryption', 'The passphrase that locks your files.', 'go', 'security'], ['Backup & Restore', 'Files are included in a full backup.', 'go', 'backup']] },
-    { id: 'tools', name: 'Tools', c: '#14b8a6', ic: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.6-.6-.6-2.6z', url: 'web/tools/', lead: 'Resize and convert images, merge and sign PDFs, work out loans and savings, make invoices, scan QR codes and more.',
-      tags: ['Over 100 tools', 'Runs in your browser', 'Favourites', 'Saved presets'],
-      where: [['Offline Reading', 'Keep pages on this device.', 'go', 'setup'], ['Menu or tabs, favourites', 'On the Tools page, in its Settings.', 'url', 'web/tools/']] }
+    { id: "home", name: "Home", c: "#3b82f6", ic: ICON.home, url: "web/home/",
+      lead: "Your own start page: a clock, your day in frosted-glass widgets, and background photos that change. Show it with the bar, or without it.",
+      hl: [["Widgets, just for you", "Today's tasks with Quick Add, a countdown, a note from Info, recent tools, a calendar, a scratch pad, a quote, world clocks and the weather. Visitors see only the clock."],
+        ["Photos with credit", "Each photo keeps its credit in the corner."],
+        ["Phone-sized copies", "Large photos get a smaller copy for phones, so the page opens quickly."],
+        ["With or without the bar", "Show the start page full screen, or keep the bar. It is a setting in Settings, Appearance, Look."],
+        ["Search from anywhere", "Press / or Ctrl+K on any page to search Links, Info, Tasks and Tools at once."],
+        ["Animated designs", "Sixteen backgrounds drawn live, from React Bits: light, galaxies, waves and more. Choose which take turns and change their colours. The heaviest are for computers only."],
+        ["Glass your way", "Home Settings sets the glass: Light, Dark or Solid, how see-through, and how much it blurs."],
+        ["Pull for a new photo", "On a phone, pull down from the top for the next background."]] },
+    { id: "links", name: "Links", c: "#22c55e", ic: 'M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7', url: "web/links/",
+      lead: "Bookmarks in tabs and categories, with icons saved on your server. Bring yours from any browser in a minute.",
+      hl: [["Import with a preview", "Pick the file, see how many links and which folders become which categories, then choose a new tab or an existing one. Links you already have are not added twice."],
+        ["Easy to undo", "A copy of Links is kept just before an import, in Settings, Backup and Restore, Earlier Versions."],
+        ["Colours and sizes", "Each tab can have its own column colours and text sizes."],
+        ["Encrypted tabs", "Tabs can be encrypted with your passphrase. The keys are made in your browser."],
+        ["See which links you open most", "Each link shows how often it was opened, at the end of its row. Only you see the numbers; links in encrypted tabs are never counted."],
+        ["One bar while you edit", "Press the pencil, choose Edit This Page, and Colors, Fetch Icons, Import Bookmarks and Links Settings sit in one bar at the bottom."]] },
+    { id: "info", name: "Info", c: "#a855f7", ic: ICON.log, url: "web/info/",
+      lead: "Notes in tabs. Each tab holds 1 to 12 boxes, or is written as one document with an outline.",
+      hl: [["Boxes you can size and arrange", "Each tab holds 1 to 12 boxes. Resize them and put them where you want."],
+        ["Cards or a document", "Arrange boxes as cards, or write the tab as one document with an outline."],
+        ["Export as PDF or text", "Export one tab, or all of them."],
+        ["Found by search", "Search covers the text of your notes, not only their titles."],
+        ["Undo after a delete", "Delete a box or a tab by mistake and a message offers Undo for 7 seconds. It comes back with its text, also in a locked tab."],
+        ["Settings in one window", "Info Settings holds privacy, text sizes and how the edit bar looks."]] },
+    { id: "cards", name: "Cards", c: "#ec4899", ic: 'M3 6h18v12H3zM3 10h18', url: "web/cards/",
+      lead: "Your cards in a table you can search and filter, with the yearly charges added up.",
+      hl: [["One searchable table", "Search your cards, and filter by bank, network, type and holder."],
+        ["Yearly charges added up", "See what your cards cost you in a year."],
+        ["Export to Excel", "Take a copy whenever you need one."],
+        ["Sent only after login", "Card data is not sent to a browser until you are logged in."],
+        ["Holders and Banks", "One window to rename or add the people your cards belong to, and one for every bank: its name, the link it opens, and how many cards."]] },
+    { id: "tasks", name: "Tasks", c: "#f59e0b", ic: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9', url: "web/tasks/",
+      lead: "Add a task in plain words, set it to repeat, and let Telegram nudge you with Done, Skip and Snooze.",
+      hl: [["Add in plain words", "Type a name, a price and how often, like Netflix 649 monthly 5 Nov, and the task fills itself in."],
+        ["Calendar and analytics", "See your tasks on a calendar, and how they add up in Analytics."],
+        ["Done, Skip or Snooze on Telegram", "Handle a reminder from the message itself: snooze for 1 hour, 3 hours or until tomorrow."],
+        ["Year in Review", "A PDF that looks back over your year of bills, renewals and chores."],
+        ["Calendar Link", "Turn it on in Tasks Settings for a secret link, and your tasks show up in Google Calendar, Apple Calendar or Outlook. A new link ends the old one."],
+        ["Tasks Settings", "Your currency, when a task counts as due soon, what the page opens on, and how dates look."]] },
+    { id: "files", name: "Files", c: "#0ea5e9", ic: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', url: "web/files/",
+      lead: "Keep documents, photos and anything else on your own server, in folders you name. Each file is locked in your browser before it is sent, so the server only ever holds scrambled data.",
+      hl: [["Folders, search and preview", "Make folders, search by name, and open a picture, a PDF or a text file without downloading it. A folder downloads as one zip."],
+        ["Locked before it leaves your browser", "Every file has its own key, and the name is locked too. Your passphrase unlocks them; the server never gets it."],
+        ["Share links you control", "Make a link for one file and choose when it ends. The key sits after the # in the address, so it is never sent to your server. Switch share links off to end them all."],
+        ["Starred and Recent", "Star the files you reach for, and see the newest ones under Recent."],
+        ["Share from your phone", "In the installed app on Android, share a photo or a file to Homebase Hub and save it to Files, or open it in Tools."],
+        ["Files Settings", "The storage limit, share links on or off, and how long the Trash keeps things."]] },
+    { id: "tools", name: "Tools", c: "#14b8a6", ic: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.6-.6-.6-2.6z', url: "web/tools/",
+      lead: "Resize and convert images, merge and sign PDFs, work out loans and savings, make invoices, scan QR codes and more. Search, star your favourites and get on with your day.",
+      hl: [["Heavy engines load on demand", "OCR, background removal and PDF encryption load only when a tool needs them."],
+        ["Favourites and your own order", "Star favourites, drag tools to reorder them or move them between sections, and hide the ones you never use."],
+        ["Side menu or tabs", "Show the sections as a side menu, or as tabs on top. Phones always get tabs."],
+        ["Search them all", "Find a tool by name or by what it does."],
+        ["Calculators and documents", "Loans, savings, deposits, percentages, dates, units and amounts in words; invoices as PDF, text compare, Markdown and spreadsheets."],
+        ["Saved presets", "Keep a signature, a watermark, a QR style, image sizes or your business details on your server, while logged in. They are in your backups too."]] }
   ];
   FEATS.forEach(function (f) { PANES['ft-' + f.id] = function (p) { pFeature(p, f); }; PANE_FN.set('ft-' + f.id, PANES['ft-' + f.id]); });   // (the tabs themselves are listed in SECTIONS)
-  var GBY = { MB: 1048576, GB: 1073741824, TB: 1099511627776 };
-  function fBytes(n) { var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0; n = +n || 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return (i ? (n >= 100 ? n.toFixed(0) : n.toFixed(1)) : n) + ' ' + u[i]; }
-  function featHead(f) {
-    return '<div class="ix-fhero"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
-      '<a class="ix-btn" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
-      '<div class="ix-ftags">' + f.tags.map(function (t) { return '<span class="ix-cl-tag">' + esc(t) + '</span>'; }).join('') + '</div>';
-  }
   function pFeatures(p) {
     p.innerHTML = '<div class="ix-fgrid">' + FEATS.map(function (f) {
-        return '<button type="button" class="ix-fcard" data-ft="' + f.id + '"><span class="ix-fcard-h"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><b>' + esc(f.name) + '</b>' +
-          (f.live ? '<span class="ix-cl-tag">Settings here</span>' : '') + '</span><span class="ix-fcard-p">' + esc(f.lead) + '</span><span class="ix-fcard-m">' + f.tags.slice(0, 3).map(esc).join(' · ') + '</span></button>';
-      }).join('') + '</div>';
+      return '<button type="button" class="ix-fcard" data-ft="' + f.id + '"><span class="ix-fcard-h"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><b>' + esc(f.name) + '</b></span>' +
+        '<span class="ix-fcard-p">' + esc(f.lead) + '</span><span class="ix-fcard-m">' + f.hl.slice(0, 3).map(function (h) { return esc(h[0]); }).join(' · ') + '</span></button>';
+    }).join('') + '</div>';
     p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
   }
-  function featWhere(f) {
-    return '<section class="ix-ec"><div class="ix-ec-h"><div><div class="ix-ec-t">' + (f.live ? 'Also Controlled In' : 'Where Its Settings Are') + '</div></div></div><div class="ix-ec-b">' + f.where.map(function (w, i) {
-      return '<div class="ix-frow"><div><b>' + esc(w[0]) + '</b><small>' + esc(w[1]) + '</small></div><button type="button" class="ix-btn" data-fw="' + i + '">Open</button></div>';
-    }).join('') + '</div></section>';
-  }
-  function featWire(p, f) {
-    p.querySelectorAll('[data-fw]').forEach(function (b) { b.onclick = function () { var w = f.where[+b.dataset.fw]; if (w[2] === 'go') go(w[3]); else location.href = K.ROOT + w[3]; }; });
-  }
   function pFeature(p, f) {
-    if (!f.live) { p.innerHTML = featHead(f) + featWhere(f); featWire(p, f); return; }
-    p.innerHTML = featHead(f) + spinRow('Reading the Files settings…');
-    window.HUB.fetch(K.ROOT + 'web/files/api.php?action=list').then(function (r) { return r.json(); }).then(function (j) {
-      if (!j || !j.settings) throw new Error('Files did not answer.');
-      var s = j.settings, used = j.usage || 0, free = j.free, lim = s.limit || 0, unit = lim >= GBY.TB && lim % GBY.TB === 0 ? 'TB' : 'GB';
-      p.innerHTML = featHead(f) +
-        '<section class="ix-ec"><div class="ix-ec-h"><div><div class="ix-ec-t">Storage Limit</div><div class="ix-ec-d">How much space Files may use on your server.</div></div></div><div class="ix-ec-b">' +
-          '<div class="ix-fused"><b>' + fBytes(used) + ' used</b><small id="ix-flst"></small></div>' +
-          '<div class="ix-fbar"><i id="ix-flbar"></i></div>' +
-          '<div class="ix-fchips" id="ix-flch">' + [['5 GB', 5], ['10 GB', 10], ['25 GB', 25], ['50 GB', 50], ['100 GB', 100], ['No Limit', 0]].map(function (c) { return '<button type="button" class="ix-fchip" data-b="' + c[1] * GBY.GB + '">' + c[0] + '</button>'; }).join('') + '</div>' +
-          '<div class="ix-frow2"><input type="number" id="ix-flnum" min="0" step="any" value="' + (lim ? +(lim / GBY[unit]).toFixed(3) : 0) + '" aria-label="Storage limit"><select id="ix-flun" aria-label="Unit">' +
-            ['MB', 'GB', 'TB'].map(function (u) { return '<option' + (u === unit ? ' selected' : '') + '>' + u + '</option>'; }).join('') + '</select><button type="button" class="ix-btn pri" id="ix-flsave">Save Limit</button></div>' +
-          '<small class="ix-fnote" id="ix-flnote"></small></div></section>' +
-        '<section class="ix-ec"><div class="ix-ec-h"><div><div class="ix-ec-t">Files Settings</div><div class="ix-ec-d">Saved as soon as you change them.</div></div></div><div class="ix-ec-b">' +
-          '<label class="ix-tg"><span>Share Links<small>Off ends every link.</small></span><input type="checkbox" id="ix-flsh"' + (s.shares ? ' checked' : '') + '></label>' +
-          '<div class="ix-frow"><div><b>Keep Deleted Files</b><small>Days in Trash before they are removed for good.</small></div><select id="ix-fltd" aria-label="Keep Trash">' +
-            [7, 14, 30, 60, 90].map(function (d) { return '<option value="' + d + '"' + (d === s.trashDays ? ' selected' : '') + '>' + d + ' days</option>'; }).join('') + '</select></div>' +
-          '<div class="ix-frow"><div><b>Default View</b><small>How files show when you open the page.</small></div><select id="ix-flvw" aria-label="Default view"><option value="list"' + (s.view === 'list' ? ' selected' : '') + '>List</option><option value="grid"' + (s.view === 'grid' ? ' selected' : '') + '>Grid</option></select></div>' +
-        '</div></section>' + featWhere(f);
-      featWire(p, f);
-      var num = p.querySelector('#ix-flnum'), un = p.querySelector('#ix-flun'), val = function () { return Math.round(Math.max(0, +num.value || 0) * GBY[un.value]); };
-      var paint = function () {
-        var v = val(), t = 'Free on the server: ' + (free == null ? 'unknown' : fBytes(free)) + '.';
-        if (v && v < used) t += ' That is less than you use now, so new uploads stop until you free some space.';
-        else if (v && free != null && v > used + free) t += ' That is more than the server has room for, so the server\'s free space limits you first.';
-        else if (!v) t += ' No limit: only the server\'s free space limits you.';
-        p.querySelector('#ix-flnote').textContent = t;
-        p.querySelector('#ix-flst').textContent = v ? 'of ' + fBytes(v) + ' limit' : 'no limit';
-        p.querySelector('#ix-flbar').style.width = (v ? Math.min(100, used / v * 100) : 0) + '%';
-        p.querySelectorAll('#ix-flch [data-b]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.b === v)); });
-      };
-      num.oninput = un.onchange = paint;
-      p.querySelectorAll('#ix-flch [data-b]').forEach(function (b) { b.onclick = function () { un.value = 'GB'; num.value = String(+b.dataset.b / GBY.GB); paint(); }; });
-      paint();
-      var save = function (set, ok) {
-        return window.HUB.fetch(K.ROOT + 'web/files/api.php?action=settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ settings: set }) })
-          .then(function (r) { return r.json(); }).then(function (r) { if (r && r.ok) { toast(ok || 'Saved.'); return true; } toast((r && r.error) || 'Could not save.', true); return false; }, function () { toast('Can\'t reach the server. Nothing was changed.', true); return false; });
-      };
-      p.querySelector('#ix-flsave').onclick = function () { var v = val(); save({ limit: v }, 'Storage limit saved.').then(function (ok) { if (ok) lim = v; }); };
-      p.querySelector('#ix-flsh').onchange = function (e) { save({ shares: e.target.checked }); };
-      p.querySelector('#ix-fltd').onchange = function (e) { save({ trashDays: +e.target.value }); };
-      p.querySelector('#ix-flvw').onchange = function (e) { save({ view: e.target.value }); };
-    }).catch(function (e) { p.innerHTML = featHead(f) + '<div class="ix-empty"><b>Could Not Read the Files Settings</b><p>' + esc(e && e.message || 'Can\'t reach the server.') + '</p></div>' + featWhere(f); featWire(p, f); });
+    p.innerHTML = '<div class="ix-fhero"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
+      '<a class="ix-btn" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
+      '<div class="ix-fhl">' + f.hl.map(function (h) { return '<div class="ix-fhl-c"><b>' + esc(h[0]) + '</b><p>' + esc(h[1]) + '</p></div>'; }).join('') + '</div>';
   }

@@ -12,7 +12,7 @@ files. This folder holds it cut into labelled parts, **in the order they are joi
 | `40-telegram.js` | Telegram reminders (`pRemind`) |
 | `50-overview-and-start.js` | Server Check start, Overview, Start Here and Guided Setup |
 | `60-changelog.js` | What's New: the changelog reader |
-| `65-features.js` | Features: a card for each page, and Files' settings (storage limit, Trash, share links) |
+| `65-features.js` | Features: a showcase of what each page offers (no settings) |
 | `70-updates.js` | Updates, GitHub updates, Files That Do Not Belong |
 | `80-building-blocks-and-save.js` | Save Settings and the small blocks every screen uses |
 | `90-security.js` | Security: devices, password, two-step, passkeys, encryption |

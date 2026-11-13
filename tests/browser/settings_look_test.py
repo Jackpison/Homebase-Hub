@@ -154,10 +154,8 @@ try:
         check('L27b the Fixes chip hides the versions that fixed nothing', 0 < fx < pg.evaluate("document.querySelectorAll('#ix-cll details.ix-cl').length"), fx)
         pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-fcard').length === 7", 20000)
         check('L28 Features: a card for each of the seven pages, and a tab for each', pg.evaluate("document.querySelectorAll('#ix-pane .ix-subt [role=tab]').length") == 8)
-        pg.goto(s.base + '/web/settings/#ft-files'); wait_js(pg, "!!document.getElementById('ix-flnum')", 20000)
-        pg.click('#ix-flch [data-b]:nth-child(3)'); pg.fill('#ix-flnum', '1.5'); pg.select_option('#ix-flun', 'TB'); pg.click('#ix-flsave')
-        until(lambda: pg.evaluate("fetch('../files/api.php?action=list').then(r => r.json()).then(j => j.settings.limit)") == 1649267441664, 10000)
-        check('L29 Features > Files: a custom size (1.5 TB) is saved as the Files storage limit', True)
+        pg.goto(s.base + '/web/settings/#ft-files'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-fhl-c').length >= 5", 20000)
+        check('L29 Features > Files shows what Files offers (highlights and an Open Files button) and holds no settings', pg.evaluate("[document.querySelectorAll('#ix-pc input,#ix-pc select').length, /Open Files/.test(document.querySelector('#ix-pc .ix-fhero a').textContent)]") == [0, True])
 
         # ---- Files: the grid ----
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)

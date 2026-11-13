@@ -160,12 +160,11 @@ Nothing to migrate by hand unless an entry says so.
 
 ### Features
 
-- A new section in System: **Features**. It has a card for each page (Home, Links, Info, Cards, Tasks, Files and Tools) and a tab for each one, saying what the page does and where its settings are.
-- **Files** has its settings right there: Storage Limit, Share Links, Keep Deleted Files and Default View. They save as soon as you change them.
+- A new section in System: **Features**. It shows what the site offers: a card for each page (Home, Links, Info, Cards, Tasks, Files and Tools) and a tab for each one with what the page does, in the same words as the website. It has no settings; each page keeps its own.
 
 ### Files
 
-- The **Storage Limit** is a size you pick (5, 10, 25, 50 or 100 GB, or No Limit) or type yourself, in MB, GB or TB. It shows what is used and what the server has left, and says so when the limit is more than the server can hold. It is in Files Settings and in Features.
+- The **Storage Limit** is a size you pick (5, 10, 25, 50 or 100 GB, or No Limit) or type yourself, in MB, GB or TB. It shows what is used and what the server has left, and says so when the limit is more than the server can hold. It is in Files Settings.
 
 ### Settings
 

@@ -941,7 +941,7 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-bb>.ix-btn{margin-top:auto;align-self:flex-start}
 #ix-page .ix-bb .ix-bbar+.ix-btn{margin-top:14px}
 
-/* (1.76.0) Features: a card for each page, and for each page a header, its tags, and its settings */
+/* (1.76.0) Features: a card for each page, and for each page a header and what it offers */
 #ix-page .ix-fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:var(--ix-cw)}
 #ix-page .ix-fcard{text-align:left;display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:20px;border:1px solid var(--ix-line);background:var(--ix-s1);color:var(--ix-tx);font:inherit;cursor:pointer;transition:transform .15s,border-color .15s}
 #ix-page .ix-fcard:hover{transform:translateY(-2px);border-color:var(--ix-line2)}
@@ -951,25 +951,14 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-fcard-m{color:var(--ix-mu2);font-size:12.5px;margin-top:auto}
 #ix-page .ix-fhero-i{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff}
 #ix-page .ix-fhero-i svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-#ix-page .ix-fhero{display:flex;gap:16px;align-items:center;padding:20px 22px;border-radius:22px;border:1px solid var(--ix-line);background:var(--ix-s1);max-width:var(--ix-cw);margin:0 0 12px}
+#ix-page .ix-fhero{display:flex;gap:16px;align-items:center;padding:20px 22px;border-radius:22px;border:1px solid var(--ix-line);background:var(--ix-s1);max-width:var(--ix-cw);margin:0 0 14px}
 #ix-page .ix-fhero .ix-fhero-i{width:54px;height:54px;border-radius:16px}
 #ix-page .ix-fhero .ix-fhero-i svg{width:26px;height:26px}
 #ix-page .ix-fhero-t{flex:1;min-width:0}
 #ix-page .ix-fhero-h{font-size:20px;font-weight:800}
 #ix-page .ix-fhero-t p{margin:4px 0 0;color:var(--ix-mu);font-size:14px}
-#ix-page .ix-ftags{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;max-width:var(--ix-cw)}
-#ix-page .ix-frow{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--ix-line)}
-#ix-page .ix-frow:first-child{border-top:0}
-#ix-page .ix-frow small{display:block;color:var(--ix-mu);font-size:12.5px}
-#ix-page .ix-fused{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin:0 0 8px}
-#ix-page .ix-fused small{color:var(--ix-mu)}
-#ix-page .ix-fbar{height:10px;border-radius:5px;background:var(--ix-s3);overflow:hidden;margin:0 0 16px}
-#ix-page .ix-fbar i{display:block;height:100%;background:var(--ix-accent);border-radius:5px;transition:width .2s}
-#ix-page .ix-fchips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
-#ix-page .ix-fchips .ix-fchip{height:34px;padding:0 15px;border-radius:999px;border:1px solid var(--ix-line);background:var(--ix-s1);color:var(--ix-mu);font:600 13px var(--ix-font);cursor:pointer}
-#ix-page .ix-fchips .ix-fchip[aria-pressed=true]{background:var(--ix-tx);color:var(--ix-bg);border-color:var(--ix-tx)}
-#ix-page .ix-frow2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-#ix-page .ix-frow2 input{width:130px!important;flex:none}
-#ix-page .ix-frow2 select,#ix-page .ix-frow select{width:auto!important;flex:none;min-width:96px}
-#ix-page .ix-fnote{display:block;margin-top:10px;color:var(--ix-mu);font-size:12.5px;line-height:1.5}
+#ix-page .ix-fhl{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;max-width:var(--ix-cw)}
+#ix-page .ix-fhl-c{padding:16px 18px;border-radius:18px;border:1px solid var(--ix-line);background:var(--ix-s1)}
+#ix-page .ix-fhl-c b{display:block;font-size:14.5px;margin-bottom:4px}
+#ix-page .ix-fhl-c p{margin:0;color:var(--ix-mu);font-size:13.5px;line-height:1.5}
 @media (max-width:600px){#ix-page .ix-fhero{flex-wrap:wrap}}

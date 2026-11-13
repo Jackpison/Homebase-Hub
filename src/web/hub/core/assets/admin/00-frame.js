@@ -63,7 +63,7 @@
     // (1.70.0) the Changelog is the What's New tab of Updates: one tab along the top, with Versions, Version Map and Notes below it
     ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Versions', 'What\'s New'], ['chmap', 'Version Map', 'What\'s New'], ['chnotes', 'Notes', 'What\'s New']], 'System Setting'],
     // (1.76.0) Features: what the site does, page by page, with the settings of each part (Files' work right there)
-    ['features', 'Features', ICON.grid, 'What the site does, page by page, and the settings of each part.', [['features', 'All'], ['ft-home', 'Home'], ['ft-links', 'Links'], ['ft-info', 'Info'], ['ft-cards', 'Cards'], ['ft-tasks', 'Tasks'], ['ft-files', 'Files'], ['ft-tools', 'Tools']], 'System Setting']];
+    ['features', 'Features', ICON.grid, 'What the site offers, page by page.', [['features', 'All'], ['ft-home', 'Home'], ['ft-links', 'Links'], ['ft-info', 'Info'], ['ft-cards', 'Cards'], ['ft-tasks', 'Tasks'], ['ft-files', 'Files'], ['ft-tools', 'Tools']], 'System Setting']];
   /* (1.66.0) the left panel in the "System tiles" look: a solid colour tile with a white icon for each section (icons from Lucide,
      lucide.dev, ISC licence: see web/hub/docs/THIRD-PARTY.md). [colour, the icon's SVG inside] */
   var SEC_TILE = {
@@ -188,7 +188,7 @@
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'setup', 'keys keyboard hotkeys shortcut question mark help'], ['Install on Your Phone', 'setup', 'app home screen phone install add to home screen iphone android help'],
-    ['Features', 'features', 'what the site does pages home links info cards tasks files tools'], ['Storage Limit', 'ft-files', 'files space size quota gb custom disk'], ['Keep Deleted Files', 'ft-files', 'trash days bin'], ['Share Links', 'ft-files', 'files sharing off'],
+    ['Features', 'features', 'what the site does pages home links info cards tasks files tools'],
     ['Guided Setup', 'setup', 'start here wizard steps protect'], ['Offline Reading', 'setup', 'offline airplane no connection internet read without cache device app'],
     ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'nav', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'nav', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],
