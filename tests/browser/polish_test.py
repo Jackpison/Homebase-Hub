@@ -125,7 +125,7 @@ try:
         pg.click('#ix-keysb'); wait_js(pg, "!!document.querySelector('#ix-dlg.open .ix-keys')", 5000)
         pg.keyboard.press('Escape'); pg.evaluate("location.hash = 'backup'")
         until(lambda: pg.evaluate("!!document.getElementById('ix-exp')"), 8000)
-        check('P21 Settings > Start Here has View Shortcuts; right after its window closes, another section still opens (it stayed on Start Here)', pg.evaluate("!!document.getElementById('ix-exp')"))
+        check('P21 Settings > Features has View Shortcuts; right after its window closes, another section still opens (it stayed on Start Here)', pg.evaluate("!!document.getElementById('ix-exp')"))
 
         # ---- (1.65.1) Erase Everything ----
         pg.wait_for_timeout(800); pg.click('.ix-tabbar button[data-tab=start-over]'); pg.click('#ix-rsst .ix-st-next'); pg.click('#ix-rsst .ix-st-next'); pg.wait_for_selector('#ix-rsgo', state='visible'); pg.mouse.move(5, 5); pg.wait_for_timeout(500)   # (1.69.0) a Stepper: two steps before the button (the mouse leaves the spot of Continue)
@@ -170,15 +170,10 @@ try:
         lay = pg.evaluate("(() => { const n = document.querySelector('.ix-snav'), t = document.querySelector('#ix-pane .ix-ph h2'); return [getComputedStyle(n).position, Math.abs(n.getBoundingClientRect().top - t.getBoundingClientRect().top) < 12, getComputedStyle(document.querySelector('.ix-snh')).display, getComputedStyle(document.querySelector('#ix-pane .ix-ec-i, #ix-pane .ix-th-i, #ix-pane .ix-tile-i, #ix-pane .ix-hero-i')).backgroundImage.includes('gradient')]; })()")
         check('P37 the menu stays in place while scrolling and starts level with the page title, without a small "Settings" label; the page tiles are solid colour (1.66.1)', lay == ['sticky', True, 'none', True], lay)
 
-        # ---- (1.66.0) one step bar: Guided Setup (one step at a time, Next), Telegram Setup (one card at a time), Updates (not clickable) ----
-        pg.goto(s.base + '/web/settings/#setup'); wait_js(pg, "!!document.querySelector('.ix-sbar .ix-sbi.now')", 20000)
-        g0 = pg.evaluate("[document.querySelectorAll('.ix-sbar .ix-sbi').length, document.querySelector('.ix-sbar .ix-sbi.now b').textContent, document.querySelectorAll('.ix-steps.ix-one > .ix-step.open').length, [...document.querySelectorAll('.ix-steps.ix-one > .ix-step')].filter(e => e.checkVisibility()).length]")
-        pg.click('.ix-sbnav [data-open] >> text=Next'); wait_js(pg, "document.querySelector('.ix-sbar .ix-sbi.now b').textContent !== %r" % g0[1], 8000)
-        g1 = pg.evaluate("document.querySelector('.ix-sbar .ix-sbi.now b').textContent")
-        check('P33 Guided Setup: a bar of five steps, one step on screen, Next moves the bar on', g0[0] == 5 and g0[2] == 1 and g0[3] == 1 and g1 != g0[1], (g0, g1))
-        pg.goto(s.base + '/web/settings/#telegram/setup'); wait_js(pg, "!!document.querySelector('.ix-tl')", 20000)
-        t0 = pg.evaluate("[[...document.querySelectorAll('.ix-tl > li')].filter(e => e.checkVisibility()).length, document.querySelectorAll('.ix-sbar, .ix-sbnav').length, !!document.querySelector('.ix-ec .ix-tl')]")
-        check('P34 Telegram Setup is a timeline: the two steps listed together in one box, with their state, no step bar and no Back / Next (1.77.3)', t0 == [2, 0, True], t0)
+        # ---- (1.66.0) Telegram Setup, Updates (a step bar that is not clickable) ----
+        pg.goto(s.base + '/web/settings/#telegram/setup'); wait_js(pg, "!!document.querySelector('#nt-tok')", 20000)
+        t0 = pg.evaluate("[[...document.querySelectorAll('.ix-tpane.ix-on .ix-ec-t, [data-tg=bot] .ix-ec-t')].map(e => e.firstChild.textContent), document.querySelectorAll('.ix-sbar, .ix-sbnav').length, document.querySelectorAll('[data-tg=bot] .ix-ec .ix-pill').length]")
+        check('P34 Telegram Setup is two cards, 1. Create Your Bot and 2. Connect and Test, each with its state, no step bar and no Back / Next (1.78.0)', t0 == [['1. Create Your Bot', '2. Connect and Test'], 0, 2], t0)
         pg.goto(s.base + '/web/settings/#updates'); wait_js(pg, "!!document.querySelector('.ix-sbar.locked')", 20000)
         u0 = pg.evaluate("[document.querySelectorAll('.ix-sbar.locked .ix-sbi').length, document.querySelectorAll('.ix-sbar.locked button').length, document.querySelector('.ix-sbar.locked .ix-sbi.now b').textContent]")
         check('P35 Updates: the same bar shows where an update is, with no clickable steps', u0 == [4, 0, 'Upload the Zip'], u0)
@@ -460,10 +455,10 @@ try:
         sp.locator('#nt-url').locator('xpath=..').locator('.ix-uf-cp').click(); sp.wait_for_timeout(150); cp = sp.evaluate('window.__cp') or ''
         check('P71 Telegram > Setup: the two cron lines are link fields ("Cron", "curl"); the key in the address shows as dots, and Copy gives the whole curl line with the real key (1.69.1)',
               tg[0][0] == 'Cron' and 'cron.php' in tg[0][1] and tg[1][0] == 'curl' and 'key=•••••' in tg[1][1] and cp.startswith('curl -s "http') and 'key=' in cp and '•' not in cp and cp.endswith('"'), (tg, len(cp)))
-        sp.goto(s.base + '/web/settings/#domains'); wait_js(sp, "!!document.getElementById('ix-whost')", 20000)
-        sp.fill('#ix-whost', 'https://shop.example.com')
-        dm = sp.evaluate("(() => { const i = document.getElementById('ix-whost'), f = i.closest('.ix-uf'); return [f.querySelector('.ix-uf-px').textContent, i.value, !!f.querySelector('.ix-uf-cp')]; })()")
-        check('P72 Health > Domains and Uptime: the add field has https:// in front, and a pasted https:// is dropped (only the host is kept) (1.69.1)', dm == ['https://', 'shop.example.com', False], dm)
+        sp.goto(s.base + '/web/settings/#telegram/instant-replies'); wait_js(sp, "document.querySelectorAll('.ix-cmdc').length > 0", 20000); sp.evaluate(CLIP)
+        sp.click('.ix-cmdc >> nth=3'); sp.wait_for_timeout(150)
+        cm = sp.evaluate("[window.__cp, (document.querySelector('.ix-cmdc.ok em') || {}).textContent, document.querySelectorAll('button.ix-cmdc').length]")
+        check('P71b Telegram > Instant Replies: each of the 8 commands is a button, and a click copies it (1.78.0)', cm == ['/add Netflix 649 monthly 5 Nov', 'Copied', 8], cm)
         sp.goto(s.base + '/web/links/'); wait_js(sp, "document.querySelectorAll('.cat').length > 0", 20000); sp.evaluate(CLIP)
         sp.evaluate("document.querySelector('[data-hub=toggle]').click()"); sp.wait_for_selector('body.editing', timeout=10000)
         sp.evaluate("document.querySelector('.cat .ctrl .ib[aria-label=\\'Edit link\\']').click()"); sp.wait_for_selector('#linkDlg[open]')   # its buttons show on hover

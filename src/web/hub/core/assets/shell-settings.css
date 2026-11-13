@@ -239,19 +239,7 @@
 #ix-page .ix-exts span{font-size:12.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--ix-line)}
 #ix-page .ix-exts .on{color:var(--ix-good)}
 #ix-page .ix-exts .off{color:var(--ix-bad)}
-#ix-page .ix-wsite{border:1px solid var(--ix-line);border-radius:12px;padding:12px 14px;margin-top:10px}
-#ix-page .ix-wsite>.ix-row>b{font-size:15px;color:var(--ix-tx)}
-#ix-page .ix-wup{font-size:13px;color:var(--ix-mu);display:inline-flex;align-items:center;gap:6px}
-#ix-page .ix-wgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
-#ix-page .ix-wgrid>div{display:flex;flex-direction:column;gap:2px;min-width:0}
-#ix-page .ix-wgrid small{font-size:12px;color:var(--ix-mu);font-weight:700}
-#ix-page .ix-wgrid b{font-size:15px;color:var(--ix-tx)}
-#ix-page .ix-wgrid b.good{color:var(--ix-good)}
-#ix-page .ix-wgrid b.warn{color:var(--ix-accent-tx)}
-#ix-page .ix-wgrid b.bad{color:var(--ix-bad)}
-#ix-page .ix-wgrid span{font-size:12px;color:var(--ix-mu2);overflow-wrap:anywhere}
-#ix-page .ix-wgrid input[type=date]{height:32px;padding:0 8px;width:100%}
-@media (max-width:700px){#ix-page .ix-wgrid{grid-template-columns:1fr}#ix-page .ix-hrow{grid-template-columns:1fr auto;}#ix-page .ix-hrow .ix-hbar{grid-column:1/-1;order:3}}
+@media (max-width:700px){#ix-page .ix-hrow{grid-template-columns:1fr auto;}#ix-page .ix-hrow .ix-hbar{grid-column:1/-1;order:3}}
 /* Settings > Security: what the one password protects,each row opens its part below */
 #ix-page .ix-sov{border:1px solid var(--ix-line);border-radius:14px;overflow:hidden;margin:4px 0 16px}
 #ix-page .ix-sov button{display:flex;width:100%;align-items:center;gap:12px;padding:11px 14px;background:none;border:0;border-bottom:1px solid var(--ix-line);color:var(--ix-tx);font:inherit;font-size:14px;text-align:left;cursor:pointer}
@@ -374,7 +362,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page a{color:var(--ix-accent-tx)}
 #ix-page .ix-btn,#ix-page button{color:inherit}
 /* ===== cards,fields and chips shared by Encryption,Telegram setup and Backup ===== */
-#ix-page .ix-ec{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:20px;padding:22px 24px;margin:0 0 16px;max-width:var(--ix-cw)}
+#ix-page .ix-ec{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:20px;padding:18px 22px;margin:0 0 14px;max-width:var(--ix-cw)}
 #ix-page .ix-ec.good{border-color:color-mix(in srgb,var(--ix-ok) 40%,var(--ix-line))}
 #ix-page .ix-ec.danger{border-color:color-mix(in srgb,var(--ix-err) 40%,var(--ix-line))}
 #ix-page .ix-ec-h{display:flex;gap:14px;align-items:flex-start}
@@ -384,9 +372,8 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-ec-i svg{width:22px;height:22px}
 #ix-page .ix-ec-t{font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 #ix-page .ix-ec-d{color:var(--ix-mu);margin-top:3px;max-width:64ch}
-#ix-page .ix-ec-b{margin-top:18px}
+#ix-page .ix-ec-b{margin-top:14px}
 #ix-page .ix-ec-b p{color:var(--ix-mu)}
-#ix-page .ix-fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 16px}
 #ix-page .ix-fd{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
 #ix-page .ix-fd label{margin:0;font-size:13px;font-weight:700;color:var(--ix-tx)}
 #ix-page .ix-fd input{height:46px;padding:0 14px;border-radius:12px;background:var(--ix-bg);border:1px solid var(--ix-line2);color:var(--ix-tx);width:100%}
@@ -548,24 +535,13 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page label.ix-btn{cursor:pointer}
 #ix-page .ix-cgrp{border-radius:18px;padding:16px 18px 8px;background:var(--ix-s1);margin-top:14px}
 #ix-page .ix-cgrp h4{font-size:15px;font-weight:800}
-#ix-page .ix-wsite,#ix-page .ix-part{border-radius:16px;background:var(--ix-s1)}
+#ix-page .ix-part{border-radius:16px;background:var(--ix-s1)}
 #ix-page .ix-hc{border-radius:16px;background:var(--ix-s1)}
 #ix-page .ix-status{border-radius:12px}
 #ix-page .ix-exts span{border-radius:999px}
 
 /* ---- 1.36.0: jump chips and the setup banner on the Overview, and the Guided Setup steps ---- */
 #ix-page .ix-steps{display:flex;flex-direction:column;gap:10px;max-width:var(--ix-cw);margin:0 0 16px}
-#ix-page .ix-step{margin:0;max-width:none;padding:0;overflow:hidden}
-#ix-page .ix-step.open{border-color:color-mix(in srgb,var(--ix-accent) 55%,var(--ix-line))}
-#ix-page .ix-steph{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;padding:16px 18px;cursor:pointer;color:inherit;font:inherit;margin:0}
-#ix-page .ix-steph>div{flex:1;min-width:0}
-#ix-page .ix-steph:hover{background:color-mix(in srgb,var(--ix-tx) 4%,transparent)}
-#ix-page .ix-stepn{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:var(--ix-s2);color:var(--ix-mu)}
-#ix-page .ix-step.open .ix-stepn{background:var(--ix-accent);color:var(--ix-ink)}
-#ix-page .ix-stepn.done,#ix-page .ix-step.open .ix-stepn.done{background:color-mix(in srgb,var(--ix-ok) 20%,transparent);color:var(--ix-ok)}
-#ix-page .ix-step .ix-ec-b{padding:2px 18px 18px 64px}
-@media (max-width:600px){#ix-page .ix-step .ix-ec-b{padding-left:18px}#ix-page .ix-steph{padding:14px}}
-#ix-page .ix-steph .ix-ec-t{color:var(--ix-tx)}#ix-page .ix-steph .ix-ec-d{color:var(--ix-mu)}
 /* Settings > Overview > Start Here > Install on Your Phone: the three sets of steps */
 #ix-page .ix-steps{margin:0 0 12px}
 #ix-page .ix-steps h4{margin:10px 0 2px;font-size:13.5px;color:var(--ix-tx)}
@@ -703,12 +679,7 @@ html[data-theme="light"] #ix-page .ix-snav .ix-sp.warn{color:#8a3a06}html[data-t
 @media (hover:hover){#ix-page .ix-sbar:not(.locked) .ix-sbi:hover b{color:var(--ix-tx)}#ix-page .ix-sbar:not(.locked) .ix-sbi:not(.done):not(.now):hover i{background:color-mix(in srgb,var(--ix-tx) 22%,transparent)}}
 #ix-page .ix-sbph{display:none;margin:-8px 0 14px;font-size:13px;font-weight:600;color:var(--ix-mu)}
 @media (max-width:640px){#ix-page .ix-sbi b{display:none}#ix-page .ix-sbph{display:block}#ix-page .ix-sbar{gap:6px}}
-#ix-page .ix-steps.ix-one>.ix-step:not(.open){display:none}
 @keyframes ix-sbin{from{opacity:0;transform:translateY(6px)}}
-#ix-page .ix-sbnav{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--ix-line)}
-#ix-page .ix-sbnav>span{flex:1}
-#ix-page .ix-sbnav .ix-btn:disabled{opacity:.45}
-#ix-page .ix-btn.ix-quiet2{background:none;border-color:transparent;color:var(--ix-mu)}
 
 /* ---------- (1.66.1) the colour tiles of the Settings menu on every Settings page: the card, hero and tile icons are solid tiles in the
    section's colour (--sc, set by pane()) with a white icon; a card that is fine is green, one in trouble red */
@@ -832,7 +803,7 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-cg .ix-cl>summary::after{right:4px}
 #ix-page .ix-cg .ix-cl>summary:hover{background:none}
 #ix-page .ix-cg .ix-cl-v{min-width:56px}
-#ix-page .ix-cl-tag{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:7px;background:color-mix(in srgb,var(--ix-accent) 16%,transparent);color:var(--ix-accent)}
+#ix-page .ix-cl-tag{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:7px;background:color-mix(in srgb,var(--ix-accent) 16%,transparent);color:var(--ix-accent-tx)}
 #ix-page .ix-cg .ix-cl-d{flex:1 1 220px}
 #ix-page .ix-cg .ix-cl-b{margin:0 0 10px;padding:4px 18px 14px;border:1px solid var(--ix-line);border-radius:14px;background:var(--ix-bg)}
 
@@ -852,7 +823,6 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-newbody{max-height:170px}
 
 /* (1.76.0, 1.77.1) Features: a banner, a tinted card for each page, and for each page a coloured header and numbered highlights */
-#ix-page .ix-fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:var(--ix-cw)}
 #ix-page .ix-fhero-i{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff;box-shadow:0 8px 18px -8px rgba(0,0,0,.6)}
 #ix-page .ix-fhero-i svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 #ix-page .ix-fhero{display:flex;gap:18px;align-items:center;padding:24px 26px;border-radius:24px;border:1px solid color-mix(in srgb,var(--fc) 35%,var(--ix-line));background:radial-gradient(120% 160% at 0% 0%,color-mix(in srgb,var(--fc) 26%,transparent),transparent 62%),var(--ix-s1);max-width:var(--ix-cw);margin:0 0 16px}
@@ -880,7 +850,13 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-hknote{margin:10px 2px 14px;max-width:var(--ix-cw);line-height:1.55}
 #ix-page .ix-hknote code{overflow-wrap:anywhere}
 #ix-page .ix-cmdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
-#ix-page .ix-cmdc{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;border:1px solid var(--ix-line);background:var(--ix-s2)}
+#ix-page .ix-cmdc{position:relative;display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;border:1px solid var(--ix-line);background:var(--ix-s2);text-align:left;cursor:pointer;font:inherit;color:inherit}
+#ix-page .ix-cmdc:hover,#ix-page .ix-cmdc:focus-visible{border-color:var(--ix-accent)}
+#ix-page .ix-cmdc em{position:absolute;top:10px;right:12px;font-style:normal;font-size:11.5px;font-weight:700;color:var(--ix-mu2);opacity:0;transition:opacity .15s}
+#ix-page .ix-cmdc:hover em,#ix-page .ix-cmdc:focus-visible em,#ix-page .ix-cmdc.ok em{opacity:1}
+#ix-page .ix-cmdc.ok{border-color:var(--ix-ok)}
+#ix-page .ix-cmdc.ok em{color:var(--ix-ok)}
+@media (hover:none){#ix-page .ix-cmdc em{opacity:1}}
 #ix-page .ix-cmdc code{color:var(--ix-tx);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ix-page .ix-cmdc span{color:var(--ix-mu);font-size:12.5px}
 
@@ -900,20 +876,6 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-rc-a{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 #ix-page .ix-rc-x{grid-column:1/-1;padding:4px 2px 2px}
 @media (max-width:600px){#ix-page .ix-rc{grid-template-columns:auto minmax(0,1fr)}#ix-page .ix-rc-a{grid-column:1/-1;justify-content:flex-start}}
-#ix-page .ix-tl{list-style:none;position:relative;margin:10px 0 18px 18px;padding:0;border-left:1px solid var(--ix-line2);max-width:var(--ix-cw)}
-#ix-page .ix-tls{position:relative;padding:0 0 26px 40px}
-#ix-page .ix-tls:last-child{padding-bottom:0}
-#ix-page .ix-tl-n{position:absolute;left:0;top:0;transform:translateX(-50%);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--ix-s2);color:var(--ix-mu);border:1px solid var(--ix-line2);box-shadow:0 0 0 7px var(--ix-bg)}
-#ix-page .ix-tls.open>.ix-tl-n{border-color:var(--ix-accent);color:var(--ix-accent-tx);background:var(--ix-soft)}
-#ix-page .ix-tls.done>.ix-tl-n{background:var(--ix-accent);border-color:var(--ix-accent);color:var(--ix-ink)}
-#ix-page .ix-tl-t{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;font-size:16.5px;font-weight:650}
-#ix-page .ix-tls.done>.ix-tl-t{cursor:pointer}
-#ix-page .ix-tls:not(.done):not(.open)>.ix-tl-t{color:var(--ix-mu)}
-#ix-page .ix-tl-s{margin-top:-4px;color:var(--ix-mu);font-size:13.5px}
-#ix-page .ix-tl-b{display:none;margin-top:6px}
-#ix-page .ix-tls.open>.ix-tl-b{display:block}
-#ix-page .ix-tl-b p{margin:0 0 10px;color:var(--ix-mu)}
-#ix-page .ix-tl-b code{padding:1px 6px;border-radius:6px;background:var(--ix-s2)}
 /* Changelog as a timeline: the version and date on the left, a line with a dot, the title and tags on the right */
 #ix-page .ix-cg .ix-cl>summary{display:grid;grid-template-columns:84px minmax(0,1fr);gap:0 22px;align-items:start;padding:14px 34px 14px 0}
 #ix-page .ix-cl-l{display:flex;flex-direction:column;gap:3px;text-align:right}
@@ -933,3 +895,30 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-frel{margin-top:18px;border:1px solid var(--ix-line);border-radius:18px;background:var(--ix-s1);padding:14px 18px}
 #ix-page .ix-frel h3{margin:0;font-size:15px}#ix-page .ix-frel p{margin:2px 0 10px;color:var(--ix-mu2)}
 #ix-page .ix-rc a.ix-btn{text-decoration:none}
+/* (1.78.0) compact forms: the fields sit side by side (up to 340 px each), the message and the button share one row under them, and a short step-by-step
+   (Add a Passkey) puts its button beside the fields instead of far below them */
+#ix-page .ix-frm{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,340px));gap:0 14px;align-items:start}
+#ix-page .ix-frm .ix-fd{margin:0 0 12px}
+#ix-page .ix-fact{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#ix-page .ix-fact>.ix-err{flex:1 1 200px;margin:0;min-height:0}
+#ix-page .ix-fact>.ix-meterw{flex:1 1 240px;margin:0}
+#ix-page .ix-fact.ix-fbot{align-items:flex-end}
+#ix-page .ix-fact.ix-fbot>.ix-fd{flex:0 1 340px;margin:0}
+#ix-page .ix-fact.ix-fbot>.ix-fd.ix-fdw{flex:1 1 280px;max-width:520px}
+#ix-page .ix-ec .ix-st:has(.ix-st-dots){display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;align-items:end}
+#ix-page .ix-ec .ix-st:has(.ix-st-dots)>.ix-st-view{grid-column:1;grid-row:1;padding-top:0}
+#ix-page .ix-ec .ix-st:has(.ix-st-dots)>.ix-st-foot{grid-column:2;grid-row:1;padding:0}
+#ix-page .ix-ec .ix-st:has(.ix-st-dots) .ix-frm .ix-fd{margin-bottom:0}
+#ix-page .ix-ec .ix-st:has(.ix-st-dots)>.ix-st-head{grid-column:1/-1;grid-row:2}
+#ix-page .ix-ec .ix-st:has(.ix-st-dots) .ix-st-back[data-h]{display:none}
+#ix-page .ix-ec .ix-st-dots{justify-content:flex-start}
+#ix-page .ix-ec .ix-err:empty{display:none}
+/* (1.78.0) a card with two sides (Sign-In): what it is on the left, what you do on the right. One column on a narrow screen. */
+#ix-page .ix-ec.ix-split{display:grid;grid-template-columns:minmax(280px,400px) minmax(0,1fr);gap:0 40px;align-items:start}
+#ix-page .ix-ec.ix-split>.ix-ec-h .ix-ec-d{font-size:13.5px;line-height:1.5}
+#ix-page .ix-ec.ix-split>.ix-ec-b{margin-top:0;padding-top:2px}
+#ix-page .ix-ec.ix-split .ix-frm{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+#ix-page .ix-ec.ix-split .ix-devs{margin-bottom:14px}
+#ix-page .ix-ec.ix-split.warn{border-color:color-mix(in srgb,var(--ix-accent) 45%,var(--ix-line))}
+@media (max-width:900px){#ix-page .ix-ec.ix-split{grid-template-columns:minmax(0,1fr)}#ix-page .ix-ec.ix-split>.ix-ec-b{margin-top:14px;padding-top:0}}
+#ix-page .ix-fact>.ix-meterw:not(.on){visibility:hidden}

@@ -256,7 +256,7 @@ try:
 
         # 1.62.2: every switch on the Settings page keeps its size (52 x 26 since 1.65.0); the older .ix-tg switches had shrunk to a ring and a ball since 1.61.6
         sw, bad = 0, []
-        for sec in ('setup', 'general', 'nav', 'look', 'themes', 'colors', 'glass', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates'):
+        for sec in ('general', 'look', 'themes', 'colors', 'glass', 'security', 'telegram', 'backup', 'health', 'check', 'updates'):
             pg.goto(s.base + '/web/settings/#' + sec); wait_js(pg, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); pg.wait_for_timeout(500)
             r = pg.evaluate("[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => [e.id || e.dataset.k || e.dataset.t || e.dataset.grp || '?', e.offsetWidth, e.offsetHeight])")
             sw += len(r); bad += [(sec, x) for x in r if x[1] != 52 or x[2] != 26]
@@ -329,7 +329,7 @@ try:
         fp = q.evaluate("[Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.round(document.getElementById('det').getBoundingClientRect().height), getComputedStyle(document.getElementById('det')).overflowY]")
         check('L25 phone, Files: nothing wider than the screen; the details sheet takes at most half the screen and scrolls inside', fp[0] <= 0 and fp[1] <= 844 // 2 + 2 and fp[2] == 'auto', fp)
         wide = []
-        for sec in ('overview', 'setup', 'general', 'nav', 'look', 'themes', 'colors', 'glass', 'security', 'telegram', 'backup', 'health', 'domains', 'check', 'updates', 'changelog'):
+        for sec in ('overview', 'general', 'look', 'themes', 'colors', 'glass', 'security', 'telegram', 'backup', 'health', 'check', 'updates', 'changelog'):
             q.goto(s.base + '/web/settings/#' + sec); wait_js(q, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); q.wait_for_timeout(300)
             r = q.evaluate("""(() => { const strips = [...document.querySelectorAll('.ix-subt')], act = document.querySelector('.ix-subt [aria-selected=true]'), st = act && act.parentElement;
                 return [Math.max(document.documentElement.scrollWidth, innerWidth) - 390, Math.max(0, ...strips.map(b => Math.round(b.getBoundingClientRect().right))),
@@ -353,7 +353,7 @@ try:
         for theme in ('dark', 'light'):
             tc = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=BROWSER != 'firefox', has_touch=True, storage_state=ctx.storage_state())   # one context per theme: the order of several init scripts is not defined
             tc.add_init_script("try { localStorage.setItem('hub-theme', '%s'); } catch (e) {}" % theme); tq = tc.new_page()
-            for sec in ('nav', 'themes', 'backup'):   # (1.70.0) the bar switches are on Appearance > Bar
+            for sec in ('look', 'themes', 'backup'):   # (1.78.0) the bar switches are on Appearance > Look & Bar
                 tq.goto(s.base + '/web/settings/#' + sec); wait_js(tq, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); tq.wait_for_timeout(500)
                 got = tq.evaluate("[document.documentElement.dataset.theme || '', ...[...document.querySelectorAll('#ix-page .ix-tg input[type=checkbox], #ix-page input.ix-sw')].filter(e => e.offsetParent).map(e => e.offsetWidth + 'x' + e.offsetHeight)]")
                 seen.add(got[0])

@@ -69,15 +69,12 @@
     secRefresh = function () { overview(); };
 
     /* Password */
-    body('pw').innerHTML = tabHead(ICON.key, 'Website Password', 'One password opens every page of this site. Changing it logs out your other devices, and encryption that uses it follows along.') +
-      '<form id="ix-cp">' + ecCard('', ICON.lock, 'Change Your Password', 'Use a long one. A few words you will remember beat a short jumble.',
-        ecField('ix-cur', 'Current Password', 'password', 'current-password') +
-        '<div class="ix-fgrid">' + ecField('ix-n1', 'New Password', 'password', 'new-password', 'At least 8 characters.') + ecField('ix-n2', 'Type It Again', 'password', 'new-password') + '</div>' +
-        '<div class="ix-meterw" id="ix-pwm"><div class="ix-meter"><i></i></div><small></small></div>' +
-        '<p class="ix-err" id="ix-cpe"></p><div class="ix-row"><button class="ix-btn pri">Change Password</button></div>') + '</form>';
+    body('pw').innerHTML = '<form id="ix-cp">' + ecCard('ix-split', ICON.key, 'Website Password', 'One password opens every page of this site. Changing it logs out your other devices, and encryption that uses it follows along. Use at least 8 characters: a few words you will remember beat a short jumble.',
+        '<div class="ix-frm">' + ecField('ix-cur', 'Current Password', 'password', 'current-password') + ecField('ix-n1', 'New Password', 'password', 'new-password') + ecField('ix-n2', 'Type It Again', 'password', 'new-password') + '</div>' +
+        '<div class="ix-fact"><div class="ix-meterw" id="ix-pwm"><div class="ix-meter"><i></i></div><small></small></div><button class="ix-btn pri">Change Password</button></div><p class="ix-err" id="ix-cpe"></p>') + '</form>';
     p.querySelector('#ix-n1').oninput = function () {
       var r = pwScore(this.value), m = p.querySelector('#ix-pwm'), bar = m.querySelector('i');
-      bar.style.width = this.value ? r.pct + '%' : '0'; bar.className = r.cls; m.querySelector('small').textContent = this.value ? r.label : '';
+      m.classList.toggle('on', !!this.value); bar.style.width = this.value ? r.pct + '%' : '0'; bar.className = r.cls; m.querySelector('small').textContent = this.value ? r.label : '';
     };
     p.querySelector('#ix-cp').onsubmit = function (e) {
       e.preventDefault(); var er = p.querySelector('#ix-cpe');
@@ -109,17 +106,17 @@
           '<button type="button" class="ix-btn" data-pkren="' + esc(k.id) + '">Rename</button><button type="button" data-hold class="ix-btn danger" data-pkdel="' + esc(k.id) + '">Remove</button></div>'; }).join('') + '</div>'
         : '<p class="ix-note">No passkey yet. Add one below, on this device or with a security key.</p>';
       // (1.77.2) no separate header and no "No Passkeys Yet" card: your passkeys are rows, and Add a Passkey is one card under them
-      b.innerHTML = tabHead(ICON.device, 'Passkeys', 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in.') + list +
-        (can ? ecCard('', ICON.key, 'Add a Passkey', 'Your browser or phone asks which device or key to use. Adding or removing a passkey needs your website password.',
-          '<div id="ix-pkst"></div><p class="ix-err" id="ix-pke"></p>')
-          : ecCard('warn', ICON.lock, 'Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.' + (keys.length ? ' You can still remove the ones you have: type your website password below.' : ''),
-            keys.length ? '<div class="ix-fgrid">' + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div><p class="ix-err" id="ix-pke"></p>' : ''));
+      // (1.78.0) one card: what a passkey is on the left, your passkeys and the way to add one on the right
+      var pkDesc = 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in. Adding or removing one needs your website password.';
+      b.innerHTML = can ? ecCard('ix-split', ICON.device, 'Passkeys', pkDesc, list + '<div id="ix-pkst"></div><p class="ix-err" id="ix-pke"></p>', '<span class="ix-pill ' + (keys.length ? 'good' : '') + '">' + (keys.length ? keys.length + (keys.length === 1 ? ' Passkey' : ' Passkeys') : 'None Yet') + '</span>')
+        : ecCard('ix-split warn', ICON.lock, 'Passkeys Are Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.' + (keys.length ? ' You can still remove the ones you have: type your website password below.' : ''),
+            list + (keys.length ? '<div class="ix-frm">' + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div><p class="ix-err" id="ix-pke"></p>' : ''));
       var err = function (t) { var e = b.querySelector('#ix-pke'); if (e) e.textContent = t; }, val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
       /* (1.69.0) Add a Passkey is a Stepper: Name -> Your Device (the last button, #ix-pkadd, asks the device). A wrong password goes back. */
       var pkHost = b.querySelector('#ix-pkst');
       if (pkHost) stepper(pkHost, { kind: 'dots', linear: true, lastId: 'ix-pkadd', complete: 'Ask My Device',
         steps: [
-          { title: 'Name', html: '<div class="ix-fgrid">' + ecField('ix-pkn', 'Name', 'text', 'off', 'Like "My Phone" or "Laptop".') + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div>',
+          { title: 'Name', html: '<div class="ix-frm">' + ecField('ix-pkn', 'Name', 'text', 'off', '', '', ' placeholder="Like My Phone or Laptop"') + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div>',
             next: function (q, c) { if (!val('#ix-pkw')) { c.err('Type your website password first.'); return false; } } },
           { title: 'Your Device', html: '<p>Your browser or phone now asks which device or key to use: your fingerprint, face, PIN or a security key.</p>',
             next: function (q, c) {
@@ -193,19 +190,18 @@
       } else {
         html = card('good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
           card('', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
-            '<div class="ix-fgrid">' + fd('ix-ccur', 'Current Passphrase or Recovery Key', 'off') + fd('ix-cpw', 'Website Password', 'current-password') + '</div>' +
-            '<div class="ix-fgrid">' + fd('ix-cn1', 'New Passphrase', 'new-password') + fd('ix-cn2', 'Type It Again', 'new-password') + '</div>' +
-            '<p class="ix-err" id="ix-ce"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-cgo">Change Passphrase</button></div>') +
+            '<div class="ix-frm">' + fd('ix-ccur', 'Current Passphrase or Recovery Key', 'off') + fd('ix-cpw', 'Website Password', 'current-password') + fd('ix-cn1', 'New Passphrase', 'new-password') + fd('ix-cn2', 'Type It Again', 'new-password') + '</div>' +
+            '<div class="ix-fact"><p class="ix-err" id="ix-ce"></p><button type="button" class="ix-btn pri" id="ix-cgo">Change Passphrase</button></div>') +
           '<div id="ix-rec">' + card('', ICON.box, 'Recovery Key', 'A spare way in. If you ever forget the passphrase, this code opens your Files, Cards, presets and locked tabs and lets you set a new passphrase. Keep it somewhere safe (print it, or put it in a password manager): anyone who has it can open them.',
-            '<div class="ix-fgrid">' + fd('ix-rpp', 'Your Passphrase', 'off') + fd('ix-rpw', 'Website Password', 'current-password') + '</div>' +
-            '<p class="ix-err" id="ix-re"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-rmk">' + (st.rec ? 'Make a New Recovery Key' : 'Create Recovery Key') + '</button>' +
+            '<div class="ix-frm">' + fd('ix-rpp', 'Your Passphrase', 'off') + fd('ix-rpw', 'Website Password', 'current-password') + '</div>' +
+            '<div class="ix-fact"><p class="ix-err" id="ix-re"></p><button type="button" class="ix-btn pri" id="ix-rmk">' + (st.rec ? 'Make a New Recovery Key' : 'Create Recovery Key') + '</button>' +
             (st.rec ? '<button type="button" data-hold class="ix-btn danger" id="ix-rdel">Remove Recovery Key</button>' : '') + '</div><div id="ix-rshow"></div>',
             '<span class="ix-pill ' + (st.rec ? 'good' : '') + '">' + (st.rec ? (st.recGap ? 'Make a New One' : 'Created') : 'Not Created') + '</span>') +
           (st.recGap ? '<p class="ix-note">Your recovery key is older than Files and Cards. Make a new one below.</p>' : '') + '</div>' +
           '<form id="ix-ef">' + card('danger', ICON.out, 'Remove Encryption', 'Locked tabs turn back into normal private tabs (still hidden from visitors) and backup files stop being locked. To use a different passphrase, change it above instead.',
-            '<div class="ix-fgrid">' + fd('ix-ecur', 'Your Passphrase', 'off') + fd('ix-epw', 'Website Password', 'current-password') + '</div>' +
+            '<div class="ix-frm">' + fd('ix-ecur', 'Your Passphrase', 'off') + fd('ix-epw', 'Website Password', 'current-password') + '</div>' +
             fd('ix-eold', 'Earlier Passphrase', 'off', 'The one your existing locked tabs use now.', 'ix-eoldw') +
-            '<p class="ix-err" id="ix-ee"></p><div class="ix-row"><button type="button" data-hold class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
+            '<div class="ix-fact"><p class="ix-err" id="ix-ee"></p><button type="button" data-hold class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
       }
       b.innerHTML = tabHead(ICON.lock, 'Encryption', 'One passphrase locks your Files, Cards and saved presets, your private tabs in Info and Links, and your backup files. Only you can unlock them.') + html;
       var er = b.querySelector('#ix-ee'), val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
@@ -220,7 +216,7 @@
         var recCode = '', recFail = function (x) { return x && x.user ? x.message : "Can't reach the server. Nothing was changed."; };
         stepper(b.querySelector('#ix-encst'), { kind: 'numbers', linear: true, complete: 'Finish',
           steps: [
-            { title: 'Passphrase', html: '<p>At least 8 characters. A few words you will remember work better than a short jumble.</p><div class="ix-fgrid">' + fd('ix-en1', 'New Passphrase', 'new-password') + fd('ix-en2', 'Type It Again', 'new-password') + '</div>' +
+            { title: 'Passphrase', html: '<p>At least 8 characters. A few words you will remember work better than a short jumble.</p><div class="ix-frm">' + fd('ix-en1', 'New Passphrase', 'new-password') + fd('ix-en2', 'Type It Again', 'new-password') + '</div>' +
                 '<label class="ix-chk"><input type="checkbox" id="ix-eack"> I understand a lost passphrase cannot be recovered without a recovery key</label>',
               next: function (p, c) {
                 if (val('#ix-en1').length < 8) { c.err('Use at least 8 characters for the passphrase.'); return false; }
@@ -299,12 +295,11 @@
     function drawAp() {
       var b = body('ap'), a = st.ap;
       if (!a.ok) { b.innerHTML = spinRow(); return; }
-      b.innerHTML = tabHead(ICON.send, 'Login Approval', 'Even someone who knows your password cannot get in until you tap Approve on your phone.') +
-        ecCard(a.on ? 'good' : '', ICON.bell, a.on ? 'Login Approval Is On' : 'Login Approval Is Off',
-          'After the password (and the two-step code), a new browser waits until you tap <b>Approve</b> on a message from your Telegram bot. You see every login and can refuse it.',
+      b.innerHTML = ecCard('ix-split' + (a.on ? ' good' : ''), ICON.send, 'Login Approval',
+          'Even someone who knows your password cannot get in until you tap <b>Approve</b> on a message from your Telegram bot, after the password (and the two-step code). You see every login and can refuse it.',
           (a.telegram ? '' : '<div class="ix-status"><span>!</span><span><b>Set up the Telegram bot first.</b> <a href="#" id="ix-apgo">Open Settings › Telegram</a></span></div>') +
-          '<form id="ix-apform">' + ecField('ix-appw', 'Website Password', 'password', 'current-password', a.on ? 'Needed to turn this off.' : 'Needed to turn this on.') +
-            '<div class="ix-row">' + (a.on ? '<button class="ix-btn" data-ap="off">Turn Off</button>' : '<button class="ix-btn pri" data-ap="on"' + (a.telegram ? '' : ' disabled') + '>Turn On</button>') + '</div>' +
+          '<form id="ix-apform"><div class="ix-fact ix-fbot">' + ecField('ix-appw', 'Website Password', 'password', 'current-password', '', '', ' placeholder="' + (a.on ? 'Needed to turn this off' : 'Needed to turn this on') + '"') +
+            (a.on ? '<button class="ix-btn" data-ap="off">Turn Off</button>' : '<button class="ix-btn pri" data-ap="on"' + (a.telegram ? '' : ' disabled') + '>Turn On</button>') + '</div>' +
             '<p class="ix-err" id="ix-aperr"></p></form>',
           '<span class="ix-pill ' + (a.on ? 'good' : '') + '">' + (a.on ? 'On' : 'Off') + '</span>') +
         '<div class="ix-sect">If Something Goes Wrong</div><div class="ix-trio">' +
@@ -337,9 +332,6 @@
     }
 
     /* Devices: who is logged in (end any login), the two log-out buttons, and the recent login history */
-    var EV = { login: ['Logged In', '', '✓'], failed: ['Wrong Password', 'warn', '!'], locked: ['Logins Paused After Too Many Wrong Tries', 'warn', '!'], password: ['Password Changed', '', '✓'],
-               logoutall: ['Other Devices Logged Out', '', '✓'], twostep_on: ['Two-Step Login Turned On', '', '✓'], twostep_off: ['Two-Step Login Turned Off', 'warn', '!'],
-               recovery: ['New Recovery Codes Made', '', '✓'], restore: ['Backup Restored', 'warn', '!'] };
     function drawDevices() {
       var b = body('dev');
       b.innerHTML = tabHead(ICON.out, 'Devices and Login History', 'See where you are logged in, end any login, and look back at recent activity.') +
@@ -359,10 +351,7 @@
           : '<div class="ix-empty"><b>Nothing Recorded Yet</b><p>Logins from now on are listed here. Logins made before this version are not.</p></div>';
         dl.querySelectorAll('[data-rev]').forEach(function (x) { x.onclick = function () {
           x.disabled = true; api('session_revoke', { id: x.dataset.rev }).then(function (k) { toast(k.ok ? 'That device is logged out.' : (k.error || 'Could not log it out.')); drawDevices(); }); }; });
-        var rows = j.events.map(function (e) {
-          var m = EV[e.ev] || [e.ev, '', '•'], label = e.ev === 'failed' ? (e.x === 'code' ? 'Wrong Two-Step Code' : e.x === 'passkey' ? 'Passkey Not Accepted' : 'Wrong Password') : e.ev === 'passkey' ? (e.x === 'removed' ? 'Passkey Removed' : 'Passkey Added') : m[0];
-          return checkRow(m[1], m[2], esc(label), esc(e.who || '') + ' · ' + esc(e.ip || '') + (e.cc ? ' (' + esc(e.cc) + ')' : '') + ' · ' + esc(ago(e.t)));
-        });
+        var rows = j.events.filter(function (e) { return LOGSEC[e.ev]; }).map(actRow);   // only the security events here; everything else is in Logs > Activity
         al.innerHTML = rows.length ? '<div class="ix-checks">' + rows.slice(0, 15).join('') + '</div>' + (rows.length > 15 ? '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn" id="ix-actmore">Show ' + (rows.length - 15) + ' More</button></div>' : '')
           : '<div class="ix-empty"><b>No Activity Yet</b><p>Logins, wrong passwords and security changes appear here.</p></div>';
         var more = al.querySelector('#ix-actmore'); if (more) more.onclick = function () { al.querySelector('.ix-checks').innerHTML = rows.join(''); more.remove(); };
@@ -635,11 +624,11 @@
   function twoStep(box) {
     var head = tabHead(ICON.device, 'Two-Step Login', 'A 6-digit code from an authenticator app, on top of your password.');
     if (S.twoStep) {
-      box.innerHTML = head + ecCard('good', ICON.shield, 'Two-Step Login Is On', 'Logins ask for your app\'s 6-digit code (not on trusted browsers). Lost your phone? Use a recovery code.',
-          '<div class="ix-chips" style="margin-top:0">' + ecChip('Recovery Codes Left', String(S.recoveryLeft), S.recoveryLeft > 2) + '</div>' + (S.recoveryLeft <= 2 ? '<p class="ix-note">Running low. Make new recovery codes below and keep them somewhere safe.</p>' : '')) +
-        ecCard('', ICON.key, 'Manage', 'Your website password is needed to change these settings.',
-          ecField('ix-2p', 'Website Password', 'password', 'current-password') +
-          '<p class="ix-err" id="ix-2e"></p><div class="ix-row"><button type="button" class="ix-btn" id="ix-rc">New Recovery Codes</button><button type="button" class="ix-btn danger" id="ix-off">Turn Off</button></div>') + '<div id="ix-rcs"></div>';
+      box.innerHTML = ecCard('ix-split good', ICON.device, 'Two-Step Login', 'Logins ask for your app\'s 6-digit code (not on trusted browsers). Lost your phone? Use a recovery code. Your website password is needed to change these settings.',
+          '<div class="ix-chips" style="margin:0 0 14px">' + ecChip('Recovery Codes Left', String(S.recoveryLeft), S.recoveryLeft > 2) + '</div>' + (S.recoveryLeft <= 2 ? '<p class="ix-note">Running low. Make new recovery codes and keep them somewhere safe.</p>' : '') +
+          '<div class="ix-frm">' + ecField('ix-2p', 'Website Password', 'password', 'current-password') + '</div>' +
+          '<div class="ix-fact"><p class="ix-err" id="ix-2e"></p><button type="button" class="ix-btn" id="ix-rc">New Recovery Codes</button><button type="button" class="ix-btn danger" id="ix-off">Turn Off</button></div>',
+          '<span class="ix-pill good">On</span>') + '<div id="ix-rcs"></div>';
       box.querySelector('#ix-off').onclick = function () { api('twostep_disable', { password: box.querySelector('#ix-2p').value }).then(function (j) {
         if (!j.ok) { box.querySelector('#ix-2e').textContent = j.error; return; } S.twoStep = false; twoStep(box); toast('Two-step login is off.'); if (secRefresh) secRefresh(); }); };
       box.querySelector('#ix-rc').onclick = function () { api('recovery_new', { password: box.querySelector('#ix-2p').value }).then(function (j) {
@@ -648,9 +637,9 @@
     }
     var how = function (n, t, d) { return '<div class="ix-mini"><span class="ix-num">' + n + '</span><b>' + t + '</b><p>' + d + '</p></div>'; };
     var tsBar = function (at) { return stepBar(['Get an App', 'Scan the Code', 'Type the Code', 'Save Recovery Codes'], at, { locked: true, done: [0, 1, 2, 3].map(function (i) { return i < at; }) }); };   // (1.66.0)
-    box.innerHTML = head + tsBar(0) + ecCard('', ICON.lock, 'Add a Second Step', 'Your password alone is no longer enough: a thief would also need your phone.',
+    box.innerHTML = ecCard('ix-split', ICON.device, 'Two-Step Login', 'A 6-digit code from an authenticator app, on top of your password. Your password alone is no longer enough: a thief would also need your phone.',
         '<div class="ix-trio" style="margin:0 0 14px">' + how(1, 'Get an App', 'Any authenticator app works: Google Authenticator, Microsoft Authenticator, Aegis, 1Password.') + how(2, 'Scan the Code', 'Point the app at the code on the next screen.') + how(3, 'Save Your Codes', 'Keep the recovery codes somewhere safe, for the day you lose your phone.') + '</div>' +
-        '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-on">Set Up Two-Step Login</button></div>');
+        '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-on">Set Up Two-Step Login</button></div>', '<span class="ix-pill">Off</span>');
     box.querySelector('#ix-on').onclick = function () {
       api('twostep_begin', {}).then(function (j) {
         if (!j.ok) { toast(j.error); return; }

@@ -13,11 +13,11 @@
 /* Map of this file (search for the names; line numbers would go stale). One closure, in this order:
  *   frame      SECTIONS, PANES, mount(), go(), pane(), tabify(), cardify(), the draft and "Save Settings" (saveSettings)
  *   search     SEARCH: add a line here for every new setting
- *   General    helpCards (Start Here), pGeneral, textSizes
+ *   General    helpCards (shown in Features), pGeneral, textSizes
  *   Appearance pLook, barHtml, accentHtml, pColors, PRESETS / PRESET_GROUPS (data), pThemes, pGlass
- *   Bar        pNav (bar settings and tabs), tabEditor
- *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles), pDomains
- *   Start Here decorateNav, pStart (Start Here: pSetup, Guided Setup, WZ, setupSteps)
+ *   Bar        pBar (bar settings and tabs, the second half of Look & Bar), tabEditor
+ *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles)
+ *   Menu       decorateNav, paintHead, stepBar
  *   Changelog mdInline, mdBlocks, clParse, pChangelog (a tab of Updates)
  *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles (shown in Health > Server Check)
  *   building blocks (used by every pane)  ecCard, ecField, ecChip, tabHead, tile, checkRow, spinRow
@@ -53,13 +53,13 @@
   ICON.users = 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 7.5M22 21a7 7 0 0 0-5-6.7';
   // [id, name, icon, what it is for (shown under the title), sub-tabs [[id, name]], menu group]
   var SECTIONS = [
-    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and a short guide to getting set up.', [['general', 'General'], ['setup', 'Start Here']], 'Web Setting'],
-    ['look', 'Appearance', ICON.palette, 'The theme, font, bar, colors and glass.', [['look', 'Look'], ['nav', 'Bar'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
+    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone.', null, 'Web Setting'],
+    ['look', 'Appearance', ICON.palette, 'The theme, font, bar and tabs, colors and glass.', [['look', 'Look & Bar'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
     ['security', 'Security', ICON.shield, 'Login, passkeys and encryption.', null, 'Data Setting'],
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
-    ['logs', 'Logs', ICON.log, 'Everything the site told you, who logged in, and what went wrong.', [['logs', 'Notifications'], ['logsign', 'Sign-Ins'], ['logerr', 'PHP Errors']], 'System Setting'],
-    ['health', 'Health', ICON.pulse, 'Version, speed, errors, domains and a check of your server.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
+    ['logs', 'Logs', ICON.log, 'What the site told you, what was done and who logged in, and what went wrong.', [['logs', 'Notifications'], ['logsign', 'Activity'], ['logerr', 'PHP Errors']], 'System Setting'],
+    ['health', 'Health', ICON.pulse, 'Version, speed, errors and a check of your server.', [['health', 'Overview'], ['check', 'Server Check']], 'System Setting'],
     // (1.77.1) Updates has two tabs: Update and Changelog (one list of every version; the old Notes moved to Features)
     ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Changelog']], 'System Setting'],
     // (1.76.0) Features: what the site does, page by page, with the settings of each part (Files' work right there)
@@ -87,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, features: pFeatures };
+  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, general: pGeneral, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, check: pCheck, changelog: pChangelog, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -190,8 +190,8 @@
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'features', 'keys keyboard hotkeys shortcut question mark help'], ['Install on Your Phone', 'features', 'app home screen phone install add to home screen iphone android help'],
     ['Features', 'features', 'what the site does pages home links info cards tasks files tools'],
     ['Cloud Backup', 'backup', 'webdav nextcloud owncloud synology nas storage box off site copy encrypted schedule'],
-    ['Guided Setup', 'setup', 'start here wizard steps protect'], ['Offline Reading', 'features', 'offline airplane no connection internet read without cache device app'],
-    ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'nav', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'nav', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
+    ['Offline Reading', 'features', 'offline airplane no connection internet read without cache device app'],
+    ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'look', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'look', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'look', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
@@ -202,8 +202,8 @@
     ['Back Up', 'backup/overview', 'download backup file locked passphrase'], ['Restore a Backup', 'backup/restore', 'import'], ['Export', 'backup/export', 'csv json spreadsheet links cards tasks'],
     ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
     ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'check', 'extra changed missing leftover files'],
-    ['Health', 'health', 'disk speed errors log'], ['Domains and Uptime', 'domains', 'expiry ssl hosting renewal'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
-    ['Logs', 'logs', 'notifications messages history log activity'], ['Sign-In History', 'logsign', 'logins wrong password activity'], ['PHP Errors', 'logerr', 'error log'],
+    ['Health', 'health', 'disk speed errors log'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
+    ['Logs', 'logs', 'notifications messages history log activity'], ['Activity', 'logsign', 'sign-in history logins wrong password what was done backups updates restores changes settings saved audit'], ['PHP Errors', 'logerr', 'error log'],
     ['Changelog', 'changelog', 'changelog versions history what changed new version map'], ['Good to Know', 'features', 'notes how updating works']
   ];
   function bindSearch(host) {
@@ -232,7 +232,9 @@
     target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'general';
     if (id === 'remind') id = 'telegram';
     if (id === 'system') id = 'updates';   // the System section of 1.48 is Updates, Health and Changelog again
-    if (id === 'pages') id = 'nav';        // General > Pages was removed in 1.48.5: its old links open Tabs
+    if (id === 'pages' || id === 'nav') id = 'look';   // Pages (1.48.5) and the Bar tab (1.78.0) are now part of Look & Bar
+    if (id === 'domains') id = 'health';   // Domains and Uptime was removed in 1.78.0
+    if (id === 'setup') id = 'general';   // Start Here was removed in 1.78.0
     // (1.70.0) the moves: Updates > Files is part of Health > Server Check; Telegram > Backups is part of Backup & Restore
     if (id === 'files') id = 'check';
     if (id === 'telegram' && parts[1] === 'backups') { id = 'backup'; parts = ['backup']; }
@@ -300,7 +302,7 @@
   var tabObs = null;
   /* The plain panes (General, Tabs, Look) are written as "heading, one line, controls". Each heading with what follows it
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
-  var CARDIFY = { general: 1, nav: 1, look: 1, glass: 1 };
+  var CARDIFY = { general: 1, look: 1, glass: 1 };
   var OFFL = function () { return K.offline(); };
   var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages, 'glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear, 'liquid': ICON.sparkle, 'where': ICON.grid };

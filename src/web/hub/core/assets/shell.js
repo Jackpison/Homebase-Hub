@@ -366,6 +366,7 @@
   var NOTE_ICON = { bad: 'M12 3l10 18H2zM12 10v5M12 18h.01', ok: 'M5 12l5 5 9-10', act: 'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',
     del: 'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6', box: 'M21 8v13H3V8M1 3h22v5H1zM10 12h4', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z',
     copy: 'M9 9h11v11H9zM5 15H4V4h11v1', lock: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4', sync: 'M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M3 21v-5h5M21 3v5h-5', plus: 'M12 5v14M5 12h14' };
+  var NOTE_HINT = /^Hold the button down to confirm\.?$/;
   function noteKind(msg, bad, act) {
     if (bad) return 'bad'; if (act) return 'act'; var m = String(msg).toLowerCase();
     if (/trash|delet|remov|erase|cleared/.test(m)) return 'del';
@@ -429,7 +430,11 @@
     var list = document.getElementById('ix-nlist'); if (list) list.remove();
     var same = [].filter.call(t.children, function (c) { return c.dataset.msg === msg; })[0];   // the same message again: one card, kept longer
     if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
-    else { noteHist.push({ m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', ts: Date.now() }); noteLogAdd(noteHist[noteHist.length - 1]); noteHist = noteHist.slice(-NOTE_KEEP); noteSave(); }
+    else {
+      var e = { m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', ts: Date.now() };
+      noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteSave();
+      if (!NOTE_HINT.test(msg)) noteLogAdd(e);   // (1.78.0) a hint ("Hold the button down to confirm.") is shown, but it is not something that got done: it stays out of Settings > Logs
+    }
     var c = document.createElement('div'), kind = noteKind(msg, bad, act);
     c.className = 'ix-nc' + (bad ? ' bad' : ''); c.dataset.msg = msg;
     c.innerHTML = noteTile(kind) + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(NOTE_SRC[APP] || 'Homebase Hub') + ' · now</small></div><button type="button" class="ix-nx" aria-label="Close message">×</button>';
@@ -1729,7 +1734,7 @@
 
 
   /* what shell-admin.js may use (it holds this same S object, so it always sees the current state) */
-  window.__ixShell = { S: S, esc: esc, toast: toast, noteLog: noteLogGet, noteLogClear: noteLogClear, noteTile: noteTile, noteKind: noteKind, api: api, ICON: ICON, dollar: $, svg: svg, drawBar: drawBar, redraw: function () { lastBar = ''; drawBar(); },
+  window.__ixShell = { S: S, esc: esc, toast: toast, noteLog: noteLogGet, noteLogClear: noteLogClear, noteTile: noteTile, noteKind: noteKind, legacyCopy: legacyCopy, api: api, ICON: ICON, dollar: $, svg: svg, drawBar: drawBar, redraw: function () { lastBar = ''; drawBar(); },
     remember: remember, applySizes: applySizes, APP: APP, openDlg: openDlg, closeDlg: closeDlg, login: login, ROOT: ROOT, applyFont: applyFont,
     applyColors: applyColors, applyAttrs: applyAttrs, PG_APPS: PG_APPS, CORE: CORE, ASSETS: ASSETS, COLOR_DEFAULT: COLOR_DEFAULT, setTheme: setTheme, pageList: pageList,
     applyFavicon: applyFavicon, SIZE_SPEC: SIZE_SPEC, PAGE_DEF: PAGE_DEF, FONTS: FONTS, COLOR_KEYS: COLOR_KEYS, when: when, previewWith: previewWith,

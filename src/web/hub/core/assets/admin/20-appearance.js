@@ -1,4 +1,4 @@
-  /* Appearance > Look (1.70.0): the theme, the font and the text sizes. The bar's settings are on the Bar tab, Accent Color on Colors, the glass switch on Glass. */
+  /* Appearance > Look & Bar: the theme, the font and the text sizes, then the bar (style, behaviour, tabs; they had a tab of their own before 1.78.0). Accent Color is on Colors, the glass switch on Glass. */
   function pLook(p) {
     p.innerHTML = '<h3>Theme</h3><p>The default look. The sun/moon button in the bar changes it just for you.</p>' +
       seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
@@ -11,8 +11,9 @@
     p.querySelector('#ix-font').onchange = function (e) { draft.font = e.target.value; p.querySelector('#ix-fontc').hidden = draft.font !== 'custom'; if (draft.font === 'custom') p.querySelector('#ix-fontc').focus(); preview(); };
     p.querySelector('#ix-fontc').oninput = function (e) { draft.fontCustom = e.target.value; preview(); };
     p.querySelectorAll('[data-ts]').forEach(function (b) { b.onclick = function () { textSizes(b.dataset.ts); }; });
+    pBar(p);
   }
-  /* Appearance > Bar (1.70.0): how the bar looks and acts, then its tabs (pNav). */
+  /* the bar: how it looks and acts, then its tabs */
   function barHtml() {
     return '<h3>Navigation Style</h3><p>For every page.</p>' +
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +

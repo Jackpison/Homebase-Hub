@@ -844,8 +844,8 @@ function bxList(remove){
   return list;
 }
 $("bxdel").onclick=()=>{
-  const t=BX.t,gone=rawBox(BX.b,t.enc),at=t.boxes.indexOf(BX.b);
-  saveBoxList(t,bxList(true),x=>$("bxmsg").textContent=x,()=>{bxdlg.close();if(window.HUB&&HUB.undo)HUB.undo("Box deleted.",()=>undoBox(t.id,gone,at))});
+  const t=BX.t,gone=rawBox(BX.b,t.enc),at=t.boxes.indexOf(BX.b),what=t.enc?"":": "+(BX.b.title||"Box");
+  saveBoxList(t,bxList(true),x=>$("bxmsg").textContent=x,()=>{bxdlg.close();if(window.HUB&&HUB.undo)HUB.undo("Box deleted"+what+" (in "+(t.name||"Tab")+").",()=>undoBox(t.id,gone,at))});
 };
 // (1.62.0) Undo after a delete: what the server sent is kept for 7 seconds (a locked tab's text stays locked) and sent back as "restore"
 const rawBox=(b,enc)=>({id:b.id,w:b.w,h:b.h,title:enc?b.ct:b.title,notes:enc?b.cn:b.notes});
@@ -906,7 +906,7 @@ function openTabEditor(id){
     },
     onDelete(ctl){
       const at=TABS.indexOf(t),gone={...tabItem(t,at),boxes:t.boxes.map(b=>rawBox(b,t.enc))};
-      saveTabsList(etList(true,null),ctl.say,()=>{ctl.close();if(window.HUB&&HUB.undo)HUB.undo("Tab deleted.",()=>undoTab(gone,at))});
+      saveTabsList(etList(true,null),ctl.say,()=>{ctl.close();if(window.HUB&&HUB.undo)HUB.undo("Tab deleted: "+(gone.name||"Tab")+".",()=>undoTab(gone,at))});
     }
   });
 }

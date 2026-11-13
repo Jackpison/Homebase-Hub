@@ -383,9 +383,6 @@ html[data-ix-look][data-ix-app="tools"]:not([data-theme="light"]){--bg:#000!impo
 #ix-dlg details.ix-apc summary{cursor:pointer;color:var(--ix-accent-tx);font-weight:600}
 #ix-dlg details.ix-apc form{margin-top:10px}
 #ix-dlg details.ix-apc button{margin-top:8px}
-.ix-wdot{width:9px;height:9px;border-radius:50%;background:var(--ix-mu2);display:inline-block}
-.ix-wdot.up{background:var(--ix-good)}
-.ix-wdot.down{background:var(--ix-bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--ix-bad) 25%,transparent)}
 #ix-dlg .ix-chk small{color:var(--ix-mu2);font-size:12.5px}
 /* Text sizes (Info, Cards): the same layout as Links' own Text sizes */
 #ix-dlg .ix-tsf{margin-bottom:12px}
@@ -938,7 +935,6 @@ html[data-theme="light"] .ix-st-glider{background:linear-gradient(180deg,#fff,#f
   font:700 11px/1.2 var(--ix-font);letter-spacing:.06em;opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap}
 .ix-uf-tip::after{content:"";position:absolute;right:16px;bottom:-4px;width:9px;height:9px;background:inherit;transform:rotate(45deg)}
 .ix-uf-cp:hover .ix-uf-tip,.ix-uf-cp:focus-visible .ix-uf-tip,.ix-uf-cp.done .ix-uf-tip{opacity:1;transform:none}
-.ix-uf-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ix-uf-row > .ix-uf{flex:1 1 220px;width:auto}
 @media (prefers-reduced-motion:reduce){.ix-uf:not(#\#),.ix-uf-tip{transition:none}}
 .ix-uf-gap:not(#\#){margin:8px 0 14px}
 .ix-uf-key:not(#\#){max-width:460px;margin:12px 0}

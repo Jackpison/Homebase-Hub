@@ -147,6 +147,8 @@ case 'notify_today':
         if (isset($b['hour'])) $d['hour'] = max(0, min(23, (int)$b['hour']));
         if ($d['on'] && ($d['token'] === '' || $d['chat'] === '')) $d['on'] = false;
         nt_save_keys($d, NT_USER_KEYS);
+        $did = !empty($b['clearToken']) ? 'bot removed' : ($tok !== '' ? 'bot token saved' : (isset($b['chat']) ? 'chat connected' : (isset($b['hour']) ? 'daily message time changed' : (isset($b['on']) ? ($d['on'] ? 'messages on' : 'messages off') : ''))));
+        if ($did !== '') hub_act('telegram', $did);
         hub_json(200, nt_view($d));
     }
     if ($d['token'] === '') hub_json(400, ['ok' => false, 'error' => 'Add the bot token first.']);
@@ -168,17 +170,20 @@ case 'notify_today':
         if (empty($r['ok'])) hub_json(400, ['ok' => false, 'error' => 'Telegram: ' . ($r['description'] ?? 'no answer')]);
         if (isset($b['chatName']) && $d['chatName'] === '') $d['chatName'] = mb_substr(strip_tags((string)$b['chatName']), 0, 80);
         nt_save_keys($d, NT_USER_KEYS);
+        hub_act('telegram', 'test message sent');
         hub_json(200, ['ok' => true] + nt_view($d));
     }
     if ($action === 'notify_today') {   // Send Today's Tasks Now: the daily list, at once (even when nothing is due)
         $r = nt_send($d, (string)nt_digest($d, true));
         if (empty($r['ok'])) hub_json(400, ['ok' => false, 'error' => 'Telegram: ' . ($r['description'] ?? 'no answer')]);
+        hub_act('telegram', 'today\'s tasks sent');
         hub_json(200, ['ok' => true, 'note' => 'Sent. Check Telegram.'] + nt_view($d));
     }
     if ($action === 'notify_backup') {
         @set_time_limit(240); @ignore_user_abort(true);   // finish and remember the backup even if the browser stopped waiting
         $r = nt_backup_send($d); $d = nt_save_keys($d, array_merge(NT_USER_KEYS, ['bkLast', 'bkError']));
         if (empty($r['ok'])) hub_json(400, ['ok' => false, 'error' => 'Telegram: ' . ($r['description'] ?? 'no answer')] + nt_view($d));
+        hub_act('backup', 'sent to Telegram');
         hub_json(200, ['ok' => true, 'note' => 'Backup sent. Check Telegram.', 'backupLast' => time()] + nt_view($d));
     }
     $r = nt_run(true);
@@ -402,7 +407,13 @@ case 'settings':
     if (!is_array($in)) hub_json(400, ['ok' => false, 'error' => 'Nothing to save.']);
     // only what Settings edits; the backup date and logo always come from the file as it is now
     unset($in['backupLast'], $in['logo']);
-    $s = hub_settings_update(function ($cur) use ($in) { return array_replace($cur, $in); });
+    $changed = [];
+    $s = hub_settings_update(function ($cur) use ($in, &$changed) {
+        $changed = [];
+        foreach ($in as $k => $v) if (!array_key_exists($k, $cur) || $cur[$k] !== $v) $changed[] = (string)$k;
+        return array_replace($cur, $in);
+    });
+    if ($changed) hub_act('settings', implode(', ', $changed));   // which settings, never their values
     hub_json(200, ['ok' => true, 'state' => array_merge(hub_public_state(), ['siteName' => $s['siteName']])]);
 
 case 'logo':   // POST {data: "data:image/png;base64,..."} sets the site logo; POST {remove: true} removes it
@@ -421,6 +432,7 @@ case 'logo':   // POST {data: "data:image/png;base64,..."} sets the site logo; P
     }
     foreach (glob($dir . '/logo-*') ?: [] as $f) if ($path === '' || basename($f) !== basename($path)) @unlink($f);   // old logos, only now
     hub_settings_update(function ($s) use ($path) { $s['logo'] = $path; return $s; });
+    hub_act('logo', $path === '' ? 'removed' : 'changed');
     hub_json(200, ['ok' => true, 'state' => hub_public_state()]);
 
 case 'favicon':   // Tools > Favicon: the icon of a website, fetched here because Google's service does not let a browser save its pictures
@@ -508,6 +520,7 @@ case 'backup':
         $name = preg_replace('/\.json$/', '.enc.json', $name);
     }
     header('Content-Disposition: attachment; filename="' . $name . '"');
+    hub_act('backup', (!empty($_GET['enc']) ? 'downloaded, locked: ' : 'downloaded: ') . implode(', ', array_keys($pick)));
     if (count(array_intersect_key($pick, array_flip(BK_PARTS))) === count(BK_PARTS) && !array_filter($pick, 'is_array')) hub_settings_update(function ($s) { $s['backupLast'] = time(); return $s; });
     echo $json;   // nosemgrep: php.lang.security.injection.echoed-request.echoed-request -- the backup as a JSON download (attachment), never shown as a page
     exit;
@@ -545,10 +558,11 @@ case 'version_restore':
             if (!is_array($old['settings'] ?? null)) $old['settings'] = [];
             $old['settings']['vault'] = $curV;
             foreach (['dark', 'light', 'sizes'] as $k) if (array_key_exists($k, $old['settings']) && !$old['settings'][$k]) unset($old['settings'][$k]);
-            if (hub_write_guarded($target, $old)) hub_json(200, ['ok' => true]);
+            if (hub_write_guarded($target, $old)) { hub_act('version_restore', $app); hub_json(200, ['ok' => true]); }
         }
     }
     if (!hub_write($target, $content)) hub_json(500, ['ok' => false, 'error' => 'Could not restore.']);
+    hub_act('version_restore', $app);
     hub_json(200, ['ok' => true]);
 
 /* ---- Settings > Security: approve logins in Telegram ---- */
@@ -567,15 +581,17 @@ case 'approval_untrust':
     $b = body();
     if ($action !== 'approval_untrust') need_password((string)($b['password'] ?? ''));
     // off: no more questions, but trusted browsers stay (they also skip the two-step code)
-    if ($action === 'approval_off') { ap_update(function (&$d) { $d['on'] = false; $d['pending'] = []; }); hub_json(200, ['ok' => true]); }
+    if ($action === 'approval_off') { ap_update(function (&$d) { $d['on'] = false; $d['pending'] = []; }); hub_act('approval', 'off'); hub_json(200, ['ok' => true]); }
     if ($action === 'approval_untrust') {
         $i = (int)($b['i'] ?? -1);
         ap_update(function (&$d) use ($i) { if ($i < 0) $d['trusted'] = []; else array_splice($d['trusted'], $i, 1); });
+        hub_act('approval', $i < 0 ? 'all trusted browsers removed' : 'trusted browser removed');
         hub_json(200, ['ok' => true]);
     }
     $n = nt_load();
     if ($n['token'] === '' || $n['chat'] === '') hub_json(400, ['ok' => false, 'error' => 'Set up the Telegram bot first (Settings > Telegram).']);
     ap_update(function (&$d) { $d['on'] = true; });
+    hub_act('approval', 'on');
     hub_json(200, ['ok' => true]);
 
 /* ---- Backup > Encryption ---- */
@@ -607,6 +623,7 @@ case 'session_revoke':   // log out one device from the list ({id}); the one you
     need_post(); need_admin();
     require_once __DIR__ . '/lib/activity.php';
     $okr = act_revoke((string)(body()['id'] ?? ''));
+    if ($okr) hub_act('session_revoke', 'one device logged out');
     hub_json($okr ? 200 : 400, ['ok' => $okr, 'error' => $okr ? '' : 'That device cannot be logged out from here.']);
 
 case 'export':   // Settings > Backup > Export Data: one page's own data, to be turned into a CSV or JSON file in the browser
@@ -666,6 +683,7 @@ case 'update_apply':   // applies the checked zip, or goes back to the saved ver
     if (isset($b['autoUndo'])) { $us = up_state(); $us['autoUndo'] = (bool)$b['autoUndo']; up_state_save($us); }
     $us = up_state(); $r = up_apply(!empty($b['back']), !isset($us['autoUndo']) || !empty($us['autoUndo']));
     $code = $r['ok'] ? 200 : (int)($r['code'] ?? 500); unset($r['code']);   // 409: nothing ready to apply (not a server failure)
+    if ($r['ok']) hub_act(!empty($b['back']) ? 'update_back' : 'update', (string)($r['from'] ?? '') . ' to ' . (string)($r['version'] ?? ''));
     hub_json($code, $r);
 
 case 'update_autoundo':
@@ -682,7 +700,9 @@ case 'files_delete':   // deletes files from the "not part of this version" list
     need_post(); need_admin();
     $b = body(2); need_password((string)($b['password'] ?? ''));
     require_once __DIR__ . '/lib/update.php';
-    hub_json(200, up_delete(is_array($b['paths'] ?? null) ? array_slice($b['paths'], 0, 500) : []));
+    $dr = up_delete(is_array($b['paths'] ?? null) ? array_slice($b['paths'], 0, 500) : []);
+    hub_act('files_delete', (string)count(is_array($b['paths'] ?? null) ? array_slice($b['paths'], 0, 500) : []) . ' files');
+    hub_json(200, $dr);
 
 case 'reset_all':   // Backup > Start Over: everything back to a new site, except your password and two-step login
     need_post(); need_admin();
@@ -690,7 +710,8 @@ case 'reset_all':   // Backup > Start Over: everything back to a new site, excep
     if (($b['confirm'] ?? '') !== 'ERASE') hub_json(400, ['ok' => false, 'error' => 'Type ERASE to confirm.']);
     need_password((string)($b['password'] ?? ''));
     require_once __DIR__ . '/lib/backup.php';
-    hub_json(200, ['ok' => true, 'erased' => bk_reset_all()]);
+    $erased = bk_reset_all(); hub_act('reset', 'everything erased');
+    hub_json(200, ['ok' => true, 'erased' => $erased]);
 
 case 'pp_set':     // the browser has already wrapped the Info and Links keys with the passphrase; this makes the backup key and the marker
     need_post(); need_admin();
@@ -699,6 +720,7 @@ case 'pp_set':     // the browser has already wrapped the Info and Links keys wi
     if (mb_strlen($pp) < 8) hub_json(400, ['ok' => false, 'error' => 'Use at least 8 characters for the passphrase.']);
     if (function_exists('openssl_encrypt')) bk_key_set($pp, 'own');   // backup files (also the ones sent to Telegram) open with it too
     hub_pp_mark(true);
+    hub_act('encryption', 'passphrase set');
     hub_json(200, ['ok' => true, 'backups' => function_exists('openssl_encrypt')]);
 
 case 'pp_clear':   // the browser has already turned the encrypted tabs back into normal private tabs
@@ -706,6 +728,7 @@ case 'pp_clear':   // the browser has already turned the encrypted tabs back int
     need_password((string)(body()['password'] ?? ''));
     if (($use = sv_in_use())) hub_json(409, ['ok' => false, 'inUse' => $use, 'error' => 'These are still locked with your passphrase: ' . implode(', ', $use) . '. Unlock them first, then remove the passphrase.']);
     sv_clear(); bk_key_clear(); hub_pp_mark(false);
+    hub_act('encryption', 'passphrase removed');
     hub_json(200, ['ok' => true]);
 
 case 'sv_get':   // the wrapped site key (it locks Files, Cards and Tools presets); the key itself never reaches the server

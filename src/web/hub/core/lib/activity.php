@@ -12,7 +12,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
 /**
  * Login history and signed-in devices (Settings > Security > Devices).
  *
- *   activity   the last 100 security events (logins, wrong passwords, password and two-step changes, logout-everywhere...): when, what,
+ *   activity   the last 300 events (logins, wrong passwords, password and two-step changes, logout-everywhere, and what was done in Settings: backups, updates, restores, encryption...): when, what,
  *              which browser, which address. site-data/core/activity.php (guarded).
  *   devices    one line for each login that can still be used: the browser, the address, when it started. Only a fingerprint of the
  *              session is kept, never the session itself, so this file cannot be used to get in. site-data/core/devices.php (guarded).
@@ -21,7 +21,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 require_once __DIR__ . '/boot.php';
 
-const ACT_KEEP = 100;
+const ACT_KEEP = 300;
 
 function act_file(): string  { return hub_dir('core') . '/activity.json'; }
 function act_dfile(): string { return hub_dir('core') . '/devices.json'; }

@@ -53,7 +53,7 @@ try:
     subprocess.run(['php', SEED, D], capture_output=True)
     ver = re.search(r"define\('HUB', '([^']+)'\)", open(D + '/web/hub/core/lib/boot.php').read()).group(1)
     pages = [('Home', '/'), ('Links', '/web/links/'), ('Info', '/web/info/'), ('Cards', '/web/cards/'), ('Tasks', '/web/tasks/'), ('Tools', '/web/tools/'),
-             ('Tools: a tool', '/web/tools/#/tool/image-resize'), ('Settings', '/web/settings/#overview'), ('Settings: General', '/web/settings/#general'), ('Settings: Start Here (Install on Your Phone)', '/web/settings/#setup'), ('Settings: Appearance, Bar', '/web/settings/#nav'), ('Settings: Security', '/web/settings/#security'), ('Settings: Updates', '/web/settings/#updates'),
+             ('Tools: a tool', '/web/tools/#/tool/image-resize'), ('Settings', '/web/settings/#overview'), ('Settings: General', '/web/settings/#general'), ('Settings: Features (Install on Your Phone)', '/web/settings/#features'), ('Settings: Appearance, Look & Bar', '/web/settings/#look'), ('Settings: Security', '/web/settings/#security'), ('Settings: Updates', '/web/settings/#updates'),
              ('Files', '/web/files/'), ('Settings: Appearance, Colors', '/web/settings/#colors'), ('Settings: Backup (Back Up)', '/web/settings/#backup'), ('Settings: Backup, Restore', '/web/settings/#backup/restore'),
              ('Settings: Backup, Export', '/web/settings/#backup/export'), ('Settings: Security, Passkeys', '/web/settings/#security/passkeys')]
     with sync_playwright() as p:

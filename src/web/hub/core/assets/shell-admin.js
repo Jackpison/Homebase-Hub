@@ -13,11 +13,11 @@
 /* Map of this file (search for the names; line numbers would go stale). One closure, in this order:
  *   frame      SECTIONS, PANES, mount(), go(), pane(), tabify(), cardify(), the draft and "Save Settings" (saveSettings)
  *   search     SEARCH: add a line here for every new setting
- *   General    helpCards (Start Here), pGeneral, textSizes
+ *   General    helpCards (shown in Features), pGeneral, textSizes
  *   Appearance pLook, barHtml, accentHtml, pColors, PRESETS / PRESET_GROUPS (data), pThemes, pGlass
- *   Bar        pNav (bar settings and tabs), tabEditor
- *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles), pDomains
- *   Start Here decorateNav, pStart (Start Here: pSetup, Guided Setup, WZ, setupSteps)
+ *   Bar        pBar (bar settings and tabs, the second half of Look & Bar), tabEditor
+ *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles)
+ *   Menu       decorateNav, paintHead, stepBar
  *   Changelog mdInline, mdBlocks, clParse, pChangelog (a tab of Updates)
  *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles (shown in Health > Server Check)
  *   building blocks (used by every pane)  ecCard, ecField, ecChip, tabHead, tile, checkRow, spinRow
@@ -53,13 +53,13 @@
   ICON.users = 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 7.5M22 21a7 7 0 0 0-5-6.7';
   // [id, name, icon, what it is for (shown under the title), sub-tabs [[id, name]], menu group]
   var SECTIONS = [
-    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and a short guide to getting set up.', [['general', 'General'], ['setup', 'Start Here']], 'Web Setting'],
-    ['look', 'Appearance', ICON.palette, 'The theme, font, bar, colors and glass.', [['look', 'Look'], ['nav', 'Bar'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
+    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone.', null, 'Web Setting'],
+    ['look', 'Appearance', ICON.palette, 'The theme, font, bar and tabs, colors and glass.', [['look', 'Look & Bar'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
     ['security', 'Security', ICON.shield, 'Login, passkeys and encryption.', null, 'Data Setting'],
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
-    ['logs', 'Logs', ICON.log, 'Everything the site told you, who logged in, and what went wrong.', [['logs', 'Notifications'], ['logsign', 'Sign-Ins'], ['logerr', 'PHP Errors']], 'System Setting'],
-    ['health', 'Health', ICON.pulse, 'Version, speed, errors, domains and a check of your server.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
+    ['logs', 'Logs', ICON.log, 'What the site told you, what was done and who logged in, and what went wrong.', [['logs', 'Notifications'], ['logsign', 'Activity'], ['logerr', 'PHP Errors']], 'System Setting'],
+    ['health', 'Health', ICON.pulse, 'Version, speed, errors and a check of your server.', [['health', 'Overview'], ['check', 'Server Check']], 'System Setting'],
     // (1.77.1) Updates has two tabs: Update and Changelog (one list of every version; the old Notes moved to Features)
     ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Changelog']], 'System Setting'],
     // (1.76.0) Features: what the site does, page by page, with the settings of each part (Files' work right there)
@@ -87,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, features: pFeatures };
+  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, general: pGeneral, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, check: pCheck, changelog: pChangelog, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -190,8 +190,8 @@
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'features', 'keys keyboard hotkeys shortcut question mark help'], ['Install on Your Phone', 'features', 'app home screen phone install add to home screen iphone android help'],
     ['Features', 'features', 'what the site does pages home links info cards tasks files tools'],
     ['Cloud Backup', 'backup', 'webdav nextcloud owncloud synology nas storage box off site copy encrypted schedule'],
-    ['Guided Setup', 'setup', 'start here wizard steps protect'], ['Offline Reading', 'features', 'offline airplane no connection internet read without cache device app'],
-    ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'nav', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'nav', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
+    ['Offline Reading', 'features', 'offline airplane no connection internet read without cache device app'],
+    ['Navigation Style', 'look', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'look', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'look', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'look', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
@@ -202,8 +202,8 @@
     ['Back Up', 'backup/overview', 'download backup file locked passphrase'], ['Restore a Backup', 'backup/restore', 'import'], ['Export', 'backup/export', 'csv json spreadsheet links cards tasks'],
     ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
     ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'check', 'extra changed missing leftover files'],
-    ['Health', 'health', 'disk speed errors log'], ['Domains and Uptime', 'domains', 'expiry ssl hosting renewal'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
-    ['Logs', 'logs', 'notifications messages history log activity'], ['Sign-In History', 'logsign', 'logins wrong password activity'], ['PHP Errors', 'logerr', 'error log'],
+    ['Health', 'health', 'disk speed errors log'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
+    ['Logs', 'logs', 'notifications messages history log activity'], ['Activity', 'logsign', 'sign-in history logins wrong password what was done backups updates restores changes settings saved audit'], ['PHP Errors', 'logerr', 'error log'],
     ['Changelog', 'changelog', 'changelog versions history what changed new version map'], ['Good to Know', 'features', 'notes how updating works']
   ];
   function bindSearch(host) {
@@ -232,7 +232,9 @@
     target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'general';
     if (id === 'remind') id = 'telegram';
     if (id === 'system') id = 'updates';   // the System section of 1.48 is Updates, Health and Changelog again
-    if (id === 'pages') id = 'nav';        // General > Pages was removed in 1.48.5: its old links open Tabs
+    if (id === 'pages' || id === 'nav') id = 'look';   // Pages (1.48.5) and the Bar tab (1.78.0) are now part of Look & Bar
+    if (id === 'domains') id = 'health';   // Domains and Uptime was removed in 1.78.0
+    if (id === 'setup') id = 'general';   // Start Here was removed in 1.78.0
     // (1.70.0) the moves: Updates > Files is part of Health > Server Check; Telegram > Backups is part of Backup & Restore
     if (id === 'files') id = 'check';
     if (id === 'telegram' && parts[1] === 'backups') { id = 'backup'; parts = ['backup']; }
@@ -300,7 +302,7 @@
   var tabObs = null;
   /* The plain panes (General, Tabs, Look) are written as "heading, one line, controls". Each heading with what follows it
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
-  var CARDIFY = { general: 1, nav: 1, look: 1, glass: 1 };
+  var CARDIFY = { general: 1, look: 1, glass: 1 };
   var OFFL = function () { return K.offline(); };
   var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages, 'glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear, 'liquid': ICON.sparkle, 'where': ICON.grid };
@@ -462,7 +464,7 @@
       api('logo', { remove: true }).then(function (j) { if (j.ok) { S.logo = draft.logo = ''; remember(S); redraw(); subPane('general'); toast('Logo removed.'); } });
     };
   }
-  /* Appearance > Look (1.70.0): the theme, the font and the text sizes. The bar's settings are on the Bar tab, Accent Color on Colors, the glass switch on Glass. */
+  /* Appearance > Look & Bar: the theme, the font and the text sizes, then the bar (style, behaviour, tabs; they had a tab of their own before 1.78.0). Accent Color is on Colors, the glass switch on Glass. */
   function pLook(p) {
     p.innerHTML = '<h3>Theme</h3><p>The default look. The sun/moon button in the bar changes it just for you.</p>' +
       seg('theme', [['auto', 'Follow Device'], ['dark', 'Dark'], ['light', 'Light']], draft.theme) +
@@ -475,8 +477,9 @@
     p.querySelector('#ix-font').onchange = function (e) { draft.font = e.target.value; p.querySelector('#ix-fontc').hidden = draft.font !== 'custom'; if (draft.font === 'custom') p.querySelector('#ix-fontc').focus(); preview(); };
     p.querySelector('#ix-fontc').oninput = function (e) { draft.fontCustom = e.target.value; preview(); };
     p.querySelectorAll('[data-ts]').forEach(function (b) { b.onclick = function () { textSizes(b.dataset.ts); }; });
+    pBar(p);
   }
-  /* Appearance > Bar (1.70.0): how the bar looks and acts, then its tabs (pNav). */
+  /* the bar: how it looks and acts, then its tabs */
   function barHtml() {
     return '<h3>Navigation Style</h3><p>For every page.</p>' +
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
@@ -1018,14 +1021,14 @@
       rd.readAsText(f);
     };
   }
-  function pNav(p) {
-    p.innerHTML = barHtml() + '<h3>Tabs</h3><p>Drag a tab to move it (or Alt + Up and Down on its name), rename it, or switch it off to hide it. Home is your logo and site name in the bar.</p>' +
-      '<div class="ix-tabp" id="ix-tabp" aria-hidden="true"></div><div class="ix-tabl" id="ix-tabl"></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-tabreset">Reset Names and Order</button></div>';
+  function pBar(p) {
+    p.insertAdjacentHTML('beforeend', barHtml() + '<h3>Tabs</h3><p>Drag a tab to move it (or Alt + Up and Down on its name), rename it, or switch it off to hide it. Home is your logo and site name in the bar.</p>' +
+      '<div class="ix-tabp" id="ix-tabp" aria-hidden="true"></div><div class="ix-tabl" id="ix-tabl"></div><div class="ix-row"><button type="button" class="ix-btn" id="ix-tabreset">Reset Names and Order</button></div>');
     bindBar(p);
     tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp'));
     p.querySelector('#ix-tabreset').onclick = function () { draft.pages = []; tabEditor(p.querySelector('#ix-tabl'), p.querySelector('#ix-tabp')); preview(); markDirty(true); };
   }
-  /* Settings > Appearance > Bar, the Tabs part (1.67.2; it was General > Tabs before 1.70.0): one row per page with its colour tile (as in the bar), its name and a switch; drag a row to move it.
+  /* Settings > Appearance > Bar, the Tabs part (1.67.2; General > Tabs before 1.70.0, on Look & Bar since 1.78.0): one row per page with its colour tile (as in the bar), its name and a switch; drag a row to move it.
      A strip above shows the bar as it will look. Home is not listed: the logo and site name lead there (the dock shows it first). */
   var GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg>';
   function tabEditor(box, strip) {
@@ -1082,7 +1085,7 @@
     function live(n, ready) {
       var now = n.now || Math.floor(Date.now() / 1000), rows = [];
       var line = function (state, text) { rows.push(checkRow(state === 'ok' ? '' : state === 'off' ? 'off' : 'warn', state === 'ok' ? '✓' : state === 'off' ? '–' : '!', '', text)); };
-      if (!ready) line('bad', '<b>Not connected yet.</b> Open the <b>Setup</b> tab and follow the 4 steps.');
+      if (!ready) line('bad', '<b>Not connected yet.</b> Open the <b>Setup</b> tab and follow the 2 steps.');
       else {
         var cronAge = n.cronLast ? now - n.cronLast : -1;
         if (cronAge >= 0 && cronAge < 1800) line('ok', '<b>Schedule is running.</b> Last check ' + esc(ago(n.cronLast)) + '.');
@@ -1124,23 +1127,20 @@
         acc('bot', 'Setup', ready ? 'Connected to ' + esc(n.chatName || n.chat) + '. The schedule (a cron job) is what sends messages on time.' : 'Two short steps: create a bot, then connect your chat and send a test.',
           (function () {
             var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on;
-            var stp = function (num, done, open, title, sum, body) {
-              return '<li class="ix-tls' + (done ? ' done' : '') + (open ? ' open' : '') + '"><span class="ix-tl-n">' + (done ? '✓' : num) + '</span><div class="ix-tl-t"' + (done ? ' role="button" tabindex="0"' : '') + '>' + title + '<span class="ix-sd ix-sd-' + (done ? 'ready' : open ? 'building' : 'queued') + '">' + (done ? 'Done' : open ? 'Next' : 'Waiting') + '</span></div>' +
-                (done && sum ? '<div class="ix-tl-s">' + sum + '</div>' : '') + '<div class="ix-tl-b">' + body + '</div></li>'; };
-            // (1.77.3) one box, two steps: make the bot, then connect your chat and send a test
-            return ecCard('ix-auto', ICON.gear, 'Set Up Your Bot', 'Two short steps: create a bot, then connect your chat and send a test.', '<ol class="ix-tl">' +
-              stp(1, d1, !d1, 'Create Your Bot', 'Token saved (' + esc(n.tokenHint || 'hidden') + ')', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It gives you a <b>token</b>: a long line of letters and numbers. Paste it here.</p>' +
-                '<div class="ix-fd"><label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
-                '<button type="button" class="ix-btn pri" id="nt-st">Save Token</button>' + (n.hasToken ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div><small>It stays on your server and is only used to talk to Telegram.</small></div>') +
-              stp(2, d4, d1, 'Connect and Test', tested ? 'Test message sent' : 'Connected to ' + esc(n.chatName || n.chat || ''), '<p>Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.</p>' +
-                '<div class="ix-row"><button type="button" class="ix-btn' + (n.hasToken && !d3 ? ' pri' : '') + '" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button></div>' +
-                '<div class="ix-status">' + (n.chat ? '<span class="ix-ok">✓</span><span><b>Connected to</b> ' + esc(n.chatName || n.chat) + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '</span>' : '<span>!</span><span>No chat yet. Send <code>/start</code> to your bot first.</span>') + '</div>' +
-                (chats && chats.length > 1 ? '<div class="ix-row">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '') +
-                (tested && d4
-                  ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Test message sent.</b> It should be in Telegram now.</span></div>' +
-                    '<div class="ix-row"><button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button><button type="button" class="ix-btn" id="nt-test">Send Another Test</button></div>'
-                  : '<div class="ix-row"><button type="button" class="ix-btn' + (d3 && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div><small>You get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</small>')) +
-              '</ol>') +
+            var pill = function (done, open) { return '<span class="ix-pill ' + (done ? 'good' : open ? 'warn' : '') + '">' + (done ? 'Done' : open ? 'Next' : 'Waiting') + '</span>'; };
+            // (1.78.0) two cards, one for each step: what to do, the fields and buttons in one row, and a Done mark when it is finished
+            return ecCard(d1 ? 'good' : '', ICON.key, '1. Create Your Bot', d1 ? 'Token saved (' + esc(n.tokenHint || 'hidden') + '). Paste a new one to replace it.' :
+                'In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It gives you a <b>token</b>, a long line of letters and numbers. Paste it here.',
+              '<div class="ix-fact ix-fbot"><div class="ix-fd ix-fdw"><label for="nt-tok">Bot Token</label><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '"></div>' +
+                '<button type="button" class="ix-btn pri" id="nt-st">' + (d1 ? 'Replace Token' : 'Save Token') + '</button>' + (d1 ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div>' +
+                '<p class="ix-note">It stays on your server and is only used to talk to Telegram.</p>', pill(d1, !d1)) +
+              ecCard(d4 ? 'good' : '', ICON.send, '2. Connect and Test', d3 ? 'Connected to <b>' + esc(n.chatName || n.chat) + '</b>' + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '. Send a test any time.' :
+                'Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.',
+              '<div class="ix-row"><button type="button" class="ix-btn' + (n.hasToken && !d3 ? ' pri' : '') + '" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button>' +
+                '<button type="button" class="ix-btn' + (d3 && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>' + (tested ? 'Send Another Test' : 'Send Test') + '</button>' +
+                (tested && d4 ? '<button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button>' : '') + '</div>' +
+                (chats && chats.length > 1 ? '<div class="ix-row" style="margin-top:10px">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '') +
+                (tested && d4 ? '<p class="ix-note"><span class="ix-ok">✓</span> <b>Test message sent.</b> It should be in Telegram now.</p>' : d3 ? '<p class="ix-note">You get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' : ''), pill(d3 && (tested || !!n.lastSent), d1)) +
               '<div class="ix-rcl">' + rowCard({ ic: ICON.clock, title: 'Keep It on Schedule', desc: 'Messages go out on time only if your host runs a small job every 10 minutes (a cron job).',
                 act: '<button type="button" class="ix-btn" id="nt-schb" aria-expanded="false">Show the Command</button>', hide: true, id: 'nt-sch',
                 body: '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +
@@ -1172,11 +1172,18 @@
             act: '<input type="checkbox" class="ix-sw" id="nt-hook" aria-label="Instant Replies"' + (n.hook ? ' checked' : '') + (n.hasToken ? '' : ' disabled') + '>',
             body: '<p class="ix-note ix-hknote" style="margin:0">With it on, <b>Approve in Telegram</b> logs you in within a second (needs https). With it off everything still works, a few minutes slower.</p>' +
               '<details class="ix-how"><summary>Behind Cloudflare?</summary><p>If replies stop, add a WAF rule that skips <code>/web/hub/core/telegram.php</code>.</p></details>' }) + '</div>' +
-          '<div class="ix-sect">Commands</div><p class="ix-note" style="margin-top:0">Send any of these to your bot. Only your own chat is answered.</p>' +
+          '<div class="ix-sect">Commands</div><p class="ix-note" style="margin-top:0">Send any of these to your bot, or click one to copy it. Only your own chat is answered.</p>' +
           '<div class="ix-cmdg">' + [['/today', 'Overdue and today, with Done buttons'], ['/week', 'The next 7 days'], ['/next', 'The next 10 tasks'], ['/add Netflix 649 monthly 5 Nov', 'A new task'],
             ['/done Netflix', 'Mark one done'], ['/snooze Netflix 2h', 'Pause its reminders'], ['/backup', 'A backup file now'], ['/status', 'A quick health check']].map(function (c) {
-            return '<div class="ix-cmdc"><code>' + esc(c[0]) + '</code><span>' + esc(c[1]) + '</span></div>'; }).join('') + '</div>');
+            return '<button type="button" class="ix-cmdc" data-cmd="' + esc(c[0]) + '" aria-label="Copy ' + esc(c[0]) + '"><code>' + esc(c[0]) + '</code><span>' + esc(c[1]) + '</span><em aria-hidden="true">Copy</em></button>'; }).join('') + '</div>');
       p.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { if (x.dataset.go === 'bk') { go('backup'); return; } var d = p.querySelector('details[data-tg="' + x.dataset.go + '"]'); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
+      // click a command to copy it (the older copy command is the fallback where the browser has no clipboard here)
+      p.querySelectorAll('[data-cmd]').forEach(function (b) { b.onclick = function () {
+        var t = b.dataset.cmd, em = b.querySelector('em');
+        var ok = function () { b.classList.add('ok'); em.textContent = 'Copied'; toast('Copied ' + t); clearTimeout(b.__t); b.__t = setTimeout(function () { b.classList.remove('ok'); em.textContent = 'Copy'; }, 1600); };
+        var fail = function () { if (K.legacyCopy(t)) ok(); else toast('Could not copy. Select the command and press Ctrl+C.', true); };
+        try { (navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(t) : Promise.reject()).then(ok, fail); } catch (x) { fail(); }
+      }; });
       var call = function (action, body, btn, wait) {
         if (btn) btn.disabled = true;
         return api(action, body || {}, null, wait).then(function (j) {
@@ -1208,7 +1215,6 @@
         call('notify_save', { chat: b.dataset.chat }, b).then(function (j) { if (j) { j.chatName = j.chatName || b.dataset.name; call('notify_test', { chatName: b.dataset.name }).then(function (k) { draw(k || j, null, k ? 'Chat saved and a test message sent.' : ''); }); } });
       }; });
       var sb = p.querySelector('#nt-schb'); if (sb) sb.onclick = function () { var x = p.querySelector('#nt-sch .ix-rc-x'); x.hidden = !x.hidden; sb.setAttribute('aria-expanded', x.hidden ? 'false' : 'true'); sb.textContent = x.hidden ? 'Show the Command' : 'Hide'; };
-      p.querySelectorAll('.ix-tls.done>.ix-tl-t').forEach(function (h) { h.onclick = function () { h.parentNode.classList.toggle('open'); }; h.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h.click(); } }; });
       p.querySelector('#nt-test').onclick = function () { call('notify_test', {}, this).then(function (j) { if (j) { tested = true; draw(j, null, 'Test message sent. Check Telegram.'); } }); };
       p.querySelector('#nt-now').onclick = function () { call('notify_run', {}, this).then(function (j) { if (j) draw(j, null, j.note || 'Done.', !j.ok); }); };
       p.querySelectorAll('[data-k]').forEach(function (c) { c.onchange = function () {
@@ -1278,23 +1284,6 @@
     h.innerHTML = '<span class="ix-phc ' + cls + '">' + esc(txt) + '</span>' + bar + nx; h.hidden = false;
     var b = h.querySelector('[data-phgo]'); if (b) b.onclick = function () { go(b.dataset.phgo); };
   }
-  /* (1.70.0) Overview > Start Here: Guided Setup, then Install on Your Phone and Keyboard Shortcuts */
-  function pStart(p) {
-    p.innerHTML = '<div class="ix-wzhost"></div>';
-    pSetup(p.querySelector('.ix-wzhost'));
-  }
-  /* ---------- Guided Setup: the protection steps one after another, using the same flows as Security and Backup ---------- */
-  var WZ = { open: '', pp: '', site: '', rec: '', skipped: {} };   // what you typed stays here only while Settings is open, never saved
-  function setupSteps(j) {
-    var on = function (k) { var x = j.protect.items.filter(function (i) { return i.key === k; })[0]; return !!(x && x.on); };
-    return [
-      { key: 'pw', title: 'Website Password', done: true, icon: ICON.key, text: 'The one password for every page of your site.' },
-      { key: 'enc', title: 'Encryption Passphrase', done: on('enc'), icon: ICON.lock, text: 'Locks your private tabs and your backup files.' },
-      { key: 'recovery', title: 'Recovery Key', done: on('recovery'), icon: ICON.shield, text: 'A spare way in, if you ever forget the passphrase.' },
-      { key: 'twostep', title: 'Two-Step Login', done: on('twostep'), icon: ICON.device, text: 'A 6-digit code from your phone on top of the password.' },
-      { key: 'backup', title: 'First Backup', done: !!(j.backup && j.backup.last), icon: ICON.box, text: 'One file with everything, kept somewhere safe.' }
-    ];
-  }
   /* (1.66.0) One step bar for every step-by-step screen: thin bars with the step names under them. Done steps fill with the accent, the
      current one is bright, the ones to come are dim, a skipped one is dashed. o.keys: a data-open key per step (Guided Setup) or o.show (the
      step whose card shows); o.locked: the bar only shows where you are (Updates, Two-Step Login). Phones show
@@ -1308,108 +1297,6 @@
       return o.locked ? '<span role="listitem" class="ix-sbi' + st + '" aria-label="' + esc(lab) + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><b>' + esc(n) + '</b></span>'
         : '<button type="button" role="listitem" class="ix-sbi' + st + '"' + attr + ' aria-label="' + esc(lab) + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><b>' + esc(n) + '</b></button>';
     }).join('') + '</div><div class="ix-sbph">' + (at + 1) + ' of ' + names.length + ' · ' + esc(names[Math.max(0, at)] || '') + '</div>';
-  }
-  function pSetup(p) {
-    p.innerHTML = spinRow('Checking your setup…');
-    var steps = [], draw, progress;
-    /* only the ring and the step badges change: a step you are in the middle of (recovery codes on screen) is never redrawn */
-    progress = function () {
-      return api('overview').then(function (j) {
-        if (!j.ok) return; OV = j; decorateNav(); steps = setupSteps(j);
-        var done = steps.filter(function (s) { return s.done; }).length, ring = p.querySelector('.ix-ring');
-        if (ring) { ring.style.setProperty('--p', Math.round(done / steps.length * 100)); ring.classList.toggle('ok', done === steps.length); ring.querySelector('b').textContent = done; }
-        steps.forEach(function (s) { var n = p.querySelector('[data-stepn="' + s.key + '"]'); if (n) { n.classList.toggle('done', s.done); n.textContent = s.done ? '✓' : steps.indexOf(s) + 1; } });
-      });
-    };
-    secRefresh = function () { progress(); };
-    var fd = function (id, label, type, auto) { return ecField(id, label, type, auto); };
-    var errOf = function (x) { return x && x.user ? x.message : "Can't reach the server. Nothing was changed."; };
-    draw = function () {
-      api('overview').then(function (j) {
-        if (!j.ok) { p.innerHTML = '<p class="ix-err">' + esc(j.error || 'Could not load.') + '</p>'; return; }
-        OV = j; decorateNav(); steps = setupSteps(j);
-        var done = steps.filter(function (s) { return s.done; }).length;
-        var next = steps.filter(function (s) { return !s.done && !WZ.skipped[s.key]; })[0];
-        var act = WZ.open && steps.some(function (s) { return s.key === WZ.open; }) ? WZ.open : (next ? next.key : '');
-        var encOn = steps[1].done;
-        var bodies = {
-          pw: '<p class="ix-note" style="margin-top:0">Your website password is set. You can change it any time in Security.</p><div class="ix-row"><button type="button" class="ix-btn" data-go2="security/password">Open Password</button></div>',
-          enc: steps[1].done ? '<div class="ix-status"><span class="ix-ok">✓</span><span>Your passphrase is set. Private tabs and backup files can be locked with it.</span></div>' :
-            '<form id="ix-wze"><div class="ix-fgrid">' + fd('ix-wp1', 'New Passphrase', 'password', 'new-password') + fd('ix-wp2', 'Type It Again', 'password', 'new-password') + '</div>' +
-            fd('ix-wpw', 'Website Password', 'password', 'current-password') +
-            '<label class="ix-chk"><input type="checkbox" id="ix-wack"> I understand the passphrase can\'t be recovered, only replaced with a recovery key.</label>' +
-            '<p class="ix-err" id="ix-wzerr"></p><div class="ix-row"><button class="ix-btn pri" id="ix-wzgo">Set Passphrase</button></div></form>',
-          recovery: WZ.rec ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Your recovery key. It is shown only now.</b></span></div>' + linkField({ id: 'ix-wzrk', value: WZ.rec, prefix: 'Key', readonly: true, copyId: 'ix-wzcp', label: 'Recovery key', cls: 'ix-uf-key', wrap: true }) +
-              '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-wzsaved">I Saved It, Continue</button></div>' +
-              '<p class="ix-note">Save it somewhere safe, apart from this server. A key made earlier no longer works.</p>' :
-            steps[2].done ? '<div class="ix-status"><span class="ix-ok">✓</span><span>A recovery key exists. Make a new one any time in Security › Encryption.</span></div>' :
-            !encOn ? '<p class="ix-note" style="margin-top:0">Set the passphrase first (the step above), then the recovery key is one click.</p><div class="ix-row"><button type="button" class="ix-btn" data-open="enc">Go to the Passphrase</button></div>' :
-            '<form id="ix-wzr">' + (WZ.pp ? '' : fd('ix-wrp', 'Your Passphrase', 'password', 'off')) + (WZ.site ? '' : fd('ix-wrw', 'Website Password', 'password', 'current-password')) +
-              '<p class="ix-err" id="ix-wzerr"></p><div class="ix-row"><button class="ix-btn pri" id="ix-wzgo">Make Recovery Key</button></div></form>',
-          twostep: steps[3].done ? '<div class="ix-status"><span class="ix-ok">✓</span><span>Two-step login is on. Manage it in Security › Two-Step Login.</span></div>' : '<div id="ix-wz2"></div>',
-          backup: steps[4].done ? '<div class="ix-status"><span class="ix-ok">✓</span><span>You have made a full backup. Make another any time in Backup & Restore.</span></div>' :
-            '<p class="ix-note" style="margin-top:0">Downloads one file with all your pages and settings' + (encOn ? ', with your encrypted tabs still locked' : '') + '. Keep it somewhere safe, apart from this server.</p>' +
-            '<p class="ix-err" id="ix-wzerr"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-wzbk">' + svg(ICON.down) + 'Download Full Backup</button></div>'
-        };
-        p.innerHTML = tabHead(ICON.shield, 'Guided Setup', 'Protect your site in a few short steps. Each one uses the same screen you would find in Security, so nothing here is different, just in order.') +
-          '<div class="ix-hero"><div class="ix-ring ' + (done === steps.length ? 'ok' : '') + '" style="--p:' + Math.round(done / steps.length * 100) + '"><b>' + done + '</b><small>of ' + steps.length + '</small></div>' +
-            '<div class="ix-hero-t"><div class="ix-hero-h">' + (done === steps.length ? 'Your Site Is Set Up' : next ? 'Next: ' + next.title : 'Skipped Steps Are Waiting') + '</div><p>' +
-            (done === steps.length ? 'Every recommended protection is on. Telegram alerts are optional, and below if you want them.' : 'You can skip a step and come back to it. Nothing is changed until you press the step\'s own button.') + '</p></div></div>' +
-          stepBar(steps.map(function (s) { return s.title; }), Math.max(0, steps.findIndex(function (s) { return s.key === act; })), { keys: steps.map(function (s) { return s.key; }),
-            done: steps.map(function (s) { return s.done; }), skip: steps.map(function (s) { return !s.done && !!WZ.skipped[s.key]; }) }) +
-          '<div class="ix-steps ix-one">' + steps.map(function (s, i) {
-            var open = s.key === act, skipped = !s.done && WZ.skipped[s.key];
-            return '<section class="ix-ec ix-step' + (s.done ? ' done' : '') + (open ? ' open' : '') + '"><button type="button" class="ix-ec-h ix-steph" data-open="' + s.key + '" aria-expanded="' + open + '">' +
-              '<span class="ix-stepn' + (s.done ? ' done' : '') + '" data-stepn="' + s.key + '">' + (s.done ? '✓' : i + 1) + '</span><div><div class="ix-ec-t">' + esc(s.title) + '</div><div class="ix-ec-d">' + esc(s.text) + '</div></div>' +
-              '<span class="ix-pill ' + (s.done ? 'good' : skipped ? '' : open ? 'warn' : '') + '">' + (s.done ? 'Done' : skipped ? 'Skipped' : open ? 'Now' : 'To Do') + '</span></button>' +
-              (open ? '<div class="ix-ec-b">' + bodies[s.key] + '<div class="ix-row ix-sbnav">' + (i ? '<button type="button" class="ix-btn" data-open="' + steps[i - 1].key + '">Back</button>' : '') + '<span></span>' +
-                (s.done || s.key === 'pw' ? '' : '<button type="button" class="ix-btn ix-quiet2" data-skip="' + s.key + '">Skip for Now</button>') +
-                (i < steps.length - 1 ? '<button type="button" class="ix-btn' + (s.done ? ' pri' : '') + '" data-open="' + steps[i + 1].key + '">Next</button>' : '') + '</div></div>' : '') + '</section>'; }).join('') + '</div>' +
-          (done === steps.length ? '<div class="ix-row" style="margin-top:6px"><button type="button" class="ix-btn pri" data-go2="general">Back to General</button></div>' : '') +
-          ecCard('', ICON.send, 'Optional: Telegram', 'Reminders, login alerts, instant approval of new logins, and automatic backups on your phone. It takes about two minutes.', '<div class="ix-row"><button type="button" class="ix-btn" data-go2="telegram/setup">Open Telegram Setup</button></div>');
-        // wiring
-        p.querySelectorAll('[data-go2]').forEach(function (b) { b.onclick = function () { go(b.dataset.go2); }; });
-        p.querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { WZ.open = WZ.open === b.dataset.open && b.classList.contains('ix-steph') ? '' : b.dataset.open; draw(); }; });
-        p.querySelectorAll('[data-skip]').forEach(function (b) { b.onclick = function () {
-          WZ.skipped[b.dataset.skip] = true; var k = steps.findIndex(function (s) { return s.key === b.dataset.skip; }), nx = steps.slice(k + 1).filter(function (s) { return !s.done; })[0];
-          WZ.open = nx ? nx.key : ''; draw(); }; });
-        var er = function () { return p.querySelector('#ix-wzerr'); }, v = function (id) { var x = p.querySelector(id); return x ? x.value : ''; };
-        var f1 = p.querySelector('#ix-wze');
-        if (f1) f1.onsubmit = function (e) {
-          e.preventDefault(); var n1 = v('#ix-wp1'), site = v('#ix-wpw');
-          if (n1.length < 8) { er().textContent = 'Use at least 8 characters for the passphrase.'; return; }
-          if (n1 !== v('#ix-wp2')) { er().textContent = 'The two passphrases are not the same.'; return; }
-          if (!site) { er().textContent = 'Type your website password.'; return; }
-          if (!p.querySelector('#ix-wack').checked) { er().textContent = 'Please confirm you understand the passphrase can\'t be recovered.'; return; }
-          var b = p.querySelector('#ix-wzgo'); b.disabled = true; er().textContent = 'Setting…';
-          PP.set({ pp: n1, site: site, old: '' }).then(function () { WZ.pp = n1; WZ.site = site; WZ.open = 'recovery'; toast('Passphrase set.'); draw(); })
-            .catch(function (x) { er().textContent = x && x.needOld ? 'Some tabs are already locked with an earlier passphrase. Set it in Security › Encryption, where you can type the earlier one.' : errOf(x); b.disabled = false; });
-        };
-        var f2 = p.querySelector('#ix-wzr');
-        if (f2) f2.onsubmit = function (e) {
-          e.preventDefault(); var pp = WZ.pp || v('#ix-wrp'), site = WZ.site || v('#ix-wrw');
-          if (!pp || !site) { er().textContent = 'Type the passphrase and your website password.'; return; }
-          var b = p.querySelector('#ix-wzgo'); b.disabled = true; er().textContent = 'Making it…';
-          PP.makeRecovery({ pp: pp, site: site }).then(function (code) { WZ.rec = code; WZ.open = 'recovery'; draw(); })
-            .catch(function (x) { er().textContent = errOf(x); b.disabled = false; });
-        };
-        var sv = p.querySelector('#ix-wzsaved'); if (sv) sv.onclick = function () { WZ.rec = ''; WZ.open = 'twostep'; draw(); };
-        var tb = p.querySelector('#ix-wz2'); if (tb) twoStep(tb);
-        var bk = p.querySelector('#ix-wzbk');
-        if (bk) bk.onclick = function () {
-          bk.disabled = true; er().textContent = 'Making your backup…';
-          fetch(CORE + 'api.php?action=backup', { credentials: 'same-origin', headers: { 'X-Hub-CSRF': S.csrf } }).then(function (r) {
-            if (!r.ok) return r.json().then(function (j) { throw new Error(j.error || 'Backup failed.'); });
-            var name = (/filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '') || [])[1] || 'backup.json';
-            return r.blob().then(function (blob) {
-              var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
-              S.backupLast = Date.now() / 1000; remember(S); toast('Backup downloaded.'); draw();
-            });
-          }).catch(function (e) { er().textContent = e.message || 'Backup failed.'; bk.disabled = false; });
-        };
-      }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
-    };
-    draw();
   }
 
 
@@ -1933,15 +1820,12 @@
     secRefresh = function () { overview(); };
 
     /* Password */
-    body('pw').innerHTML = tabHead(ICON.key, 'Website Password', 'One password opens every page of this site. Changing it logs out your other devices, and encryption that uses it follows along.') +
-      '<form id="ix-cp">' + ecCard('', ICON.lock, 'Change Your Password', 'Use a long one. A few words you will remember beat a short jumble.',
-        ecField('ix-cur', 'Current Password', 'password', 'current-password') +
-        '<div class="ix-fgrid">' + ecField('ix-n1', 'New Password', 'password', 'new-password', 'At least 8 characters.') + ecField('ix-n2', 'Type It Again', 'password', 'new-password') + '</div>' +
-        '<div class="ix-meterw" id="ix-pwm"><div class="ix-meter"><i></i></div><small></small></div>' +
-        '<p class="ix-err" id="ix-cpe"></p><div class="ix-row"><button class="ix-btn pri">Change Password</button></div>') + '</form>';
+    body('pw').innerHTML = '<form id="ix-cp">' + ecCard('ix-split', ICON.key, 'Website Password', 'One password opens every page of this site. Changing it logs out your other devices, and encryption that uses it follows along. Use at least 8 characters: a few words you will remember beat a short jumble.',
+        '<div class="ix-frm">' + ecField('ix-cur', 'Current Password', 'password', 'current-password') + ecField('ix-n1', 'New Password', 'password', 'new-password') + ecField('ix-n2', 'Type It Again', 'password', 'new-password') + '</div>' +
+        '<div class="ix-fact"><div class="ix-meterw" id="ix-pwm"><div class="ix-meter"><i></i></div><small></small></div><button class="ix-btn pri">Change Password</button></div><p class="ix-err" id="ix-cpe"></p>') + '</form>';
     p.querySelector('#ix-n1').oninput = function () {
       var r = pwScore(this.value), m = p.querySelector('#ix-pwm'), bar = m.querySelector('i');
-      bar.style.width = this.value ? r.pct + '%' : '0'; bar.className = r.cls; m.querySelector('small').textContent = this.value ? r.label : '';
+      m.classList.toggle('on', !!this.value); bar.style.width = this.value ? r.pct + '%' : '0'; bar.className = r.cls; m.querySelector('small').textContent = this.value ? r.label : '';
     };
     p.querySelector('#ix-cp').onsubmit = function (e) {
       e.preventDefault(); var er = p.querySelector('#ix-cpe');
@@ -1973,17 +1857,17 @@
           '<button type="button" class="ix-btn" data-pkren="' + esc(k.id) + '">Rename</button><button type="button" data-hold class="ix-btn danger" data-pkdel="' + esc(k.id) + '">Remove</button></div>'; }).join('') + '</div>'
         : '<p class="ix-note">No passkey yet. Add one below, on this device or with a security key.</p>';
       // (1.77.2) no separate header and no "No Passkeys Yet" card: your passkeys are rows, and Add a Passkey is one card under them
-      b.innerHTML = tabHead(ICON.device, 'Passkeys', 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in.') + list +
-        (can ? ecCard('', ICON.key, 'Add a Passkey', 'Your browser or phone asks which device or key to use. Adding or removing a passkey needs your website password.',
-          '<div id="ix-pkst"></div><p class="ix-err" id="ix-pke"></p>')
-          : ecCard('warn', ICON.lock, 'Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.' + (keys.length ? ' You can still remove the ones you have: type your website password below.' : ''),
-            keys.length ? '<div class="ix-fgrid">' + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div><p class="ix-err" id="ix-pke"></p>' : ''));
+      // (1.78.0) one card: what a passkey is on the left, your passkeys and the way to add one on the right
+      var pkDesc = 'Log in with a fingerprint, face, PIN or security key. A passkey already counts as two steps in one, so it skips the two-step code and the Telegram tap. Your password stays as the other way in. Adding or removing one needs your website password.';
+      b.innerHTML = can ? ecCard('ix-split', ICON.device, 'Passkeys', pkDesc, list + '<div id="ix-pkst"></div><p class="ix-err" id="ix-pke"></p>', '<span class="ix-pill ' + (keys.length ? 'good' : '') + '">' + (keys.length ? keys.length + (keys.length === 1 ? ' Passkey' : ' Passkeys') : 'None Yet') + '</span>')
+        : ecCard('ix-split warn', ICON.lock, 'Passkeys Are Not Available Here', 'Passkeys need a secure (https) connection and a browser that supports them.' + (keys.length ? ' You can still remove the ones you have: type your website password below.' : ''),
+            list + (keys.length ? '<div class="ix-frm">' + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div><p class="ix-err" id="ix-pke"></p>' : ''));
       var err = function (t) { var e = b.querySelector('#ix-pke'); if (e) e.textContent = t; }, val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
       /* (1.69.0) Add a Passkey is a Stepper: Name -> Your Device (the last button, #ix-pkadd, asks the device). A wrong password goes back. */
       var pkHost = b.querySelector('#ix-pkst');
       if (pkHost) stepper(pkHost, { kind: 'dots', linear: true, lastId: 'ix-pkadd', complete: 'Ask My Device',
         steps: [
-          { title: 'Name', html: '<div class="ix-fgrid">' + ecField('ix-pkn', 'Name', 'text', 'off', 'Like "My Phone" or "Laptop".') + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div>',
+          { title: 'Name', html: '<div class="ix-frm">' + ecField('ix-pkn', 'Name', 'text', 'off', '', '', ' placeholder="Like My Phone or Laptop"') + ecField('ix-pkw', 'Website Password', 'password', 'current-password') + '</div>',
             next: function (q, c) { if (!val('#ix-pkw')) { c.err('Type your website password first.'); return false; } } },
           { title: 'Your Device', html: '<p>Your browser or phone now asks which device or key to use: your fingerprint, face, PIN or a security key.</p>',
             next: function (q, c) {
@@ -2057,19 +1941,18 @@
       } else {
         html = card('good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
           card('', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
-            '<div class="ix-fgrid">' + fd('ix-ccur', 'Current Passphrase or Recovery Key', 'off') + fd('ix-cpw', 'Website Password', 'current-password') + '</div>' +
-            '<div class="ix-fgrid">' + fd('ix-cn1', 'New Passphrase', 'new-password') + fd('ix-cn2', 'Type It Again', 'new-password') + '</div>' +
-            '<p class="ix-err" id="ix-ce"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-cgo">Change Passphrase</button></div>') +
+            '<div class="ix-frm">' + fd('ix-ccur', 'Current Passphrase or Recovery Key', 'off') + fd('ix-cpw', 'Website Password', 'current-password') + fd('ix-cn1', 'New Passphrase', 'new-password') + fd('ix-cn2', 'Type It Again', 'new-password') + '</div>' +
+            '<div class="ix-fact"><p class="ix-err" id="ix-ce"></p><button type="button" class="ix-btn pri" id="ix-cgo">Change Passphrase</button></div>') +
           '<div id="ix-rec">' + card('', ICON.box, 'Recovery Key', 'A spare way in. If you ever forget the passphrase, this code opens your Files, Cards, presets and locked tabs and lets you set a new passphrase. Keep it somewhere safe (print it, or put it in a password manager): anyone who has it can open them.',
-            '<div class="ix-fgrid">' + fd('ix-rpp', 'Your Passphrase', 'off') + fd('ix-rpw', 'Website Password', 'current-password') + '</div>' +
-            '<p class="ix-err" id="ix-re"></p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-rmk">' + (st.rec ? 'Make a New Recovery Key' : 'Create Recovery Key') + '</button>' +
+            '<div class="ix-frm">' + fd('ix-rpp', 'Your Passphrase', 'off') + fd('ix-rpw', 'Website Password', 'current-password') + '</div>' +
+            '<div class="ix-fact"><p class="ix-err" id="ix-re"></p><button type="button" class="ix-btn pri" id="ix-rmk">' + (st.rec ? 'Make a New Recovery Key' : 'Create Recovery Key') + '</button>' +
             (st.rec ? '<button type="button" data-hold class="ix-btn danger" id="ix-rdel">Remove Recovery Key</button>' : '') + '</div><div id="ix-rshow"></div>',
             '<span class="ix-pill ' + (st.rec ? 'good' : '') + '">' + (st.rec ? (st.recGap ? 'Make a New One' : 'Created') : 'Not Created') + '</span>') +
           (st.recGap ? '<p class="ix-note">Your recovery key is older than Files and Cards. Make a new one below.</p>' : '') + '</div>' +
           '<form id="ix-ef">' + card('danger', ICON.out, 'Remove Encryption', 'Locked tabs turn back into normal private tabs (still hidden from visitors) and backup files stop being locked. To use a different passphrase, change it above instead.',
-            '<div class="ix-fgrid">' + fd('ix-ecur', 'Your Passphrase', 'off') + fd('ix-epw', 'Website Password', 'current-password') + '</div>' +
+            '<div class="ix-frm">' + fd('ix-ecur', 'Your Passphrase', 'off') + fd('ix-epw', 'Website Password', 'current-password') + '</div>' +
             fd('ix-eold', 'Earlier Passphrase', 'off', 'The one your existing locked tabs use now.', 'ix-eoldw') +
-            '<p class="ix-err" id="ix-ee"></p><div class="ix-row"><button type="button" data-hold class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
+            '<div class="ix-fact"><p class="ix-err" id="ix-ee"></p><button type="button" data-hold class="ix-btn danger" id="ix-erm">Remove Passphrase</button></div>') + '</form>';
       }
       b.innerHTML = tabHead(ICON.lock, 'Encryption', 'One passphrase locks your Files, Cards and saved presets, your private tabs in Info and Links, and your backup files. Only you can unlock them.') + html;
       var er = b.querySelector('#ix-ee'), val = function (id) { var x = b.querySelector(id); return x ? x.value : ''; };
@@ -2084,7 +1967,7 @@
         var recCode = '', recFail = function (x) { return x && x.user ? x.message : "Can't reach the server. Nothing was changed."; };
         stepper(b.querySelector('#ix-encst'), { kind: 'numbers', linear: true, complete: 'Finish',
           steps: [
-            { title: 'Passphrase', html: '<p>At least 8 characters. A few words you will remember work better than a short jumble.</p><div class="ix-fgrid">' + fd('ix-en1', 'New Passphrase', 'new-password') + fd('ix-en2', 'Type It Again', 'new-password') + '</div>' +
+            { title: 'Passphrase', html: '<p>At least 8 characters. A few words you will remember work better than a short jumble.</p><div class="ix-frm">' + fd('ix-en1', 'New Passphrase', 'new-password') + fd('ix-en2', 'Type It Again', 'new-password') + '</div>' +
                 '<label class="ix-chk"><input type="checkbox" id="ix-eack"> I understand a lost passphrase cannot be recovered without a recovery key</label>',
               next: function (p, c) {
                 if (val('#ix-en1').length < 8) { c.err('Use at least 8 characters for the passphrase.'); return false; }
@@ -2163,12 +2046,11 @@
     function drawAp() {
       var b = body('ap'), a = st.ap;
       if (!a.ok) { b.innerHTML = spinRow(); return; }
-      b.innerHTML = tabHead(ICON.send, 'Login Approval', 'Even someone who knows your password cannot get in until you tap Approve on your phone.') +
-        ecCard(a.on ? 'good' : '', ICON.bell, a.on ? 'Login Approval Is On' : 'Login Approval Is Off',
-          'After the password (and the two-step code), a new browser waits until you tap <b>Approve</b> on a message from your Telegram bot. You see every login and can refuse it.',
+      b.innerHTML = ecCard('ix-split' + (a.on ? ' good' : ''), ICON.send, 'Login Approval',
+          'Even someone who knows your password cannot get in until you tap <b>Approve</b> on a message from your Telegram bot, after the password (and the two-step code). You see every login and can refuse it.',
           (a.telegram ? '' : '<div class="ix-status"><span>!</span><span><b>Set up the Telegram bot first.</b> <a href="#" id="ix-apgo">Open Settings › Telegram</a></span></div>') +
-          '<form id="ix-apform">' + ecField('ix-appw', 'Website Password', 'password', 'current-password', a.on ? 'Needed to turn this off.' : 'Needed to turn this on.') +
-            '<div class="ix-row">' + (a.on ? '<button class="ix-btn" data-ap="off">Turn Off</button>' : '<button class="ix-btn pri" data-ap="on"' + (a.telegram ? '' : ' disabled') + '>Turn On</button>') + '</div>' +
+          '<form id="ix-apform"><div class="ix-fact ix-fbot">' + ecField('ix-appw', 'Website Password', 'password', 'current-password', '', '', ' placeholder="' + (a.on ? 'Needed to turn this off' : 'Needed to turn this on') + '"') +
+            (a.on ? '<button class="ix-btn" data-ap="off">Turn Off</button>' : '<button class="ix-btn pri" data-ap="on"' + (a.telegram ? '' : ' disabled') + '>Turn On</button>') + '</div>' +
             '<p class="ix-err" id="ix-aperr"></p></form>',
           '<span class="ix-pill ' + (a.on ? 'good' : '') + '">' + (a.on ? 'On' : 'Off') + '</span>') +
         '<div class="ix-sect">If Something Goes Wrong</div><div class="ix-trio">' +
@@ -2201,9 +2083,6 @@
     }
 
     /* Devices: who is logged in (end any login), the two log-out buttons, and the recent login history */
-    var EV = { login: ['Logged In', '', '✓'], failed: ['Wrong Password', 'warn', '!'], locked: ['Logins Paused After Too Many Wrong Tries', 'warn', '!'], password: ['Password Changed', '', '✓'],
-               logoutall: ['Other Devices Logged Out', '', '✓'], twostep_on: ['Two-Step Login Turned On', '', '✓'], twostep_off: ['Two-Step Login Turned Off', 'warn', '!'],
-               recovery: ['New Recovery Codes Made', '', '✓'], restore: ['Backup Restored', 'warn', '!'] };
     function drawDevices() {
       var b = body('dev');
       b.innerHTML = tabHead(ICON.out, 'Devices and Login History', 'See where you are logged in, end any login, and look back at recent activity.') +
@@ -2223,10 +2102,7 @@
           : '<div class="ix-empty"><b>Nothing Recorded Yet</b><p>Logins from now on are listed here. Logins made before this version are not.</p></div>';
         dl.querySelectorAll('[data-rev]').forEach(function (x) { x.onclick = function () {
           x.disabled = true; api('session_revoke', { id: x.dataset.rev }).then(function (k) { toast(k.ok ? 'That device is logged out.' : (k.error || 'Could not log it out.')); drawDevices(); }); }; });
-        var rows = j.events.map(function (e) {
-          var m = EV[e.ev] || [e.ev, '', '•'], label = e.ev === 'failed' ? (e.x === 'code' ? 'Wrong Two-Step Code' : e.x === 'passkey' ? 'Passkey Not Accepted' : 'Wrong Password') : e.ev === 'passkey' ? (e.x === 'removed' ? 'Passkey Removed' : 'Passkey Added') : m[0];
-          return checkRow(m[1], m[2], esc(label), esc(e.who || '') + ' · ' + esc(e.ip || '') + (e.cc ? ' (' + esc(e.cc) + ')' : '') + ' · ' + esc(ago(e.t)));
-        });
+        var rows = j.events.filter(function (e) { return LOGSEC[e.ev]; }).map(actRow);   // only the security events here; everything else is in Logs > Activity
         al.innerHTML = rows.length ? '<div class="ix-checks">' + rows.slice(0, 15).join('') + '</div>' + (rows.length > 15 ? '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn" id="ix-actmore">Show ' + (rows.length - 15) + ' More</button></div>' : '')
           : '<div class="ix-empty"><b>No Activity Yet</b><p>Logins, wrong passwords and security changes appear here.</p></div>';
         var more = al.querySelector('#ix-actmore'); if (more) more.onclick = function () { al.querySelector('.ix-checks').innerHTML = rows.join(''); more.remove(); };
@@ -2499,11 +2375,11 @@
   function twoStep(box) {
     var head = tabHead(ICON.device, 'Two-Step Login', 'A 6-digit code from an authenticator app, on top of your password.');
     if (S.twoStep) {
-      box.innerHTML = head + ecCard('good', ICON.shield, 'Two-Step Login Is On', 'Logins ask for your app\'s 6-digit code (not on trusted browsers). Lost your phone? Use a recovery code.',
-          '<div class="ix-chips" style="margin-top:0">' + ecChip('Recovery Codes Left', String(S.recoveryLeft), S.recoveryLeft > 2) + '</div>' + (S.recoveryLeft <= 2 ? '<p class="ix-note">Running low. Make new recovery codes below and keep them somewhere safe.</p>' : '')) +
-        ecCard('', ICON.key, 'Manage', 'Your website password is needed to change these settings.',
-          ecField('ix-2p', 'Website Password', 'password', 'current-password') +
-          '<p class="ix-err" id="ix-2e"></p><div class="ix-row"><button type="button" class="ix-btn" id="ix-rc">New Recovery Codes</button><button type="button" class="ix-btn danger" id="ix-off">Turn Off</button></div>') + '<div id="ix-rcs"></div>';
+      box.innerHTML = ecCard('ix-split good', ICON.device, 'Two-Step Login', 'Logins ask for your app\'s 6-digit code (not on trusted browsers). Lost your phone? Use a recovery code. Your website password is needed to change these settings.',
+          '<div class="ix-chips" style="margin:0 0 14px">' + ecChip('Recovery Codes Left', String(S.recoveryLeft), S.recoveryLeft > 2) + '</div>' + (S.recoveryLeft <= 2 ? '<p class="ix-note">Running low. Make new recovery codes and keep them somewhere safe.</p>' : '') +
+          '<div class="ix-frm">' + ecField('ix-2p', 'Website Password', 'password', 'current-password') + '</div>' +
+          '<div class="ix-fact"><p class="ix-err" id="ix-2e"></p><button type="button" class="ix-btn" id="ix-rc">New Recovery Codes</button><button type="button" class="ix-btn danger" id="ix-off">Turn Off</button></div>',
+          '<span class="ix-pill good">On</span>') + '<div id="ix-rcs"></div>';
       box.querySelector('#ix-off').onclick = function () { api('twostep_disable', { password: box.querySelector('#ix-2p').value }).then(function (j) {
         if (!j.ok) { box.querySelector('#ix-2e').textContent = j.error; return; } S.twoStep = false; twoStep(box); toast('Two-step login is off.'); if (secRefresh) secRefresh(); }); };
       box.querySelector('#ix-rc').onclick = function () { api('recovery_new', { password: box.querySelector('#ix-2p').value }).then(function (j) {
@@ -2512,9 +2388,9 @@
     }
     var how = function (n, t, d) { return '<div class="ix-mini"><span class="ix-num">' + n + '</span><b>' + t + '</b><p>' + d + '</p></div>'; };
     var tsBar = function (at) { return stepBar(['Get an App', 'Scan the Code', 'Type the Code', 'Save Recovery Codes'], at, { locked: true, done: [0, 1, 2, 3].map(function (i) { return i < at; }) }); };   // (1.66.0)
-    box.innerHTML = head + tsBar(0) + ecCard('', ICON.lock, 'Add a Second Step', 'Your password alone is no longer enough: a thief would also need your phone.',
+    box.innerHTML = ecCard('ix-split', ICON.device, 'Two-Step Login', 'A 6-digit code from an authenticator app, on top of your password. Your password alone is no longer enough: a thief would also need your phone.',
         '<div class="ix-trio" style="margin:0 0 14px">' + how(1, 'Get an App', 'Any authenticator app works: Google Authenticator, Microsoft Authenticator, Aegis, 1Password.') + how(2, 'Scan the Code', 'Point the app at the code on the next screen.') + how(3, 'Save Your Codes', 'Keep the recovery codes somewhere safe, for the day you lose your phone.') + '</div>' +
-        '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-on">Set Up Two-Step Login</button></div>');
+        '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-on">Set Up Two-Step Login</button></div>', '<span class="ix-pill">Off</span>');
     box.querySelector('#ix-on').onclick = function () {
       api('twostep_begin', {}).then(function (j) {
         if (!j.ok) { toast(j.error); return; }
@@ -2996,23 +2872,19 @@
   }
 
 
-  /* ---------- Health (Settings > Health): Overview, Domains and Uptime, Server Check ---------- */
-  function daysLeft(d) { if (!d) return null; return Math.round((new Date(d + 'T12:00:00') - new Date()) / 864e5); }
-  function leftText(n) { return n === null ? '' : n < 0 ? 'ended ' + -n + ' days ago' : n === 0 ? 'ends today' : n + (n === 1 ? ' day' : ' days') + ' left'; }
-  function leftCls(n, warn) { return n === null ? '' : n < 0 ? 'bad' : n <= warn ? 'warn' : 'good'; }
-  /* (1.77.1) the six boxes: a coloured tile with an icon, a status dot, the number big, and a line under it */
-  var HC_ICON = { 'Version': [ICON.upload, '#14b8a6'], 'Schedule': [ICON.clock, '#3b82f6'], 'Last Backup': [ICON.box, '#f97316'], 'Domains': [ICON.send, '#a855f7'], 'Disk Used': [ICON.grid, '#0ea5e9'], 'PHP Errors': [ICON.warn, '#f43f5e'] };
+  /* ---------- Health (Settings > Health): Overview, Server Check ---------- */
+  /* (1.77.1) the six boxes (the Domains one became PHP in 1.78.0): a coloured tile with an icon, a status dot, the number big, and a line under it */
+  var HC_ICON = { 'Version': [ICON.upload, '#14b8a6'], 'Schedule': [ICON.clock, '#3b82f6'], 'Last Backup': [ICON.box, '#f97316'], 'PHP': [ICON.server, '#a855f7'], 'Disk Used': [ICON.grid, '#0ea5e9'], 'PHP Errors': [ICON.warn, '#f43f5e'] };
   function hCard(label, val, sub, cls, go) {
     var ic = HC_ICON[label] || [ICON.pulse, '#888'];
     return '<' + (go ? 'button type="button" data-go="' + go + '"' : 'div') + ' class="ix-hc ' + (cls || '') + '"><span class="ix-hc-i" style="background:' + ic[1] + '">' + svg(ic[0]) + '</span>' +
       '<span class="ix-hc-t"><small>' + label + '</small><b>' + val + '</b><span>' + sub + '</span></span><i class="ix-hc-d" aria-hidden="true"></i></' + (go ? 'button' : 'div') + '>';
   }
-  /* Settings > Health: Overview, Domains and Uptime, Server Check */
+  /* Settings > Health: Overview, Server Check */
   function health(sub) { go(sub || 'health'); }
   function pHealth(p) {
     p.innerHTML = '<div class="ix-row"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><span>Checking…</span></div>';
-    Promise.all([api('health'), api('watch')]).then(function (r) {
-      var h = r[0], w = r[1] || {};
+    api('health').then(function (h) {
       if (!h.ok) { p.innerHTML = '<p class="ix-err">' + esc(h.error || 'Could not load.') + '</p>'; return; }
       var cronAgo = h.cron ? (Date.now() / 1000 - h.cron) : null, cronOk = cronAgo !== null && cronAgo < 1800;
       var errLines = h.logs.reduce(function (n, l) { return n + l.lines.length; }, 0);
@@ -3020,19 +2892,11 @@
       var up = h.update || {};
       var slowRows = ((h.speed || {}).rows || []).filter(function (x) { return x.ms > 150 || x.bytes > 1500000; });
       var openLogs = h.logs.filter(function (l) { return l.public === true; });
-      // the domain, SSL or hosting date that ends first
-      var soon = null;
-      (w.sites || []).forEach(function (s) {
-        [[s.dom && s.dom.exp, 'Domain'], [s.ssl && s.ssl.exp, 'SSL'], [s.hosting, 'Hosting']].forEach(function (x) {
-          var n = daysLeft(x[0]); if (n !== null && (!soon || n < soon.n)) soon = { n: n, what: x[1], host: s.host };
-        });
-      });
-      var down = (w.sites || []).filter(function (s) { return s.up && s.st && s.st.at && !s.st.ok; }).length;
       p.innerHTML = '<div class="ix-hcards six">' +
           hCard('Version', esc(h.version), up.newer ? '<a href="' + esc(up.link || '#') + '" target="_blank" rel="noopener">' + esc(up.version) + ' is available</a>' : (h.leftovers.length ? h.leftovers.length + ' update problem' + (h.leftovers.length > 1 ? 's' : '') : 'Files match'), up.newer || h.leftovers.length ? 'warn' : 'good') +
           hCard('Schedule', cronOk ? 'Running' : h.cron ? 'Stopped' : 'Not Set Up', h.cron ? 'Last run ' + esc(ago(h.cron)) : 'Add the cron job (Settings › Telegram)', cronOk ? 'good' : 'warn', 'telegram') +
           hCard('Last Backup', h.backup.last ? esc(ago(h.backup.last)) : 'Never', (h.backup.encrypted ? '🔒 Encrypted' : 'Not Encrypted') + (h.backup.tgEvery ? ', Telegram on' : ''), !h.backup.last || (h.backup.every && (Date.now() / 1000 - h.backup.last) / 86400 >= h.backup.every) ? 'warn' : 'good', 'backup') +
-          hCard('Domains', (w.sites || []).length ? (w.sites.length + (w.sites.length === 1 ? ' Site' : ' Sites')) : 'None Yet', down ? down + ' down right now' : soon ? esc(soon.what + ' ' + leftText(soon.n)) : 'Add one to watch its expiry', down || (soon && soon.n <= 14) ? (down || soon.n < 0 ? 'bad' : 'warn') : (w.sites || []).length ? 'good' : '', 'domains') +
+          hCard('PHP', esc(h.php), esc(h.server), '', 'check') +
           hCard('Disk Used', esc(size(h.total)), 'Your pages, pictures, icons and backups', '') +   /* (1.65.2) no "free on the server": on shared hosting that is the whole disk, not what you may use */
           hCard('PHP Errors', errLines ? errLines + ' lines' : 'None', openLogs.length ? 'A log is publicly readable' : h.logs.length ? h.logs.length + ' log file' + (h.logs.length > 1 ? 's' : '') : 'No error_log files', errLines || openLogs.length ? 'warn' : 'good') +
         '</div>' +
@@ -3061,7 +2925,7 @@
               (l.clear && l.size ? '<button type="button" data-hold class="ix-btn" data-clr="' + esc(l.file) + '">Clear</button>' : '') + '</div><pre>' + (l.lines.length ? esc(l.lines.join('\n')) : '(empty)') + '</pre></div>'; }).join('')
             : '<p>No error_log files were found. That is good news.</p>') + '</div></details>' +
         '<p class="ix-note">PHP version, limits and extensions, and whether your hosting can reach other websites: <button type="button" class="ix-linkbtn" style="padding:0" data-go="check">Server Check</button>.</p>';
-      if (window.HUB && HUB.countUp) HUB.countUp([].filter.call(p.querySelectorAll('.ix-hcards .ix-hc b'), function (b) { return /^(Disk Used|PHP Errors|Domains)$/.test(b.parentNode.querySelector('small').textContent); }));   // (1.65.0) these numbers roll up; the version never does
+      if (window.HUB && HUB.countUp) HUB.countUp([].filter.call(p.querySelectorAll('.ix-hcards .ix-hc b'), function (b) { return /^(Disk Used|PHP Errors)$/.test(b.parentNode.querySelector('small').textContent); }));   // (1.65.0) these numbers roll up; the version never does
       p.querySelectorAll('[data-clr]').forEach(function (b) { b.onclick = function () {
         api('health_log_clear', { file: b.dataset.clr }).then(function (j) { if (j.ok) { toast('Log cleared.'); pHealth(p); } else toast(j.error); });
       }; });
@@ -3082,58 +2946,24 @@
       p.querySelector('#ix-upf').onsubmit = function (e) { e.preventDefault(); api('health_update', { url: p.querySelector('#ix-upurl').value }).then(function (j) { if (j.ok) pHealth(p); }); };
     });
   }
-  function pDomains(p) {
-    p.innerHTML = '<p>Domain and SSL expiry, hosting renewals and uptime, with Telegram alerts and tasks.</p><div id="ix-wbox"><div class="ix-row"><span class="ix-spin" aria-hidden="true"><i></i><i></i><i></i></span><span>Loading…</span></div></div>';
-    api('watch').then(function (w) {
-      var box = p.querySelector('#ix-wbox'); if (!box) return;
-      if (!w || !w.ok) { box.innerHTML = '<p class="ix-err">' + esc((w && w.error) || 'Could not load.') + '</p>'; return; }
-      watchBox(box, w);
-    });
-  }
-  function watchBox(box, w) {
-    var draw = function (w) {
-      var t = w.tasks || {};
-      box.innerHTML = '<form class="ix-row ix-uf-row" id="ix-wadd">' + linkField({ id: 'ix-whost', prefix: 'https://', strip: true, copy: false, placeholder: 'example.com or shop.example.com', label: 'Domain' }) +
-          '<label class="ix-chk" style="margin:0"><input type="checkbox" id="ix-wup" checked> Uptime</label><button class="ix-btn pri">Add and Check</button></form>' +
-        (w.sites && w.sites.length ? w.sites.map(function (s) {
-          var st = s.st || {}, dn = daysLeft(s.dom && s.dom.exp), sn = daysLeft(s.ssl && s.ssl.exp), hn = daysLeft(s.hosting);
-          var upTxt = !s.up ? '<span class="ix-wdot off"></span>Uptime off' : st.at ? '<span class="ix-wdot ' + (st.ok ? 'up' : 'down') + '"></span>' + (st.ok ? 'Up' : 'Down') + (st.code ? ' (' + st.code + (st.ms ? ', ' + st.ms + ' ms' : '') + ')' : '') + ', ' + esc(ago(st.at)) : '<span class="ix-wdot off"></span>Not checked yet';
-          return '<div class="ix-wsite" data-host="' + esc(s.host) + '"><div class="ix-row" style="justify-content:space-between"><b>' + esc(s.host) + '</b><span class="ix-wup">' + upTxt + '</span></div>' +
-            '<div class="ix-wgrid">' +
-              '<div><small>Domain' + (s.dom && s.dom.name && s.dom.name !== s.host ? ' (' + esc(s.dom.name) + ')' : '') + '</small><b class="' + leftCls(dn, 30) + '">' + (s.dom && s.dom.exp ? esc(new Date(s.dom.exp + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })) : '—') + '</b><span>' + (s.dom && s.dom.exp ? esc(leftText(dn)) + (s.dom.registrar ? ', ' + esc(s.dom.registrar) : '') : esc((s.dom && s.dom.err) || 'Not checked yet')) + '</span></div>' +
-              '<div><small>SSL Certificate</small><b class="' + leftCls(sn, 14) + '">' + (s.ssl && s.ssl.exp ? esc(new Date(s.ssl.exp + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })) : '—') + '</b><span>' + (s.ssl && s.ssl.exp ? esc(leftText(sn)) + (s.ssl.issuer ? ', ' + esc(s.ssl.issuer) : '') : esc((s.ssl && s.ssl.err) || 'Not checked yet')) + '</span></div>' +
-              '<div><small>Hosting Renews</small><input type="date" data-hosting value="' + esc(s.hosting || '') + '" aria-label="Hosting renewal date for ' + esc(s.host) + '"><span>' + (s.hosting ? esc(leftText(hn)) : 'Your hosting\'s renewal date') + '</span></div>' +
-            '</div><div class="ix-row" style="margin-top:8px"><label class="ix-chk" style="margin:0"><input type="checkbox" data-up' + (s.up ? ' checked' : '') + '> Check Uptime Every 5 Minutes</label><span style="flex:1"></span><button type="button" data-hold class="ix-btn" data-del>Remove</button></div></div>';
-        }).join('') : '<p class="ix-note" style="margin:14px 0">No domains yet. Add yours above: the expiry dates are looked up for you.</p>') +
-        '<div class="ix-row" style="margin-top:10px"><button type="button" class="ix-btn" id="ix-wnow"' + (w.sites && w.sites.length ? '' : ' disabled') + '>Check Everything Now</button></div>' +
-        '<h3>Renewal Tasks</h3><p>Expiry dates become tasks, so reminders cover them.</p>' +
-        '<label class="ix-tg"><span>Domain Expiry<small>A task 30 days ahead.</small></span><input type="checkbox" data-t="dom"' + (t.dom ? ' checked' : '') + '></label>' +
-        '<label class="ix-tg"><span>Hosting Renewal<small>From the date you enter above.</small></span><input type="checkbox" data-t="host"' + (t.host ? ' checked' : '') + '></label>' +
-        '<label class="ix-tg"><span>SSL Certificate<small>Usually off: certificates renew themselves.</small></span><input type="checkbox" data-t="ssl"' + (t.ssl ? ' checked' : '') + '></label>' +
-        '<p class="ix-note">Runs with the cron job: uptime every 5 minutes, expiry twice a day.</p>';
-      var busy = function (b, txt) { b.disabled = true; b.textContent = txt; };
-      box.querySelector('#ix-wadd').onsubmit = function (e) {
-        e.preventDefault(); var b = e.target.querySelector('button'); busy(b, 'Checking…');
-        api('watch_add', { host: box.querySelector('#ix-whost').value, up: box.querySelector('#ix-wup').checked }).then(function (j) { if (!j.ok) { toast(j.error); b.disabled = false; b.textContent = 'Add and Check'; return; } toast('Added.'); draw(j); });
-      };
-      box.querySelector('#ix-wnow').onclick = function () { busy(this, 'Checking…'); api('watch_check', {}).then(function (j) { if (j.ok) { toast('Checked.'); draw(j); } }); };
-      box.querySelectorAll('[data-t]').forEach(function (c) { c.onchange = function () { var o = {}; o[c.dataset.t] = c.checked; api('watch_tasks', o).then(function (j) { if (j.ok) toast('Saved.'); }); }; });
-      box.querySelectorAll('.ix-wsite').forEach(function (r) {
-        var h = r.dataset.host;
-        r.querySelector('[data-hosting]').onchange = function (e) { api('watch_set', { host: h, hosting: e.target.value }).then(function (j) { if (j.ok) { toast(e.target.value ? 'Hosting date saved.' : 'Hosting date removed.'); draw(j); } }); };
-        r.querySelector('[data-up]').onchange = function (e) { api('watch_set', { host: h, up: e.target.checked }).then(function (j) { if (j.ok) draw(j); }); };
-        r.querySelector('[data-del]').onclick = function () {
-          api('watch_del', { host: h }).then(function (j) { if (j.ok) { toast('Removed. Its tasks stay in Tasks.'); draw(j); } });
-        };
-      });
-    };
-    draw(w);
-  }
-
   /* ---------- Logs (Settings > Logs): what the site told you, who logged in, and what went wrong ---------- */
-  var LOGEV = { login: ['Logged In', '', '✓'], failed: ['Wrong Password', 'warn', '!'], locked: ['Logins Paused After Too Many Wrong Tries', 'warn', '!'], password: ['Password Changed', '', '✓'],
-    logoutall: ['Other Devices Logged Out', '', '✓'], twostep_on: ['Two-Step Login Turned On', '', '✓'], twostep_off: ['Two-Step Login Turned Off', 'warn', '!'],
-    recovery: ['New Recovery Codes Made', '', '✓'], restore: ['Backup Restored', 'warn', '!'] };
+  /* (1.78.0) what the site records, in plain words: [label, style, mark, security?]. The detail (e.x) is what was changed, never a value. */
+  var LOGEV = { login: ['Logged In', '', '✓', 1], failed: ['Wrong Password', 'warn', '!', 1], locked: ['Logins Paused After Too Many Wrong Tries', 'warn', '!', 1], password: ['Password Changed', '', '✓', 1],
+    logoutall: ['Other Devices Logged Out', '', '✓', 1], twostep_on: ['Two-Step Login Turned On', '', '✓', 1], twostep_off: ['Two-Step Login Turned Off', 'warn', '!', 1],
+    recovery: ['New Recovery Codes Made', '', '✓', 1], restore: ['Backup Restored', 'warn', '!', 1], passkey: ['Passkey', '', '✓', 1], session_revoke: ['Device Logged Out', '', '✓', 1], approval: ['Login Approval', '', '✓', 1],
+    encryption: ['Encryption', '', '✓', 1], settings: ['Settings Saved', '', '✓'], logo: ['Logo', '', '✓'], backup: ['Backup', '', '✓'], version_restore: ['Earlier Version Restored', 'warn', '!'],
+    update: ['Site Updated', '', '✓'], update_back: ['Went Back to the Saved Version', 'warn', '!'], files_delete: ['Files Deleted', 'warn', '!'], reset: ['Site Erased', 'warn', '!'], telegram: ['Telegram', '', '✓'] };
+  var LOGSEC = {}; Object.keys(LOGEV).forEach(function (k) { if (LOGEV[k][3]) LOGSEC[k] = 1; });
+  var LOGKEY = { siteName: 'site name', nav: 'navigation', theme: 'theme', accent: 'accent color', accentPg: 'page accents', look: 'look', homeBar: 'bar on Home', glass: 'glass', glassFx: 'glass settings', barHide: 'hide bar', font: 'font', fontCustom: 'font', colors: 'colors', pages: 'tabs', tz: 'time zone', sizes: 'text sizes' };
+  /* one line of the activity list: what happened (with what it was about), then who, from where and when */
+  function actRow(e) {
+    var m = LOGEV[e.ev] || [e.ev, '', '•'], x = String(e.x || ''), label = m[0];
+    if (e.ev === 'failed') label = x === 'code' ? 'Wrong Two-Step Code' : x === 'passkey' ? 'Passkey Not Accepted' : 'Wrong Password';
+    else if (e.ev === 'passkey') label = x === 'removed' ? 'Passkey Removed' : 'Passkey Added';
+    else if (e.ev === 'settings') label += ': ' + x.split(', ').map(function (k) { return LOGKEY[k] || k; }).filter(function (k, i, a) { return a.indexOf(k) === i; }).join(', ');
+    else if (x && e.ev !== 'login') label += ': ' + x;   // what it was about: the parts restored, "3 files", "passphrase set"
+    return checkRow(m[1], m[2], esc(label), esc(e.who || '') + ' · ' + esc(e.ip || '') + (e.cc ? ' (' + esc(e.cc) + ')' : '') + ' · ' + esc(ago(e.t)));
+  }
   var LOGDAY = function (ts) { var d = new Date(ts), t = new Date(), y = new Date(Date.now() - 864e5); return d.toDateString() === t.toDateString() ? 'Today' : d.toDateString() === y.toDateString() ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }); };
   function pLogNotes(p) {
     var all = K.noteLog().slice().reverse(), only = false;
@@ -3153,15 +2983,12 @@
     draw();
   }
   function pLogSign(p) {
-    p.innerHTML = spinRow('Reading the sign-in history…');
+    p.innerHTML = spinRow('Reading the activity…');
     api('activity').then(function (j) {
       if (!j || !j.ok) { p.innerHTML = '<p class="ix-err">' + esc((j && j.error) || 'Could not load.') + '</p>'; return; }
-      var rows = j.events.map(function (e) {
-        var m = LOGEV[e.ev] || [e.ev, '', '•'], label = e.ev === 'failed' ? (e.x === 'code' ? 'Wrong Two-Step Code' : e.x === 'passkey' ? 'Passkey Not Accepted' : 'Wrong Password') : m[0];
-        return checkRow(m[1], m[2], esc(label), esc(e.who || '') + ' · ' + esc(e.ip || '') + (e.cc ? ' (' + esc(e.cc) + ')' : '') + ' · ' + esc(ago(e.t)));
-      });
-      p.innerHTML = tabHead(ICON.out, 'Sign-Ins', 'Logins, wrong passwords and security changes. Who is logged in right now is under Security › Devices.') +
-        (rows.length ? '<div class="ix-checks">' + rows.join('') + '</div>' : '<div class="ix-empty"><b>No Activity Yet</b><p>Logins, wrong passwords and security changes appear here.</p></div>');
+      var rows = j.events.map(actRow);
+      p.innerHTML = tabHead(ICON.out, 'Activity', 'What was done on your site and who logged in: backups, updates, restores, settings saved, passkeys, encryption and every login. The last 300 are kept. Who is logged in right now is under Security › Devices.') +
+        (rows.length ? '<div class="ix-checks">' + rows.join('') + '</div>' : '<div class="ix-empty"><b>No Activity Yet</b><p>Logins, backups, updates and changes to settings appear here.</p></div>');
     }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
   }
   function pLogErr(p) {

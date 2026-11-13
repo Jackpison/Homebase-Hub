@@ -98,26 +98,30 @@ try:
         sel = "(document.querySelector('#ix-pane .ix-subt [aria-selected=true]') || {}).textContent"
         h2 = "(document.querySelector('#ix-pane .ix-ph h2') || {}).textContent"
         sub = "[...document.querySelectorAll('#ix-pane .ix-subseg [aria-selected=true]')].map(e => e.textContent).join('')"
-        places = [('#updates', 'Updates', 'Update'), ('#files', 'Health', 'Server Check'), ('#health', 'Health', 'Overview'), ('#domains', 'Health', 'Domains and Uptime'), ('#check', 'Health', 'Server Check'),
-                  ('#changelog', 'Updates', "Changelog"), ('#system', 'Updates', 'Update'), ('#look', 'Appearance', 'Look'), ('#themes', 'Appearance', 'Presets'),
-                  ('#colors', 'Appearance', 'Colors'), ('#glass', 'Appearance', 'Glass'), ('#nav', 'Appearance', 'Bar'), ('#pages', 'Appearance', 'Bar'), ('#setup', 'General', 'Start Here'), ('#logs', 'Logs', 'Notifications'),
+        places = [('#updates', 'Updates', 'Update'), ('#files', 'Health', 'Server Check'), ('#health', 'Health', 'Overview'), ('#domains', 'Health', 'Overview'), ('#check', 'Health', 'Server Check'),
+                  ('#changelog', 'Updates', "Changelog"), ('#system', 'Updates', 'Update'), ('#look', 'Appearance', 'Look & Bar'), ('#themes', 'Appearance', 'Presets'),
+                  ('#colors', 'Appearance', 'Colors'), ('#glass', 'Appearance', 'Glass'), ('#nav', 'Appearance', 'Look & Bar'), ('#pages', 'Appearance', 'Look & Bar'), ('#logs', 'Logs', 'Notifications'),
                   ('#telegram/backups', 'Backup & Restore', 'Back Up')]
         bad = [h for h, t, u in places if not at(h, h2 + " === %s && %s === %s" % (json.dumps(t), sel, json.dumps(u)))]
-        check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages and #nav open Appearance > Bar; 1.70.0: #files opens Server Check, #changelog Changelog, #telegram/backups Backup & Restore)', not bad, bad)
+        check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages and #nav open Appearance > Look & Bar (1.78.0), #domains Health, #setup General; 1.70.0: #files opens Server Check, #changelog Changelog, #telegram/backups Backup & Restore)', not bad, bad)
         odd = [h for h in ('#constructor', '#__proto__', '#hasOwnProperty', '#toString/x') if not at(h, h2 + " === 'General'")]
         check('S10d an address that is a built-in JavaScript name (#constructor, #__proto__ ...) opens General, not a broken page (2026-11)', not odd, odd)
         ok = at('#changelog', tabs + " === \"Update|Changelog\"")
         check("S10b Updates has two tabs, Update and Changelog (1.77.1: Versions and Version Map are one list; the Notes moved to Features)", ok and pg.evaluate("document.querySelectorAll('#ix-pane .ix-subseg').length") == 0, pg.evaluate(sub))
         ok = at('#general', "!!document.querySelector('#ix-name')")
         gen = pg.evaluate("[[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent), document.querySelectorAll('#ix-pane .ix-subt').length]")
-        check('S10c General holds Site Name, Site Logo and Time Zone, with the two tabs General and Start Here (1.77.2)', ok and gen == [['Site Name', 'Site Logo', 'Time Zone'], 1] and pg.evaluate(tabs) == 'General|Start Here', gen)
-        ok = at('#nav', tabs + " === 'Look|Bar|Colors|Presets|Glass' && !!document.querySelector('#ix-pc #ix-tabl .ix-pgr') && !!document.querySelector('#ix-pc .ix-navpick')")
+        check('S10c General holds Site Name, Site Logo and Time Zone, and no tabs: Start Here was removed in 1.78.0', ok and gen == [['Site Name', 'Site Logo', 'Time Zone'], 0] and at('#setup', h2 + " === 'General'"), gen)
+        s.php("hub_act('backup', 'downloaded: links'); hub_act('settings', 'theme, accent'); hub_act('update', '1.77.5 to 1.78.0');")
+        ok = at('#logsign', "document.querySelectorAll('#ix-pc .ix-chkrow').length >= 3")
+        rows = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-chkrow b')].map(b => b.textContent)")
+        check('S10e Logs > Activity (1.78.0, was Sign-Ins) lists what was done, with what it was about', ok and 'Backup: downloaded: links' in rows and 'Settings Saved: theme, accent color' in rows and 'Site Updated: 1.77.5 to 1.78.0' in rows and at('#logs', tabs + " === 'Notifications|Activity|PHP Errors'"), rows)
+        ok = at('#nav', tabs + " === 'Look & Bar|Colors|Presets|Glass' && !!document.querySelector('#ix-pc #ix-tabl .ix-pgr') && !!document.querySelector('#ix-pc .ix-navpick')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
-        check('S11 Appearance > Bar holds Navigation Style (with the two bar switches) and the Tabs list', ok and cards == ['Navigation Style', 'Tabs'] and pg.evaluate("!!document.querySelector('#ix-hb') && !!document.querySelector('#ix-bh')"), (pg.evaluate(tabs), cards))
+        check('S11 Appearance > Look & Bar holds Theme, Font, Text Sizes, then Navigation Style (with the two bar switches) and the Tabs list (1.78.0: one tab)', ok and cards == ['Theme', 'Font', 'Text Sizes', 'Navigation Style', 'Tabs'] and pg.evaluate("!!document.querySelector('#ix-hb') && !!document.querySelector('#ix-bh')"), (pg.evaluate(tabs), cards))
         ok = at('#look', "!!document.querySelector('#ix-font')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
-        check('S13 Look shows Theme, Font and Text Sizes; the bar, the accent and the glass switch are on their own tabs',
-              ok and cards == ['Theme', 'Font', 'Text Sizes'] and pg.evaluate("!document.querySelector('#ix-pc .ix-navpick, #ix-glass, #ix-pc .ix-apk, #ix-look')"), cards)
+        check('S13 Look & Bar shows the bar too; the accent and the glass switch are on their own tabs',
+              ok and cards[:3] == ['Theme', 'Font', 'Text Sizes'] and pg.evaluate("!!document.querySelector('#ix-pc .ix-navpick') && !document.querySelector('#ix-glass, #ix-pc .ix-apk, #ix-look')"), cards)
         pg.click('#ix-pc [data-ts="cards"]'); wait_js(pg, "!!document.querySelector('#ix-dlg.open #ix-tzs')", 5000)
         tsz = pg.evaluate("[document.querySelector('#ix-dlg.open h2').textContent, document.querySelectorAll('#ix-dlg.open input[type=range]').length, !!document.querySelector('#ix-dlg.open .ix-tss-cards')]")
         pg.evaluate("(() => { const r = document.querySelector('#ix-dlg.open input[type=range]'); r.value = r.max; r.dispatchEvent(new Event('input')); })()")
@@ -130,8 +134,6 @@ try:
         check('S14 Colors holds Accent Color: 10 colors (the 1.65.3 picker) and your own, and no second Accent row', pg.evaluate("document.querySelectorAll('#ix-pc .ix-sw [data-c]').length") == 10 and pg.evaluate("!!document.querySelector('#ix-acc') && !document.querySelector('[data-sa]')"))
         ok = at('#glass', "!!document.querySelector('#ix-glass2')")
         check('S14b the glass on/off switch is on the Glass tab (Glass on the Bar)', ok)
-        ok = at('#setup', "!!document.querySelector('#ix-pc .ix-wzhost')")
-        check('S14c General > Start Here holds the Guided Setup', ok)
         ok = at('#features', "!!document.querySelector('#ix-pc .ix-help #ix-inst') && !!document.querySelector('#ix-pc .ix-help #ix-keysb')")
         check('S14e Features ends with Install on Your Phone and Keyboard Shortcuts (1.77.2)', ok)
         ok = at('#features', "document.querySelectorAll('#ix-pc .ix-rc [data-ft]').length >= 7")
