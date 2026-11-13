@@ -982,8 +982,16 @@ html[data-ix-nav="dock"] #ix-toast,html[data-ix-nav="dock"] #ix-bell{bottom:calc
 .ix-nc.in{opacity:1;transform:none}
 #ix-nlist .ix-nc{opacity:1;transform:none;box-shadow:none;background:var(--ix-s2)}
 .ix-nc.bad{border-color:color-mix(in srgb,var(--ix-err) 45%,var(--ix-line2))}
-.ix-nt{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--ix-accent);color:#111}
-.ix-nt.bad{background:var(--ix-err);color:#fff}.ix-nt.ok{background:var(--ix-ok,#22c55e);color:#06210f}
+.ix-nt{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#4ade80,#16a34a);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 14px -6px rgba(22,163,74,.7)}
+.ix-nt.bad{background:linear-gradient(145deg,#fb7185,#dc2626);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px rgba(220,38,38,.7)}
+.ix-nt.act{background:linear-gradient(145deg,#a5b4fc,#4f46e5);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px rgba(79,70,229,.7)}
+.ix-nt.del{background:linear-gradient(145deg,#fdba74,#ea580c);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px rgba(234,88,12,.7)}
+.ix-nt.box{background:linear-gradient(145deg,#60a5fa,#2563eb);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px rgba(37,99,235,.7)}
+.ix-nt.send{background:linear-gradient(145deg,#38bdf8,#0284c7);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px rgba(2,132,199,.7)}
+.ix-nt.copy{background:linear-gradient(145deg,#c4b5fd,#7c3aed);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px rgba(124,58,237,.7)}
+.ix-nt.lock{background:linear-gradient(145deg,#fcd34d,#d97706);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 14px -6px rgba(217,119,6,.7)}
+.ix-nt.sync{background:linear-gradient(145deg,#5eead4,#0d9488);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px rgba(13,148,136,.7)}
+.ix-nt.plus{background:linear-gradient(145deg,#86efac,#15803d);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px rgba(21,128,61,.7)}
 .ix-nt svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .ix-nb{flex:1;min-width:0}
 .ix-nm{font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
@@ -993,6 +1001,8 @@ html[data-ix-nav="dock"] #ix-toast,html[data-ix-nav="dock"] #ix-bell{bottom:calc
 .ix-nc .ix-tact{flex:none;border:0;border-radius:9px;background:var(--ix-s3);color:var(--ix-accent,#ffc21a);font:700 13px var(--ix-font);padding:7px 12px;cursor:pointer}
 #ix-bell{position:fixed;right:16px;bottom:16px;z-index:2147483002;width:44px;height:44px;border-radius:50%;border:1px solid var(--ix-line2);background:var(--ix-s1);color:var(--ix-tx);display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 24px -6px rgba(0,0,0,.55)}
 #ix-bell[hidden]{display:none}
+#ix-bell.ix-quiet{width:38px;height:38px;opacity:.6;box-shadow:none}
+#ix-bell.ix-quiet:hover,#ix-bell.ix-quiet:focus-visible{opacity:1}
 #ix-bell svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #ix-bell b{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ix-accent);color:#111;font:700 11px/18px var(--ix-font);text-align:center}
 #ix-nlist{position:fixed;right:16px;bottom:16px;z-index:2147483004;width:min(400px,calc(100vw - 32px));max-height:min(520px,calc(100vh - 32px));display:flex;flex-direction:column;border:1px solid var(--ix-line2);border-radius:18px;background:var(--ix-s1);color:var(--ix-tx);box-shadow:0 18px 48px -10px rgba(0,0,0,.65);font:14px var(--ix-font)}
@@ -1016,3 +1026,11 @@ html[data-ix-glass]:not([data-ix-gsolid]) #ix-ebar{background:color-mix(in srgb,
   backdrop-filter:blur(max(12px,var(--ix-gb,3px))) saturate(calc(var(--ix-gs,1) * 1.4)) brightness(1.04);-webkit-backdrop-filter:blur(max(12px,var(--ix-gb,3px))) saturate(calc(var(--ix-gs,1) * 1.4)) brightness(1.04);
   border-color:transparent;box-shadow:inset 0 1px 0 0 rgba(255,255,255,calc(var(--ix-grim,.35) * .86)),0 0 2px 1px rgba(255,255,255,calc(var(--ix-grim,.35) * .8)) inset,0 8px 24px rgba(17,17,26,calc(var(--ix-gsh,.3) * .5)),0 16px 56px rgba(17,17,26,calc(var(--ix-gsh,.3) * .5))}
 
+
+/* (1.77.2) one search look everywhere, adapted from Uiverse.io by sabbircoder07, "gentle-yak-43" (https://uiverse.io/sabbircoder07/gentle-yak-43): a soft pill,
+   a small spaced-out capital placeholder, and a field that grows a little and brightens when you click into it. The bar, Spotlight, Settings and the lists use it. */
+:is(#ix-bar,#ix-spot) .ix-search input,#ix-page .ix-ssearch input,#ix-page .ix-cl-search input,.ix-psearch{border-radius:1000px!important;border-color:transparent!important;background:color-mix(in srgb,var(--ix-tx) 7%,var(--ix-field,transparent))!important;transition:background .2s,box-shadow .2s,transform .2s}
+:is(#ix-bar,#ix-spot) .ix-search input::placeholder,#ix-page .ix-ssearch input::placeholder,#ix-page .ix-cl-search input::placeholder,.ix-psearch input::placeholder{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--ix-mu2)}
+:is(#ix-bar,#ix-spot) .ix-search input:focus,#ix-page .ix-ssearch input:focus,#ix-page .ix-cl-search input:focus,.ix-psearch:focus-within{background:color-mix(in srgb,var(--ix-tx) 11%,var(--ix-field,transparent))!important;box-shadow:0 0 0 3px var(--ix-soft),0 8px 22px -12px rgba(0,0,0,.6)}
+#ix-page .ix-ssearch input{padding-left:16px}
+@media (prefers-reduced-motion:no-preference){:is(#ix-bar,#ix-spot) .ix-search{transition:flex-basis .25s ease,max-width .25s ease}:is(#ix-bar) .ix-search:focus-within{max-width:560px}#ix-page .ix-ssearch input:focus{transform:scale(1.015)}}

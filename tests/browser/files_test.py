@@ -138,6 +138,15 @@ try:
         except Exception as e: zn, bad, zc = [str(e)], 'x', {}
         check('B24 a folder downloads as a zip that opens, with its files under the folder\'s name and the right bytes', d.value.suggested_filename == 'Docs.zip' and bad is None and zn == ['Docs/greeting.txt', 'Docs/inside.txt'] and zc.get('Docs/greeting.txt') == TXT and zc.get('Docs/inside.txt') == b'inside the folder', (zn, bad))
 
+        # ---- (1.77.2) the details panel is open by default, with Select All
+        pg.locator('.row .ck').first.wait_for()
+        pg.evaluate("document.querySelectorAll('.row.sel').length && document.querySelector('#bulk .btn:last-child')?.click()")
+        pn = pg.evaluate("(() => { const d = document.getElementById('det'); return [!d.hidden, !!document.getElementById('selall'), !!document.getElementById('sela') && !document.getElementById('sela').hidden]; })()")
+        check('B24b nothing picked: the details panel is open with Select All (1.77.2)', pn == [True, True, True], pn)
+        pg.click('#selall'); n_all = pg.evaluate("[document.querySelectorAll('.row.sel').length, document.querySelectorAll('.row').length]")
+        check('B24c Select All picks every item, and the button then says Clear Selection', n_all[0] == n_all[1] and n_all[0] > 0 and pg.inner_text('#selall') == 'Clear Selection', n_all)
+        pg.click('#selall'); check('B24d Clear Selection empties the pick', pg.evaluate("document.querySelectorAll('.row.sel').length") == 0)
+
         # ---- share links ----
         pg.locator('.nm[title="Docs"]').click(); wait_names(pg, ['greeting.txt'])
         menu(pg, 'greeting.txt', 'Share Link'); pg.wait_for_selector('#dform button:has-text("Make a New Link")')
@@ -147,7 +156,7 @@ try:
         key = link.split('#')[1]; tok = re.search(r't=([A-Za-z0-9_-]{32})', link).group(1)
         lf = pg.evaluate("(() => { const f = document.querySelector('#dform .linkbox .ix-uf'); return f ? [f.querySelector('.ix-uf-px').textContent, f.querySelector('input').readOnly, !!f.querySelector('.ix-uf-cp .ix-uf-tip')] : null; })()")
         check('B25b the share link sits in the link field: "Link" in front, read-only, a copy icon with its COPY tip (1.69.1)', lf == ['Link', True, True], lf)
-        pg.click('#dform .ix-st-next:has-text("Done")')   # (1.69.0) the Share window is a Stepper: Done is its last button
+        pg.click('#dform .act button:has-text("Done")')   # (1.77.2) one window: Done closes it
         vctx = b.new_context(viewport={'width': 1000, 'height': 800}, accept_downloads=True); vctx.add_init_script(CSP_REPORTER)
         vp = vctx.new_page(); seen = []; vp.on('request', lambda r: seen.append(r.url)); verrs = []
         vp.on('console', lambda m: verrs.append(m.text[:160]) if m.type == 'error' and 'security policy' in m.text.lower() else None)
@@ -166,7 +175,7 @@ try:
         check('B31 a visitor opening Files itself sees only "private"', 'private' in vp.inner_text('body').lower() and 'greeting' not in vp.inner_text('body'))
         # remove it
         menu(pg, 'greeting.txt', 'Share Link'); pg.wait_for_selector('#dform .lk'); pg.click('#dform .lk button:has-text("Remove")'); until(lambda: pg.locator('#dform .lk').count() == 0, 8000)
-        pg.click('#dform .ix-st-next:has-text("Done")')   # (1.69.0) the Share window is a Stepper: Done is its last button
+        pg.click('#dform .act button:has-text("Done")')   # (1.77.2) one window: Done closes it
         vp.goto(link); wait_js(vp, "document.getElementById('err').textContent.length > 0", 15000)
         check('B32 once the link is removed, opening it says it has ended', 'ended or was removed' in vp.inner_text('#err'), vp.inner_text('#err'))
         vp.goto(s.site_base + '/web/files/share.html?t=%s#%s' % ('a' * 32, 'b' * 43)); wait_js(vp, "document.getElementById('err').textContent.length > 0", 15000)

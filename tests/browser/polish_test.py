@@ -446,7 +446,7 @@ try:
         lst = pg.evaluate("[...document.querySelectorAll('#ix-nlist .ix-nm')].map(e => e.textContent)")
         check('P71 a message that went away unseen is kept behind the bell, newest first', lst[0] == 'Quiet note' and 'Second note' in lst and 'First note' in lst, lst)
         pg.click('#ix-nlist [data-clear]')
-        check('P72 Clear empties the list and the bell goes away', pg.evaluate("!document.getElementById('ix-nlist') && (!document.getElementById('ix-bell') || document.getElementById('ix-bell').hidden)"))
+        check('P72 Clear empties the list; the bell stays on the page (quiet, no number) so messages can be read again later (1.77.2)', pg.evaluate("!document.getElementById('ix-nlist') && !!document.getElementById('ix-bell') && !document.getElementById('ix-bell').hidden && !document.querySelector('#ix-bell b')"))
         # (1.75.0) Overview: boxes side by side; pick a part and the box below it changes
         pg.goto(s.base + '/web/settings/#overview'); wait_js(pg, "!!document.querySelector('.ix-bento .ix-bp')", 20000)
         ov = pg.evaluate("(() => { const t = [...document.querySelectorAll('.ix-bp')].map(b => b.querySelector('b').textContent), a = document.querySelector('#ix-bsel h4').textContent; return [t.join(','), a]; })()")

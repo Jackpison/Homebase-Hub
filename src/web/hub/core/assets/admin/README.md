@@ -18,6 +18,7 @@ files. This folder holds it cut into labelled parts, **in the order they are joi
 | `90-security.js` | Security: devices, password, two-step, passkeys, encryption |
 | `95-backup-and-import.js` | Backup, Restore and the Import Center |
 | `97-health.js` | Health: Overview, Domains and Uptime, Server Check |
+| `98-logs.js` | Logs: Notifications, Sign-Ins, PHP Errors |
 | `99-end.js` | The search index and the hand-over to `shell.js` |
 
 ## How to change it

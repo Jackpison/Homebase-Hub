@@ -17,7 +17,7 @@
  *   Appearance pLook, barHtml, accentHtml, pColors, PRESETS / PRESET_GROUPS (data), pThemes, pGlass
  *   Bar        pNav (bar settings and tabs), tabEditor
  *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles), pDomains
- *   Overview   pOverview, whatsNew, decorateNav, pStart (Start Here: pSetup, Guided Setup, WZ, setupSteps)
+ *   Start Here decorateNav, pStart (Start Here: pSetup, Guided Setup, WZ, setupSteps)
  *   Changelog mdInline, mdBlocks, clParse, pChangelog (a tab of Updates)
  *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles (shown in Health > Server Check)
  *   building blocks (used by every pane)  ecCard, ecField, ecChip, tabHead, tile, checkRow, spinRow
@@ -53,12 +53,12 @@
   ICON.users = 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 7.5M22 21a7 7 0 0 0-5-6.7';
   // [id, name, icon, what it is for (shown under the title), sub-tabs [[id, name]], menu group]
   var SECTIONS = [
-    ['overview', 'Overview', ICON.grid, 'How your site stands right now, and what to look at next.', [['overview', 'Overview'], ['setup', 'Start Here']], ''],
-    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone.', null, 'Web Setting'],
+    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and a short guide to getting set up.', [['general', 'General'], ['setup', 'Start Here']], 'Web Setting'],
     ['look', 'Appearance', ICON.palette, 'The theme, font, bar, colors and glass.', [['look', 'Look'], ['nav', 'Bar'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
     ['security', 'Security', ICON.shield, 'Login, passkeys and encryption.', null, 'Data Setting'],
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
+    ['logs', 'Logs', ICON.log, 'Everything the site told you, who logged in, and what went wrong.', [['logs', 'Notifications'], ['logsign', 'Sign-Ins'], ['logerr', 'PHP Errors']], 'System Setting'],
     ['health', 'Health', ICON.pulse, 'Version, speed, errors, domains and a check of your server.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
     // (1.77.1) Updates has two tabs: Update and Changelog (one list of every version; the old Notes moved to Features)
     ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Changelog']], 'System Setting'],
@@ -67,12 +67,12 @@
   /* (1.66.0) the left panel in the "System tiles" look: a solid colour tile with a white icon for each section (icons from Lucide,
      lucide.dev, ISC licence: see web/hub/docs/THIRD-PARTY.md). [colour, the icon's SVG inside] */
   var SEC_TILE = {
-    overview: ['#f5a524', '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'],
     general: ['#3b82f6', '<path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>'],
     look: ['#a855f7', '<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/><circle cx="13.5" cy="6.5" r=".8" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".8" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".8" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".8" fill="currentColor"/>'],
     security: ['#22c55e', '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>'],
     telegram: ['#0ea5e9', '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>'],
     backup: ['#f97316', '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="m9.5 14.5 2.5 2.5 2.5-2.5M12 11v6"/>'],
+    logs: ['#64748b', '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'],
     health: ['#f43f5e', '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>'],
     features: ['#f97316', '<path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.6L12 15.3 7 18.2l1.2-5.6L4 8.8l5.6-.6z"/>'],
     updates: ['#14b8a6', '<path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"/><path d="M12 21v-9M8 16l4-4 4 4"/>'],
@@ -87,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, features: pFeatures };
+  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -179,7 +179,7 @@
     var narrow = window.matchMedia && window.matchMedia('(max-width: 859px)').matches;
     if (h) go(h);
     else if (narrow) host.setAttribute('data-view', 'list');
-    else { var last = ''; try { last = sessionStorage.getItem('ix-sec') || ''; } catch (e) {} go(SUB_OF[last] ? last : 'overview'); }
+    else { var last = ''; try { last = sessionStorage.getItem('ix-sec') || ''; } catch (e) {} go(SUB_OF[last] ? last : 'general'); }
     ovGet().then(function (j) { if (j.ok) { OV = j; decorateNav(); } }).catch(function () {});
   }
   /* Opening Settings asks for the overview twice at once (the menu badges and the Overview page): one request serves both. */
@@ -203,6 +203,7 @@
     ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
     ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'check', 'extra changed missing leftover files'],
     ['Health', 'health', 'disk speed errors log'], ['Domains and Uptime', 'domains', 'expiry ssl hosting renewal'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
+    ['Logs', 'logs', 'notifications messages history log activity'], ['Sign-In History', 'logsign', 'logins wrong password activity'], ['PHP Errors', 'logerr', 'error log'],
     ['Changelog', 'changelog', 'changelog versions history what changed new version map'], ['Good to Know', 'features', 'notes how updating works']
   ];
   function bindSearch(host) {
@@ -228,7 +229,7 @@
   }
   /* Open a section, one of its sub-tabs ('colors'), or a tab inside it ('security/encryption'). */
   function go(target) {
-    target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'overview';
+    target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'general';
     if (id === 'remind') id = 'telegram';
     if (id === 'system') id = 'updates';   // the System section of 1.48 is Updates, Health and Changelog again
     if (id === 'pages') id = 'nav';        // General > Pages was removed in 1.48.5: its old links open Tabs
@@ -236,7 +237,7 @@
     if (id === 'files') id = 'check';
     if (id === 'telegram' && parts[1] === 'backups') { id = 'backup'; parts = ['backup']; }
     if (!PAGE) { location.href = K.ROOT + 'web/settings/#' + target; return; }
-    if (!own(SUB_OF, id)) id = 'overview';
+    if (!own(SUB_OF, id)) id = 'general';
     if (id === 'backup' && parts[1]) parts[1] = { 'back-up': 'overview', 'export-data': 'export', 'earlier-versions': 'restore' }[parts[1]] || parts[1];   // the tabs of 1.60 and before
     if (parts[1]) TABSEL[id] = parts[1];
     pane(id);
@@ -244,7 +245,7 @@
   function sectionOf(id) { return SECTIONS.filter(function (x) { return x[0] === id; })[0]; }
   var curSub = '';
   function pane(id) {
-    var sec = SUB_OF[id] || 'overview', s = sectionOf(sec);
+    var sec = SUB_OF[id] || 'general', s = sectionOf(sec);
     var subs = s[4] || [[sec, s[1]]], sub = subs.some(function (t) { return t[0] === id; }) ? id : subs[0][0];
     var tabs = subTabs(subs, sub);
     P().querySelectorAll('[data-sec]').forEach(function (b) { if (b.dataset.sec === sec) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
@@ -320,7 +321,7 @@
     });
   }
   function mountPane(sub) {
-    var draw = PANE_FN.get(sub); if (typeof draw !== 'function') { sub = 'overview'; draw = PANE_FN.get(sub); }   // only a pane of ours runs, whatever the address says
+    var draw = PANE_FN.get(sub); if (typeof draw !== 'function') { sub = 'general'; draw = PANE_FN.get(sub); }   // only a pane of ours runs, whatever the address says
     var pc = $('#ix-pc'); if (tabObs) { tabObs.disconnect(); tabObs = null; }
     if (TABBED[sub] || CARDIFY[sub]) { tabObs = new MutationObserver(function () { if (TABBED[sub]) tabify(pc, sub); if (CARDIFY[sub]) cardify(pc); }); tabObs.observe(pc, { childList: true }); }
     draw(pc); if (TABBED[sub]) tabify(pc, sub); if (CARDIFY[sub]) cardify(pc);

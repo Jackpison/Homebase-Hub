@@ -298,3 +298,6 @@ html[data-ix-nav="side"] .fdet{top:16px}
 .row .qb.ib{padding:0;width:32px}.row .qb svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .row .qb[aria-pressed=true]{color:var(--acc)}.row .qb[aria-pressed=true] svg{fill:currentColor}
 @media (hover:none){.row .qa{display:none}}
+
+.shend{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.shend label{color:var(--mute);font-size:13.5px}
+.fdet .pv.sum{height:110px}.fdet .pv.sum svg{width:48px;height:48px}.fdet .hint{margin:0;color:var(--mute);font-size:13.5px}

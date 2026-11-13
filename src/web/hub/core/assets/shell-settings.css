@@ -215,9 +215,9 @@
 #ix-page .ix-hcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
 #ix-page .ix-hcards.six{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media (max-width:560px){#ix-page .ix-hcards.six{grid-template-columns:repeat(2,minmax(0,1fr))}}   /* (1.61.6) Health's six cards: 3 + 3, never 5 + 1 alone */
-#ix-page .ix-hc{position:relative;border:1px solid var(--ix-line);border-radius:18px;background:var(--ix-s1);padding:16px;display:flex;gap:14px;align-items:flex-start;min-width:0}
-#ix-page .ix-hc-i{flex:none;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;box-shadow:0 8px 18px -10px rgba(0,0,0,.7)}
-#ix-page .ix-hc-i svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#ix-page .ix-hc{position:relative;border:1px solid var(--ix-line);border-radius:18px;background:var(--ix-s1);padding:10px 14px;display:flex;gap:12px;align-items:center;min-width:0}
+#ix-page .ix-hc-i{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;box-shadow:0 8px 18px -10px rgba(0,0,0,.7)}
+#ix-page .ix-hc-i svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 #ix-page .ix-hc-t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
 #ix-page .ix-hc-d{position:absolute;top:14px;right:14px;width:9px;height:9px;border-radius:50%;background:var(--ix-line2)}
 #ix-page .ix-hc.good .ix-hc-d{background:var(--ix-good);box-shadow:0 0 0 4px color-mix(in srgb,var(--ix-good) 22%,transparent)}
@@ -324,15 +324,6 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-cardh{display:flex;justify-content:space-between;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin-bottom:6px}
 #ix-page h4{margin:20px 0 8px;font-size:14.5px;color:var(--ix-tx)}
 #ix-page .ix-mu{color:var(--ix-mu);font-size:13.5px}
-#ix-page .ix-ocs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-#ix-page .ix-oc{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0;transition:border-color .18s,transform .18s}
-#ix-page .ix-oc:hover{border-color:var(--ix-line2)}
-#ix-page .ix-os{color:var(--ix-mu);font-size:13px;line-height:1.4}
-#ix-page .ix-oc .ix-btn{align-self:flex-start;margin-top:auto;padding:4px 0 0;border:0;background:none;box-shadow:none;color:var(--ix-accent-tx);font-weight:600;font-size:13.5px}
-#ix-page .ix-oc .ix-btn::after{content:" →";transition:margin-left .18s}
-#ix-page .ix-oc .ix-btn:hover::after{margin-left:3px}
-#ix-page .ix-als{background:var(--ix-s1);border:1px solid color-mix(in srgb,var(--ix-accent) 40%,var(--ix-line));border-radius:18px;padding:14px 18px;margin:0 0 18px;display:flex;flex-direction:column;gap:8px}
-#ix-page .ix-als.ok{flex-direction:row;align-items:center;gap:10px;border-color:var(--ix-line)}
 #ix-page .ix-pill.bad{color:var(--ix-err);border-color:color-mix(in srgb,var(--ix-err) 45%,transparent)}
 /* tabs made from accordions */
 #ix-page .ix-tabbed>.ix-tabbar{margin:0 0 6px;overflow-x:auto;scrollbar-width:none}
@@ -570,11 +561,9 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-bkstat,#ix-page .ix-wsite,#ix-page .ix-part{border-radius:16px;background:var(--ix-s1)}
 #ix-page .ix-hc{border-radius:16px;background:var(--ix-s1)}
 #ix-page .ix-status{border-radius:12px}
-#ix-page .ix-oc{box-shadow:none}
 #ix-page .ix-exts span{border-radius:999px}
 
 /* ---- 1.36.0: jump chips and the setup banner on the Overview, and the Guided Setup steps ---- */
-#ix-page .ix-setupb{border-color:color-mix(in srgb,var(--ix-accent) 45%,var(--ix-line))}
 #ix-page .ix-steps{display:flex;flex-direction:column;gap:10px;max-width:var(--ix-cw);margin:0 0 16px}
 #ix-page .ix-step{margin:0;max-width:none;padding:0;overflow:hidden}
 #ix-page .ix-step.open{border-color:color-mix(in srgb,var(--ix-accent) 55%,var(--ix-line))}
@@ -860,69 +849,20 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-cg .ix-cl-b{margin:0 0 10px;padding:4px 18px 14px;border:1px solid var(--ix-line);border-radius:14px;background:var(--ix-bg)}
 
 /* (1.75.0) the small boxes (Security tiles, Overview cards): a soft top light, a lift and an accent edge on hover, an even rhythm */
-#ix-page .ix-tile,#ix-page .ix-oc{border-radius:18px;background:linear-gradient(180deg,color-mix(in srgb,var(--ix-tx) 4%,var(--ix-s1)),var(--ix-s1));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ix-tx) 7%,transparent);transition:border-color .18s,transform .18s,box-shadow .18s,background .18s}
+#ix-page .ix-tile{border-radius:18px;background:linear-gradient(180deg,color-mix(in srgb,var(--ix-tx) 4%,var(--ix-s1)),var(--ix-s1));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ix-tx) 7%,transparent);transition:border-color .18s,transform .18s,box-shadow .18s,background .18s}
 #ix-page .ix-tile{padding:16px 18px;gap:14px;align-items:center;min-height:92px}
-#ix-page .ix-tile:hover,#ix-page .ix-oc:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--ix-accent) 55%,var(--ix-line));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ix-tx) 7%,transparent),0 14px 28px -16px rgba(0,0,0,.7)}
+#ix-page .ix-tile:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--ix-accent) 55%,var(--ix-line));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ix-tx) 7%,transparent),0 14px 28px -16px rgba(0,0,0,.7)}
 #ix-page .ix-tile:focus-visible{outline:2px solid var(--ix-accent);outline-offset:2px}
 #ix-page .ix-tile-i{width:44px;height:44px;border-radius:13px}
 #ix-page .ix-tile-h b{font-size:15px}
 #ix-page .ix-tile small{font-size:13px}
-#ix-page .ix-oc{padding:16px 18px;gap:8px}
-#ix-page .ix-oc .ix-btn{padding-top:6px}
 
 /* (1.75.0) the Settings content uses the room it has (it stopped at 780 px and left a wide empty strip on the right) */
 #ix-page{--ix-cw:1160px}
 
 /* (1.75.0) Overview as boxes side by side (like the features-card mock-up): the big one with four parts to pick, Health, Protection Steps, and what needs a look */
-#ix-page .ix-bento{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr);gap:16px;max-width:var(--ix-cw)}
-#ix-page .ix-bb{background:var(--ix-s1);border:1px solid var(--ix-line);border-radius:22px;padding:22px;min-width:0;display:flex;flex-direction:column;gap:6px}
-#ix-page .ix-bmain{grid-row:span 2}
-#ix-page .ix-bwide{grid-column:2 / -1}
-#ix-page .ix-bbadge{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;border:1px solid var(--ix-line2);background:var(--ix-s2);font-size:13px;font-weight:600}
-#ix-page .ix-bbadge svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#ix-page .ix-bb h3{margin:14px 0 0;font-size:28px;letter-spacing:-.015em}
-#ix-page .ix-bb h4{margin:8px 0 0;font-size:17px}
-#ix-page .ix-bsub{margin:0 0 8px;color:var(--ix-mu);font-size:14px}
-#ix-page .ix-bh{display:flex;align-items:center;justify-content:space-between;gap:10px}
-#ix-page .ix-bwide .ix-bh{justify-content:flex-start}#ix-page .ix-bwide .ix-bh h4{margin:0}
-#ix-page .ix-bi{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:var(--ix-s3);border:1px solid var(--ix-line2)}
-#ix-page .ix-bi svg,#ix-page .ix-bpi svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#ix-page .ix-blive{padding:4px 11px;border-radius:999px;background:var(--ix-s3);font-size:12.5px;font-weight:700;color:var(--ix-mu)}
-#ix-page .ix-blive.good{color:var(--ix-ok)}#ix-page .ix-blive.warn{color:var(--ix-accent-tx,var(--ix-accent))}
-#ix-page .ix-bpick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 12px}
-#ix-page .ix-bp{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:16px;border-radius:16px;text-align:left;font:inherit;color:var(--ix-tx);cursor:pointer;background:var(--ix-s2);border:1px solid var(--ix-line);box-shadow:none}
-#ix-page .ix-bp:hover{transform:none;border-color:var(--ix-line2)}
-#ix-page .ix-bp[aria-pressed="true"]{background:var(--ix-s3);border-color:color-mix(in srgb,var(--ix-accent) 55%,var(--ix-line2))}
-#ix-page .ix-bpi{margin-bottom:8px;color:var(--ix-mu)}
-#ix-page .ix-bp[aria-pressed="true"] .ix-bpi{color:var(--ix-accent-tx,var(--ix-accent))}
-#ix-page .ix-bp b{font-size:15px}
-#ix-page .ix-bp small{font-size:12.5px;color:var(--ix-mu)}
-#ix-page .ix-bp small.good{color:var(--ix-ok)}#ix-page .ix-bp small.warn{color:var(--ix-accent-tx,var(--ix-accent))}
-#ix-page .ix-bsel{margin-top:auto;padding:16px 18px;border-radius:16px;background:var(--ix-s2);border:1px solid var(--ix-line);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
-#ix-page .ix-bsel small{font:12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ix-mu2)}
-#ix-page .ix-bsel h4{margin:0;font-size:19px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#ix-page .ix-bsel p{margin:0;color:var(--ix-tx);font-size:14px}#ix-page .ix-bsel p.ix-os{color:var(--ix-mu);font-size:13.5px}
-#ix-page .ix-bsel .ix-btn{margin-top:8px}
-#ix-page .ix-bm{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:12px;background:var(--ix-s2);border:1px solid var(--ix-line);font-size:13.5px}
-#ix-page .ix-bm span{color:var(--ix-mu)}#ix-page .ix-bm b{font-weight:700}
-#ix-page .ix-bm b.good{color:var(--ix-ok)}#ix-page .ix-bm b.warn{color:var(--ix-accent-tx,var(--ix-accent))}
-#ix-page .ix-bb>.ix-btn{align-self:flex-start;margin-top:10px}
-#ix-page .ix-bbar{height:8px;border-radius:4px;background:var(--ix-s3);overflow:hidden}
-#ix-page .ix-bbar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--ix-accent),var(--ix-ok))}
-#ix-page .ix-bcode{list-style:none;counter-reset:b;margin:10px 0 0;padding:6px 14px;border-radius:14px;background:var(--ix-bg);border:1px solid var(--ix-line)}
-#ix-page .ix-bcode li{counter-increment:b;display:flex;align-items:center;gap:12px;padding:9px 0;font-size:13.5px}
-#ix-page .ix-bcode li::before{content:counter(b);width:18px;text-align:right;font:12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ix-mu2)}
-#ix-page .ix-bcode li span{flex:1}
-#ix-page .ix-bcode li+li{border-top:1px solid var(--ix-line)}
-#ix-page .ix-bwide.ok .ix-bi{color:var(--ix-ok)}
-@media (max-width:1100px){#ix-page .ix-bento{grid-template-columns:1fr 1fr}#ix-page .ix-bmain{grid-column:1 / -1;grid-row:auto}#ix-page .ix-bwide{grid-column:1 / -1}}
-@media (max-width:600px){#ix-page .ix-bento{grid-template-columns:1fr}#ix-page .ix-bb h3{font-size:24px}}
-#ix-page .ix-bb h3{color:var(--ix-tx)}
-#ix-page .ix-bb.ix-als{display:flex;flex-direction:column;align-items:stretch;gap:6px;margin:0;border:1px solid var(--ix-line);background:var(--ix-s1);padding:22px}#ix-page .ix-bb.ix-als .ix-bsub{margin:4px 0 0}
 #ix-page .ix-newbody{max-height:170px}
 #ix-page .ix-ec.ix-new{padding:18px 22px}
-#ix-page .ix-bb>.ix-btn{margin-top:auto;align-self:flex-start}
-#ix-page .ix-bb .ix-bbar+.ix-btn{margin-top:14px}
 
 /* (1.76.0, 1.77.1) Features: a banner, a tinted card for each page, and for each page a coloured header and numbered highlights */
 #ix-page .ix-fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:var(--ix-cw)}
@@ -951,7 +891,6 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 
 /* (1.77.1) Telegram: Setup as a plain checklist, Instant Replies with one short note, the commands as a tidy grid */
 #ix-page .ix-hknote{margin:10px 2px 14px;max-width:var(--ix-cw);line-height:1.55}
-#ix-page .ix-hknote .ix-cf{display:block;margin-top:6px;color:var(--ix-mu2);font-size:12.5px}
 #ix-page .ix-hknote code{overflow-wrap:anywhere}
 #ix-page .ix-cmdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 #ix-page .ix-cmdc{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;border:1px solid var(--ix-line);background:var(--ix-s2)}
@@ -997,3 +936,9 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-cl-m .ix-cl-d{flex:none}
 #ix-page .ix-cl-tags{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 #ix-page .ix-cg .ix-cl-b{margin:0 0 10px 106px}
+/* (1.77.2) Logs */
+#ix-page .ix-lgbar{margin:0 0 6px;max-width:var(--ix-cw);justify-content:space-between}
+#ix-page .ix-lg{max-width:var(--ix-cw)}
+#ix-page .ix-lgr{display:flex;gap:14px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--ix-line)}
+#ix-page .ix-lgt b{display:block;font-weight:600;font-size:14.5px;overflow-wrap:anywhere}
+#ix-page .ix-lgt small{color:var(--ix-mu);font-size:12.5px}

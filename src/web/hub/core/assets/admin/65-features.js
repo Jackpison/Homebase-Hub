@@ -76,6 +76,8 @@
       nb.querySelectorAll('[data-note]').forEach(function (b) { b.onclick = function () {
         var x = b.closest('.ix-rc').querySelector('.ix-rc-x'), open = x.hidden; x.hidden = !open; b.textContent = open ? 'Hide' : 'Read'; b.setAttribute('aria-expanded', open ? 'true' : 'false'); }; });
     }).catch(function () {});
+    // (1.77.2) Install on Your Phone, Keyboard Shortcuts and Offline Reading moved here from Start Here: they are help about the site, not setup
+    var hb = document.createElement('div'); hb.className = 'ix-help'; p.appendChild(hb); helpCards(hb);
   }
   function pFeature(p, f) {
     p.innerHTML = '<div class="ix-fhero" style="--fc:' + f.c + '"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +

@@ -24,7 +24,6 @@
     });
   }
   /* ---------- Overview: where things stand ---------- */
-  var hourLbl = function (h) { return (h % 12 || 12) + ':00 ' + (h < 12 ? 'AM' : 'PM'); };
   function decorateNav() {
     if (!OV || !PAGE) return;
     var pill = function (id, txt, cls) { var e = PAGE.querySelector('[data-pill="' + id + '"]'); if (e) { e.textContent = txt || ''; e.className = 'ix-sp ' + (cls || ''); } };
@@ -35,8 +34,6 @@
     pill('backup', bk.last ? ago(bk.last).replace(' ago', '') : 'Never', late ? 'warn' : bk.last ? 'good' : '');
     var n = fl ? fl.extra + fl.changed : 0;
     pill('updates', up.staged ? 'Ready' : up.newer ? 'New Version' : n ? n + ' to check' : 'Up to date', up.staged || up.newer || n ? 'warn' : 'good');
-    var al = (OV.alerts || []).length;
-    pill('overview', al ? al + ' to see' : '', al ? 'warn' : '');
     pill('look', S.theme === 'auto' ? 'Auto' : S.theme === 'light' ? 'Light' : 'Dark', '');
     pill('health', OV.https ? 'OK' : 'No HTTPS', OV.https ? 'good' : 'warn');
     var sv = PAGE.querySelector('[data-sver]'); if (sv) sv.textContent = ' · v' + OV.version;    paintHead();
@@ -46,7 +43,7 @@
   function paintHead() {
     var h = PAGE && PAGE.querySelector('#ix-phs'), box = h && h.closest('.ix-ph'); if (!h || !OV) return;
     var sec = box.dataset.sec, pill = PAGE.querySelector('[data-pill="' + sec + '"]'), txt = pill ? pill.textContent : '', cls = pill && /good|warn/.test(pill.className) ? (/good/.test(pill.className) ? 'good' : 'warn') : '';
-    if (sec === 'overview' || sec === 'look' || !txt) { h.hidden = true; h.innerHTML = ''; return; }
+    if (sec === 'look' || !txt) { h.hidden = true; h.innerHTML = ''; return; }
     var pr = OV.protect, bar = sec === 'security' ? '<span class="ix-phb"><i style="width:' + Math.round(100 * (pr.on + 1) / (pr.total + 1)) + '%"></i></span>' : '';
     var nx = sec === 'security' && pr.next && pr.next.key === 'https' ? '<button type="button" class="ix-btn pri" data-phgo="health">Fix Next: HTTPS</button>' : '';
     h.innerHTML = '<span class="ix-phc ' + cls + '">' + esc(txt) + '</span>' + bar + nx; h.hidden = false;
@@ -54,8 +51,8 @@
   }
   /* (1.70.0) Overview > Start Here: Guided Setup, then Install on Your Phone and Keyboard Shortcuts */
   function pStart(p) {
-    p.innerHTML = '<div class="ix-wzhost"></div><div class="ix-help"></div>';
-    pSetup(p.querySelector('.ix-wzhost')); helpCards(p.querySelector('.ix-help'));
+    p.innerHTML = '<div class="ix-wzhost"></div>';
+    pSetup(p.querySelector('.ix-wzhost'));
   }
   /* ---------- Guided Setup: the protection steps one after another, using the same flows as Security and Backup ---------- */
   var WZ = { open: '', pp: '', site: '', rec: '', skipped: {} };   // what you typed stays here only while Settings is open, never saved
@@ -139,7 +136,7 @@
               (open ? '<div class="ix-ec-b">' + bodies[s.key] + '<div class="ix-row ix-sbnav">' + (i ? '<button type="button" class="ix-btn" data-open="' + steps[i - 1].key + '">Back</button>' : '') + '<span></span>' +
                 (s.done || s.key === 'pw' ? '' : '<button type="button" class="ix-btn ix-quiet2" data-skip="' + s.key + '">Skip for Now</button>') +
                 (i < steps.length - 1 ? '<button type="button" class="ix-btn' + (s.done ? ' pri' : '') + '" data-open="' + steps[i + 1].key + '">Next</button>' : '') + '</div></div>' : '') + '</section>'; }).join('') + '</div>' +
-          (done === steps.length ? '<div class="ix-row" style="margin-top:6px"><button type="button" class="ix-btn pri" data-go2="overview">Back to Overview</button></div>' : '') +
+          (done === steps.length ? '<div class="ix-row" style="margin-top:6px"><button type="button" class="ix-btn pri" data-go2="general">Back to General</button></div>' : '') +
           ecCard('', ICON.send, 'Optional: Telegram', 'Reminders, login alerts, instant approval of new logins, and automatic backups on your phone. It takes about two minutes.', '<div class="ix-row"><button type="button" class="ix-btn" data-go2="telegram/setup">Open Telegram Setup</button></div>');
         // wiring
         p.querySelectorAll('[data-go2]').forEach(function (b) { b.onclick = function () { go(b.dataset.go2); }; });
@@ -186,74 +183,4 @@
     draw();
   }
 
-  function pOverview(p) {
-    p.innerHTML = '<p class="ix-ld">Checking how things stand…</p>';
-    ovGet().then(function (j) {
-      if (!j.ok) { p.innerHTML = '<p class="ix-err">' + esc(j.error || 'Could not load the overview.') + '</p>'; return; }
-      OV = j; decorateNav();
-      var pr = j.protect, tg = j.telegram, bk = j.backup, up = j.update, fl = j.files, now = Date.now() / 1000;
-      var run = tg.cronLast && now - tg.cronLast < 1800;
-      /* (1.75.0) the Overview as a few boxes side by side: the big one picks one of four parts (Security, Backup, Telegram, Updates) and says
-         more about it below; next to it how the site is doing right now and how far the protection steps are; under them what needs a look. */
-      var onNames = [['Password']].concat(pr.items.filter(function (x) { return x.on; }).map(function (x) { return [x.title]; })).map(function (x) { return x[0].toLowerCase(); });
-      var n = fl ? fl.extra + fl.changed : 0;
-      var bkLate = (bk.every > 0 && (!bk.last || (now - bk.last) / 86400 >= bk.every)) || !bk.last;
-      var parts = [
-        { id: 'security', go: 'security', title: 'Security', icon: ICON.shield, pill: pr.on + ' of ' + pr.total + ' on', cls: pr.on >= pr.total ? 'good' : 'warn', l1: 'On: ' + esc(onNames.join(', ')) + '.',
-          l2: pr.next ? '<b>Next best step:</b> ' + esc(pr.next.next) : 'Everything we recommend is on.', action: 'Review Security' },
-        { id: 'backup', go: 'backup', title: 'Backup', icon: ICON.box, pill: bk.last ? ago(bk.last) : 'None yet', cls: bkLate ? 'warn' : 'good',
-          l1: bk.tg ? 'A backup goes to Telegram ' + ({ 1: 'every day', 3: 'every 3 days', 7: 'every week', 14: 'every 2 weeks', 30: 'every month' }[bk.tg] || 'regularly') + (bk.enc ? ', encrypted.' : ', not encrypted.') : 'Download one file that restores everything.',
-          l2: 'A backup holds your pages, settings, Telegram and domain watch.', action: 'Back Up Now' },
-        { id: 'telegram', go: 'telegram', title: 'Telegram', icon: ICON.send, pill: !tg.ready ? 'Not set up' : run ? 'Running' : 'Needs a look', cls: !tg.ready ? '' : run ? 'good' : 'warn',
-          l1: !tg.ready ? 'Get reminders, login alerts and backups on your phone.' : run ? 'The schedule last ran ' + esc(ago(tg.cronLast)) + '.' : (tg.cronLast ? 'The schedule stopped ' + esc(ago(tg.cronLast)) + '.' : 'The schedule has never run.'),
-          l2: !tg.ready ? 'It takes about two minutes: make a bot, send it one message, done.' : (tg.on ? 'Daily message at ' + hourLbl(tg.hour) + '. ' : 'Daily message is off. ') + (tg.lastSent ? 'Last message ' + esc(ago(tg.lastSent)) + '.' : 'Nothing sent yet.'),
-          action: !tg.ready ? 'Set Up Telegram' : 'Open Telegram' },
-        { id: 'updates', go: 'updates', title: 'Updates', icon: ICON.up, pill: up.staged ? 'Update ready' : up.newer ? 'New version' : n ? n + ' to check' : 'Up to date', cls: up.staged || up.newer || n ? 'warn' : 'good',
-          l1: up.staged ? 'Version <b>' + esc(up.staged.version) + '</b> is checked and waiting for you.' : up.newer ? 'Version <b>' + esc(up.newer) + '</b> is available on GitHub. You have <b>' + esc(j.version) + '</b>.' : 'You have version <b>' + esc(j.version) + '</b>.',
-          l2: !up.hasManifest ? 'Update once with the File Manager, then the site can update itself.' : fl ? (n ? n + ' file' + (n > 1 ? 's' : '') + ' to look at in Files.' : 'Every file on your server belongs to this version.') : 'Upload a new zip here. No File Manager, nothing to delete by hand.',
-          action: up.staged ? 'Review the Update' : 'Update the Site' }
-      ];
-      var pick = (parts.filter(function (x) { return x.cls === 'warn'; })[0] || parts[0]).id;   // opens on the first part that needs a look
-      var al = (j.alerts || []).slice(0, 4), stp = setupSteps(j), stDone = stp.filter(function (x) { return x.done; }).length, nextStep = stp.filter(function (x) { return !x.done; })[0];
-      var rowM = function (k, v, cls) { return '<div class="ix-bm"><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b></div>'; };
-      var detail = function (x) { return '<div class="ix-bsel" id="ix-bsel"><small>Selected</small><h4>' + x.title + ' <span class="ix-pill ' + x.cls + '">' + esc(x.pill) + '</span></h4><p>' + x.l1 + '</p>' + (x.cls === 'good' ? '' : '<p class="ix-os">' + x.l2 + '</p>') +
-        '<button type="button" class="ix-btn pri ix-ovgo" data-go="' + x.go + '">' + x.action + '</button></div>'; };
-      p.innerHTML = '<div class="ix-bento">' +
-        '<section class="ix-bb ix-bmain"><span class="ix-bbadge">' + svg(ICON.site) + esc(j.siteName) + '</span><h3>How Your Site Stands</h3><p class="ix-bsub">Pick a part to see more.</p>' +
-          '<div class="ix-bpick ix-ocs" role="group" aria-label="Parts of your site">' + parts.map(function (x) {
-            return '<button type="button" class="ix-bp ix-oc" data-pick="' + x.id + '" aria-pressed="' + (x.id === pick) + '"><i class="ix-bpi">' + svg(x.icon) + '</i><b>' + x.title + '</b><small class="' + x.cls + '">' + esc(x.pill) + '</small></button>'; }).join('') + '</div>' +
-          detail(parts.filter(function (x) { return x.id === pick; })[0]) + '</section>' +
-        '<section class="ix-bb"><div class="ix-bh"><span class="ix-bi">' + svg(ICON.pulse) + '</span><span class="ix-blive ' + (j.https ? 'good' : 'warn') + '">' + (j.https ? 'Live' : 'No HTTPS') + '</span></div><h4>Health</h4><p class="ix-bsub">Right now</p>' +
-          rowM('HTTPS', j.https ? 'On' : 'Off', j.https ? 'good' : 'warn') + rowM('PHP', esc(j.php.split('.').slice(0, 2).join('.'))) + rowM('Version', esc(j.version)) + rowM('Files to check', String(n), n ? 'warn' : '') +
-          '<button type="button" class="ix-btn ix-ovgo" data-go="health">Open Health</button></section>' +
-        '<section class="ix-bb"><div class="ix-bh"><span class="ix-bi">' + svg(ICON.shield) + '</span><span class="ix-blive ' + (stDone >= stp.length ? 'good' : 'warn') + '">' + stDone + ' of ' + stp.length + '</span></div><h4>Protection Steps</h4>' +
-          '<p class="ix-bsub">' + (nextStep ? 'Next: <b>' + esc(nextStep.title) + '</b>' : 'All steps are done.') + '</p><div class="ix-bbar"><i style="width:' + Math.round(100 * stDone / stp.length) + '%"></i></div>' +
-          (nextStep ? '<button type="button" class="ix-btn pri ix-ovgo ix-setupb" data-go="setup">' + (stDone > 1 ? 'Continue Setup' : 'Start Guided Setup') + '</button>' : '<button type="button" class="ix-btn ix-ovgo" data-go="setup">Open Start Here</button>') + '</section>' +
-        '<section class="ix-bb ix-bwide ix-als' + (al.length ? '' : ' ok') + '"><div class="ix-bh"><span class="ix-bi">' + svg(al.length ? ICON.warn : ICON.check) + '</span><h4>' + (al.length ? (j.alerts.length > 1 ? j.alerts.length + ' things to look at' : '1 thing to look at') : 'Nothing needs your attention.') + '</h4></div>' +
-          (al.length ? '<ol class="ix-bcode">' + al.map(function (a) { return '<li class="' + a.level + '"><span>' + esc(a.text) + '</span><button type="button" class="ix-btn" data-go="' + a.go + '">Open</button></li>'; }).join('') + '</ol>' : '<p class="ix-bsub">Everything checked here looks fine.</p>') + '</section>' +
-        '</div>';
-      p.querySelectorAll('[data-pick]').forEach(function (b) { b.onclick = function () {
-        p.querySelectorAll('[data-pick]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        var cur = p.querySelector('#ix-bsel'), d = document.createElement('div'); d.innerHTML = detail(parts.filter(function (x) { return x.id === b.dataset.pick; })[0]);
-        cur.replaceWith(d.firstChild); p.querySelector('#ix-bsel .ix-ovgo').onclick = function () { go(this.dataset.go); };
-      }; });
-      p.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
-      whatsNew(p, j.version);
-    }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
-  }
-  /* After an update: once, on the Overview, what the new version changed (from the changelog), until you press Got It. */
-  function whatsNew(p, ver) {
-    if (lsGet('ix-seen-ver') === ver) return;
-    // only the newest version's notes (the whole changelog is over 100 KB; Changelog loads it when you open it)
-    (CL && CL.entries ? Promise.resolve(CL) : api('changelog&latest=1').then(function (j) { if (!j || !j.ok) throw new Error('no changelog'); return clParse(j.md); })).then(function (cl) {
-      var e = cl.entries[0];
-      if (!e || e.ver !== ver) { lsSet('ix-seen-ver', ver); return; }
-      var box = document.createElement('section'); box.className = 'ix-ec ix-new';
-      box.innerHTML = '<div class="ix-ec-h"><span class="ix-ec-i">' + svg(ICON.sparkle) + '</span><div><div class="ix-ec-t">What\'s New in Version ' + esc(ver) + '</div><div class="ix-ec-d">Your site was updated. Here is what changed.</div></div></div>' +
-        '<div class="ix-ec-b"><div class="ix-md ix-newbody">' + mdBlocks(e.body) + '</div><div class="ix-row" style="margin-top:14px"><button type="button" class="ix-btn pri" id="ix-nwok">Got It</button><button type="button" class="ix-btn" id="ix-nwall">Open the Changelog</button></div></div>';
-      p.insertBefore(box, p.firstChild);
-      box.querySelector('#ix-nwok').onclick = function () { lsSet('ix-seen-ver', ver); box.remove(); };
-      box.querySelector('#ix-nwall').onclick = function () { lsSet('ix-seen-ver', ver); go('changelog'); };
-    }, function () {});
-  }
 

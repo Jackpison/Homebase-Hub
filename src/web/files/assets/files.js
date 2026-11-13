@@ -365,18 +365,30 @@ function usage() {
 const KIND = { d: "Folder", image: "Picture", video: "Video", audio: "Sound", pdf: "PDF document", text: "Text", zip: "Zip archive" };
 function details() {
   const det = $("det"), fa = $("fa"), ids = [...sel];
+  selbtn();
   const i = ids.length === 1 ? byId.get(ids[0]) : null;
-  if (!i || tab === "trash") { det.hidden = true; fa.classList.remove("hasdet"); return; }
+  /* (1.77.2) open by default: nothing (or several) picked shows a summary of what is here, with Select All. Phones keep it closed until you pick one. */
+  if (!i) {
+    const wide = matchMedia("(min-width:1101px)").matches, vis = shown();
+    if (tab === "trash" || !wide || !vis.length) { det.hidden = true; fa.classList.remove("hasdet"); selbtn(); return; }
+    const many = ids.length > 1, files = vis.filter(x => x.t === "f"), total = files.reduce((n, x) => n + (sizeOf(x) || 0), 0);
+    det.hidden = false; fa.classList.add("hasdet");
+    det.replaceChildren(h("div", { class: "dh" }, h("b", { text: many ? ids.length + " Picked" : "Details" })),
+      h("div", { class: "pv sum" }, svg(many ? "file" : "folder")),
+      h("h3", { text: many ? ids.length + " items picked" : vis.length + (vis.length === 1 ? " item here" : " items here") }),
+      h("dl", {}, h("dt", { text: "Folders" }), h("dd", { text: String(vis.length - files.length) }), h("dt", { text: "Files" }), h("dd", { text: String(files.length) }), h("dt", { text: "Size" }), h("dd", { text: fmt(total) })),
+      h("div", { class: "acts" }, h("button", { type: "button", class: "btn pri", id: "selall", onclick: toggleAll }, ids.length === vis.length ? "Clear Selection" : "Select All")),
+      h("p", { class: "hint", text: many ? "Use the bar above the list to download, move or remove them." : "Pick a file or folder to see its details here." }));
+    selbtn(); return;
+  }
+  if (tab === "trash") { det.hidden = true; fa.classList.remove("hasdet"); return; }
   det.hidden = false; fa.classList.add("hasdet");
   const isD = i.t === "d", name = nameOf(i), m = meta(i) || {};
   const where = pathOf(i.p || "").map(nameOf).join(" / ");
-  const link = h("button", { type: "button", class: "btn", onclick: () => shareBox(i) }, svg("share", "i"), "Share");
   const acts = h("div", { class: "acts" },
     isD ? h("button", { type: "button", class: "btn pri", onclick: () => openItem(i) }, svg("folder", "i"), "Open") : (previewable(i) ? h("button", { type: "button", class: "btn pri", onclick: () => openItem(i) }, svg("file", "i"), "Preview") : null),
     h("button", { type: "button", class: "btn", onclick: () => download([i.id]) }, svg("down", "i"), "Download"),
-    !isD && D.settings.shares ? link : null,
-    h("button", { type: "button", class: "btn star", "aria-pressed": String(!!m.st), onclick: () => star(i) }, m.st ? "★ Starred" : "☆ Star"),
-    h("button", { type: "button", class: "btn more", "aria-haspopup": "menu", onclick: e => menu(e.currentTarget, i) }, svg("more", "i"), "More"));
+    h("button", { type: "button", class: "btn star", "aria-pressed": String(!!m.st), onclick: () => star(i) }, m.st ? "★ Starred" : "☆ Star"));
   const shares = D.shares.filter(x => x.id === i.id).length;
   det.replaceChildren(
     h("div", { class: "dh" }, h("b", { text: "Details" }), h("button", { type: "button", class: "ib", "aria-label": "Close details", onclick: () => { sel.clear(); row.sync(); } }, svg("x"))),
@@ -388,6 +400,9 @@ function details() {
       h("dt", { text: "Modified" }), h("dd", { text: when(dateOf(i)) }), h("dt", { text: "Location" }), h("dd", { text: "My Files" + (where ? " / " + where : "") })),
     !isD && D.settings.shares ? h("div", { class: "shb" }, h("b", { text: "Share link" }), h("small", { text: shares ? shares + " active. Anyone with a link opens this file." : "None yet. Anyone with a link can open this file." }), h("button", { type: "button", class: "btn", onclick: () => shareBox(i) }, shares ? "Manage Links" : "Make a Link")) : null);
 }
+function toggleAll() { const vis = shown(); if (sel.size === vis.length) sel.clear(); else for (const x of vis) sel.add(x.id); row.sync(); }
+/** The Select All button above the list (small screens use it too). */
+function selbtn() { const b = $("sela"); if (!b) return; const vis = shown(); b.hidden = !vis.length; b.textContent = sel.size && sel.size === vis.length ? "Clear Selection" : "Select All"; }
 async function star(i) {
   if (!await ensureKey()) return;
   const old = meta(i) || {}, m = await SITE.sealJson(Object.assign({}, old, { st: old.st ? 0 : 1 }));
@@ -727,23 +742,20 @@ async function shareBox(i) {
     }) : [h("p", { text: "No link yet. Make one, and send it to the person who should have this file." })]));
   };
   draw();
+  /* (1.77.2) one window, no steps: your links on top, then how long the next one lasts. Making a link copies it for you. */
+  const copyNew = async u => { try { await navigator.clipboard.writeText(u); return true; } catch (e) { return false; } };
   const make = async () => {
     const meta1 = meta(i) || { n: nameOf(i), s: sizeOf(i) };
     const sm = await V.seal(fk, JSON.stringify({ n: meta1.n, ty: meta1.ty || "", s: meta1.s }));
     const e = +exp.value, j = await post("share_create", { id: i.id, sm, exp: e ? Math.floor(Date.now() / 1000) + e : 0 });
     if (!j.ok) { derr(j.error); return false; }
-    await refresh(); draw(); toast("Link made."); return true;
+    await refresh(); draw();
+    const made = D.shares.filter(x => x.id === i.id).find(x => x.token === j.token) || D.shares.filter(x => x.id === i.id).slice(-1)[0];
+    toast(made && await copyNew(linkFor(made.token)) ? "Link made and copied." : "Link made."); return true;
   };
-  /* (1.69.0) a Stepper (shell.js): How Long -> Your Link. A file that already has links opens on them. */
-  const host = h("div", { id: "dshst" });
-  if (window.HUB && HUB.stepper) {
-    const st = HUB.stepper(host, { kind: "dots", start: D.shares.some(s => s.id === i.id) ? 2 : 1, cont: "Make a New Link", complete: "Done",
-      steps: [{ title: "How Long", next: () => make() }, { title: "Your Link", next: () => { dlg.close(); return false; } }] });
-    st.pane(1).prepend(h("label", { for: "dexp", text: "The link ends" }), exp);
-    st.pane(2).prepend(box);
-  } else host.append(box, h("label", { for: "dexp", text: "New link ends" }), exp);
-  await openDialog("Share " + nameOf(i), [FC ? h("div", { class: "shfc" }, FC.make(nameOf(i), "m"), h("b", { text: nameOf(i) })) : null, h("p", { text: "Anyone with the link can open this one file. The key to unlock it is in the link itself (after the #), so it never reaches your server, and the file stays locked there." }), host],
-    window.HUB && HUB.stepper ? [{ text: "Close", run: () => {} }] : [{ text: "Make a New Link", pri: true, left: true, run: async () => { await make(); return false; } }, { text: "Done", run: () => {} }]);
+  const ends = h("div", { class: "shend" }, h("label", { for: "dexp", text: "The next link ends" }), exp);
+  await openDialog("Share " + nameOf(i), [FC ? h("div", { class: "shfc" }, FC.make(nameOf(i), "m"), h("b", { text: nameOf(i) })) : null, h("p", { text: "Anyone with the link can open this one file. The key to unlock it is in the link itself (after the #), so it never reaches your server, and the file stays locked there." }), box, ends],
+    [{ text: "Make a New Link", pri: true, left: true, run: async () => { await make(); return false; } }, { text: "Done", run: () => {} }]);
   raw.fill(0);
 }
 
@@ -850,6 +862,7 @@ function wire() {
   $("mk").onclick = $("mkh").onclick = mkdir;
   $("psets").onclick = settingsBox;
   $("pick").onchange = e => { uploadAll([...e.target.files].map(f => ({ file: f, parts: [] }))); e.target.value = ""; };
+  $("sela").onclick = toggleAll;
   $("empty").onclick = async () => { if (await confirmBox("Empty the Trash?", "Everything in the Trash is deleted for good. This can't be undone.", "Empty Trash", true)) await run(post("empty_trash"), "Trash emptied."); };
   $("tabs").onclick = e => { const b = e.target.closest("button"); if (!b) return; tab = b.dataset.t; sel.clear(); q = ""; $("q").value = ""; render(); };
   $("vsw").onclick = e => { const b = e.target.closest("button"); if (!b) return; D.settings.view = b.dataset.v; render(); post("settings", { settings: { view: b.dataset.v } }); };

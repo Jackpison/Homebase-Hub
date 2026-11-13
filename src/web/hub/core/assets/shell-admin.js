@@ -17,7 +17,7 @@
  *   Appearance pLook, barHtml, accentHtml, pColors, PRESETS / PRESET_GROUPS (data), pThemes, pGlass
  *   Bar        pNav (bar settings and tabs), tabEditor
  *   Telegram   pRemind                    Health      pCheck (Server Check: checkInto, then pFiles), pDomains
- *   Overview   pOverview, whatsNew, decorateNav, pStart (Start Here: pSetup, Guided Setup, WZ, setupSteps)
+ *   Start Here decorateNav, pStart (Start Here: pSetup, Guided Setup, WZ, setupSteps)
  *   Changelog mdInline, mdBlocks, clParse, pChangelog (a tab of Updates)
  *   Updates    pUpdate, ghCard, ghWire, drawUpdate, pFiles (shown in Health > Server Check)
  *   building blocks (used by every pane)  ecCard, ecField, ecChip, tabHead, tile, checkRow, spinRow
@@ -53,12 +53,12 @@
   ICON.users = 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 7.5M22 21a7 7 0 0 0-5-6.7';
   // [id, name, icon, what it is for (shown under the title), sub-tabs [[id, name]], menu group]
   var SECTIONS = [
-    ['overview', 'Overview', ICON.grid, 'How your site stands right now, and what to look at next.', [['overview', 'Overview'], ['setup', 'Start Here']], ''],
-    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone.', null, 'Web Setting'],
+    ['general', 'General', ICON.home, 'Your site\'s name, logo and time zone, and a short guide to getting set up.', [['general', 'General'], ['setup', 'Start Here']], 'Web Setting'],
     ['look', 'Appearance', ICON.palette, 'The theme, font, bar, colors and glass.', [['look', 'Look'], ['nav', 'Bar'], ['colors', 'Colors'], ['themes', 'Presets'], ['glass', 'Glass']], 'Web Setting'],
     ['security', 'Security', ICON.shield, 'Login, passkeys and encryption.', null, 'Data Setting'],
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
+    ['logs', 'Logs', ICON.log, 'Everything the site told you, who logged in, and what went wrong.', [['logs', 'Notifications'], ['logsign', 'Sign-Ins'], ['logerr', 'PHP Errors']], 'System Setting'],
     ['health', 'Health', ICON.pulse, 'Version, speed, errors, domains and a check of your server.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
     // (1.77.1) Updates has two tabs: Update and Changelog (one list of every version; the old Notes moved to Features)
     ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Changelog']], 'System Setting'],
@@ -67,12 +67,12 @@
   /* (1.66.0) the left panel in the "System tiles" look: a solid colour tile with a white icon for each section (icons from Lucide,
      lucide.dev, ISC licence: see web/hub/docs/THIRD-PARTY.md). [colour, the icon's SVG inside] */
   var SEC_TILE = {
-    overview: ['#f5a524', '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'],
     general: ['#3b82f6', '<path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>'],
     look: ['#a855f7', '<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/><circle cx="13.5" cy="6.5" r=".8" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".8" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".8" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".8" fill="currentColor"/>'],
     security: ['#22c55e', '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>'],
     telegram: ['#0ea5e9', '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>'],
     backup: ['#f97316', '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="m9.5 14.5 2.5 2.5 2.5-2.5M12 11v6"/>'],
+    logs: ['#64748b', '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'],
     health: ['#f43f5e', '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>'],
     features: ['#f97316', '<path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.6L12 15.3 7 18.2l1.2-5.6L4 8.8l5.6-.6z"/>'],
     updates: ['#14b8a6', '<path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"/><path d="M12 21v-9M8 16l4-4 4 4"/>'],
@@ -87,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, features: pFeatures };
+  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -179,7 +179,7 @@
     var narrow = window.matchMedia && window.matchMedia('(max-width: 859px)').matches;
     if (h) go(h);
     else if (narrow) host.setAttribute('data-view', 'list');
-    else { var last = ''; try { last = sessionStorage.getItem('ix-sec') || ''; } catch (e) {} go(SUB_OF[last] ? last : 'overview'); }
+    else { var last = ''; try { last = sessionStorage.getItem('ix-sec') || ''; } catch (e) {} go(SUB_OF[last] ? last : 'general'); }
     ovGet().then(function (j) { if (j.ok) { OV = j; decorateNav(); } }).catch(function () {});
   }
   /* Opening Settings asks for the overview twice at once (the menu badges and the Overview page): one request serves both. */
@@ -203,6 +203,7 @@
     ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
     ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'check', 'extra changed missing leftover files'],
     ['Health', 'health', 'disk speed errors log'], ['Domains and Uptime', 'domains', 'expiry ssl hosting renewal'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
+    ['Logs', 'logs', 'notifications messages history log activity'], ['Sign-In History', 'logsign', 'logins wrong password activity'], ['PHP Errors', 'logerr', 'error log'],
     ['Changelog', 'changelog', 'changelog versions history what changed new version map'], ['Good to Know', 'features', 'notes how updating works']
   ];
   function bindSearch(host) {
@@ -228,7 +229,7 @@
   }
   /* Open a section, one of its sub-tabs ('colors'), or a tab inside it ('security/encryption'). */
   function go(target) {
-    target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'overview';
+    target = String(target || '').replace(/^#/, ''); var parts = target.split('/'), id = parts[0] || 'general';
     if (id === 'remind') id = 'telegram';
     if (id === 'system') id = 'updates';   // the System section of 1.48 is Updates, Health and Changelog again
     if (id === 'pages') id = 'nav';        // General > Pages was removed in 1.48.5: its old links open Tabs
@@ -236,7 +237,7 @@
     if (id === 'files') id = 'check';
     if (id === 'telegram' && parts[1] === 'backups') { id = 'backup'; parts = ['backup']; }
     if (!PAGE) { location.href = K.ROOT + 'web/settings/#' + target; return; }
-    if (!own(SUB_OF, id)) id = 'overview';
+    if (!own(SUB_OF, id)) id = 'general';
     if (id === 'backup' && parts[1]) parts[1] = { 'back-up': 'overview', 'export-data': 'export', 'earlier-versions': 'restore' }[parts[1]] || parts[1];   // the tabs of 1.60 and before
     if (parts[1]) TABSEL[id] = parts[1];
     pane(id);
@@ -244,7 +245,7 @@
   function sectionOf(id) { return SECTIONS.filter(function (x) { return x[0] === id; })[0]; }
   var curSub = '';
   function pane(id) {
-    var sec = SUB_OF[id] || 'overview', s = sectionOf(sec);
+    var sec = SUB_OF[id] || 'general', s = sectionOf(sec);
     var subs = s[4] || [[sec, s[1]]], sub = subs.some(function (t) { return t[0] === id; }) ? id : subs[0][0];
     var tabs = subTabs(subs, sub);
     P().querySelectorAll('[data-sec]').forEach(function (b) { if (b.dataset.sec === sec) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
@@ -320,7 +321,7 @@
     });
   }
   function mountPane(sub) {
-    var draw = PANE_FN.get(sub); if (typeof draw !== 'function') { sub = 'overview'; draw = PANE_FN.get(sub); }   // only a pane of ours runs, whatever the address says
+    var draw = PANE_FN.get(sub); if (typeof draw !== 'function') { sub = 'general'; draw = PANE_FN.get(sub); }   // only a pane of ours runs, whatever the address says
     var pc = $('#ix-pc'); if (tabObs) { tabObs.disconnect(); tabObs = null; }
     if (TABBED[sub] || CARDIFY[sub]) { tabObs = new MutationObserver(function () { if (TABBED[sub]) tabify(pc, sub); if (CARDIFY[sub]) cardify(pc); }); tabObs.observe(pc, { childList: true }); }
     draw(pc); if (TABBED[sub]) tabify(pc, sub); if (CARDIFY[sub]) cardify(pc);
@@ -1120,33 +1121,34 @@
         tile('two', ICON.pulse, 'Instant Replies', n.hook ? 'On' : 'Off', n.hook ? 'good' : '', n.hook ? 'The bot answers within a second.' : 'The bot answers within a few minutes.') + '</div>';
       p.innerHTML = hero + (msg ? '<p class="' + (err ? 'ix-err' : 'ix-note') + '">' + esc(msg) + '</p>' : '') + tiles + live(n, ready) +
 
-        acc('bot', 'Setup', ready ? 'Connected to ' + esc(n.chatName || n.chat) + '. The schedule (a cron job) is what sends messages on time.' : 'Four short steps: make a bot, connect it, check it, add the schedule.',
-          tabHead(ICON.gear, 'Setup', 'Four short steps: make a bot, connect it, check it, add the schedule.') + (function () {
+        acc('bot', 'Setup', ready ? 'Connected to ' + esc(n.chatName || n.chat) + '. The schedule (a cron job) is what sends messages on time.' : 'Three short steps: create a bot, connect your chat, send a test.',
+          tabHead(ICON.gear, 'Setup', 'Three short steps: create a bot, connect your chat, send a test.') + (function () {
             var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on;
             var stp = function (num, done, open, title, sum, body) {
               return '<li class="ix-tls' + (done ? ' done' : '') + (open ? ' open' : '') + '"><span class="ix-tl-n">' + (done ? '✓' : num) + '</span><div class="ix-tl-t"' + (done ? ' role="button" tabindex="0"' : '') + '>' + title + '<span class="ix-sd ix-sd-' + (done ? 'ready' : open ? 'building' : 'queued') + '">' + (done ? 'Done' : open ? 'Next' : 'Waiting') + '</span></div>' +
                 (done && sum ? '<div class="ix-tl-s">' + sum + '</div>' : '') + '<div class="ix-tl-b">' + body + '</div></li>'; };
             return '<ol class="ix-tl">' +
-              stp(1, d1, !d1, 'Make a Bot', 'Done', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It then gives you a <b>token</b>: a long line of letters and numbers.</p>') +
-              stp(2, d1, !d1, 'Paste Its Token', 'Saved (' + esc(n.tokenHint || 'hidden') + ')', '<div class="ix-fd">' + '<label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
+              stp(1, d1, !d1, 'Create Your Bot', 'Token saved (' + esc(n.tokenHint || 'hidden') + ')', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It gives you a <b>token</b>: a long line of letters and numbers. Paste it here.</p>' +
+                '<div class="ix-fd"><label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
                 '<button type="button" class="ix-btn pri" id="nt-st">Save Token</button>' + (n.hasToken ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div><small>It stays on your server and is only used to talk to Telegram.</small></div>') +
-              stp(3, d3, d1 && !d3, 'Connect Your Chat', 'Connected to ' + esc(n.chatName || n.chat || ''), '<p>Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.</p>' +
+              stp(2, d3, d1 && !d3, 'Connect Your Chat', 'Connected to ' + esc(n.chatName || n.chat || ''), '<p>Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.</p>' +
                 '<div class="ix-row"><button type="button" class="ix-btn" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button></div>' +
                 '<div class="ix-status">' + (n.chat ? '<span class="ix-ok">✓</span><span><b>Connected to</b> ' + esc(n.chatName || n.chat) + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '</span>' : '<span>!</span><span>No chat yet. Send <code>/start</code> to your bot first.</span>') + '</div>' +
                 (chats && chats.length > 1 ? '<div class="ix-row">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '')) +
-              stp(4, d4, d3, 'Send a Test', tested ? 'Test message sent' : 'Ready', tested && d4
+              stp(3, d4, d3, 'Send a Test', tested ? 'Test message sent' : 'Ready', tested && d4
                 ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Test message sent.</b> It should be in Telegram now.</span></div>' +
                   '<div class="ix-row"><button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button><button type="button" class="ix-btn" id="nt-test">Send Another Test</button></div>'
                 : '<p>You should get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' +
                   '<div class="ix-row"><button type="button" class="ix-btn' + (ready && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div>') +
               '</ol>' +
-              ecCard('', ICON.clock, 'Keep It on Schedule', 'Messages and reminders are sent by a scheduled job (a cron job). Without one they only go out while one of your pages is open.',
-                '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +
+              '<div class="ix-rcl">' + rowCard({ ic: ICON.clock, title: 'Keep It on Schedule', desc: 'Messages go out on time only if your host runs a small job every 10 minutes (a cron job).',
+                act: '<button type="button" class="ix-btn" id="nt-schb" aria-expanded="false">Show the Command</button>', hide: true, id: 'nt-sch',
+                body: '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +
                 linkField({ id: 'nt-cmd', value: n.cronCmd, prefix: 'Cron', readonly: true, label: 'Cron job command', cls: 'ix-uf-gap' }) +   // (1.69.1) the link field
                 '<p>If your host only accepts a web address, use this one instead and keep it private:</p>' +
                 // the key in the address shows as dots; Copy gives the whole line
                 linkField({ id: 'nt-url', value: n.cronUrl, show: String(n.cronUrl).replace(/([?&]key=)[^&]+/, '$1•••••'), prefix: 'curl', readonly: true,
-                  copyText: 'curl -s "' + n.cronUrl + '"', label: 'Cron job web address', cls: 'ix-uf-gap' }));
+                  copyText: 'curl -s "' + n.cronUrl + '"', label: 'Cron job web address', cls: 'ix-uf-gap' }) }) + '</div>'
           })()) +
 
         acc('msg', 'Messages', !ready ? 'Finish Setup first, then choose what you want to hear about.' : n.on ? 'A daily message at ' + hourLabel(n.hour) + ', plus the alerts you pick below.' : 'Daily messages are off.',
@@ -1165,14 +1167,15 @@
           ecCard('', ICON.send, 'Send Today\'s Tasks', 'The daily list, sent to your chat right now.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="nt-today"' + (ready ? '' : ' disabled') + '>Send Today\'s Tasks Now</button></div>')) +
 
         acc('two', 'Instant Replies', (n.hook ? 'On: the bot answers your commands within a second.' : 'Off: the bot answers within a few minutes.') + ' It understands 8 commands.',
-          tabHead(ICON.pulse, 'Instant Replies', 'Tap Done or Snooze under reminders, or send commands. Only your own chat is answered.') +
-          ecCard(n.hook ? 'good' : '', ICON.pulse, 'Instant Replies', n.hook ? 'Telegram sends each message straight to your site, so the bot answers at once.' : 'The site checks for messages every few minutes and whenever a page is open.',
-            '<label class="ix-tg"><span>Instant Replies<small>' + (n.hook ? 'On.' + (n.hookInfo && n.hookInfo.error ? ' <span class="ix-err">Telegram reports: ' + esc(n.hookInfo.error) + '</span>' : '') : 'Off.') + '</small></span><input type="checkbox" id="nt-hook"' + (n.hook ? ' checked' : '') + (n.hasToken ? '' : ' disabled') + '></label>') +
-          '<p class="ix-note ix-hknote">On: answers at once, and <b>Approve in Telegram</b> logs you in within a second (needs https). Off: everything still works, a few minutes slower. <span class="ix-cf">Behind Cloudflare? If replies stop, add a WAF rule that skips <code>/web/hub/core/telegram.php</code>.</span></p>' +
-          ecCard('', ICON.cmd, 'Commands', 'Send any of these to your bot.',
-            '<div class="ix-cmdg">' + [['/today', 'Overdue and today, with Done buttons'], ['/week', 'The next 7 days'], ['/next', 'The next 10 tasks'], ['/add Netflix 649 monthly 5 Nov', 'A new task'],
-              ['/done Netflix', 'Mark one done'], ['/snooze Netflix 2h', 'Pause its reminders'], ['/backup', 'A backup file now'], ['/status', 'A quick health check']].map(function (c) {
-              return '<div class="ix-cmdc"><code>' + esc(c[0]) + '</code><span>' + esc(c[1]) + '</span></div>'; }).join('') + '</div>'));
+          '<div class="ix-rcl">' + rowCard({ ic: ICON.pulse, color: n.hook ? '#22c55e' : '', title: 'Instant Replies', desc: (n.hook ? 'On: the bot answers within a second.' : 'Off: the bot answers within a few minutes.') +
+              (n.hook && n.hookInfo && n.hookInfo.error ? ' <span class="ix-err">Telegram reports: ' + esc(n.hookInfo.error) + '</span>' : ''),
+            act: '<input type="checkbox" class="ix-sw" id="nt-hook" aria-label="Instant Replies"' + (n.hook ? ' checked' : '') + (n.hasToken ? '' : ' disabled') + '>',
+            body: '<p class="ix-note ix-hknote" style="margin:0">With it on, <b>Approve in Telegram</b> logs you in within a second (needs https). With it off everything still works, a few minutes slower.</p>' +
+              '<details class="ix-how"><summary>Behind Cloudflare?</summary><p>If replies stop, add a WAF rule that skips <code>/web/hub/core/telegram.php</code>.</p></details>' }) + '</div>' +
+          '<div class="ix-sect">Commands</div><p class="ix-note" style="margin-top:0">Send any of these to your bot. Only your own chat is answered.</p>' +
+          '<div class="ix-cmdg">' + [['/today', 'Overdue and today, with Done buttons'], ['/week', 'The next 7 days'], ['/next', 'The next 10 tasks'], ['/add Netflix 649 monthly 5 Nov', 'A new task'],
+            ['/done Netflix', 'Mark one done'], ['/snooze Netflix 2h', 'Pause its reminders'], ['/backup', 'A backup file now'], ['/status', 'A quick health check']].map(function (c) {
+            return '<div class="ix-cmdc"><code>' + esc(c[0]) + '</code><span>' + esc(c[1]) + '</span></div>'; }).join('') + '</div>');
       p.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { if (x.dataset.go === 'bk') { go('backup'); return; } var d = p.querySelector('details[data-tg="' + x.dataset.go + '"]'); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
       var call = function (action, body, btn, wait) {
         if (btn) btn.disabled = true;
@@ -1204,6 +1207,7 @@
       p.querySelectorAll('[data-chat]').forEach(function (b) { b.onclick = function () {
         call('notify_save', { chat: b.dataset.chat }, b).then(function (j) { if (j) { j.chatName = j.chatName || b.dataset.name; call('notify_test', { chatName: b.dataset.name }).then(function (k) { draw(k || j, null, k ? 'Chat saved and a test message sent.' : ''); }); } });
       }; });
+      var sb = p.querySelector('#nt-schb'); if (sb) sb.onclick = function () { var x = p.querySelector('#nt-sch .ix-rc-x'); x.hidden = !x.hidden; sb.setAttribute('aria-expanded', x.hidden ? 'false' : 'true'); sb.textContent = x.hidden ? 'Show the Command' : 'Hide'; };
       p.querySelectorAll('.ix-tls.done>.ix-tl-t').forEach(function (h) { h.onclick = function () { h.parentNode.classList.toggle('open'); }; h.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h.click(); } }; });
       p.querySelector('#nt-test').onclick = function () { call('notify_test', {}, this).then(function (j) { if (j) { tested = true; draw(j, null, 'Test message sent. Check Telegram.'); } }); };
       p.querySelector('#nt-now').onclick = function () { call('notify_run', {}, this).then(function (j) { if (j) draw(j, null, j.note || 'Done.', !j.ok); }); };
@@ -1249,7 +1253,6 @@
     });
   }
   /* ---------- Overview: where things stand ---------- */
-  var hourLbl = function (h) { return (h % 12 || 12) + ':00 ' + (h < 12 ? 'AM' : 'PM'); };
   function decorateNav() {
     if (!OV || !PAGE) return;
     var pill = function (id, txt, cls) { var e = PAGE.querySelector('[data-pill="' + id + '"]'); if (e) { e.textContent = txt || ''; e.className = 'ix-sp ' + (cls || ''); } };
@@ -1260,8 +1263,6 @@
     pill('backup', bk.last ? ago(bk.last).replace(' ago', '') : 'Never', late ? 'warn' : bk.last ? 'good' : '');
     var n = fl ? fl.extra + fl.changed : 0;
     pill('updates', up.staged ? 'Ready' : up.newer ? 'New Version' : n ? n + ' to check' : 'Up to date', up.staged || up.newer || n ? 'warn' : 'good');
-    var al = (OV.alerts || []).length;
-    pill('overview', al ? al + ' to see' : '', al ? 'warn' : '');
     pill('look', S.theme === 'auto' ? 'Auto' : S.theme === 'light' ? 'Light' : 'Dark', '');
     pill('health', OV.https ? 'OK' : 'No HTTPS', OV.https ? 'good' : 'warn');
     var sv = PAGE.querySelector('[data-sver]'); if (sv) sv.textContent = ' · v' + OV.version;    paintHead();
@@ -1271,7 +1272,7 @@
   function paintHead() {
     var h = PAGE && PAGE.querySelector('#ix-phs'), box = h && h.closest('.ix-ph'); if (!h || !OV) return;
     var sec = box.dataset.sec, pill = PAGE.querySelector('[data-pill="' + sec + '"]'), txt = pill ? pill.textContent : '', cls = pill && /good|warn/.test(pill.className) ? (/good/.test(pill.className) ? 'good' : 'warn') : '';
-    if (sec === 'overview' || sec === 'look' || !txt) { h.hidden = true; h.innerHTML = ''; return; }
+    if (sec === 'look' || !txt) { h.hidden = true; h.innerHTML = ''; return; }
     var pr = OV.protect, bar = sec === 'security' ? '<span class="ix-phb"><i style="width:' + Math.round(100 * (pr.on + 1) / (pr.total + 1)) + '%"></i></span>' : '';
     var nx = sec === 'security' && pr.next && pr.next.key === 'https' ? '<button type="button" class="ix-btn pri" data-phgo="health">Fix Next: HTTPS</button>' : '';
     h.innerHTML = '<span class="ix-phc ' + cls + '">' + esc(txt) + '</span>' + bar + nx; h.hidden = false;
@@ -1279,8 +1280,8 @@
   }
   /* (1.70.0) Overview > Start Here: Guided Setup, then Install on Your Phone and Keyboard Shortcuts */
   function pStart(p) {
-    p.innerHTML = '<div class="ix-wzhost"></div><div class="ix-help"></div>';
-    pSetup(p.querySelector('.ix-wzhost')); helpCards(p.querySelector('.ix-help'));
+    p.innerHTML = '<div class="ix-wzhost"></div>';
+    pSetup(p.querySelector('.ix-wzhost'));
   }
   /* ---------- Guided Setup: the protection steps one after another, using the same flows as Security and Backup ---------- */
   var WZ = { open: '', pp: '', site: '', rec: '', skipped: {} };   // what you typed stays here only while Settings is open, never saved
@@ -1364,7 +1365,7 @@
               (open ? '<div class="ix-ec-b">' + bodies[s.key] + '<div class="ix-row ix-sbnav">' + (i ? '<button type="button" class="ix-btn" data-open="' + steps[i - 1].key + '">Back</button>' : '') + '<span></span>' +
                 (s.done || s.key === 'pw' ? '' : '<button type="button" class="ix-btn ix-quiet2" data-skip="' + s.key + '">Skip for Now</button>') +
                 (i < steps.length - 1 ? '<button type="button" class="ix-btn' + (s.done ? ' pri' : '') + '" data-open="' + steps[i + 1].key + '">Next</button>' : '') + '</div></div>' : '') + '</section>'; }).join('') + '</div>' +
-          (done === steps.length ? '<div class="ix-row" style="margin-top:6px"><button type="button" class="ix-btn pri" data-go2="overview">Back to Overview</button></div>' : '') +
+          (done === steps.length ? '<div class="ix-row" style="margin-top:6px"><button type="button" class="ix-btn pri" data-go2="general">Back to General</button></div>' : '') +
           ecCard('', ICON.send, 'Optional: Telegram', 'Reminders, login alerts, instant approval of new logins, and automatic backups on your phone. It takes about two minutes.', '<div class="ix-row"><button type="button" class="ix-btn" data-go2="telegram/setup">Open Telegram Setup</button></div>');
         // wiring
         p.querySelectorAll('[data-go2]').forEach(function (b) { b.onclick = function () { go(b.dataset.go2); }; });
@@ -1411,76 +1412,6 @@
     draw();
   }
 
-  function pOverview(p) {
-    p.innerHTML = '<p class="ix-ld">Checking how things stand…</p>';
-    ovGet().then(function (j) {
-      if (!j.ok) { p.innerHTML = '<p class="ix-err">' + esc(j.error || 'Could not load the overview.') + '</p>'; return; }
-      OV = j; decorateNav();
-      var pr = j.protect, tg = j.telegram, bk = j.backup, up = j.update, fl = j.files, now = Date.now() / 1000;
-      var run = tg.cronLast && now - tg.cronLast < 1800;
-      /* (1.75.0) the Overview as a few boxes side by side: the big one picks one of four parts (Security, Backup, Telegram, Updates) and says
-         more about it below; next to it how the site is doing right now and how far the protection steps are; under them what needs a look. */
-      var onNames = [['Password']].concat(pr.items.filter(function (x) { return x.on; }).map(function (x) { return [x.title]; })).map(function (x) { return x[0].toLowerCase(); });
-      var n = fl ? fl.extra + fl.changed : 0;
-      var bkLate = (bk.every > 0 && (!bk.last || (now - bk.last) / 86400 >= bk.every)) || !bk.last;
-      var parts = [
-        { id: 'security', go: 'security', title: 'Security', icon: ICON.shield, pill: pr.on + ' of ' + pr.total + ' on', cls: pr.on >= pr.total ? 'good' : 'warn', l1: 'On: ' + esc(onNames.join(', ')) + '.',
-          l2: pr.next ? '<b>Next best step:</b> ' + esc(pr.next.next) : 'Everything we recommend is on.', action: 'Review Security' },
-        { id: 'backup', go: 'backup', title: 'Backup', icon: ICON.box, pill: bk.last ? ago(bk.last) : 'None yet', cls: bkLate ? 'warn' : 'good',
-          l1: bk.tg ? 'A backup goes to Telegram ' + ({ 1: 'every day', 3: 'every 3 days', 7: 'every week', 14: 'every 2 weeks', 30: 'every month' }[bk.tg] || 'regularly') + (bk.enc ? ', encrypted.' : ', not encrypted.') : 'Download one file that restores everything.',
-          l2: 'A backup holds your pages, settings, Telegram and domain watch.', action: 'Back Up Now' },
-        { id: 'telegram', go: 'telegram', title: 'Telegram', icon: ICON.send, pill: !tg.ready ? 'Not set up' : run ? 'Running' : 'Needs a look', cls: !tg.ready ? '' : run ? 'good' : 'warn',
-          l1: !tg.ready ? 'Get reminders, login alerts and backups on your phone.' : run ? 'The schedule last ran ' + esc(ago(tg.cronLast)) + '.' : (tg.cronLast ? 'The schedule stopped ' + esc(ago(tg.cronLast)) + '.' : 'The schedule has never run.'),
-          l2: !tg.ready ? 'It takes about two minutes: make a bot, send it one message, done.' : (tg.on ? 'Daily message at ' + hourLbl(tg.hour) + '. ' : 'Daily message is off. ') + (tg.lastSent ? 'Last message ' + esc(ago(tg.lastSent)) + '.' : 'Nothing sent yet.'),
-          action: !tg.ready ? 'Set Up Telegram' : 'Open Telegram' },
-        { id: 'updates', go: 'updates', title: 'Updates', icon: ICON.up, pill: up.staged ? 'Update ready' : up.newer ? 'New version' : n ? n + ' to check' : 'Up to date', cls: up.staged || up.newer || n ? 'warn' : 'good',
-          l1: up.staged ? 'Version <b>' + esc(up.staged.version) + '</b> is checked and waiting for you.' : up.newer ? 'Version <b>' + esc(up.newer) + '</b> is available on GitHub. You have <b>' + esc(j.version) + '</b>.' : 'You have version <b>' + esc(j.version) + '</b>.',
-          l2: !up.hasManifest ? 'Update once with the File Manager, then the site can update itself.' : fl ? (n ? n + ' file' + (n > 1 ? 's' : '') + ' to look at in Files.' : 'Every file on your server belongs to this version.') : 'Upload a new zip here. No File Manager, nothing to delete by hand.',
-          action: up.staged ? 'Review the Update' : 'Update the Site' }
-      ];
-      var pick = (parts.filter(function (x) { return x.cls === 'warn'; })[0] || parts[0]).id;   // opens on the first part that needs a look
-      var al = (j.alerts || []).slice(0, 4), stp = setupSteps(j), stDone = stp.filter(function (x) { return x.done; }).length, nextStep = stp.filter(function (x) { return !x.done; })[0];
-      var rowM = function (k, v, cls) { return '<div class="ix-bm"><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b></div>'; };
-      var detail = function (x) { return '<div class="ix-bsel" id="ix-bsel"><small>Selected</small><h4>' + x.title + ' <span class="ix-pill ' + x.cls + '">' + esc(x.pill) + '</span></h4><p>' + x.l1 + '</p>' + (x.cls === 'good' ? '' : '<p class="ix-os">' + x.l2 + '</p>') +
-        '<button type="button" class="ix-btn pri ix-ovgo" data-go="' + x.go + '">' + x.action + '</button></div>'; };
-      p.innerHTML = '<div class="ix-bento">' +
-        '<section class="ix-bb ix-bmain"><span class="ix-bbadge">' + svg(ICON.site) + esc(j.siteName) + '</span><h3>How Your Site Stands</h3><p class="ix-bsub">Pick a part to see more.</p>' +
-          '<div class="ix-bpick ix-ocs" role="group" aria-label="Parts of your site">' + parts.map(function (x) {
-            return '<button type="button" class="ix-bp ix-oc" data-pick="' + x.id + '" aria-pressed="' + (x.id === pick) + '"><i class="ix-bpi">' + svg(x.icon) + '</i><b>' + x.title + '</b><small class="' + x.cls + '">' + esc(x.pill) + '</small></button>'; }).join('') + '</div>' +
-          detail(parts.filter(function (x) { return x.id === pick; })[0]) + '</section>' +
-        '<section class="ix-bb"><div class="ix-bh"><span class="ix-bi">' + svg(ICON.pulse) + '</span><span class="ix-blive ' + (j.https ? 'good' : 'warn') + '">' + (j.https ? 'Live' : 'No HTTPS') + '</span></div><h4>Health</h4><p class="ix-bsub">Right now</p>' +
-          rowM('HTTPS', j.https ? 'On' : 'Off', j.https ? 'good' : 'warn') + rowM('PHP', esc(j.php.split('.').slice(0, 2).join('.'))) + rowM('Version', esc(j.version)) + rowM('Files to check', String(n), n ? 'warn' : '') +
-          '<button type="button" class="ix-btn ix-ovgo" data-go="health">Open Health</button></section>' +
-        '<section class="ix-bb"><div class="ix-bh"><span class="ix-bi">' + svg(ICON.shield) + '</span><span class="ix-blive ' + (stDone >= stp.length ? 'good' : 'warn') + '">' + stDone + ' of ' + stp.length + '</span></div><h4>Protection Steps</h4>' +
-          '<p class="ix-bsub">' + (nextStep ? 'Next: <b>' + esc(nextStep.title) + '</b>' : 'All steps are done.') + '</p><div class="ix-bbar"><i style="width:' + Math.round(100 * stDone / stp.length) + '%"></i></div>' +
-          (nextStep ? '<button type="button" class="ix-btn pri ix-ovgo ix-setupb" data-go="setup">' + (stDone > 1 ? 'Continue Setup' : 'Start Guided Setup') + '</button>' : '<button type="button" class="ix-btn ix-ovgo" data-go="setup">Open Start Here</button>') + '</section>' +
-        '<section class="ix-bb ix-bwide ix-als' + (al.length ? '' : ' ok') + '"><div class="ix-bh"><span class="ix-bi">' + svg(al.length ? ICON.warn : ICON.check) + '</span><h4>' + (al.length ? (j.alerts.length > 1 ? j.alerts.length + ' things to look at' : '1 thing to look at') : 'Nothing needs your attention.') + '</h4></div>' +
-          (al.length ? '<ol class="ix-bcode">' + al.map(function (a) { return '<li class="' + a.level + '"><span>' + esc(a.text) + '</span><button type="button" class="ix-btn" data-go="' + a.go + '">Open</button></li>'; }).join('') + '</ol>' : '<p class="ix-bsub">Everything checked here looks fine.</p>') + '</section>' +
-        '</div>';
-      p.querySelectorAll('[data-pick]').forEach(function (b) { b.onclick = function () {
-        p.querySelectorAll('[data-pick]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        var cur = p.querySelector('#ix-bsel'), d = document.createElement('div'); d.innerHTML = detail(parts.filter(function (x) { return x.id === b.dataset.pick; })[0]);
-        cur.replaceWith(d.firstChild); p.querySelector('#ix-bsel .ix-ovgo').onclick = function () { go(this.dataset.go); };
-      }; });
-      p.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
-      whatsNew(p, j.version);
-    }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
-  }
-  /* After an update: once, on the Overview, what the new version changed (from the changelog), until you press Got It. */
-  function whatsNew(p, ver) {
-    if (lsGet('ix-seen-ver') === ver) return;
-    // only the newest version's notes (the whole changelog is over 100 KB; Changelog loads it when you open it)
-    (CL && CL.entries ? Promise.resolve(CL) : api('changelog&latest=1').then(function (j) { if (!j || !j.ok) throw new Error('no changelog'); return clParse(j.md); })).then(function (cl) {
-      var e = cl.entries[0];
-      if (!e || e.ver !== ver) { lsSet('ix-seen-ver', ver); return; }
-      var box = document.createElement('section'); box.className = 'ix-ec ix-new';
-      box.innerHTML = '<div class="ix-ec-h"><span class="ix-ec-i">' + svg(ICON.sparkle) + '</span><div><div class="ix-ec-t">What\'s New in Version ' + esc(ver) + '</div><div class="ix-ec-d">Your site was updated. Here is what changed.</div></div></div>' +
-        '<div class="ix-ec-b"><div class="ix-md ix-newbody">' + mdBlocks(e.body) + '</div><div class="ix-row" style="margin-top:14px"><button type="button" class="ix-btn pri" id="ix-nwok">Got It</button><button type="button" class="ix-btn" id="ix-nwall">Open the Changelog</button></div></div>';
-      p.insertBefore(box, p.firstChild);
-      box.querySelector('#ix-nwok').onclick = function () { lsSet('ix-seen-ver', ver); box.remove(); };
-      box.querySelector('#ix-nwall').onclick = function () { lsSet('ix-seen-ver', ver); go('changelog'); };
-    }, function () {});
-  }
 
   /* ---------- Changelog: web/hub/docs/CHANGELOG.md, read through the API (the docs folder is closed to browsers) ---------- */
   var CL = null;             // the parsed file (kept while Settings is open)
@@ -1707,6 +1638,8 @@
       nb.querySelectorAll('[data-note]').forEach(function (b) { b.onclick = function () {
         var x = b.closest('.ix-rc').querySelector('.ix-rc-x'), open = x.hidden; x.hidden = !open; b.textContent = open ? 'Hide' : 'Read'; b.setAttribute('aria-expanded', open ? 'true' : 'false'); }; });
     }).catch(function () {});
+    // (1.77.2) Install on Your Phone, Keyboard Shortcuts and Offline Reading moved here from Start Here: they are help about the site, not setup
+    var hb = document.createElement('div'); hb.className = 'ix-help'; p.appendChild(hb); helpCards(hb);
   }
   function pFeature(p, f) {
     p.innerHTML = '<div class="ix-fhero" style="--fc:' + f.c + '"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
@@ -3185,6 +3118,49 @@
     draw(w);
   }
 
+  /* ---------- Logs (Settings > Logs): what the site told you, who logged in, and what went wrong ---------- */
+  var LOGEV = { login: ['Logged In', '', '✓'], failed: ['Wrong Password', 'warn', '!'], locked: ['Logins Paused After Too Many Wrong Tries', 'warn', '!'], password: ['Password Changed', '', '✓'],
+    logoutall: ['Other Devices Logged Out', '', '✓'], twostep_on: ['Two-Step Login Turned On', '', '✓'], twostep_off: ['Two-Step Login Turned Off', 'warn', '!'],
+    recovery: ['New Recovery Codes Made', '', '✓'], restore: ['Backup Restored', 'warn', '!'] };
+  var LOGDAY = function (ts) { var d = new Date(ts), t = new Date(), y = new Date(Date.now() - 864e5); return d.toDateString() === t.toDateString() ? 'Today' : d.toDateString() === y.toDateString() ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }); };
+  function pLogNotes(p) {
+    var all = K.noteLog().slice().reverse(), only = false;
+    var draw = function () {
+      var list = only ? all.filter(function (n) { return n.b; }) : all, day = '';
+      p.innerHTML = tabHead(ICON.bell, 'Notifications', 'Every message the site showed you on this device, newest first. The last 300 are kept here.') +
+        '<div class="ix-row ix-lgbar"><div class="ix-seg" role="tablist" aria-label="Show"><button type="button" role="tab" data-f="all" aria-selected="' + !only + '">All</button><button type="button" role="tab" data-f="bad" aria-selected="' + only + '">Problems</button></div>' +
+        '<span class="ix-note" style="margin:0">' + list.length + (list.length === 1 ? ' message' : ' messages') + '</span><button type="button" class="ix-btn" id="ix-lgclr"' + (all.length ? '' : ' disabled') + '>Clear</button></div>' +
+        (list.length ? '<div class="ix-lg">' + list.map(function (n) {
+          var d = LOGDAY(n.ts), head = d !== day ? '<div class="ix-sect">' + esc(d) + '</div>' : ''; day = d;
+          return head + '<div class="ix-lgr">' + K.noteTile(n.k && ICON && K.noteKind ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-lgt"><b></b><small>' + esc(n.s || '') + ' · ' + esc(new Date(n.ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })) + '</small></div></div>'; }).join('') + '</div>'
+          : '<div class="ix-empty"><b>' + (only ? 'No Problems' : 'Nothing Yet') + '</b><p>' + (only ? 'Nothing has gone wrong on this device.' : 'Messages appear here as the site shows them.') + '</p></div>');
+      [].forEach.call(p.querySelectorAll('.ix-lgr .ix-lgt b'), function (b, i) { b.textContent = list[i].m; });
+      p.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { only = b.dataset.f === 'bad'; draw(); }; });
+      var c = p.querySelector('#ix-lgclr'); if (c) c.onclick = function () { K.noteLogClear(); all = []; draw(); };
+    };
+    draw();
+  }
+  function pLogSign(p) {
+    p.innerHTML = spinRow('Reading the sign-in history…');
+    api('activity').then(function (j) {
+      if (!j || !j.ok) { p.innerHTML = '<p class="ix-err">' + esc((j && j.error) || 'Could not load.') + '</p>'; return; }
+      var rows = j.events.map(function (e) {
+        var m = LOGEV[e.ev] || [e.ev, '', '•'], label = e.ev === 'failed' ? (e.x === 'code' ? 'Wrong Two-Step Code' : e.x === 'passkey' ? 'Passkey Not Accepted' : 'Wrong Password') : m[0];
+        return checkRow(m[1], m[2], esc(label), esc(e.who || '') + ' · ' + esc(e.ip || '') + (e.cc ? ' (' + esc(e.cc) + ')' : '') + ' · ' + esc(ago(e.t)));
+      });
+      p.innerHTML = tabHead(ICON.out, 'Sign-Ins', 'Logins, wrong passwords and security changes. Who is logged in right now is under Security › Devices.') +
+        (rows.length ? '<div class="ix-checks">' + rows.join('') + '</div>' : '<div class="ix-empty"><b>No Activity Yet</b><p>Logins, wrong passwords and security changes appear here.</p></div>');
+    }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
+  }
+  function pLogErr(p) {
+    p.innerHTML = spinRow('Looking for PHP error logs…');
+    api('health').then(function (h) {
+      if (!h || !h.ok) { p.innerHTML = '<p class="ix-err">' + esc((h && h.error) || 'Could not load.') + '</p>'; return; }
+      p.innerHTML = tabHead(ICON.warn, 'PHP Errors', 'From your host\'s error_log files, newest last. Clearing them is under Health.') +
+        (h.logs.length ? h.logs.map(function (l) { return '<div class="ix-log"><b>' + esc(l.file) + '</b><pre>' + esc(l.lines.slice(-40).join('\n')) + '</pre></div>'; }).join('')
+          : '<div class="ix-empty"><b>No Errors Logged</b><p>Nothing has gone wrong that your server wrote down.</p></div>');
+    }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
+  }
   /* (1.72.0) the site-wide search finds Settings too: [name, where it opens, more words, the section's name] */
   function searchIndex() { return SEARCH.map(function (x) { var s = sectionOf(SUB_OF[x[1].split('/')[0]] || ''); return [x[0], x[1], x[2], s ? 'Settings › ' + s[1] : 'Settings']; }); }
   K.impl = { settings: go, mount: mount, openBackup: openBackup, textSizes: textSizes, health: health, searchIndex: searchIndex };

@@ -362,26 +362,45 @@
   var NOTE_MAX = 4, NOTE_KEEP = 30, noteHist = [], noteSeen = 0;
   try { noteHist = JSON.parse(sessionStorage.getItem('ix-notes') || '[]').filter(function (n) { return n && typeof n.m === 'string'; }).slice(-NOTE_KEEP); noteSeen = +sessionStorage.getItem('ix-notes-seen') || 0; } catch (e) {}
   var NOTE_SRC = { home: 'Home', links: 'Links', info: 'Info', cards: 'Cards', tasks: 'Tasks', files: 'Files', tools: 'Tools', settings: 'Settings' };
-  var NOTE_ICON = { bad: 'M12 3l10 18H2zM12 10v5M12 18h.01', ok: 'M5 12l5 5 9-10', act: 'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3' };
+  /* (1.77.2) each message gets the icon and color of what it did: saved, deleted, backed up, sent, copied, locked, updated, added, or a problem */
+  var NOTE_ICON = { bad: 'M12 3l10 18H2zM12 10v5M12 18h.01', ok: 'M5 12l5 5 9-10', act: 'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',
+    del: 'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6', box: 'M21 8v13H3V8M1 3h22v5H1zM10 12h4', send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z',
+    copy: 'M9 9h11v11H9zM5 15H4V4h11v1', lock: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4', sync: 'M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M3 21v-5h5M21 3v5h-5', plus: 'M12 5v14M5 12h14' };
+  function noteKind(msg, bad, act) {
+    if (bad) return 'bad'; if (act) return 'act'; var m = String(msg).toLowerCase();
+    if (/trash|delet|remov|erase|cleared/.test(m)) return 'del';
+    if (/telegram|test message|message sent|sent to/.test(m)) return 'send';
+    if (/backup|backed up|download|export/.test(m)) return 'box';
+    if (/copied|copy/.test(m)) return 'copy';
+    if (/passkey|passphrase|password|encrypt|locked|unlock|log(ged)? (in|out)|two-step/.test(m)) return 'lock';
+    if (/updat|version|restor|refresh|reload|synced/.test(m)) return 'sync';
+    if (/added|created|uploaded|imported|new /.test(m)) return 'plus';
+    return 'ok';
+  }
+  /* (1.77.2) every message is also kept on this device (the last 300, in Settings > Logs), after the tab and its short list are gone */
+  function noteLogGet() { try { return (JSON.parse(ls.get('hub-notelog') || '[]') || []).filter(function (n) { return n && typeof n.m === 'string'; }); } catch (e) { return []; } }
+  function noteLogAdd(e) { try { var a = noteLogGet(); a.push(e); ls.set('hub-notelog', JSON.stringify(a.slice(-300))); } catch (x) {} }
+  function noteLogClear() { try { ls.set('hub-notelog', '[]'); } catch (x) {} }
   function noteSave() { try { sessionStorage.setItem('ix-notes', JSON.stringify(noteHist.slice(-NOTE_KEEP))); sessionStorage.setItem('ix-notes-seen', String(noteSeen)); } catch (e) {} }
   function noteAgo(ts) { var s = Math.max(0, Math.round((Date.now() - ts) / 1000)); return s < 45 ? 'now' : s < 3600 ? Math.round(s / 60) + 'm ago' : Math.round(s / 3600) + 'h ago'; }
   function noteTile(kind) { return '<span class="ix-nt ' + kind + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + NOTE_ICON[kind] + '"/></svg></span>'; }
   function noteBell() {
     var b = document.getElementById('ix-bell'), n = noteHist.length - noteSeen, box = document.getElementById('ix-toast'), live = box && box.querySelector('.ix-nc');
-    if (n <= 0 || live) { if (b) b.hidden = true; return; }
+    if (live) { if (b) b.hidden = true; return; }   // (1.77.2) the bell stays on every page, so the messages can always be read again; the number shows only what was missed
     if (!b) {
       b = document.createElement('button'); b.type = 'button'; b.id = 'ix-bell'; b.setAttribute('aria-label', 'Messages you may have missed');
       b.onclick = function () { noteList(); }; document.body.appendChild(b);
     }
-    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b>' + Math.min(n, 9) + (n > 9 ? '+' : '') + '</b>'; b.hidden = false;
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' + (n > 0 ? '<b>' + Math.min(n, 9) + (n > 9 ? '+' : '') + '</b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.hidden = false;
   }
+  whenBody(noteBell);   // the bell is there from the first moment on every page
   /* the list behind the bell: the last messages of this tab, newest first */
   function noteList() {
     var old = document.getElementById('ix-nlist'); if (old) { old.remove(); return; }
     noteSeen = noteHist.length; noteSave(); noteBell();
     var l = document.createElement('div'); l.id = 'ix-nlist'; l.setAttribute('role', 'dialog'); l.setAttribute('aria-label', 'Messages');
     l.innerHTML = '<div class="ix-nlh"><b>Messages</b><span>' + (noteHist.length ? 'This tab, newest first' : 'Nothing yet') + '</span><button type="button" class="ix-nlc" ' + (noteHist.length ? '' : 'hidden ') + 'data-clear>Clear</button><button type="button" class="ix-nlx" aria-label="Close">×</button></div><div class="ix-nlb">' +
-      noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '">' + noteTile(n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
+      noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '">' + noteTile(n.k && NOTE_ICON[n.k] ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
     [].forEach.call(l.querySelectorAll('.ix-nm'), function (m, i) { m.textContent = noteHist[noteHist.length - 1 - i].m; });
     document.body.appendChild(l);
     l.querySelector('.ix-nlx').onclick = function () { l.remove(); };
@@ -410,8 +429,8 @@
     var list = document.getElementById('ix-nlist'); if (list) list.remove();
     var same = [].filter.call(t.children, function (c) { return c.dataset.msg === msg; })[0];   // the same message again: one card, kept longer
     if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
-    else { noteHist.push({ m: msg, b: !!bad, s: NOTE_SRC[APP] || 'Homebase Hub', ts: Date.now() }); noteHist = noteHist.slice(-NOTE_KEEP); noteSave(); }
-    var c = document.createElement('div'), kind = bad ? 'bad' : act ? 'act' : 'ok';
+    else { noteHist.push({ m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', ts: Date.now() }); noteLogAdd(noteHist[noteHist.length - 1]); noteHist = noteHist.slice(-NOTE_KEEP); noteSave(); }
+    var c = document.createElement('div'), kind = noteKind(msg, bad, act);
     c.className = 'ix-nc' + (bad ? ' bad' : ''); c.dataset.msg = msg;
     c.innerHTML = noteTile(kind) + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(NOTE_SRC[APP] || 'Homebase Hub') + ' · now</small></div><button type="button" class="ix-nx" aria-label="Close message">×</button>';
     c.querySelector('.ix-nm').textContent = msg;
@@ -1710,7 +1729,7 @@
 
 
   /* what shell-admin.js may use (it holds this same S object, so it always sees the current state) */
-  window.__ixShell = { S: S, esc: esc, toast: toast, api: api, ICON: ICON, dollar: $, svg: svg, drawBar: drawBar, redraw: function () { lastBar = ''; drawBar(); },
+  window.__ixShell = { S: S, esc: esc, toast: toast, noteLog: noteLogGet, noteLogClear: noteLogClear, noteTile: noteTile, noteKind: noteKind, api: api, ICON: ICON, dollar: $, svg: svg, drawBar: drawBar, redraw: function () { lastBar = ''; drawBar(); },
     remember: remember, applySizes: applySizes, APP: APP, openDlg: openDlg, closeDlg: closeDlg, login: login, ROOT: ROOT, applyFont: applyFont,
     applyColors: applyColors, applyAttrs: applyAttrs, PG_APPS: PG_APPS, CORE: CORE, ASSETS: ASSETS, COLOR_DEFAULT: COLOR_DEFAULT, setTheme: setTheme, pageList: pageList,
     applyFavicon: applyFavicon, SIZE_SPEC: SIZE_SPEC, PAGE_DEF: PAGE_DEF, FONTS: FONTS, COLOR_KEYS: COLOR_KEYS, when: when, previewWith: previewWith,
