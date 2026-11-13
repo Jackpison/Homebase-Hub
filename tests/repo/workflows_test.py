@@ -74,7 +74,7 @@ check('W14 CI runs the JavaScript type check', 'npx tsc -p config/tsconfig.json'
 bj = '\n'.join(cij['browsers'])
 ci_code = '\n'.join(l.split('   #')[0] for l in ci.split('\n') if not l.strip().startswith('#'))   # the comments may say Firefox
 check('W15 CI runs the browser tests in Chromium only: the pages half on every push, the tools half when the matrix from ci_changes.py says so (Tools, designs, a release, a manual run); WebKit, Firefox and the visual report job are not in CI (WebKit and Firefox run in scheduled.yml)',
-      'fromJSON(needs.changes.outputs.matrix)' in bj and 'browser: [chromium]' in bj and 'part: [pages] or [pages, tools]' in bj and not re.search(r'firefox|webkit', ci_code, re.I) and 'visual' not in cij,
+      'fromJSON(needs.changes.outputs.matrix)' in bj and 'browser: [chromium]' in bj and 'part: [pages] or [pages, tools, more]' in bj and not re.search(r'firefox|webkit', ci_code, re.I) and 'visual' not in cij,
       [x for x in ('firefox', 'webkit', 'visual') if x in ci_code.lower() or x in cij])
 ff = wk
 check('W16 Firefox runs on the 1st of the month and by hand, runs the page tests and the accessibility check, and reports a failure in its own issue (label browsers)',
@@ -82,7 +82,7 @@ check('W16 Firefox runs on the 1st of the month and by hand, runs the page tests
       and 'issues: write' in ff and 'timeout-minutes:' in ff and 'permissions: {}' in ff and not re.search(r'pull_request|push:', ff))
 check('W17 CI runs the secret check', 'tests/repo/secrets_test.py' in ci)
 check('W18 several browser tests run at once through run_parallel.py, and only the slow-phone test (it measures time) runs alone (-j 1)',
-      bj.count('tests/lib/run_parallel.py --retry 1 -j 3') == 2 and 'tests/lib/run_parallel.py --retry 1 -j 2' in wk and 'run_parallel.py --retry 1 -j 1 "slow phone|' in bj and 'speed_test' not in bj.replace('run_parallel.py --retry 1 -j 1 "slow phone|tests/browser/speed_test.py', '') and 'tests/repo/parallel_test.py' in ci)
+      bj.count('tests/lib/run_parallel.py --retry 1 -j 3') == 3 and 'tests/lib/run_parallel.py --retry 1 -j 2' in wk and 'run_parallel.py --retry 1 -j 1 "slow phone|' in bj and 'speed_test' not in bj.replace('run_parallel.py --retry 1 -j 1 "slow phone|tests/browser/speed_test.py', '') and 'tests/repo/parallel_test.py' in ci)
 check('W19 CI lints the Python (ruff, pinned, rules in ruff.toml) and the build job reads enough history for the commit-message secret check',
       'ruff==' in ci and '/tmp/rf/bin/ruff check' in ci and os.path.isfile(os.path.join(ROOT, 'ruff.toml')) and re.search(r'fetch-depth: 50', '\n'.join(cij['build'])))
 bad_names = []

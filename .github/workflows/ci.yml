@@ -8,7 +8,7 @@ on:
 # Now it runs once, and a newer push cancels the older run on the same branch.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}   # a newer pull request push replaces the old run; a push to main never cancels a run (1.77.4: a docs push had thrown away the release run)
 permissions:
   contents: read
 jobs:
@@ -182,7 +182,7 @@ jobs:
     needs: [changes, quick]
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
     # Every page in a real browser: Chromium, in two halves (pages, tools), side by side. WebKit (every iPhone browser uses it) runs every Monday and Firefox on the
-    # 1st of the month, in scheduled.yml. A push runs the light set: the pages half only (one job, about 4 minutes). The tools half (Tools, Files, the designs, the slow-phone test) joins it when Tools or the
+    # 1st of the month, in scheduled.yml. A push runs the light set: the pages half only (one job, about 4 minutes). The tools half (in two jobs side by side, tools and more: Tools, Files, Settings, the designs, the slow-phone test) joins it when Tools or the
     # Animated Designs changed, when a release is being prepared, and on a manual run; scheduled.yml starts that manual run every Monday, so the whole set is checked weekly.
     # Inside a half several tests run at the same time (tests/lib/run_parallel.py): each test has its own port and /tmp folder.
     # Chromium runs three at once (WebKit, in scheduled.yml, two: with three it cancelled requests and missed timings on a busy runner, 1.61.10).
@@ -191,7 +191,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}   # browser: [chromium], part: [pages] or [pages, tools] (scripts/ci_changes.py)
+      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}   # browser: [chromium], part: [pages] or [pages, tools, more] (scripts/ci_changes.py)
     timeout-minutes: 25
     name: browser (${{ matrix.browser }}, ${{ matrix.part }})
     env:
@@ -247,7 +247,7 @@ jobs:
             "app|tests/browser/app_test.py build/site-update-*.zip" \
             "settings|tests/browser/settings_test.py build/site-update-*.zip" \
             "search|tests/browser/search_test.py build/site-update-*.zip --browser chromium"
-      - name: Tools half in Chromium (several tests at once, then the slow-phone test alone)
+      - name: Tools half in Chromium (Tools, website, encryption, sharing, the designs)
         if: matrix.browser == 'chromium' && matrix.part == 'tools' && steps.build.outcome == 'success'
         run: |
           rc=0
@@ -255,6 +255,17 @@ jobs:
             "tools|tests/browser/tools_test.py build/site-update-*.zip --browser chromium" \
             "website|tests/browser/website_test.py build/site --browser chromium" \
             "encrypt|tests/browser/encrypt_test.py build/site-update-*.zip --browser chromium" \
+            "passkeys|tests/browser/passkey_test.py build/site-update-*.zip" \
+            "share|tests/browser/share_test.py build/site-update-*.zip" \
+            "offline|tests/browser/offline_test.py build/site-update-*.zip --browser chromium" \
+            "import center|tests/browser/importer_test.py build/site-update-*.zip --browser chromium" || rc=1
+          python3 tests/lib/run_parallel.py --retry 1 -j 1 "designs|tests/browser/designs_test.py build/site-update-*.zip --browser chromium" || rc=1   # alone: the designs are drawn by software and need the whole machine
+          exit $rc
+      - name: More pages in Chromium (Files, Settings, tabs, windows, the slow-phone test alone)
+        if: matrix.browser == 'chromium' && matrix.part == 'more' && steps.build.outcome == 'success'
+        run: |
+          rc=0
+          python3 tests/lib/run_parallel.py --retry 1 -j 3 \
             "files|tests/browser/files_test.py build/site-update-*.zip --browser chromium" \
             "lock|tests/browser/lock_test.py build/site-update-*.zip --browser chromium" \
             "tabs lock|tests/browser/tabs_lock_test.py build/site-update-*.zip --browser chromium" \
@@ -262,12 +273,8 @@ jobs:
             "settings look|tests/browser/settings_look_test.py build/site-update-*.zip --browser chromium" \
             "windows|tests/browser/windows_test.py build/site-update-*.zip --browser chromium" \
             "polish|tests/browser/polish_test.py build/site-update-*.zip --browser chromium" \
-            "passkeys|tests/browser/passkey_test.py build/site-update-*.zip" \
-            "share|tests/browser/share_test.py build/site-update-*.zip" \
-            "offline|tests/browser/offline_test.py build/site-update-*.zip --browser chromium" \
-            "tasks more|tests/browser/tasks_more_test.py build/site-update-*.zip --browser chromium" \
-            "import center|tests/browser/importer_test.py build/site-update-*.zip --browser chromium" || rc=1
-          python3 tests/lib/run_parallel.py --retry 1 -j 1 "slow phone|tests/browser/speed_test.py build/site-update-*.zip" "designs|tests/browser/designs_test.py build/site-update-*.zip --browser chromium" || rc=1   # alone: the designs are drawn by software here and take the whole processor
+            "tasks more|tests/browser/tasks_more_test.py build/site-update-*.zip --browser chromium" || rc=1
+          python3 tests/lib/run_parallel.py --retry 1 -j 1 "slow phone|tests/browser/speed_test.py build/site-update-*.zip" || rc=1   # alone: it measures time
           exit $rc
 
   apache:

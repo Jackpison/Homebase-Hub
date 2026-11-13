@@ -44,10 +44,10 @@ TOOLS_PATHS = ('tools-app/', 'src/web/tools/', 'src/web/home/designs')
 
 
 def browser_parts(files):
-    """The halves of the browser tests this push runs: always 'pages'; 'tools' too when it matters (see the top of this file)."""
-    if not files: return ['pages', 'tools']
+    """The halves of the browser tests this push runs: always 'pages'; 'tools' and 'more' too (two jobs side by side) when it matters (see the top of this file)."""
+    if not files: return ['pages', 'tools', 'more']
     release = 'src/web/hub/core/lib/boot.php' in files and 'CHANGELOG.md' in files
-    return ['pages', 'tools'] if release or any(f.startswith(TOOLS_PATHS) for f in files) else ['pages']
+    return ['pages', 'tools', 'more'] if release or any(f.startswith(TOOLS_PATHS) for f in files) else ['pages']
 
 
 def changed_files():
