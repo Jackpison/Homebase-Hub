@@ -98,6 +98,7 @@ try:
         card = pg.get_by_text('Install on Your Phone', exact=True)
         hidden = pg.evaluate("!document.querySelector('.ix-help .ix-how').open && !document.querySelector('.ix-help .ix-how .ix-steps').checkVisibility()")
         pg.click('.ix-help .ix-how > summary')
+        wait_js(pg, "document.querySelector('.ix-help .ix-how .ix-steps').checkVisibility()", 5000)   # (1.78.1) the fold opens smoothly
         txt = pg.inner_text('#ix-pc')
         check('Settings > Overview > Start Here has the Install on Your Phone card; its steps for iPhone, Android and a computer open under "How?"', not why and card.count() == 1 and hidden and all(x in txt for x in ('iPhone or iPad', 'Add to Home Screen', 'Android', 'Install App', 'Computer')), (why, card.count(), hidden))
         check('the Install button is hidden when the browser offers no install', pg.evaluate("document.querySelector('#ix-inst').hidden"))

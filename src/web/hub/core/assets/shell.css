@@ -1042,5 +1042,5 @@ html[data-ix-glass]:not([data-ix-gsolid]) #ix-ebar{background:color-mix(in srgb,
     details[open]::details-content{height:auto}
   }
   :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{transition:outline-offset .15s ease,box-shadow .15s ease}
-  :where(.card,.cat,.box,.row,.tile,.item,.task,.fcard,.widget,.chip){transition:background-color .18s ease,border-color .18s ease,box-shadow .22s ease,opacity .18s ease}
+  :where(.card,.cat,.box,.row,.tile,.item,.task,.widget,.chip){transition:background-color .18s ease,border-color .18s ease,box-shadow .22s ease,opacity .18s ease}
 }
