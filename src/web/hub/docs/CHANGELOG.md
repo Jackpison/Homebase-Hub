@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.77.0 | Cloud Backup: an encrypted copy of the site sent to a WebDAV folder, on a schedule |
 | 1.76.0 | What's New by series with filters, a Features section, and a Files storage limit you can set to any size |
 | 1.75.0 | One message stack in the bottom right with a bell for missed ones, sliding-pill tabs, a wider Settings with one header and a box-style Overview, a timeline for What's New, six Spotlight presets, and a Files drop zone |
 | 1.74.2 | Settings: pill sub-tabs, Security in four tabs, a new Overview and Colors, per-page colors always shown; smoother sliders; a flatter phone top bar; quicker CI |
@@ -146,6 +147,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.77.0
+
+### Cloud Backup
+
+- A new card in **Backup & Restore**: an encrypted copy of the whole site, sent to a WebDAV folder (Nextcloud, ownCloud, Synology, a Hetzner Storage Box or another server). Fill in the address, user name, password and folder, press **Test Connection**, then switch on the schedule (daily, every 3 days or weekly) or press **Back Up Now**.
+- Only an encrypted backup is ever sent. Without an encryption passphrase, nothing leaves the server.
+- It keeps the last 7 to 90 copies. Older copies are removed only after a new one has arrived, and only the ones this feature made (the file name has the date only, like `mysite-backup-2026-11-14.enc.json`); other files in the folder are never touched.
+- Files go into the copy while all of them together are 24 MB or less; the card says so when they are not included.
+- The address is checked like every other request the site makes. An address on the internet must use https; your own network (a NAS) can use http. Redirects are not followed.
+- The password stays on your server (in `site-data`), is not part of any backup, and is never sent back to the browser. Start Over removes it.
+- To restore: download the file from your cloud and open it with Import, like any encrypted backup.
 
 ---
 
