@@ -187,10 +187,10 @@
   function ovGet() { if (!ovP || Date.now() - ovAt > 3000) { ovAt = Date.now(); ovP = api('overview'); } return ovP; }
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
-    ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'setup', 'keys keyboard hotkeys shortcut question mark help'], ['Install on Your Phone', 'setup', 'app home screen phone install add to home screen iphone android help'],
+    ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'features', 'keys keyboard hotkeys shortcut question mark help'], ['Install on Your Phone', 'features', 'app home screen phone install add to home screen iphone android help'],
     ['Features', 'features', 'what the site does pages home links info cards tasks files tools'],
     ['Cloud Backup', 'backup', 'webdav nextcloud owncloud synology nas storage box off site copy encrypted schedule'],
-    ['Guided Setup', 'setup', 'start here wizard steps protect'], ['Offline Reading', 'setup', 'offline airplane no connection internet read without cache device app'],
+    ['Guided Setup', 'setup', 'start here wizard steps protect'], ['Offline Reading', 'features', 'offline airplane no connection internet read without cache device app'],
     ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'nav', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'nav', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],

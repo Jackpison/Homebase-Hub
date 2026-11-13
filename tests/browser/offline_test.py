@@ -64,7 +64,7 @@ try:
 
         # ---- Offline Reading ----
         sw0 = pg.evaluate("navigator.serviceWorker.getRegistrations().then(r => r.filter(x => /action=sw/.test((x.active || x.installing || x.waiting || {}).scriptURL || '')).length)")
-        pg.goto(s.base + '/web/settings/#setup'); wait_js(pg, "!!document.getElementById('ix-offsw')", 20000)
+        pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "!!document.getElementById('ix-offsw')", 20000)
         sw_off = pg.evaluate("[document.getElementById('ix-offsw').checked, document.getElementById('ix-offst').textContent]")
         check('F4 Offline Reading is off by default: no service worker for it; Start Here has its switch, off', sw0 == 0 and sw_off == [False, 'Off'], (sw0, sw_off))
         pg.click('#ix-offsw')
@@ -110,7 +110,7 @@ try:
         after = pg.evaluate("caches.open('hub-offline').then(c => c.match(location.origin + '/web/tasks/api.php')).then(r => r ? r.json() : null).then(j => [j ? !!j.auth : null, " + SNAPS + "])")
         check('F9 Log Out deletes the kept copy (what is kept afterwards is only what a visitor sees) and the instant-page copies', after[0] in (None, False) and after[1] == [], after)
         browser_login(pg, s.base)
-        pg.goto(s.base + '/web/settings/#setup'); wait_js(pg, "!!document.getElementById('ix-offsw') && document.getElementById('ix-offsw').checked", 20000)
+        pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "!!document.getElementById('ix-offsw') && document.getElementById('ix-offsw').checked", 20000)
         pg.click('#ix-offsw'); pg.wait_for_timeout(1500)
         gone = pg.evaluate("Promise.all([navigator.serviceWorker.getRegistrations().then(r => r.filter(x => /action=sw/.test((x.active || x.installing || x.waiting || {}).scriptURL || '')).length), caches.has('hub-offline')])")
         check('F10 switching it off removes the service worker and deletes the copy', gone == [0, False], gone)
