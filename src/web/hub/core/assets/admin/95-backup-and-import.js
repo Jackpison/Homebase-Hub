@@ -196,20 +196,18 @@
       if (!j.ok) { p.innerHTML = '<p class="ix-err">' + esc(j.error) + '</p>'; return; }
       var parts = j.parts, last = +S.backupLast || 0, every = +S.backupEvery || 0;
       var due = every > 0 && (!last || (Date.now() / 1000 - last) / 86400 >= every);
-      var tg = n.ok && n.hasToken && n.chat ? (n.bkEvery ? 'Sends a backup ' + ({ 1: 'every day', 3: 'every 3 days', 7: 'every week', 14: 'every 2 weeks', 30: 'every month' }[n.bkEvery] || 'regularly') + (n.bkLast ? '. Last: ' + ago(n.bkLast) : '. None sent yet') : 'Connected, Automatic Backups Off') : 'Not Set Up';
       var tgOn = !!(n.ok && n.hasToken && n.chat);
       var newest = j.versions.length ? j.versions.reduce(function (a, v) { return v.time > a ? v.time : a; }, 0) : 0;
       p.innerHTML =
-        '<div class="ix-bkstat' + (due ? ' due' : '') + '">' +
-          '<div><small>Last Full Backup</small><b>' + (last ? esc(ago(last)) : 'Never') + '</b><span>' + (last ? esc(when(last)) : 'Export one below, or let Telegram send them') + '</span></div>' +
-          '<div><small>Remind Me Every</small><select id="ix-every" aria-label="Remind me every">' + [0, 1, 3, 7, 14, 30].map(function (d) {
-            return '<option value="' + d + '"' + (every === d ? ' selected' : '') + '>' + (d ? d + (d > 1 ? ' Days' : ' Day') : 'Never') + '</option>'; }).join('') + '</select><span>' + (due ? 'A backup is due' : every ? 'Not due yet' : 'No Reminders') + '</span></div>' +
-          '<div><small>Telegram</small><b>' + (n.bkEvery && n.chat ? 'On' : 'Off') + '</b><span>' + esc(tg) + ' · <a href="#" id="ix-tgset">' + (n.chat ? 'Change' : 'Set Up') + '</a></span></div>' +
-        '</div>' +
-        '<div class="ix-bkbig"><button type="button" class="ix-btn pri ix-big" id="ix-exp">' + svg(ICON.box) + 'Download Backup</button>' +
-          '<p>One file that brings back your pages and settings, on this server or any other.' + (enc.set ? ' It is locked with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + '.' : '') + '</p><small id="ix-bksum" class="ix-mu"></small></div>' +
+        // (1.77.3) one hero box: what a backup is, when the last one was, and the Download button. Reminder and automatic copies follow as rows.
+        '<div class="ix-bkhero' + (due ? ' due' : '') + '"><span class="ix-bkhero-i">' + svg(ICON.box) + '</span><div class="ix-bkhero-t"><b>Back Up Your Site</b>' +
+          '<span>' + (last ? 'Last full backup ' + esc(ago(last)) + ' (' + esc(when(last)) + ')' : 'No full backup yet') + (due ? ' · <em>A backup is due</em>' : '') + '</span>' +
+          '<small>One file that brings back your pages and settings, on this server or any other.</small><small id="ix-bksum" class="ix-mu"></small></div>' +
+          '<button type="button" class="ix-btn pri ix-big" id="ix-exp">' + svg(ICON.box) + 'Download Backup</button></div>' +
         '<div class="ix-status">' + (enc.set ? '<span class="ix-ok">🔒</span><span><b>Backup Files Are Locked</b> and open only with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + '. '
           : '<span>!</span><span><b>Backup files are not locked.</b> Set an encryption passphrase and every backup is locked. ') + '<a href="#" id="ix-encgo2">' + (enc.set ? 'Change' : 'Set one') + ' in Settings › Security</a></span></div>' +
+        '<div class="ix-rcl">' + rowCard({ ic: ICON.clock, title: 'Remind Me to Back Up', desc: due ? 'A backup is due.' : every ? 'Not due yet.' : 'No reminders. Pick how often you want one.',
+          act: '<select id="ix-every" aria-label="Remind me every">' + [0, 1, 3, 7, 14, 30].map(function (d) { return '<option value="' + d + '"' + (every === d ? ' selected' : '') + '>' + (d ? 'Every ' + d + (d > 1 ? ' Days' : ' Day') : 'Never') + '</option>'; }).join('') + '</select>' }) + '</div>' +
         // (1.70.0) moved here from Telegram > Backups
         '<div id="ix-tgbk">' + ecCard(tgOn && n.bkEvery ? 'good' : '', ICON.send, 'Send Backups to Telegram', 'The whole site as one file, sent to your Telegram chat at your daily message hour. ' +
             (enc.set ? 'Locked like the files you download.' : 'Not locked: anyone who gets into your Telegram could open it.'),
@@ -255,7 +253,6 @@
           '<div id="ix-rsst"></div></div></details>' +
         '<p class="ix-note">Moving the site? Copy the whole folder: your data is in <code>site-data</code>.</p>';
       wireCloud(p, cl);
-      p.querySelector('#ix-tgset').onclick = function (e) { e.preventDefault(); if (tgOn) p.querySelector('#ix-tgbk').scrollIntoView({ block: 'center', behavior: 'smooth' }); else go('telegram/setup'); };
       bindImport(p);   // (1.72.0) the Import tab, once it is drawn
       var tgb = p.querySelector('#ix-tgbk');
       if (!tgOn) tgb.querySelector('#ix-tgsetup').onclick = function () { go('telegram/setup'); };

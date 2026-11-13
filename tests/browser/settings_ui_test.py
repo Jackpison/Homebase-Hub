@@ -152,6 +152,8 @@ try:
         pg.uncheck('[data-grp=site]')
         check('U23 turning Site off clears Settings, Telegram and Domain Watch', not pg.evaluate("[...document.querySelectorAll('[data-part=settings],[data-part=telegram],[data-part=watch]')].some(c => c.checked)") and pg.evaluate("document.querySelector('[data-part=links]').checked"))
         pg.check('[data-grp=site]')
+        hero = pg.evaluate("(() => { const h = document.querySelector('.ix-bkhero'); return [!!h, !!h && !!h.querySelector('#ix-exp'), !!document.querySelector('.ix-bkstat'), !!document.querySelector('.ix-rc #ix-every')]; })()")
+        check('U21b Back Up opens with one hero box (Download Backup inside) and the reminder as a row, no three-box strip (1.77.4)', hero == [True, True, False, True], hero)
         with pg.expect_download() as dl: pg.click('#ix-exp')
         fb = os.path.join(TMP, 'backup.json'); dl.value.save_as(fb); bk = json.load(open(fb))
         check('U24 Download Backup saves a full backup without Files', bk.get('format') == 'site-backup' and {'links', 'info', 'cards', 'tasks', 'settings'} <= set(bk.get('parts', {})) and 'files' not in bk.get('parts', {}), list(bk.get('parts', {})))

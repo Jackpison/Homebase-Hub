@@ -167,17 +167,15 @@
 #ix-page .ix-crx{width:30px!important;height:30px!important;border:0;background:none;cursor:pointer;font-size:15px}
 #ix-page .ix-crx:hover{color:var(--ix-accent-tx)!important;background:var(--ix-soft)}
 #ix-page .ix-crx[hidden]{display:grid!important;visibility:hidden}
-#ix-page .ix-bkstat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--ix-line);border-left:4px solid var(--ix-good);border-radius:14px;margin-bottom:14px;overflow:hidden}
-#ix-page .ix-bkstat.due{border-left-color:var(--ix-bad)}
-#ix-page .ix-bkstat>div{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-right:1px solid var(--ix-line);min-width:0}
-#ix-page .ix-bkstat>div:last-child{border-right:0}
-#ix-page .ix-bkstat small{font-size:12px;color:var(--ix-mu);font-weight:700}
-#ix-page .ix-bkstat b{font-size:17px;color:var(--ix-tx)}
-#ix-page .ix-bkstat.due>div:first-child b{color:var(--ix-bad)}
-#ix-page .ix-bkstat span{font-size:12.5px;color:var(--ix-mu2)}
-#ix-page .ix-bkstat select{height:32px;width:auto;margin:1px 0}
-#ix-page .ix-bkstat a{color:var(--ix-accent-tx)}
-@media (max-width:700px){#ix-page .ix-bkstat{grid-template-columns:1fr}#ix-page .ix-bkstat>div{border-right:0;border-bottom:1px solid var(--ix-line)}#ix-page .ix-bkstat>div:last-child{border-bottom:0}}
+#ix-page .ix-bkhero{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid var(--ix-line);border-left:4px solid var(--ix-good);border-radius:18px;background:var(--ix-s1);padding:16px 18px;margin-bottom:12px}
+#ix-page .ix-bkhero.due{border-left-color:var(--ix-bad)}
+#ix-page .ix-bkhero-i{flex:none;width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:#f97316;color:#fff}
+#ix-page .ix-bkhero-i svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#ix-page .ix-bkhero-t{display:flex;flex-direction:column;gap:2px;flex:1 1 260px;min-width:0}
+#ix-page .ix-bkhero-t b{font-size:17px;color:var(--ix-tx)}
+#ix-page .ix-bkhero-t span{font-size:13.5px;color:var(--ix-mu)}
+#ix-page .ix-bkhero-t em{font-style:normal;color:var(--ix-bad);font-weight:700}
+#ix-page .ix-bkhero-t small{font-size:12.5px;color:var(--ix-mu2)}
 #ix-page details.ix-acc{border:1px solid var(--ix-line);border-radius:14px;margin-bottom:10px;background:color-mix(in srgb,var(--ix-s2) 35%,transparent)}
 #ix-page details.ix-acc>summary{list-style:none;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:13px 40px 13px 16px;cursor:pointer;position:relative;border-radius:14px}
 #ix-page details.ix-acc>summary::-webkit-details-marker{display:none}
@@ -550,7 +548,7 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page label.ix-btn{cursor:pointer}
 #ix-page .ix-cgrp{border-radius:18px;padding:16px 18px 8px;background:var(--ix-s1);margin-top:14px}
 #ix-page .ix-cgrp h4{font-size:15px;font-weight:800}
-#ix-page .ix-bkstat,#ix-page .ix-wsite,#ix-page .ix-part{border-radius:16px;background:var(--ix-s1)}
+#ix-page .ix-wsite,#ix-page .ix-part{border-radius:16px;background:var(--ix-s1)}
 #ix-page .ix-hc{border-radius:16px;background:var(--ix-s1)}
 #ix-page .ix-status{border-radius:12px}
 #ix-page .ix-exts span{border-radius:999px}
@@ -589,8 +587,6 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 #ix-page .ix-how .ix-steps{display:block;padding:0;margin:10px 0 0}
 @media (max-width:600px){#ix-page .ix-ec .ix-seg{display:flex;width:100%;flex-wrap:nowrap}#ix-page .ix-ec .ix-seg button{flex:1;padding:10px 4px;font-size:13px;white-space:nowrap}}
 /* (1.61.0) Backup: one big button, and what to include folded away */
-#ix-page .ix-bkbig{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:6px 0 16px}
-#ix-page .ix-bkbig p{margin:0;color:var(--ix-mu)}
 #ix-page .ix-btn.ix-big{height:52px;padding:0 28px;font-size:16px}
 #ix-page .ix-more#ix-choose{margin:14px 0}
 #ix-page .ix-more#ix-choose>.ix-tg:first-of-type{margin-top:8px}
