@@ -6,7 +6,7 @@
   * a phone is never given the computers-only designs (their files are not even requested); Reduce Motion keeps to the designs that can stand still
     python3 tests/browser/designs_test.py build/site-update-X.Y.Z.zip [--full]     (Chromium only: it needs WebGL; port 8988)
 Every push runs the quick version (4 designs drawn, short phone and Reduce Motion loops: software-drawn designs are slow in CI); the monthly
-Scheduled checks run --full (all 15 drawn, longer loops)."""
+Weekly and monthly checks run --full (all 15 drawn, longer loops)."""
 import json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, until, page_errors, CSP_REPORTER

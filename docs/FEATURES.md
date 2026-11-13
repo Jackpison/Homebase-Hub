@@ -114,7 +114,7 @@ Names in **bold** are the names the screen shows.
 
 Not for the website's feature pages, but worth one line on the **About** or **Security** page:
 
-- [x] **Monthly maintenance:** GitHub updates the libraries inside Tools each month and opens a pull request; the owner merges it and publishes the release (`MAINTAINING.md`).
+- [x] **Update Tools libraries:** GitHub updates the libraries inside Tools each month and opens a pull request; the owner merges it and publishes the release (`MAINTAINING.md`).
 - [x] **The next PHP version** is tested every week, months before hosts offer it.
 - [x] **No surprise login box** (1.53.6): pressing the pencil right after a page opens waits for the server instead of asking for the password again.
 - [x] Safer fetching from other websites: one checked way for Home's photos and Links' icons (1.53.2).

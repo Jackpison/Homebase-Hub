@@ -25,7 +25,7 @@ jobs:
         run: |
           V=$(sed -n "s/^define('HUB', '\([^']*\)').*/\1/p" src/web/hub/core/lib/boot.php)
           if [ -z "$V" ] || [ "v$V" != "${GITHUB_REF_NAME}" ]; then
-            echo "::error title=Tag and version differ::The tag ${GITHUB_REF_NAME} does not match the version in the code (${V:-unknown}). Nothing was published. If a Monthly maintenance pull request is open, merge it first. Then delete this release and its tag on github.com and publish again with the tag v${V} or the merged version. See docs/MAINTAINING.md."
+            echo "::error title=Tag and version differ::The tag ${GITHUB_REF_NAME} does not match the version in the code (${V:-unknown}). Nothing was published. If an Update Tools libraries pull request is open, merge it first. Then delete this release and its tag on github.com and publish again with the tag v${V} or the merged version. See docs/MAINTAINING.md."
             exit 1
           fi
           echo "Tag ${GITHUB_REF_NAME} = HUB ${V}"

@@ -5,7 +5,7 @@ The versions are not written down in CI. They are worked out each time:
   first   the oldest PHP the site supports: HUB_MIN_PHP in src/web/hub/core/lib/boot.php
   last    the newest stable PHP: asked from php.net (releases/index.php?json), or, if php.net cannot be reached, the newest one boot.php knows
   between every minor version from the first to the last (8.3, 8.4, 8.5 today; 8.6 and so on the day they are released)
-  The coming version (still in development) is not tried here: the weekly Scheduled checks do that (scheduled.yml, job next-php) and open
+  The coming version (still in development) is not tried here: the weekly Weekly and monthly checks do that (scheduled.yml, job next-php) and open
   an issue on a break. CI tried it too until 2026-11; it installed one more PHP on every push for a warning nobody acted on.
 For each version it runs the PHP lint on every file in src/ and the unit tests (tests/unit/run.php) with that version's own php.
 

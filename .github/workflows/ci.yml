@@ -46,7 +46,7 @@ jobs:
             echo "- Everything else (docs-only changes skip it): $CODE"
             echo "- Server, Apache, nginx, Docker, install scripts (full run only): $SERVERS"
             echo "- Browser jobs: \`$MATRIX\` (a push runs the pages half; the tools and more halves join a run started by hand)"
-            echo "- The other browsers: weekly and monthly, in Scheduled checks, not here."
+            echo "- The other browsers: weekly and monthly, in Weekly and monthly checks, not here."
           } >> "$GITHUB_STEP_SUMMARY"
 
   quick:

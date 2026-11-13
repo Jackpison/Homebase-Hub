@@ -1,11 +1,11 @@
-name: Scheduled checks
+name: Weekly and monthly checks
 # The checks that run on a calendar, not on a push (one workflow since 2026-11; before, three):
 #   - every Monday (the weekly run): the bundled libraries and build tools against known security problems (issue "security"), the next PHP
 #     version's development build (issue "php"), the whole CI with the tools half of the browser tests (a push runs only the light set, see ci.yml),
 #     and the page and tools tests in WebKit (issue "browsers"; every iPhone browser uses WebKit);
 #   - the 1st of the month: the page tests in Firefox (issue "browsers") and the Animated Designs test in full, all 15 drawn (every push runs a quicker version);
 #   - 15 November: the yearly PHP support-dates checklist (issue "maintenance").
-# Each job runs only on its own schedule. By hand: Actions > Scheduled checks > Run workflow, and choose which check.
+# Each job runs only on its own schedule. By hand: Actions > Weekly and monthly checks > Run workflow, and choose which check.
 on:
   schedule:
     - cron: '17 6 * * 1'
@@ -125,7 +125,7 @@ jobs:
   firefox:
     if: github.event.schedule == '41 5 1 * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "firefox"]'), inputs.check))
     # CI tests Chromium on every push, and WebKit runs every Monday. On the 1st of the month the same page tests run in Firefox, so a bug only Firefox shows is
-    # found within a month. Start it by hand (Actions > Scheduled checks > Run workflow > firefox) before a release that touched the layout or a window.
+    # found within a month. Start it by hand (Actions > Weekly and monthly checks > Run workflow > firefox) before a release that touched the layout or a window.
     # On a failure it opens one issue labelled "browsers" (or comments on the open one). The site's own CI is not affected.
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -197,7 +197,7 @@ jobs:
   webkit:
     if: github.event.schedule == '31 4 * * 1' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "webkit"]'), inputs.check))
     # CI tests Chromium only. Every Monday the page and tools tests run in WebKit (every iPhone browser uses it), two at a time: with more it cancelled
-    # requests and missed timings on a busy runner (1.61.10). Start it by hand (Actions > Scheduled checks > Run workflow > webkit) before a release that
+    # requests and missed timings on a busy runner (1.61.10). Start it by hand (Actions > Weekly and monthly checks > Run workflow > webkit) before a release that
     # touched the layout, a window or anything a phone shows. On a failure it opens one issue labelled "browsers" (or comments on the open one). The site's own CI is not affected.
     runs-on: ubuntu-24.04
     timeout-minutes: 60

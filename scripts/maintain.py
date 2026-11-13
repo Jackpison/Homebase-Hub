@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Monthly maintenance (1.59): keeps the libraries inside Tools current, so the project keeps going with only a few clicks.
+"""Update Tools libraries (1.59): keeps the libraries inside Tools current, so the project keeps going with only a few clicks.
 The workflow .github/workflows/maintenance.yml runs it; a person can run the same steps by hand (see docs/MAINTAINING.md).
 
   python3 scripts/maintain.py plan          asks npm for newer versions of the libraries in tools-app/package.json.

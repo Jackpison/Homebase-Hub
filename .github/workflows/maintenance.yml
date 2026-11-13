@@ -1,5 +1,5 @@
-name: Monthly maintenance
-# Once a month (and on demand: Actions > Monthly maintenance > Run workflow) this keeps the libraries inside Tools current,
+name: Update Tools libraries
+# Once a month (and on demand: Actions > Update Tools libraries > Run workflow) this keeps the libraries inside Tools current,
 # so the project keeps going with a few clicks and no programmer (see docs/MAINTAINING.md):
 #   1. scripts/maintain.py plan asks npm for newer versions, within the same major version only (a new major is only listed);
 #   2. if there is something to update: rebuild Tools, raise the version by one patch, write the changelog, check it all;
@@ -72,7 +72,7 @@ jobs:
           {
             echo "> **Merge this first, then publish.** Version $NEXT is only on \`main\` once this is merged: a tag \`v$NEXT\` made before that is refused by the release."
             echo
-            echo "Monthly maintenance: version $NEXT."
+            echo "Update Tools libraries: version $NEXT."
             echo
             cat "$RUNNER_TEMP/plan.log"
             echo
@@ -83,7 +83,7 @@ jobs:
             echo
             echo "If CI is red: do not merge; open docs/MAINTAINING.md, section \"When something fails\"."
           } > "$RUNNER_TEMP/pr.md"
-          gh pr create --repo "$REPO" --base main --head "$BRANCH" --title "Monthly maintenance: $NEXT" --body-file "$RUNNER_TEMP/pr.md" || gh pr edit "$BRANCH" --repo "$REPO" --body-file "$RUNNER_TEMP/pr.md"
+          gh pr create --repo "$REPO" --base main --head "$BRANCH" --title "Update Tools libraries: $NEXT" --body-file "$RUNNER_TEMP/pr.md" || gh pr edit "$BRANCH" --repo "$REPO" --body-file "$RUNNER_TEMP/pr.md"
           gh workflow run ci.yml --repo "$REPO" --ref "$BRANCH"
       - name: Report a failure
         if: failure()
@@ -92,6 +92,6 @@ jobs:
           REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          gh label create maintenance --repo "$REPO" --color 0E8A16 --description "Monthly maintenance" 2>/dev/null || true
+          gh label create maintenance --repo "$REPO" --color 0E8A16 --description "Update Tools libraries" 2>/dev/null || true
           printf 'The monthly maintenance could not finish on %s. Nothing was changed on main.\n\nRun: %s\n\nIf the run says "GitHub Actions is not permitted to create or approve pull requests": Settings > Actions > General > Workflow permissions > tick "Allow GitHub Actions to create and approve pull requests" > Save, then run it again.\n\nSee docs/MAINTAINING.md, section "When something fails".\n' "$(date -u +%Y-%m-%d)" "$RUN_URL" > "$RUNNER_TEMP/body.md"
-          gh issue create --repo "$REPO" --title "Monthly maintenance failed" --label maintenance --body-file "$RUNNER_TEMP/body.md"
+          gh issue create --repo "$REPO" --title "Update Tools libraries failed" --label maintenance --body-file "$RUNNER_TEMP/body.md"
