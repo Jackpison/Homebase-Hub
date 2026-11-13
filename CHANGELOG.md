@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.77.3 | Telegram Setup in one box with two steps, and every Features row opens its page and its related settings |
 | 1.77.2 | A Logs section, always-visible Notifications with colourful icons, Overview folded into General, a timeline for Telegram Setup, a Files details panel with Select All, and a simpler Share Link window |
 | 1.77.1 | A Dropbox-style Files page, a Features showcase, a simpler Telegram setup, a Changelog tab, and the E key turns editing off again |
 | 1.77.0 | Cloud Backup: an encrypted copy of the site sent to a WebDAV folder, on a schedule |
@@ -149,6 +150,15 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.77.3
+
+### Settings
+
+- **Telegram › Setup** is one box with two steps: create your bot, then connect your chat and send a test. The schedule stays below it.
+- **Features**: each row has an **Open** link to its page, and each page's tab has **Related Settings** buttons that open the matching settings (Look and Colors for Home, Back Up and Export for Links, Encryption for Files, and so on).
 
 ---
 
