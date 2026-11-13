@@ -4,9 +4,10 @@ docs-only change. Prints "code=true|false", "app=true|false", "servers=true|fals
 app: the site, Tools or the visual check itself changed, so the "visual changes" report is worth making.
   python3 scripts/ci_changes.py            reads EVENT, BEFORE (push) and BASE (pull request) from the environment
 Docs: *.md files outside src/, except CHANGELOG.md (the release check reads it), and .github/ISSUE_TEMPLATE/.
-matrix: the browser jobs of CI. Every push runs the light set (the pages half, in Chromium and WebKit); the tools half joins it when Tools or the
+matrix: the browser jobs of CI. CI tests Chromium only. Every push runs the light set (the pages half); the tools half joins it when Tools or the
 Animated Designs changed, when a release is being prepared (the version and the changelog change together), on a manual run and when the changes
-cannot be listed. The daily run in scheduled.yml starts CI by hand, so every day the whole set runs too.
+cannot be listed. The weekly run in scheduled.yml starts CI by hand, so every week the whole set runs too. WebKit and Firefox run in scheduled.yml
+(WebKit every Monday, Firefox on the 1st), not here.
 website/** is not docs: the Pages workflow runs no tests, so CI's website test must."""
 import json, os, re, subprocess, sys
 
@@ -68,4 +69,4 @@ if __name__ == '__main__':
     print('code=%s' % ('true' if code else 'false'))
     print('app=%s' % ('true' if app_changed(files) else 'false'))
     print('servers=%s' % ('true' if servers_changed(files) else 'false'))
-    print('matrix=%s' % json.dumps({'browser': ['chromium', 'webkit'], 'part': browser_parts(files)}, separators=(',', ':')))
+    print('matrix=%s' % json.dumps({'browser': ['chromium'], 'part': browser_parts(files)}, separators=(',', ':')))

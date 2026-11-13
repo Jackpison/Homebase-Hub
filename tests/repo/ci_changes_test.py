@@ -41,6 +41,6 @@ check('X14 an ordinary push runs the light browser set: the pages half only', br
 check('X15 Tools, the Animated Designs, a release (version and changelog together), a manual run or any doubt add the tools half', all(browser_parts(f) == ['pages', 'tools'] for f in (['tools-app/src/main.js'], ['src/web/tools/index.html'], ['src/web/home/designs/orb.js'], ['src/web/home/designs-src/orb/Orb.jsx'], ['src/web/hub/core/lib/boot.php', 'CHANGELOG.md', 'README.md'], None, [])))
 check('X16 a version change without the changelog is not a release', browser_parts(['src/web/hub/core/lib/boot.php']) == ['pages'])
 mx = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'ci_changes.py')], cwd=ROOT, env=dict(os.environ, EVENT='workflow_dispatch'), capture_output=True, text=True).stdout.split('matrix=')[-1].strip()
-check('X17 the matrix line is JSON with both browsers and, on a manual run, both halves', json.loads(mx) == {'browser': ['chromium', 'webkit'], 'part': ['pages', 'tools']}, mx)
+check('X17 the matrix line is JSON with Chromium only (WebKit and Firefox run on a schedule) and, on a manual run, both halves', json.loads(mx) == {'browser': ['chromium'], 'part': ['pages', 'tools']}, mx)
 print('\n%d/%d passed' % (sum(res), len(res)))
 sys.exit(0 if all(res) else 1)

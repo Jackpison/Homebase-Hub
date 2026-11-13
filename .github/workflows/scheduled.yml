@@ -1,18 +1,18 @@
 name: Scheduled checks
 # The checks that run on a calendar, not on a push (one workflow since 2026-11; before, three):
-#   - every Monday: the bundled libraries and build tools against known security problems (issue "security"), and the next PHP
-#     version's development build (issue "php");
-#   - the 1st and 15th: the page tests in Firefox (issue "browsers");
-#   - every day: the whole CI, with the tools half of the browser tests (a push runs only the light set, see ci.yml);
-#   - the 1st of the month: the Animated Designs test in full, all 15 drawn (every push runs a quicker version; issue "browsers");
+#   - every Monday (the weekly run): the bundled libraries and build tools against known security problems (issue "security"), the next PHP
+#     version's development build (issue "php"), the whole CI with the tools half of the browser tests (a push runs only the light set, see ci.yml),
+#     and the page and tools tests in WebKit (issue "browsers"; every iPhone browser uses WebKit);
+#   - the 1st of the month: the page tests in Firefox (issue "browsers") and the Animated Designs test in full, all 15 drawn (every push runs a quicker version);
 #   - 15 November: the yearly PHP support-dates checklist (issue "maintenance").
 # Each job runs only on its own schedule. By hand: Actions > Scheduled checks > Run workflow, and choose which check.
 on:
   schedule:
     - cron: '17 6 * * 1'
-    - cron: '41 5 1,15 * *'
+    - cron: '31 4 * * 1'
+    - cron: '47 3 * * 1'
+    - cron: '41 5 1 * *'
     - cron: '23 6 1 * *'
-    - cron: '47 3 * * *'
     - cron: '0 8 15 11 *'
   workflow_dispatch:
     inputs:
@@ -20,7 +20,7 @@ on:
         description: Which check to run
         type: choice
         default: security
-        options: [security, next-php, firefox, designs, full-ci, php-reminder, all]
+        options: [security, next-php, webkit, firefox, designs, full-ci, php-reminder, all]
 permissions: {}
 concurrency:
   group: scheduled-${{ github.event.schedule || inputs.check }}
@@ -123,9 +123,9 @@ jobs:
           NUM=$(gh issue list --repo "$REPO" --state open --label php --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
           if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/php.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label php --body-file "$RUNNER_TEMP/php.md"; fi
   firefox:
-    if: github.event.schedule == '41 5 1,15 * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "firefox"]'), inputs.check))
-    # CI tests Chromium and WebKit on every push. On the 1st and 15th the same page tests run in Firefox, so a bug only Firefox shows is
-    # found within two weeks. Start it by hand (Actions > Scheduled checks > Run workflow > firefox) before a release that touched the layout or a window.
+    if: github.event.schedule == '41 5 1 * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "firefox"]'), inputs.check))
+    # CI tests Chromium on every push, and WebKit runs every Monday. On the 1st of the month the same page tests run in Firefox, so a bug only Firefox shows is
+    # found within a month. Start it by hand (Actions > Scheduled checks > Run workflow > firefox) before a release that touched the layout or a window.
     # On a failure it opens one issue labelled "browsers" (or comments on the open one). The site's own CI is not affected.
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -194,6 +194,90 @@ jobs:
           TITLE="Firefox browser tests failed"
           NUM=$(gh issue list --repo "$REPO" --state open --label browsers --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
           if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/browsers.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label browsers --body-file "$RUNNER_TEMP/browsers.md"; fi
+  webkit:
+    if: github.event.schedule == '31 4 * * 1' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "webkit"]'), inputs.check))
+    # CI tests Chromium only. Every Monday the page and tools tests run in WebKit (every iPhone browser uses it), two at a time: with more it cancelled
+    # requests and missed timings on a busy runner (1.61.10). Start it by hand (Actions > Scheduled checks > Run workflow > webkit) before a release that
+    # touched the layout, a window or anything a phone shows. On a failure it opens one issue labelled "browsers" (or comments on the open one). The site's own CI is not affected.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    name: browser tests (WebKit)
+    permissions:
+      contents: read   # check out the repo
+      issues: write    # open or comment on the "browsers" issue
+    env:
+      BROWSER: webkit   # the scripts read it from here, never pasted into the script text
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with: { php-version: '8.3', extensions: 'curl, zip, mbstring' }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: '24', cache: npm }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: tests/requirements.txt }
+      - name: npm packages
+        run: npm ci --ignore-scripts
+      - name: Python packages
+        run: pip install -r tests/requirements.txt
+      - name: Browser system packages from Ubuntu (up to 3 tries of 2 minutes)
+        timeout-minutes: 8
+        run: |
+          for i in 1 2 3; do
+            sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
+            echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
+            sudo killall -q apt-get dpkg || true; sleep 10
+          done
+          exit 1
+      - name: The browser
+        timeout-minutes: 10
+        run: python -m playwright install "$BROWSER"
+      - name: Build the zip and the website
+        run: python3 scripts/build.py && python3 scripts/make-site.py --no-guide
+      - name: The page and tools tests in this browser (two at a time; a failed one runs once more, alone)
+        run: |
+          set -o pipefail
+          python3 tests/lib/run_parallel.py --retry 1 -j 2 \
+            "pages|tests/browser/pages_test.py build/site-update-*.zip --browser webkit" \
+            "nav|tests/browser/nav_test.py build/site-update-*.zip --browser webkit" \
+            "accessibility|tests/browser/a11y_test.py build/site-update-*.zip --browser webkit" \
+            "search|tests/browser/search_test.py build/site-update-*.zip --browser webkit" \
+            "tasks more|tests/browser/tasks_more_test.py build/site-update-*.zip --browser webkit" \
+            "import center|tests/browser/importer_test.py build/site-update-*.zip --browser webkit" \
+            "settings ui|tests/browser/settings_ui_test.py build/site-update-*.zip --browser webkit" \
+            "import|tests/browser/import_test.py build/site-update-*.zip --browser webkit" \
+            "tools|tests/browser/tools_test.py build/site-update-*.zip --browser webkit" \
+            "website|tests/browser/website_test.py build/site --browser webkit" \
+            "encrypt|tests/browser/encrypt_test.py build/site-update-*.zip --browser webkit" \
+            "files|tests/browser/files_test.py build/site-update-*.zip --browser webkit" \
+            "lock|tests/browser/lock_test.py build/site-update-*.zip --browser webkit" \
+            "tabs lock|tests/browser/tabs_lock_test.py build/site-update-*.zip --browser webkit" \
+            "tabs kit|tests/browser/tabs_kit_test.py build/site-update-*.zip --browser webkit" \
+            "settings look|tests/browser/settings_look_test.py build/site-update-*.zip --browser webkit" \
+            "windows|tests/browser/windows_test.py build/site-update-*.zip --browser webkit" \
+            "polish|tests/browser/polish_test.py build/site-update-*.zip --browser webkit" 2>&1 | tee browsers.log
+      - name: Open or update the issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create browsers --repo "$REPO" --color 0E8A16 --description "Firefox and WebKit checks" 2>/dev/null || true
+          {
+            echo "The WebKit browser tests failed on $(date -u +%Y-%m-%d)."
+            echo
+            echo "Run: $RUN_URL"
+            echo
+            echo "Failing lines:"
+            echo
+            echo '```'
+            grep -E '^FAIL|Error|Traceback' browsers.log 2>/dev/null | tail -n 40 || echo "(no log)"
+            echo '```'
+          } > "$RUNNER_TEMP/browsers.md"
+          TITLE="WebKit browser tests failed"
+          NUM=$(gh issue list --repo "$REPO" --state open --label browsers --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
+          if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/browsers.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label browsers --body-file "$RUNNER_TEMP/browsers.md"; fi
   designs:
     if: github.event.schedule == '23 6 1 * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "designs"]'), inputs.check))
     # Every push runs a quick designs test (4 designs drawn). Once a month all 15 are drawn, with the long phone and Reduce Motion loops (the designs are drawn by software in CI, so it is slow).
@@ -260,12 +344,12 @@ jobs:
           NUM=$(gh issue list --repo "$REPO" --state open --label browsers --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
           if [ -n "$NUM" ]; then gh issue comment "$NUM" --repo "$REPO" --body-file "$RUNNER_TEMP/browsers.md"; else gh issue create --repo "$REPO" --title "$TITLE" --label browsers --body-file "$RUNNER_TEMP/browsers.md"; fi
   full-ci:
-    if: github.event.schedule == '47 3 * * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "full-ci"]'), inputs.check))
-    # A push runs the light browser set (the pages half). Every day CI is started by hand on main, which runs everything, the tools half too
+    if: github.event.schedule == '47 3 * * 1' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all", "full-ci"]'), inputs.check))
+    # A push runs the light browser set (the pages half). Every Monday CI is started by hand on main, which runs everything, the tools half too
     # (scripts/ci_changes.py: a manual run has no base to compare, so nothing is skipped). A red run shows in the Actions tab and the usual mail.
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    name: start the whole CI (daily)
+    name: start the whole CI (weekly)
     permissions:
       actions: write   # start the CI workflow
     steps:

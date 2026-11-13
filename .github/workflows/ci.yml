@@ -21,7 +21,7 @@ jobs:
     outputs:
       code: ${{ steps.c.outputs.code }}
       servers: ${{ steps.c.outputs.servers }}   # the server and web-server jobs only run when something they test changed (scripts/ci_changes.py)
-      matrix: ${{ steps.c.outputs.matrix }}   # the browser jobs: the pages half always; the tools half when it matters (scripts/ci_changes.py)
+      matrix: ${{ steps.c.outputs.matrix }}   # the browser jobs: Chromium; the pages half always, the tools half when it matters (scripts/ci_changes.py)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false, fetch-depth: 0 }
@@ -31,6 +31,23 @@ jobs:
           BEFORE: ${{ github.event.before }}
           BASE: ${{ github.event.pull_request.base.sha }}
         run: python3 scripts/ci_changes.py >> "$GITHUB_OUTPUT"
+      - name: What this run does (shown on the run's summary page)
+        env:
+          CODE: ${{ steps.c.outputs.code }}
+          SERVERS: ${{ steps.c.outputs.servers }}
+          MATRIX: ${{ steps.c.outputs.matrix }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          {
+            echo "### What this run does"
+            echo
+            echo "- Run started by: \`$EVENT\`"
+            echo "- Quick checks (lint, unit tests, repo checks, build): always"
+            echo "- Everything else (docs-only changes skip it): $CODE"
+            echo "- Server, Apache, nginx, Docker, install scripts: $SERVERS"
+            echo "- Browser jobs: \`$MATRIX\` (the tools half joins for Tools, the designs, a release, or a manual run)"
+            echo "- The other browsers: weekly and monthly, in Scheduled checks, not here."
+          } >> "$GITHUB_STEP_SUMMARY"
 
   build:
     runs-on: ubuntu-24.04
@@ -144,17 +161,17 @@ jobs:
   browsers:
     needs: changes
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
-    # Every page in a real browser: Chromium and WebKit (every iPhone browser uses it), each in two halves (pages, tools), side by side.
-    # A push runs the light set: the pages half only (two jobs, about 4 minutes). The tools half (Tools, Files, the designs, the slow-phone test) joins it when Tools or the
-    # Animated Designs changed, when a release is being prepared, and on a manual run; scheduled.yml starts that manual run every day, so the whole set is checked daily.
+    # Every page in a real browser: Chromium, in two halves (pages, tools), side by side. WebKit (every iPhone browser uses it) runs every Monday and Firefox on the
+    # 1st of the month, in scheduled.yml. A push runs the light set: the pages half only (one job, about 4 minutes). The tools half (Tools, Files, the designs, the slow-phone test) joins it when Tools or the
+    # Animated Designs changed, when a release is being prepared, and on a manual run; scheduled.yml starts that manual run every Monday, so the whole set is checked weekly.
     # Inside a half several tests run at the same time (tests/lib/run_parallel.py): each test has its own port and /tmp folder.
-    # Chromium runs three at once, WebKit two: with three, WebKit cancelled requests and missed timings on a busy runner (1.61.10).
-    # Only the slow-phone test runs alone, because it measures time. Firefox runs on the 1st and 15th in scheduled.yml. A failed batch test runs once more, alone (--retry 1): passing then, it shows as a 'flaky' warning.
+    # Chromium runs three at once (WebKit, in scheduled.yml, two: with three it cancelled requests and missed timings on a busy runner, 1.61.10).
+    # Only the slow-phone test runs alone, because it measures time. A failed batch test runs once more, alone (--retry 1): passing then, it shows as a 'flaky' warning.
     # Each job installs the browser's Ubuntu packages itself, so a stuck download holds one job, not all: the install tries three times.
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}   # browser: [chromium, webkit], part: [pages] or [pages, tools] (scripts/ci_changes.py)
+      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}   # browser: [chromium], part: [pages] or [pages, tools] (scripts/ci_changes.py)
     timeout-minutes: 25
     name: browser (${{ matrix.browser }}, ${{ matrix.part }})
     env:
@@ -210,18 +227,6 @@ jobs:
             "app|tests/browser/app_test.py build/site-update-*.zip" \
             "settings|tests/browser/settings_test.py build/site-update-*.zip" \
             "search|tests/browser/search_test.py build/site-update-*.zip --browser chromium"
-      - name: Pages half in WebKit (several tests at once)
-        if: matrix.browser == 'webkit' && matrix.part == 'pages' && steps.build.outcome == 'success'
-        run: |
-          python3 tests/lib/run_parallel.py --retry 1 -j 2 \
-            "pages webkit|tests/browser/pages_test.py build/site-update-*.zip --browser webkit" \
-            "nav webkit|tests/browser/nav_test.py build/site-update-*.zip --browser webkit" \
-            "accessibility webkit|tests/browser/a11y_test.py build/site-update-*.zip --browser webkit" \
-            "search webkit|tests/browser/search_test.py build/site-update-*.zip --browser webkit" \
-            "tasks more webkit|tests/browser/tasks_more_test.py build/site-update-*.zip --browser webkit" \
-            "import center webkit|tests/browser/importer_test.py build/site-update-*.zip --browser webkit" \
-            "settings ui webkit|tests/browser/settings_ui_test.py build/site-update-*.zip --browser webkit" \
-            "import webkit|tests/browser/import_test.py build/site-update-*.zip --browser webkit"
       - name: Tools half in Chromium (several tests at once, then the slow-phone test alone)
         if: matrix.browser == 'chromium' && matrix.part == 'tools' && steps.build.outcome == 'success'
         run: |
@@ -244,20 +249,6 @@ jobs:
             "import center|tests/browser/importer_test.py build/site-update-*.zip --browser chromium" || rc=1
           python3 tests/lib/run_parallel.py --retry 1 -j 1 "slow phone|tests/browser/speed_test.py build/site-update-*.zip" "designs|tests/browser/designs_test.py build/site-update-*.zip --browser chromium" || rc=1   # alone: the designs are drawn by software here and take the whole processor
           exit $rc
-      - name: Tools half in WebKit (several tests at once)
-        if: matrix.browser == 'webkit' && matrix.part == 'tools' && steps.build.outcome == 'success'
-        run: |
-          python3 tests/lib/run_parallel.py --retry 1 -j 2 \
-            "tools webkit|tests/browser/tools_test.py build/site-update-*.zip --browser webkit" \
-            "website webkit|tests/browser/website_test.py build/site --browser webkit" \
-            "encrypt webkit|tests/browser/encrypt_test.py build/site-update-*.zip --browser webkit" \
-            "files webkit|tests/browser/files_test.py build/site-update-*.zip --browser webkit" \
-            "lock webkit|tests/browser/lock_test.py build/site-update-*.zip --browser webkit" \
-            "tabs lock webkit|tests/browser/tabs_lock_test.py build/site-update-*.zip --browser webkit" \
-            "tabs kit webkit|tests/browser/tabs_kit_test.py build/site-update-*.zip --browser webkit" \
-            "settings look webkit|tests/browser/settings_look_test.py build/site-update-*.zip --browser webkit" \
-            "windows webkit|tests/browser/windows_test.py build/site-update-*.zip --browser webkit" \
-            "polish webkit|tests/browser/polish_test.py build/site-update-*.zip --browser webkit"
 
   apache:
     needs: changes
