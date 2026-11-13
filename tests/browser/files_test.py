@@ -177,6 +177,8 @@ try:
         pg.evaluate("document.getElementById('psets').click()"); pg.wait_for_selector('#dlim')
         fs = pg.evaluate("(() => { const d = document.getElementById('dlg'); const o = document.getElementById('donly'), sh = document.getElementById('dsh'); return [d.classList.contains('ix-sdlg'), !!d.querySelector('.ix-sh .ix-sx'), !!d.querySelector('.ix-sb'), o.checked, o.disabled, o.classList.contains('ix-sw'), sh.classList.contains('ix-sw'), d.querySelector('.ix-sh h2').textContent]; })()")
         check('B34b Files Settings is the shared Settings window: a close X, Only Me locked on, Share Links as a switch', fs == [True, True, True, True, True, True, True, 'Files Settings'], fs)
+        pg.click('#dform .limchips .chip:nth-child(3)')
+        check('B34a the usual sizes fill the limit (25 GB), with the free space shown below', pg.input_value('#dlim') == '25' and 'Free on the server' in pg.inner_text('#dlimn'), pg.inner_text('#dlimn'))
         pg.fill('#dlim', '0.00002'); pg.click('#dform .act .pri'); until(lambda: 'of 21' in pg.inner_text('#usage'), 10000)
         check('B34 Files Settings changes the limit (here about 21 KB), and the usage line follows', srv_items()[1]['settings']['limit'] == 21475 and 'of 21' in pg.inner_text('#usage'), pg.inner_text('#usage'))
         upload(pg, 'toobig.bin', os.urandom(60000)); until(lambda: 'full' in (pg.inner_text('#ups') or ''), 15000)

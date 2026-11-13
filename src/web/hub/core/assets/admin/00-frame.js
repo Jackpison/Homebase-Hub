@@ -61,7 +61,9 @@
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
     ['health', 'Health', ICON.pulse, 'Version, speed, errors, domains and a check of your server.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
     // (1.70.0) the Changelog is the What's New tab of Updates: one tab along the top, with Versions, Version Map and Notes below it
-    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Versions', 'What\'s New'], ['chmap', 'Version Map', 'What\'s New'], ['chnotes', 'Notes', 'What\'s New']], 'System Setting']];
+    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Versions', 'What\'s New'], ['chmap', 'Version Map', 'What\'s New'], ['chnotes', 'Notes', 'What\'s New']], 'System Setting'],
+    // (1.76.0) Features: what the site does, page by page, with the settings of each part (Files' work right there)
+    ['features', 'Features', ICON.grid, 'What the site does, page by page, and the settings of each part.', [['features', 'All'], ['ft-home', 'Home'], ['ft-links', 'Links'], ['ft-info', 'Info'], ['ft-cards', 'Cards'], ['ft-tasks', 'Tasks'], ['ft-files', 'Files'], ['ft-tools', 'Tools']], 'System Setting']];
   /* (1.66.0) the left panel in the "System tiles" look: a solid colour tile with a white icon for each section (icons from Lucide,
      lucide.dev, ISC licence: see web/hub/docs/THIRD-PARTY.md). [colour, the icon's SVG inside] */
   var SEC_TILE = {
@@ -72,6 +74,7 @@
     telegram: ['#0ea5e9', '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>'],
     backup: ['#f97316', '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="m9.5 14.5 2.5 2.5 2.5-2.5M12 11v6"/>'],
     health: ['#f43f5e', '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>'],
+    features: ['#f97316', '<path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.6L12 15.3 7 18.2l1.2-5.6L4 8.8l5.6-.6z"/>'],
     updates: ['#14b8a6', '<path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"/><path d="M12 21v-9M8 16l4-4 4 4"/>'],
   };
   var LOGOUT_ICON = '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>';
@@ -84,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
+  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -185,6 +188,7 @@
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'setup', 'keys keyboard hotkeys shortcut question mark help'], ['Install on Your Phone', 'setup', 'app home screen phone install add to home screen iphone android help'],
+    ['Features', 'features', 'what the site does pages home links info cards tasks files tools'], ['Storage Limit', 'ft-files', 'files space size quota gb custom disk'], ['Keep Deleted Files', 'ft-files', 'trash days bin'], ['Share Links', 'ft-files', 'files sharing off'],
     ['Guided Setup', 'setup', 'start here wizard steps protect'], ['Offline Reading', 'setup', 'offline airplane no connection internet read without cache device app'],
     ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'nav', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'nav', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],

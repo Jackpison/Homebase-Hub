@@ -853,23 +853,28 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-subseg button{border-radius:10px;padding:8px 16px}
 #ix-page .ix-subseg button[aria-selected="true"]{background:var(--ix-tx);color:var(--ix-bg);font-weight:600}
 
-/* (1.75.0) What's New as a timeline: a line down the left, a tick for versions you have passed, a filled dot for yours, a hollow one for newer ones;
-   the version, when, and under it what it brought */
-#ix-page .ix-tl{position:relative;max-width:var(--ix-cw);padding-left:6px}
-#ix-page .ix-tl::before{content:"";position:absolute;left:17px;top:18px;bottom:18px;width:2px;background:var(--ix-line)}
-#ix-page .ix-tl .ix-cl{border:0;border-radius:0;background:none;margin:0;overflow:visible}
-#ix-page .ix-tl .ix-cl>summary{padding:12px 40px 12px 40px;gap:4px 10px;align-items:baseline}
-#ix-page .ix-tl .ix-cl>summary:hover{background:none}
-#ix-page .ix-tl .ix-cl>summary::after{right:6px}
-#ix-page .ix-tl .ix-cl-m{position:absolute;left:5px;top:15px;width:24px;height:24px;border-radius:50%;background:var(--ix-bg);display:grid;place-items:center}
-#ix-page .ix-tl .ix-cl.done .ix-cl-m::before{content:"";width:6px;height:11px;border:solid var(--ix-tx);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
-#ix-page .ix-tl .ix-cl.now .ix-cl-m::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--ix-accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--ix-accent) 25%,transparent)}
-#ix-page .ix-tl .ix-cl.up .ix-cl-m::before{content:"";width:11px;height:11px;border-radius:50%;border:2px solid var(--ix-mu2)}
-#ix-page .ix-tl .ix-cl.up .ix-cl-v{color:var(--ix-mu)}
-#ix-page .ix-tl .ix-cl-v{font-size:15.5px;font-weight:700}
-#ix-page .ix-tl .ix-cl-date{font-size:13px}
-#ix-page .ix-tl .ix-cl-d{flex:1 1 100%;order:3;font-size:14px;color:var(--ix-mu)}
-#ix-page .ix-tl .ix-cl-b{margin:2px 0 8px 40px;padding:4px 18px 14px;border:1px solid var(--ix-line);border-radius:14px;background:var(--ix-s1)}
+/* (1.76.0) What's New: the version you have on top, filter chips, then the versions grouped by series (1.75, 1.74…), one line each */
+#ix-page .ix-clhero .ix-btn{flex:none}
+#ix-page .ix-clchips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px;max-width:var(--ix-cw)}
+#ix-page .ix-fchip{height:34px;padding:0 15px;border-radius:999px;border:1px solid var(--ix-line);background:var(--ix-s1);color:var(--ix-mu);font:600 13px var(--ix-font);cursor:pointer}
+#ix-page .ix-fchip:hover{color:var(--ix-tx)}
+#ix-page .ix-fchip.on{background:var(--ix-tx);color:var(--ix-bg);border-color:var(--ix-tx)}
+#ix-page .ix-cg{border:1px solid var(--ix-line);border-radius:18px;background:var(--ix-s1);margin:0 0 10px;max-width:var(--ix-cw);overflow:hidden}
+#ix-page .ix-cg>summary{list-style:none;display:flex;gap:12px;align-items:baseline;padding:14px 46px 14px 20px;cursor:pointer;position:relative}
+#ix-page .ix-cg>summary::-webkit-details-marker{display:none}
+#ix-page .ix-cg>summary::after{content:"";position:absolute;right:22px;top:50%;width:8px;height:8px;margin-top:-6px;border-right:2px solid var(--ix-mu);border-bottom:2px solid var(--ix-mu);transform:rotate(45deg);transition:transform .15s}
+#ix-page .ix-cg[open]>summary::after{transform:rotate(-135deg);margin-top:-2px}
+#ix-page .ix-cg-v{font-size:17px;font-weight:800}
+#ix-page .ix-cg-n{font-size:12.5px;color:var(--ix-mu2)}
+#ix-page .ix-cg-b{padding:0 20px 8px}
+#ix-page .ix-cg .ix-cl{border:0;border-top:1px solid var(--ix-line);border-radius:0;background:none;margin:0;max-width:none;overflow:visible}
+#ix-page .ix-cg .ix-cl>summary{padding:11px 30px 11px 0;gap:4px 10px;align-items:baseline}
+#ix-page .ix-cg .ix-cl>summary::after{right:4px}
+#ix-page .ix-cg .ix-cl>summary:hover{background:none}
+#ix-page .ix-cg .ix-cl-v{min-width:56px}
+#ix-page .ix-cl-tag{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:7px;background:color-mix(in srgb,var(--ix-accent) 16%,transparent);color:var(--ix-accent)}
+#ix-page .ix-cg .ix-cl-d{flex:1 1 220px}
+#ix-page .ix-cg .ix-cl-b{margin:0 0 10px;padding:4px 18px 14px;border:1px solid var(--ix-line);border-radius:14px;background:var(--ix-bg)}
 
 /* (1.75.0) the small boxes (Security tiles, Overview cards): a soft top light, a lift and an accent edge on hover, an even rhythm */
 #ix-page .ix-tile,#ix-page .ix-oc{border-radius:18px;background:linear-gradient(180deg,color-mix(in srgb,var(--ix-tx) 4%,var(--ix-s1)),var(--ix-s1));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ix-tx) 7%,transparent);transition:border-color .18s,transform .18s,box-shadow .18s,background .18s}
@@ -935,3 +940,36 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-ec.ix-new{padding:18px 22px}
 #ix-page .ix-bb>.ix-btn{margin-top:auto;align-self:flex-start}
 #ix-page .ix-bb .ix-bbar+.ix-btn{margin-top:14px}
+
+/* (1.76.0) Features: a card for each page, and for each page a header, its tags, and its settings */
+#ix-page .ix-fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:var(--ix-cw)}
+#ix-page .ix-fcard{text-align:left;display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:20px;border:1px solid var(--ix-line);background:var(--ix-s1);color:var(--ix-tx);font:inherit;cursor:pointer;transition:transform .15s,border-color .15s}
+#ix-page .ix-fcard:hover{transform:translateY(-2px);border-color:var(--ix-line2)}
+#ix-page .ix-fcard-h{display:flex;gap:12px;align-items:center}
+#ix-page .ix-fcard-h b{flex:1;font-size:16px}
+#ix-page .ix-fcard-p{color:var(--ix-mu);font-size:13.5px;line-height:1.5}
+#ix-page .ix-fcard-m{color:var(--ix-mu2);font-size:12.5px;margin-top:auto}
+#ix-page .ix-fhero-i{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff}
+#ix-page .ix-fhero-i svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#ix-page .ix-fhero{display:flex;gap:16px;align-items:center;padding:20px 22px;border-radius:22px;border:1px solid var(--ix-line);background:var(--ix-s1);max-width:var(--ix-cw);margin:0 0 12px}
+#ix-page .ix-fhero .ix-fhero-i{width:54px;height:54px;border-radius:16px}
+#ix-page .ix-fhero .ix-fhero-i svg{width:26px;height:26px}
+#ix-page .ix-fhero-t{flex:1;min-width:0}
+#ix-page .ix-fhero-h{font-size:20px;font-weight:800}
+#ix-page .ix-fhero-t p{margin:4px 0 0;color:var(--ix-mu);font-size:14px}
+#ix-page .ix-ftags{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;max-width:var(--ix-cw)}
+#ix-page .ix-frow{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--ix-line)}
+#ix-page .ix-frow:first-child{border-top:0}
+#ix-page .ix-frow small{display:block;color:var(--ix-mu);font-size:12.5px}
+#ix-page .ix-fused{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin:0 0 8px}
+#ix-page .ix-fused small{color:var(--ix-mu)}
+#ix-page .ix-fbar{height:10px;border-radius:5px;background:var(--ix-s3);overflow:hidden;margin:0 0 16px}
+#ix-page .ix-fbar i{display:block;height:100%;background:var(--ix-accent);border-radius:5px;transition:width .2s}
+#ix-page .ix-fchips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+#ix-page .ix-fchips .ix-fchip{height:34px;padding:0 15px;border-radius:999px;border:1px solid var(--ix-line);background:var(--ix-s1);color:var(--ix-mu);font:600 13px var(--ix-font);cursor:pointer}
+#ix-page .ix-fchips .ix-fchip[aria-pressed=true]{background:var(--ix-tx);color:var(--ix-bg);border-color:var(--ix-tx)}
+#ix-page .ix-frow2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#ix-page .ix-frow2 input{width:130px!important;flex:none}
+#ix-page .ix-frow2 select,#ix-page .ix-frow select{width:auto!important;flex:none;min-width:96px}
+#ix-page .ix-fnote{display:block;margin-top:10px;color:var(--ix-mu);font-size:12.5px;line-height:1.5}
+@media (max-width:600px){#ix-page .ix-fhero{flex-wrap:wrap}}

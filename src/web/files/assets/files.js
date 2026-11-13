@@ -722,8 +722,33 @@ async function shareBox(i) {
 }
 
 /* ---------- settings ---------- */
+/** (1.76.0) A storage limit chosen from sizes or typed in: the number, its unit (MB, GB, TB), chips for the usual sizes, and what the server has left. */
+const LIM_UNITS = { MB: 1048576, GB: 1073741824, TB: 1099511627776 };
+function limitControl(bytes) {
+  const unit = bytes >= LIM_UNITS.TB && bytes % LIM_UNITS.TB === 0 ? "TB" : "GB";
+  const num = h("input", { type: "number", id: "dlim", class: "num", min: "0", step: "any", value: bytes ? +(bytes / LIM_UNITS[unit]).toFixed(3) : 0, "aria-label": "Storage limit" });
+  const sel = h("select", { id: "dlimu", "aria-label": "Unit" }, Object.keys(LIM_UNITS).map(u => h("option", { value: u, selected: u === unit, text: u })));
+  const note = h("small", { id: "dlimn", class: "limn" });
+  const chips = h("div", { class: "limchips", role: "group", "aria-label": "Usual sizes" });
+  const value = () => Math.round(Math.max(0, +num.value || 0) * LIM_UNITS[sel.value]);
+  const paint = () => {
+    const v = value(), free = D.free, used = D.usage;
+    for (const c of chips.children) c.setAttribute("aria-pressed", String(+c.dataset.b === v));
+    let t = "Used now: " + fmt(used) + (free != null ? ". Free on the server: " + fmt(free) + "." : ".");
+    if (v && v < used) t += " That is less than you use now, so new uploads stop until you free some space.";
+    else if (v && free != null && v > used + free) t += " That is more than the server has room for, so the server's free space limits you first.";
+    else if (!v) t += " No limit: only the server's free space limits you.";
+    note.textContent = t;
+  };
+  /** @type {[string, number][]} */ const sizes = [["5 GB", 5], ["10 GB", 10], ["25 GB", 25], ["50 GB", 50], ["100 GB", 100], ["No Limit", 0]];
+  for (const [name, b] of sizes) {
+    chips.append(h("button", { type: "button", class: "chip", "data-b": String(b * LIM_UNITS.GB), "aria-pressed": "false", text: name, onclick: () => { sel.value = "GB"; num.value = String(b); paint(); } }));
+  }
+  num.oninput = sel.onchange = paint; paint();
+  return { num, sel, chips, note, value };
+}
 async function settingsBox() {
-  const s = D.settings, lim = h("input", { type: "number", id: "dlim", class: "num", min: "0", step: "0.5", value: s.limit ? +(s.limit / 1073741824).toFixed(2) : 0, "aria-label": "Storage limit in GB" });
+  const s = D.settings, lc = limitControl(s.limit || 0);
   const sh = h("input", { type: "checkbox", id: "dsh", class: "ix-sw", checked: !!s.shares }), only = h("input", { type: "checkbox", id: "donly", class: "ix-sw", checked: true, disabled: true });
   const td = h("select", { id: "dtd", "aria-label": "Keep Trash" }, [7, 14, 30, 60, 90].map(d => h("option", { value: d, selected: d === s.trashDays, text: d + " days" })));
   const row = (id, name, help, ctl) => h("div", { class: "ix-srow" }, h("label", { for: id }, name, h("small", { text: help })), ctl);
@@ -731,13 +756,14 @@ async function settingsBox() {
     h("h3", { text: "Privacy" }),
     row("donly", "Only Me", "Always on for Files.", only),
     h("h3", { text: "Storage" }),
-    row("dlim", "Storage Limit", "In GB. 0 means no limit.", lim),
+    h("div", { class: "ix-srow lim" }, h("label", { for: "dlim" }, "Storage Limit", h("small", { text: "Pick a size or type your own. 0 means no limit." })), lc.num, lc.sel),
+    h("div", { class: "limx" }, lc.chips, lc.note),
     h("h3", { text: "Sharing" }),
     row("dsh", "Share Links", "Off ends every link.", sh),
     h("h3", { text: "Trash" }),
     row("dtd", "Keep in Trash", "Then it is deleted for good.", td)
   ], [cancelBtn, { text: "Save Settings", pri: true, run: async () => {
-    const j = await post("settings", { settings: { limit: Math.round(Math.max(0, +lim.value || 0) * 1073741824), shares: sh.checked, trashDays: +td.value } });
+    const j = await post("settings", { settings: { limit: lc.value(), shares: sh.checked, trashDays: +td.value } });
     if (!j.ok) { derr(j.error); return false; }
     await refresh(); toast("Saved.");
   } }], { frame: true, rows: true });

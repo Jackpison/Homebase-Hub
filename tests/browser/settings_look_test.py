@@ -145,6 +145,20 @@ try:
         gap = pg.evaluate("(() => { const s = document.querySelector('#ix-pc .ix-row .ix-seg'), b = [...document.querySelectorAll('#ix-pc .ix-row button')].find(x => /^Reset/.test(x.textContent)); return Math.round(b.getBoundingClientRect().left - s.getBoundingClientRect().right); })()")
         check('L20 Colors: Reset sits next to the Dark/Light choice', 0 <= gap <= 30, gap)
 
+        # ---- 1.76.0: What's New in series, Features, the storage limit ----
+        pg.goto(s.base + '/web/settings/#changelog'); wait_js(pg, "!!document.querySelector('#ix-cll details.ix-cg')", 20000)
+        cg = pg.evaluate("(() => [document.querySelectorAll('#ix-cll details.ix-cg').length, document.querySelectorAll('#ix-cll details.ix-cg[open]').length, document.querySelectorAll('.ix-fchip').length, !!document.querySelector('.ix-clhero')])()")
+        check('L27 What\'s New: versions grouped by series (only the one you have is open), filter chips and the version you have on top', cg[0] > 1 and cg[1] == 1 and cg[2] == 6 and cg[3], cg)
+        pg.click('.ix-fchip[data-t=Fixes]'); pg.wait_for_timeout(200)
+        fx = pg.evaluate("(() => [...document.querySelectorAll('#ix-cll details.ix-cl')].filter(d => !d.hidden).length)()")
+        check('L27b the Fixes chip hides the versions that fixed nothing', 0 < fx < pg.evaluate("document.querySelectorAll('#ix-cll details.ix-cl').length"), fx)
+        pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-fcard').length === 7", 20000)
+        check('L28 Features: a card for each of the seven pages, and a tab for each', pg.evaluate("document.querySelectorAll('#ix-pane .ix-subt [data-sub]').length") == 8)
+        pg.goto(s.base + '/web/settings/#ft-files'); wait_js(pg, "!!document.getElementById('ix-flnum')", 20000)
+        pg.click('#ix-flch [data-b]:nth-child(3)'); pg.fill('#ix-flnum', '1.5'); pg.select_option('#ix-flun', 'TB'); pg.click('#ix-flsave')
+        until(lambda: pg.evaluate("fetch('../files/api.php?action=list').then(r => r.json()).then(j => j.settings.limit)") == 1649267441664, 10000)
+        check('L29 Features > Files: a custom size (1.5 TB) is saved as the Files storage limit', True)
+
         # ---- Files: the grid ----
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
         pg.set_input_files('#pick', [{'name': 'red.png', 'mimeType': 'image/png', 'buffer': png((220, 40, 40))}])

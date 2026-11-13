@@ -271,3 +271,10 @@ html[data-ix-nav="side"] .fdet{top:16px}
 .none.zone .btn{margin-top:4px}
 .fside .usage{margin:auto 8px 8px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--box)}
 .row:hover{background:color-mix(in srgb,var(--fg) 4%,transparent)}
+
+/* (1.76.0) the storage limit: usual sizes as chips, the number and its unit, what is left on the server */
+#dlg .limx{padding:0 0 10px}
+#dlg .limchips{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 8px}
+#dlg .limchips .chip{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--ix-line);background:var(--ix-s1);color:var(--ix-mu);font:600 13px inherit;cursor:pointer}
+#dlg .limchips .chip[aria-pressed=true]{background:var(--ix-tx);color:var(--ix-bg);border-color:var(--ix-tx)}
+#dlg .limn{display:block;color:var(--ix-mu);font-size:12.5px;line-height:1.45}

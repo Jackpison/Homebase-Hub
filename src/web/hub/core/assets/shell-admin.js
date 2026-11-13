@@ -61,7 +61,9 @@
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
     ['health', 'Health', ICON.pulse, 'Version, speed, errors, domains and a check of your server.', [['health', 'Overview'], ['domains', 'Domains and Uptime'], ['check', 'Server Check']], 'System Setting'],
     // (1.70.0) the Changelog is the What's New tab of Updates: one tab along the top, with Versions, Version Map and Notes below it
-    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Versions', 'What\'s New'], ['chmap', 'Version Map', 'What\'s New'], ['chnotes', 'Notes', 'What\'s New']], 'System Setting']];
+    ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Versions', 'What\'s New'], ['chmap', 'Version Map', 'What\'s New'], ['chnotes', 'Notes', 'What\'s New']], 'System Setting'],
+    // (1.76.0) Features: what the site does, page by page, with the settings of each part (Files' work right there)
+    ['features', 'Features', ICON.grid, 'What the site does, page by page, and the settings of each part.', [['features', 'All'], ['ft-home', 'Home'], ['ft-links', 'Links'], ['ft-info', 'Info'], ['ft-cards', 'Cards'], ['ft-tasks', 'Tasks'], ['ft-files', 'Files'], ['ft-tools', 'Tools']], 'System Setting']];
   /* (1.66.0) the left panel in the "System tiles" look: a solid colour tile with a white icon for each section (icons from Lucide,
      lucide.dev, ISC licence: see web/hub/docs/THIRD-PARTY.md). [colour, the icon's SVG inside] */
   var SEC_TILE = {
@@ -72,6 +74,7 @@
     telegram: ['#0ea5e9', '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>'],
     backup: ['#f97316', '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="m9.5 14.5 2.5 2.5 2.5-2.5M12 11v6"/>'],
     health: ['#f43f5e', '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>'],
+    features: ['#f97316', '<path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.6L12 15.3 7 18.2l1.2-5.6L4 8.8l5.6-.6z"/>'],
     updates: ['#14b8a6', '<path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"/><path d="M12 21v-9M8 16l4-4 4 4"/>'],
   };
   var LOGOUT_ICON = '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>';
@@ -84,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes };
+  var PANES = { overview: pOverview, setup: pStart, general: pGeneral, nav: pNav, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, domains: pDomains, check: pCheck, changelog: pChangelog, chmap: pChMap, chnotes: pChNotes, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -185,6 +188,7 @@
   /* Search Settings: type a word ("passphrase", "cron", "font") and jump to the place for it. "/" focuses the box. */
   var SEARCH = [
     ['Site Name', 'general', 'title brand called'], ['Site Logo', 'general', 'icon favicon image picture'], ['Time Zone', 'general', 'timezone clock hour'], ['Keyboard Shortcuts', 'setup', 'keys keyboard hotkeys shortcut question mark help'], ['Install on Your Phone', 'setup', 'app home screen phone install add to home screen iphone android help'],
+    ['Features', 'features', 'what the site does pages home links info cards tasks files tools'], ['Storage Limit', 'ft-files', 'files space size quota gb custom disk'], ['Keep Deleted Files', 'ft-files', 'trash days bin'], ['Share Links', 'ft-files', 'files sharing off'],
     ['Guided Setup', 'setup', 'start here wizard steps protect'], ['Offline Reading', 'setup', 'offline airplane no connection internet read without cache device app'],
     ['Navigation Style', 'nav', 'top bar sidebar dock menu rail pill bottom navigation'], ['Show the Bar on the Home Page', 'nav', 'home start page corner bar'], ['Hide the Bar While Scrolling', 'nav', 'auto hide slide away stay put fixed scroll dock shrink bar'], ['Bar Glass', 'glass', 'glass bend frost tint fringe saturation refraction transparent'], ['Rename, Reorder or Hide Tabs', 'nav', 'tabs pages names order navigation'],
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],
@@ -1569,43 +1573,74 @@
     });
   }
   function clFail(p) { return function (e) { p.innerHTML = '<div class="ix-empty"><span class="ix-empty-i">' + svg(ICON.warn) + '</span><b>Could Not Load the Changelog</b><p>' + esc(e && e.message || 'Can\'t reach the server.') + '</p></div>'; }; }
+  // (1.76.0) tags for a version, from its ### headings: New, Fixes, or the heading itself (Settings, Files, Security…)
+  var CLTAGS = ['New', 'Fixes', 'Settings', 'Files', 'Security'];
+  function clTags(e) {
+    var seen = [], out = [];
+    String(e.body).split('\n').forEach(function (ln) {
+      var m = /^### (.+)$/.exec(ln); if (!m) return;
+      var t = m[1].trim(); if (/^(added|new)\b/i.test(t)) t = 'New'; else if (/^fix/i.test(t)) t = 'Fixes';
+      if (seen.indexOf(t) < 0) { seen.push(t); out.push(t); }
+    });
+    return out;
+  }
+  function clDay(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); if (!m) return ''; return +m[3] + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+m[2] - 1]; }
   function pChangelog(p) {
     p.innerHTML = spinRow('Reading the changelog…');
     clLoad().then(function (cl) {
-      var cur = cl.version, shown = cl.entries;
-      p.innerHTML = '<div class="ix-hero"><span class="ix-hero-i good">' + svg(ICON.log) + '</span><div class="ix-hero-t"><div class="ix-hero-h">You Have Version ' + esc(cur) + '</div>' +
-          '<p>' + cl.entries.length + ' versions are written down here, newest first. Open one to see what changed.</p></div></div>' +
+      var cur = cl.version, shown = cl.entries, now = shown.filter(function (x) { return x.ver === cur; })[0] || shown[0];
+      var groups = [], gi = {};
+      shown.forEach(function (e, i) {
+        var k = e.ver.split('.').slice(0, 2).join('.'); if (!(k in gi)) { gi[k] = groups.length; groups.push({ k: k, rows: [] }); }
+        groups[gi[k]].rows.push(i);
+      });
+      var curKey = now ? now.ver.split('.').slice(0, 2).join('.') : '';
+      var row = function (e, i) {
+        return '<details class="ix-cl" data-i="' + i + '"><summary><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
+          (e.ver === cur ? '<span class="ix-pill good">Installed</span>' : '') +
+          clTags(e).slice(0, 3).map(function (t) { return '<span class="ix-cl-tag">' + esc(t) + '</span>'; }).join('') +
+          (e.date ? '<span class="ix-cl-date">' + esc(clDay(e.date)) + '</span>' : '') +
+          '<span class="ix-cl-d">' + mdInline(e.summary || e.label || '') + '</span></summary><div class="ix-cl-b ix-md"></div></details>';
+      };
+      p.innerHTML = (now ? '<div class="ix-hero ix-clhero"><span class="ix-hero-i good">' + svg(ICON.log) + '</span><div class="ix-hero-t"><div class="ix-hero-h">You Have Version ' + esc(cur) + '</div>' +
+          '<p>' + mdInline(now.summary || now.label || 'Read what is in this version.') + '</p></div><button type="button" class="ix-btn pri" id="ix-clnow">Read the Notes</button></div>' : '') +
         '<div class="ix-cl-bar"><div class="ix-cl-search">' + svg(ICON.search) + '<input type="search" id="ix-clq" placeholder="Search the Changelog" aria-label="Search the Changelog" autocomplete="off" spellcheck="false"></div>' +
           '<button type="button" class="ix-btn" id="ix-clall">Expand All</button><button type="button" class="ix-btn" id="ix-clnone">Collapse All</button></div>' +
+        '<div class="ix-clchips" role="group" aria-label="Filter by kind"><button type="button" class="ix-fchip on" data-t="">All</button>' +
+          CLTAGS.map(function (t) { return '<button type="button" class="ix-fchip" data-t="' + t + '">' + t + '</button>'; }).join('') + '</div>' +
         '<div class="ix-pcount" id="ix-clcount" aria-live="polite"></div>' +
-        '<div id="ix-cll" class="ix-tl">' + shown.map(function (e, i) {
-          var ci = shown.findIndex(function (x) { return x.ver === cur; }), st = ci < 0 || i > ci ? 'done' : i === ci ? 'now' : 'up';   // (1.75.0) a timeline: newer than yours (not yet), yours, and the ones you have passed
-          return '<details class="ix-cl ' + st + '" data-i="' + i + '"' + (i === 0 ? ' open' : '') + '><summary><i class="ix-cl-m" aria-hidden="true"></i><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
-            (e.ver === cur ? '<span class="ix-pill good">Installed</span>' : '') + (e.date ? '<span class="ix-cl-date">' + esc(e.date) + '</span>' : '') +
-            '<span class="ix-cl-d">' + mdInline(e.summary || e.label || '') + '</span></summary><div class="ix-cl-b ix-md"></div></details>'; }).join('') + '</div>' +
+        '<div id="ix-cll">' + groups.map(function (g) {
+          var first = shown[g.rows[0]];
+          return '<details class="ix-cg" data-k="' + g.k + '"' + (g.k === curKey ? ' open' : '') + '><summary><span class="ix-cg-v">' + esc(g.k) + '</span><span class="ix-cg-n">' + g.rows.length + (g.rows.length === 1 ? ' version' : ' versions') +
+            (first.date ? ' · ' + esc(clDay(first.date)) + ' ' + first.date.slice(0, 4) : '') + '</span></summary><div class="ix-cg-b">' + g.rows.map(function (i) { return row(shown[i], i); }).join('') + '</div></details>';
+        }).join('') + '</div>' +
         '<p class="ix-note ix-pnone" id="ix-clnone2" hidden>Nothing in the changelog matches that. Try a shorter word.</p>';
-      var rows = [].slice.call(p.querySelectorAll('details.ix-cl'));
+      var rows = [].slice.call(p.querySelectorAll('details.ix-cl')), grps = [].slice.call(p.querySelectorAll('details.ix-cg')), kind = '';
       var fill = function (d) { var b = d.querySelector('.ix-cl-b'); if (!b.dataset.done) { b.innerHTML = mdBlocks(shown[+d.dataset.i].body); b.dataset.done = '1'; } };
-      rows.forEach(function (d) { d.addEventListener('toggle', function () { if (d.open) fill(d); }); if (d.open) fill(d); });
+      rows.forEach(function (d) { d.addEventListener('toggle', function () { if (d.open) fill(d); }); });
       var q = p.querySelector('#ix-clq');
       var filter = function () {
-        var t = q.value.trim().toLowerCase(), n = 0;
+        var t = q.value.trim().toLowerCase(), n = 0, narrowed = !!(t || kind);
         rows.forEach(function (d) {
-          var e = shown[+d.dataset.i], hit = !t || (e.title + ' ' + e.summary + ' ' + e.body).toLowerCase().indexOf(t) >= 0;
+          var e = shown[+d.dataset.i], tags = clTags(e), hit = (!t || (e.title + ' ' + e.summary + ' ' + e.body).toLowerCase().indexOf(t) >= 0) && (!kind || tags.indexOf(kind) >= 0);
           d.hidden = !hit; if (hit) n++;
           if (t && hit && n <= 6) { d.open = true; fill(d); }
         });
-        p.querySelector('#ix-clcount').textContent = t ? n + ' of ' + rows.length + ' versions match' : '';
+        grps.forEach(function (g) { var any = [].some.call(g.querySelectorAll('details.ix-cl'), function (d) { return !d.hidden; }); g.hidden = !any; if (narrowed && any) g.open = true; });
+        p.querySelector('#ix-clcount').textContent = narrowed ? n + ' of ' + rows.length + ' versions match' : '';
         p.querySelector('#ix-clnone2').hidden = n > 0;
       };
       q.oninput = filter;
-      p.querySelector('#ix-clall').onclick = function () { rows.forEach(function (d) { if (!d.hidden) d.open = true; }); };
-      p.querySelector('#ix-clnone').onclick = function () { rows.forEach(function (d) { d.open = false; }); };
-      if (CLWANT) {                                                   // sent here from the Version Map
-        var want = CLWANT; CLWANT = '';
+      [].forEach.call(p.querySelectorAll('.ix-fchip'), function (c) { c.onclick = function () { kind = c.dataset.t; [].forEach.call(p.querySelectorAll('.ix-fchip'), function (x) { x.classList.toggle('on', x === c); }); filter(); }; });
+      p.querySelector('#ix-clall').onclick = function () { grps.forEach(function (g) { if (!g.hidden) g.open = true; }); rows.forEach(function (d) { if (!d.hidden) { d.open = true; fill(d); } }); };
+      p.querySelector('#ix-clnone').onclick = function () { rows.forEach(function (d) { d.open = false; }); grps.forEach(function (g) { g.open = false; }); };
+      var reveal = function (want) {
         var hit = rows.filter(function (d) { return shown[+d.dataset.i].ver === want; })[0] || rows.filter(function (d) { return shown[+d.dataset.i].ver.indexOf(want) === 0; })[0];
-        if (hit) { hit.open = true; fill(hit); setTimeout(function () { hit.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60); }
-      }
+        if (!hit) return; hit.closest('details.ix-cg').open = true; hit.open = true; fill(hit);
+        setTimeout(function () { hit.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60);
+      };
+      var nb = p.querySelector('#ix-clnow'); if (nb) nb.onclick = function () { reveal(now.ver); };
+      if (CLWANT) { var want = CLWANT; CLWANT = ''; reveal(want); }          // sent here from the Version Map
     }).catch(clFail(p));
   }
   function pChMap(p) {
@@ -1629,6 +1664,99 @@
     }).catch(clFail(p));
   }
 
+  /* ---------- Features (1.76.0): what the site does, page by page, and the settings of each part, in one place ----------
+     Files' settings (storage limit, Trash, share links, view) work right here. The other pages say where theirs are. */
+  var FEATS = [
+    { id: 'home', name: 'Home', c: '#3b82f6', ic: ICON.home, url: 'web/home/', lead: 'Your own start page: a clock, your day in frosted-glass widgets, and background photos that change. Show it with the bar, or without it.',
+      tags: ['Widgets', 'Photos that change', 'Animated designs', 'Glass', 'Search from anywhere'],
+      where: [['Show the Bar on the Home Page', 'Off keeps the home page clean.', 'go', 'nav'], ['Colors and Glass', 'The look of the glass widgets.', 'go', 'glass'], ['Widgets, photos and designs', 'On the Home page itself, in its Settings.', 'url', 'web/home/']] },
+    { id: 'links', name: 'Links', c: '#22c55e', ic: 'M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7', url: 'web/links/', lead: 'Bookmarks in tabs and categories, with icons saved on your server. Bring yours from any browser in a minute.',
+      tags: ['Import with a preview', 'Easy to undo', 'Encrypted tabs', 'Most opened'],
+      where: [['Tabs in the bar', 'Which pages show, and in what order.', 'go', 'nav'], ['Import Center', 'Bring links from a browser, Raindrop or Pocket.', 'go', 'backup'], ['Colors and sizes', 'On the Links page, in its Settings.', 'url', 'web/links/']] },
+    { id: 'info', name: 'Info', c: '#a855f7', ic: ICON.log, url: 'web/info/', lead: 'Notes in tabs. Each tab holds 1 to 12 boxes, or is written as one document with an outline.',
+      tags: ['Boxes', 'Document tabs', 'Export as PDF or text', 'Undo after a delete'],
+      where: [['Encryption for locked tabs', 'One passphrase for locked tabs and files.', 'go', 'security'], ['Tab layout and boxes', 'On the Info page, in its Settings.', 'url', 'web/info/']] },
+    { id: 'cards', name: 'Cards', c: '#ec4899', ic: 'M3 6h18v12H3zM3 10h18', url: 'web/cards/', lead: 'Your cards in a table you can search and filter, with the yearly charges added up.',
+      tags: ['Searchable table', 'Yearly charges', 'Export to Excel', 'Sent only after login'],
+      where: [['Encryption', 'Card details are locked in your browser.', 'go', 'security'], ['Holders and Banks', 'On the Cards page, in its Settings.', 'url', 'web/cards/']] },
+    { id: 'tasks', name: 'Tasks', c: '#f59e0b', ic: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9', url: 'web/tasks/', lead: 'Add a task in plain words, set it to repeat, and let Telegram nudge you with Done, Skip and Snooze.',
+      tags: ['Plain words', 'Repeats', 'Calendar link', 'Year in Review'],
+      where: [['Telegram reminders', 'Done, Skip and Snooze on your phone.', 'go', 'telegram'], ['Time zone', 'Today and due times follow it.', 'go', 'general'], ['Calendar, repeats and analytics', 'On the Tasks page, in its Settings.', 'url', 'web/tasks/']] },
+    { id: 'files', name: 'Files', c: '#0ea5e9', ic: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', url: 'web/files/', lead: 'Keep documents, photos and anything else on your own server. Each file is locked in your browser before it is sent, so the server only ever holds scrambled data.',
+      tags: ['Locked in your browser', 'Share links', 'Trash', 'Starred and Recent', 'Share from your phone'], live: true,
+      where: [['Encryption', 'The passphrase that locks your files.', 'go', 'security'], ['Backup & Restore', 'Files are included in a full backup.', 'go', 'backup']] },
+    { id: 'tools', name: 'Tools', c: '#14b8a6', ic: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.6-.6-.6-2.6z', url: 'web/tools/', lead: 'Resize and convert images, merge and sign PDFs, work out loans and savings, make invoices, scan QR codes and more.',
+      tags: ['Over 100 tools', 'Runs in your browser', 'Favourites', 'Saved presets'],
+      where: [['Offline Reading', 'Keep pages on this device.', 'go', 'setup'], ['Menu or tabs, favourites', 'On the Tools page, in its Settings.', 'url', 'web/tools/']] }
+  ];
+  FEATS.forEach(function (f) { PANES['ft-' + f.id] = function (p) { pFeature(p, f); }; PANE_FN.set('ft-' + f.id, PANES['ft-' + f.id]); });   // (the tabs themselves are listed in SECTIONS)
+  var GBY = { MB: 1048576, GB: 1073741824, TB: 1099511627776 };
+  function fBytes(n) { var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0; n = +n || 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return (i ? (n >= 100 ? n.toFixed(0) : n.toFixed(1)) : n) + ' ' + u[i]; }
+  function featHead(f) {
+    return '<div class="ix-fhero"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
+      '<a class="ix-btn" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
+      '<div class="ix-ftags">' + f.tags.map(function (t) { return '<span class="ix-cl-tag">' + esc(t) + '</span>'; }).join('') + '</div>';
+  }
+  function pFeatures(p) {
+    p.innerHTML = '<div class="ix-fgrid">' + FEATS.map(function (f) {
+        return '<button type="button" class="ix-fcard" data-ft="' + f.id + '"><span class="ix-fcard-h"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><b>' + esc(f.name) + '</b>' +
+          (f.live ? '<span class="ix-cl-tag">Settings here</span>' : '') + '</span><span class="ix-fcard-p">' + esc(f.lead) + '</span><span class="ix-fcard-m">' + f.tags.slice(0, 3).map(esc).join(' · ') + '</span></button>';
+      }).join('') + '</div>';
+    p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
+  }
+  function featWhere(f) {
+    return '<section class="ix-ec"><div class="ix-ec-h"><div><div class="ix-ec-t">' + (f.live ? 'Also Controlled In' : 'Where Its Settings Are') + '</div></div></div><div class="ix-ec-b">' + f.where.map(function (w, i) {
+      return '<div class="ix-frow"><div><b>' + esc(w[0]) + '</b><small>' + esc(w[1]) + '</small></div><button type="button" class="ix-btn" data-fw="' + i + '">Open</button></div>';
+    }).join('') + '</div></section>';
+  }
+  function featWire(p, f) {
+    p.querySelectorAll('[data-fw]').forEach(function (b) { b.onclick = function () { var w = f.where[+b.dataset.fw]; if (w[2] === 'go') go(w[3]); else location.href = K.ROOT + w[3]; }; });
+  }
+  function pFeature(p, f) {
+    if (!f.live) { p.innerHTML = featHead(f) + featWhere(f); featWire(p, f); return; }
+    p.innerHTML = featHead(f) + spinRow('Reading the Files settings…');
+    window.HUB.fetch(K.ROOT + 'web/files/api.php?action=list').then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.settings) throw new Error('Files did not answer.');
+      var s = j.settings, used = j.usage || 0, free = j.free, lim = s.limit || 0, unit = lim >= GBY.TB && lim % GBY.TB === 0 ? 'TB' : 'GB';
+      p.innerHTML = featHead(f) +
+        '<section class="ix-ec"><div class="ix-ec-h"><div><div class="ix-ec-t">Storage Limit</div><div class="ix-ec-d">How much space Files may use on your server.</div></div></div><div class="ix-ec-b">' +
+          '<div class="ix-fused"><b>' + fBytes(used) + ' used</b><small id="ix-flst"></small></div>' +
+          '<div class="ix-fbar"><i id="ix-flbar"></i></div>' +
+          '<div class="ix-fchips" id="ix-flch">' + [['5 GB', 5], ['10 GB', 10], ['25 GB', 25], ['50 GB', 50], ['100 GB', 100], ['No Limit', 0]].map(function (c) { return '<button type="button" class="ix-fchip" data-b="' + c[1] * GBY.GB + '">' + c[0] + '</button>'; }).join('') + '</div>' +
+          '<div class="ix-frow2"><input type="number" id="ix-flnum" min="0" step="any" value="' + (lim ? +(lim / GBY[unit]).toFixed(3) : 0) + '" aria-label="Storage limit"><select id="ix-flun" aria-label="Unit">' +
+            ['MB', 'GB', 'TB'].map(function (u) { return '<option' + (u === unit ? ' selected' : '') + '>' + u + '</option>'; }).join('') + '</select><button type="button" class="ix-btn pri" id="ix-flsave">Save Limit</button></div>' +
+          '<small class="ix-fnote" id="ix-flnote"></small></div></section>' +
+        '<section class="ix-ec"><div class="ix-ec-h"><div><div class="ix-ec-t">Files Settings</div><div class="ix-ec-d">Saved as soon as you change them.</div></div></div><div class="ix-ec-b">' +
+          '<label class="ix-tg"><span>Share Links<small>Off ends every link.</small></span><input type="checkbox" id="ix-flsh"' + (s.shares ? ' checked' : '') + '></label>' +
+          '<div class="ix-frow"><div><b>Keep Deleted Files</b><small>Days in Trash before they are removed for good.</small></div><select id="ix-fltd" aria-label="Keep Trash">' +
+            [7, 14, 30, 60, 90].map(function (d) { return '<option value="' + d + '"' + (d === s.trashDays ? ' selected' : '') + '>' + d + ' days</option>'; }).join('') + '</select></div>' +
+          '<div class="ix-frow"><div><b>Default View</b><small>How files show when you open the page.</small></div><select id="ix-flvw" aria-label="Default view"><option value="list"' + (s.view === 'list' ? ' selected' : '') + '>List</option><option value="grid"' + (s.view === 'grid' ? ' selected' : '') + '>Grid</option></select></div>' +
+        '</div></section>' + featWhere(f);
+      featWire(p, f);
+      var num = p.querySelector('#ix-flnum'), un = p.querySelector('#ix-flun'), val = function () { return Math.round(Math.max(0, +num.value || 0) * GBY[un.value]); };
+      var paint = function () {
+        var v = val(), t = 'Free on the server: ' + (free == null ? 'unknown' : fBytes(free)) + '.';
+        if (v && v < used) t += ' That is less than you use now, so new uploads stop until you free some space.';
+        else if (v && free != null && v > used + free) t += ' That is more than the server has room for, so the server\'s free space limits you first.';
+        else if (!v) t += ' No limit: only the server\'s free space limits you.';
+        p.querySelector('#ix-flnote').textContent = t;
+        p.querySelector('#ix-flst').textContent = v ? 'of ' + fBytes(v) + ' limit' : 'no limit';
+        p.querySelector('#ix-flbar').style.width = (v ? Math.min(100, used / v * 100) : 0) + '%';
+        p.querySelectorAll('#ix-flch [data-b]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.b === v)); });
+      };
+      num.oninput = un.onchange = paint;
+      p.querySelectorAll('#ix-flch [data-b]').forEach(function (b) { b.onclick = function () { un.value = 'GB'; num.value = String(+b.dataset.b / GBY.GB); paint(); }; });
+      paint();
+      var save = function (set, ok) {
+        return window.HUB.fetch(K.ROOT + 'web/files/api.php?action=settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ settings: set }) })
+          .then(function (r) { return r.json(); }).then(function (r) { if (r && r.ok) { toast(ok || 'Saved.'); return true; } toast((r && r.error) || 'Could not save.', true); return false; }, function () { toast('Can\'t reach the server. Nothing was changed.', true); return false; });
+      };
+      p.querySelector('#ix-flsave').onclick = function () { var v = val(); save({ limit: v }, 'Storage limit saved.').then(function (ok) { if (ok) lim = v; }); };
+      p.querySelector('#ix-flsh').onchange = function (e) { save({ shares: e.target.checked }); };
+      p.querySelector('#ix-fltd').onchange = function (e) { save({ trashDays: +e.target.value }); };
+      p.querySelector('#ix-flvw').onchange = function (e) { save({ view: e.target.value }); };
+    }).catch(function (e) { p.innerHTML = featHead(f) + '<div class="ix-empty"><b>Could Not Read the Files Settings</b><p>' + esc(e && e.message || 'Can\'t reach the server.') + '</p></div>' + featWhere(f); featWire(p, f); });
+  }
   /* ---------- Updates ---------- */
   function rnd16() { var a = new Uint8Array(8); crypto.getRandomValues(a); return [].map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
   function pUpdate(p) {

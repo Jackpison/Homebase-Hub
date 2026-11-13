@@ -76,43 +76,74 @@
     });
   }
   function clFail(p) { return function (e) { p.innerHTML = '<div class="ix-empty"><span class="ix-empty-i">' + svg(ICON.warn) + '</span><b>Could Not Load the Changelog</b><p>' + esc(e && e.message || 'Can\'t reach the server.') + '</p></div>'; }; }
+  // (1.76.0) tags for a version, from its ### headings: New, Fixes, or the heading itself (Settings, Files, Security…)
+  var CLTAGS = ['New', 'Fixes', 'Settings', 'Files', 'Security'];
+  function clTags(e) {
+    var seen = [], out = [];
+    String(e.body).split('\n').forEach(function (ln) {
+      var m = /^### (.+)$/.exec(ln); if (!m) return;
+      var t = m[1].trim(); if (/^(added|new)\b/i.test(t)) t = 'New'; else if (/^fix/i.test(t)) t = 'Fixes';
+      if (seen.indexOf(t) < 0) { seen.push(t); out.push(t); }
+    });
+    return out;
+  }
+  function clDay(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); if (!m) return ''; return +m[3] + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+m[2] - 1]; }
   function pChangelog(p) {
     p.innerHTML = spinRow('Reading the changelog…');
     clLoad().then(function (cl) {
-      var cur = cl.version, shown = cl.entries;
-      p.innerHTML = '<div class="ix-hero"><span class="ix-hero-i good">' + svg(ICON.log) + '</span><div class="ix-hero-t"><div class="ix-hero-h">You Have Version ' + esc(cur) + '</div>' +
-          '<p>' + cl.entries.length + ' versions are written down here, newest first. Open one to see what changed.</p></div></div>' +
+      var cur = cl.version, shown = cl.entries, now = shown.filter(function (x) { return x.ver === cur; })[0] || shown[0];
+      var groups = [], gi = {};
+      shown.forEach(function (e, i) {
+        var k = e.ver.split('.').slice(0, 2).join('.'); if (!(k in gi)) { gi[k] = groups.length; groups.push({ k: k, rows: [] }); }
+        groups[gi[k]].rows.push(i);
+      });
+      var curKey = now ? now.ver.split('.').slice(0, 2).join('.') : '';
+      var row = function (e, i) {
+        return '<details class="ix-cl" data-i="' + i + '"><summary><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
+          (e.ver === cur ? '<span class="ix-pill good">Installed</span>' : '') +
+          clTags(e).slice(0, 3).map(function (t) { return '<span class="ix-cl-tag">' + esc(t) + '</span>'; }).join('') +
+          (e.date ? '<span class="ix-cl-date">' + esc(clDay(e.date)) + '</span>' : '') +
+          '<span class="ix-cl-d">' + mdInline(e.summary || e.label || '') + '</span></summary><div class="ix-cl-b ix-md"></div></details>';
+      };
+      p.innerHTML = (now ? '<div class="ix-hero ix-clhero"><span class="ix-hero-i good">' + svg(ICON.log) + '</span><div class="ix-hero-t"><div class="ix-hero-h">You Have Version ' + esc(cur) + '</div>' +
+          '<p>' + mdInline(now.summary || now.label || 'Read what is in this version.') + '</p></div><button type="button" class="ix-btn pri" id="ix-clnow">Read the Notes</button></div>' : '') +
         '<div class="ix-cl-bar"><div class="ix-cl-search">' + svg(ICON.search) + '<input type="search" id="ix-clq" placeholder="Search the Changelog" aria-label="Search the Changelog" autocomplete="off" spellcheck="false"></div>' +
           '<button type="button" class="ix-btn" id="ix-clall">Expand All</button><button type="button" class="ix-btn" id="ix-clnone">Collapse All</button></div>' +
+        '<div class="ix-clchips" role="group" aria-label="Filter by kind"><button type="button" class="ix-fchip on" data-t="">All</button>' +
+          CLTAGS.map(function (t) { return '<button type="button" class="ix-fchip" data-t="' + t + '">' + t + '</button>'; }).join('') + '</div>' +
         '<div class="ix-pcount" id="ix-clcount" aria-live="polite"></div>' +
-        '<div id="ix-cll" class="ix-tl">' + shown.map(function (e, i) {
-          var ci = shown.findIndex(function (x) { return x.ver === cur; }), st = ci < 0 || i > ci ? 'done' : i === ci ? 'now' : 'up';   // (1.75.0) a timeline: newer than yours (not yet), yours, and the ones you have passed
-          return '<details class="ix-cl ' + st + '" data-i="' + i + '"' + (i === 0 ? ' open' : '') + '><summary><i class="ix-cl-m" aria-hidden="true"></i><span class="ix-cl-v">' + esc(e.ver) + '</span>' +
-            (e.ver === cur ? '<span class="ix-pill good">Installed</span>' : '') + (e.date ? '<span class="ix-cl-date">' + esc(e.date) + '</span>' : '') +
-            '<span class="ix-cl-d">' + mdInline(e.summary || e.label || '') + '</span></summary><div class="ix-cl-b ix-md"></div></details>'; }).join('') + '</div>' +
+        '<div id="ix-cll">' + groups.map(function (g) {
+          var first = shown[g.rows[0]];
+          return '<details class="ix-cg" data-k="' + g.k + '"' + (g.k === curKey ? ' open' : '') + '><summary><span class="ix-cg-v">' + esc(g.k) + '</span><span class="ix-cg-n">' + g.rows.length + (g.rows.length === 1 ? ' version' : ' versions') +
+            (first.date ? ' · ' + esc(clDay(first.date)) + ' ' + first.date.slice(0, 4) : '') + '</span></summary><div class="ix-cg-b">' + g.rows.map(function (i) { return row(shown[i], i); }).join('') + '</div></details>';
+        }).join('') + '</div>' +
         '<p class="ix-note ix-pnone" id="ix-clnone2" hidden>Nothing in the changelog matches that. Try a shorter word.</p>';
-      var rows = [].slice.call(p.querySelectorAll('details.ix-cl'));
+      var rows = [].slice.call(p.querySelectorAll('details.ix-cl')), grps = [].slice.call(p.querySelectorAll('details.ix-cg')), kind = '';
       var fill = function (d) { var b = d.querySelector('.ix-cl-b'); if (!b.dataset.done) { b.innerHTML = mdBlocks(shown[+d.dataset.i].body); b.dataset.done = '1'; } };
-      rows.forEach(function (d) { d.addEventListener('toggle', function () { if (d.open) fill(d); }); if (d.open) fill(d); });
+      rows.forEach(function (d) { d.addEventListener('toggle', function () { if (d.open) fill(d); }); });
       var q = p.querySelector('#ix-clq');
       var filter = function () {
-        var t = q.value.trim().toLowerCase(), n = 0;
+        var t = q.value.trim().toLowerCase(), n = 0, narrowed = !!(t || kind);
         rows.forEach(function (d) {
-          var e = shown[+d.dataset.i], hit = !t || (e.title + ' ' + e.summary + ' ' + e.body).toLowerCase().indexOf(t) >= 0;
+          var e = shown[+d.dataset.i], tags = clTags(e), hit = (!t || (e.title + ' ' + e.summary + ' ' + e.body).toLowerCase().indexOf(t) >= 0) && (!kind || tags.indexOf(kind) >= 0);
           d.hidden = !hit; if (hit) n++;
           if (t && hit && n <= 6) { d.open = true; fill(d); }
         });
-        p.querySelector('#ix-clcount').textContent = t ? n + ' of ' + rows.length + ' versions match' : '';
+        grps.forEach(function (g) { var any = [].some.call(g.querySelectorAll('details.ix-cl'), function (d) { return !d.hidden; }); g.hidden = !any; if (narrowed && any) g.open = true; });
+        p.querySelector('#ix-clcount').textContent = narrowed ? n + ' of ' + rows.length + ' versions match' : '';
         p.querySelector('#ix-clnone2').hidden = n > 0;
       };
       q.oninput = filter;
-      p.querySelector('#ix-clall').onclick = function () { rows.forEach(function (d) { if (!d.hidden) d.open = true; }); };
-      p.querySelector('#ix-clnone').onclick = function () { rows.forEach(function (d) { d.open = false; }); };
-      if (CLWANT) {                                                   // sent here from the Version Map
-        var want = CLWANT; CLWANT = '';
+      [].forEach.call(p.querySelectorAll('.ix-fchip'), function (c) { c.onclick = function () { kind = c.dataset.t; [].forEach.call(p.querySelectorAll('.ix-fchip'), function (x) { x.classList.toggle('on', x === c); }); filter(); }; });
+      p.querySelector('#ix-clall').onclick = function () { grps.forEach(function (g) { if (!g.hidden) g.open = true; }); rows.forEach(function (d) { if (!d.hidden) { d.open = true; fill(d); } }); };
+      p.querySelector('#ix-clnone').onclick = function () { rows.forEach(function (d) { d.open = false; }); grps.forEach(function (g) { g.open = false; }); };
+      var reveal = function (want) {
         var hit = rows.filter(function (d) { return shown[+d.dataset.i].ver === want; })[0] || rows.filter(function (d) { return shown[+d.dataset.i].ver.indexOf(want) === 0; })[0];
-        if (hit) { hit.open = true; fill(hit); setTimeout(function () { hit.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60); }
-      }
+        if (!hit) return; hit.closest('details.ix-cg').open = true; hit.open = true; fill(hit);
+        setTimeout(function () { hit.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60);
+      };
+      var nb = p.querySelector('#ix-clnow'); if (nb) nb.onclick = function () { reveal(now.ver); };
+      if (CLWANT) { var want = CLWANT; CLWANT = ''; reveal(want); }          // sent here from the Version Map
     }).catch(clFail(p));
   }
   function pChMap(p) {
