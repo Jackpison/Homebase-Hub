@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.77.2 | A Logs section, always-visible Notifications with colourful icons, Overview folded into General, a timeline for Telegram Setup, a Files details panel with Select All, and a simpler Share Link window |
 | 1.77.1 | A Dropbox-style Files page, a Features showcase, a simpler Telegram setup, a Changelog tab, and the E key turns editing off again |
 | 1.77.0 | Cloud Backup: an encrypted copy of the site sent to a WebDAV folder, on a schedule |
 | 1.76.0 | What's New by series with filters, a Features section, and a Files storage limit you can set to any size |
@@ -148,6 +149,35 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.77.2
+
+### Settings
+
+- New **Logs** section: **Notifications** (everything the site told you, kept even after you close them), **Sign-Ins** and **PHP Errors**.
+- **Overview** is gone. **Start Here** is a tab of **General**, and Install on Your Phone and Keyboard Shortcuts are at the bottom of **Features**.
+- **Changelog** is one list of versions with the one you have marked **Installed**; the old What's New box is gone.
+- **Telegram › Setup** is a timeline of three steps with a status on each (Done, Next, Waiting). **Instant Replies** is one clear card.
+- **Features** lists each page as a row, with its highlights one click away.
+- **Health**: the six boxes are shorter.
+- The search box, switches and buttons have a new look. Buttons fill with your accent colour when you point at them, and switches turn the accent colour when on.
+
+### Notifications
+
+- The bell is always there. Each message has a colourful icon that matches what happened, and the list animates in.
+- Switching between light and dark grows from the button as a circle.
+
+### Files
+
+- The details panel on the right is open by default. It shows what is in the folder and has a **Select All** button (there is one above the list too).
+- The panel no longer repeats **Share** and **More**; those are in the row menu and the Share Link box.
+- **Share Link** is one window: your links on top, then how long the next one lasts. Making a link copies it for you.
+
+### Under the hood
+
+- A quick check (`scripts/precheck.py`) and a faster first CI job, so a mistake shows up in minutes.
 
 ---
 
