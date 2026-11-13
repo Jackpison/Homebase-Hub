@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.78.0 | Settings: Sign-In boxes redesigned, Look and Bar in one tab, a clearer Telegram Setup, click-to-copy commands, an Activity log of what was done; Start Here and Domains and Uptime are gone |
 | 1.77.5 | Info: an unlocked encrypted tab in the Document layout no longer shows its lock bar on top of the Outline |
 | 1.77.4 | Backup & Restore › Back Up is one hero box with Download Backup, and the reminder is a row |
 | 1.77.3 | Telegram Setup in one box with two steps, and every Features row opens its page and its related settings |
@@ -152,6 +153,26 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.78.0
+
+### Settings
+- **Sign-In** boxes (Website Password, Passkeys, Two-Step Login, Login Approval) have two sides: what it is on the left, what you do on the right. No more big empty boxes.
+- The Data Protection boxes (Change Passphrase, Recovery Key, Remove Encryption) put their fields in a row with the message and button under them.
+- **Look and Bar** are one tab in Appearance: theme, font, text sizes, navigation style and tabs.
+- **Telegram Setup** is two clear cards: Create Your Bot, then Connect and Test.
+- Click a Telegram command (Instant Replies) to copy it.
+- Start Here (and its Guided Setup) is removed from General: the help is in Features.
+- Domains and Uptime is removed from Health; the box in Health now shows your PHP version. Sites already on the list keep being checked.
+
+### Logs
+- **Sign-Ins** is now **Activity**: it also lists what was done (settings saved, backups, restores, updates, files deleted, encryption, passkeys, Telegram) and keeps the last 300.
+- Deleting a tab or box names it in the message, and the "Hold the button" hint no longer fills the log.
+
+### Fixes
+- The New tag in Features is readable in the light theme.
 
 ---
 
