@@ -933,3 +933,7 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-lgr{display:flex;gap:14px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--ix-line)}
 #ix-page .ix-lgt b{display:block;font-weight:600;font-size:14.5px;overflow-wrap:anywhere}
 #ix-page .ix-lgt small{color:var(--ix-mu);font-size:12.5px}
+
+#ix-page .ix-frel{margin-top:18px;border:1px solid var(--ix-line);border-radius:18px;background:var(--ix-s1);padding:14px 18px}
+#ix-page .ix-frel h3{margin:0;font-size:15px}#ix-page .ix-frel p{margin:2px 0 10px;color:var(--ix-mu2)}
+#ix-page .ix-rc a.ix-btn{text-decoration:none}

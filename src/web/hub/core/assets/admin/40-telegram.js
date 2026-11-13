@@ -46,26 +46,26 @@
         tile('two', ICON.pulse, 'Instant Replies', n.hook ? 'On' : 'Off', n.hook ? 'good' : '', n.hook ? 'The bot answers within a second.' : 'The bot answers within a few minutes.') + '</div>';
       p.innerHTML = hero + (msg ? '<p class="' + (err ? 'ix-err' : 'ix-note') + '">' + esc(msg) + '</p>' : '') + tiles + live(n, ready) +
 
-        acc('bot', 'Setup', ready ? 'Connected to ' + esc(n.chatName || n.chat) + '. The schedule (a cron job) is what sends messages on time.' : 'Three short steps: create a bot, connect your chat, send a test.',
-          tabHead(ICON.gear, 'Setup', 'Three short steps: create a bot, connect your chat, send a test.') + (function () {
+        acc('bot', 'Setup', ready ? 'Connected to ' + esc(n.chatName || n.chat) + '. The schedule (a cron job) is what sends messages on time.' : 'Two short steps: create a bot, then connect your chat and send a test.',
+          (function () {
             var d1 = !!n.hasToken, d3 = !!n.chat, d4 = ready && !!n.on;
             var stp = function (num, done, open, title, sum, body) {
               return '<li class="ix-tls' + (done ? ' done' : '') + (open ? ' open' : '') + '"><span class="ix-tl-n">' + (done ? '✓' : num) + '</span><div class="ix-tl-t"' + (done ? ' role="button" tabindex="0"' : '') + '>' + title + '<span class="ix-sd ix-sd-' + (done ? 'ready' : open ? 'building' : 'queued') + '">' + (done ? 'Done' : open ? 'Next' : 'Waiting') + '</span></div>' +
                 (done && sum ? '<div class="ix-tl-s">' + sum + '</div>' : '') + '<div class="ix-tl-b">' + body + '</div></li>'; };
-            return '<ol class="ix-tl">' +
+            // (1.77.3) one box, two steps: make the bot, then connect your chat and send a test
+            return ecCard('ix-auto', ICON.gear, 'Set Up Your Bot', 'Two short steps: create a bot, then connect your chat and send a test.', '<ol class="ix-tl">' +
               stp(1, d1, !d1, 'Create Your Bot', 'Token saved (' + esc(n.tokenHint || 'hidden') + ')', '<p>In Telegram, open <b>@BotFather</b>, send <code>/newbot</code> and answer its questions. It gives you a <b>token</b>: a long line of letters and numbers. Paste it here.</p>' +
                 '<div class="ix-fd"><label for="nt-tok">Bot Token</label><div class="ix-row"><input type="password" id="nt-tok" autocomplete="off" spellcheck="false" placeholder="' + esc(n.tokenHint || '123456789:AAE…') + '" style="flex:1;min-width:200px">' +
                 '<button type="button" class="ix-btn pri" id="nt-st">Save Token</button>' + (n.hasToken ? '<button type="button" data-hold class="ix-btn" id="nt-rm">Remove</button>' : '') + '</div><small>It stays on your server and is only used to talk to Telegram.</small></div>') +
-              stp(2, d3, d1 && !d3, 'Connect Your Chat', 'Connected to ' + esc(n.chatName || n.chat || ''), '<p>Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.</p>' +
-                '<div class="ix-row"><button type="button" class="ix-btn" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button></div>' +
+              stp(2, d4, d1, 'Connect and Test', tested ? 'Test message sent' : 'Connected to ' + esc(n.chatName || n.chat || ''), '<p>Open your new bot in Telegram, send it <code>/start</code>, then press <b>Find My Chat</b>.</p>' +
+                '<div class="ix-row"><button type="button" class="ix-btn' + (n.hasToken && !d3 ? ' pri' : '') + '" id="nt-find"' + (n.hasToken ? '' : ' disabled') + '>Find My Chat</button></div>' +
                 '<div class="ix-status">' + (n.chat ? '<span class="ix-ok">✓</span><span><b>Connected to</b> ' + esc(n.chatName || n.chat) + (n.chatName ? ' <small>(' + esc(n.chat) + ')</small>' : '') + '</span>' : '<span>!</span><span>No chat yet. Send <code>/start</code> to your bot first.</span>') + '</div>' +
-                (chats && chats.length > 1 ? '<div class="ix-row">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '')) +
-              stp(3, d4, d3, 'Send a Test', tested ? 'Test message sent' : 'Ready', tested && d4
-                ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Test message sent.</b> It should be in Telegram now.</span></div>' +
-                  '<div class="ix-row"><button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button><button type="button" class="ix-btn" id="nt-test">Send Another Test</button></div>'
-                : '<p>You should get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</p>' +
-                  '<div class="ix-row"><button type="button" class="ix-btn' + (ready && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div>') +
-              '</ol>' +
+                (chats && chats.length > 1 ? '<div class="ix-row">' + chats.map(function (c) { return '<button type="button" class="ix-btn" data-chat="' + esc(c.id) + '" data-name="' + esc(c.name) + '">Use ' + esc(c.name || c.id) + '</button>'; }).join('') + '</div>' : '') +
+                (tested && d4
+                  ? '<div class="ix-status"><span class="ix-ok">✓</span><span><b>Test message sent.</b> It should be in Telegram now.</span></div>' +
+                    '<div class="ix-row"><button type="button" class="ix-btn pri" data-go="msg">Choose What to Hear About</button><button type="button" class="ix-btn" id="nt-test">Send Another Test</button></div>'
+                  : '<div class="ix-row"><button type="button" class="ix-btn' + (d3 && !tested ? ' pri' : '') + '" id="nt-test"' + (ready ? '' : ' disabled') + '>Send Test</button></div><small>You get a message from your bot within a second. Then open the <b>Messages</b> tab to choose what you want to hear about.</small>')) +
+              '</ol>') +
               '<div class="ix-rcl">' + rowCard({ ic: ICON.clock, title: 'Keep It on Schedule', desc: 'Messages go out on time only if your host runs a small job every 10 minutes (a cron job).',
                 act: '<button type="button" class="ix-btn" id="nt-schb" aria-expanded="false">Show the Command</button>', hide: true, id: 'nt-sch',
                 body: '<p>In your hosting panel (cPanel › Cron Jobs), add this to run <b>every 10 minutes</b>:</p>' +

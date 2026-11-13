@@ -59,11 +59,20 @@
         ["Calculators and documents", "Loans, savings, deposits, percentages, dates, units and amounts in words; invoices as PDF, text compare, Markdown and spreadsheets."],
         ["Saved presets", "Keep a signature, a watermark, a QR style, image sizes or your business details on your server, while logged in. They are in your backups too."]] }
   ];
+  // (1.77.3) where each page keeps its settings: buttons on the page's Features tab that open them
+  var REL = { home: [['Look', 'look'], ['Colors', 'colors'], ['Glass', 'glass']],
+    links: [['Back Up Links', 'backup/overview'], ['Export Bookmarks', 'backup/export'], ['Import Bookmarks', 'backup/restore']],
+    info: [['Back Up Info', 'backup/overview'], ['Lock Tabs', 'security/encryption']],
+    cards: [['Back Up Cards', 'backup/overview'], ['Lock Cards', 'security/encryption']],
+    tasks: [['Telegram Messages', 'telegram/messages'], ['Instant Replies', 'telegram/instant-replies']],
+    files: [['Encryption', 'security/encryption'], ['Back Up Files', 'backup/overview']],
+    tools: [] };
+  FEATS.forEach(function (f) { f.rel = REL[f.id] || []; });
   FEATS.forEach(function (f) { PANES['ft-' + f.id] = function (p) { pFeature(p, f); }; PANE_FN.set('ft-' + f.id, PANES['ft-' + f.id]); });   // (the tabs themselves are listed in SECTIONS)
   function pFeatures(p) {
     p.innerHTML = '<div class="ix-rcl">' + FEATS.map(function (f) {
       return rowCard({ ic: f.ic, color: f.c, title: esc(f.name) + (f.hl.some(function (h) { return h[2]; }) ? ' <span class="ix-cl-tag">New</span>' : ''), desc: esc(f.lead),
-        act: '<button type="button" class="ix-btn" data-ft="' + f.id + '">See More</button>' });
+        act: '<a class="ix-btn" href="' + K.ROOT + f.url + '">Open</a><button type="button" class="ix-btn" data-ft="' + f.id + '">See More</button>' });
     }).join('') + '</div>';
     p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
     // (1.77.2) the notes that used to be a tab of What's New (how updating works and a few things worth knowing), as the same row cards
@@ -83,4 +92,10 @@
     p.innerHTML = '<div class="ix-fhero" style="--fc:' + f.c + '"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
       '<a class="ix-btn pri" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
       '<div class="ix-fhl">' + f.hl.map(function (h, i) { return '<div class="ix-fhl-c" style="--fc:' + f.c + '"><span class="ix-fhl-n">' + (i + 1) + '</span><div><b>' + esc(h[0]) + (h[2] ? ' <span class="ix-cl-tag">New</span>' : '') + '</b><p>' + esc(h[1]) + '</p></div></div>'; }).join('') + '</div>';
+    if (f.rel.length) {
+      var rb = document.createElement('div'); rb.className = 'ix-frel';
+      rb.innerHTML = '<h3>Related Settings</h3><p>Where ' + esc(f.name) + ' keeps its settings.</p><div class="ix-row">' + f.rel.map(function (r) { return '<button type="button" class="ix-btn" data-rel="' + r[1] + '">' + esc(r[0]) + '</button>'; }).join('') + '</div>';
+      p.appendChild(rb);
+      rb.querySelectorAll('[data-rel]').forEach(function (b) { b.onclick = function () { go(b.dataset.rel); }; });
+    }
   }
