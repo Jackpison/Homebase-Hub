@@ -92,6 +92,16 @@ try:
         shown = pg.evaluate("[...document.querySelectorAll('.box')].filter(b => b.offsetParent).map(b => b.innerText).join(' ')")
         check('T13 Info, a locked tab: a deleted box offers Undo and comes back in its place with the same locked text; nothing readable reaches the server; it reads normally after a reload',
               got and gone and ta == tb and 'Weekend in the Mountains' not in raw_after and 'guest house' not in raw_after and 'guest house' in shown, (got, len(ta), len(tb), ta == tb))
+        # (1.77.5) the Document layout of an unlocked encrypted tab: the "unlocked on this device" bar sits above the Outline and the page, not on top of them
+        def doc_order():
+            return pg.evaluate("""(() => { const m = document.querySelector('.boxes:not([hidden])'); m.dataset.lay = 'doc';
+              const r = e => m.querySelector(e).getBoundingClientRect(), eb = r('.encbar'), ol = r('.outline'), bx = r('.bxs');
+              return [getComputedStyle(m.querySelector('.encbar')).display !== 'none', eb.bottom <= ol.top + 1, eb.bottom <= bx.top + 1, ol.left < bx.left]; })()""")
+        wide = doc_order()
+        pg.set_viewport_size({'width': 600, 'height': 900}); pg.wait_for_timeout(300)
+        narrow = pg.evaluate("""(() => { const m = document.querySelector('.boxes:not([hidden])'), r = e => m.querySelector(e).getBoundingClientRect(), eb = r('.encbar'), ol = r('.outline'), bx = r('.bxs'); return [eb.bottom <= ol.top + 1, ol.bottom <= bx.top + 1]; })()""")
+        pg.set_viewport_size({'width': 1280, 'height': 900})
+        check('T13b Info, an unlocked encrypted tab in the Document layout: the bar is above the Outline and the page (and above them on a phone, with the Outline before the page)', wide == [True, True, True, True] and narrow == [True, True], (wide, narrow))
         # a new private Info tab is encrypted from the start
         pg.evaluate("document.querySelector('[data-hub=toggle]') && document.querySelector('[data-hub=toggle]').click()")
         pg.evaluate("document.querySelector('[data-add]').click()"); pg.wait_for_selector('#hubTabDlg[open]')

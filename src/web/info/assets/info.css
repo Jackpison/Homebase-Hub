@@ -235,9 +235,9 @@ dialog p{color:var(--mute);margin:0 0 6px}
 .outline{display:none}
 /* Document: one page, the boxes as sections, and an outline beside it (above it on a phone) */
 .boxes[data-lay="doc"]{display:grid;grid-template-columns:200px minmax(0,780px);justify-content:start;align-content:start;column-gap:clamp(24px,3.4vw,52px);row-gap:0}
-.boxes[data-lay="doc"]>.bxs{grid-column:2;column-gap:28px;row-gap:0}
-.boxes[data-lay="doc"]>.gate,.boxes[data-lay="doc"]>.encbar{grid-column:1/-1}
-.boxes[data-lay="doc"] .outline{display:flex;flex-direction:column;gap:2px;grid-column:1;grid-row:1/span 6;position:sticky;top:72px;align-self:start;padding-top:6px}
+.boxes[data-lay="doc"]>.bxs{grid-column:2;grid-row:2;column-gap:28px;row-gap:0}
+.boxes[data-lay="doc"]>.gate,.boxes[data-lay="doc"]>.encbar{grid-column:1/-1;grid-row:1}   /* (1.77.5) row 1 on purpose: left to auto-placement the unlocked-tab bar fell under the Outline, on top of the page */
+.boxes[data-lay="doc"] .outline{display:flex;flex-direction:column;gap:2px;grid-column:1;grid-row:2/span 6;position:sticky;top:72px;align-self:start;padding-top:6px}
 .outline .oh{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin:0 0 8px 12px}
 .outline button{text-align:left;font:inherit;font-size:14px;color:var(--mute);background:none;border:0;border-left:2px solid var(--line);padding:7px 12px;cursor:pointer;border-radius:0 8px 8px 0;overflow-wrap:anywhere}
 .outline button:hover{color:var(--fg)}
@@ -256,7 +256,7 @@ dialog p{color:var(--mute);margin:0 0 6px}
   .boxes[data-lay="doc"] .outline .oh{display:none}
   .boxes[data-lay="doc"] .outline button{border-left:0;border-bottom:2px solid var(--line);border-radius:0;white-space:nowrap;padding:8px 14px}
   .boxes[data-lay="doc"] .outline button.on{border-bottom-color:var(--tc,var(--fg));background:none}
-  .boxes[data-lay="doc"]>.bxs{grid-column:1}
+  .boxes[data-lay="doc"]>.bxs{grid-column:1;grid-row:auto}
 }
 /* The layout picker in Edit Tab */
 
