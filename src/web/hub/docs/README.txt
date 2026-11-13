@@ -9,7 +9,7 @@ FOLDERS
     hub/             the site's own engine, your pictures and these notes
       core/          the engine shared by every page
         api.php cron.php telegram.php   the only PHP files a browser calls: site API, schedule, Telegram replies
-        lib/         PHP that other files load: boot (which loads auth, fetch, settings), backup, notify, approval, watch, health, update, ghupdate, overview, activity, passkey, vault, presets (blocked from the web)
+        lib/         PHP that other files load: boot (which loads auth, fetch, settings), backup, cloud, notify, approval, watch, health, update, ghupdate, overview, activity, passkey, vault, presets (blocked from the web)
         assets/      what every page loads: shell.js, shell.css, shell-admin.js, vendor/ (PDF, Excel and QR libraries)
         manifest.json  every file of this release with its fingerprint (made when the release is built; Updates uses it)
       media/         YOUR OWN FILES: brand (the site logo), home/photos, home/uploads, home/icons (start page) and links/icons
@@ -167,7 +167,7 @@ and Tools (rename, reorder or hide them in Settings > Appearance > Bar).
 BACKUP
 ------
 Settings > Backup & Restore (the Backup icon in the bar opens it too) has four tabs:
-- Back Up: when the last full backup was, the reminder interval, Send Backups to Telegram (how often, Send Backup Now), the parts to include, and
+- Back Up: when the last full backup was, the reminder interval, Send Backups to Telegram (how often, Send Backup Now), Cloud Backup (an encrypted copy sent to a WebDAV folder: Nextcloud, ownCloud, Synology, a Storage Box; address, user name, password, folder, how often, how many copies to keep, Test Connection, Back Up Now), the parts to include, and
   Download Backup (one file for everything, locked with your passphrase when you have set one).
 - Restore: drop or choose a backup file (.json or .json.gz). Choose "Replace everything" or "Add or update these tabs only". What is
   there now is kept as an earlier version first. Earlier Versions (click to open) lists every page's saved versions, with Restore.
@@ -237,6 +237,7 @@ HOW THE CODE FITS TOGETHER (for later changes)
 web/hub/core/lib/boot.php        data folder, the one login, sessions, settings, time zone, login alerts (every api.php requires it)
 web/hub/core/api.php             the site API: login, settings, logo, backup, Telegram, Health and its server check
 web/hub/core/lib/backup.php      what goes into and comes out of a backup file (and opens an encrypted one to test it)
+web/hub/core/lib/cloud.php       Cloud Backup: the encrypted copy sent to a WebDAV folder, with the address checks and the clean-up of old copies
 web/hub/core/lib/notify.php      Telegram: digest, Due Now, backup reminder, login alerts, backup files, and the two-way bot
 web/hub/core/telegram.php        Telegram's instant replies (webhook), checked with a secret
 web/hub/core/cron.php            the schedule: bot messages, domain watch, reminders (the cron job in Settings > Telegram)

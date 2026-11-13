@@ -962,3 +962,11 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-fhl-c b{display:block;font-size:14.5px;margin-bottom:4px}
 #ix-page .ix-fhl-c p{margin:0;color:var(--ix-mu);font-size:13.5px;line-height:1.5}
 @media (max-width:600px){#ix-page .ix-fhero{flex-wrap:wrap}}
+
+/* (1.77.0) Cloud Backup: the fields in two columns, and the small labels beside the two choices */
+#ix-page .ix-fdgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin:0 0 10px}
+#ix-page .ix-lab{color:var(--ix-mu);font-size:13px;font-weight:600;margin:0 6px 0 0}
+#ix-page .ix-lab:not(:first-child){margin-left:14px}
+@media (max-width:760px){#ix-page .ix-fdgrid{grid-template-columns:1fr}}
+#ix-page #ix-cloud .ix-row select{width:auto!important;flex:none;min-width:150px}
+#ix-page #ix-cloud .ix-row{flex-wrap:wrap}

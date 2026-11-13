@@ -147,11 +147,52 @@
       }, function () { b.disabled = false; if (st) st.textContent = 'Can\'t reach the server.'; });
     });
   }
+  /* ---------- Cloud Backup (1.77.0): an encrypted copy sent to a WebDAV folder (Nextcloud, ownCloud, a NAS, a Storage Box) ---------- */
+  function cloudCard(c, enc) {
+    if (!c || !c.ok) return '';
+    var every = [[1, 'Daily'], [3, 'Every 3 Days'], [7, 'Weekly']], keeps = [7, 14, 30, 60, 90];
+    var status = c.error ? '<p class="ix-note"><span class="ix-err">Last problem: ' + esc(c.error) + '</span></p>'
+      : c.last ? '<p class="ix-note">Last copy: ' + esc(when(c.last)) + ' · ' + esc(c.lastName) + ' (' + Math.max(1, Math.round(c.lastSize / 1024)) + ' KB).' + (c.note ? ' ' + esc(c.note) : '') + '</p>' : '<p class="ix-note">No copy sent yet.</p>';
+    return '<div id="ix-cloud">' + ecCard(c.on ? 'good' : '', ICON.box, 'Cloud Backup', 'An encrypted copy of the whole site, sent to a WebDAV folder (Nextcloud, ownCloud, Synology, a Storage Box or another server). ' +
+      'It is always locked with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + ', and the password for the cloud stays on your server.' +
+      (c.encReady ? '' : ' <b>Set an encryption passphrase first</b> (Settings › Security): without one, nothing is sent.'),
+      '<div class="ix-fdgrid">' + ecField('ix-clurl', 'WebDAV Address', 'url', 'off', 'Like https://cloud.example.com/remote.php/dav/files/you/. On your own network, http:// works too.', '', ' value="' + esc(c.url) + '" spellcheck="false" placeholder="https://"') +
+        ecField('ix-cluser', 'User Name', 'text', 'off', '', '', ' value="' + esc(c.user) + '" spellcheck="false"') +
+        ecField('ix-clpass', 'Password', 'password', 'new-password', c.hasPass ? 'A password is saved. Type a new one only to change it.' : 'For Nextcloud, make an app password in its security settings.', '', ' placeholder="' + (c.hasPass ? 'Saved' : '') + '"') +
+        ecField('ix-cldir', 'Folder', 'text', 'off', 'Made for you inside that address.', '', ' value="' + esc(c.dir) + '" spellcheck="false"') + '</div>' +
+      '<div class="ix-row"><label class="ix-lab" for="ix-clevery">Copy</label><select id="ix-clevery" aria-label="How often">' + every.map(function (e) { return '<option value="' + e[0] + '"' + (c.every === e[0] ? ' selected' : '') + '>' + e[1] + '</option>'; }).join('') + '</select>' +
+        '<label class="ix-lab" for="ix-clkeep">Keep</label><select id="ix-clkeep" aria-label="How many copies to keep">' + keeps.map(function (k) { return '<option value="' + k + '"' + (c.keep === k ? ' selected' : '') + '>' + k + ' copies</option>'; }).join('') + '</select></div>' +
+      '<label class="ix-tg"><span>Send Copies on a Schedule<small>One try a day. Older copies this feature made are removed after a new one arrives; nothing else in the folder is touched.</small></span><input type="checkbox" id="ix-clon"' + (c.on ? ' checked' : '') + '></label>' +
+      status +
+      '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-clsave">Save</button><button type="button" class="ix-btn" id="ix-cltest">Test Connection</button><button type="button" class="ix-btn" id="ix-clnow">' + svg(ICON.box) + 'Back Up Now</button></div>' +
+      '<p class="ix-note" id="ix-clmsg" aria-live="polite"></p>') + '</div>';
+  }
+  function wireCloud(p, c) {
+    var box = p.querySelector('#ix-cloud'); if (!box) return;
+    var q = function (id) { return box.querySelector(id); }, msg = function (t, bad) { var m = q('#ix-clmsg'); m.textContent = t; m.className = 'ix-note' + (bad ? ' ix-err' : ''); };
+    var body = function () { return { url: q('#ix-clurl').value.trim(), user: q('#ix-cluser').value.trim(), pass: q('#ix-clpass').value, dir: q('#ix-cldir').value.trim(), every: +q('#ix-clevery').value, keep: +q('#ix-clkeep').value, on: q('#ix-clon').checked }; };
+    var busy = function (b, t, on) { b.disabled = on; if (on) { b.dataset.t = b.textContent; b.textContent = t; } else if (b.dataset.t) b.textContent = b.dataset.t; };
+    q('#ix-clsave').onclick = function () {
+      var b = this; busy(b, 'Saving…', true);
+      api('cloud_save', body()).then(function (r) { busy(b, '', false); if (r.ok) { toast('Cloud Backup saved.'); pBackup(p); } else msg(r.error || 'Could not save.', true); });
+    };
+    q('#ix-cltest').onclick = function () {
+      var b = this; busy(b, 'Testing…', true); msg('Connecting…');
+      api('cloud_test', body(), 'POST', { timeout: 60000 }).then(function (r) { busy(b, '', false); msg(r.ok ? r.message : (r.error || r.message || 'It did not work.'), !r.ok); });
+    };
+    q('#ix-clnow').onclick = function () {
+      var b = this; busy(b, 'Backing up…', true); msg('Making the copy and sending it. A big site can take a minute.');
+      api('cloud_save', body()).then(function (s) {
+        if (!s.ok) { busy(b, '', false); msg(s.error || 'Could not save.', true); return; }
+        return api('cloud_run', {}, 'POST', { timeout: 600000 }).then(function (r) { busy(b, '', false); if (r.ok) { toast(r.message); pBackup(p); } else msg(r.error || r.message || 'It did not work.', true); });
+      });
+    };
+  }
   function pBackup(p) {
     bindExport(p);
     p.innerHTML = '<p>Loading…</p>';
-    Promise.all([api('backup_overview'), api('notify').catch(function () { return {}; }), api('bkkey').catch(function () { return {}; })]).then(function (r) {
-      var j = r[0], n = r[1] || {}, enc = r[2] || {};
+    Promise.all([api('backup_overview'), api('notify').catch(function () { return {}; }), api('bkkey').catch(function () { return {}; }), api('cloud_get').catch(function () { return {}; })]).then(function (r) {
+      var j = r[0], n = r[1] || {}, enc = r[2] || {}, cl = r[3] || {};
       if (!j.ok) { p.innerHTML = '<p class="ix-err">' + esc(j.error) + '</p>'; return; }
       var parts = j.parts, last = +S.backupLast || 0, every = +S.backupEvery || 0;
       var due = every > 0 && (!last || (Date.now() / 1000 - last) / 86400 >= every);
@@ -176,6 +217,7 @@
             '<p class="ix-note">Last backup sent: ' + (n.bkLast ? esc(when(n.bkLast)) : 'none yet') + '.' + (n.bkError ? ' <span class="ix-err">Last problem: ' + esc(n.bkError) + '</span>' : '') + '</p>' +
             '<div class="ix-row"><button type="button" class="ix-btn" id="ix-tgbknow">' + svg(ICON.send) + 'Send Backup Now</button></div>'
             : '<p class="ix-note">Connect a Telegram bot first.</p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-tgsetup">Set Up Telegram</button></div>') + '</div>' +
+        cloudCard(cl, enc) +
         '<details class="ix-more" id="ix-choose"><summary>Choose What to Include</summary>' +
           [['pages', 'Pages', 'Links, Info, Cards, Tasks, Home and Tools presets.'], ['site', 'Site', 'Your settings, Telegram and the domain watch list.']].concat(parts.files ? [['files', 'Files', 'The files you keep on the Files page. Can be big, so it is off unless you want it.']] : []).map(function (g) {
             return '<label class="ix-tg"><span>' + g[1] + '<small>' + g[2] + '</small></span><input type="checkbox" data-grp="' + g[0] + '"></label>'; }).join('') +
@@ -212,6 +254,7 @@
         '<details class="ix-acc ix-danger" id="ix-reset"><summary><span>Start Over</span><small>Erase all data and settings, like a new site</small></summary><div class="ix-accb">' +
           '<div id="ix-rsst"></div></div></details>' +
         '<p class="ix-note">Moving the site? Copy the whole folder: your data is in <code>site-data</code>.</p>';
+      wireCloud(p, cl);
       p.querySelector('#ix-tgset').onclick = function (e) { e.preventDefault(); if (tgOn) p.querySelector('#ix-tgbk').scrollIntoView({ block: 'center', behavior: 'smooth' }); else go('telegram/setup'); };
       bindImport(p);   // (1.72.0) the Import tab, once it is drawn
       var tgb = p.querySelector('#ix-tgbk');

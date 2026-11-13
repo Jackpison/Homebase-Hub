@@ -790,6 +790,37 @@ case 'tg_hook':
     if (empty($r['ok'])) hub_json(400, ['ok' => false, 'error' => 'Telegram: ' . ($r['description'] ?? 'no answer')] + nt_view($d));
     hub_json(200, ['ok' => true] + nt_view($d));
 
+/* ---- Settings > Backup & Restore > Cloud Backup (1.77.0): an encrypted copy sent to a WebDAV folder ---- */
+case 'cloud_get':
+    need_admin(false);
+    require_once __DIR__ . '/lib/cloud.php';
+    hub_json(200, cl_view(cl_load()));
+
+case 'cloud_save':
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/cloud.php';
+    $b = body(); $d = cl_load();
+    $url = trim((string)($b['url'] ?? $d['url']));
+    if ($url !== '') { [, $why] = cl_url_check($url); if ($why !== '') hub_json(400, ['ok' => false, 'error' => $why]); }
+    $dir = trim((string)($b['dir'] ?? $d['dir']));
+    if (cl_dir_parts($dir) === null) hub_json(400, ['ok' => false, 'error' => 'The folder name can use letters, numbers, spaces and . _ - ( ) only, up to three levels.']);
+    if (!empty($b['on']) && !bk_key()) hub_json(400, ['ok' => false, 'error' => 'Cloud Backup is always encrypted: set an encryption passphrase first (Settings, Security, Encryption).'] + cl_view($d));
+    $d['url'] = $url; $d['dir'] = $dir; $d['user'] = substr(trim((string)($b['user'] ?? $d['user'])), 0, 200);
+    if (isset($b['pass']) && $b['pass'] !== '') $d['pass'] = substr((string)$b['pass'], 0, 400);
+    if (!empty($b['clearPass'])) { $d['pass'] = ''; $d['on'] = false; }
+    $d['on'] = !empty($b['on']) && $d['url'] !== '' && $d['user'] !== '' && $d['pass'] !== '';
+    $d['every'] = in_array((int)($b['every'] ?? $d['every']), [1, 3, 7], true) ? (int)($b['every'] ?? $d['every']) : 1;
+    $d['keep'] = max(1, min(CL_KEEP_MAX, (int)($b['keep'] ?? $d['keep'])));
+    if (!cl_save($d)) hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
+    hub_json(200, cl_view($d));
+
+case 'cloud_test':
+case 'cloud_run':
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/cloud.php';
+    $r = $action === 'cloud_test' ? cl_test(body()) : cl_run();
+    hub_json($r['ok'] ? 200 : 400, ['ok' => $r['ok'], 'message' => $r['message'], 'error' => $r['ok'] ? '' : $r['message']] + cl_view(cl_load()));
+
 default:
     hub_json(400, ['ok' => false, 'error' => 'Unknown action.']);
 }

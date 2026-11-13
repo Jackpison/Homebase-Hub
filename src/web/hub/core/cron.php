@@ -30,5 +30,7 @@ try { require_once __DIR__ . '/lib/watch.php'; if (wt_load()['sites']) { wt_run(
 try { require_once HUB_WEB . '/tasks/lib.php'; $n = tasks_subs_tick((string)(hub_settings()['tz'] ?? 'UTC')); if ($n) $out[] = "Calendars: $n fetched."; } catch (Throwable $e) { $out[] = 'Calendars: ' . $e->getMessage(); }
 try { require_once __DIR__ . '/lib/ghupdate.php'; gh_tick(); } catch (Throwable $e) { $out[] = 'GitHub check: ' . $e->getMessage(); }   // does nothing unless the daily check was switched on
 $r = nt_run(false); $out[] = $r['note'];
+// (1.77.0) Cloud Backup: an encrypted copy sent to your WebDAV folder, once a day at most (nothing happens while it is off)
+try { require_once __DIR__ . '/lib/cloud.php'; $c = cl_tick(); if ($c) $out[] = 'Cloud Backup: ' . $c['message']; } catch (Throwable $e) { $out[] = 'Cloud Backup: ' . $e->getMessage(); }
 $h = hub_dir('core') . '/cron-last.txt'; @file_put_contents($h, (string)time());   // Health shows when the schedule last ran
 echo implode("\n", $out), "\n";

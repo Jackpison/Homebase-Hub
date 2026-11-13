@@ -157,6 +157,14 @@ try:
         pg.goto(s.base + '/web/settings/#ft-files'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-fhl-c').length >= 5", 20000)
         check('L29 Features > Files shows what Files offers (highlights and an Open Files button) and holds no settings', pg.evaluate("[document.querySelectorAll('#ix-pc input,#ix-pc select').length, /Open Files/.test(document.querySelector('#ix-pc .ix-fhero a').textContent)]") == [0, True])
 
+        # ---- 1.77.0: Cloud Backup (the card in Backup & Restore) ----
+        pg.goto(s.base + '/web/settings/#backup'); wait_js(pg, "!!document.getElementById('ix-cloud')", 20000)
+        cb = pg.evaluate("(() => [...['ix-clurl', 'ix-cluser', 'ix-clpass', 'ix-cldir', 'ix-clevery', 'ix-clkeep', 'ix-clon', 'ix-clsave', 'ix-cltest', 'ix-clnow'].map(i => !!document.getElementById(i)), document.getElementById('ix-clpass').type, document.getElementById('ix-clpass').value])()")
+        check('L30 Cloud Backup: the card has its fields, a password box that is empty, and the three buttons', cb == [True] * 10 + ['password', ''], cb)
+        pg.fill('#ix-clurl', 'http://8.8.8.8/dav'); pg.fill('#ix-cluser', 'me'); pg.fill('#ix-clpass', 'x'); pg.click('#ix-cltest')
+        wait_js(pg, "/https/.test(document.getElementById('ix-clmsg').textContent)", 15000)
+        check('L30b an address on the internet without https is refused in plain words, before anything is sent', 'https://' in pg.inner_text('#ix-clmsg'), pg.inner_text('#ix-clmsg'))
+
         # ---- Files: the grid ----
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
         pg.set_input_files('#pick', [{'name': 'red.png', 'mimeType': 'image/png', 'buffer': png((220, 40, 40))}])

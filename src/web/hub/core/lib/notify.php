@@ -362,6 +362,12 @@ function nt_tick(): void {
         @file_put_contents($wf, (string)time());
         try { require_once __DIR__ . '/watch.php'; if (wt_load()['sites']) wt_run(false); } catch (Throwable $e) {}
     }
+    // (1.77.0) Cloud Backup: checked with the same ten-minute rhythm, only when it is on
+    $cf = hub_jpath(hub_dir('core') . '/cloud.json');
+    if (is_file($cf) && time() - (int)@file_get_contents(hub_dir('core') . '/cloud-tick.txt') >= 600) {
+        @file_put_contents(hub_dir('core') . '/cloud-tick.txt', (string)time());
+        try { require_once __DIR__ . '/cloud.php'; cl_tick(); } catch (Throwable $e) {}
+    }
     if (!is_file($f)) return;
     $d = nt_load();
     if (!$d['on'] || time() - (int)$d['lastRun'] < 600) return;   // lastRun only: polling writes the file every few seconds
