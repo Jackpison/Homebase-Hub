@@ -542,14 +542,6 @@ html[data-theme="light"] #ix-page .ix-pill.warn{color:color-mix(in srgb,var(--ix
 #ix-page .ix-ec.ix-auto .ix-ec-b>.ix-tg:last-child{border-bottom:0;padding-bottom:0}
 #ix-page .ix-ec.ix-auto .ix-ec-b>.ix-note:last-child{margin-bottom:0}
 #ix-page .ix-ec.ix-auto .ix-ec-d{font-size:13.5px}
-#ix-page .ix-ec.ix-new{max-width:var(--ix-cw);position:relative;isolation:isolate}
-/* (1.65.1) What's New: a calm border with one light that runs around it twice when the card appears (instead of the heavy accent outline) */
-@property --ix-beam{syntax:"<angle>";inherits:false;initial-value:0deg}
-#ix-page .ix-ec.ix-new::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;
-  background:conic-gradient(from var(--ix-beam),transparent 0 72%,color-mix(in srgb,var(--ix-accent) 90%,transparent) 88%,transparent 96%);
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:ix-beam 3.2s linear .3s 2 both}
-@keyframes ix-beam{from{--ix-beam:0deg;opacity:1}99%{opacity:1}to{--ix-beam:360deg;opacity:0}}
-@media (prefers-reduced-motion:reduce){#ix-page .ix-ec.ix-new::before{animation:none;opacity:0}}
 #ix-page .ix-newbody{max-height:340px;overflow:auto;padding:2px 14px 6px;border:1px solid var(--ix-line);border-radius:14px;background:var(--ix-bg)}
 #ix-page .ix-mypre{margin:0 0 12px}
 #ix-page .ix-mypre>summary{cursor:pointer;color:var(--ix-accent-tx);font-weight:700;padding:4px 0}
@@ -862,7 +854,6 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 
 /* (1.75.0) Overview as boxes side by side (like the features-card mock-up): the big one with four parts to pick, Health, Protection Steps, and what needs a look */
 #ix-page .ix-newbody{max-height:170px}
-#ix-page .ix-ec.ix-new{padding:18px 22px}
 
 /* (1.76.0, 1.77.1) Features: a banner, a tinted card for each page, and for each page a coloured header and numbered highlights */
 #ix-page .ix-fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:var(--ix-cw)}
