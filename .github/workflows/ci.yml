@@ -179,11 +179,11 @@ jobs:
           python3 tests/server/files_test.py build/site-update-*.zip 2>&1 | python3 tests/lib/annotate.py "files server"
 
   browsers:
-    needs: [changes, quick]
+    needs: [changes]   # side by side with the quick checks, not after them: a push finishes in about 4 minutes (the heavy jobs wait for quick, but they only run by hand)
     if: needs.changes.outputs.code == 'true'   # skipped on a docs-only change
     # Every page in a real browser: Chromium, in two halves (pages, tools), side by side. WebKit (every iPhone browser uses it) runs every Monday and Firefox on the
-    # 1st of the month, in scheduled.yml. A push runs the light set: the pages half only (one job, about 4 minutes). The tools half (in two jobs side by side, tools and more: Tools, Files, Settings, the designs, the slow-phone test) joins it when Tools or the
-    # Animated Designs changed, when a release is being prepared, and on a manual run; scheduled.yml starts that manual run every Monday, so the whole set is checked weekly.
+    # 1st of the month, in scheduled.yml. A push runs the light set: the pages half only (one job, about 4 minutes). The tools and more halves (Tools, Files, Settings, the designs, the slow-phone test: two jobs side by side) run only on a run started by hand;
+    # scheduled.yml starts that run every Monday, so the whole set is checked weekly.
     # Inside a half several tests run at the same time (tests/lib/run_parallel.py): each test has its own port and /tmp folder.
     # Chromium runs three at once (WebKit, in scheduled.yml, two: with three it cancelled requests and missed timings on a busy runner, 1.61.10).
     # Only the slow-phone test runs alone, because it measures time. A failed batch test runs once more, alone (--retry 1): passing then, it shows as a 'flaky' warning.
