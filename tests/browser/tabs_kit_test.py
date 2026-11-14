@@ -97,7 +97,7 @@ try:
         pg.evaluate("document.querySelectorAll('#tabs .pen')[0].click()"); pg.wait_for_selector('#hubTabDlg[open]')
         d = pg.evaluate("""(() => { const d = document.getElementById('hubTabDlg'); return { x: !!d.querySelector('.ix-sh .ix-sx'), icons: d.querySelectorAll('.hubt-ico').length, lay: !d.querySelector('#htLayBlock').hidden,
             hc: !d.querySelector('#htHcRow').hidden, move: /Move (Left|Right)/.test(d.textContent), title: d.querySelector('.ix-sh h3').textContent, colorLabel: d.querySelector('#htColorLbl').textContent }; })()""")
-        check('K9 Info: the same window, with Layout and Box Headline Color (its own), the same 16 icons, and no Move Left / Move Right', d['x'] and d['icons'] == 17 and d['lay'] and d['hc'] and not d['move'] and d['title'] == 'Edit Tab' and d['colorLabel'] == 'Tab Color', d)
+        check('K9 Info: the same window, with Layout and no Box Headline Color (1.79.3: it is set in each box), the same 16 icons, and no Move Left / Move Right', d['x'] and d['icons'] == 17 and d['lay'] and not d['hc'] and not d['move'] and d['title'] == 'Edit Tab' and d['colorLabel'] == 'Tab Color', d)
         check('K10 ...a tab with no icon chosen is marked Default and draws the document icon', pg.evaluate("document.querySelector('#htIcoDef').getAttribute('aria-checked')") == 'true' and pg.evaluate("!!document.querySelector('#tabs .tabi:first-child svg.ti')"))
         pg.click('#htIcoBtn'); pg.click('.hubt-ico[data-i="globe"]'); pg.click('#htSave')
         until(lambda: info_tabs(s)[0].get('icon') == 'globe', 10000)
@@ -127,6 +127,19 @@ try:
         r3 = s.req(s.site_base + '/web/links/api.php?action=save', data=json.dumps({'data': data, 'rev': lk.get('rev')}).encode(), method='POST', hdr={'Content-Type': 'application/json', 'X-Hub-CSRF': s.csrf, 'X-Requested-With': 'bookmarks'})
         ic = [t.get('icon') for t in links_tabs(s)]
         check('K16 Links: a save keeps only a known icon on each tab', ic[0] is None and ic[1] == 'heart', (ic, r3))
+        # (1.79.3) the headline color is set in each box: Box Settings > Headline Color; it is saved on the box and drawn on its title only
+        pg.goto(s.base + '/web/info/'); wait_js(pg, "document.querySelectorAll('#tabs .tab:not(.add)').length >= 2", 20000); edit_on()
+        pg.evaluate("[...document.querySelectorAll('.box')].find(b => b.offsetParent).querySelector('[data-r=cfg]').click()"); pg.wait_for_selector('#bxdlg[open]')
+        pg.click('#bxsw .swc[data-c="#3b82f6"]')
+        check('K18 Box Settings has a Headline Color: the usual colors, and Use Default once one is picked', pg.get_attribute('#bxsw .swc[data-c="#3b82f6"]', 'aria-pressed') == 'true' and pg.is_enabled('#bxhcdef'))
+        pg.click('#bxform button[type=submit]'); until(lambda: not pg.evaluate("document.getElementById('bxdlg').open"), 10000)
+        saved = [b.get('hc') for t in info_tabs(s) for b in t['boxes']]
+        drawn = pg.evaluate("[...document.querySelectorAll('.box')].filter(b => b.offsetParent).map(b => getComputedStyle(b.querySelector('.nh h2')).color)")
+        check('K19 the color is saved on that box only, and its title is drawn in it', saved.count('#3b82f6') == 1 and 'rgb(59, 130, 246)' in drawn and drawn.count('rgb(59, 130, 246)') == 1, (saved, drawn))
+        pg.evaluate("[...document.querySelectorAll('.box')].find(b => b.offsetParent).querySelector('[data-r=cfg]').click()"); pg.wait_for_selector('#bxdlg[open]')
+        pg.click('#bxhcdef'); pg.click('#bxform button[type=submit]'); until(lambda: not pg.evaluate("document.getElementById('bxdlg').open"), 10000)
+        until(lambda: [b.get('hc') for t in info_tabs(s) for b in t['boxes']].count('#3b82f6') == 0, 10000)
+        check('K20 Use Default puts the box back to the normal text color', [b.get('hc') for t in info_tabs(s) for b in t['boxes']].count('#3b82f6') == 0)
         check('K17 no page errors', not errs, errs)
         b.close()
 finally:

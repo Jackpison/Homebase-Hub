@@ -17,7 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
-| 1.79.3 | TODO: one line for this version |
+| 1.79.3 | Box Headline Color moved from Edit Tab into each box |
 | 1.79.2 | Edit Tab is one page with a preview on top; tab bar gaps fixed; a divider under the Links tabs; Telegram Login Approval |
 | 1.79.1 | The gear opens Edit This Page, the page's Settings and Main Settings; Only Me is now Hide From Visitors; one-column Settings forms on a phone |
 | 1.79.0 | Clear the Activity log, a Cleanup section, turn Telegram, Tasks, Cards, Files and Tools off for real, a live countdown, an encryption step in first setup, and fixes for Add Your First Card and the logo message |
@@ -164,9 +164,10 @@ Nothing to migrate by hand unless an entry says so.
 
 ## 1.79.3
 
-### TODO
+### Changed
 
-- TODO: describe the changes in plain words.
+- **Box Headline Color** is now set in each box (Box Settings > Headline Color), not in Edit Tab. Each box can have its own color, and Use Default puts it back to the normal text color.
+- Tabs that already had a headline color keep it: it is copied to each of their boxes the first time the page is read, so nothing changes on screen.
 
 ---
 

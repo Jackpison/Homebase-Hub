@@ -12,7 +12,7 @@ function fn_src(string $src, string $name): string {
     for ($k = $j, $n = strlen($src); $k < $n; $k++) { if ($src[$k] === '{') $d++; elseif ($src[$k] === '}' && --$d === 0) return substr($src, $i, $k - $i + 1); }
     return '';
 }
-foreach (['cut', 'rid', 'box_title', 'box_id_ok', 'box_w', 'box_h', 'norm_box', 'restore_box', 'restore_boxes'] as $f) {
+foreach (['cut', 'rid', 'box_title', 'box_id_ok', 'box_w', 'box_h', 'color_ok', 'box_hc', 'norm_box', 'restore_box', 'restore_boxes'] as $f) {
     $code = fn_src($src, $f); t("api.php has $f", $code !== '');
     eval($code);
 }

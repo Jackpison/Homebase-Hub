@@ -128,6 +128,8 @@ function box_w($v) { return is_string($v) && in_array($v, BOX_W, true) ? $v : ''
 function box_h($v) { return is_string($v) && in_array($v, BOX_H, true) ? $v : ''; }
 // A box id is 8 hex characters, or a single digit for the two boxes pages had before boxes had ids (0 and 1).
 function box_id_ok($v) { return is_string($v) && preg_match('/^([0-9]|[a-f0-9]{8})$/', $v) === 1; }
+// (1.79.3) A box's own headline color: a #rrggbb color, or '' for the normal text color.
+function box_hc($v) { return is_string($v) && color_ok($v) ? strtolower($v) : ''; }
 function norm_box($b, $defTitle) {
     if (!is_array($b)) $b = [];
     $t = isset($b['title']) && is_string($b['title']) ? box_title($b['title']) : '';
@@ -135,6 +137,7 @@ function norm_box($b, $defTitle) {
         'id'    => isset($b['id']) && box_id_ok($b['id']) ? $b['id'] : '',
         'w'     => box_w($b['w'] ?? ''),
         'h'     => box_h($b['h'] ?? ''),
+        'hc'    => box_hc($b['hc'] ?? ''),
         'title' => $t !== '' ? $t : $defTitle,
         'notes' => isset($b['notes']) && is_string($b['notes']) ? $b['notes'] : '',
         'rev'   => isset($b['rev']) ? (int)$b['rev'] : 0,
@@ -168,7 +171,7 @@ function restore_box($re, $enc, $defTitle, $id = '', $taken = []) {
     if ($notes !== '' && $sealed !== (bool)$enc) return null;
     $title = isset($re['title']) && is_string($re['title']) ? box_title($re['title']) : '';
     if (!$enc && strncmp($title, 'enc1:', 5) === 0) return null;
-    $b = norm_box(['title' => $title, 'notes' => $notes, 'w' => $re['w'] ?? '', 'h' => $re['h'] ?? ''], $defTitle);
+    $b = norm_box(['title' => $title, 'notes' => $notes, 'w' => $re['w'] ?? '', 'h' => $re['h'] ?? '', 'hc' => $re['hc'] ?? ''], $defTitle);
     if (!box_id_ok($id) || isset($taken[$id])) { do { $id = rid(); } while (isset($taken[$id])); }   // the old id comes back when it is free
     $b['id'] = $id; $b['rev'] = 1; $b['saved'] = time();
     return $b;
@@ -198,10 +201,13 @@ function norm_data($j) {
         $bx = isset($t['boxes']) && is_array($t['boxes']) ? array_values($t['boxes']) : [];
         $nm = isset($t['name']) && is_string($t['name']) ? cut($t['name'], 40) : '';
         $boxes = norm_boxes($bx);
+        // (1.79.3) The headline color moved from the tab to each box: a color a tab still holds goes to its boxes that have none, then the tab's own is cleared.
+        $thc = tab_hc($t);
+        if ($thc !== '') { foreach ($boxes as &$bb) if ($bb['hc'] === '') $bb['hc'] = $thc; unset($bb); }
         // A tab holding encrypted text is always an encrypted (and private) tab, whatever its flag says,
         // so encrypted text is never shown raw and never sent to visitors.
         $enc = !empty($t['enc']) || has_enc($boxes);
-        $tabs[] = ['id' => $id, 'name' => $nm !== '' ? $nm : 'Tab ' . (count($tabs) + 1), 'color' => tab_color($t), 'hc' => tab_hc($t), 'layout' => tab_layout($t), 'icon' => tab_icon($t), 'private' => !empty($t['private']) || $enc, 'enc' => $enc,
+        $tabs[] = ['id' => $id, 'name' => $nm !== '' ? $nm : 'Tab ' . (count($tabs) + 1), 'color' => tab_color($t), 'hc' => '', 'layout' => tab_layout($t), 'icon' => tab_icon($t), 'private' => !empty($t['private']) || $enc, 'enc' => $enc,
                    'boxes' => $boxes];
     }
     if (!$tabs) $tabs[] = ['id' => rid(), 'name' => 'Information & Notes', 'color' => '', 'layout' => 'cards', 'boxes' => default_boxes('Information', 'Notes')];
@@ -345,7 +351,7 @@ if ($action === 'save') {
                 return [409, ['ok' => false, 'error' => 'conflict', 'box' => $cur], false];
             }
             $title = isset($d['title']) && is_string($d['title']) ? box_title($d['title']) : '';
-            $t['boxes'][$k] = ['id' => $bid, 'w' => $cur['w'], 'h' => $cur['h'], 'title' => $title !== '' ? $title : $cur['title'], 'notes' => $d['notes'], 'rev' => $cur['rev'] + 1, 'saved' => time()];
+            $t['boxes'][$k] = ['id' => $bid, 'w' => $cur['w'], 'h' => $cur['h'], 'hc' => $cur['hc'] ?? '', 'title' => $title !== '' ? $title : $cur['title'], 'notes' => $d['notes'], 'rev' => $cur['rev'] + 1, 'saved' => time()];
             return [200, ['ok' => true, 'box' => $t['boxes'][$k]], true];
         }
         return [404, ['ok' => false, 'error' => 'gone'], false];
@@ -375,6 +381,7 @@ if ($action === 'save_boxes') {
                 }
                 else { do { $id = rid(); } while (isset($old[$id]) || isset($used[$id])); $b = norm_box(null, 'Box ' . $n); $b['id'] = $id; }
                 $used[$id] = true; $b['w'] = box_w($e['w'] ?? ''); $b['h'] = box_h($e['h'] ?? '');
+                if (array_key_exists('hc', $e)) $b['hc'] = box_hc($e['hc']); elseif (!isset($b['hc'])) $b['hc'] = '';   // (1.79.3) a list without colors keeps each box's own
                 $boxes[] = $b;
             }
             $removed = count(array_diff(array_keys($old), array_keys($used))) > 0;
@@ -486,7 +493,7 @@ if ($action === 'remove_vault') {
                 $title = isset($b['title']) && is_string($b['title']) ? $b['title'] : '';
                 if (strncmp($title, 'enc1:', 5) === 0 || strncmp($b['notes'], 'enc1:', 5) === 0) return [400, ['ok' => false, 'error' => 'still encrypted'], false];
                 $title = box_title($title);
-                $t['boxes'][$k] = ['id' => $t['boxes'][$k]['id'], 'w' => $t['boxes'][$k]['w'], 'h' => $t['boxes'][$k]['h'], 'title' => $title !== '' ? $title : 'Box ' . ($k + 1), 'notes' => $b['notes'], 'rev' => $t['boxes'][$k]['rev'] + 1, 'saved' => time()];
+                $t['boxes'][$k] = ['id' => $t['boxes'][$k]['id'], 'w' => $t['boxes'][$k]['w'], 'h' => $t['boxes'][$k]['h'], 'hc' => $t['boxes'][$k]['hc'] ?? '', 'title' => $title !== '' ? $title : 'Box ' . ($k + 1), 'notes' => $b['notes'], 'rev' => $t['boxes'][$k]['rev'] + 1, 'saved' => time()];
             }
             $t['enc'] = false; $t['private'] = true;   // still hidden from visitors
         }

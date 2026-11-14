@@ -139,7 +139,7 @@ function mkBox(tabId,k,src,enc){
   src=src||{};
   // the two boxes of older pages are 0 and 1 (their drafts keep their names); every other box gets a random id
   const id=/^([0-9]|[a-f0-9]{8})$/.test(String(src.id))?String(src.id):(k<2?String(k):rid());
-  const b={key:tabId+"-"+id,id,tabId,k,w:okW(src.w),h:okH(src.h),title:"",notes:"",rev:0,saved:0,editing:false,theirs:null,el:null};
+  const b={key:tabId+"-"+id,id,tabId,k,w:okW(src.w),h:okH(src.h),hc:okColor(src.hc),title:"",notes:"",rev:0,saved:0,editing:false,theirs:null,el:null};
   intake(b,src,enc);return b;
 }
 const LAYS=["cards","doc"],okLay=v=>v==="doc"?"doc":"cards";   // how a tab is laid out: notebook cards (the default; "classic" from earlier versions is cards too) or one document
@@ -166,7 +166,7 @@ function textOn(hex){
 const findBox=key=>{for(const t of TABS)for(const b of t.boxes)if(b.key===key)return b};
 // The tabs as stored: encrypted tabs keep their ciphertext, never the decrypted text.
 const stored=(t,b)=>t.enc?{title:b.ct??b.title,notes:b.cn??b.notes}:{title:b.title,notes:b.notes};
-const plainTabs=()=>TABS.map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>({...stored(t,b),id:b.id,w:b.w,h:b.h,rev:b.rev,saved:b.saved}))}));
+const plainTabs=()=>TABS.map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>({...stored(t,b),id:b.id,w:b.w,h:b.h,hc:b.hc,rev:b.rev,saved:b.saved}))}));
 // The copy kept in this browser for instant loading. Private tabs (and everything, when the page is private)
 // are left out, so private text is never stored on the device. The icon is stored separately and only when it changes.
 let savedIcon=null;
@@ -214,7 +214,7 @@ function syncBoxes(t){
   [...bx.children].forEach(n=>{if(n.classList&&n.classList.contains("box")&&!want.has(n.dataset.key))n.remove()});
   t.boxes.forEach(b=>{
     if(!b.el||!boxNode(b)||!bx.contains(boxNode(b))){const n=buildBox(b);bx.insertBefore(n,add);fresh.push(b)}
-    const n=boxNode(b);n.dataset.w=b.w||"";n.dataset.h=b.h||"";
+    const n=boxNode(b);n.dataset.w=b.w||"";n.dataset.h=b.h||"";if(b.hc)n.style.setProperty("--hc",b.hc);else n.style.removeProperty("--hc");   // (1.79.3) each box has its own headline color
   });
   // order: each box right before the Add Box tile, in list order (only boxes that are out of place are moved)
   let prev=null;
@@ -519,7 +519,7 @@ document.addEventListener("visibilitychange",async()=>{
   lastFetch=Date.now();
   try{const had=authed;takeData(await fetchData());if(had&&!authed){setEdit(false);setStatus("You were logged out on this device.")}}catch(e){}
 }); // true once the server has answered (or is known to be unreachable)
-const sig=d=>JSON.stringify([d.rev|0,!!d.closed,d.tabs.map(t=>[t.id,t.name,t.color||"",t.hc||"",t.layout||"",!!t.private,t.boxes.map(b=>[b.id||"",b.w||"",b.h||"",b.title,b.notes,b.rev|0,b.saved|0])]),
+const sig=d=>JSON.stringify([d.rev|0,!!d.closed,d.tabs.map(t=>[t.id,t.name,t.color||"",t.hc||"",t.layout||"",!!t.private,t.boxes.map(b=>[b.id||"",b.w||"",b.h||"",b.hc||"",b.title,b.notes,b.rev|0,b.saved|0])]),
   d.page&&[d.page.title,d.page.icon,d.page.colors,!!d.page.private],d.timer]);
 // Replaces everything shown with the given data (tabs, title, icon, colors, timer).
 function applyData(d){
@@ -744,7 +744,7 @@ function mergeTabs(d){
     t.boxes=(Array.isArray(src.boxes)?src.boxes:[]).map((x,k)=>{
       const b=had.get(String(x&&x.id!=null?x.id:(k<2?k:"")));
       if(!b)return mkBox(t.id,k,x,t.enc);
-      b.k=k;b.w=okW(x.w);b.h=okH(x.h);if(!b.editing&&!busy.has(b.key))intake(b,x,t.enc);return b;
+      b.k=k;b.w=okW(x.w);b.h=okH(x.h);b.hc=okColor(x.hc);if(!b.editing&&!busy.has(b.key))intake(b,x,t.enc);return b;
     });
     return t;
   });
@@ -795,7 +795,7 @@ async function saveBoxList(t,list,say,done){
   const before=new Set(t.boxes.map(b=>b.id));
   if(!server){
     const pt=plainTabs(),x=pt.find(y=>y.id===t.id);
-    x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h}:{id:e.restore&&e.id?e.id:rid(),title:e.restore?e.restore.title:"",notes:e.restore?e.restore.notes:"",rev:0,saved:0,w:e.w,h:e.h}});
+    x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h,hc:e.hc!=null?e.hc:o.hc}:{id:e.restore&&e.id?e.id:rid(),title:e.restore?e.restore.title:"",notes:e.restore?e.restore.notes:"",rev:0,saved:0,w:e.w,h:e.h,hc:e.hc||""}});
     mergeTabs({rev:REV+1,tabs:pt});if(done)done(before);return;
   }
   try{
@@ -812,7 +812,7 @@ async function saveBoxList(t,list,say,done){
 function addBox(t){
   if(!t||t.boxes.length>=MAXBOX)return;
   guard(()=>{
-    const list=t.boxes.map(b=>({id:b.id,w:b.w,h:b.h}));list.push({id:null,w:"",h:""});
+    const list=t.boxes.map(b=>({id:b.id,w:b.w,h:b.h,hc:b.hc||""}));list.push({id:null,w:"",h:"",hc:""});
     saveBoxList(t,list,setStatus,before=>{
       const nb=t.boxes.find(b=>!before.has(b.id));if(!nb)return;
       const n=boxNode(nb);if(n)n.scrollIntoView({behavior:"smooth",block:"center"});
@@ -824,23 +824,30 @@ const bxdlg=$("bxdlg");let BX=null;
 function openBoxDlg(b){
   const t=TABS.find(x=>x.id===b.tabId);if(!t)return;
   if(b.editing){setStatus("Save or cancel this box first.");return}
-  BX={t,b,w:b.w,h:b.h,pos:t.boxes.indexOf(b),armed:false};
+  BX={t,b,w:b.w,h:b.h,hc:b.hc||"",pos:t.boxes.indexOf(b),armed:false};
   $("bxname").textContent=b.sealed?"Locked box":b.title;
   $("bxmsg").textContent="";$("bxdel").textContent="Delete Box";$("bxdel").hidden=t.boxes.length<2;bxUI();bxdlg.showModal();
 }
 function bxUI(){
   for(const [id,key] of [["bxw","w"],["bxh","h"]])document.querySelectorAll("#"+id+" .opt").forEach((/** @type {HTMLElement} */ x)=>{const on=x.dataset.v===BX[key];x.classList.toggle("on",on);x.setAttribute("aria-checked",String(on))});
   const n=BX.t.boxes.length;$("bxpos").textContent="Position "+(BX.pos+1)+" of "+n;$("bxleft").disabled=BX.pos<1;$("bxright").disabled=BX.pos>=n-1;
+  $("bxhc").value=BX.hc||"#ffffff";$("bxhcdef").disabled=!BX.hc;
+  document.querySelectorAll("#bxsw .swc").forEach((/** @type {HTMLElement} */ x)=>x.setAttribute("aria-pressed",String(!!BX.hc&&x.dataset.c===BX.hc)));
   $("bxwhint").textContent=BX.w?"":"Auto means "+(BX.t.layout==="doc"?"the full width of the page.":"half the width.");
 }
 $("bxw").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest(".opt");if(x){BX.w=okW(x.dataset.v);bxUI()}});
 $("bxh").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest(".opt");if(x){BX.h=okH(x.dataset.v);bxUI()}});
+// (1.79.3) The headline color of this box: a few usual colors, any color, or the normal text color
+$("bxsw").innerHTML=["#e5484d","#f5a524","#d4a72c","#3ecf8e","#2dd4bf","#3b82f6","#8b5cf6","#ec4899"].map(c=>'<button type="button" class="swc" data-c="'+c+'" style="background:'+c+'" aria-label="'+c+'" aria-pressed="false"></button>').join("");
+$("bxsw").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest(".swc");if(x){BX.hc=x.dataset.c;bxUI()}});
+$("bxhc").addEventListener("input",()=>{BX.hc=okColor($("bxhc").value);bxUI()});
+$("bxhcdef").onclick=()=>{BX.hc="";bxUI()};
 $("bxleft").onclick=()=>{BX.pos=Math.max(0,BX.pos-1);bxUI()};
 $("bxright").onclick=()=>{BX.pos=Math.min(BX.t.boxes.length-1,BX.pos+1);bxUI()};
 $("bxcancel").onclick=()=>bxdlg.close();
 function bxList(remove){
-  const list=BX.t.boxes.filter(x=>x!==BX.b).map(x=>({id:x.id,w:x.w,h:x.h}));
-  if(!remove)list.splice(BX.pos,0,{id:BX.b.id,w:BX.w,h:BX.h});
+  const list=BX.t.boxes.filter(x=>x!==BX.b).map(x=>({id:x.id,w:x.w,h:x.h,hc:x.hc||""}));
+  if(!remove)list.splice(BX.pos,0,{id:BX.b.id,w:BX.w,h:BX.h,hc:BX.hc});
   return list;
 }
 $("bxdel").onclick=()=>{
@@ -848,13 +855,13 @@ $("bxdel").onclick=()=>{
   saveBoxList(t,bxList(true),x=>$("bxmsg").textContent=x,()=>{bxdlg.close();if(window.HUB&&HUB.undo)HUB.undo("Box deleted"+what+" (in "+(t.name||"Tab")+").",()=>undoBox(t.id,gone,at))});
 };
 // (1.62.0) Undo after a delete: what the server sent is kept for 7 seconds (a locked tab's text stays locked) and sent back as "restore"
-const rawBox=(b,enc)=>({id:b.id,w:b.w,h:b.h,title:enc?b.ct:b.title,notes:enc?b.cn:b.notes});
+const rawBox=(b,enc)=>({id:b.id,w:b.w,h:b.h,hc:b.hc||"",title:enc?b.ct:b.title,notes:enc?b.cn:b.notes});
 function undoBox(tabId,gone,at){
   const t=TABS.find(x=>x.id===tabId);
   if(!t){setStatus("That tab is gone, so the box can't come back.");return}
   if(t.boxes.length>=MAXBOX){setStatus("This tab is full, so the box can't come back.");return}
-  const list=t.boxes.map(b=>({id:b.id,w:b.w,h:b.h}));
-  list.splice(Math.min(at,list.length),0,{id:gone.id,w:gone.w,h:gone.h,restore:{title:gone.title,notes:gone.notes}});
+  const list=t.boxes.map(b=>({id:b.id,w:b.w,h:b.h,hc:b.hc||""}));
+  list.splice(Math.min(at,list.length),0,{id:gone.id,w:gone.w,h:gone.h,hc:gone.hc||"",restore:{title:gone.title,notes:gone.notes,hc:gone.hc||""}});
   guard(()=>saveBoxList(t,list,setStatus,()=>setStatus("Box is back.")));
 }
 $("bxform").addEventListener("submit",e=>{e.preventDefault();saveBoxList(BX.t,bxList(false),x=>$("bxmsg").textContent=x,()=>bxdlg.close())});
@@ -881,7 +888,7 @@ function openTabEditor(id){
   HubTabs.edit({
     isNew:!t,title:t?"Edit Tab":"New Tab",saveLabel:t?"Save Tab":"Add Tab",name:t?t.name:nextTabName(),defaultName:nextTabName(),
     color:t?t.color:freeColor(TABS.map((x,j)=>tabColor(x,j))),colorShown:tabColor({color:""},pos),colorLabel:"Tab Color",
-    hc:t?t.hc||"":"",layouts:LAYS,layout:t?t.layout:"cards",icon:t&&t.icon,iconDefault:"doc",
+    hc:null,layouts:LAYS,layout:t?t.layout:"cards",icon:t&&t.icon,iconDefault:"doc",
     priv:!!(t&&t.private),enc:!!(t&&t.enc),
     privWhy:noPw?"Create a password first (in Settings) so private tabs can be hidden from visitors.":"",encWhy,
     encOnNote:"The box titles and text are encrypted in your browser with your encryption passphrase, so the server, earlier versions and backups only hold scrambled data. The tab name isn't encrypted.",
