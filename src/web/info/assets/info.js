@@ -702,7 +702,7 @@ function renderTabs(){
     return`<div class="tabi${on?" on":""}" role="none" data-t="${id}" style="--tc:${c};--tf:${textOn(c)}">`+
       `<button class="tab" role="tab" data-t="${id}" aria-selected="${on}">${HubTabs.iconSvg(t.icon||"doc","ti")}${nm}`+
       (t.enc?`<span class="lk enc" title="Encrypted: locked with your passphrase">${IMG_SAFE}</span>`
-       :t.private?`<span class="lk" title="Private: visible only when logged in">${IMG_LOCK}</span>`:`<span class="lk slot"></span>`)+`</button>`+
+       :t.private?`<span class="lk" title="Private: visible only when logged in">${IMG_LOCK}</span>`:"")+`</button>`+
       `<button class="pen" type="button" title="Edit Tab" aria-label="Edit tab ${nm}">${PEN}</button></div>`}).join("")+
     (TABS.length<MAXTAB?'<button class="tab add" data-add="1" title="Add Tab" aria-label="Add Tab">+</button>':"");
   for(const t of TABS){const m=$("panel-"+t.id);if(m){m.hidden=t.id!==active;m.style.setProperty("--tc",tabColor(t,TABS.indexOf(t)))}}

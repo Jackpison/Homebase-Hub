@@ -241,13 +241,16 @@ body.is-locked .search{display:none}
 .row .vc~.ctrl{margin-left:0}
 
 .nores.first{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 16px;border:1px dashed var(--line2,var(--line));border-radius:16px}.nores.first b{font-size:1.15em;color:var(--text)}
-/* (1.79.1) Tab bar: the pencil only on the tab you are on, a fixed lock slot while editing, a line under the active tab, a New tab button that looks like a tab */
+/* (1.79.1) Tab bar: the pencil only on the tab you are on, a line under the active tab, a New tab button that looks like a tab */
 .tabi:not(.on) .pen{display:none!important}
 .tab .tslot{display:inline-grid;place-items:center;flex:none;width:20px;height:20px}
 .tab .tslot svg,.tab .tslot img{width:16px;height:16px;display:block}
 .tab .tslot:empty{display:none}
-body.editing .tab:not(.add) .tslot:empty{display:inline-grid}
 .tab:not(.add){position:relative}
 .tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:3px;border-radius:3px;background:var(--tab-ribbon,var(--ribbon))}
 .tab.add{transition:background .15s,color .15s}
 .tab.add:hover{background:color-mix(in srgb,var(--text) 8%,transparent)}
+/* (1.79.2) a small grey divider between the tabs and the links */
+header{position:relative}
+header::after{content:"";position:absolute;left:32px;right:32px;bottom:0;height:1px;background:color-mix(in srgb,var(--text) 16%,transparent)}
+@media (max-width:700px){header::after{left:16px;right:16px}}

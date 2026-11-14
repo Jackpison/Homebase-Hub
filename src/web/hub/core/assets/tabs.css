@@ -62,16 +62,11 @@ body.dragtabs,body.dragtabs *{cursor:grabbing!important}
 #hubTabDlg .hubt-lp-cards{background-image:linear-gradient(var(--ix-accent,var(--accent,#ffc21a)),var(--ix-accent,var(--accent,#ffc21a))),linear-gradient(var(--ix-accent,var(--accent,#ffc21a)),var(--ix-accent,var(--accent,#ffc21a))),linear-gradient(color-mix(in srgb,currentColor 30%,transparent),color-mix(in srgb,currentColor 30%,transparent)),linear-gradient(color-mix(in srgb,currentColor 30%,transparent),color-mix(in srgb,currentColor 30%,transparent));background-size:40% 9%,40% 9%,40% 56%,40% 56%;background-position:8% 18%,92% 18%,8% 78%,92% 78%;background-repeat:no-repeat}
 #hubTabDlg .hubt-lp-doc{background-image:linear-gradient(currentColor,currentColor),linear-gradient(currentColor,currentColor),linear-gradient(color-mix(in srgb,currentColor 30%,transparent),color-mix(in srgb,currentColor 30%,transparent)),linear-gradient(color-mix(in srgb,currentColor 30%,transparent),color-mix(in srgb,currentColor 30%,transparent)),linear-gradient(color-mix(in srgb,currentColor 30%,transparent),color-mix(in srgb,currentColor 30%,transparent));background-size:20% 7%,16% 7%,52% 8%,60% 6%,56% 6%;background-position:7% 24%,7% 44%,92% 22%,92% 48%,92% 70%;background-repeat:no-repeat}
 @media (max-width:420px){#hubTabDlg .hubt-lays{grid-template-columns:1fr}#hubTabDlg .hubt-lay{flex-direction:row;align-items:center;gap:10px}#hubTabDlg .hubt-lp{width:64px;flex:none;margin:0}}
-/* (1.79.1) Edit Tab in three steps: Basics, Look, Privacy */
-#hubTabDlg .hubt-seg{display:flex;gap:4px;padding:3px;margin:0 0 14px;border-radius:12px;background:color-mix(in srgb,currentColor 7%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
-#hubTabDlg .hubt-seg button{flex:1;padding:8px 6px;border:0;border-radius:9px;background:none;color:inherit;font:inherit;font-size:14px;font-weight:600;opacity:.7;cursor:pointer}
-#hubTabDlg .hubt-seg button[aria-selected="true"]{background:color-mix(in srgb,currentColor 16%,transparent);opacity:1}
-#hubTabDlg .hubt-seg button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
-#hubTabDlg h4[hidden],#hubTabDlg .ix-grp[hidden]{display:none}
+/* (1.79.1) Edit Tab: a preview of the tab at the top */
+#hubTabDlg .hubt-prevblk{display:flex;flex-direction:column;align-items:center;gap:8px}
 #hubTabDlg .hubt-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid color-mix(in srgb,currentColor 18%,transparent);background:color-mix(in srgb,currentColor 6%,transparent);font-weight:800;letter-spacing:.02em;text-transform:uppercase}
 #hubTabDlg .hubt-pi .hubt-svg{width:18px;height:18px;display:block}
 #hubTabDlg .hubt-pl{display:grid;place-items:center;color:#ffbd1f}
 #hubTabDlg .hubt-pl.enc{color:#3ecf8e}
 #hubTabDlg .hubt-pl[hidden]{display:none}
 #hubTabDlg .hubt-pl svg{width:16px;height:16px}
-#hubTabDlg .hubt-seg[hidden]{display:none}

@@ -419,7 +419,7 @@ case 'settings':
 case 'features_off':   // (1.79.0) Settings > Features: {off: ['telegram', 'files', ...]} turns those off for real; the rest stay on
     need_post(); need_admin();
     $off = hub_clean_off(body()['off'] ?? []);
-    if (in_array('telegram', $off, true)) { require_once __DIR__ . '/lib/approval.php'; if (ap_on()) hub_json(400, ['ok' => false, 'error' => 'Login Approval uses Telegram. Turn it off first (Security, Sign-In), or you could not log in.']); }
+    if (in_array('telegram', $off, true)) { require_once __DIR__ . '/lib/approval.php'; if (ap_on()) hub_json(400, ['ok' => false, 'error' => 'Telegram Login Approval uses Telegram. Turn it off first (Security, Sign-In), or you could not log in.']); }
     hub_settings_update(function ($s) use ($off) { $s['off'] = $off; return $s; });
     hub_act('features', $off ? 'off: ' . implode(', ', $off) : 'all on');
     hub_json(200, ['ok' => true, 'state' => hub_public_state()]);

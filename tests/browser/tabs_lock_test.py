@@ -69,7 +69,7 @@ try:
         pg.keyboard.press('Escape')
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_selector('body.editing', timeout=10000)
         pg.evaluate("[...document.querySelectorAll('#tabs .tabi')].find(x => x.textContent.includes('Trip Notes')).querySelector('.tab').click()"); pg.wait_for_selector('#tabs .tabi.on .pen', state='visible'); pg.evaluate("document.querySelector('#tabs .tabi.on .pen').click()"); pg.wait_for_selector('#hubTabDlg[open]')
-        pg.click('#htSeg [data-step=priv]'); pg.check('#htEnc'); pg.click('#htSave'); pg.wait_for_selector('#uldlg[open]'); pg.fill('#ulin', PP); pg.check('#ulkeep'); pg.click('#ulsave')
+        pg.check('#htEnc'); pg.click('#htSave'); pg.wait_for_selector('#uldlg[open]'); pg.fill('#ulin', PP); pg.check('#ulkeep'); pg.click('#ulsave')
         until(lambda: 'Weekend in the Mountains' not in everything(s.dir + '/site-data/info', '/**/*'), 30000)
         raw_info = everything(s.dir + '/site-data/info', '/**/*')
         tabs = json.loads(open(s.dir + '/site-data/info/info.php').read().split('\n', 1)[1])['tabs']
@@ -107,16 +107,17 @@ try:
         # a new private Info tab is encrypted from the start
         pg.evaluate("document.querySelector('[data-hub=toggle]') && document.querySelector('[data-hub=toggle]').click()")
         pg.evaluate("document.querySelector('[data-add]').click()"); pg.wait_for_selector('#hubTabDlg[open]')
-        pg.click('#htSeg [data-step=priv]'); pg.check('#htPriv')
+        pg.check('#htPriv')
         check('T12 ticking Private on a new Info tab ticks Encrypt too', pg.is_checked('#htEnc'))
-        # (1.79.1) Info's Edit Tab has three steps and a preview of the tab in the bar; Links' has everything on one page (few fields)
-        steps = pg.evaluate("(() => { const v = [...document.querySelectorAll('#hubTabDlg h4[data-step]')].map(x => !x.hidden); return [v, !document.getElementById('htSeg').hidden, document.getElementById('htPrevLock').classList.contains('enc'), !document.getElementById('htPrevLock').hidden]; })()")
-        check('T15 Info Edit Tab: three steps (Privacy shown here), and the preview shows the green lock for an encrypted tab', steps[0] == [False, False, True] and steps[1] and steps[2] and steps[3], steps)
+        # (1.79.1) Edit Tab (Info, then Links) is one page with a preview of the tab at the top; the preview shows the lock of an encrypted tab
+        prev = pg.evaluate("(() => { const p = document.getElementById('htPrev').getBoundingClientRect(), n = document.getElementById('htName').getBoundingClientRect(); return [p.top < n.top, document.getElementById('htPrevLock').classList.contains('enc'), !document.getElementById('htPrevLock').hidden, document.getElementById('htPrevName').textContent]; })()")
+        check('T15 Info Edit Tab: the preview of the tab is above the Name, and shows the green lock for an encrypted tab', prev[0] and prev[1] and prev[2] and prev[3] == 'Trip Notes', prev)
         pg.keyboard.press('Escape'); pg.goto(s.base + '/web/links/'); wait_js(pg, "document.querySelectorAll('.tab').length > 1", 20000)
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_selector('body.editing', timeout=10000)
-        pg.evaluate("document.querySelectorAll('#tabs .pen')[0].click()"); pg.wait_for_selector('#hubTabDlg[open]')
-        flat = pg.evaluate("[document.getElementById('htSeg').offsetParent === null, [...document.querySelectorAll('#hubTabDlg h4[data-step]')].every(x => !x.hidden)]")
-        check('T16 Links Edit Tab shows everything on one page, with no step buttons', flat == [True, True], flat)
+        pg.evaluate("document.querySelector('#tabs .tabi.on .pen').click()"); pg.wait_for_selector('#hubTabDlg[open]')
+        prev = pg.evaluate("(() => { const p = document.getElementById('htPrev').getBoundingClientRect(), n = document.getElementById('htName').getBoundingClientRect(); return [p.top < n.top, document.getElementById('htPrevName').textContent === document.getElementById('htName').value]; })()")
+        check('T16 Links Edit Tab: the preview of the tab is above the Name too, and shows its name', prev == [True, True], prev)
+        pg.fill('#htName', 'Renamed'); check('T17 the preview follows the name as you type', pg.inner_text('#htPrevName').strip().lower() == 'renamed', pg.inner_text('#htPrevName'))
         check('T14 no page error', not errs, errs)
         b.close()
 finally:

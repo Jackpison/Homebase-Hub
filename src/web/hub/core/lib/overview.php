@@ -26,7 +26,7 @@ function hub_overview(): array {
         ['key' => 'twostep',  'on' => !empty($a['totp']['on']),                     'title' => 'Two-Step Login',     'next' => 'Turn on Two-Step Login, so a stolen password alone gets nobody in.'],
         ['key' => 'enc',      'on' => hub_pp_on(),                              'title' => 'Encryption',         'next' => 'Set an encryption passphrase: encrypted tabs and backup files stay private even if someone copies your server.'],
         ['key' => 'recovery', 'on' => $rec,                                         'title' => 'Recovery Key',       'next' => 'Create a recovery key: without one, a forgotten passphrase means encrypted tabs are lost.'],
-        ['key' => 'approval', 'on' => is_file(hub_dir('core') . '/login-approval.php'), 'title' => 'Login Approval', 'next' => 'Approve new logins in Telegram: you see every login and can refuse it.'],
+        ['key' => 'approval', 'on' => is_file(hub_dir('core') . '/login-approval.php'), 'title' => 'Telegram Login Approval', 'next' => 'Approve new logins in Telegram: you see every login and can refuse it.'],
     ];
     $on = 1 + count(array_filter($prot, function ($p) { return $p['on']; }));   // the password counts too
     $next = null; foreach ($prot as $p) if (!$p['on'] && !($p['key'] === 'recovery' && !hub_pp_on()) && !($p['key'] === 'approval' && $n['token'] === '')) { $next = $p; break; }

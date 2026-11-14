@@ -196,7 +196,7 @@
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
-    ['Passkeys', 'security/passkeys', 'passkey fingerprint face pin webauthn security key log in without password'], ['Two-Step Login', 'security/two-step-login', '2fa authenticator totp recovery codes'], ['Login Approval', 'security/login-approval', 'telegram approve tap'],
+    ['Passkeys', 'security/passkeys', 'passkey fingerprint face pin webauthn security key log in without password'], ['Two-Step Login', 'security/two-step-login', '2fa authenticator totp recovery codes'], ['Telegram Login Approval', 'security/login-approval', 'telegram approve tap'],
     ['Trusted Browsers', 'security/trusted-browsers', 'skip code remember'], ['Devices and Login History', 'security/devices', 'log out sessions activity wrong password ip'],
     ['Telegram Bot Setup', 'telegram/setup', 'token botfather chat cron schedule connect'], ['Send Backups to Telegram', 'backup', 'telegram send backup schedule daily weekly'],
     ['Telegram Messages', 'telegram/messages', 'digest reminders alerts daily hour due'], ['Instant Replies', 'telegram/instant-replies', 'webhook commands bot'],

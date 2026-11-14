@@ -196,7 +196,7 @@
     ['Font', 'look', 'typeface text trebuchet georgia'], ['Theme', 'look', 'dark light amoled follow device system'], ['Text Sizes', 'look', 'bigger smaller font size info cards zoom'], ['Accent Color', 'colors', 'gold buttons highlight'],
     ['Presets', 'themes', 'themes looks dracula nord gallery surprise my save share import export'], ['Colors', 'colors', 'background text borders menu bar page accent per page'],
     ['Website Password', 'security/password', 'change login'], ['Encryption Passphrase', 'security/encryption', 'encrypt lock private tabs backups'], ['Recovery Key', 'security/encryption', 'forgot passphrase spare'],
-    ['Passkeys', 'security/passkeys', 'passkey fingerprint face pin webauthn security key log in without password'], ['Two-Step Login', 'security/two-step-login', '2fa authenticator totp recovery codes'], ['Login Approval', 'security/login-approval', 'telegram approve tap'],
+    ['Passkeys', 'security/passkeys', 'passkey fingerprint face pin webauthn security key log in without password'], ['Two-Step Login', 'security/two-step-login', '2fa authenticator totp recovery codes'], ['Telegram Login Approval', 'security/login-approval', 'telegram approve tap'],
     ['Trusted Browsers', 'security/trusted-browsers', 'skip code remember'], ['Devices and Login History', 'security/devices', 'log out sessions activity wrong password ip'],
     ['Telegram Bot Setup', 'telegram/setup', 'token botfather chat cron schedule connect'], ['Send Backups to Telegram', 'backup', 'telegram send backup schedule daily weekly'],
     ['Telegram Messages', 'telegram/messages', 'digest reminders alerts daily hour due'], ['Instant Replies', 'telegram/instant-replies', 'webhook commands bot'],
@@ -1781,7 +1781,7 @@
 
   function pSecurity(p) {
     var SECS = [['pw', 'Password'], ['enc', 'Encryption'], ['pk', 'Passkeys'], ['2fa', 'Two-Step Login'],
-                ['ap', 'Login Approval'], ['tr', 'Trusted Browsers'], ['dev', 'Devices']];
+                ['ap', 'Telegram Login Approval'], ['tr', 'Trusted Browsers'], ['dev', 'Devices']];
     p.innerHTML = '<div class="ix-hero" id="ix-sov">' + spinRow('Checking your protections…') + '</div><div class="ix-tiles" id="ix-stiles"></div><div id="ix-schk"></div>' +
       SECS.map(function (x) { return '<details class="ix-acc" data-sec="' + x[0] + '"><summary><span>' + x[1] + '</span><small data-sum="' + x[0] + '">…</small></summary><div class="ix-accb" data-body="' + x[0] + '"></div></details>'; }).join('');
     var body = function (k) { return p.querySelector('[data-body="' + k + '"]'); }, sum = function (k, t) { p.querySelector('[data-sum="' + k + '"]').textContent = t; };
@@ -1815,7 +1815,7 @@
         (encOn() ? tile('enc', ICON.shield, 'Recovery Key', st.rec ? 'Created' : 'Not Created', st.rec ? 'good' : 'warn', st.rec ? 'A spare way in if you ever forget the passphrase.' : 'Create one, so a forgotten passphrase does not mean lost tabs.') : '') +
         tile('2fa', ICON.device, 'Two-Step Login', S.twoStep ? 'On' : 'Off', S.twoStep ? 'good' : 'warn', S.twoStep ? S.recoveryLeft + ' recovery ' + (S.recoveryLeft === 1 ? 'code' : 'codes') + ' left.' : 'A 6-digit code from your phone on top of the password.') +
         tile('pk', ICON.device, 'Passkeys', st.pk.length ? st.pk.length + (st.pk.length === 1 ? ' Passkey' : ' Passkeys') : 'None', st.pk.length ? 'good' : '', st.pk.length ? 'Log in with your fingerprint, face or PIN.' : (st.pkSecure ? 'Log in with your fingerprint, face or PIN.' : 'Needs HTTPS.')) +   // (1.61.6) it had a tab but no card
-        tile('ap', ICON.send, 'Login Approval', a.on ? 'On' : 'Off', a.on ? 'good' : '', a.on ? 'Every new browser waits for your tap in Telegram.' : (a.telegram ? 'Approve new logins with one tap in Telegram.' : 'Needs the Telegram bot to be set up first.')) +
+        tile('ap', ICON.send, 'Telegram Login Approval', a.on ? 'On' : 'Off', a.on ? 'good' : '', a.on ? 'Every new browser waits for your tap in Telegram.' : (a.telegram ? 'Approve new logins with one tap in Telegram.' : 'Needs the Telegram bot to be set up first.')) +
         tile('tr', ICON.desktop, 'Trusted Browsers', trN ? trN + (trN === 1 ? ' Browser' : ' Browsers') : 'None', '', 'Browsers that skip the code and the tap for 30 days.') +
         tile('dev', ICON.out, 'Devices', '', '', 'Log out every other device in one tap.');
       p.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { var d = acc(b.dataset.go); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
@@ -2080,7 +2080,7 @@
     function drawAp() {
       var b = body('ap'), a = st.ap;
       if (!a.ok) { b.innerHTML = spinRow(); return; }
-      b.innerHTML = ecCard('ix-split' + (a.on ? ' good' : ''), ICON.send, 'Login Approval',
+      b.innerHTML = ecCard('ix-split' + (a.on ? ' good' : ''), ICON.send, 'Telegram Login Approval',
           'Even someone who knows your password cannot get in until you tap <b>Approve</b> on a message from your Telegram bot, after the password (and the two-step code). You see every login and can refuse it.',
           (a.telegram ? '' : '<div class="ix-status"><span>!</span><span><b>Set up the Telegram bot first.</b> <a href="#" id="ix-apgo">Open Settings › Telegram</a></span></div>') +
           '<form id="ix-apform"><div class="ix-fact ix-fbot">' + ecField('ix-appw', 'Website Password', 'password', 'current-password', '', '', ' placeholder="' + (a.on ? 'Needed to turn this off' : 'Needed to turn this on') + '"') +
@@ -3013,7 +3013,7 @@
   /* (1.78.0) what the site records, in plain words: [label, style, mark, security?]. The detail (e.x) is what was changed, never a value. */
   var LOGEV = { login: ['Logged In', '', '✓', 1], failed: ['Wrong Password', 'warn', '!', 1], locked: ['Logins Paused After Too Many Wrong Tries', 'warn', '!', 1], password: ['Password Changed', '', '✓', 1],
     logoutall: ['Other Devices Logged Out', '', '✓', 1], twostep_on: ['Two-Step Login Turned On', '', '✓', 1], twostep_off: ['Two-Step Login Turned Off', 'warn', '!', 1],
-    recovery: ['New Recovery Codes Made', '', '✓', 1], restore: ['Backup Restored', 'warn', '!', 1], passkey: ['Passkey', '', '✓', 1], session_revoke: ['Device Logged Out', '', '✓', 1], approval: ['Login Approval', '', '✓', 1],
+    recovery: ['New Recovery Codes Made', '', '✓', 1], restore: ['Backup Restored', 'warn', '!', 1], passkey: ['Passkey', '', '✓', 1], session_revoke: ['Device Logged Out', '', '✓', 1], approval: ['Telegram Login Approval', '', '✓', 1],
     encryption: ['Encryption', '', '✓', 1], activity_cleared: ['Activity Cleared', 'warn', '!', 1], settings: ['Settings Saved', '', '✓'], logo: ['Logo', '', '✓'], backup: ['Backup', '', '✓'], version_restore: ['Earlier Version Restored', 'warn', '!'],
     update: ['Site Updated', '', '✓'], features: ['Features', '', '✓'], cleanup: ['Cleanup', '', '✓'], update_back: ['Went Back to the Saved Version', 'warn', '!'], files_delete: ['Files Deleted', 'warn', '!'], reset: ['Site Erased', 'warn', '!'], telegram: ['Telegram', '', '✓'] };
   var LOGSEC = {}; Object.keys(LOGEV).forEach(function (k) { if (LOGEV[k][3]) LOGSEC[k] = 1; });
