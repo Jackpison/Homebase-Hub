@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.78.2 | The domain and uptime watch is removed completely (code, schedule, backups and Telegram status); the optional update address stays |
 | 1.78.1 | Settings: Data Protection and Telegram Setup in the Sign-In style, Two-Step scan side by side, Look tab renamed; smoother pages, folds and hovers everywhere |
 | 1.78.0 | Settings: Sign-In boxes redesigned, Look and Bar in one tab, a clearer Telegram Setup, click-to-copy commands, an Activity log of what was done; Start Here and Domains and Uptime are gone |
 | 1.77.5 | Info: an unlocked encrypted tab in the Document layout no longer shows its lock bar on top of the Outline |
@@ -154,6 +155,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.78.2
+
+### Removed
+
+- The domain, SSL and uptime watch is gone from the code. Its screen went in 1.78.0; now its checks, its 5-minute schedule, its Telegram alerts and its line in the Telegram `/status` message are gone too, so your site makes no request to a domain registry or to your own site any more.
+- Backups no longer have a Domain Watch part. A backup made before 1.78.2 still restores: its watch part is ignored.
+- The optional update address (Health › Updates) keeps working. It now lives in `site-data/core/update-check.json`, and the address you saved before is taken over by itself.
+- Renewal tasks the watch made in Tasks stay where they are. They are yours to keep or delete.
+- Start Over also removes the old `watch.json` that earlier versions left behind.
 
 ---
 

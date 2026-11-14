@@ -912,9 +912,20 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-ec .ix-st:has(.ix-st-dots)>.ix-st-head{grid-column:1/-1;grid-row:2}
 #ix-page .ix-ec .ix-st:has(.ix-st-dots) .ix-st-back[data-h]{display:none}
 #ix-page .ix-ec .ix-st-dots{justify-content:flex-start}
+/* (1.78.2) the numbered steps (Set a Passphrase): the fields fill the row, and Continue sits on the line of the tick box, its right edge under the last box.
+   Only while the step shows a tick box (and not on a phone); other steps keep Continue below, at the right. */
+#ix-page .ix-ec .ix-st:has(.ix-st-seg) .ix-frm{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:701px){
+#ix-page .ix-ec .ix-st:has(.ix-st-pane:not([hidden]) .ix-chk:not([hidden])){position:relative}
+#ix-page .ix-ec .ix-st:has(.ix-st-pane:not([hidden]) .ix-chk:not([hidden]))>.ix-st-foot{position:absolute;right:0;bottom:0;padding:0}
+#ix-page .ix-ec .ix-st:has(.ix-st-pane:not([hidden]) .ix-chk:not([hidden])) .ix-st-pane:not([hidden]) .ix-chk{max-width:calc(100% - 140px)}
+#ix-page .ix-ec .ix-st:has(.ix-st-pane:not([hidden]) .ix-chk:not([hidden])):has(.ix-st-back:not([data-h])) .ix-st-pane:not([hidden]) .ix-chk{max-width:calc(100% - 240px)}
+}
 #ix-page .ix-ec .ix-err:empty{display:none}
 /* (1.78.0) a card with two sides (Sign-In): what it is on the left, what you do on the right. One column on a narrow screen. */
 #ix-page .ix-ec.ix-split{display:grid;grid-template-columns:minmax(280px,400px) minmax(0,1fr);gap:0 40px;align-items:start}
+#ix-page .ix-ec.ix-split.intro{align-items:center}
+#ix-page .ix-ec.ix-split.intro>.ix-ec-b{padding-top:0}
 #ix-page .ix-ec.ix-split>.ix-ec-h .ix-ec-d{font-size:13.5px;line-height:1.5}
 #ix-page .ix-ec.ix-split>.ix-ec-b{margin-top:0;padding-top:2px}
 #ix-page .ix-ec.ix-split .ix-frm{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}

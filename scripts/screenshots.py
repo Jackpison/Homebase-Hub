@@ -100,10 +100,10 @@ with sync_playwright() as p:
             snap(pg,'tasks-calendar','/web/tasks/',click='#views button[data-view="cal"]')
             snap(pg,'tasks-analytics','/web/tasks/',click='#views button[data-view="an"]')
             snap(pg,'tools','/web/tools/')
-            for n,h in [('overview','overview'),('general','general'),('appearance','look'),('presets','themes'),('colors','colors'),('security','security'),('telegram','telegram'),('backup','backup'),('updates','updates'),('files','files'),('health','health'),('check','check'),('changelog','changelog')]:
+            for n,h in [('general','general'),('appearance','look'),('presets','themes'),('colors','colors'),('security','security'),('telegram','telegram'),('backup','backup'),('updates','updates'),('files','files'),('health','health'),('check','check'),('changelog','changelog')]:
                 snap(pg,'s-'+n,'/web/settings/#'+h)
         else:
-            snap(pg,'s-overview-light','/web/settings/#overview'); snap(pg,'tools-light','/web/tools/')
+            snap(pg,'s-general-light','/web/settings/#general'); snap(pg,'tools-light','/web/tools/')
     # Home (1440 x 683, as on the website): the Glass Dock with Today open, Glance and Expand, and what a visitor sees
     # Home shows the time: photograph it at a quarter to eight in the evening (India), not at whatever time this runs
     EVENING=datetime.datetime.combine(today, datetime.time(19, 42), tzinfo=datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
@@ -118,7 +118,7 @@ with sync_playwright() as p:
     home_seed('dock')
     m=ctx(390,844,'dark').new_page()
     m.context.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}"); evening(m.context)
-    for n,u in [('m-home','/web/home/'),('m-links','/web/links/'),('m-tasks','/web/tasks/'),('m-info','/web/info/'),('m-settings','/web/settings/#overview'),('m-tools','/web/tools/')]: snap(m,n,u)
+    for n,u in [('m-home','/web/home/'),('m-links','/web/links/'),('m-tasks','/web/tasks/'),('m-info','/web/info/'),('m-settings','/web/settings/#general'),('m-tools','/web/tools/')]: snap(m,n,u)
     # ---- 1.60: the settings of every page, edit mode, the login window, new tools (dark) ----
     def item(pg, label):   # presses a page's menu item (the pencil menu or the edit bar both use these buttons)
         pg.evaluate("(l) => document.querySelector('[data-hub=\"item\"][data-hub-label=\"' + l + '\"]').click()", label); pg.wait_for_timeout(1200)
@@ -179,11 +179,13 @@ with sync_playwright() as p:
     fx = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tests', 'fixtures')
     fb = lambda n: open(os.path.join(fx, n), 'rb').read()
     pg = ctx(1440, 900, 'dark').new_page()
-    pg.goto(B + '/web/settings/#security/encryption'); pg.wait_for_selector('#ix-en1', timeout=20000)
-    pg.fill('#ix-en1', PASS); pg.fill('#ix-en2', PASS); pg.fill('#ix-epw', PW); pg.check('#ix-eack'); pg.click('#ix-eset')
+    # (1.78.2) the passphrase is a three-step Stepper in Security > Data Protection: Passphrase -> Confirm It's You (sets it) -> Recovery Key
+    pg.goto(B + '/web/settings/#security/data-protection'); pg.wait_for_selector('#ix-en1', timeout=20000)
+    pg.fill('#ix-en1', PASS); pg.fill('#ix-en2', PASS); pg.check('#ix-eack'); pg.click('#ix-encst .ix-st-next')
+    pg.wait_for_selector('#ix-epw', state='visible', timeout=10000); pg.fill('#ix-epw', PW); pg.click('#ix-encst .ix-st-next')
     waitjs(pg, "fetch('/web/hub/core/api.php?action=sv_get', {credentials: 'same-origin'}).then(r => r.json()).then(j => !!(j.pp && j.vault))", 60000)
-    pg.wait_for_timeout(1500); shot(pg, 's-encryption')
-    snap(pg, 's-security', '/web/settings/#security'); snap(pg, 's-passkeys', '/web/settings/#security', click='.ix-subt button:has-text("Passkeys")')
+    snap(pg, 's-encryption', '/web/settings/#security/data-protection', full=True)
+    snap(pg, 's-security', '/web/settings/#security'); snap(pg, 's-passkeys', '/web/settings/#security/password', full=True)
     # Files: a few files with real-looking names, a folder, a star and a share link
     pg.goto(B + '/web/files/', wait_until='domcontentloaded'); waitjs(pg, "!!(window.__files && __files.state().started)")
     def clean(pg):   # let the message fade and hide the Transfers panel, so the picture shows the page
@@ -196,7 +198,7 @@ with sync_playwright() as p:
     pg.wait_for_selector('#list .row .nm[title="Invoice 1042.pdf"]', timeout=30000); pg.wait_for_timeout(800)
     pg.click('#newb'); pg.click('.pm button:has-text("New Folder")'); pg.fill('#dname', 'Home Documents'); pg.click('#dform .act .pri'); pg.wait_for_selector('#list .row .nm[title="Home Documents"]', timeout=15000)
     rowf = lambda n: pg.locator('#list .row', has=pg.locator('.nm[title="%s"]' % n))
-    def menuf(n, it): rowf(n).locator('.more').click(); pg.locator('.pm button', has_text=it).first.click()
+    def menuf(n, it): pg.evaluate("(() => { const u = document.getElementById('ups'); if (u) u.hidden = true; })()"); rowf(n).locator('.more').click(); pg.locator('.pm button', has_text=it).first.click()
     rowf('Passport scan.pdf').locator('.nm').click(); pg.wait_for_selector('#det:not([hidden]) .btn.star', timeout=8000); pg.click('#det .btn.star'); pg.wait_for_timeout(800)   # Star is a button in the details panel
     menuf('Rent agreement.pdf', 'Share Link'); pg.wait_for_selector('#dform button:has-text("Make a New Link")'); pg.click('#dform button:has-text("Make a New Link")'); pg.wait_for_selector('#dform .lk', timeout=15000); pg.wait_for_timeout(600)
     clean(pg); shot(pg, 'files-share'); pg.keyboard.press('Escape'); pg.wait_for_timeout(500)
@@ -209,8 +211,11 @@ with sync_playwright() as p:
     pg.evaluate("document.getElementById('s-calurl').scrollIntoView({block: 'center'})"); pg.wait_for_timeout(500); shot(pg, 'tasks-calendar-link')
     # Info: a deleted box and its Undo message
     pg.goto(B + '/web/info/', wait_until='domcontentloaded'); pg.wait_for_timeout(2000)
-    pg.evaluate("[...document.querySelectorAll('.box')].find(b => b.offsetParent).querySelector('[data-r=cfg]').click()"); pg.wait_for_selector('#bxdlg[open]'); pg.click('#bxdel')
-    if pg.evaluate("document.getElementById('bxdel').textContent.includes('Its Text')"): pg.click('#bxdel')
+    pg.evaluate("[...document.querySelectorAll('.box')].find(b => b.offsetParent).querySelector('[data-r=cfg]').click()"); pg.wait_for_selector('#bxdlg[open]')
+    def hold_del():   # (1.78.2) Delete is a Hold-to-Delete button: press it for a little over a second
+        bb = pg.locator('#bxdel').bounding_box(); pg.mouse.move(bb['x'] + bb['width'] / 2, bb['y'] + bb['height'] / 2); pg.mouse.down(); pg.wait_for_timeout(1300); pg.mouse.up()
+    hold_del()
+    if pg.evaluate("document.getElementById('bxdel').textContent.includes('Its Text')"): hold_del()
     pg.wait_for_selector('#ix-toast.on .ix-tact', timeout=10000); pg.wait_for_timeout(500); shot(pg, 'info-undo')
     b.close()
 php.terminate()

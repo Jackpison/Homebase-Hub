@@ -78,7 +78,7 @@ And around the pages:
 
 | Extra | What you get |
 |---|---|
-| ⚙️&nbsp;**Settings** | Guided Setup for protection, 141 looks and your own colours, backup and restore, updates and health checks |
+| ⚙️&nbsp;**Settings** | an Overview that shows what still needs protecting, 141 looks and your own colours, backup and restore, updates and health checks |
 | ✈️&nbsp;**[Telegram](#telegram)** | A daily digest, Due Now messages with Done, Skip and Snooze buttons, and backup files sent to your chat |
 | 📱&nbsp;**On your phone** | Add the site to the home screen of a phone or computer and it opens like an app, with its own icon and no browser bars (Settings > Features > Install on Your Phone). Swipe between pages. Nothing is kept offline: your data always comes from your server |
 | 🛡️&nbsp;**[Security](#security-in-short)** | One password, optional two-step login, encrypted tabs and backups, and checked updates you can undo |
@@ -181,7 +181,7 @@ Chrome, Edge, Firefox, Brave, Opera and Safari all export an .html file that Lin
 3. Open your domain and click the key icon. Enter the setup code from `site-data/core/SETUP-CODE.php` and choose a password.
 
 > [!TIP]
-> Open **Settings > General > Start Here** next. It walks you through a strong password, two-step login, an encryption passphrase, a first backup and Telegram, one step at a time.
+> Open **Settings > General** next. Its Overview shows where you stand: a strong password, two-step login, an encryption passphrase, a first backup and Telegram.
 
 > [!WARNING]
 > **Never delete `site-data`.** It holds all your data, and updates never touch it.

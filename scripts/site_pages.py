@@ -322,7 +322,7 @@ def telegram():
 <div class="hart">{chat}</div></div></section>
 <section class="s a-tg"><div class="in"><span class="eyebrow">What it does</span><h2>Four ways it helps.</h2><div class="cards c2">{feats}</div></div></section>
 <section class="s a-tg"><div class="in"><span class="eyebrow">Commands</span><h2>Type it, and it is done.</h2><div class="page flush"><table><tr><th>Command</th><th>What it does</th></tr>{rows}</table></div></div></section>
-<section class="s a-tg"><div class="in tg"><div><span class="eyebrow">Set up</span><h2>Four short steps.</h2><p class="intro">Settings, Telegram walks you through making a bot and connecting your chat. It takes a few minutes, and Guided Setup in Settings can lead you there.</p></div>
+<section class="s a-tg"><div class="in tg"><div><span class="eyebrow">Set up</span><h2>Four short steps.</h2><p class="intro">Settings, Telegram walks you through making a bot and connecting your chat. It takes a few minutes, and the Overview in Settings shows what is still to do.</p></div>
 <div class="frame">{img('s-telegram.webp', 1440, 900, 'Settings, Telegram: four short steps to make a bot and connect your chat')}</div></div></section>{band()}'''
     return dict(slug='telegram', title='Telegram: Homebase Hub', cls='a-tg', desc='Homebase Hub can send a daily digest, Due Now reminders with Done, Skip and Snooze buttons, and backups to your own Telegram chat.', body=body)
 
@@ -345,7 +345,7 @@ def phone():
 <div class="tabs" role="tablist" aria-label="Your device">{tabs}</div>{panels}</div>
 <div class="hart"><div class="phones"><img src="img/m-links.webp" alt="Links on a phone" width="390" height="844" loading="lazy"><img src="img/m-info.webp" alt="Info on a phone" width="390" height="844" loading="lazy"><img src="img/m-tasks.webp" alt="Tasks on a phone" width="390" height="844" loading="lazy"></div></div></div></section>
 <section class="s a-home"><div class="in"><span class="eyebrow">What you get</span><h2>Like an app, still your site.</h2><div class="cards c4">{perks}</div>
-<p class="intro mt">The same steps are in Settings, Overview, Start Here, where an Install button also appears when your browser offers one. It works in a sub-folder too.</p></div></section>{band()}'''
+<p class="intro mt">The same steps are in Settings, General, where an Install button also appears when your browser offers one. It works in a sub-folder too.</p></div></section>{band()}'''
     return dict(slug='phone', title='On your phone: Homebase Hub', cls='a-home', desc='Add Homebase Hub to the home screen of an iPhone, an Android phone or a computer and it opens like an app. Nothing is kept offline.', body=body)
 
 
@@ -371,7 +371,7 @@ FAQ = [
     ('What kind of hosting do I need?', 'Any hosting with PHP 8.3 or newer and a file manager (or FTP). HTTPS is recommended. Settings tells you when your PHP is about to stop getting security fixes.'),
     ('Can I put it in a sub-folder?', 'Yes. Upload it to a folder such as /hub/ and it works the same, including installing it on a phone.'),
     ('Can I bring my bookmarks from my browser?', 'Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari, then press the pencil on Links, choose Edit This Page and press Import Bookmarks on the bar at the bottom. You see a preview first, and a copy of Links is kept so you can undo.'),
-    ('Does it work offline?', 'Only if you switch it on, one device at a time: Offline Reading (Settings, Overview, Start Here) keeps a read-only copy of Home, Links, Info, Cards and Tasks on that device. Off, nothing is kept on the phone. Log Out deletes the copy.'),
+    ('Does it work offline?', 'Only if you switch it on, one device at a time: Offline Reading (Settings, General) keeps a read-only copy of Home, Links, Info, Cards and Tasks on that device. Off, nothing is kept on the phone. Log Out deletes the copy.'),
     ('Can Tools keep my settings, like my signature?', 'Yes, while you are logged in. Sign PDF, both watermark tools, the QR Code Generator, the Image Resizer and the Invoice Generator have Save as Preset. Presets are kept on your server, are part of the site backup, and can be renamed or deleted in Tools Settings.'),
     ('Why does Tools ask for the microphone or the screen?', 'Only the Screen and Voice Recorder asks, and only when you press its button. Nothing is sent anywhere, and the other pages are not allowed to use them at all.'),
     ('My site is still on version 1.49 or older. Can it update?', 'Yes, with its own updater: install 1.59.1 first (Settings, Updates), then the newest version. From 1.60 the updater no longer installs or goes back to versions from before 1.50, which used another folder layout.'),
@@ -443,15 +443,14 @@ GALLERY = [
                       ('tools-settings.webp', 'Tools Settings: the layout, your data and your presets.', False),
                       ('tools-tabs.webp', 'Tabs on Top instead of the side menu.', False)])]),
     ('settings', 'Settings', 'a-home', 'settings', [
-        ('Highlights', [('s-overview.webp', 'Overview: where things stand, and what to look at next.', True),
+        ('Highlights', [('s-general.webp', 'General: the site name, logo, time zone and what needs a look next.', True),
                         ('login.webp', 'The login window.', False)]),
-        ('Settings', [('s-general.webp', 'General: the site name, logo, time zone and pages.', False),
-                      ('s-appearance.webp', 'Appearance: the bar, theme, font and accent colour.', False),
+        ('Settings', [('s-appearance.webp', 'Appearance, Look: the theme, font, accent colour, bar and tabs.', False),
                       ('s-presets.webp', 'Appearance, Presets: 141 ready-made looks, with a Vivid group.', False),
                       ('s-colors.webp', 'Appearance, Colors: every colour of the bar and pages.', False),
                       ('s-security.webp', 'Security: where your site stands, from the password to the passphrase that locks your data.', False),
-                      ('s-encryption.webp', 'Security, Encryption: one passphrase that locks Cards, Files, Tools presets and private tabs in your browser.', False),
-                      ('s-passkeys.webp', 'Security, Passkeys: log in with a fingerprint, face or PIN.', False),
+                      ('s-encryption.webp', 'Security, Data Protection: one passphrase that locks Cards, Files, Tools presets and private tabs in your browser.', False),
+                      ('s-passkeys.webp', 'Security, Sign-In: your password, passkeys and two-step login in one place.', False),
                       ('s-telegram.webp', 'Telegram: your bot, the digest, reminders and backups.', False),
                       ('s-backup.webp', 'Backup and Restore: one file for the whole site, and earlier versions.', False),
                       ('s-updates.webp', 'Updates: from GitHub or by zip, with Go Back.', False),
