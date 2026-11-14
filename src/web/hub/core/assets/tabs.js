@@ -135,9 +135,9 @@
   var hexOf = function (v) { v = String(v || '').trim().replace(/^#/, ''); if (/^[0-9a-f]{3}$/i.test(v)) v = v.replace(/./g, '$&$&'); return /^[0-9a-f]{6}$/i.test(v) ? '#' + v.toLowerCase() : ''; };
   var dlg = null, cur = null;
   function $(id) { return dlg.querySelector('#' + id); }
-  function colorRow(key, label, hint) {
+  function colorRow(key, label, hint, noWell) {   // noWell: the color well sits in the Name line instead of in this row
     return '<div class="ix-srow hubt-color" id="ht' + key + 'Row"><label for="ht' + key + '">' + esc(label) + '<small id="ht' + key + 'Hint">' + esc(hint || '') + '</small></label>' +
-      '<span class="hubt-ctl"><input type="color" id="ht' + key + '" aria-label="' + esc(label) + '"><input type="text" class="hubt-hx" id="ht' + key + 'Tx" maxlength="7" placeholder="Default" spellcheck="false" autocomplete="off" aria-label="' + esc(label) + ' as a hex code">' +
+      '<span class="hubt-ctl">' + (noWell ? '' : '<input type="color" id="ht' + key + '" aria-label="' + esc(label) + '">') + '<input type="text" class="hubt-hx" id="ht' + key + 'Tx" maxlength="7" placeholder="Default" spellcheck="false" autocomplete="off" aria-label="' + esc(label) + ' as a hex code">' +
       '<button type="button" class="btn" id="ht' + key + 'Def">Use Default</button></span></div>';
   }
   var SWATCHES = ['#e5484d', '#f5a524', '#d4a72c', '#3ecf8e', '#2dd4bf', '#3b82f6', '#8b5cf6', '#ec4899'];
@@ -150,10 +150,10 @@
     dlg.innerHTML = '<form method="dialog" novalidate><h3 id="htTitle">Edit Tab</h3>' +
       '<h4>Tab</h4>' +
       '<div class="hubt-block hubt-prevblk"><span class="hubt-pill" id="htPrev" title="How it looks in the tab bar"><span class="hubt-pi" id="htPrevIco"></span><b id="htPrevName"></b><span class="hubt-pl" id="htPrevLock">' + lockSvg + '</span></span></div>' +
-      '<div class="field"><label for="htName">Name</label><input id="htName" maxlength="40" autocomplete="off"></div>' +
-      '<div class="hubt-block hubt-iconblk"><button type="button" class="hubt-iconhd" id="htIcoBtn" aria-expanded="false" aria-controls="htIcons"><span class="hubt-ilbl" id="htIcoLbl">Icon</span><span class="hubt-cur" id="htIcoCur"></span><span class="hubt-chev" aria-hidden="true"></span></button>' +
-        '<div class="hubt-icons" id="htIcons" role="radiogroup" aria-labelledby="htIcoLbl" hidden>' + icons + '</div></div>' +
-      '<h4>Look</h4>' + colorRow('Color', 'Tab Color', '') + '<div class="hubt-block hubt-swb"><div class="hubt-sw" id="htSw" role="group" aria-label="Usual colors">' + SWATCHES.map(function (c) { return '<button type="button" class="hubt-swc" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="false"></button>'; }).join('') + '</div></div>' + colorRow('Hc', 'Box Headline Color', 'Default uses the normal text color.') +
+      '<div class="hubt-line"><button type="button" class="hubt-icobtn" id="htIcoBtn" aria-expanded="false" aria-controls="htIcons" aria-label="Icon" title="Icon"><span class="hubt-cur" id="htIcoCur"></span><span class="hubt-chev" aria-hidden="true"></span></button>' +
+        '<input id="htName" maxlength="40" autocomplete="off" aria-label="Name" placeholder="Name"><input type="color" id="htColor" aria-label="Tab Color" title="Tab Color"></div>' +
+      '<div class="hubt-icons" id="htIcons" role="radiogroup" aria-label="Icon" hidden>' + icons + '</div>' +
+      '<h4>Look</h4>' + colorRow('Color', 'Tab Color', '', true) + '<div class="hubt-block hubt-swb"><div class="hubt-sw" id="htSw" role="group" aria-label="Usual colors">' + SWATCHES.map(function (c) { return '<button type="button" class="hubt-swc" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="false"></button>'; }).join('') + '</div></div>' + colorRow('Hc', 'Box Headline Color', 'Default uses the normal text color.') +
       '<div class="hubt-block" id="htLayBlock" hidden><span class="hubt-lt">Layout</span><div class="hubt-lays" id="htLays" role="radiogroup" aria-label="Layout">' +
         '<button type="button" class="hubt-lay" data-lay="cards" role="radio" aria-checked="true"><i class="hubt-lp hubt-lp-cards" aria-hidden="true"></i><b>Notebook Cards</b><small>Cards you can size and arrange. The default.</small></button>' +
         '<button type="button" class="hubt-lay" data-lay="doc" role="radio" aria-checked="false"><i class="hubt-lp hubt-lp-doc" aria-hidden="true"></i><b>Document</b><small>One page with an outline</small></button></div></div>' +
