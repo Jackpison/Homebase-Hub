@@ -67,18 +67,18 @@ Seven pages share one login, one bar and one Settings page. Pick a name to see i
 | Page | What it does | Highlights |
 |---|---|---|
 | [🏠&nbsp;**Home**](https://jackpison.github.io/Homebase-Hub/features/home/) | A start page that feels like yours | A clock and widgets in frosted glass, background photos that change, with or without the bar |
-| [🔖&nbsp;**Links**](https://jackpison.github.io/Homebase-Hub/features/links/) | Bookmarks in tabs and categories | Import from any browser, see which links you open most, icons saved on your server, encrypted tabs |
+| [🔖&nbsp;**Links**](https://jackpison.github.io/Homebase-Hub/features/links/) | Bookmarks in tabs and categories | Import from any browser, see which links you open most, icons saved on your server, up to 20 tabs, encrypted tabs |
 | [📝&nbsp;**Info**](https://jackpison.github.io/Homebase-Hub/features/info/) | Notes in boxes, or as a document | 1 to 12 boxes in each tab, cards or one document with an outline, export as PDF or text, Undo after a delete |
 | [💳&nbsp;**Cards**](https://jackpison.github.io/Homebase-Hub/features/cards/) | Your cards in one searchable table | Filter by bank, network, type and holder, yearly charges added up, Holders and Banks windows, export to Excel |
 | [✅&nbsp;**Tasks**](https://jackpison.github.io/Homebase-Hub/features/tasks/) | Bills, renewals and chores | Due dates, repeats and prices, calendar and analytics, Year in Review PDF, a secret calendar link for Google, Apple or Outlook (off until you turn it on) |
-| [📁&nbsp;**Files**](https://jackpison.github.io/Homebase-Hub/features/files/) | Your own files, locked in your browser | Folders, preview, Trash, share links, Starred and Recent, a 5 GB limit. Share to it from your phone |
+| [📁&nbsp;**Files**](https://jackpison.github.io/Homebase-Hub/features/files/) | Your own files, locked in your browser | Folders, drag and drop, preview, Trash, share links, Starred and Recent, a 5 GB limit. Share to it from your phone |
 | [🧰&nbsp;**Tools**](https://jackpison.github.io/Homebase-Hub/features/tools/) | Small tools that run in your browser | 47 tools in six sections: images, photos, PDF, calculators (EMI, SIP, FD and RD), documents (invoices, text compare, Markdown, spreadsheets) and utilities (QR scanner, barcodes, time zones, recorder). Save your settings as presets |
 
 And around the pages:
 
 | Extra | What you get |
 |---|---|
-| ⚙️&nbsp;**Settings** | an Overview that shows what still needs protecting, 141 looks and your own colours, backup and restore, updates and health checks |
+| ⚙️&nbsp;**Settings** | an Overview that shows what still needs protecting, 141 looks and your own colours, backup and restore (to a file, a WebDAV folder or an S3 bucket), updates and health checks with a Cleanup |
 | ✈️&nbsp;**[Telegram](#telegram)** | A daily digest, Due Now messages with Done, Skip and Snooze buttons, and backup files sent to your chat |
 | 📱&nbsp;**On your phone** | Add the site to the home screen of a phone or computer and it opens like an app, with its own icon and no browser bars (Settings > Features > Install on Your Phone). Swipe between pages. Nothing is kept offline: your data always comes from your server |
 | 🛡️&nbsp;**[Security](#security-in-short)** | One password, optional two-step login, encrypted tabs and backups, and checked updates you can undo |
@@ -276,7 +276,7 @@ Yes. Upload it to a folder such as <code>/hub/</code> and it works the same, inc
 <details>
 <summary><b>Can I bring my bookmarks from my browser?</b></summary>
 <br>
-Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari. On Links, press the pencil, choose <b>Edit This Page</b>, then <b>Import Bookmarks</b> in the bar at the bottom. You see a preview first.
+Yes. Export them from Chrome, Edge, Firefox, Brave, Opera or Safari. On Links, press the gear, choose <b>Edit This Page</b>, then <b>Import Bookmarks</b> in the bar at the bottom. You see a preview first.
 </details>
 
 <details>

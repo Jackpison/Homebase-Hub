@@ -100,8 +100,13 @@ with sync_playwright() as p:
             snap(pg,'tasks-calendar','/web/tasks/',click='#views button[data-view="cal"]')
             snap(pg,'tasks-analytics','/web/tasks/',click='#views button[data-view="an"]')
             snap(pg,'tools','/web/tools/')
-            for n,h in [('general','general'),('appearance','look'),('presets','themes'),('colors','colors'),('security','security'),('telegram','telegram'),('backup','backup'),('updates','updates'),('files','files'),('health','health'),('check','check'),('changelog','changelog')]:
+            for n,h in [('general','general'),('appearance','look'),('presets','themes'),('colors','colors'),('security','security'),('telegram','telegram'),('backup','backup'),('updates','updates'),('files','files'),('health','health'),('features','features'),('check','check'),('changelog','changelog')]:
                 snap(pg,'s-'+n,'/web/settings/#'+h)
+            # (1.79.5) Cloud Backup to an S3 bucket, filled in with made-up values, and Restore From Cloud beside it
+            pg.goto(B+'/web/settings/#backup',wait_until='domcontentloaded'); pg.wait_for_selector('#ix-cltype',timeout=20000); pg.select_option('#ix-cltype','s3')
+            for i,v in [('#ix-cls3url','https://s3.eu-central-003.backblazeb2.com'),('#ix-clregion','eu-central-003'),('#ix-clbucket','my-homebase-backups'),('#ix-clak','example-access-key'),('#ix-clsk','example-secret-key')]: pg.fill(i,v)
+            pg.locator('#ix-cltype').scroll_into_view_if_needed(); pg.evaluate("document.querySelector('#ix-cltype').scrollIntoView({block:'start'})"); pg.wait_for_timeout(500)
+            pg.screenshot(path=f'{OUT}/s-cloud.png'); print('s-cloud')
         else:
             snap(pg,'s-general-light','/web/settings/#general'); snap(pg,'tools-light','/web/tools/')
     # Home (1440 x 683, as on the website): the Glass Dock with Today open, Glance and Expand, and what a visitor sees
@@ -131,9 +136,9 @@ with sync_playwright() as p:
             pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); item(pg, 'Holders'); shot(pg, 'cards-holders')
             pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); item(pg, 'Banks'); shot(pg, 'cards-banks')
             # the pencil menu, then editing with the edit bar at the bottom
-            pg.goto(B + '/web/links/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); pg.click('#ix-editb'); pg.wait_for_timeout(600); shot(pg, 'links-menu')
+            pg.goto(B + '/web/links/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); pg.locator('[data-ix=account]:visible').first.click(); pg.wait_for_timeout(600); shot(pg, 'links-menu')
             pg.locator('#ix-pop button').first.click(); pg.wait_for_timeout(1400); pg.hover('#ix-ebar .ix-eb >> nth=0'); pg.wait_for_timeout(400); shot(pg, 'links-edit')
-            pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); pg.click('#ix-editb'); pg.wait_for_timeout(500); pg.locator('#ix-pop button').first.click(); pg.wait_for_timeout(1400); shot(pg, 'cards-edit')
+            pg.goto(B + '/web/cards/', wait_until='domcontentloaded'); pg.wait_for_timeout(1800); pg.locator('[data-ix=account]:visible').first.click(); pg.wait_for_timeout(500); pg.locator('#ix-pop button').first.click(); pg.wait_for_timeout(1400); shot(pg, 'cards-edit')
             # Tools: a section, calculators, documents, presets and both layouts
             T = B + '/web/tools/'
             def tool(i, w=2200): pg.goto(T + '#/', wait_until='domcontentloaded'); pg.wait_for_timeout(500); pg.goto(T + '#/tool/' + i); pg.wait_for_timeout(w)
