@@ -273,3 +273,11 @@ dialog p{color:var(--mute);margin:0 0 6px}
 #setdlg .f input{background:color-mix(in srgb,var(--fg) 5%,var(--panel));border-color:color-mix(in srgb,var(--fg) 14%,var(--panel))}
 #setdlg .f input:focus{outline:none;border-color:color-mix(in srgb,var(--fg) 55%,var(--panel));box-shadow:none}
 #setdlg .f label:not(.chk){font-size:13px}
+/* (1.79.1) Tab bar: the pencil only on the tab you are on, a fixed lock slot while editing, a line under the active tab, a + that looks like a tab */
+body.editing .tabi:not(.on) .pen{display:none}
+body.editing .tabi:not(.on) .tab:not(.add){padding-right:0}
+.tab .lk.slot{display:none}
+body.editing .tab .lk.slot{display:inline-grid;width:16px;height:16px}
+.tab:not(.add){position:relative}
+.tab[aria-selected="true"]:not(.add)::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:3px;border-radius:3px;background:var(--tc)}
+.tab.add:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}

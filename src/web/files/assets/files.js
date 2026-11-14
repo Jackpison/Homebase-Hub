@@ -292,11 +292,9 @@ function render() {
   else if (!unlocked && D.items.length) { lock.hidden = false; lock.append(h("p", {}, h("b", { text: "Your files are locked. " }), "Type your encryption passphrase to see their names and open them."), h("button", { type: "button", class: "btn pri", text: "Unlock", onclick: () => { ensureKey(); } })); }
   else lock.hidden = true;
   /* rows */
-  for (const x of document.querySelectorAll("#app .sug")) x.remove();
   const list = shown(), box = $("list"), grid = D.settings.view === "grid";
   box.className = "list" + (grid ? " grid" : ""); box.replaceChildren();
-  if (list.length && !grid) box.append(h("div", { class: "lh", "aria-hidden": "true" }, h("span"), h("span", { text: "Name" }), h("span", { text: "Who Can See It" }), h("span", { text: "Size" }), h("span", { text: "Modified" }), h("span")));
-  const sug = suggested(); if (sug) $("drop").before(sug);
+  if (list.length && !grid) box.append(h("div", { class: "lh" }, h("span", {}, h("input", { type: "checkbox", class: "ck", id: "lhck", "aria-label": "Select all", onchange: toggleAll })), h("span", { "aria-hidden": "true", text: "Name" }), h("span", { "aria-hidden": "true", text: "Who Can See It" }), h("span", { "aria-hidden": "true", text: "Size" }), h("span", { "aria-hidden": "true", text: "Modified" }), h("span")));
   for (const i of list) box.append(row(i));
   const none = $("none"); none.hidden = list.length > 0;
   none.classList.toggle("zone", !list.length && !q && (tab === "files" || !tab));   // (1.75.0) an empty folder is a drop zone
@@ -310,24 +308,6 @@ function render() {
   }
   bulk(); usage(); details();
   $("sync").textContent = D.items.length ? "Saved on your server, locked" : "";
-}
-
-/** (1.77.1) "Suggested for You": the newest files as cards above the list, in My Files at the top level (not while searching, not in a folder). */
-function suggested() {
-  if (tab !== "files" || cwd || q || !unlocked) return null;
-  const top = live().filter(i => i.t === "f").sort((a, b) => dateOf(b) - dateOf(a)).slice(0, 5);
-  if (top.length < 2) return null;
-  const ago = ms => { const d = Math.floor((Date.now() - ms) / 86400000); return d <= 0 ? "today" : d === 1 ? "yesterday" : when(ms); };
-  const sec = h("section", { class: "sug", "aria-label": "Suggested for you" }, h("div", { class: "sugh" }, h("h2", { text: "Suggested for You" }), h("small", { text: "Your newest files" })),
-    h("div", { class: "sugl" }, top.map(i => {
-      const shared = D.shares.some(x => x.id === i.id);
-      const c = h("button", { type: "button", class: "sugc", title: nameOf(i), onclick: () => pick1(i.id), ondblclick: () => openItem(i) },
-        h("span", { class: "sugi ico " + icoOf(i) + " fc" }, icoBody(i, "m")),
-        h("span", { class: "sugn", text: nameOf(i) }), h("small", { text: (shared ? "Shared · " : "") + "Added " + ago(dateOf(i)) }));
-      queueMicrotask(() => { const ic = c.querySelector(".ico"); if (ic) thumbWatch(ic, i); });
-      return c;
-    })));
-  return sec;
 }
 
 function row(i) {
@@ -402,7 +382,10 @@ function details() {
 }
 function toggleAll() { const vis = shown(); if (sel.size === vis.length) sel.clear(); else for (const x of vis) sel.add(x.id); row.sync(); }
 /** The Select All button above the list (small screens use it too). */
-function selbtn() { const b = $("sela"); if (!b) return; const vis = shown(); b.hidden = !vis.length; b.textContent = sel.size && sel.size === vis.length ? "Clear Selection" : "Select All"; }
+function selbtn() {
+  const vis = shown(), all = !!vis.length && sel.size === vis.length, ck = /** @type {HTMLInputElement | null} */ ($("lhck"));
+  if (ck) { ck.checked = all; ck.indeterminate = !all && sel.size > 0; }   // (1.79.1) Select All is the box at the top of the list
+  const b = $("sela"); if (!b) return; b.hidden = !vis.length || (D.settings.view !== "grid" && !matchMedia("(max-width:760px)").matches); b.textContent = sel.size && sel.size === vis.length ? "Clear Selection" : "Select All"; }
 async function star(i) {
   if (!await ensureKey()) return;
   const old = meta(i) || {}, m = await SITE.sealJson(Object.assign({}, old, { st: old.st ? 0 : 1 }));
@@ -760,17 +743,14 @@ async function shareBox(i) {
 }
 
 /* ---------- settings ---------- */
-/** (1.76.0) A storage limit chosen from sizes or typed in: the number, its unit (MB, GB, TB), chips for the usual sizes, and what the server has left. */
-const LIM_UNITS = { MB: 1048576, GB: 1073741824, TB: 1099511627776 };
+/** (1.76.0) A storage limit chosen from usual sizes (1.79.1: no typed number), with what the server has left. A limit set earlier that is not one of them shows as one more size. */
+const GB = 1073741824;
 function limitControl(bytes) {
-  const unit = bytes >= LIM_UNITS.TB && bytes % LIM_UNITS.TB === 0 ? "TB" : "GB";
-  const num = h("input", { type: "number", id: "dlim", class: "num", min: "0", step: "any", value: bytes ? +(bytes / LIM_UNITS[unit]).toFixed(3) : 0, "aria-label": "Storage limit" });
-  const sel = h("select", { id: "dlimu", "aria-label": "Unit" }, Object.keys(LIM_UNITS).map(u => h("option", { value: u, selected: u === unit, text: u })));
+  let cur = bytes;
   const note = h("small", { id: "dlimn", class: "limn" });
   const chips = h("div", { class: "limchips", role: "group", "aria-label": "Usual sizes" });
-  const value = () => Math.round(Math.max(0, +num.value || 0) * LIM_UNITS[sel.value]);
   const paint = () => {
-    const v = value(), free = D.free, used = D.usage;
+    const v = cur, free = D.free, used = D.usage;
     for (const c of chips.children) c.setAttribute("aria-pressed", String(+c.dataset.b === v));
     let t = "Used now: " + fmt(used) + (free != null ? ". Free on the server: " + fmt(free) + "." : ".");
     if (v && v < used) t += " That is less than you use now, so new uploads stop until you free some space.";
@@ -778,12 +758,11 @@ function limitControl(bytes) {
     else if (!v) t += " No limit: only the server's free space limits you.";
     note.textContent = t;
   };
-  /** @type {[string, number][]} */ const sizes = [["5 GB", 5], ["10 GB", 10], ["25 GB", 25], ["50 GB", 50], ["100 GB", 100], ["No Limit", 0]];
-  for (const [name, b] of sizes) {
-    chips.append(h("button", { type: "button", class: "chip", "data-b": String(b * LIM_UNITS.GB), "aria-pressed": "false", text: name, onclick: () => { sel.value = "GB"; num.value = String(b); paint(); } }));
-  }
-  num.oninput = sel.onchange = paint; paint();
-  return { num, sel, chips, note, value };
+  /** @type {[string, number][]} */ const sizes = [["5 GB", 5 * GB], ["10 GB", 10 * GB], ["25 GB", 25 * GB], ["50 GB", 50 * GB], ["100 GB", 100 * GB], ["No Limit", 0]];
+  if (bytes && !sizes.some(x => x[1] === bytes)) sizes.unshift([fmt(bytes), bytes]);
+  for (const [name, b] of sizes) chips.append(h("button", { type: "button", class: "chip", "data-b": String(b), "aria-pressed": "false", text: name, onclick: () => { cur = b; paint(); } }));
+  paint();
+  return { chips, note, value: () => cur };
 }
 async function settingsBox() {
   const s = D.settings, lc = limitControl(s.limit || 0);
@@ -792,9 +771,9 @@ async function settingsBox() {
   const row = (id, name, help, ctl) => h("div", { class: "ix-srow" }, h("label", { for: id }, name, h("small", { text: help })), ctl);
   await openDialog("Files Settings", [
     h("h3", { text: "Privacy" }),
-    row("donly", "Only Me", "Always on for Files.", only),
+    row("donly", "Hide From Visitors", "Always on: visitors must log in to see Files.", only),
     h("h3", { text: "Storage" }),
-    h("div", { class: "ix-srow lim" }, h("label", { for: "dlim" }, "Storage Limit", h("small", { text: "Pick a size or type your own. 0 means no limit." })), lc.num, lc.sel),
+    h("div", { class: "ix-srow lim" }, h("span", {}, "Storage Limit", h("small", { text: "Pick a size." }))),
     h("div", { class: "limx" }, lc.chips, lc.note),
     h("h3", { text: "Sharing" }),
     row("dsh", "Share Links", "Off ends every link.", sh),

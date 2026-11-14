@@ -145,24 +145,27 @@
     var icons = '<button type="button" role="radio" class="hubt-ico" data-i="" id="htIcoDef" aria-checked="false"><span class="hubt-def">Default</span></button>' + ICONS.map(function (i) {
       return '<button type="button" role="radio" class="hubt-ico" data-i="' + i.id + '" aria-checked="false" title="' + esc(i.name) + '" aria-label="' + esc(i.name) + '">' + iconSvg(i.id, 'hubt-svg') + '</button>';
     }).join('');
+    var lockSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     dlg.innerHTML = '<form method="dialog" novalidate><h3 id="htTitle">Edit Tab</h3>' +
-      '<h4>Name</h4><div class="field"><label for="htName">Name</label><input id="htName" maxlength="40" autocomplete="off"></div>' +
-      '<h4>Look</h4>' + colorRow('Color', 'Tab Color', '') + colorRow('Hc', 'Box Headline Color', 'Leave it on default to use the normal text color.') +
+      '<div class="hubt-seg" id="htSeg" role="tablist" aria-label="Edit Tab steps"><button type="button" role="tab" data-step="basics" aria-selected="true">Basics</button><button type="button" role="tab" data-step="look" aria-selected="false" tabindex="-1">Look</button><button type="button" role="tab" data-step="priv" aria-selected="false" tabindex="-1">Privacy</button></div>' +
+      '<h4 data-step="basics">Name</h4><div class="field"><label for="htName">Name</label><input id="htName" maxlength="40" autocomplete="off"></div>' +
+      '<div class="hubt-block hubt-iconblk"><button type="button" class="hubt-iconhd" id="htIcoBtn" aria-expanded="false" aria-controls="htIcons"><span class="hubt-ilbl" id="htIcoLbl">Icon</span><span class="hubt-cur" id="htIcoCur"></span><span class="hubt-chev" aria-hidden="true"></span></button>' +
+        '<div class="hubt-icons" id="htIcons" role="radiogroup" aria-labelledby="htIcoLbl" hidden>' + icons + '</div></div>' +
+      '<h4 data-step="look">Look</h4>' + colorRow('Color', 'Tab Color', '') + colorRow('Hc', 'Box Headline Color', 'Leave it on default to use the normal text color.') +
       '<div class="hubt-block" id="htLayBlock" hidden><span class="hubt-lt">Layout</span><div class="hubt-lays" id="htLays" role="radiogroup" aria-label="Layout">' +
         '<button type="button" class="hubt-lay" data-lay="cards" role="radio" aria-checked="true"><i class="hubt-lp hubt-lp-cards" aria-hidden="true"></i><b>Notebook Cards</b><small>Cards you can size and arrange. The default.</small></button>' +
         '<button type="button" class="hubt-lay" data-lay="doc" role="radio" aria-checked="false"><i class="hubt-lp hubt-lp-doc" aria-hidden="true"></i><b>Document</b><small>One page with an outline</small></button></div></div>' +
-      '<div class="hubt-block hubt-iconblk"><button type="button" class="hubt-iconhd" id="htIcoBtn" aria-expanded="false" aria-controls="htIcons"><span class="hubt-ilbl" id="htIcoLbl">Icon</span><span class="hubt-cur" id="htIcoCur"></span><span class="hubt-chev" aria-hidden="true"></span></button>' +
-        '<div class="hubt-icons" id="htIcons" role="radiogroup" aria-labelledby="htIcoLbl" hidden>' + icons + '</div></div>' +
-      '<h4>Privacy</h4>' +
+      '<h4 data-step="priv">Privacy</h4>' +
       '<div class="ix-srow"><label for="htPriv">Private Tab<small id="htPrivNote"></small></label><input type="checkbox" class="ix-sw" id="htPriv"></div>' +
       '<div class="ix-srow"><label for="htEnc">Encrypted Tab<small id="htEncNote"></small></label><input type="checkbox" class="ix-sw" id="htEnc"></div>' +
+      '<div class="hubt-block hubt-prevblk"><span class="hubt-lt">In the tab bar it will show</span><span class="hubt-pill" id="htPrev"><span class="hubt-pi" id="htPrevIco"></span><b id="htPrevName"></b><span class="hubt-pl" id="htPrevLock">' + lockSvg + '</span></span></div>' +
       '<p class="err" id="htErr" role="status"></p>' +
       '<div class="actions act"><button type="button" class="btn left danger" id="htDel" data-hold title="Hold to delete">Delete Tab</button><button class="btn" value="cancel" formnovalidate>Cancel</button><button type="submit" class="btn primary pri" id="htSave">Save Tab</button></div></form>';
     document.body.appendChild(dlg);
     if (window.HUB && HUB.settingsWindow) HUB.settingsWindow(dlg);
     wire();
   }
-  function setColor(key, v) { var el = $('ht' + key), tx = $('ht' + key + 'Tx'); cur[key.toLowerCase()] = v; tx.value = v || ''; tx.classList.remove('bad'); if (v) el.value = v; else el.value = key === 'Color' ? cur.colorShown || '#d4a72c' : '#ffffff'; $('ht' + key + 'Def').disabled = !v; }
+  function setColor(key, v) { var el = $('ht' + key), tx = $('ht' + key + 'Tx'); cur[key.toLowerCase()] = v; tx.value = v || ''; tx.classList.remove('bad'); if (v) el.value = v; else el.value = key === 'Color' ? cur.colorShown || '#d4a72c' : '#ffffff'; $('ht' + key + 'Def').disabled = !v; prevUI(); }
   function setLayout(v) { cur.layout = v; /** @type {any[]} */ ([]).forEach.call(dlg.querySelectorAll('.hubt-lay'), function (b) { var on = b.dataset.lay === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; }); }
   // (1.64.1) the 16 icons stay folded away; the row shows the one in use (its picture and name) and opens the picker
   function iconOpen(on) { var b = $('htIcoBtn'); b.setAttribute('aria-expanded', String(on)); $('htIcons').hidden = !on; }
@@ -170,14 +173,34 @@
     cur.icon = v;
     /** @type {any[]} */ ([]).forEach.call(dlg.querySelectorAll('.hubt-ico'), function (b) { var on = b.dataset.i === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; });
     var info = ICONS.filter(function (i) { return i.id === v; })[0];
-    $('htIcoCur').innerHTML = (info ? iconSvg(info.id, 'hubt-svg') : (cur.cfg && cur.cfg.iconDefault ? iconSvg(cur.cfg.iconDefault, 'hubt-svg') : '')) + '<span>' + (info ? esc(info.name) : 'Default') + '</span>';
+    $('htIcoCur').innerHTML = (info ? iconSvg(info.id, 'hubt-svg') : (cur.cfg && cur.cfg.iconDefault ? iconSvg(cur.cfg.iconDefault, 'hubt-svg') : '')) + '<span>' + (info ? esc(info.name) : 'Default') + '</span>'; prevUI();
+  }
+  // (1.79.1) Three steps: Basics (name, icon), Look (colors, layout), Privacy (the two locks and how the tab will look in the bar)
+  function setStep(st) {
+    var flat = dlg.classList.contains('hubt-flat');   // a page with few fields (Links) shows everything at once, with no step buttons
+    $('htSeg').hidden = flat;
+    // each step is a heading and the card the Settings look draws after it
+    /** @type {any[]} */ ([]).forEach.call(dlg.querySelectorAll('h4[data-step]'), function (h) {
+      var hide = !flat && h.dataset.step !== st, g = h.nextElementSibling;
+      h.hidden = hide; if (g && g.matches('.ix-grp')) g.hidden = hide;
+    });
+    /** @type {any[]} */ ([]).forEach.call($('htSeg').querySelectorAll('[data-step]'), function (b) { var on = b.dataset.step === st; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+  }
+  // The tab as the bar will draw it: its icon in its color, its name, and the lock (gold private, green encrypted)
+  function prevUI() {
+    if (!cur) return;
+    var ic = isIcon(cur.icon) ? cur.icon : cur.cfg.iconDefault, pi = $('htPrevIco'), enc = $('htEnc').checked, priv = $('htPriv').checked || enc, lk = $('htPrevLock');
+    pi.innerHTML = ic ? iconSvg(ic, 'hubt-svg') : ''; pi.style.color = cur.color || cur.colorShown || '';
+    $('htPrevName').textContent = $('htName').value.trim().slice(0, 40) || cur.cfg.defaultName || 'Tab';
+    lk.hidden = !priv; lk.classList.toggle('enc', enc);
   }
   // Encrypt needs a key and a secure page; an encrypted tab is always private.
   function encUI() {
     var c = cur.cfg, enc = $('htEnc'), priv = $('htPriv');
     enc.disabled = !!c.encWhy;
     if (enc.checked) { priv.checked = true; priv.disabled = true; } else priv.disabled = !!c.privWhy;
-    $('htPrivNote').textContent = c.privWhy || 'Only visible when you are logged in. Visitors never receive this tab.';
+    $('htPrivNote').textContent = c.privWhy || 'Gold lock. Only visible when you are logged in. Visitors never receive this tab.';
+    prevUI();
     $('htEncNote').textContent = c.encWhy || (enc.checked ? (c.encOnNote || 'Locked in this browser with your encryption passphrase before it is saved. The server, earlier versions and backups only hold scrambled text. The tab name stays readable.') : (c.encOffNote || 'Lock it with your encryption passphrase. The tab name stays readable.'));
   }
   function wire() {
@@ -201,6 +224,13 @@
       var n = (i + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1) + all.length) % all.length; setIcon(all[n].dataset.i); all[n].focus();
     });
     $('htEnc').addEventListener('change', function () { encUI(); });
+    $('htSeg').addEventListener('click', function (e) { var b = e.target.closest('[data-step]'); if (b) setStep(b.dataset.step); });
+    $('htSeg').addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; e.preventDefault();
+      var all = [].slice.call($('htSeg').querySelectorAll('[data-step]')), i = all.findIndex(function (x) { return x.getAttribute('aria-selected') === 'true'; }), n = all[(i + (e.key === 'ArrowLeft' ? -1 : 1) + all.length) % all.length];
+      setStep(n.dataset.step); n.focus();
+    });
+    $('htName').addEventListener('input', prevUI);
     // With a passphrase set, a new private tab is encrypted from the start (untick Encrypted Tab to keep it private only)
     $('htPriv').addEventListener('change', function () { if (!$('htPriv').checked) $('htEnc').checked = false; else if (cur.cfg.isNew && !$('htEnc').disabled) $('htEnc').checked = true; encUI(); });
     var ctl = {
@@ -213,8 +243,8 @@
     dlg.querySelector('form').addEventListener('submit', function (e) {
       e.preventDefault(); if (!cur) return;
       var v = { name: $('htName').value.trim().slice(0, 40), color: cur.color || '', hc: cur.hc || '', layout: cur.layout, icon: cur.icon || '', priv: $('htPriv').checked || $('htEnc').checked, enc: $('htEnc').checked };
-      if (!v.name) { if (cur.cfg.defaultName) v.name = cur.cfg.defaultName; else { ctl.say('Type a name for the tab.'); $('htName').focus(); return; } }
-      if (($('htColorTx').value.trim() && !hexOf($('htColorTx').value)) || ($('htHcTx').value.trim() && !hexOf($('htHcTx').value))) { ctl.say('Use a color like #d9a85b, or Use Default.'); return; }
+      if (!v.name) { if (cur.cfg.defaultName) v.name = cur.cfg.defaultName; else { setStep('basics'); ctl.say('Type a name for the tab.'); $('htName').focus(); return; } }
+      if (($('htColorTx').value.trim() && !hexOf($('htColorTx').value)) || ($('htHcTx').value.trim() && !hexOf($('htHcTx').value))) { setStep('look'); ctl.say('Use a color like #d9a85b, or Use Default.'); return; }
       Promise.resolve(cur.cfg.onSave(v, ctl)).catch(function (err) { ctl.say((err && err.message) || 'That did not work.'); ctl.busy(false); });
     });
     $('htDel').addEventListener('click', function () { if (cur && cur.cfg.onDelete) cur.cfg.onDelete(ctl); });
@@ -237,7 +267,7 @@
     $('htIcoDef').innerHTML = (cfg.iconDefault ? iconSvg(cfg.iconDefault, 'hubt-svg') : '') + '<span class="hubt-def">Default</span>'; setIcon(cur.icon); iconOpen(false);
     $('htPriv').checked = !!cfg.priv; $('htEnc').checked = !!cfg.enc; encUI();
     $('htDel').hidden = !cfg.canDelete; dlg._ctl.deleteLabel('Delete Tab'); dlg._ctl.busy(false, '');
-    dlg.showModal(); $('htName').focus(); $('htName').select();
+    dlg.classList.toggle('hubt-flat', cfg.hc == null && !cfg.layouts); setStep('basics'); dlg.showModal(); $('htName').focus(); $('htName').select();
   }
   window.HubTabs = { icons: ICONS, iconSvg: iconSvg, isIcon: isIcon, drag: drag, edit: edit, hexOf: hexOf };
 })();

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The Settings windows and screens of 1.61.0 in a real browser: choices as buttons (and the keyboard on them), switches, one window
-frame with a close X, "Only Me" on every page (a visitor of a private Home gets a log-in screen and nothing else; Cards, Tasks and Files
+frame with a close X, "Hide From Visitors" on every page (a visitor of a private Home gets a log-in screen and nothing else; Cards, Tasks and Files
 show it locked on), the shorter Colors tab, the four Backup tabs (Files off by default, one big Download Backup), and Export Bookmarks
 (the standard bookmark file, made in the browser, with and without private tabs, and read back by Links' own importer).
     python3 tests/browser/settings_ui_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8981)"""
@@ -46,7 +46,7 @@ try:
         pg.focus('#sEditBar + .ix-sgc [data-v=text]'); pg.keyboard.press('ArrowLeft')
         check('U3 the arrow keys move the choice', pg.evaluate("document.getElementById('sEditBar').value") == 'icons')
         sw = pg.evaluate("(() => { const c = document.getElementById('sPrivate'), r = c.getBoundingClientRect(); return [c.type, c.classList.contains('ix-sw'), c.offsetWidth, c.offsetHeight, r.width > 0]; })()")
-        check('U4 Only Me is an on/off switch over a real checkbox', sw == ['checkbox', True, 52, 26, True], sw)
+        check('U4 Hide From Visitors is an on/off switch over a real checkbox', sw == ['checkbox', True, 52, 26, True], sw)
         frame = pg.evaluate("(() => { const d = document.getElementById('setDlg'); return [!!d.querySelector('.ix-sh .ix-sx'), getComputedStyle(d.querySelector('.ix-sb')).overflowY, [...d.querySelectorAll('.ix-sf button')].map(x => x.textContent.trim()), d.querySelector('.ix-sh h3,.ix-sh h2').textContent]; })()")
         check('U5 the Settings window has its title and a close X on top, a scrolling body, and Cancel / Save Settings in the footer', frame == [True, 'auto', ['Cancel', 'Save Settings'], 'Links Settings'], frame)
         pg.click('#setDlg .ix-sx'); until(lambda: not pg.evaluate("document.getElementById('setDlg').open"), 5000)
@@ -82,20 +82,20 @@ try:
         check('U10 the import holds the same titles and addresses that went out (the importer reads every link)', set(want) <= set(got), (got, want))
 
         s.php("""hub_write_guarded(hub_dir('links') . '/bookmarks.php', ['settings' => new stdClass, 'tabs' => array_values(array_filter(hub_jread(hub_dir('links') . '/bookmarks.php')['tabs'], fn($t) => $t['title'] !== 'Round Trip'))]);""")   # the imported copy goes again
-        # ---- Only Me ----
+        # ---- Hide From Visitors ----
         pg.goto(s.base + '/web/home/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.getElementById('editBtn')", 20000); pg.evaluate("document.getElementById('editBtn').click()"); pg.wait_for_selector('#ix-ebar:not([hidden])', timeout=15000)
         code, html = visitor(s.base + '/web/home/')
         check('U11 Home starts public: a visitor sees the page', code == 200 and 'window.PUB' in html and 'This Page Is Private' not in html)
         pg.evaluate("document.querySelector('[data-open=settingsSheet]').click()"); pg.wait_for_selector('#settingsSheet[open]')
-        check('U12 Home Settings has an Only Me switch, and calls the title "Page Title"', pg.evaluate("document.getElementById('sPrivate').classList.contains('switch')") and 'Page Title' in pg.inner_text('#settingsSheet'))
+        check('U12 Home Settings has an Hide From Visitors switch, and calls the title "Page Title"', pg.evaluate("document.getElementById('sPrivate').classList.contains('switch')") and 'Page Title' in pg.inner_text('#settingsSheet'))
         pg.check('#sPrivate'); pg.click('#saveSettings'); until(lambda: not pg.evaluate("document.getElementById('settingsSheet').open"), 10000)
         until(lambda: 'This Page Is Private' in visitor(s.base + '/web/home/')[1], 10000)   # (1.64.5) the window closes first and the server catches up
         code, html = visitor(s.base + '/web/home/')
-        check('U13 with Only Me on, a visitor is sent a log-in screen and nothing of the page (no photos, no data)', code == 200 and 'This Page Is Private' in html and 'window.PUB' not in html and 'id="bg"' not in html and 'welcome' not in html.lower().replace('welcome-', ''), html[:300])
+        check('U13 with Hide From Visitors on, a visitor is sent a log-in screen and nothing of the page (no photos, no data)', code == 200 and 'This Page Is Private' in html and 'window.PUB' not in html and 'id="bg"' not in html and 'welcome' not in html.lower().replace('welcome-', ''), html[:300])
         pg.reload(); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.getElementById('stage')", 20000); pg.evaluate("document.getElementById('editBtn').click()"); pg.wait_for_selector('#ix-ebar:not([hidden])', timeout=15000)
         check('U14 ...and you, logged in, still see your page', pg.evaluate("!!document.getElementById('stage')") and 'This Page Is Private' not in pg.content())
         pg.evaluate("document.querySelector('[data-open=settingsSheet]').click()"); pg.wait_for_selector('#settingsSheet[open]')
-        check('U15 Only Me shows as on when you open Home Settings again', pg.is_checked('#sPrivate'))
+        check('U15 Hide From Visitors shows as on when you open Home Settings again', pg.is_checked('#sPrivate'))
         pg.uncheck('#sPrivate'); pg.click('#saveSettings'); until(lambda: not pg.evaluate("document.getElementById('settingsSheet').open"), 10000)
         until(lambda: 'window.PUB' in visitor(s.base + '/web/home/')[1], 10000)
         check('U16 turning it off opens the page to visitors again', 'window.PUB' in visitor(s.base + '/web/home/')[1])
@@ -103,7 +103,7 @@ try:
         c = pg.evaluate("(() => { const e = document.getElementById('tonlyme'); return [e.checked, e.disabled]; })()")
         pg.goto(s.base + '/web/tasks/'); pg.wait_for_selector('#sdlg', state='attached'); pg.evaluate("document.getElementById('sdlg').showModal()")
         t = pg.evaluate("(() => { const e = document.getElementById('s-onlyme'); return [e.checked, e.disabled]; })()")
-        check('U17 Cards and Tasks show Only Me locked on (they are only ever for you)', c == [True, True] and t == [True, True], (c, t))
+        check('U17 Cards and Tasks show Hide From Visitors locked on (they are only ever for you)', c == [True, True] and t == [True, True], (c, t))
 
         # ---- the calendar link ----
         pg.goto(s.base + '/web/tasks/'); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.getElementById('psets')", 20000)

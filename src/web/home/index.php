@@ -61,7 +61,7 @@ $iconFile = HUB_PUBLIC . '/' . ($logoOk ? $siteLogo : $brand);
 $iconType = ['ico' => 'image/x-icon', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp'][pathinfo($iconPath, PATHINFO_EXTENSION)] ?? 'image/svg+xml';
 $favicon = $iconPath . '?v=' . (is_file($iconFile) ? filemtime($iconFile) : 0);   // the site logo, or Homebase Hub's own
 
-// (1.61.0) Only Me: a visitor gets a log-in screen and nothing of the page (no photos, no text, no widgets)
+// (1.61.0) Hide From Visitors: a visitor gets a log-in screen and nothing of the page (no photos, no text, no widgets)
 if (!empty($site['private']) && !hub_admin()) {
 ?><!doctype html>
 <html lang="en">
@@ -167,8 +167,8 @@ if (!empty($site['private']) && !hub_admin()) {
       <section>
         <h3>General</h3>
         <div class="group">
-          <label class="g-row stack"><span class="g-label">Page Title<small>Shown in the browser tab. The logo comes from the main Settings.</small></span>
-            <input type="text" id="sTitle" maxlength="80"></label>
+          <label class="g-row"><span class="g-label">Page Title<small>Shown in the browser tab.</small></span>
+            <input type="text" id="sTitle" maxlength="80" placeholder="Home"></label>
           <div class="g-row"><span class="g-label">Home Tour<small>A short look at the clock, the bar, the widgets and Settings.</small></span>
             <button type="button" class="btn" id="sTour">Take the Tour</button></div>
         </div>
@@ -176,7 +176,7 @@ if (!empty($site['private']) && !hub_admin()) {
       <section>
         <h3>Privacy</h3>
         <div class="group">
-          <label class="g-row"><span class="g-label">Only Me<small>Visitors see only a login screen.</small></span>
+          <label class="g-row"><span class="g-label">Hide From Visitors<small>Visitors must log in first. They see nothing of this page.</small></span>
             <input type="checkbox" class="switch" id="sPrivate"></label>
         </div>
       </section>

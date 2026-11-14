@@ -704,7 +704,7 @@
   }
   /* (1.61.5) the look inside a Settings window: each section's rows in one rounded card, a small coloured tile in front of each row */
   var RT = [
-    /* (1.64.3) Encrypt first: "Encrypt All Private Tabs" has the word private and took the green lock of Only Me; now it keeps its own purple shield */
+    /* (1.64.3) Encrypt first: "Encrypt All Private Tabs" has the word private and took the green lock of Hide From Visitors; now it keeps its own purple shield */
     [/encrypt|passphrase|recovery/i, 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM9.5 12.5h5v3.5h-5zM10.5 12.5v-1a1.5 1.5 0 0 1 3 0v1', '179,146,240'],
     [/only me|private|lock|password/i, 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3', '80,200,140'],
     [/google|icons?\b/i, 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18', '255,138,92'],
@@ -2251,16 +2251,7 @@
         })(t0);
       });
     },
-    /* (1.64.3) the "Encrypt Private Tabs" row of Links and Info: a badge with how many wait, a short button, and "All encrypted" once done */
     watchSave: function (d) { sdlgWatch(d, function () { return d.querySelector('.ix-sf .pri,.act .pri'); }); },   // (1.64.3) Files draws its Settings window itself, each time it opens
-    encRow: function (o) {
-      var left = o.waiting, row = o.row; row.hidden = !(o.can && o.priv);
-      if (row.hidden) return;
-      var badge = row.querySelector('.ix-badge'), hint = row.querySelector('small'), btn = row.querySelector('button');
-      badge.textContent = left ? left + ' waiting' : 'All encrypted'; badge.classList.toggle('done', !left);
-      hint.textContent = left ? left + ' of your ' + o.total + ' tab' + (o.total === 1 ? '' : 's') + (left === 1 ? ' is' : ' are') + ' private but not encrypted yet.' : 'Nothing waiting.';
-      btn.textContent = 'Encrypt'; btn.disabled = !left;
-    },
     settingsRows: function (body, heads) { sdlgDecorate(body, heads || 'h3,h4'); }   // (1.61.6) cards and tiles for a body a page draws itself (Files Settings)   // (1.61.6) a Settings window made later by a page (Import and Export, Files Settings) gets the same look
   };
 })();

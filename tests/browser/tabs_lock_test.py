@@ -43,18 +43,18 @@ try:
         # ---- Links ----
         pg.goto(s.base + '/web/links/'); wait_js(pg, "document.querySelectorAll('.tab').length > 1", 20000)
         pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]')
-        check('T4 with a passphrase and a readable private tab, Links Settings offers "Encrypt 1 Tab"', pg.is_visible('#sEncRow') and 'Encrypt' in pg.inner_text('#sEncAll') and '1 waiting' in pg.inner_text('#sEncRow') and pg.is_enabled('#sEncAll'), pg.inner_text('#sEncRow'))
-        pg.click('#sEncAll'); pg.wait_for_selector('#keyDlg[open]'); pg.fill('#keyPw', PP); pg.check('#keyKeep'); pg.click('#keyGo')
+        check('T4 (1.79.1) Links Settings no longer has an "Encrypt Private Tabs" row; a readable private tab is encrypted from its own Edit Tab window', pg.locator('#sEncRow').count() == 0)
+        pg.keyboard.press('Escape')
+        pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_selector('body.editing', timeout=10000)
+        pg.evaluate("[...document.querySelectorAll('#tabs .tabi')].find(x => x.textContent.includes('Secret')).querySelector('.tab').click()"); pg.wait_for_selector('#tabs .tabi.on .pen', state='visible'); pg.evaluate("document.querySelector('#tabs .tabi.on .pen').click()"); pg.wait_for_selector('#hubTabDlg[open]')
+        pg.check('#htEnc'); pg.click('#htSave'); pg.wait_for_selector('#keyDlg[open]'); pg.fill('#keyPw', PP); pg.check('#keyKeep'); pg.click('#keyGo')
         until(lambda: 'Hidden Bank Login' not in everything(s.dir + '/site-data/links', '/**/*'), 20000)
         doc = json.loads(open(s.dir + '/site-data/links/bookmarks.php').read().split('\n', 1)[1])
         sec = [t for t in doc['tabs'] if t.get('title') == 'Secret'][0]
         check('T5 the server then holds the private tab as locked text only: no readable link, in the data or in any earlier version', isinstance(sec.get('enc'), str) and sec['enc'].startswith('enc1:') and not sec.get('categories')
               and 'Hidden Bank Login' not in everything(s.dir + '/site-data/links', '/**/*') and 'bank.example.com' not in everything(s.dir + '/site-data/links', '/**/*'))
         check('T6 the public tab is untouched and still readable', 'Public Daily Link' in everything(s.dir + '/site-data/links', '/bookmarks.php'))
-        pg.keyboard.press('Escape'); pg.reload(); wait_js(pg, "document.querySelectorAll('.tab').length > 1", 20000)
-        pg.evaluate("document.getElementById('settingsBtn').click()"); pg.wait_for_selector('#setDlg[open]')
-        check('T7 once every private tab is locked, the row says "All encrypted" and its button is off', pg.is_visible('#sEncRow') and 'All encrypted' in pg.inner_text('#sEncRow') and pg.is_disabled('#sEncAll'), pg.inner_text('#sEncRow'))
-        pg.keyboard.press('Escape')
+        pg.reload(); wait_js(pg, "document.querySelectorAll('.tab').length > 1", 20000)
         # a new private tab starts encrypted
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_selector('body.editing', timeout=10000)
         pg.evaluate("document.querySelector('.tab.add').click()"); pg.wait_for_selector('#hubTabDlg[open]')
@@ -65,16 +65,18 @@ try:
         # ---- Info ----
         pg.goto(s.base + '/web/info/'); wait_js(pg, "server === true && TABS.length > 1", 20000)
         pg.evaluate("document.querySelector('[data-e=settings]').click()"); pg.wait_for_selector('#setdlg[open]')
-        check('T9 Info Settings offers "Encrypt 1 Tab" for its readable private tab', pg.is_visible('#sencrow') and 'Encrypt' in pg.inner_text('#sencall') and '1 waiting' in pg.inner_text('#sencrow') and pg.is_enabled('#sencall'), pg.inner_text('#sencrow'))
-        pg.click('#sencall'); pg.wait_for_selector('#uldlg[open]'); pg.fill('#ulin', PP); pg.check('#ulkeep'); pg.click('#ulsave')
+        check('T9 (1.79.1) Info Settings has no "Encrypt Private Tabs" row either', pg.locator('#sencrow').count() == 0)
+        pg.keyboard.press('Escape')
+        pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_selector('body.editing', timeout=10000)
+        pg.evaluate("[...document.querySelectorAll('#tabs .tabi')].find(x => x.textContent.includes('Trip Notes')).querySelector('.tab').click()"); pg.wait_for_selector('#tabs .tabi.on .pen', state='visible'); pg.evaluate("document.querySelector('#tabs .tabi.on .pen').click()"); pg.wait_for_selector('#hubTabDlg[open]')
+        pg.click('#htSeg [data-step=priv]'); pg.check('#htEnc'); pg.click('#htSave'); pg.wait_for_selector('#uldlg[open]'); pg.fill('#ulin', PP); pg.check('#ulkeep'); pg.click('#ulsave')
         until(lambda: 'Weekend in the Mountains' not in everything(s.dir + '/site-data/info', '/**/*'), 30000)
         raw_info = everything(s.dir + '/site-data/info', '/**/*')
         tabs = json.loads(open(s.dir + '/site-data/info/info.php').read().split('\n', 1)[1])['tabs']
         trip = [t for t in tabs if t.get('name') == 'Trip Notes'][0]
         check('T10 Info\'s private tab is locked on the server: its boxes are locked text, and no readable copy is left in the data or the earlier versions',
               trip.get('enc') and all(str(x.get('title', '')).startswith('enc1:') for x in trip['boxes']) and 'Weekend in the Mountains' not in raw_info and 'guest house' not in raw_info, trip.get('boxes', [{}])[0])
-        pg.keyboard.press('Escape'); pg.reload(); wait_js(pg, "server === true && TABS.length > 1", 20000); pg.evaluate("document.querySelector('[data-e=settings]').click()"); pg.wait_for_selector('#setdlg[open]')
-        check('T10b Info: once every private tab is locked the row says "All encrypted" and its button is off', pg.is_visible('#sencrow') and 'All encrypted' in pg.inner_text('#sencrow') and pg.is_disabled('#sencall'), pg.inner_text('#sencrow'))
+        pg.reload(); wait_js(pg, "server === true && TABS.length > 1", 20000)
         check('T11 the other Info tabs stay readable', 'Lemon Pasta' in raw_info)
         pg.reload(); wait_js(pg, "server === true && TABS.length > 1", 20000)
         # 1.62.0: Undo in a locked tab puts the locked text back unchanged, and no readable copy ever reaches the server
@@ -105,8 +107,16 @@ try:
         # a new private Info tab is encrypted from the start
         pg.evaluate("document.querySelector('[data-hub=toggle]') && document.querySelector('[data-hub=toggle]').click()")
         pg.evaluate("document.querySelector('[data-add]').click()"); pg.wait_for_selector('#hubTabDlg[open]')
-        pg.check('#htPriv')
+        pg.click('#htSeg [data-step=priv]'); pg.check('#htPriv')
         check('T12 ticking Private on a new Info tab ticks Encrypt too', pg.is_checked('#htEnc'))
+        # (1.79.1) Info's Edit Tab has three steps and a preview of the tab in the bar; Links' has everything on one page (few fields)
+        steps = pg.evaluate("(() => { const v = [...document.querySelectorAll('#hubTabDlg h4[data-step]')].map(x => !x.hidden); return [v, !document.getElementById('htSeg').hidden, document.getElementById('htPrevLock').classList.contains('enc'), !document.getElementById('htPrevLock').hidden]; })()")
+        check('T15 Info Edit Tab: three steps (Privacy shown here), and the preview shows the green lock for an encrypted tab', steps[0] == [False, False, True] and steps[1] and steps[2] and steps[3], steps)
+        pg.keyboard.press('Escape'); pg.goto(s.base + '/web/links/'); wait_js(pg, "document.querySelectorAll('.tab').length > 1", 20000)
+        pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_selector('body.editing', timeout=10000)
+        pg.evaluate("document.querySelectorAll('#tabs .pen')[0].click()"); pg.wait_for_selector('#hubTabDlg[open]')
+        flat = pg.evaluate("[document.getElementById('htSeg').offsetParent === null, [...document.querySelectorAll('#hubTabDlg h4[data-step]')].every(x => !x.hidden)]")
+        check('T16 Links Edit Tab shows everything on one page, with no step buttons', flat == [True, True], flat)
         check('T14 no page error', not errs, errs)
         b.close()
 finally:

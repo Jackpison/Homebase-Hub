@@ -141,11 +141,14 @@ try:
         # ---- (1.77.2) the details panel is open by default, with Select All
         pg.locator('.row .ck').first.wait_for()
         pg.evaluate("document.querySelectorAll('.row.sel').length && document.querySelector('#bulk .btn:last-child')?.click()")
-        pn = pg.evaluate("(() => { const d = document.getElementById('det'); return [!d.hidden, !!document.getElementById('selall'), !!document.getElementById('sela') && !document.getElementById('sela').hidden]; })()")
-        check('B24b nothing picked: the details panel is open with Select All (1.77.2)', pn == [True, True, True], pn)
+        pn = pg.evaluate("(() => { const d = document.getElementById('det'); return [!d.hidden, !!document.getElementById('selall'), !!document.getElementById('lhck') && document.getElementById('sela').hidden]; })()")
+        check('B24b nothing picked: the details panel is open with Select All, and the list has a Select All box at the top instead of a button (1.79.1)', pn == [True, True, True], pn)
         pg.click('#selall'); n_all = pg.evaluate("[document.querySelectorAll('.row.sel').length, document.querySelectorAll('.row').length]")
         check('B24c Select All picks every item, and the button then says Clear Selection', n_all[0] == n_all[1] and n_all[0] > 0 and pg.inner_text('#selall') == 'Clear Selection', n_all)
-        pg.click('#selall'); check('B24d Clear Selection empties the pick', pg.evaluate("document.querySelectorAll('.row.sel').length") == 0)
+        pg.click('#lhck'); until(lambda: pg.evaluate("document.querySelectorAll('.row.sel').length") == 0, 3000)
+        pg.click('#lhck'); until(lambda: pg.evaluate("document.querySelectorAll('.row.sel').length") == pg.evaluate("document.querySelectorAll('.row').length"), 3000)
+        check('B24e the box at the top of the list picks every row, and clears them when pressed again (1.79.1)', pg.evaluate("document.getElementById('lhck').checked") and pg.evaluate("document.querySelectorAll('.row.sel').length") == pg.evaluate("document.querySelectorAll('.row').length"))
+        pg.click('#lhck'); pg.click('#selall'); pg.click('#selall'); check('B24d Clear Selection empties the pick', pg.evaluate("document.querySelectorAll('.row.sel').length") == 0)
 
         # ---- share links ----
         pg.locator('.nm[title="Docs"]').click(); wait_names(pg, ['greeting.txt'])
@@ -184,14 +187,14 @@ try:
 
         # ---- the limit ----
         pg.click('#crumbs button:first-child')
-        sg = pg.evaluate("(() => [document.querySelectorAll('#app .sug .sugc').length, document.querySelectorAll('#list .row .qa').length > 0, [...document.querySelectorAll('#list .row .cell.vis')].every(c => /^(Only you|Anyone with the link)$/.test(c.textContent)), (document.querySelector('#list .lh') || {}).textContent])()")
-        check('B34c the top of My Files shows "Suggested for You" cards, each row says who can see it, and has Share / Download / Star for when you point at it', 2 <= sg[0] <= 5 and sg[1] and sg[2] and 'Who Can See It' in sg[3], sg)
-        pg.evaluate("document.getElementById('psets').click()"); pg.wait_for_selector('#dlim')
+        sg = pg.evaluate("(() => [document.querySelectorAll('#app .sug').length === 0 ? 2 : 0, document.querySelectorAll('#list .row .qa').length > 0, [...document.querySelectorAll('#list .row .cell.vis')].every(c => /^(Only you|Anyone with the link)$/.test(c.textContent)), (document.querySelector('#list .lh') || {}).textContent])()")
+        check('B34c (1.79.1: no Suggested for You cards any more) each row says who can see it, and has Share / Download / Star for when you point at it', 2 <= sg[0] <= 5 and sg[1] and sg[2] and 'Who Can See It' in sg[3], sg)
+        pg.evaluate("document.getElementById('psets').click()"); pg.wait_for_selector('#dform .limchips')
         fs = pg.evaluate("(() => { const d = document.getElementById('dlg'); const o = document.getElementById('donly'), sh = document.getElementById('dsh'); return [d.classList.contains('ix-sdlg'), !!d.querySelector('.ix-sh .ix-sx'), !!d.querySelector('.ix-sb'), o.checked, o.disabled, o.classList.contains('ix-sw'), sh.classList.contains('ix-sw'), d.querySelector('.ix-sh h2').textContent]; })()")
-        check('B34b Files Settings is the shared Settings window: a close X, Only Me locked on, Share Links as a switch', fs == [True, True, True, True, True, True, True, 'Files Settings'], fs)
+        check('B34b Files Settings is the shared Settings window: a close X, Hide From Visitors locked on, Share Links as a switch', fs == [True, True, True, True, True, True, True, 'Files Settings'], fs)
         pg.click('#dform .limchips .chip:nth-child(3)')
-        check('B34a the usual sizes fill the limit (25 GB), with the free space shown below', pg.input_value('#dlim') == '25' and 'Free on the server' in pg.inner_text('#dlimn'), pg.inner_text('#dlimn'))
-        pg.fill('#dlim', '0.00002'); pg.click('#dform .act .pri'); until(lambda: 'of 21' in pg.inner_text('#usage'), 10000)
+        check('B34a (1.79.1) the usual sizes are the only way to set the limit (no typed number): picking 25 GB marks it, with the free space shown below', pg.get_attribute('#dform .limchips .chip:nth-child(3)', 'aria-pressed') == 'true' and pg.locator('#dlim').count() == 0 and 'Free on the server' in pg.inner_text('#dlimn'), pg.inner_text('#dlimn'))
+        pg.keyboard.press('Escape'); pg.evaluate("HUB.fetch('api.php?action=settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ settings: { limit: 21475 } }) }).then(r => r.json())"); pg.reload(); until(lambda: 'of 21' in pg.inner_text('#usage'), 10000)
         check('B34 Files Settings changes the limit (here about 21 KB), and the usage line follows', srv_items()[1]['settings']['limit'] == 21475 and 'of 21' in pg.inner_text('#usage'), pg.inner_text('#usage'))
         upload(pg, 'toobig.bin', os.urandom(60000)); until(lambda: 'full' in (pg.inner_text('#ups') or ''), 15000)
         check('B35 a file over the limit is refused with a plain message, and nothing is left on the server', 'full' in pg.inner_text('#ups') and not any(i.get('up') for i in srv_items()[0]) and 'toobig' not in ' '.join(names(pg)), pg.inner_text('#ups'))

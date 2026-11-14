@@ -701,8 +701,8 @@ function renderTabs(){
   $("tabs").innerHTML=TABS.map((t,i)=>{const c=tabColor(t,i),on=t.id===active,id=esc(t.id),nm=esc(t.name);
     return`<div class="tabi${on?" on":""}" role="none" data-t="${id}" style="--tc:${c};--tf:${textOn(c)}">`+
       `<button class="tab" role="tab" data-t="${id}" aria-selected="${on}">${HubTabs.iconSvg(t.icon||"doc","ti")}${nm}`+
-      (t.enc?`<span class="lk enc" title="Encrypted tab: encrypted with your passphrase">${IMG_SAFE}</span>`
-       :t.private?`<span class="lk" title="Private tab: only visible when you're logged in">${IMG_LOCK}</span>`:"")+`</button>`+
+      (t.enc?`<span class="lk enc" title="Encrypted: locked with your passphrase">${IMG_SAFE}</span>`
+       :t.private?`<span class="lk" title="Private: visible only when logged in">${IMG_LOCK}</span>`:`<span class="lk slot"></span>`)+`</button>`+
       `<button class="pen" type="button" title="Edit Tab" aria-label="Edit tab ${nm}">${PEN}</button></div>`}).join("")+
     (TABS.length<MAXTAB?'<button class="tab add" data-add="1" title="Add Tab" aria-label="Add Tab">+</button>':"");
   for(const t of TABS){const m=$("panel-"+t.id);if(m){m.hidden=t.id!==active;m.style.setProperty("--tc",tabColor(t,TABS.indexOf(t)))}}
@@ -727,7 +727,7 @@ $("tabs").onclick=e=>{
   if(tabDrag.justDragged())return;
   const pen=/** @type {any} */ (e.target).closest(".pen");if(pen){guard(()=>openTabEditor(pen.parentElement.dataset.t));return}
   const b=/** @type {any} */ (e.target).closest(".tab");if(!b)return;
-  if(b.dataset.add)guard(()=>openTabEditor(null));else showTab(b.dataset.t);
+  if(b.dataset.add)guard(()=>openTabEditor(null));else if(EDIT&&b.dataset.t===active)guard(()=>openTabEditor(b.dataset.t));else showTab(b.dataset.t);
 };
 $("tabs").addEventListener("contextmenu",e=>{if(EDIT&&/** @type {any} */ (e.target).closest(".tabi"))e.preventDefault()}); // no long-press menu while editing
 const openEdits=()=>TABS.some(t=>t.boxes.some(b=>b.editing||busy.has(b.key)));
@@ -933,23 +933,6 @@ async function convertTab(t,encrypt,say){
   return true;
 }
 
-// Locks every private tab that is still readable, in one go (the key is asked for once); earlier readable versions are then deleted
-const plainPrivate=()=>TABS.filter(t=>t.private&&!t.enc);
-function encRowUI(){HUB.encRow({row:$("sencrow"),can:CAN_ENC&&server&&locked&&PAGE.vault,priv:TABS.filter(t=>t.private).length,waiting:plainPrivate().length,total:TABS.length})}
-$("sencall").onclick=async()=>{
-  const say=x=>$("setmsg").textContent=x,todo=plainPrivate();if(!todo.length)return;
-  if(!KEY&&!(await ensureKey(say)))return;
-  if(todo.some(t=>t.boxes.some(b=>b.editing||busy.has(b.key)))){say("Save or cancel the box you are editing first.");return}
-  $("sencall").disabled=true;
-  for(const t of todo){say("Encrypting "+t.name+"…");if(!(await convertTab(t,true,say))){$("sencall").disabled=false;return}}
-  const ids=new Set(todo.map(t=>t.id));
-  const list=TABS.map((t,i)=>({id:t.id,name:t.name,color:tabColor(t,i),hc:t.hc,layout:t.layout,icon:t.icon,private:t.private||ids.has(t.id),enc:t.enc||ids.has(t.id)}));
-  saveTabsList(list,say,async()=>{
-    try{await api({action:"clear_versions"})}catch(err){}
-    $("sencall").disabled=false;encRowUI();renderGates();
-    say(todo.length===1?"1 tab encrypted. Earlier versions were deleted so no readable copy stays on the server.":todo.length+" tabs encrypted. Earlier versions were deleted so no readable copy stays on the server.");
-  });
-};
 
 /* passphrase: unlock. The passphrase is set (and removed) in Settings › Security › Encryption; this page only opens the tabs with it. */
 const uldlg=$("uldlg");let ulDone=null;
@@ -1168,7 +1151,7 @@ function renderPage(){
 const setdlg=$("setdlg");
 function openSettings(){
   $("gin").value=PAGE.title;
-  fillSettings();$("setmsg").textContent="";encRowUI();if(!setdlg.open)setdlg.showModal();
+  fillSettings();$("setmsg").textContent="";if(!setdlg.open)setdlg.showModal();
 }
 // The privacy and password parts, which change when a password is created or removed.
 function fillSettings(){

@@ -17,7 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
-| 1.79.1 | The gear opens Edit This Page, the page's Settings and Main Settings; one-column Settings forms on a phone |
+| 1.79.1 | The gear opens Edit This Page, the page's Settings and Main Settings; Only Me is now Hide From Visitors; one-column Settings forms on a phone |
 | 1.79.0 | Clear the Activity log, a Cleanup section, turn Telegram, Tasks, Cards, Files and Tools off for real, a live countdown, an encryption step in first setup, and fixes for Add Your First Card and the logo message |
 | 1.78.2 | The domain and uptime watch is removed completely (code, schedule, backups and Telegram status); the optional update address stays |
 | 1.78.1 | Settings: Data Protection and Telegram Setup in the Sign-In style, Two-Step scan side by side, Look tab renamed; smoother pages, folds and hovers everywhere |
@@ -166,6 +166,12 @@ Nothing to migrate by hand unless an entry says so.
 
 - The gear icon in the bar now opens a menu: **Edit This Page**, the page's own Settings (for example Links Settings) and **Main Settings**. The separate pencil is gone. While you edit, the gear is lit.
 - Settings forms use one column on a phone, so the fields are no longer cramped.
+- **Only Me** is now called **Hide From Visitors**, with a clearer hint: "Visitors must log in first. They see nothing of this page." The saved setting is the same, so nothing needs to be set again.
+- **Edit Tab** has three steps in Info (Basics, Look, Privacy) with a preview of the tab and what each lock means; Links has few fields, so it shows everything on one page.
+- **Tab bar** (Links and Info): the pencil shows only on the tab you are on, and tapping that tab again opens Edit Tab. A line in the tab's own colour sits under it. While editing, every tab keeps room for its lock, and the tooltips read "Private: visible only when logged in" and "Encrypted: locked with your passphrase".
+- **Home Settings** matches the other pages: the title field sits at the right of its label, and its buttons look like the rest.
+- **Files:** "Suggested for You" is gone, and "Select All" is a box at the top of the list (the button stays in Grid view and on a phone). The Storage Limit is chosen from sizes only, with no typed number.
+- The **Encrypt Private Tabs** row is gone from Links and Info Settings. To encrypt a tab, open its Edit Tab window and turn on Encrypted Tab (a new private tab already starts encrypted).
 
 ### Housekeeping
 

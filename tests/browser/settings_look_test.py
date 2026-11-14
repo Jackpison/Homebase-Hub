@@ -57,9 +57,7 @@ try:
         why = browser_set_passphrase(pg, s.base, PP); check('L0b the encryption passphrase is set', not why, why)
 
         # ---- the page Settings windows ----
-        open_menu(pg, s.base, '/web/links/', 'Links Settings'); wait_js(pg, "!document.getElementById('sEncRow').hidden", 10000)
-        enc = pg.evaluate("(() => { const r = document.getElementById('sEncRow'), g = r.closest('.ix-grp'); return [!!g, !!(g && g.contains(document.getElementById('sPrivate'))), !!r.offsetParent]; })()")
-        check('L1 Links: Encrypt All Private Tabs is a row inside the Privacy card (it was hidden when the window was drawn)', enc == [True, True, True], enc)
+        open_menu(pg, s.base, '/web/links/', 'Links Settings'); wait_js(pg, "!!document.getElementById('sPrivate')", 10000)
         cards = pg.evaluate(CARDS, '#setDlg')
         check('L2 Links: no card draws a line above its first row, and none ends with an empty strip', cards and all(c[1] == 0 and c[2] <= (4 if c[3] else 16) for c in cards), cards)
         check('L3 Links: the Backups line under Look is gone', 'Backups: use the Backup icon' not in pg.inner_text('#setDlg'))
@@ -82,10 +80,10 @@ try:
         pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('impDlg').open"), 4000)
 
         open_menu(pg, s.base, '/web/files/', 'Files Settings')
-        fs = pg.evaluate("""(() => { const d = document.querySelector('dialog[open]'), n = d.querySelector('#dlim'), t = d.querySelector('#dtd');
+        fs = pg.evaluate("""(() => { const d = document.querySelector('dialog[open]'), t = d.querySelector('#dtd');
             const row = x => x.closest('.ix-srow'), same = x => { const a = x.getBoundingClientRect(), l = row(x).querySelector('label').getBoundingClientRect(); return a.left > l.right - 2 && Math.abs(a.top + a.height / 2 - (l.top + l.height / 2)) < 30; };
-            return [d.querySelectorAll('.ix-grp').length, d.querySelectorAll('.ix-rt').length >= 4, Math.round(n.getBoundingClientRect().width) <= 140, same(n), same(t)]; })()""")
-        check('L7 Files Settings: four cards with tiles; the storage box and the Trash choice sit small at the right of their row', fs == [4, True, True, True, True], fs)
+            return [d.querySelectorAll('.ix-grp').length, d.querySelectorAll('.ix-rt').length >= 4, same(t)]; })()""")
+        check('L7 Files Settings: four cards with tiles; the Trash choice sits small at the right of its row (1.79.1: the storage limit is chips only)', fs == [4, True, True], fs)
         pg.keyboard.press('Escape')
 
         pg.goto(s.base + '/web/tasks/'); pg.wait_for_selector('#sdlg', state='attached'); pg.evaluate("document.getElementById('sdlg').showModal()")
@@ -99,7 +97,7 @@ try:
             const right = (ctl) => { const row = ctl.closest('.g-row'), l = row.querySelector('.g-label').getBoundingClientRect(), c = ctl.getBoundingClientRect(); return (c.left >= l.right - 2 && Math.abs((c.top + c.bottom) / 2 - (l.top + l.bottom) / 2) < 30) || c.top >= l.bottom - 2; };   // beside the label, or (1.64.3) under it at full width when they do not fit side by side
             const only = r('sPrivate').closest('.g-row'), lab = only.querySelector('.g-label').getBoundingClientRect(), tile = only.querySelector('.ix-rt').getBoundingClientRect();
             return [right(seg), !!link && /settings\/#glass$/.test(link.getAttribute('href')) && !r('pTint') && !r('pOpacity') && !r('pBlur'), Math.round(lab.left - tile.right) <= 24]; })()""")
-        check('L9 Home Settings: Edit Bar sits at the right of its label or under it; Glass is only a link to Settings > Appearance > Glass (1.68.4); Only Me starts next to its tile', hm == [True, True, True], hm)
+        check('L9 Home Settings: Edit Bar sits at the right of its label or under it; Glass is only a link to Settings > Appearance > Glass (1.68.4); Hide From Visitors starts next to its tile', hm == [True, True, True], hm)
 
         # ---- the main Settings page ----
         pg.goto(s.base + '/web/settings/#nav'); wait_js(pg, "!!document.querySelector('#ix-tabl .ix-pgr')", 20000)

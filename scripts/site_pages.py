@@ -430,7 +430,7 @@ GALLERY = [
     ('files', 'Files', 'a-files', 'folder', [
         ('Highlights', [('files.webp', 'Files: folders, a details panel, and "Locked in your browser" for the file you picked.', False),
                         ('files-share.webp', 'A share link for one file: the key is after the # in the address, so it never reaches your server.', False)]),
-        ('Settings', [('files-settings.webp', 'Files Settings: Only Me, the storage limit, share links and how long the Trash keeps things.', False)])]),
+        ('Settings', [('files-settings.webp', 'Files Settings: Hide From Visitors, the storage limit, share links and how long the Trash keeps things.', False)])]),
     ('tools', 'Tools', 'a-tools', 'tools', [
         ('Highlights', [('tools.webp', 'Every tool in sections, with search, favourites and recent tools.', True),
                         ('tools-calculators.webp', 'Calculators: loans, savings, deposits, dates, units and amounts in words.', False),

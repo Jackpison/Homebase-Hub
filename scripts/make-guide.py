@@ -236,7 +236,7 @@ story += chapter('9', 'Files', 'Your files in folders on your own server, locked
  shot('files-share', 'Share link: the key is after the # in the address, so it never reaches your server.'),
  P('You can remove a link at any time. Switching %s off in Files Settings ends every link at once.' % C('Share Links')),
  *sub('Files Settings'),
- table(['Setting', 'What it does'], [['Only Me', 'Always on: only you, logged in, can see your files.'], ['Storage Limit', 'In GB. 0 means no limit. The default is 5.'], ['Share Links', 'On or off for the whole page.'], ['Keep in Trash', 'How many days before removed files are deleted for good.']]),
+ table(['Setting', 'What it does'], [['Hide From Visitors', 'Always on: only you, logged in, can see your files.'], ['Storage Limit', 'In GB. 0 means no limit. The default is 5.'], ['Share Links', 'On or off for the whole page.'], ['Keep in Trash', 'How many days before removed files are deleted for good.']]),
  shot('files-settings', 'Files Settings.'),
  Tip('On Android, in the installed app, you can share a photo or a file from another app to Homebase Hub and save it straight into Files.'))
 

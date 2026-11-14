@@ -1,12 +1,12 @@
 <?php
-// 1.61.0: Home's "Only Me" switch. It is saved (default off), a visitor's page is only a log-in screen, and a visitor can start no photo download.
+// 1.61.0: Home's "Hide From Visitors" switch. It is saved (default off), a visitor's page is only a log-in screen, and a visitor can start no photo download.
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
 require $site . '/web/home/lib.php';
 
 t('a new Home is not private', default_site()['private'] === false);
 $s = clean_site(['title' => 'Mine', 'private' => true]);
-t('Only Me is kept when it is on', $s['private'] === true);
+t('Hide From Visitors is kept when it is on', $s['private'] === true);
 t('0 or nothing leaves it off', clean_site(['private' => 0])['private'] === false && clean_site([])['private'] === false);
 $saved = site_from_page(['title' => 'Mine', 'private' => true], load_site());
 t('saving Home Settings writes it', ($saved['private'] ?? null) === true, json_encode($saved['private'] ?? null));

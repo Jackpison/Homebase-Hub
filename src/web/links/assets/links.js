@@ -644,8 +644,8 @@ function renderTabs() {
     const active = t === cur && !S.q;
     wrap.append(h('div', { class: 'tabi' + (active ? ' on' : ''), 'data-t': t.id, role: 'none' },
       h('a', { class: 'tab' + (active ? ' active' : ''), href: '#' + encodeURIComponent(t.id), 'data-tab': t.id, role: 'tab', style: isHex(t.ribbon) ? `--tab-ribbon:${t.ribbon}` : null, 'aria-selected': active ? 'true' : 'false',
-        onclick: e => { if (tabDrag.justDragged()) { e.preventDefault(); return; } if (S.q) { $('#q').value = ''; S.q = ''; } } }, tabIcon(t), h('span', {}, t.title),
-        t.private ? h('span', { 'aria-label': t.encrypted ? 'encrypted' : 'private', title: t.encrypted ? 'Encrypted tab: encrypted with your passphrase' : 'Private tab: only shown when you are logged in', html: t.encrypted ? ICONS.safe : ICONS.lock }) : null),
+        onclick: e => { if (tabDrag.justDragged()) { e.preventDefault(); return; } if (S.editing && active) { e.preventDefault(); editTab(t); return; } if (S.q) { $('#q').value = ''; S.q = ''; } } }, tabIcon(t), h('span', {}, t.title),
+        h('span', { class: 'tslot', 'aria-label': t.private ? (t.encrypted ? 'encrypted' : 'private') : null, title: t.private ? (t.encrypted ? 'Encrypted: locked with your passphrase' : 'Private: visible only when logged in') : null, html: t.private ? (t.encrypted ? ICONS.safe : ICONS.lock) : '' })),
       h('button', { class: 'pen', type: 'button', title: 'Edit Tab', 'aria-label': 'Edit tab ' + t.title, html: ICONS.edit, onclick: () => { if (!tabDrag.justDragged()) editTab(t); } })));
   });
   if (S.editing && tabs.length < MAX_TABS) wrap.append(h('button', { class: 'tab add', type: 'button', onclick: addTab }, ribbon(true), 'New tab'));
@@ -662,7 +662,7 @@ function editTab(t) {
   const noKey = !vault() && !(t && t.encrypted);   // keys are made in Settings › Security › Encryption
   HubTabs.edit({
     isNew: !t, title: t ? 'Edit Tab' : 'New Tab', saveLabel: t ? 'Save Tab' : 'Add Tab', name: t ? t.title : '',
-    color: t && isHex(t.ribbon) ? t.ribbon : '', colorShown: colorsFor(mode()).ribbon, colorLabel: 'Ribbon Color', colorHint: 'Leave it on default to use the tab ribbon color from Colors.',
+    color: t && isHex(t.ribbon) ? t.ribbon : '', colorShown: colorsFor(mode()).ribbon, colorLabel: 'Ribbon Color', colorHint: 'Default uses the ribbon color from Colors.',
     icon: t && t.icon, iconDefault: 'bookmark', priv: !!(t && t.private), enc: !!(t && t.encrypted),
     encWhy: !CAN_ENC ? 'Needs a secure (https) connection.' : noKey ? 'Set an encryption passphrase first: Settings › Security › Encryption.' : stuck ? 'Unlock this tab first to change this.' : '',
     canDelete: !!t && S.data.tabs.length > 1,
@@ -694,18 +694,6 @@ function editTab(t) {
     }
   });
 }
-// Locks every private tab that is still readable (one press): the key is asked for once, then every such tab is sealed when the page saves
-const plainPrivate = () => S.data.tabs.filter(t => t.private && !t.encrypted);
-function encRowUI() {
-  HUB.encRow({ row: $('#sEncRow'), can: CAN_ENC && vault(), priv: S.data.tabs.filter(t => t.private).length, waiting: plainPrivate().length, total: S.data.tabs.length });
-}
-$('#sEncAll').onclick = async () => {
-  const todo = plainPrivate(); if (!todo.length) return;
-  if (!(await ensureKey())) return;
-  for (const t of todo) { t.encrypted = true; t.private = true; t._blob = ''; t._plain = ''; t.locked = false; t.bad = false; }
-  persist(todo.length === 1 ? 'Tab encrypted' : todo.length + ' tabs encrypted');
-  encRowUI();
-};
 async function addCategory(col) {
   const t = curTab();
   const n = await askName(`Add category to ${t.title}`, '', 'Add category'); if (!n) return;
@@ -1216,7 +1204,7 @@ $('#linkSave').onclick = e => {
 let draft = null, draftSaved = false;
 const openDraft = () => { draft = JSON.parse(JSON.stringify(S.data.settings || {})); draftSaved = false; };
 // (1.64.9) Saving Settings, Colors or Text Sizes redraws every link only when a setting changes what is drawn (icons from Google, visit counts,
-// Only Me). Colors, text sizes and the title are CSS variables and the browser tab's name: with 1,500 links the full redraw took about a second.
+// Hide From Visitors). Colors, text sizes and the title are CSS variables and the browser tab's name: with 1,500 links the full redraw took about a second.
 const drawnBy = s => [!!(s && s.webIcons), !(s && s.visitCounts === false), !!(s && s.private)].join();
 function commitDraft(dlg, msg) { const redraw = drawnBy(S.data.settings) !== drawnBy(draft); const keepV = S.data.settings && S.data.settings.vault; S.data.settings = draft; if (keepV) S.data.settings.vault = keepV; else delete S.data.settings.vault; draftSaved = true; dlg.close(); applyLook(); persist(msg, redraw); }
 ['#setDlg', '#colorDlg', '#textDlg'].forEach(id => $(id).addEventListener('close', () => { if (!draftSaved) applyLook(); }));
@@ -1305,7 +1293,7 @@ $('#settingsBtn').onclick = () => {
   $('#sPrivate').checked = !!draft.private;
   $('#sWebIcons').checked = !!draft.webIcons;
   $('#sVisits').checked = draft.visitCounts !== false;
-  readSettingsForm(); $('#setErr').textContent = ''; encRowUI();
+  readSettingsForm(); $('#setErr').textContent = '';
   $('#setDlg').showModal();
 };
 $('#sTitle').addEventListener('input', readSettingsForm);

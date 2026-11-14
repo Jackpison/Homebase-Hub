@@ -444,8 +444,8 @@ try:
         hctx.close()
         rows_ok = lambda r: ['Text Sizes', 'Edit Bar'] == [x[0] for x in r[1] if x[0] in ('Text Sizes', 'Edit Bar')] and [x[1] for x in r[1] if x[0] == 'Text Sizes'] == ['BUTTON'] and [x[1] for x in r[1] if x[0] == 'Edit Bar'] == ['DIV'] and [x[2] for x in r[1] if x[0] == 'Text Sizes'][0] == 'Change' and [x[3] for x in r[1] if x[0] == 'Text Sizes'][0] < 200
         frame_ok = lambda r: r[2] is True and r[3][-2:] == ['Cancel', 'Save Settings'] and r[4] in ('auto', 'scroll')
-        check('P58 Links and Info Settings: a Look section with Text Sizes (a small Change button) and Edit Bar as a row of buttons; each has Only Me; Tasks Settings: General, When the Page Opens, Look, Calendar Link and Privacy, with Edit Bar in Look; every Settings window has a close X, a scrolling body and Cancel / Save Settings',
-              rows_ok(ls_) and rows_ok(is_) and 'Look' in ls_[0] and 'Look' in is_[0] and any(x[0] == 'Only Me' for x in ls_[1]) and any(x[0] == 'Only Me' for x in is_[1])
+        check('P58 Links and Info Settings: a Look section with Text Sizes (a small Change button) and Edit Bar as a row of buttons; each has Hide From Visitors; Tasks Settings: General, When the Page Opens, Look, Calendar Link and Privacy, with Edit Bar in Look; every Settings window has a close X, a scrolling body and Cancel / Save Settings',
+              rows_ok(ls_) and rows_ok(is_) and 'Look' in ls_[0] and 'Look' in is_[0] and any(x[0] == 'Hide From Visitors' for x in ls_[1]) and any(x[0] == 'Hide From Visitors' for x in is_[1])
               and tl == ['General', 'When the Page Opens', 'Look', 'Calendar Link', 'Calendars You Follow', 'Privacy'] and lookhas and frame_ok(ls_) and frame_ok(is_) and frame_ok(ts_), (ls_, is_, ts_, tl, lookhas))
         # P60-P62 (1.53.8): the login window; Cards Settings like Links and Info; the Banks window and its own icon
         lctx2 = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); lctx2.route('**/*', handle)
@@ -484,8 +484,8 @@ try:
         cp.click('#ix-ebar [data-tip="Holders"]'); until(lambda: cp.evaluate("document.getElementById('hdlg').open"), 5000); cp.focus('#hlist input')
         ring = cp.evaluate("(() => { const s = getComputedStyle(document.querySelector('#hlist input')); return [s.outlineStyle, s.borderColor] })()"); cp.click('#hcancel')
         cctx.close()
-        check('P61 Cards Settings looks like Links and Info: General (Page Title), Privacy (Only Me, locked on), then Look with Text Sizes, Edit Bar (buttons) and Column Order rows',
-              cs == [['General', 'Privacy', 'Look'], [['Page Title', 'INPUT'], ['Only Me', 'INPUT'], ['Text Sizes', 'BUTTON'], ['Edit Bar', 'DIV'], ['Column Order', 'BUTTON']]], cs)
+        check('P61 Cards Settings looks like Links and Info: General (Page Title), Privacy (Hide From Visitors, locked on), then Look with Text Sizes, Edit Bar (buttons) and Column Order rows',
+              cs == [['General', 'Privacy', 'Look'], [['Page Title', 'INPUT'], ['Hide From Visitors', 'INPUT'], ['Text Sizes', 'BUTTON'], ['Edit Bar', 'DIV'], ['Column Order', 'BUTTON']]], cs)
         check('P62 Cards: Banks has its own icon (not Add Card\'s) and one window like Holders: every bank with its cards, a rename moves the cards, a link is kept, a wrong link is refused, Cancel changes nothing; a holder\'s name box gets a clean border, not a cut-off outline',
               idict.get('Banks') and idict.get('Banks') != idict.get('Add Card') and brows and all(x[1].endswith('card') or x[1].endswith('cards') for x in brows) and kept
               and badlink[0] and 'https://' in badlink[1] and 'Lakeside Bank' in renamed and old not in renamed and link and ring[0] == 'none' and not cerr, (icons, brows, kept, badlink, link, ring, cerr))
