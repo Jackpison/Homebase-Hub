@@ -76,6 +76,6 @@ Give the new person or AI:
 
 1. this file;
 2. `AGENTS.md` (the rules for changing the code, and every check to run);
-3. `docs/PROJECT-HANDOFF.md` (the owner's rules, the plan list and the history; a new version is written at each release).
+3. the newest `Project-Handoff vN.md`, if you keep one (it holds the history and the plans).
 
 They need nothing else. Everything is in the repository: the site in `src/`, Tools' source in `tools-app/`, the website in `website/`, the tests in `tests/`, and the scripts in `scripts/`.
