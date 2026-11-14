@@ -153,7 +153,7 @@
       '<div class="hubt-line"><button type="button" class="hubt-icobtn" id="htIcoBtn" aria-expanded="false" aria-controls="htIcons" aria-label="Icon" title="Icon"><span class="hubt-cur" id="htIcoCur"></span><span class="hubt-chev" aria-hidden="true"></span></button>' +
         '<input id="htName" maxlength="40" autocomplete="off" aria-label="Name" placeholder="Name"><input type="color" id="htColor" aria-label="Tab Color" title="Tab Color"></div>' +
       '<div class="hubt-icons" id="htIcons" role="radiogroup" aria-label="Icon" hidden>' + icons + '</div>' +
-      '<h4>Look</h4>' + colorRow('Color', 'Tab Color', '', true) + '<div class="hubt-block hubt-swb"><div class="hubt-sw" id="htSw" role="group" aria-label="Usual colors">' + SWATCHES.map(function (c) { return '<button type="button" class="hubt-swc" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="false"></button>'; }).join('') + '</div></div>' + colorRow('Hc', 'Box Headline Color', 'Default uses the normal text color.') +
+      '<h4>Look</h4>' + '<div class="hubt-block hubt-swb"><span class="hubt-lt" id="htColorLbl">Tab Color</span><div class="hubt-sw" id="htSw" role="group" aria-label="Usual colors">' + SWATCHES.map(function (c) { return '<button type="button" class="hubt-swc" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="false"></button>'; }).join('') + '<button type="button" class="btn" id="htColorDef">Use Default</button><input type="text" id="htColorTx" hidden></div></div>' + colorRow('Hc', 'Box Headline Color', 'Default uses the normal text color.') +
       '<div class="hubt-block" id="htLayBlock" hidden><span class="hubt-lt">Layout</span><div class="hubt-lays" id="htLays" role="radiogroup" aria-label="Layout">' +
         '<button type="button" class="hubt-lay" data-lay="cards" role="radio" aria-checked="true"><i class="hubt-lp hubt-lp-cards" aria-hidden="true"></i><b>Notebook Cards</b><small>Cards you can size and arrange. The default.</small></button>' +
         '<button type="button" class="hubt-lay" data-lay="doc" role="radio" aria-checked="false"><i class="hubt-lp hubt-lp-doc" aria-hidden="true"></i><b>Document</b><small>One page with an outline</small></button></div></div>' +
@@ -243,8 +243,7 @@
     if (!dlg) build();
     cur = { cfg: cfg, color: cfg.color || '', hc: cfg.hc || '', layout: cfg.layout || 'cards', icon: isIcon(cfg.icon) ? cfg.icon : '', colorShown: cfg.colorShown };
     $('htTitle').textContent = cfg.title; $('htSave').textContent = cfg.saveLabel; $('htName').value = cfg.name || '';
-    dlg.querySelector('label[for=htColor]').firstChild.textContent = cfg.colorLabel || 'Tab Color'; $('htColor').setAttribute('aria-label', cfg.colorLabel || 'Tab Color');
-    $('htColorHint').textContent = cfg.colorHint || '';
+    $('htColorLbl').textContent = cfg.colorLabel || 'Tab Color'; $('htColor').setAttribute('aria-label', cfg.colorLabel || 'Tab Color'); $('htColor').title = cfg.colorLabel || 'Tab Color'; $('htColorDef').title = cfg.colorHint || '';
     $('htHcRow').hidden = cfg.hc == null;
     $('htLayBlock').hidden = !cfg.layouts;
     setColor('Color', cur.color); setColor('Hc', cur.hc); setLayout(cur.layout);

@@ -96,7 +96,7 @@ try:
         names0 = order('#tabs .tabi .tab')
         pg.evaluate("document.querySelectorAll('#tabs .pen')[0].click()"); pg.wait_for_selector('#hubTabDlg[open]')
         d = pg.evaluate("""(() => { const d = document.getElementById('hubTabDlg'); return { x: !!d.querySelector('.ix-sh .ix-sx'), icons: d.querySelectorAll('.hubt-ico').length, lay: !d.querySelector('#htLayBlock').hidden,
-            hc: !d.querySelector('#htHcRow').hidden, move: /Move (Left|Right)/.test(d.textContent), title: d.querySelector('.ix-sh h3').textContent, colorLabel: d.querySelector('label[for=htColor]').firstChild.textContent }; })()""")
+            hc: !d.querySelector('#htHcRow').hidden, move: /Move (Left|Right)/.test(d.textContent), title: d.querySelector('.ix-sh h3').textContent, colorLabel: d.querySelector('#htColorLbl').textContent }; })()""")
         check('K9 Info: the same window, with Layout and Box Headline Color (its own), the same 16 icons, and no Move Left / Move Right', d['x'] and d['icons'] == 17 and d['lay'] and d['hc'] and not d['move'] and d['title'] == 'Edit Tab' and d['colorLabel'] == 'Tab Color', d)
         check('K10 ...a tab with no icon chosen is marked Default and draws the document icon', pg.evaluate("document.querySelector('#htIcoDef').getAttribute('aria-checked')") == 'true' and pg.evaluate("!!document.querySelector('#tabs .tabi:first-child svg.ti')"))
         pg.click('#htIcoBtn'); pg.click('.hubt-ico[data-i="globe"]'); pg.click('#htSave')

@@ -565,7 +565,7 @@ $("oreset").onclick=()=>{wo=[...DEFAULT_ORDER];drawOrder()};
 $("ocancel").onclick=()=>odlg.close();
 $("osave").onclick=()=>{ST.order=[...wo];persist();render();odlg.close()};
 
-/* page title (the icon is the site logo, set in the main Settings) */
+/* page title (the icon is the site logo, set in the Site Settings) */
 const tdlg=$("tdlg");
 function openTitle(){$("ttl").value=pageTitle();tdlg.showModal()}
 $("tcancel").onclick=()=>tdlg.close();

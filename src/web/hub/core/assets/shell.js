@@ -517,7 +517,7 @@
     if (thenLabel) setTimeout(function () { runItem(thenLabel); }, 450);
   }
   function runItem(label) { hubItems().some(function (it) { if (it.label === label) { it.el.click(); return true; } }); }
-  /* (1.79.1) The gear menu: Edit This Page (or Done Editing), the page's own settings (data-hub-main), then Main Settings. Everything else is on the edit bar (3b). */
+  /* (1.79.1) The gear menu: Edit This Page (or Done Editing), the page's own settings (data-hub-main), then Site Settings. Everything else is on the edit bar (3b). */
   function gearMenu(anchor) {
     whenKnown(function () {
       var items = [], t = q1('toggle');
@@ -527,7 +527,7 @@
       itemEntries(anchor, t, true).forEach(function (x) { if (/ Settings$/.test(x.label) && PAGE_TILE[APP]) x.pageIcon = APP; items.push(x); });
       EXTRA.forEach(function (x) { items.push(x); });
       if (items.length) items.push({ sep: true });
-      items.push({ label: 'Main Settings', icon: ICON.gear, run: function () { settings(); } });
+      items.push({ label: 'Site Settings', icon: ICON.gear, run: function () { settings(); } });
       popMenu(anchor, items);
     });
   }
@@ -862,7 +862,7 @@
     var adm = isAdmin(), nav = NAV();
     var brand = '<span data-ix-brand></span>';   // the logo and site name: brandEl() puts them in once the markup is in place
     var theme = iconBtn('theme', themeLabel(), toolTile('theme', themeIcon()));
-    var edit = '';   // (1.79.1) the pencil is gone from the bar: the gear opens Edit This Page, the page's settings and Main Settings
+    var edit = '';   // (1.79.1) the pencil is gone from the bar: the gear opens Edit This Page, the page's settings and Site Settings
     var me = acctButtons(adm), links = pageLinks();
     var html;
     if (nav === 'side') {

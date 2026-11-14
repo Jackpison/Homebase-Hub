@@ -52,7 +52,7 @@ $site['first'] = $first;
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 $v = fn($f) => $f . '?v=' . (is_file(__DIR__ . '/' . $f) ? filemtime(__DIR__ . '/' . $f) : 0);
 hub_glass_adopt_home(is_array($site['panel'] ?? null) ? $site['panel'] : []);   // (1.68.4) once: a hand-set Home glass look becomes the one glass
-// The tab icon is the site logo from the main Settings.
+// The tab icon is the site logo from the Site Settings.
 $siteLogo = hub_settings()['logo'] ?? '';
 $logoOk = $siteLogo !== '' && is_file(HUB_PUBLIC . '/' . $siteLogo);
 $brand = 'web/hub/core/assets/brand/favicon-64.png';   // Homebase Hub's own logo, when no site logo is set

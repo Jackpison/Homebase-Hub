@@ -6,7 +6,7 @@ Things people asked for that are not built yet, with what was decided and why. N
 
 | Request | Decision |
 |---|---|
-| Edit button easier to find on every page | **Done in 1.79.1.** The gear opens Edit This Page, the page's Settings and Main Settings. |
+| Edit button easier to find on every page | **Done in 1.79.1.** The gear opens Edit This Page, the page's Settings and Site Settings. |
 | News feed (RSS) with pictures | **Not now.** A bigger feature and a new kind of outside request. If it comes back it must be off by default, fetch only through `hub_get_https` (every hop pinned to a public address), strip all HTML, cache on the server and show pictures only from the feed's own host. |
 | Custom iframe or link pages | **Not now.** Many sites refuse to be embedded, and a free-form page widens the security policy. A safe version would be: the owner adds an `https` address, the page shows it inside an iframe with `sandbox` and no `allow-same-origin`, a `frame-src` rule that lists only that host, and a plain "Open in a new tab" link beside it. A page of buttons that open links is already what Links is for. |
 | Multiple users with their own storage | **Not planned.** The site is one owner and one site; separate users would change the data layout, the login, backups and every page. |

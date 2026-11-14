@@ -358,8 +358,8 @@ try:
             old[app] = ep.evaluate("[...document.querySelectorAll('[data-hub-ebar]')].every(e => getComputedStyle(e).display === 'none')")
             ep.click('#ix-ebar [data-ix-done]'); until(lambda: ebar() is None, 5000)
             done[app] = not ep.evaluate("document.body.classList.contains('editing')")
-        check('P50 the gear menu offers Edit This Page, the page\'s own Settings and Main Settings (Links, Info, Cards, Tasks)',
-              all(menus[a] == ['Edit This Page', a.title() + ' Settings', 'Main Settings'] for a in want), menus)
+        check('P50 the gear menu offers Edit This Page, the page\'s own Settings and Site Settings (Links, Info, Cards, Tasks)',
+              all(menus[a] == ['Edit This Page', a.title() + ' Settings', 'Site Settings'] for a in want), menus)
         check('P51 Edit This Page shows the shared edit bar with the page\'s tools, its Settings and Done, the old bar is hidden, and Done ends editing (also on Cards and Tasks, which have no edit mode of their own)',
               bars == want and all(old.values()) and all(done.values()), (bars, old, done))
         # the bar's buttons do what the old ones did
@@ -405,12 +405,12 @@ try:
         early = rp2.evaluate("HUB.state().admin === undefined"); rp2.click('#ix-bar [data-ix=account]')
         until(lambda: rp2.evaluate("!!document.querySelector('#ix-pop') || !!document.querySelector('#ix-dlg.open')"), 8000)
         race = rp2.evaluate("[!!document.querySelector('#ix-dlg.open'), [...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)]"); rctx2.close()
-        check('P55 logged in, pressing the gear the moment it appears (the server answers slowly) opens the menu, no login box', race == [False, ['Edit This Page', 'Info Settings', 'Main Settings']], (early, race))
+        check('P55 logged in, pressing the gear the moment it appears (the server answers slowly) opens the menu, no login box', race == [False, ['Edit This Page', 'Info Settings', 'Site Settings']], (early, race))
         hctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); hctx.add_cookies(cookies); hctx.route('**/*', handle); hp2 = hctx.new_page(); herr2 = []; page_errors(hp2, herr2)
         hp2.goto(B + '/web/cards/', wait_until='domcontentloaded'); until(lambda: hp2.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(hp2)
         hp2.click('#ix-bar [data-ix=account]'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000)
         lines = hp2.evaluate("document.querySelectorAll('#ix-pop hr').length")
-        check('P56 the gear menu (Edit This Page, Cards Settings, then a line, Main Settings) has exactly one dividing line', lines == 1, lines)
+        check('P56 the gear menu (Edit This Page, Cards Settings, then a line, Site Settings) has exactly one dividing line', lines == 1, lines)
         hp2.click('#ix-pop button'); until(lambda: hp2.evaluate("!!document.getElementById('ix-ebar') && !document.getElementById('ix-ebar').hidden"), 5000)
         hrows = lambda: hp2.evaluate("[...document.querySelectorAll('#hlist .hrow')].map(r => [r.querySelector('input').value, r.querySelector('.hn').textContent, r.querySelector('.hdel').disabled])")
         hp2.click('#ix-ebar [data-tip="Holders"]'); until(lambda: hp2.evaluate("document.getElementById('hdlg').open"), 5000)
