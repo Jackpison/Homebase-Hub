@@ -147,31 +147,49 @@
       }, function () { b.disabled = false; if (st) st.textContent = 'Can\'t reach the server.'; });
     });
   }
-  /* ---------- Cloud Backup (1.77.0): an encrypted copy sent to a WebDAV folder (Nextcloud, ownCloud, a NAS, a Storage Box) ---------- */
+  /* ---------- Cloud Backup (1.77.0): an encrypted copy sent to a WebDAV folder (Nextcloud, ownCloud, a NAS, a Storage Box) or (1.79.5) to an S3 bucket; Restore From Cloud brings one back ---------- */
   function cloudCard(c, enc) {
     if (!c || !c.ok) return '';
-    var every = [[1, 'Daily'], [3, 'Every 3 Days'], [7, 'Weekly']], keeps = [7, 14, 30, 60, 90];
+    var every = [[1, 'Daily'], [3, 'Every 3 Days'], [7, 'Weekly']], keeps = [7, 14, 30, 60, 90], s3 = c.type === 's3';
     var status = c.error ? '<p class="ix-note"><span class="ix-err">Last problem: ' + esc(c.error) + '</span></p>'
       : c.last ? '<p class="ix-note">Last copy: ' + esc(when(c.last)) + ' · ' + esc(c.lastName) + ' (' + Math.max(1, Math.round(c.lastSize / 1024)) + ' KB).' + (c.note ? ' ' + esc(c.note) : '') + '</p>' : '<p class="ix-note">No copy sent yet.</p>';
-    return '<div id="ix-cloud">' + ecCard(c.on ? 'good' : '', ICON.box, 'Cloud Backup', 'An encrypted copy of the whole site, sent to a WebDAV folder (Nextcloud, ownCloud, Synology, a Storage Box or another server). ' +
-      'It is always locked with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + ', and the password for the cloud stays on your server.' +
+    return '<div id="ix-cloud">' + ecCard(c.on ? 'good' : '', ICON.box, 'Cloud Backup', 'An encrypted copy of the whole site, sent to a WebDAV folder (Nextcloud, ownCloud, Synology, a Storage Box) or to an S3 bucket (Amazon S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO). ' +
+      'It is always locked with your ' + (enc.mode === 'login' ? 'website password' : 'encryption passphrase') + ', and the password or keys for the cloud stay on your server.' +
       (c.encReady ? '' : ' <b>Set an encryption passphrase first</b> (Settings › Security): without one, nothing is sent.'),
-      '<div class="ix-fdgrid">' + ecField('ix-clurl', 'WebDAV Address', 'url', 'off', 'Like https://cloud.example.com/remote.php/dav/files/you/. On your own network, http:// works too.', '', ' value="' + esc(c.url) + '" spellcheck="false" placeholder="https://"') +
-        ecField('ix-cluser', 'User Name', 'text', 'off', '', '', ' value="' + esc(c.user) + '" spellcheck="false"') +
-        ecField('ix-clpass', 'Password', 'password', 'new-password', c.hasPass ? 'A password is saved. Type a new one only to change it.' : 'For Nextcloud, make an app password in its security settings.', '', ' placeholder="' + (c.hasPass ? 'Saved' : '') + '"') +
-        ecField('ix-cldir', 'Folder', 'text', 'off', 'Made for you inside that address.', '', ' value="' + esc(c.dir) + '" spellcheck="false"') + '</div>' +
+      '<div class="ix-row"><label class="ix-lab" for="ix-cltype">Send To</label><select id="ix-cltype" aria-label="Kind of cloud"><option value="webdav"' + (s3 ? '' : ' selected') + '>WebDAV (Nextcloud, a NAS)</option><option value="s3"' + (s3 ? ' selected' : '') + '>S3 Bucket (Amazon, R2, B2, MinIO)</option></select></div>' +
+      '<div class="ix-fdgrid"><div class="ix-cltp" data-for="webdav"' + (s3 ? ' hidden' : '') + '>' +
+        ecField('ix-clurl', 'WebDAV Address', 'url', 'off', 'Like https://cloud.example.com/remote.php/dav/files/you/. On your own network, http:// works too.', '', ' value="' + esc(s3 ? '' : c.url) + '" spellcheck="false" placeholder="https://"') +
+        ecField('ix-cluser', 'User Name', 'text', 'off', '', '', ' value="' + esc(s3 ? '' : c.user) + '" spellcheck="false"') +
+        ecField('ix-clpass', 'Password', 'password', 'new-password', c.hasPass && !s3 ? 'A password is saved. Type a new one only to change it.' : 'For Nextcloud, make an app password in its security settings.', '', ' placeholder="' + (c.hasPass && !s3 ? 'Saved' : '') + '"') + '</div>' +
+        '<div class="ix-cltp" data-for="s3"' + (s3 ? '' : ' hidden') + '>' +
+        ecField('ix-cls3url', 'S3 Address', 'url', 'off', 'The server only, like https://s3.eu-central-1.amazonaws.com or https://ACCOUNT.r2.cloudflarestorage.com. On your own network, http:// works too.', '', ' value="' + esc(s3 ? c.url : '') + '" spellcheck="false" placeholder="https://"') +
+        ecField('ix-clregion', 'Region', 'text', 'off', 'Like eu-central-1. Cloudflare R2 uses auto.', '', ' value="' + esc(c.region || 'us-east-1') + '" spellcheck="false"') +
+        ecField('ix-clbucket', 'Bucket', 'text', 'off', 'The bucket must already exist. Lower-case letters, numbers, dots and hyphens.', '', ' value="' + esc(c.bucket || '') + '" spellcheck="false"') +
+        ecField('ix-clak', 'Access Key ID', 'text', 'off', '', '', ' value="' + esc(s3 ? c.user : '') + '" spellcheck="false"') +
+        ecField('ix-clsk', 'Secret Access Key', 'password', 'new-password', c.hasPass && s3 ? 'A secret key is saved. Type a new one only to change it.' : 'Make a key that may only use this bucket.', '', ' placeholder="' + (c.hasPass && s3 ? 'Saved' : '') + '"') + '</div>' +
+        ecField('ix-cldir', 'Folder', 'text', 'off', 'Made for you inside that address (inside the bucket for S3).', '', ' value="' + esc(c.dir) + '" spellcheck="false"') + '</div>' +
       '<div class="ix-row"><label class="ix-lab" for="ix-clevery">Copy</label><select id="ix-clevery" aria-label="How often">' + every.map(function (e) { return '<option value="' + e[0] + '"' + (c.every === e[0] ? ' selected' : '') + '>' + e[1] + '</option>'; }).join('') + '</select>' +
         '<label class="ix-lab" for="ix-clkeep">Keep</label><select id="ix-clkeep" aria-label="How many copies to keep">' + keeps.map(function (k) { return '<option value="' + k + '"' + (c.keep === k ? ' selected' : '') + '>' + k + ' copies</option>'; }).join('') + '</select></div>' +
       '<label class="ix-tg"><span>Send Copies on a Schedule<small>One try a day. Older copies this feature made are removed after a new one arrives; nothing else in the folder is touched.</small></span><input type="checkbox" id="ix-clon"' + (c.on ? ' checked' : '') + '></label>' +
       status +
-      '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-clsave">Save</button><button type="button" class="ix-btn" id="ix-cltest">Test Connection</button><button type="button" class="ix-btn" id="ix-clnow">' + svg(ICON.box) + 'Back Up Now</button></div>' +
-      '<p class="ix-note" id="ix-clmsg" aria-live="polite"></p>') + '</div>';
+      '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-clsave">Save</button><button type="button" class="ix-btn" id="ix-cltest">Test Connection</button><button type="button" class="ix-btn" id="ix-clnow">' + svg(ICON.box) + 'Back Up Now</button><button type="button" class="ix-btn" id="ix-clrestore">Restore From Cloud</button></div>' +
+      '<p class="ix-note" id="ix-clmsg" aria-live="polite"></p><div id="ix-cllist"></div>') + '</div>';
   }
   function wireCloud(p, c) {
     var box = p.querySelector('#ix-cloud'); if (!box) return;
     var q = function (id) { return box.querySelector(id); }, msg = function (t, bad) { var m = q('#ix-clmsg'); m.textContent = t; m.className = 'ix-note' + (bad ? ' ix-err' : ''); };
-    var body = function () { return { url: q('#ix-clurl').value.trim(), user: q('#ix-cluser').value.trim(), pass: q('#ix-clpass').value, dir: q('#ix-cldir').value.trim(), every: +q('#ix-clevery').value, keep: +q('#ix-clkeep').value, on: q('#ix-clon').checked }; };
+    var isS3 = function () { return q('#ix-cltype').value === 's3'; };
+    var body = function () {
+      var s3 = isS3();
+      return { type: s3 ? 's3' : 'webdav', url: (s3 ? q('#ix-cls3url') : q('#ix-clurl')).value.trim(), user: (s3 ? q('#ix-clak') : q('#ix-cluser')).value.trim(), pass: (s3 ? q('#ix-clsk') : q('#ix-clpass')).value,
+        region: q('#ix-clregion').value.trim(), bucket: q('#ix-clbucket').value.trim(), dir: q('#ix-cldir').value.trim(), every: +q('#ix-clevery').value, keep: +q('#ix-clkeep').value, on: q('#ix-clon').checked };
+    };
     var busy = function (b, t, on) { b.disabled = on; if (on) { b.dataset.t = b.textContent; b.textContent = t; } else if (b.dataset.t) b.textContent = b.dataset.t; };
+    q('#ix-cltype').onchange = function () {
+      var s3 = isS3();
+      box.querySelectorAll('.ix-cltp').forEach(function (g) { g.hidden = g.dataset.for !== (s3 ? 's3' : 'webdav'); });
+      q('#ix-cllist').innerHTML = ''; msg('');
+    };
     q('#ix-clsave').onclick = function () {
       var b = this; busy(b, 'Saving…', true);
       api('cloud_save', body()).then(function (r) { busy(b, '', false); if (r.ok) { toast('Cloud Backup saved.'); pBackup(p); } else msg(r.error || 'Could not save.', true); });
@@ -185,6 +203,35 @@
       api('cloud_save', body()).then(function (s) {
         if (!s.ok) { busy(b, '', false); msg(s.error || 'Could not save.', true); return; }
         return api('cloud_run', {}, 'POST', { timeout: 600000 }).then(function (r) { busy(b, '', false); if (r.ok) { toast(r.message); pBackup(p); } else msg(r.error || r.message || 'It did not work.', true); });
+      });
+    };
+    /* Restore From Cloud (1.79.5): lists the copies in the saved folder or bucket; a pick is fetched (still encrypted) and handed to the Restore steps below,
+       which ask for the passphrase and open it in this browser, like a file you chose yourself. It uses the saved settings: Save first after a change. */
+    q('#ix-clrestore').onclick = function () {
+      var b = this, out = q('#ix-cllist'); busy(b, 'Looking…', true); msg('Looking in the cloud for copies…'); out.innerHTML = '';
+      api('cloud_list', null, 'GET', { timeout: 60000 }).then(function (r) {
+        busy(b, '', false);
+        if (!r.ok) { msg(r.error || 'It did not work.', true); return; }
+        if (!r.copies.length) { msg('No copies of this kind are in that folder yet.'); return; }
+        msg(r.copies.length + (r.copies.length === 1 ? ' copy' : ' copies') + ' found, newest first. Pick the one to restore.');
+        out.innerHTML = r.copies.map(function (k) {
+          return '<div class="ix-ver"><span class="ix-tag">' + esc(k.date) + '</span><span>' + esc(k.name) + ' <small>' + (k.size ? Math.max(1, Math.round(k.size / 1024)) + ' KB' : '') + '</small></span>' +
+            '<button type="button" class="ix-btn" data-cn="' + esc(k.name) + '">Use This Copy</button></div>'; }).join('');
+        out.querySelectorAll('[data-cn]').forEach(function (u) {
+          u.onclick = function () {
+            var n = u.dataset.cn; busy(u, 'Fetching…', true);
+            fetch(CORE + 'api.php?action=cloud_fetch&name=' + encodeURIComponent(n), { credentials: 'same-origin', cache: 'no-store', headers: S.csrf ? { 'X-Hub-CSRF': S.csrf } : {} }).then(function (res) {
+              if (!res.ok) return res.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.error || 'The copy could not be fetched.'); });
+              return res.blob();
+            }).then(function (blob) {
+              busy(u, '', false);
+              if (!p.__pickFile) throw new Error('The restore steps are not ready. Reload the page and try again.');
+              p.__pickFile(new File([blob], n, { type: 'application/json' }));
+              toast('Copy fetched. Enter your passphrase to open it.');
+              var st = p.querySelector('#ix-rst'); if (st && st.scrollIntoView) st.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }).catch(function (e) { busy(u, '', false); msg(e.message || 'The copy could not be fetched.', true); });
+          };
+        });
       });
     };
   }
@@ -352,6 +399,7 @@
         done: '<div class="ix-st-fin"><span class="ix-st-big"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><h3>Restored</h3><p>Reloading…</p></div>' });
       var dz = p.querySelector('#ix-dropz');
       var pickFile = function (f) { if (!f) return; rst.__file = f; var bx = p.querySelector('#ix-impx'); bx.__restore = null; importFile(f, bx); rst.go(2); };
+      p.__pickFile = pickFile;   // Restore From Cloud (Cloud Backup card) hands a fetched copy to these steps
       p.querySelector('#ix-imp').onchange = function (e) { pickFile(e.target.files[0]); };
       ['dragenter', 'dragover'].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('over'); }); });
       ['dragleave', 'drop'].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('over'); }); });

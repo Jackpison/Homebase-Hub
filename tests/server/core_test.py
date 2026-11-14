@@ -299,7 +299,7 @@ try:
             if os.path.isfile(f): out[f[len(s.dir) + 1:]] = hashlib.sha256(open(f, 'rb').read()).hexdigest()
         return out
     anon = s.client('anonymous/2.0'); anon.get('state')
-    before = tree(); leaks, opened, unguarded, found = [], [], [], {}
+    before = tree(); leaks, opened, unguarded, found, shape = [], [], [], {}, []
     for pg in ('links', 'info', 'cards', 'tasks', 'files', 'home'):
         src = open('%s/web/%s/api.php' % (s.dir, pg)).read(); url = '%s/web/%s/api.php?action=' % (s.site_base, pg); found[pg] = page_actions(src)
         for a in found[pg]:
@@ -308,18 +308,29 @@ try:
                 txt = json.dumps(r)
                 if MARK in txt or 'Weekend in the Mountains' in txt or 'private.example' in txt: leaks.append((pg, a, who))
                 if who == 'visitor POST' and (pg, a) not in PUBLIC and anon.last_status < 400: opened.append((pg, a, anon.last_status))
+                if anon.last_status >= 400 and isinstance(r, dict) and 'error' in r and r.get('ok') is not False: shape.append((pg, a, who, anon.last_status))   # E10
             if a == 'logout' or (pg, a) in PUBLIC: continue   # logging out the test's own session would end the sweep; the public ones answer anyone
             for who, extra in (('no token', {}), ('wrong token', {'X-Hub-CSRF': 'f' * 64})):
-                s.req(url + a, data=body, method='POST', hdr=dict(h, **extra))
+                rr = s.req(url + a, data=body, method='POST', hdr=dict(h, **extra))
                 if s.last_status < 400: unguarded.append((pg, a, who, s.last_status))
+                if s.last_status >= 400 and isinstance(rr, dict) and 'error' in rr and rr.get('ok') is not False: shape.append((pg, a, who, s.last_status))   # E10
     after = tree(); changed = sorted(f for f in set(before) | set(after) if before.get(f) != after.get(f) and not MAY_CHANGE.match(f))
     n = sum(len(v) for v in found.values())
     check('E6 the six page APIs: every action (%d found) gives a visitor nothing private (the private Links tab and Info tab stay out of every answer)' % n,
           n >= 60 and all(len(found[p]) >= (1 if p == 'cards' else 5) for p in found) and not leaks, (leaks, {p: len(v) for p, v in found.items()}))
     check('E7 ...a visitor\'s change is refused, except the public actions (Links get/visit, Home state/refill/seen, logout); you, without the security token or with a wrong one, are refused too',
           not opened and not unguarded, (opened, unguarded))
+    check('E10 (1.79.5) ...and every refused request (HTTP 400 and up) of those six APIs that carries an error text also says ok:false, the same on every page', not shape, shape[:6])
     check('E8 ...and none of those requests changed anything on the server (only sessions, visit counts and Home\'s picture queue may move)', not changed, changed)
     check('E9 you are still logged in after the sweep, and you still see your private Links tab', s.get('state').get('admin') is True and MARK in json.dumps(s.req(s.site_base + '/web/links/api.php?action=get')), s.get('state'))
+    # E11 (1.79.5): Restore From Cloud lists and fetches only for you; a bad name is refused in the one failure shape
+    core = s.site_base + '/web/hub/core/api.php?action='
+    anon2 = s.client('anonymous/3.0'); anon2.get('state')
+    la = anon2.req(core + 'cloud_list'); la_st = anon2.last_status; fa = anon2.req(core + 'cloud_fetch&name=x-backup-2026-01-01.enc.json'); fa_st = anon2.last_status
+    lm = s.req(core + 'cloud_list'); lm_st = s.last_status
+    fm = s.req(core + 'cloud_fetch&name=' + '..%2Fcore%2Fconfig.php'); fm_st = s.last_status
+    check('E11 Restore From Cloud: a visitor gets nothing from cloud_list or cloud_fetch; you get a refusal with ok:false for no settings and for a name that is not a copy',
+          la_st in (401, 403) and fa_st in (401, 403) and lm_st == 400 and lm.get('ok') is False and fm_st == 400 and fm.get('ok') is False and 'error' in fm, (la_st, fa_st, lm_st, lm, fm_st, fm))
 finally:
     stop_all()
 sys.exit(check.done())

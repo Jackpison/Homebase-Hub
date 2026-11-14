@@ -24,7 +24,7 @@ const rules = {
 };
 
 module.exports = [
-  { ignores: ['src/web/tools/assets/**', '**/vendor/**', 'src/web/hub/core/assets/admin/**', 'src/web/home/designs/**', 'src/web/home/designs-src/**', 'build/**', '**/node_modules/**', 'website/**', 'tests/**', 'scripts/**'] },
+  { ignores: ['src/web/tools/assets/**', '**/vendor/**', 'src/web/hub/core/assets/admin/**', 'src/web/hub/core/assets/shell/**', 'src/web/home/assets/app/**', 'src/web/tasks/assets/tasks/**', 'src/web/links/assets/links/**', 'src/web/info/assets/info/**', 'src/web/home/designs/**', 'src/web/home/designs-src/**', 'build/**', '**/node_modules/**', 'website/**', 'tests/**', 'scripts/**'] },
   { files: ['src/web/**/*.js'], languageOptions: { ecmaVersion: 2022, sourceType: 'script', globals: site }, rules },
   { files: ['src/web/cards/assets/cards.js', 'src/web/info/assets/info.js', 'src/web/tasks/assets/tasks.js'],
     languageOptions: { globals: ownHelpers } },

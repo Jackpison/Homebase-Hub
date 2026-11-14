@@ -58,6 +58,14 @@ $d = cl_load(); $d['keep'] = 2; cl_save($d); cl_run();
 $left = array_values(array_diff(scandir("$root/data/Backups"), ['.', '..']));
 t('only the newest 2 own copies are kept; other files in the folder are never touched', in_array($name, $left, true) && in_array("$slug-backup-2020-10-03.enc.json", $left, true) && !in_array("$slug-backup-2020-10-01.enc.json", $left, true) && !in_array("$slug-backup-2020-10-02.enc.json", $left, true)
   && in_array('holiday.jpg', $left, true) && in_array("$slug-backup-2020-10-09.json", $left, true), json_encode($left));
+// ---- Restore from Cloud (1.79.5), WebDAV ----
+[$ok, $why, $copies] = cl_copies();
+t('Restore lists the copies of the folder with date and size, newest first (WebDAV)', $ok && ($copies[0]['name'] ?? '') === $name && ($copies[0]['date'] ?? '') === $day && ($copies[0]['size'] ?? -1) === filesize($file) && !in_array('holiday.jpg', array_column($copies, 'name'), true), json_encode([$ok, $why, $copies]));
+[$ok, $got] = cl_fetch_copy($name);
+t('a copy comes back byte for byte, still encrypted, into a private temporary file', $ok && file_get_contents($got) === file_get_contents($file) && (fileperms($got) & 0777) === 0600, json_encode([$ok, $got]));
+if ($ok) @unlink($got);
+t('only the name of a copy is accepted, and a missing one is said plainly', !cl_fetch_copy('holiday.jpg')[0] && !cl_fetch_copy('../x-backup-2026-01-01.enc.json')[0] && strpos((string)cl_fetch_copy('nothere-backup-2026-01-01.enc.json')[1], 'does not exist') !== false);
+t('the sizes in the WebDAV list are the real ones', (cl_dav_sizes(cl_load(), ['Backups'])[$name] ?? -1) === filesize($file));
 // a hostile answer to the list: nothing is deleted
 $d = cl_load(); $d['dir'] = 'evil'; cl_save($d);
 $names = cl_dav_list(cl_load(), ['evil']);

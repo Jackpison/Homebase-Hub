@@ -163,6 +163,29 @@ try:
         wait_js(pg, "/https/.test(document.getElementById('ix-clmsg').textContent)", 15000)
         check('L30b an address on the internet without https is refused in plain words, before anything is sent', 'https://' in pg.inner_text('#ix-clmsg'), pg.inner_text('#ix-clmsg'))
 
+        # ---- 1.79.5: Cloud Backup to an S3 bucket, and Restore From Cloud ----
+        pg.reload(); wait_js(pg, "!!document.getElementById('ix-cloud')", 20000)
+        pg.select_option('#ix-cltype', 's3')
+        vis = pg.evaluate("(() => { const g = k => document.querySelector('.ix-cltp[data-for=' + k + ']'); return [g('s3').hidden, g('webdav').hidden, ['ix-cls3url', 'ix-clregion', 'ix-clbucket', 'ix-clak', 'ix-clsk'].every(i => !!document.getElementById(i)), document.getElementById('ix-clsk').type, !!document.getElementById('ix-clrestore')]; })()")
+        check('L30c Cloud Backup: choosing S3 shows its fields (address, region, bucket, access key, secret key, hidden) and hides the WebDAV ones; Restore From Cloud is there', vis == [False, True, True, 'password', True], vis)
+        pg.fill('#ix-cls3url', 'https://8.8.8.8/minio'); pg.fill('#ix-clbucket', 'my-backups'); pg.fill('#ix-clak', 'AKID'); pg.fill('#ix-clsk', 'SECRETKEY1'); pg.click('#ix-cltest')
+        wait_js(pg, "/only the server/.test(document.getElementById('ix-clmsg').textContent)", 15000)
+        check('L30d an S3 address with a folder in it is refused in plain words (the bucket has its own field)', 'only the server' in pg.inner_text('#ix-clmsg'), pg.inner_text('#ix-clmsg'))
+        pg.fill('#ix-cls3url', 'https://8.8.8.8'); pg.fill('#ix-clbucket', 'Bad Bucket'); pg.click('#ix-cltest')
+        wait_js(pg, "/bucket name/.test(document.getElementById('ix-clmsg').textContent)", 15000)
+        check('L30e a bucket name that cannot be one is refused in plain words', 'bucket name' in pg.inner_text('#ix-clmsg'), pg.inner_text('#ix-clmsg'))
+        pg.fill('#ix-clbucket', 'my-backups'); pg.fill('#ix-clregion', 'eu-central-1'); pg.click('#ix-clsave')
+        wait_js(pg, "document.getElementById('ix-clsk') && document.getElementById('ix-clsk').placeholder === 'Saved'", 15000)
+        sv = pg.evaluate("[document.getElementById('ix-cltype').value, document.getElementById('ix-clbucket').value, document.getElementById('ix-clregion').value, document.getElementById('ix-clak').value, document.getElementById('ix-clsk').value, document.body.innerHTML.indexOf('SECRETKEY1') < 0]")
+        check('L30f saving S3 keeps the kind, bucket, region and access key, shows only "Saved" for the secret key and never puts it in the page', sv == ['s3', 'my-backups', 'eu-central-1', 'AKID', '', True], sv)
+        pg.click('#ix-clrestore'); wait_js(pg, "document.getElementById('ix-clmsg').textContent.length > 8 && !/Looking/.test(document.getElementById('ix-clmsg').textContent)", 20000)
+        rm = pg.inner_text('#ix-clmsg')
+        check('L30g Restore From Cloud with nothing reachable says what is wrong in plain words and lists nothing', len(rm) > 8 and pg.evaluate("document.querySelectorAll('#ix-cllist [data-cn]').length") == 0, rm)
+        pg.select_option('#ix-cltype', 'webdav'); pg.fill('#ix-clurl', 'https://8.8.8.8/dav'); pg.fill('#ix-cluser', 'me'); pg.click('#ix-clsave')
+        wait_js(pg, "document.getElementById('ix-clsk') && document.getElementById('ix-clsk').placeholder === '' && document.getElementById('ix-cltype').value === 'webdav' && document.getElementById('ix-clurl').value === 'https://8.8.8.8/dav'", 15000)   # the saved S3 secret said Saved until this save redrew the card
+        sw = pg.evaluate("[document.getElementById('ix-clpass').placeholder, document.getElementById('ix-clsk').placeholder]")
+        check('L30h changing the kind of cloud without a new password drops the saved secret (a key for one kind of server is never sent to the other)', sw == ['', ''], sw)
+
         # ---- Files: the grid ----
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
         pg.set_input_files('#pick', [{'name': 'red.png', 'mimeType': 'image/png', 'buffer': png((220, 40, 40))}])

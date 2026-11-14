@@ -12,8 +12,10 @@ def check(name, ok, extra=''):
 CONFIGS = ('config/tsconfig.json', 'config/tsconfig.links.json', 'config/tsconfig.home.json', 'config/tsconfig.cards.json', 'config/tsconfig.tasks.json', 'config/tsconfig.info.json')   # the strict one, and one looser one for each page script
 listed = [os.path.normpath(os.path.join(os.path.dirname(c), f)).replace(os.sep, '/') for c in CONFIGS for f in json.load(open(os.path.join(ROOT, c)))['files'] if f.endswith('.js')]   # paths in a config are relative to the config's own folder (config/)
 flagged = []
+PARTS = ('src/web/hub/core/assets/admin', 'src/web/hub/core/assets/shell', 'src/web/home/assets/app', 'src/web/tasks/assets/tasks', 'src/web/links/assets/links', 'src/web/info/assets/info')   # labelled parts (make-admin.py, make-parts.py): the joined file is the one that is checked
 for base in ('src', 'tools-app/src'):
     for d, _, fs in os.walk(os.path.join(ROOT, base)):
+        if os.path.relpath(d, ROOT).replace(os.sep, '/') in PARTS: continue
         if '/src/web/tools' in d.replace(os.sep, '/') + '/' and base == 'src': continue   # Tools' built bundles
         for f in fs:
             if f.endswith('.js') and re.search(r'^// @ts-check\s*$', open(os.path.join(d, f), encoding='utf-8', errors='ignore').read(), re.M):

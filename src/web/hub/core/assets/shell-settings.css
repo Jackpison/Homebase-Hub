@@ -843,6 +843,7 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-lab{color:var(--ix-mu);font-size:13px;font-weight:600;margin:0 6px 0 0}
 #ix-page .ix-lab:not(:first-child){margin-left:14px}
 @media (max-width:760px){#ix-page .ix-fdgrid{grid-template-columns:1fr}}
+#ix-page .ix-cltp{display:contents}#ix-page .ix-cltp[hidden]{display:none}   /* Cloud Backup: the fields of the kind of cloud that is chosen (1.79.5) */
 #ix-page #ix-cloud .ix-row select{width:auto!important;flex:none;min-width:150px}
 #ix-page #ix-cloud .ix-row{flex-wrap:wrap}
 

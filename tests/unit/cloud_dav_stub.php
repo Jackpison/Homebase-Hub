@@ -17,6 +17,9 @@ switch ($m) {
     case 'PUT':
         if (!is_dir(dirname($path))) { http_response_code(409); exit; }
         file_put_contents($path, file_get_contents('php://input')); http_response_code(201); exit;
+    case 'GET':
+        if (!is_file($path)) { http_response_code(404); exit; }
+        header('Content-Type: application/json'); readfile($path); exit;
     case 'DELETE':
         if (is_file($path)) unlink($path); http_response_code(204); exit;
     case 'PROPFIND':
@@ -26,7 +29,7 @@ switch ($m) {
         if (!is_dir($path)) { http_response_code(404); exit; }
         http_response_code(207); header('Content-Type: application/xml');
         $x = '<?xml version="1.0"?><d:multistatus xmlns:d="DAV:"><d:response><d:href>' . htmlspecialchars($u) . '</d:href></d:response>';
-        if (($_SERVER['HTTP_DEPTH'] ?? '') === '1') foreach (scandir($path) as $f) if ($f !== '.' && $f !== '..') $x .= '<d:response><d:href>' . htmlspecialchars(rtrim($u, '/') . '/' . rawurlencode($f)) . (is_dir("$path/$f") ? '/' : '') . '</d:href></d:response>';
+        if (($_SERVER['HTTP_DEPTH'] ?? '') === '1') foreach (scandir($path) as $f) if ($f !== '.' && $f !== '..') $x .= '<d:response><d:href>' . htmlspecialchars(rtrim($u, '/') . '/' . rawurlencode($f)) . (is_dir("$path/$f") ? '/' : '') . '</d:href>' . (is_file("$path/$f") ? '<d:propstat><d:prop><d:getcontentlength>' . filesize("$path/$f") . '</d:getcontentlength></d:prop></d:propstat>' : '') . '</d:response>';
         echo $x . '</d:multistatus>'; exit;
 }
 http_response_code(501);

@@ -9,7 +9,7 @@ prints one table. A failure here would have been a red CI run, so fix everything
     python3 scripts/precheck.py --plan       only print what it would run
 The version rule: a push that changes the site (src/ or tools-app/) must raise the version in the same push, unless the version
 in the code has no tag yet (it is still unreleased). Pass --no-bump for the rare exception.
-Exit 0 only when every check passed. See docs/MAINTAINING.md."""
+Exit 0 only when every check passed. See MAINTAINING.md."""
 import concurrent.futures, fnmatch, hashlib, os, re, shutil, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -171,6 +171,10 @@ def main(argv):
     if any('assets/admin/' in f for f in files):
         sh([PY, 'scripts/make-admin.py'])
         rows.append(('shell-admin.js is built from its parts', True, 'rebuilt' if digest('src/web/hub/core/assets/shell-admin.js') != admin_before else 'unchanged', 0.0, ''))
+    PART_DIRS = ('assets/shell/', 'assets/app/', 'assets/tasks/', 'assets/links/', 'assets/info/')
+    if any(d in f for f in files for d in PART_DIRS):
+        sh([PY, 'scripts/make-parts.py'])
+        rows.append(('the page scripts are built from their parts', True, '', 0.0, ''))
     bump = None if nobump else version_problem(files)
     rows.append(('Version raised when the site changed', bump is None, bump or '', 0.0, ''))
 

@@ -26,7 +26,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 
 if (defined('HUB')) return;
-define('HUB', '1.79.3');
+define('HUB', '1.79.5');
 const HUB_MIN_PHP = '8.3';   // the oldest PHP this version supports and is tested on; an update zip carries it as "minPhp" in its file list
 
 /** When each PHP branch stops getting security fixes (https://www.php.net/supported-versions, checked 2026-10-23). Branches not listed are newer than this table. Add a row each November. */
@@ -199,9 +199,16 @@ function hub_jput(string $f, string $json): bool {
 
 /* ======================= requests ======================= */
 
+/* (1.79.5) One shape for every failed answer: an answer with an HTTP error code (400 and up) that carries an `error` text also says
+   `ok:false`, so a page that tests `r.ok === false` sees every failure the same way (Links and Home used to send only `error`).
+   An answer that already has its own `ok` is left alone. */
+function hub_json_body($code, $arr) {
+    if ((int)$code >= 400 && is_array($arr) && array_key_exists('error', $arr) && !array_key_exists('ok', $arr)) return ['ok' => false] + $arr;
+    return $arr;
+}
 function hub_json($code, $arr): never {
     if (!headers_sent()) { http_response_code($code); header('Content-Type: application/json; charset=utf-8'); }
-    echo json_encode($arr, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    echo json_encode(hub_json_body($code, $arr), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     exit;
 }
 function hub_headers(): void {

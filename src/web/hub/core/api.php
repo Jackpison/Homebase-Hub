@@ -617,7 +617,7 @@ case 'pp_check':   // the website password, checked like a login (before the bro
 case 'changelog':   // Settings > Updates > What's New: the history of every version (docs/ is closed to browsers, so it is read here, for you only)
     need_admin(false);
     $cl = HUB_DOCS . '/CHANGELOG.md';
-    if (!is_file($cl)) hub_json(200, ['ok' => false, 'error' => 'The changelog file is not on your server (web/hub/docs/CHANGELOG.md).']);
+    if (!is_file($cl)) hub_json(404, ['ok' => false, 'error' => 'The changelog file is not on your server (web/hub/docs/CHANGELOG.md).']);
     $md = (string)file_get_contents($cl, false, null, 0, 1500000);
     if (!empty($_GET['latest'])) $md = hub_changelog_latest($md);   // Overview's "What's New": the newest version only
     hub_json(200, ['ok' => true, 'version' => HUB, 'md' => $md, 'time' => (int)filemtime($cl)]);
@@ -814,19 +814,47 @@ case 'cloud_save':
     need_post(); need_admin();
     require_once __DIR__ . '/lib/cloud.php';
     $b = body(); $d = cl_load();
+    $type = in_array((string)($b['type'] ?? $d['type']), ['webdav', 's3'], true) ? (string)($b['type'] ?? $d['type']) : 'webdav';
     $url = trim((string)($b['url'] ?? $d['url']));
-    if ($url !== '') { [, $why] = cl_url_check($url); if ($why !== '') hub_json(400, ['ok' => false, 'error' => $why]); }
+    if ($url !== '') { [, $why] = $type === 's3' ? cl_s3_endpoint_check($url) : cl_url_check($url); if ($why !== '') hub_json(400, ['ok' => false, 'error' => $why]); }
     $dir = trim((string)($b['dir'] ?? $d['dir']));
-    if (cl_dir_parts($dir) === null) hub_json(400, ['ok' => false, 'error' => 'The folder name can use letters, numbers, spaces and . _ - ( ) only, up to three levels.']);
+    if (cl_dir_parts($dir) === null) hub_json(400, ['ok' => false, 'error' => cl_dir_problem($dir)]);
+    $region = trim((string)($b['region'] ?? $d['region'])); $bucket = trim((string)($b['bucket'] ?? $d['bucket']));
+    if ($type === 's3') {
+        if ($region === '' || !cl_region_ok($region)) hub_json(400, ['ok' => false, 'error' => 'The region looks like us-east-1 or eu-central-1 (letters, numbers and hyphens).']);
+        if ($bucket !== '' && !cl_bucket_ok($bucket)) hub_json(400, ['ok' => false, 'error' => 'The bucket name can use lower-case letters, numbers, dots and hyphens only (3 to 63 characters).']);
+    }
     if (!empty($b['on']) && !bk_key()) hub_json(400, ['ok' => false, 'error' => 'Cloud Backup is always encrypted: set an encryption passphrase first (Settings, Security, Encryption).'] + cl_view($d));
-    $d['url'] = $url; $d['dir'] = $dir; $d['user'] = substr(trim((string)($b['user'] ?? $d['user'])), 0, 200);
-    if (isset($b['pass']) && $b['pass'] !== '') $d['pass'] = substr((string)$b['pass'], 0, 400);
+    $newPass = isset($b['pass']) && $b['pass'] !== '';
+    if ($type !== $d['type'] && !$newPass) { $d['pass'] = ''; $d['user'] = ''; $d['on'] = false; }   // the secret of one kind of server is never sent to the other kind
+    $d['type'] = $type; $d['url'] = $url; $d['dir'] = $dir; $d['region'] = $region !== '' ? $region : 'us-east-1'; $d['bucket'] = $bucket;
+    if (isset($b['user'])) $d['user'] = substr(trim((string)$b['user']), 0, 200);
+    if ($newPass) $d['pass'] = substr((string)$b['pass'], 0, 400);
     if (!empty($b['clearPass'])) { $d['pass'] = ''; $d['on'] = false; }
-    $d['on'] = !empty($b['on']) && $d['url'] !== '' && $d['user'] !== '' && $d['pass'] !== '';
+    $d['on'] = !empty($b['on']) && $d['url'] !== '' && $d['user'] !== '' && $d['pass'] !== '' && ($type !== 's3' || $d['bucket'] !== '');
     $d['every'] = in_array((int)($b['every'] ?? $d['every']), [1, 3, 7], true) ? (int)($b['every'] ?? $d['every']) : 1;
     $d['keep'] = max(1, min(CL_KEEP_MAX, (int)($b['keep'] ?? $d['keep'])));
     if (!cl_save($d)) hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
     hub_json(200, cl_view($d));
+
+case 'cloud_list':   // Restore from Cloud (1.79.5): the copies in the saved folder or bucket
+    need_admin(false);
+    require_once __DIR__ . '/lib/cloud.php';
+    [$ok, $why, $copies] = cl_copies();
+    if (!$ok) hub_json(400, ['ok' => false, 'error' => $why]);
+    hub_json(200, ['ok' => true, 'copies' => $copies]);
+
+case 'cloud_fetch':   // one copy, still encrypted, to the browser: Import asks for the passphrase there and opens it
+    need_admin(false);
+    require_once __DIR__ . '/lib/cloud.php';
+    [$ok, $got] = cl_fetch_copy((string)($_GET['name'] ?? ''));
+    if (!$ok) hub_json(400, ['ok' => false, 'error' => $got]);
+    $size = (int)filesize($got);
+    header('Content-Type: application/json; charset=utf-8'); header('Content-Length: ' . $size); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff');
+    $fh = @fopen($got, 'rb');
+    if ($fh) { while (!feof($fh)) { echo fread($fh, 262144); } fclose($fh); }
+    @unlink($got);
+    exit;
 
 case 'cloud_test':
 case 'cloud_run':

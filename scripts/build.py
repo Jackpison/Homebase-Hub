@@ -41,6 +41,8 @@ def main():
     shutil.copytree(os.path.join(ROOT, 'src'), TREE)
     shutil.rmtree(os.path.join(TREE, 'web', 'home', 'designs-src'), ignore_errors=True)   # the React Bits sources and the small runtime (scripts/build-designs.py): the built files in web/home/designs/ ship
     shutil.rmtree(os.path.join(TREE, 'web', 'hub', 'core', 'assets', 'admin'), ignore_errors=True)   # the parts of shell-admin.js (scripts/make-admin.py): the joined file is what ships
+    for parts in ('hub/core/assets/shell', 'home/assets/app', 'tasks/assets/tasks', 'links/assets/links', 'info/assets/info'):   # the parts of the five big page scripts (scripts/make-parts.py): the joined files are what ships
+        shutil.rmtree(os.path.join(TREE, 'web', *parts.split('/')), ignore_errors=True)
     held = []
     for dp, dn, fns in os.walk(TREE):
         for fn in fns:

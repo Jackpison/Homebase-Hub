@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.5 | Cloud Backup can send to an S3 bucket, and Restore From Cloud brings a copy back; every failed request now answers in one shape; the big page scripts are cut into labelled parts |
 | 1.79.3 | Box Headline Color moved from Edit Tab into each box |
 | 1.79.2 | Edit Tab is one page with a preview on top; tab bar gaps fixed; a divider under the Links tabs; Telegram Login Approval |
 | 1.79.1 | The gear opens Edit This Page, the page's Settings and Main Settings; Only Me is now Hide From Visitors; one-column Settings forms on a phone |
@@ -159,6 +160,24 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.5
+
+### Added
+
+- **Cloud Backup to an S3 bucket.** In Settings > Backup & Restore > Cloud Backup, choose **S3 Bucket** under Send To. It works with Amazon S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO and other S3-style storage. Fill in the address, region, bucket, access key and secret key, press **Test Connection**, then switch on the schedule or press **Back Up Now**. The copy is locked with your passphrase before it leaves, the secret key stays on your server, and old copies this feature made are removed after a new one arrives (nothing else in the folder is touched).
+- **Restore From Cloud.** The Cloud Backup card has a new button that lists the copies in your folder or bucket, newest first. Pick one: it is fetched still locked, the Restore steps below ask for your passphrase and open it in your browser, and you choose what to restore, exactly as with a file you chose yourself. It works for WebDAV and S3.
+
+### Changed
+
+- Switching the kind of cloud (WebDAV or S3) without typing a new password drops the saved password or secret key, so a secret meant for one kind of server is never sent to the other.
+
+### Behind the scenes
+
+- Every failed request (a 400, 401, 403, 404, 409, 500 and so on) that carries an error message now also says `ok: false`, on every page. Links and Home used to send only the message. A missing changelog file now answers 404, not 200.
+- The five biggest page scripts (the shared bar, Home, Tasks, Links and Info) are kept as labelled parts and joined into the same single file each page loads, like Settings has been since 1.74.0. Nothing runs differently.
 
 ---
 
