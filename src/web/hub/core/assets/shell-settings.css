@@ -933,6 +933,8 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-ec.ix-split .ix-devs{margin-bottom:14px}
 #ix-page .ix-ec.ix-split.warn{border-color:color-mix(in srgb,var(--ix-accent) 45%,var(--ix-line))}
 @media (max-width:900px){#ix-page .ix-ec.ix-split{grid-template-columns:minmax(0,1fr)}#ix-page .ix-ec.ix-split>.ix-ec-b{margin-top:14px;padding-top:0}}
+/* (1.79.1) on a phone every form field gets the full width: two narrow columns made the labels wrap and the boxes small */
+@media (max-width:600px){#ix-page .ix-ec.ix-split .ix-frm,#ix-page .ix-ec.ix-split .ix-frm:has(>.ix-fd:nth-child(4)){grid-template-columns:minmax(0,1fr)}}
 #ix-page .ix-fact>.ix-meterw:not(.on){visibility:hidden}
 /* (1.78.1) one box with numbered rows (Telegram Setup): the number, title and what to do on the left, the fields and buttons on the right */
 #ix-page .ix-srow{display:grid;grid-template-columns:minmax(260px,400px) minmax(0,1fr);gap:0 40px;align-items:start;padding:18px 0;border-top:1px solid var(--ix-line)}
