@@ -24,11 +24,12 @@ if (PHP_SAPI !== 'cli') {
 }
 @set_time_limit(240);
 $out = [];
-try { $n = nt_poll(); if ($n) $out[] = "Bot: $n message" . ($n === 1 ? '' : 's') . '.'; } catch (Throwable $e) { $out[] = 'Bot: ' . $e->getMessage(); }
+$tgOff = hub_feature_off('telegram');   // (1.79.0) turned off in Settings > Features: no bot, no reminders, no Telegram backups
+if (!$tgOff) try { $n = nt_poll(); if ($n) $out[] = "Bot: $n message" . ($n === 1 ? '' : 's') . '.'; } catch (Throwable $e) { $out[] = 'Bot: ' . $e->getMessage(); }
 // (1.72.0) the calendars you follow in Tasks: fetched again every 6 hours (nothing happens while you follow none)
 try { require_once HUB_WEB . '/tasks/lib.php'; $n = tasks_subs_tick((string)(hub_settings()['tz'] ?? 'UTC')); if ($n) $out[] = "Calendars: $n fetched."; } catch (Throwable $e) { $out[] = 'Calendars: ' . $e->getMessage(); }
 try { require_once __DIR__ . '/lib/ghupdate.php'; gh_tick(); } catch (Throwable $e) { $out[] = 'GitHub check: ' . $e->getMessage(); }   // does nothing unless the daily check was switched on
-$r = nt_run(false); $out[] = $r['note'];
+if (!$tgOff) { $r = nt_run(false); $out[] = $r['note']; } else $out[] = 'Telegram is turned off.';
 // (1.77.0) Cloud Backup: an encrypted copy sent to your WebDAV folder, once a day at most (nothing happens while it is off)
 try { require_once __DIR__ . '/lib/cloud.php'; $c = cl_tick(); if ($c) $out[] = 'Cloud Backup: ' . $c['message']; } catch (Throwable $e) { $out[] = 'Cloud Backup: ' . $e->getMessage(); }
 $h = hub_dir('core') . '/cron-last.txt'; @file_put_contents($h, (string)time());   // Health shows when the schedule last ran

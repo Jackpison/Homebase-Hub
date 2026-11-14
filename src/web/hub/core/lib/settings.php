@@ -91,6 +91,7 @@ function hub_settings_default(): array {
         'tz'          => 'Asia/Kolkata',   // the site's time zone (India Standard Time by default): today, due times, reminders
         'backupLast'  => 0,
         'tools'    => ['title' => 'TOOLS', 'emoji' => '', 'logo' => '', 'favicon' => ''],
+        'off'      => [],           // (1.79.0) features turned off for real (not only hidden): any of HUB_FEATURES
         'pages'    => [],           // the bar's tabs: [{id, name, hide}] in the order shown (empty = default names and order)
     ];
 }
@@ -152,6 +153,7 @@ function hub_clean_settings(array $in): array {
     $t = is_array($in['tools'] ?? null) ? $in['tools'] : [];
     $img = function ($v) { return is_string($v) && ($v === '' || (strlen($v) < 700000 && preg_match('#^data:image/(png|jpeg|webp|gif|x-icon|vnd\.microsoft\.icon);base64,[A-Za-z0-9+/=]+$#', $v))) ? $v : ''; };
     $o['pages'] = hub_clean_pages($in['pages'] ?? []);
+    $o['off'] = hub_clean_off($in['off'] ?? []);
     $o['tools'] = ['title' => mb_substr(trim(strip_tags((string)($t['title'] ?? 'TOOLS'))), 0, 40) ?: 'TOOLS',
                    'emoji' => mb_substr((string)($t['emoji'] ?? ''), 0, 8), 'logo' => $img($t['logo'] ?? ''), 'favicon' => $img($t['favicon'] ?? '')];
     return $o;
@@ -227,12 +229,22 @@ function hub_settings_save(array $s): array {
     return $s;
 }
 /** What every page needs to draw the shared bar. Safe to send to visitors. */
+/** (1.79.0) the features that can be turned off for real; Home, Links and Info always stay */
+const HUB_FEATURES = ['telegram', 'cards', 'tasks', 'files', 'tools'];
+function hub_clean_off($v): array { return is_array($v) ? array_values(array_intersect(HUB_FEATURES, array_map('strval', $v))) : []; }
+function hub_feature_off(string $id): bool { return in_array($id, hub_settings()['off'] ?? [], true); }
+/** An address of a turned-off page answers with a plain "off" instead of doing anything (JSON, for pages' api.php files). */
+function hub_feature_guard(string $id): void {
+    if (!hub_feature_off($id)) return;
+    http_response_code(403); header('Content-Type: application/json; charset=utf-8');
+    exit(json_encode(['ok' => false, 'off' => true, 'error' => 'This is turned off. Turn it on in Settings, Features.']));
+}
 function hub_public_state(): array {
     $s = hub_settings(); $admin = hub_admin();
     $o = ['v' => HUB, 'admin' => $admin, 'setup' => hub_auth() === null, 'passkeys' => is_file(hub_jpath(hub_dir('core') . '/passkeys.json')),   // the login box offers a passkey when one is set up
           'tz' => $s['tz'] ?? 'Asia/Kolkata', 'siteName' => $s['siteName'], 'logo' => $s['logo'], 'nav' => $s['nav'], 'theme' => $s['theme'], 'accent' => $s['accent'], 'accentPg' => (object)$s['accentPg'],
           'look' => $s['look'], 'homeBar' => $s['homeBar'], 'glass' => $s['glass'], 'glassFx' => (object)$s['glassFx'], 'barHide' => $s['barHide'], 'editBar' => (object)$s['editBar'], 'font' => $s['font'], 'fontCustom' => $s['fontCustom'], 'colors' => ['dark' => (object)$s['colors']['dark'], 'light' => (object)$s['colors']['light'], 'pg' => (object)array_map(function ($a) { return (object)$a; }, $s['colors']['pg'])],
-          'sizes' => (object)array_map(function ($a) { return (object)$a; }, $s['sizes']), 'pages' => $s['pages']];
+          'sizes' => (object)array_map(function ($a) { return (object)$a; }, $s['sizes']), 'pages' => $s['pages'], 'off' => $s['off']];
     if ($o['setup']) {   // brand-new site: make sure the one-time code file exists, and say where it is
         hub_setup_code();
         $o['setupFile'] = hub_setup_file_hint();

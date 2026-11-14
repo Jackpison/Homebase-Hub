@@ -72,3 +72,32 @@
       p.querySelector('#ix-upf').onsubmit = function (e) { e.preventDefault(); api('health_update', { url: p.querySelector('#ix-upurl').value }).then(function (j) { if (j.ok) pHealth(p); }); };
     });
   }
+  /* ---------- Health > Cleanup (1.79.0): what the site has piled up, each kind with its size and its own Hold-to-Clean button ---------- */
+  var CLEAN = [
+    ['versions', 'Earlier Versions', ICON.clock, '#f97316', function (k) { return 'The undo history of Links, Info, Cards, Tasks and Home. The newest ' + k + ' of each page stay.'; }],
+    ['photos', 'Unused Start Page Photos', ICON.image, '#0ea5e9', function () { return 'Downloaded background photos that nothing uses any more. Your own uploads are never touched.'; }],
+    ['sessions', 'Old Logins', ICON.key, '#a855f7', function () { return 'Login files of browsers whose login ran out long ago. Anyone logged in now stays logged in.'; }],
+    ['logs', 'Error Logs', ICON.warn, '#ef4444', function () { return 'The error_log files your host wrote inside the site folder. They are emptied, not deleted.'; }]];
+  function pCleanup(p) {
+    p.innerHTML = spinRow('Looking for things to clean…');
+    var draw = function (j) {
+      var total = 0, n = 0;
+      CLEAN.forEach(function (c) { var i = j.items[c[0]] || { count: 0, bytes: 0 }; total += i.bytes; n += i.count; });
+      p.innerHTML = tabHead(ICON.box, 'Cleanup', n ? size(total) + ' in ' + n + (n === 1 ? ' file' : ' files') + ' can go. Nothing you made is touched: pages, files, icons and settings stay as they are.' : 'Nothing to clean. The site is tidy.') +
+        '<div class="ix-rcl">' + CLEAN.map(function (c) {
+          var i = j.items[c[0]] || { count: 0, bytes: 0 };
+          return rowCard({ id: 'ix-cl-' + c[0], ic: c[2], color: c[3], title: c[1], desc: c[4](j.keep) + ' <b>' + (i.count ? size(i.bytes) + ', ' + i.count + (i.count === 1 ? ' file' : ' files') : 'Nothing to clean') + '</b>',
+            act: '<button type="button" class="ix-btn danger" data-hold data-cl="' + c[0] + '"' + (i.count ? '' : ' disabled') + '>' + (c[0] === 'logs' ? 'Hold to Empty' : 'Hold to Clean') + '</button>' });
+        }).join('') + '</div>';
+      p.querySelectorAll('[data-cl]').forEach(function (b) {
+        b.onclick = function () {
+          b.disabled = true;
+          api('cleanup_run', { kind: b.dataset.cl }).then(function (r) {
+            if (!r.ok) { toast(r.error || 'Could not clean.', true); b.disabled = false; return; }
+            toast('Cleaned ' + r.count + (r.count === 1 ? ' file' : ' files') + ' (' + size(r.bytes) + ').'); draw(r);
+          }, function () { toast("Can't reach the server.", true); b.disabled = false; });
+        };
+      });
+    };
+    api('cleanup').then(function (j) { if (!j || !j.ok) { p.innerHTML = '<p class="ix-err">' + esc((j && j.error) || 'Could not load.') + '</p>'; return; } draw(j); }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
+  }

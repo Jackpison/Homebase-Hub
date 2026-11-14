@@ -59,9 +59,9 @@
       var f = e.target.files[0]; if (!f) return;
       smallImage(f, 192, function (data) {
         api('logo', { data: data }).then(function (j) {
-          if (!j.ok) { toast(j.error || 'Could not save the logo.'); return; }
+          if (!j.ok) { toast(j.error || ('Could not save the logo. The server answered ' + (j._status || 'nothing') + (j._status === 413 ? ' (the image is too big for this host).' : '. Ask your host to check that web/hub/media can be written to.')), true); return; }
           S.logo = draft.logo = j.state.logo; remember(S); redraw(); applyFavicon(); subPane('general'); toast('Logo updated.');
-        });
+        }, function () { toast("Can't reach the server. The logo was not changed.", true); });
       });
     };
     p.querySelector('#ix-lx').onclick = function () {

@@ -155,7 +155,7 @@
     return out;
   }
   /* the tabs to show: hidden ones stay out, except the page you are on */
-  function pages() { return pageList().filter(function (p) { return !p[4] || p[0] === APP; }); }
+  function pages() { var off = S.off || []; return pageList().filter(function (p) { return off.indexOf(p[0]) < 0 && (!p[4] || p[0] === APP); }); }   // (1.79.0) a page turned off in Features leaves the bar
   var reduced = function () { return matchMedia('(prefers-reduced-motion: reduce)').matches; };
 
   /* ---------- 1. before the page paints: look, nav style and theme from the last visit ---------- */
@@ -1551,7 +1551,7 @@
     var nm = S.siteName && S.siteName !== 'My Site' ? S.siteName : guessName(S.host || '');
     openDlg('<div class="ix-ico">' + svg(ICON.key) + '</div><h2>Welcome!</h2><div id="ix-setst"></div>' +
       '<p class="ix-note">One password unlocks editing on every page. You can open this box any time from the key icon.</p>');
-    var val = function (id) { var e = document.getElementById(id); return e ? e.value : ''; };
+    var val = function (id) { var e = document.getElementById(id); return e ? e.value : ''; }, wantLock = false;
     stepper($('#ix-setst'), { kind: 'numbers', linear: true, complete: 'Create My Site', skip: function () { closeDlg(); }, skipText: 'Later',
       steps: [
         { title: 'Code', html: '<p>Open this file in your hosting file manager, copy the code inside and paste it here. This proves the site is yours:</p>' +
@@ -1564,8 +1564,10 @@
             if (val('ix-p1').length < 8) { c.err('At least 8 characters.'); return false; }
             if (val('ix-p1') !== val('ix-p2')) { c.err("The two passwords don't match."); return false; } } },
         { title: 'Site', html: '<label for="ix-sn">Site Name</label><input type="text" id="ix-sn" maxlength="30" value="' + esc(nm) + '">' +
+            '<label class="ix-chk"><input type="checkbox" id="ix-sen" checked> Lock my private data next (an encryption passphrase, about two minutes)</label>' +
             '<p class="ix-note">The time zone is taken from this browser; the look follows your device (light or dark). Both can be changed in Settings.</p>',
           next: function (p, c) {
+            var en = document.getElementById('ix-sen'); wantLock = !!(en && en.checked);   // (1.79.0) the box is read before the Stepper moves on
             var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (x) {}
             // a new site starts with this browser's time zone and the theme that follows the device
             return api('setup', { code: val('ix-sc'), password: val('ix-p1'), siteName: val('ix-sn'), tz: tz, theme: 'auto' }).then(function (j) {
@@ -1575,7 +1577,7 @@
             });
           } }],
       done: '<div class="ix-st-fin"><span class="ix-st-big">' + '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><h3>Your site is ready</h3><p>Opening it…</p></div>',
-      onDone: function () { try { localStorage.setItem('hl-tour-due', '1'); } catch (x) {} loggedIn().then(function () { location.reload(); }); } });   // (1.69.0) the Home Tour on the first visit
+      onDone: function () { try { localStorage.setItem('hl-tour-due', '1'); } catch (x) {} loggedIn().then(function () { if (wantLock) location.href = ROOT + 'web/settings/#security/data-protection'; else location.reload(); }); } });   // (1.69.0) the Home Tour on the first visit; (1.79.0) or the passphrase steps, when asked for
   }
   /* The password was right; the login waits for Approve in Telegram (or a two-step recovery code, when two-step is on).
      Settings > Security turns this on. */
@@ -1862,6 +1864,19 @@
      in the background) that answer may still be on its way; deciding before it came showed the login box to someone already
      logged in (1.53.6). */
   function whenKnown(fn) { if (S.admin !== undefined) fn(); else refresh().then(fn); }
+  /* (1.79.0) A page turned off in Settings > Features says so instead of showing itself (its api.php already refuses). */
+  function offPage() {
+    var off = (S.off || []).indexOf(APP) >= 0, old = document.getElementById('ix-offp');
+    if (!off) { if (old) old.remove(); return; }
+    if (old) return;
+    var d = document.createElement('div'), h = document.createElement('h1'), p = document.createElement('p'), a = document.createElement('a'), c = document.createElement('div');
+    d.id = 'ix-offp'; d.setAttribute('role', 'status'); c.className = 'ix-offc';
+    h.textContent = (NOTE_SRC[APP] || 'This page') + ' is turned off';
+    p.textContent = S.admin ? 'Your data is still here. Turn it on again in Settings, Features.' : 'The owner turned this page off.';
+    c.append(h, p);
+    if (S.admin) { a.className = 'ix-btn pri'; a.href = ROOT + 'web/settings/#features'; a.textContent = 'Open Features'; c.appendChild(a); }
+    d.appendChild(c); document.body.appendChild(d);
+  }
   function refreshNow() {
     return api('state').then(function (st) {
       if (!st || !('admin' in st)) return;
@@ -1872,7 +1887,7 @@
       Object.keys(S).forEach(function (k) { delete S[k]; }); Object.assign(S, st); remember(st);
       if (changed) applyAttrs();
       applyColors(); applyFont(); applySizes();
-      drawBar(); applyFavicon(); ebarKey = ''; drawEditBar(); editBarPick();
+      drawBar(); applyFavicon(); ebarKey = ''; drawEditBar(); editBarPick(); offPage();
     }).catch(function () {});
   }
   /* (1.61.0) Share from your phone: one small service worker (web/hub/share-sw.js) takes what the phone's Share button sends to this

@@ -224,8 +224,8 @@ if (!empty($site['private']) && !hub_admin()) {
         <div class="field">
           <div class="group" id="wList"></div></div>
         <div class="group">
-          <div class="g-row stack"><span class="g-label">Countdown<small>The days left until a date you choose.</small></span>
-            <div class="inline"><input type="text" id="wCdName" maxlength="40" placeholder="Goa Trip" aria-label="Countdown Name"><input type="date" id="wCdDate" aria-label="Countdown Date"></div></div>
+          <div class="g-row stack"><span class="g-label">Countdown<small>The days left until a date you choose, counting down live to the time you add.</small></span>
+            <div class="inline"><input type="text" id="wCdName" maxlength="40" placeholder="Goa Trip" aria-label="Countdown Name"><input type="date" id="wCdDate" aria-label="Countdown Date"><input type="time" id="wCdTime" aria-label="Countdown Time (optional)"></div></div>
           <label class="g-row stack"><span class="g-label">Pinned Note<small>One box from Info. Boxes in encrypted tabs can't be shown here.</small></span>
             <select id="wNote"><option value="">None</option></select></label>
         </div>

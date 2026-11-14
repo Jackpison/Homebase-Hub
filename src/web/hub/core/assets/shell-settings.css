@@ -947,3 +947,6 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-srow-b>:first-child{margin-top:0}
 #ix-page .ix-srow-b .ix-note:last-child{margin-bottom:0}
 @media (max-width:900px){#ix-page .ix-srow{grid-template-columns:minmax(0,1fr)}#ix-page .ix-srow-b{margin-top:12px}}
+
+/* (1.79.0) Settings > Features: the switches for turning pages off */
+#ix-page .ix-offl{display:grid;gap:4px}

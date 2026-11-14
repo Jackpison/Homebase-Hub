@@ -69,12 +69,37 @@
     tools: [] };
   FEATS.forEach(function (f) { f.rel = REL[f.id] || []; });
   FEATS.forEach(function (f) { PANES['ft-' + f.id] = function (p) { pFeature(p, f); }; PANE_FN.set('ft-' + f.id, PANES['ft-' + f.id]); });   // (the tabs themselves are listed in SECTIONS)
+  /* (1.79.0) Turn Off What You Don't Use: a switch for each page that can go. Off is for real: the page and what it runs stop, and Telegram's settings hide. Your data stays. */
+  var OFFS = [['telegram', 'Telegram', 'The bot, reminders, Telegram backups and login approval stop. The Telegram settings hide.'], ['tasks', 'Tasks', 'The page and its reminders stop.'], ['cards', 'Cards', 'The page stops.'],
+    ['files', 'Files', 'The page and its share links stop.'], ['tools', 'Tools', 'The page stops.']];
+  function applyOff() { var off = S.off || [], b = PAGE && PAGE.querySelector('[data-sec=telegram]'); if (b) b.hidden = off.indexOf('telegram') >= 0; }
+  function offCard() {
+    var off = S.off || [];
+    return ecCard('', ICON.gear, 'Turn Off What You Do Not Use', 'Off is for real, not only hidden: the page stops answering and what it runs in the background stops. Your data stays, and turning it on again brings everything back.',
+      '<div class="ix-offl">' + OFFS.map(function (o) {
+        return '<label class="ix-tg"><span>' + o[1] + '<small>' + o[2] + '</small></span><input type="checkbox" data-off="' + o[0] + '"' + (off.indexOf(o[0]) < 0 ? ' checked' : '') + ' aria-label="' + o[1] + ' is on"></label>';
+      }).join('') + '</div><p class="ix-err" id="ix-offe"></p>');
+  }
+  function bindOff(p) {
+    p.querySelectorAll('[data-off]').forEach(function (c) {
+      c.onchange = function () {
+        var off = [].slice.call(p.querySelectorAll('[data-off]')).filter(function (x) { return !x.checked; }).map(function (x) { return x.dataset.off; }), er = p.querySelector('#ix-offe');
+        er.textContent = '';
+        api('features_off', { off: off }).then(function (j) {
+          if (!j.ok) { c.checked = !c.checked; er.textContent = j.error || 'Could not save.'; return; }
+          S.off = j.state.off || []; remember(S); applyOff(); redraw();
+          toast((c.checked ? '' : 'Turned off: ') + (OFFS.filter(function (o) { return o[0] === c.dataset.off; })[0] || [0, ''])[1] + (c.checked ? ' is on again.' : '.'));
+        }, function () { c.checked = !c.checked; er.textContent = "Can't reach the server. Nothing was changed."; });
+      };
+    });
+  }
   function pFeatures(p) {
-    p.innerHTML = '<div class="ix-rcl">' + FEATS.map(function (f) {
+    p.innerHTML = offCard() + '<div class="ix-rcl">' + FEATS.map(function (f) {
       return rowCard({ ic: f.ic, color: f.c, title: esc(f.name) + (f.hl.some(function (h) { return h[2]; }) ? ' <span class="ix-cl-tag">New</span>' : ''), desc: esc(f.lead),
         act: '<a class="ix-btn" href="' + K.ROOT + f.url + '">Open</a><button type="button" class="ix-btn" data-ft="' + f.id + '">See More</button>' });
     }).join('') + '</div>';
     p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
+    bindOff(p);
     // (1.77.2) the notes that used to be a tab of What's New (how updating works and a few things worth knowing), as the same row cards
     var nb = document.createElement('div'); p.appendChild(nb);
     clLoad().then(function (cl) {

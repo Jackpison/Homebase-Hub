@@ -52,6 +52,13 @@ function act_log(string $what, string $extra = ''): void {
         act_update(act_file(), function ($d) use ($ev) { $d[] = $ev; return array_slice($d, -ACT_KEEP); });
     } catch (Throwable $e) {}
 }
+/** (1.79.0) Empties the activity list. One line is left behind that says it was emptied, by whom and from where, so clearing it can not be done unseen. Returns how many lines went. */
+function act_clear(): int {
+    $n = 0;
+    act_update(act_file(), function ($d) use (&$n) { $n = count($d); return []; });
+    act_log('activity_cleared', $n . ' lines');
+    return $n;
+}
 function act_sid(): string { $id = session_id(); return $id === '' ? '' : substr(hash('sha256', 'dev|' . $id), 0, 16); }
 
 /** A login just started (its session id is final): remember its browser and address. Old lines go. */

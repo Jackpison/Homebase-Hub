@@ -59,7 +59,7 @@
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
     ['logs', 'Logs', ICON.log, 'What the site told you, what was done and who logged in, and what went wrong.', [['logs', 'Notifications'], ['logsign', 'Activity'], ['logerr', 'PHP Errors']], 'System Setting'],
-    ['health', 'Health', ICON.pulse, 'Version, speed, errors and a check of your server.', [['health', 'Overview'], ['check', 'Server Check']], 'System Setting'],
+    ['health', 'Health', ICON.pulse, 'Version, speed, errors and a check of your server.', [['health', 'Overview'], ['check', 'Server Check'], ['cleanup', 'Cleanup']], 'System Setting'],
     // (1.77.1) Updates has two tabs: Update and Changelog (one list of every version; the old Notes moved to Features)
     ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Changelog']], 'System Setting'],
     // (1.76.0) Features: what the site does, page by page, with the settings of each part (Files' work right there)
@@ -87,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, general: pGeneral, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, check: pCheck, changelog: pChangelog, features: pFeatures };
+  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, general: pGeneral, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, check: pCheck, cleanup: pCleanup, changelog: pChangelog, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -166,6 +166,7 @@
       '<div class="ix-sf" id="ix-sf" hidden><span id="ix-sfnote"></span><span class="ix-err" id="ix-sferr"></span><button type="button" class="ix-btn" id="ix-discard">Discard</button><button type="button" class="ix-btn pri" id="ix-save">Save Settings</button></div>';
     host.querySelectorAll('[data-sec]').forEach(function (b) { b.onclick = function () { go(b.dataset.sec); }; });
     $('#ix-save').onclick = saveSettings;
+    applyOff();
     bindSearch(host);
     $('#ix-discard').onclick = function () {   // throw the unsaved changes away and show the saved look again
       draft = JSON.parse(JSON.stringify(S)); applyAttrs(); applyColors(); applyFont(); K.restoreTheme(); redraw(); pane(curSub); markDirty();
@@ -202,7 +203,7 @@
     ['Back Up', 'backup/overview', 'download backup file locked passphrase'], ['Restore a Backup', 'backup/restore', 'import'], ['Export', 'backup/export', 'csv json spreadsheet links cards tasks'],
     ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
     ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'check', 'extra changed missing leftover files'],
-    ['Health', 'health', 'disk speed errors log'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
+    ['Health', 'health', 'disk speed errors log'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'], ['Cleanup', 'cleanup', 'clean clear delete versions photos sessions error log space disk free tidy'],
     ['Logs', 'logs', 'notifications messages history log activity'], ['Activity', 'logsign', 'sign-in history logins wrong password what was done backups updates restores changes settings saved audit'], ['PHP Errors', 'logerr', 'error log'],
     ['Changelog', 'changelog', 'changelog versions history what changed new version map'], ['Good to Know', 'features', 'notes how updating works']
   ];

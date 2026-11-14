@@ -427,3 +427,6 @@ body.onlyme{min-height:100dvh;display:grid;place-items:center;background:#111;co
 /* (1.72.0) an event from a calendar you follow, in Today: a stripe in its colour; links in the new widgets look like the rows */
 .wrow.wev{border-left:3px solid var(--ec);padding-left:9px}
 a.wrow{text-decoration:none;color:inherit}
+/* (1.79.0) the live countdown under the big number: days, hours, minutes and seconds, ticking */
+.wcl{margin:8px 0 0;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em;opacity:.9}
+.wcl:empty{display:none}

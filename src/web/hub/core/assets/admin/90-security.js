@@ -189,6 +189,8 @@
             '<div id="ix-encst"></div><p class="ix-err" id="ix-ee"></p>');
       } else {
         html = card('ix-split good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
+          card('ix-split', ICON.desktop, 'This Device', 'When you unlock with the box "Keep unlocked on this device" ticked, this browser keeps your data open until you log out, so it does not ask again. Forget the kept keys here to make it ask next time.',
+            '<div class="ix-fact"><p class="ix-err" id="ix-fe"></p><button type="button" class="ix-btn" id="ix-forget">Forget Keys on This Device</button></div>') +
           card('ix-split', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
             '<div class="ix-frm">' + fd('ix-ccur', 'Current Passphrase or Recovery Key', 'off') + fd('ix-cpw', 'Website Password', 'current-password') + fd('ix-cn1', 'New Passphrase', 'new-password') + fd('ix-cn2', 'Type It Again', 'new-password') + '</div>' +
             '<div class="ix-fact"><p class="ix-err" id="ix-ce"></p><button type="button" class="ix-btn pri" id="ix-cgo">Change Passphrase</button></div>') +
@@ -212,6 +214,8 @@
           .finally(function () { btn.disabled = false; });
       };
       /* (1.69.0) the first passphrase is a Stepper: Passphrase -> Confirm It's You (sets it) -> Recovery Key (made and shown at once) */
+      var fg = b.querySelector('#ix-forget');   // (1.79.0) "Keep unlocked on this device" is easy to find: here it can be undone, and the unlock window offers it
+      if (fg) fg.onclick = function () { if (window.HubVault) window.HubVault.devDropAll(); toast('This device will ask for your passphrase again.'); };
       if (!on) {
         var recCode = '', recFail = function (x) { return x && x.user ? x.message : "Can't reach the server. Nothing was changed."; };
         stepper(b.querySelector('#ix-encst'), { kind: 'numbers', linear: true, complete: 'Finish',

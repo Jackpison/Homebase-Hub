@@ -354,15 +354,15 @@ function nt_backup_send(array &$d): array {
 function nt_tick(): void {
     // bot messages (polling mode): checked when pages are open, at most every 10 seconds (a login waiting for approval
     // checks every 3 seconds on its own)
-    $f = hub_jpath(nt_file());
-    if (is_file($f)) { try { nt_poll(10); } catch (Throwable $e) {} }
+    $f = hub_jpath(nt_file()); $tgOff = hub_feature_off('telegram');   // (1.79.0) off: nothing of Telegram runs
+    if (!$tgOff && is_file($f)) { try { nt_poll(10); } catch (Throwable $e) {} }
     // (1.77.0) Cloud Backup: checked with the same ten-minute rhythm, only when it is on
     $cf = hub_jpath(hub_dir('core') . '/cloud.json');
     if (is_file($cf) && time() - (int)@file_get_contents(hub_dir('core') . '/cloud-tick.txt') >= 600) {
         @file_put_contents(hub_dir('core') . '/cloud-tick.txt', (string)time());
         try { require_once __DIR__ . '/cloud.php'; cl_tick(); } catch (Throwable $e) {}
     }
-    if (!is_file($f)) return;
+    if ($tgOff || !is_file($f)) return;
     $d = nt_load();
     if (!$d['on'] || time() - (int)$d['lastRun'] < 600) return;   // lastRun only: polling writes the file every few seconds
     nt_run(false);

@@ -1044,3 +1044,9 @@ html[data-ix-glass]:not([data-ix-gsolid]) #ix-ebar{background:color-mix(in srgb,
   :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{transition:outline-offset .15s ease,box-shadow .15s ease}
   :where(.card,.cat,.box,.row,.tile,.item,.task,.widget,.chip){transition:background-color .18s ease,border-color .18s ease,box-shadow .22s ease,opacity .18s ease}
 }
+
+/* (1.79.0) a page turned off in Settings > Features: a plain notice over the page, under the bar */
+#ix-offp{position:fixed;inset:0;z-index:2147482000;display:grid;place-items:center;padding:24px;background:var(--ix-bg,var(--bg,#0b0d12));color:var(--ix-tx,inherit);text-align:center}
+#ix-offp .ix-offc{max-width:420px;display:grid;gap:12px;justify-items:center}
+#ix-offp h1{margin:0;font-size:22px}
+#ix-offp p{margin:0;color:var(--ix-mu,inherit);opacity:.8}

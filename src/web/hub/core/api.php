@@ -416,6 +416,14 @@ case 'settings':
     if ($changed) hub_act('settings', implode(', ', $changed));   // which settings, never their values
     hub_json(200, ['ok' => true, 'state' => array_merge(hub_public_state(), ['siteName' => $s['siteName']])]);
 
+case 'features_off':   // (1.79.0) Settings > Features: {off: ['telegram', 'files', ...]} turns those off for real; the rest stay on
+    need_post(); need_admin();
+    $off = hub_clean_off(body()['off'] ?? []);
+    if (in_array('telegram', $off, true)) { require_once __DIR__ . '/lib/approval.php'; if (ap_on()) hub_json(400, ['ok' => false, 'error' => 'Login Approval uses Telegram. Turn it off first (Security, Sign-In), or you could not log in.']); }
+    hub_settings_update(function ($s) use ($off) { $s['off'] = $off; return $s; });
+    hub_act('features', $off ? 'off: ' . implode(', ', $off) : 'all on');
+    hub_json(200, ['ok' => true, 'state' => hub_public_state()]);
+
 case 'logo':   // POST {data: "data:image/png;base64,..."} sets the site logo; POST {remove: true} removes it
     need_post(); need_admin();
     $b = body(1); $s = hub_settings();
@@ -428,7 +436,7 @@ case 'logo':   // POST {data: "data:image/png;base64,..."} sets the site logo; P
         if ($ext === '' || strlen($bin) > 400000) hub_json(400, ['ok' => false, 'error' => 'That image is not usable (max 400 KB).']);
         if (!is_dir($dir)) @mkdir($dir, 0755, true);
         $path = HUB_LAYOUT_HERE['media'] . '/brand/logo-' . dechex(time()) . bin2hex(random_bytes(2)) . '.' . $ext;
-        if (!hub_write(HUB_PUBLIC . '/' . $path, $bin)) hub_json(500, ['ok' => false, 'error' => 'Could not save the logo (check folder permissions).']);
+        if (!hub_write(HUB_PUBLIC . '/' . $path, $bin)) hub_json(500, ['ok' => false, 'error' => 'Could not save the logo. PHP cannot write to ' . HUB_LAYOUT_HERE['media'] . '/brand: give that folder write permission (755, or 775) in your hosting file manager.']);
     }
     foreach (glob($dir . '/logo-*') ?: [] as $f) if ($path === '' || basename($f) !== basename($path)) @unlink($f);   // old logos, only now
     hub_settings_update(function ($s) use ($path) { $s['logo'] = $path; return $s; });
@@ -619,6 +627,12 @@ case 'activity':   // Settings > Security > Devices: who is logged in, and the r
     require_once __DIR__ . '/lib/activity.php';
     hub_json(200, ['ok' => true, 'now' => time(), 'sessions' => act_sessions(), 'events' => array_reverse(hub_jread(act_file()) ?? [])]);
 
+case 'activity_clear':   // (1.79.0) Logs > Activity > Clear: empties the list; needs the website password
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/activity.php';
+    need_password((string)(body()['password'] ?? ''));
+    hub_json(200, ['ok' => true, 'cleared' => act_clear()]);
+
 case 'session_revoke':   // log out one device from the list ({id}); the one you are using is "Log Out Here"
     need_post(); need_admin();
     require_once __DIR__ . '/lib/activity.php';
@@ -743,6 +757,22 @@ case 'sv_save':   // {vault, prev, password}: the browser wrapped the key with t
     if ($why === 'conflict') hub_json(409, ['ok' => false, 'error' => 'The key changed on another device. Close Settings and try again.']);
     if ($why !== '') hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
     hub_json(200, ['ok' => true]);
+
+/* ---- Health > Cleanup (1.79.0): what can be let go, and letting it go ---- */
+case 'cleanup':
+    need_admin(false);
+    require_once __DIR__ . '/lib/cleanup.php';
+    hub_json(200, ['ok' => true, 'keep' => CU_KEEP, 'items' => cu_scan()]);
+
+case 'cleanup_run':
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/cleanup.php';
+    $kind = (string)(body()['kind'] ?? '');
+    if (!in_array($kind, CU_KINDS, true)) hub_json(400, ['ok' => false, 'error' => 'Nothing to clean there.']);
+    @set_time_limit(60);
+    $r = cu_run($kind);
+    hub_act('cleanup', $kind . ': ' . $r['count'] . ' files');
+    hub_json(200, ['ok' => true] + $r + ['items' => cu_scan()]);
 
 /* ---- Health ---- */
 case 'health':

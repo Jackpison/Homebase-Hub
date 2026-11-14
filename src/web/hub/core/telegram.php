@@ -14,6 +14,7 @@ declare(strict_types=1);
  */
 require __DIR__ . '/lib/notify.php';
 header('Content-Type: application/json'); header('Cache-Control: no-store'); header('X-Robots-Tag: noindex');
+if (hub_feature_off('telegram')) { http_response_code(403); exit('{}'); }   // (1.79.0) turned off in Settings > Features
 $d = nt_load();
 $key = (string)($_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] ?? '');
 if (!$d['hook'] || $d['hookKey'] === '' || !hash_equals((string)$d['hookKey'], $key)) { http_response_code(403); exit('{}'); }

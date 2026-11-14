@@ -260,7 +260,7 @@ function clean_widgets($in): array
         'show'      => (bool) ($in['show'] ?? true),   // Widgets > Show Widgets (1.51.1): off hides every widget; the clock has its own switch
         'clock'     => (bool) ($in['clock'] ?? true),
         'list'      => $list,
-        'countdown' => ['name' => str_clip($cd['name'] ?? '', 40), 'date' => $okDate ? $date : ''],
+        'countdown' => ['name' => str_clip($cd['name'] ?? '', 40), 'date' => $okDate ? $date : '', 'time' => $okDate && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) ($cd['time'] ?? '')) ? (string) $cd['time'] : ''],   // (1.79.0) time: optional, for the live seconds
         'note'      => ['tab' => $idOk($nt['tab'] ?? ''), 'box' => $idOk($nt['box'] ?? '')],
         'zones'     => $zones,
         'weather'   => ['town' => str_clip(preg_replace('/\s+/u', ' ', (string) ($we['town'] ?? '')) ?? '', 60), 'unit' => ($we['unit'] ?? '') === 'f' ? 'f' : 'c'],

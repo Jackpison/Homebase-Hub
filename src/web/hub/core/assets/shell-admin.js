@@ -59,7 +59,7 @@
     ['telegram', 'Telegram', ICON.send, 'Reminders, login alerts and instant replies, sent to your phone.', null, 'Data Setting'],
     ['backup', 'Backup & Restore', ICON.box, 'Download, restore or start over, and backups sent to Telegram.', null, 'Data Setting'],
     ['logs', 'Logs', ICON.log, 'What the site told you, what was done and who logged in, and what went wrong.', [['logs', 'Notifications'], ['logsign', 'Activity'], ['logerr', 'PHP Errors']], 'System Setting'],
-    ['health', 'Health', ICON.pulse, 'Version, speed, errors and a check of your server.', [['health', 'Overview'], ['check', 'Server Check']], 'System Setting'],
+    ['health', 'Health', ICON.pulse, 'Version, speed, errors and a check of your server.', [['health', 'Overview'], ['check', 'Server Check'], ['cleanup', 'Cleanup']], 'System Setting'],
     // (1.77.1) Updates has two tabs: Update and Changelog (one list of every version; the old Notes moved to Features)
     ['updates', 'Updates', ICON.upload, 'Update from GitHub or a zip, go back, and what changed in each version.', [['updates', 'Update'], ['changelog', 'Changelog']], 'System Setting'],
     // (1.76.0) Features: what the site does, page by page, with the settings of each part (Files' work right there)
@@ -87,7 +87,7 @@
     hl.style.opacity = '1'; hl.style.top = on.offsetTop + 'px'; hl.style.height = on.offsetHeight + 'px';
     nav.style.setProperty('--hc', on.style.getPropertyValue('--c'));
   }
-  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, general: pGeneral, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, check: pCheck, changelog: pChangelog, features: pFeatures };
+  var PANES = { logs: pLogNotes, logsign: pLogSign, logerr: pLogErr, general: pGeneral, look: pLook, themes: pThemes, colors: pColors, glass: pGlass, security: pSecurity, telegram: pRemind, backup: pBackup, updates: pUpdate, health: pHealth, check: pCheck, cleanup: pCleanup, changelog: pChangelog, features: pFeatures };
   var PANE_FN = new Map(Object.keys(PANES).map(function (k) { return [k, PANES[k]]; }));   // a Map never answers a built-in name like "constructor"
   var SUB_OF = Object.create(null);   // sub-tab -> its section (nav -> general, colors -> look); no built-in names (#constructor is not a section)
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
@@ -166,6 +166,7 @@
       '<div class="ix-sf" id="ix-sf" hidden><span id="ix-sfnote"></span><span class="ix-err" id="ix-sferr"></span><button type="button" class="ix-btn" id="ix-discard">Discard</button><button type="button" class="ix-btn pri" id="ix-save">Save Settings</button></div>';
     host.querySelectorAll('[data-sec]').forEach(function (b) { b.onclick = function () { go(b.dataset.sec); }; });
     $('#ix-save').onclick = saveSettings;
+    applyOff();
     bindSearch(host);
     $('#ix-discard').onclick = function () {   // throw the unsaved changes away and show the saved look again
       draft = JSON.parse(JSON.stringify(S)); applyAttrs(); applyColors(); applyFont(); K.restoreTheme(); redraw(); pane(curSub); markDirty();
@@ -202,7 +203,7 @@
     ['Back Up', 'backup/overview', 'download backup file locked passphrase'], ['Restore a Backup', 'backup/restore', 'import'], ['Export', 'backup/export', 'csv json spreadsheet links cards tasks'],
     ['Earlier Versions', 'backup/restore', 'history undo'], ['Start Over', 'backup/start-over', 'erase reset'],
     ['Update the Site', 'updates', 'upload zip version install'], ['Update From GitHub', 'updates', 'github check now daily release download'], ['Files That Do Not Belong', 'check', 'extra changed missing leftover files'],
-    ['Health', 'health', 'disk speed errors log'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'],
+    ['Health', 'health', 'disk speed errors log'], ['Server Check', 'check', 'php memory gd curl extensions limit photos'], ['Cleanup', 'cleanup', 'clean clear delete versions photos sessions error log space disk free tidy'],
     ['Logs', 'logs', 'notifications messages history log activity'], ['Activity', 'logsign', 'sign-in history logins wrong password what was done backups updates restores changes settings saved audit'], ['PHP Errors', 'logerr', 'error log'],
     ['Changelog', 'changelog', 'changelog versions history what changed new version map'], ['Good to Know', 'features', 'notes how updating works']
   ];
@@ -455,9 +456,9 @@
       var f = e.target.files[0]; if (!f) return;
       smallImage(f, 192, function (data) {
         api('logo', { data: data }).then(function (j) {
-          if (!j.ok) { toast(j.error || 'Could not save the logo.'); return; }
+          if (!j.ok) { toast(j.error || ('Could not save the logo. The server answered ' + (j._status || 'nothing') + (j._status === 413 ? ' (the image is too big for this host).' : '. Ask your host to check that web/hub/media can be written to.')), true); return; }
           S.logo = draft.logo = j.state.logo; remember(S); redraw(); applyFavicon(); subPane('general'); toast('Logo updated.');
-        });
+        }, function () { toast("Can't reach the server. The logo was not changed.", true); });
       });
     };
     p.querySelector('#ix-lx').onclick = function () {
@@ -1522,12 +1523,37 @@
     tools: [] };
   FEATS.forEach(function (f) { f.rel = REL[f.id] || []; });
   FEATS.forEach(function (f) { PANES['ft-' + f.id] = function (p) { pFeature(p, f); }; PANE_FN.set('ft-' + f.id, PANES['ft-' + f.id]); });   // (the tabs themselves are listed in SECTIONS)
+  /* (1.79.0) Turn Off What You Don't Use: a switch for each page that can go. Off is for real: the page and what it runs stop, and Telegram's settings hide. Your data stays. */
+  var OFFS = [['telegram', 'Telegram', 'The bot, reminders, Telegram backups and login approval stop. The Telegram settings hide.'], ['tasks', 'Tasks', 'The page and its reminders stop.'], ['cards', 'Cards', 'The page stops.'],
+    ['files', 'Files', 'The page and its share links stop.'], ['tools', 'Tools', 'The page stops.']];
+  function applyOff() { var off = S.off || [], b = PAGE && PAGE.querySelector('[data-sec=telegram]'); if (b) b.hidden = off.indexOf('telegram') >= 0; }
+  function offCard() {
+    var off = S.off || [];
+    return ecCard('', ICON.gear, 'Turn Off What You Do Not Use', 'Off is for real, not only hidden: the page stops answering and what it runs in the background stops. Your data stays, and turning it on again brings everything back.',
+      '<div class="ix-offl">' + OFFS.map(function (o) {
+        return '<label class="ix-tg"><span>' + o[1] + '<small>' + o[2] + '</small></span><input type="checkbox" data-off="' + o[0] + '"' + (off.indexOf(o[0]) < 0 ? ' checked' : '') + ' aria-label="' + o[1] + ' is on"></label>';
+      }).join('') + '</div><p class="ix-err" id="ix-offe"></p>');
+  }
+  function bindOff(p) {
+    p.querySelectorAll('[data-off]').forEach(function (c) {
+      c.onchange = function () {
+        var off = [].slice.call(p.querySelectorAll('[data-off]')).filter(function (x) { return !x.checked; }).map(function (x) { return x.dataset.off; }), er = p.querySelector('#ix-offe');
+        er.textContent = '';
+        api('features_off', { off: off }).then(function (j) {
+          if (!j.ok) { c.checked = !c.checked; er.textContent = j.error || 'Could not save.'; return; }
+          S.off = j.state.off || []; remember(S); applyOff(); redraw();
+          toast((c.checked ? '' : 'Turned off: ') + (OFFS.filter(function (o) { return o[0] === c.dataset.off; })[0] || [0, ''])[1] + (c.checked ? ' is on again.' : '.'));
+        }, function () { c.checked = !c.checked; er.textContent = "Can't reach the server. Nothing was changed."; });
+      };
+    });
+  }
   function pFeatures(p) {
-    p.innerHTML = '<div class="ix-rcl">' + FEATS.map(function (f) {
+    p.innerHTML = offCard() + '<div class="ix-rcl">' + FEATS.map(function (f) {
       return rowCard({ ic: f.ic, color: f.c, title: esc(f.name) + (f.hl.some(function (h) { return h[2]; }) ? ' <span class="ix-cl-tag">New</span>' : ''), desc: esc(f.lead),
         act: '<a class="ix-btn" href="' + K.ROOT + f.url + '">Open</a><button type="button" class="ix-btn" data-ft="' + f.id + '">See More</button>' });
     }).join('') + '</div>';
     p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
+    bindOff(p);
     // (1.77.2) the notes that used to be a tab of What's New (how updating works and a few things worth knowing), as the same row cards
     var nb = document.createElement('div'); p.appendChild(nb);
     clLoad().then(function (cl) {
@@ -1944,6 +1970,8 @@
             '<div id="ix-encst"></div><p class="ix-err" id="ix-ee"></p>');
       } else {
         html = card('ix-split good', ICON.shield, 'Encryption Is On', 'Your locked data, tabs and backup files are protected by your passphrase.', chips + hintTabs) + older +
+          card('ix-split', ICON.desktop, 'This Device', 'When you unlock with the box "Keep unlocked on this device" ticked, this browser keeps your data open until you log out, so it does not ask again. Forget the kept keys here to make it ask next time.',
+            '<div class="ix-fact"><p class="ix-err" id="ix-fe"></p><button type="button" class="ix-btn" id="ix-forget">Forget Keys on This Device</button></div>') +
           card('ix-split', ICON.key, 'Change Passphrase', 'Pick a new one. Your locked data is not touched, so this takes a moment. New backups use the new passphrase; older backup files keep opening with the old one.',
             '<div class="ix-frm">' + fd('ix-ccur', 'Current Passphrase or Recovery Key', 'off') + fd('ix-cpw', 'Website Password', 'current-password') + fd('ix-cn1', 'New Passphrase', 'new-password') + fd('ix-cn2', 'Type It Again', 'new-password') + '</div>' +
             '<div class="ix-fact"><p class="ix-err" id="ix-ce"></p><button type="button" class="ix-btn pri" id="ix-cgo">Change Passphrase</button></div>') +
@@ -1967,6 +1995,8 @@
           .finally(function () { btn.disabled = false; });
       };
       /* (1.69.0) the first passphrase is a Stepper: Passphrase -> Confirm It's You (sets it) -> Recovery Key (made and shown at once) */
+      var fg = b.querySelector('#ix-forget');   // (1.79.0) "Keep unlocked on this device" is easy to find: here it can be undone, and the unlock window offers it
+      if (fg) fg.onclick = function () { if (window.HubVault) window.HubVault.devDropAll(); toast('This device will ask for your passphrase again.'); };
       if (!on) {
         var recCode = '', recFail = function (x) { return x && x.user ? x.message : "Can't reach the server. Nothing was changed."; };
         stepper(b.querySelector('#ix-encst'), { kind: 'numbers', linear: true, complete: 'Finish',
@@ -2950,13 +2980,42 @@
       p.querySelector('#ix-upf').onsubmit = function (e) { e.preventDefault(); api('health_update', { url: p.querySelector('#ix-upurl').value }).then(function (j) { if (j.ok) pHealth(p); }); };
     });
   }
+  /* ---------- Health > Cleanup (1.79.0): what the site has piled up, each kind with its size and its own Hold-to-Clean button ---------- */
+  var CLEAN = [
+    ['versions', 'Earlier Versions', ICON.clock, '#f97316', function (k) { return 'The undo history of Links, Info, Cards, Tasks and Home. The newest ' + k + ' of each page stay.'; }],
+    ['photos', 'Unused Start Page Photos', ICON.image, '#0ea5e9', function () { return 'Downloaded background photos that nothing uses any more. Your own uploads are never touched.'; }],
+    ['sessions', 'Old Logins', ICON.key, '#a855f7', function () { return 'Login files of browsers whose login ran out long ago. Anyone logged in now stays logged in.'; }],
+    ['logs', 'Error Logs', ICON.warn, '#ef4444', function () { return 'The error_log files your host wrote inside the site folder. They are emptied, not deleted.'; }]];
+  function pCleanup(p) {
+    p.innerHTML = spinRow('Looking for things to clean…');
+    var draw = function (j) {
+      var total = 0, n = 0;
+      CLEAN.forEach(function (c) { var i = j.items[c[0]] || { count: 0, bytes: 0 }; total += i.bytes; n += i.count; });
+      p.innerHTML = tabHead(ICON.box, 'Cleanup', n ? size(total) + ' in ' + n + (n === 1 ? ' file' : ' files') + ' can go. Nothing you made is touched: pages, files, icons and settings stay as they are.' : 'Nothing to clean. The site is tidy.') +
+        '<div class="ix-rcl">' + CLEAN.map(function (c) {
+          var i = j.items[c[0]] || { count: 0, bytes: 0 };
+          return rowCard({ id: 'ix-cl-' + c[0], ic: c[2], color: c[3], title: c[1], desc: c[4](j.keep) + ' <b>' + (i.count ? size(i.bytes) + ', ' + i.count + (i.count === 1 ? ' file' : ' files') : 'Nothing to clean') + '</b>',
+            act: '<button type="button" class="ix-btn danger" data-hold data-cl="' + c[0] + '"' + (i.count ? '' : ' disabled') + '>' + (c[0] === 'logs' ? 'Hold to Empty' : 'Hold to Clean') + '</button>' });
+        }).join('') + '</div>';
+      p.querySelectorAll('[data-cl]').forEach(function (b) {
+        b.onclick = function () {
+          b.disabled = true;
+          api('cleanup_run', { kind: b.dataset.cl }).then(function (r) {
+            if (!r.ok) { toast(r.error || 'Could not clean.', true); b.disabled = false; return; }
+            toast('Cleaned ' + r.count + (r.count === 1 ? ' file' : ' files') + ' (' + size(r.bytes) + ').'); draw(r);
+          }, function () { toast("Can't reach the server.", true); b.disabled = false; });
+        };
+      });
+    };
+    api('cleanup').then(function (j) { if (!j || !j.ok) { p.innerHTML = '<p class="ix-err">' + esc((j && j.error) || 'Could not load.') + '</p>'; return; } draw(j); }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
+  }
   /* ---------- Logs (Settings > Logs): what the site told you, who logged in, and what went wrong ---------- */
   /* (1.78.0) what the site records, in plain words: [label, style, mark, security?]. The detail (e.x) is what was changed, never a value. */
   var LOGEV = { login: ['Logged In', '', '✓', 1], failed: ['Wrong Password', 'warn', '!', 1], locked: ['Logins Paused After Too Many Wrong Tries', 'warn', '!', 1], password: ['Password Changed', '', '✓', 1],
     logoutall: ['Other Devices Logged Out', '', '✓', 1], twostep_on: ['Two-Step Login Turned On', '', '✓', 1], twostep_off: ['Two-Step Login Turned Off', 'warn', '!', 1],
     recovery: ['New Recovery Codes Made', '', '✓', 1], restore: ['Backup Restored', 'warn', '!', 1], passkey: ['Passkey', '', '✓', 1], session_revoke: ['Device Logged Out', '', '✓', 1], approval: ['Login Approval', '', '✓', 1],
-    encryption: ['Encryption', '', '✓', 1], settings: ['Settings Saved', '', '✓'], logo: ['Logo', '', '✓'], backup: ['Backup', '', '✓'], version_restore: ['Earlier Version Restored', 'warn', '!'],
-    update: ['Site Updated', '', '✓'], update_back: ['Went Back to the Saved Version', 'warn', '!'], files_delete: ['Files Deleted', 'warn', '!'], reset: ['Site Erased', 'warn', '!'], telegram: ['Telegram', '', '✓'] };
+    encryption: ['Encryption', '', '✓', 1], activity_cleared: ['Activity Cleared', 'warn', '!', 1], settings: ['Settings Saved', '', '✓'], logo: ['Logo', '', '✓'], backup: ['Backup', '', '✓'], version_restore: ['Earlier Version Restored', 'warn', '!'],
+    update: ['Site Updated', '', '✓'], features: ['Features', '', '✓'], cleanup: ['Cleanup', '', '✓'], update_back: ['Went Back to the Saved Version', 'warn', '!'], files_delete: ['Files Deleted', 'warn', '!'], reset: ['Site Erased', 'warn', '!'], telegram: ['Telegram', '', '✓'] };
   var LOGSEC = {}; Object.keys(LOGEV).forEach(function (k) { if (LOGEV[k][3]) LOGSEC[k] = 1; });
   var LOGKEY = { siteName: 'site name', nav: 'navigation', theme: 'theme', accent: 'accent color', accentPg: 'page accents', look: 'look', homeBar: 'bar on Home', glass: 'glass', glassFx: 'glass settings', barHide: 'hide bar', font: 'font', fontCustom: 'font', colors: 'colors', pages: 'tabs', tz: 'time zone', sizes: 'text sizes' };
   /* one line of the activity list: what happened (with what it was about), then who, from where and when */
@@ -2992,7 +3051,20 @@
       if (!j || !j.ok) { p.innerHTML = '<p class="ix-err">' + esc((j && j.error) || 'Could not load.') + '</p>'; return; }
       var rows = j.events.map(actRow);
       p.innerHTML = tabHead(ICON.out, 'Activity', 'What was done on your site and who logged in: backups, updates, restores, settings saved, passkeys, encryption and every login. The last 300 are kept. Who is logged in right now is under Security › Devices.') +
+        '<form class="ix-row ix-lgbar" id="ix-actclr" autocomplete="off"><span class="ix-note" style="margin:0">' + j.events.length + (j.events.length === 1 ? ' line' : ' lines') + '</span>' +
+        '<input type="password" id="ix-actpw" placeholder="Website Password" autocomplete="current-password" aria-label="Website Password" hidden style="max-width:240px"><button type="button" class="ix-btn" id="ix-actgo"' + (j.events.length ? '' : ' disabled') + '>Clear</button></form><p class="ix-err" id="ix-acterr"></p>' +
         (rows.length ? '<div class="ix-checks">' + rows.join('') + '</div>' : '<div class="ix-empty"><b>No Activity Yet</b><p>Logins, backups, updates and changes to settings appear here.</p></div>');
+      var pw = p.querySelector('#ix-actpw'), go = p.querySelector('#ix-actgo'), er = p.querySelector('#ix-acterr');
+      go.onclick = function () {   // first press asks for the password; the second clears. One line stays: that it was cleared.
+        if (pw.hidden) { pw.hidden = false; pw.focus(); go.textContent = 'Clear Activity'; return; }
+        if (!pw.value) { er.textContent = 'Type your website password.'; return; }
+        go.disabled = true; er.textContent = '';
+        api('activity_clear', { password: pw.value }).then(function (r) {
+          if (!r.ok) { er.textContent = r.error || 'Could not clear.'; go.disabled = false; return; }
+          toast('Activity cleared.'); pLogSign(p);
+        }, function () { er.textContent = "Can't reach the server."; go.disabled = false; });
+      };
+      p.querySelector('#ix-actclr').onsubmit = function (e) { e.preventDefault(); go.click(); };
     }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
   }
   function pLogErr(p) {

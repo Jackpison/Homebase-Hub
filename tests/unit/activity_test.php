@@ -21,3 +21,11 @@ t('A4 the event name is cleaned and the detail is cut to 80 characters', $last['
 for ($i = 0; $i < 320; $i++) hub_act('settings', 'n' . $i);
 $ev = hub_jread(act_file());
 t('A5 only the newest 300 are kept', count($ev) === 300 && end($ev)['x'] === 'n319' && $ev[0]['x'] === 'n20');
+
+// ---- 1.79.0: Clear Activity empties the list but leaves one line saying it was done ----
+hub_act('backup', 'x'); hub_act('settings', 'theme');
+$gone = act_clear();
+$ev = hub_jread(act_file()) ?? [];
+t('A6 clearing empties the list and says how many lines went', $gone > 2 && count($ev) === 1, json_encode([$gone, count($ev)]));
+t('A7 the one line left says it was cleared', $ev[0]['ev'] === 'activitycleared' || $ev[0]['ev'] === 'activity_cleared', json_encode($ev[0]['ev'] ?? null));
+t('A8 the list grows normally again afterwards', (function () { hub_act('backup', 'again'); return count(hub_jread(act_file())) === 2; })());

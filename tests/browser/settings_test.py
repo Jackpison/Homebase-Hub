@@ -10,7 +10,7 @@
     python3 tests/browser/settings_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8970)"""
 import os, sys, glob, re, json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, page_errors
+from helpers import PW, hold, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, page_errors
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -115,6 +115,13 @@ try:
         ok = at('#logsign', "document.querySelectorAll('#ix-pc .ix-chkrow').length >= 3")
         rows = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-chkrow b')].map(b => b.textContent)")
         check('S10e Logs > Activity (1.78.0, was Sign-Ins) lists what was done, with what it was about', ok and 'Backup: downloaded: links' in rows and 'Settings Saved: theme, accent color' in rows and 'Site Updated: 1.77.5 to 1.78.0' in rows and at('#logs', tabs + " === 'Notifications|Activity|PHP Errors'"), rows)
+        # (1.79.0) Clear needs the website password; a wrong one clears nothing, the right one leaves a single "Activity Cleared" line
+        at('#logsign', "!!document.querySelector('#ix-actgo') && !document.querySelector('#ix-actgo').disabled")
+        pg.click('#ix-actgo'); pg.fill('#ix-actpw', 'not my password'); pg.click('#ix-actgo')
+        wrong = until(lambda: pg.evaluate("document.querySelector('#ix-acterr').textContent !== ''"), 8000) and pg.evaluate("document.querySelectorAll('#ix-pc .ix-chkrow').length") >= 3
+        pg.fill('#ix-actpw', PW); pg.click('#ix-actgo')
+        gone = until(lambda: pg.evaluate("document.querySelectorAll('#ix-pc .ix-chkrow').length === 1 && document.querySelector('#ix-pc .ix-chkrow b').textContent.startsWith('Activity Cleared')"), 12000)
+        check('S10f Logs > Activity > Clear asks for the website password, a wrong one clears nothing, the right one leaves one "Activity Cleared" line (1.79.0)', wrong and gone, (wrong, gone))
         ok = at('#nav', tabs + " === 'Look|Colors|Presets|Glass' && !!document.querySelector('#ix-pc #ix-tabl .ix-pgr') && !!document.querySelector('#ix-pc .ix-navpick')")
         cards = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-ec-t')].map(e => e.textContent)")
         check('S11 Appearance > Look holds Theme, Font, Text Sizes, then Navigation Style (with the two bar switches) and the Tabs list (1.78.0: one tab)', ok and cards == ['Theme', 'Font', 'Text Sizes', 'Navigation Style', 'Tabs'] and pg.evaluate("!!document.querySelector('#ix-hb') && !!document.querySelector('#ix-bh')"), (pg.evaluate(tabs), cards))
@@ -146,6 +153,24 @@ try:
         check('S14g a feature page lists its related settings and a button opens them (Files: Encryption in Security)', rel == ['security/encryption', 'backup/overview'] and pg.evaluate(h2) == 'Security' and pg.evaluate(sel) == 'Data Protection', (rel, pg.evaluate(h2), pg.evaluate(sel)))
         ok = at('#check', "!!document.querySelector('#ix-pc .ix-scbox .ix-checks') && !!document.querySelector('#ix-pc #ix-fnb') && !!document.querySelector('#ix-pc .ix-fls .ix-chgs, #ix-pc .ix-fls .ix-status')")
         check('S14d Health > Server Check ends with Files That Do Not Belong', ok)
+        # (1.79.0) Health > Cleanup: earlier versions beyond the newest three can be cleaned with a held button; the page's own data stays
+        s.php("$d = hub_data_root() . '/info/versions'; @mkdir($d, 0755, true); for ($i = 1; $i <= 6; $i++) { $f = \"$d/cu$i.php\"; file_put_contents($f, '<?php // x'); touch($f, time() - (7 - $i) * 100); }")
+        ok = at('#cleanup', "!!document.querySelector('#ix-cl-versions [data-cl]:not([disabled])')")
+        kinds = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-rc-t > b')].map(e => e.textContent)")
+        hold(pg, '#ix-cl-versions [data-cl]')
+        done = until(lambda: pg.evaluate("document.querySelector('#ix-cl-versions [data-cl]').disabled && /Nothing to clean/.test(document.querySelector('#ix-cl-versions').textContent)"), 12000)
+        left = s.php("echo count(glob(hub_data_root() . '/info/versions/cu*.php'));").strip()
+        check('S14e Health > Cleanup lists four kinds; holding Clean on Earlier Versions removes all but the newest three (1.79.0)', ok and kinds == ['Earlier Versions', 'Unused Start Page Photos', 'Old Logins', 'Error Logs'] and done and left == '3', (ok, kinds, done, left))
+        # (1.79.0) Features: turning Cards and Telegram off is for real (the page says so, its api refuses, Telegram leaves the menu); on again brings it back
+        ok = at('#features', "!!document.querySelector('[data-off=cards]') && document.querySelectorAll('[data-off]').length === 5")
+        pg.evaluate("document.querySelector('[data-off=cards]').click()"); pg.evaluate("document.querySelector('[data-off=telegram]').click()")
+        saved = until(lambda: s.php("echo json_encode(hub_settings()['off']);").strip() == '["telegram","cards"]', 10000)
+        menu_hidden = until(lambda: pg.evaluate("document.querySelector('[data-sec=telegram]').hidden"), 5000)
+        pg.goto(s.base + '/web/cards/'); notice = until(lambda: pg.evaluate("!!document.querySelector('#ix-offp') && document.querySelector('#ix-offp h1').textContent === 'Cards is turned off'"), 10000)
+        api_off = pg.evaluate("fetch('/web/cards/api.php?action=load').then(r => r.status)")
+        s.php("hub_settings_update(function ($x) { $x['off'] = []; return $x; });")
+        pg.goto(s.base + '/web/cards/'); back = until(lambda: pg.evaluate("!document.querySelector('#ix-offp') && !!document.querySelector('#list')"), 10000)
+        check('S14f Settings > Features switches turn Cards and Telegram off for real, and on again brings them back (1.79.0)', ok and saved and menu_hidden and notice and api_off == 403 and back, (ok, saved, menu_hidden, notice, api_off, back))
         at('#look', "!!document.querySelector('#ix-font')")
         pg.click('#ix-pane .ix-subt [data-grp="themes"]')
         wait_js(pg, "document.querySelectorAll('#ix-pc .ix-preset').length > 0", 10000)

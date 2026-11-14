@@ -25,6 +25,7 @@ declare(strict_types=1);
 require __DIR__ . '/lib.php';
 hub_headers();
 hub_same_origin();
+hub_feature_guard('files');   // (1.79.0) turned off in Settings > Features
 
 $action = (string)($_GET['action'] ?? 'list');
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';

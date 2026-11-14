@@ -464,7 +464,7 @@ function openWidgets(){
   $('#wShow').checked = w.show;
   seg($('#wStyle'), w.style);
   $('#wClock').checked = w.clock;
-  $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date;
+  $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date; $('#wCdTime').value = w.countdown.time || '';
   drawWidgetList();
   fillNotePicker();
   drawZones();
@@ -530,7 +530,7 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   w.zones = zones;
   w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
-  w.countdown = { name:$('#wCdName').value.trim(), date:$('#wCdDate').value };
+  w.countdown = { name:$('#wCdName').value.trim(), date:$('#wCdDate').value, time:$('#wCdTime').value };
   w.note = { tab:tab || '', box:box || '' };
   ADMIN.widgets = w;
   try {
@@ -1238,6 +1238,22 @@ function countdown(){
   return { name, days, when: days > 1 ? plural(days, 'day', 'days') : days === 1 ? 'Tomorrow' : days === 0 ? 'Today' : plural(-days, 'day', 'days') + ' ago',
            chip: days > 1 ? `${name} in ${days} days` : days === 1 ? `${name} is tomorrow` : days === 0 ? `${name} is today` : `${name} was ${plural(-days, 'day', 'days')} ago` };
 }
+/* (1.79.0) live countdown: days, hours, minutes and seconds to the date (and the time, when one is set), in the site's time zone. One timer updates every .wcl. */
+function cdLive(date, time){
+  try {
+    const p = new Intl.DateTimeFormat('en-CA', { timeZone:SITE_TZ(), hourCycle:'h23', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }).formatToParts(new Date());
+    const g = t => +p.find(x => x.type === t).value;
+    const now = Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute'), g('second'));
+    const [y, m, d] = date.split('-').map(Number), [hh, mm] = (time || '00:00').split(':').map(Number);
+    let s = Math.floor((Date.UTC(y, m - 1, d, hh, mm, 0) - now) / 1000);
+    if (s <= 0) return '';
+    const days = Math.floor(s / 86400); s -= days * 86400;
+    const h = Math.floor(s / 3600); s -= h * 3600;
+    return `${days}d ${pad2(h)}h ${pad2(Math.floor(s / 60))}m ${pad2(s % 60)}s`;
+  } catch { return ''; }
+}
+function cdTick(){ document.querySelectorAll('.wcl').forEach(e => { const el = /** @type {HTMLElement} */ (e); el.textContent = cdLive(el.dataset.d || '', el.dataset.t || ''); }); }
+setInterval(cdTick, 1000);
 /* Quote of the Day: short sayings, all long out of copyright, kept here (nothing is fetched). One a day; Another Quote shows the next. */
 const QUOTES = [
   ['The journey of a thousand miles begins with a single step.', 'Lao Tzu'],
@@ -1446,7 +1462,8 @@ function panelHTML(id){
     const c = countdown();
     if (!c) return '<p class="wmsg">Choose a name and a date in Edit › Settings › Widgets.</p>';
     const n = Math.abs(c.days);
-    return `<p class="wcount"><b>${c.days > 1 || c.days < -1 ? n : esc(c.when)}</b><span>${c.days > 1 ? 'days to ' + esc(c.name) : c.days < -1 ? 'days since ' + esc(c.name) : esc(c.name)} · ${esc(dLong(WCFG.countdown.date))}</span></p>`;
+    const live = c.days >= 0 ? `<p class="wcl" aria-hidden="true" data-d="${esc(WCFG.countdown.date)}" data-t="${esc(WCFG.countdown.time || '')}">${esc(cdLive(WCFG.countdown.date, WCFG.countdown.time))}</p>` : '';   // the seconds are for the eyes: the sentence above says it for a screen reader
+    return `<p class="wcount"><b>${c.days > 1 || c.days < -1 ? n : esc(c.when)}</b><span>${c.days > 1 ? 'days to ' + esc(c.name) : c.days < -1 ? 'days since ' + esc(c.name) : esc(c.name)} · ${esc(dLong(WCFG.countdown.date))}${WCFG.countdown.time ? ', ' + esc(WCFG.countdown.time) : ''}</span></p>${live}`;
   }
   if (id === 'note'){
     if (!WCFG.note.box) return '<p class="wmsg">Choose a box from Info in Edit › Settings › Widgets.</p>';

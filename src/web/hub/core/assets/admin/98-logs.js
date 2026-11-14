@@ -3,8 +3,8 @@
   var LOGEV = { login: ['Logged In', '', '✓', 1], failed: ['Wrong Password', 'warn', '!', 1], locked: ['Logins Paused After Too Many Wrong Tries', 'warn', '!', 1], password: ['Password Changed', '', '✓', 1],
     logoutall: ['Other Devices Logged Out', '', '✓', 1], twostep_on: ['Two-Step Login Turned On', '', '✓', 1], twostep_off: ['Two-Step Login Turned Off', 'warn', '!', 1],
     recovery: ['New Recovery Codes Made', '', '✓', 1], restore: ['Backup Restored', 'warn', '!', 1], passkey: ['Passkey', '', '✓', 1], session_revoke: ['Device Logged Out', '', '✓', 1], approval: ['Login Approval', '', '✓', 1],
-    encryption: ['Encryption', '', '✓', 1], settings: ['Settings Saved', '', '✓'], logo: ['Logo', '', '✓'], backup: ['Backup', '', '✓'], version_restore: ['Earlier Version Restored', 'warn', '!'],
-    update: ['Site Updated', '', '✓'], update_back: ['Went Back to the Saved Version', 'warn', '!'], files_delete: ['Files Deleted', 'warn', '!'], reset: ['Site Erased', 'warn', '!'], telegram: ['Telegram', '', '✓'] };
+    encryption: ['Encryption', '', '✓', 1], activity_cleared: ['Activity Cleared', 'warn', '!', 1], settings: ['Settings Saved', '', '✓'], logo: ['Logo', '', '✓'], backup: ['Backup', '', '✓'], version_restore: ['Earlier Version Restored', 'warn', '!'],
+    update: ['Site Updated', '', '✓'], features: ['Features', '', '✓'], cleanup: ['Cleanup', '', '✓'], update_back: ['Went Back to the Saved Version', 'warn', '!'], files_delete: ['Files Deleted', 'warn', '!'], reset: ['Site Erased', 'warn', '!'], telegram: ['Telegram', '', '✓'] };
   var LOGSEC = {}; Object.keys(LOGEV).forEach(function (k) { if (LOGEV[k][3]) LOGSEC[k] = 1; });
   var LOGKEY = { siteName: 'site name', nav: 'navigation', theme: 'theme', accent: 'accent color', accentPg: 'page accents', look: 'look', homeBar: 'bar on Home', glass: 'glass', glassFx: 'glass settings', barHide: 'hide bar', font: 'font', fontCustom: 'font', colors: 'colors', pages: 'tabs', tz: 'time zone', sizes: 'text sizes' };
   /* one line of the activity list: what happened (with what it was about), then who, from where and when */
@@ -40,7 +40,20 @@
       if (!j || !j.ok) { p.innerHTML = '<p class="ix-err">' + esc((j && j.error) || 'Could not load.') + '</p>'; return; }
       var rows = j.events.map(actRow);
       p.innerHTML = tabHead(ICON.out, 'Activity', 'What was done on your site and who logged in: backups, updates, restores, settings saved, passkeys, encryption and every login. The last 300 are kept. Who is logged in right now is under Security › Devices.') +
+        '<form class="ix-row ix-lgbar" id="ix-actclr" autocomplete="off"><span class="ix-note" style="margin:0">' + j.events.length + (j.events.length === 1 ? ' line' : ' lines') + '</span>' +
+        '<input type="password" id="ix-actpw" placeholder="Website Password" autocomplete="current-password" aria-label="Website Password" hidden style="max-width:240px"><button type="button" class="ix-btn" id="ix-actgo"' + (j.events.length ? '' : ' disabled') + '>Clear</button></form><p class="ix-err" id="ix-acterr"></p>' +
         (rows.length ? '<div class="ix-checks">' + rows.join('') + '</div>' : '<div class="ix-empty"><b>No Activity Yet</b><p>Logins, backups, updates and changes to settings appear here.</p></div>');
+      var pw = p.querySelector('#ix-actpw'), go = p.querySelector('#ix-actgo'), er = p.querySelector('#ix-acterr');
+      go.onclick = function () {   // first press asks for the password; the second clears. One line stays: that it was cleared.
+        if (pw.hidden) { pw.hidden = false; pw.focus(); go.textContent = 'Clear Activity'; return; }
+        if (!pw.value) { er.textContent = 'Type your website password.'; return; }
+        go.disabled = true; er.textContent = '';
+        api('activity_clear', { password: pw.value }).then(function (r) {
+          if (!r.ok) { er.textContent = r.error || 'Could not clear.'; go.disabled = false; return; }
+          toast('Activity cleared.'); pLogSign(p);
+        }, function () { er.textContent = "Can't reach the server."; go.disabled = false; });
+      };
+      p.querySelector('#ix-actclr').onsubmit = function (e) { e.preventDefault(); go.click(); };
     }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
   }
   function pLogErr(p) {

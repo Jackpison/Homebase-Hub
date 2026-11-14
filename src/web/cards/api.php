@@ -16,6 +16,7 @@ require __DIR__ . '/../hub/core/lib/boot.php';
 hub_headers();
 header('Content-Type: application/json; charset=utf-8');
 hub_same_origin();
+hub_feature_guard('cards');   // (1.79.0) turned off in Settings > Features
 if (extension_loaded('zlib') && !ini_get('zlib.output_compression')) { @ob_start('ob_gzhandler'); }
 
 const CARDS_KEEP_VERSIONS = 40;

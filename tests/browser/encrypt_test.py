@@ -107,6 +107,11 @@ try:
         until(lambda: s.get('sv_get')['vault']['wrap'] != v['wrap'], 30000)
         v2 = s.get('sv_get')['vault']
         check('E16 changing the passphrase re-wraps the key: new wrap, same key id, recovery wrap kept', v2['wrap'] != v['wrap'] and v2['kid'] == kid1 and 'rec' in v2, v2)
+        # (1.79.0) Data Protection (on) has a "This Device" card: Forget Keys on This Device clears the kept keys and says so
+        pg.goto(base + '/web/settings/#security/data-protection'); wait_js(pg, "!!document.querySelector('#ix-forget')", 20000)
+        pg.click('#ix-forget')
+        said = until(lambda: 'ask for your passphrase again' in pg.evaluate("document.getElementById('ix-toast').textContent"), 6000)
+        check('E24 Security > Data Protection has a This Device card; Forget Keys on This Device clears the kept keys and says it will ask again (1.79.0)', said, said)
         c3, p3 = fresh(mk2, base + '/web/cards/')
         p3.evaluate("() => { window.__r = null; HubSite.open(%s).then(x => window.__r = x, e => window.__r = 'ERR ' + e.code); }" % json.dumps(sealed))
         p3.wait_for_selector('#ix-skp', timeout=10000)

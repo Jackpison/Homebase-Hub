@@ -504,13 +504,14 @@ try:
             wait_js(np_, "!!document.getElementById('ix-sn') && !document.getElementById('ix-sn').closest('.ix-st-pane').hidden", 5000)
             np_.fill('#ix-sn', 'Stepper Site'); np_.click('#ix-setst .ix-st-next')
             until(lambda: ns.get('state').get('setup') is False, 15000); np_.wait_for_load_state(); np_.wait_for_timeout(1500)
+            landed = 'security/data-protection' if until(lambda: '/web/settings/' in np_.url and np_.evaluate("!!document.querySelector('#ix-encst')"), 20000) else np_.url   # (1.79.0) the box "Lock my private data next" is ticked: Settings opens at the passphrase steps
             due = np_.evaluate("localStorage.getItem('hl-tour-due')")
             np_.goto(ns.base + '/web/home/'); wait_js(np_, "!!document.querySelector('#hlTour .ix-st-dots')", 15000)
             t1 = np_.evaluate("[document.querySelectorAll('#hlTour .ix-st-dots button').length, !!document.querySelector('.hl-spot')]")
             np_.click('#hlTour .ix-st-skip'); np_.wait_for_timeout(300)
             t2 = np_.evaluate("[!!document.getElementById('hlTour'), localStorage.getItem('hl-tour'), localStorage.getItem('hl-tour-due'), !!document.querySelector('.hl-spot')]")
             check('P69 New Site Setup is a Stepper (Code, Password, Site; each checked before going on; Enter goes on), and the first Home visit after it shows the Home Tour (four cards, the part lit up; Skip ends it for good) (1.69.0)',
-                  'code' in s1.lower() and '8 characters' in s2 and ns.get('state').get('siteName') == 'Stepper Site' and due == '1' and t1 == [4, True] and t2 == [False, '1', None, False], (s1, s2, due, t1, t2))
+                  'code' in s1.lower() and '8 characters' in s2 and ns.get('state').get('siteName') == 'Stepper Site' and due == '1' and t1 == [4, True] and t2 == [False, '1', None, False] and 'security/data-protection' in landed, (s1, s2, due, t1, t2, landed))
             np_.context.close()
         finally:
             ns.p.terminate()

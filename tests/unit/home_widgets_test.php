@@ -20,6 +20,9 @@ t('Glass Tint is Light at first, keeps Dark or Solid, and anything else falls ba
 t('an unknown style falls back to Glass Dock', clean_widgets(['style' => '<b>'])['style'] === 'dock');
 $c = fn($d) => clean_widgets(['countdown' => ['name' => str_repeat('Goa trip ', 10), 'date' => $d]])['countdown'];
 t('the countdown keeps a real date and a name of up to 40 characters', $c('2026-11-07')['date'] === '2026-11-07' && mb_strlen($c('2026-11-07')['name']) <= 40);
+$ct = fn($d, $t) => clean_widgets(['countdown' => ['name' => 'Trip', 'date' => $d, 'time' => $t]])['countdown']['time'];
+t('the countdown keeps a time like 18:30 (1.79.0, for the live seconds) and drops a wrong one', $ct('2026-11-07', '18:30') === '18:30' && $ct('2026-11-07', '25:00') === '' && $ct('2026-11-07', '9:5') === '' && $ct('2026-11-07', '') === '');
+t('a time without a date is dropped', $ct('', '18:30') === '');
 t('...and drops a date that does not exist or is not a date', $c('2026-02-30')['date'] === '' && $c('next week')['date'] === '' && $c('2026-11-7')['date'] === '');
 $n = clean_widgets(['note' => ['tab' => 'abc_1', 'box' => '../../x']])['note'];
 t('the pinned note keeps a plain Info tab and box id, nothing else', $n['tab'] === 'abc_1' && $n['box'] === '', json_encode($n));

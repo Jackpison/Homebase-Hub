@@ -230,6 +230,10 @@ try:
               and 'Trip Notes' in enc, (cards, note, enc))
         hp.click('#wCards [data-w=countdown]'); hp.wait_for_selector('#wBody .wcount', timeout=5000)
         check('P26 the countdown opens to the days left', hp.evaluate("document.querySelector('#wBody .wcount b').textContent") == '12', hp.evaluate("document.getElementById('wBody').textContent"))
+        live1 = hp.evaluate("document.querySelector('#wBody .wcl').textContent")
+        ticked = until(lambda: hp.evaluate("document.querySelector('#wBody .wcl').textContent") != live1, 4000)
+        import re as _re
+        check('P26b the countdown also counts down live in days, hours, minutes and seconds, and the seconds tick (1.79.0)', bool(_re.fullmatch(r'\d+d \d\dh \d\dm \d\ds', live1)) and ticked and hp.evaluate("document.querySelector('#wBody .wcl').getAttribute('aria-hidden')") == 'true', live1)
         hp.click('#wCards [data-w=pad]'); hp.wait_for_selector('#wPad', timeout=5000)
         hp.fill('#wPad', 'Buy a spare key'); until(lambda: hp.evaluate("document.getElementById('wPadState').textContent") == 'Saved', 10000)
         hp.reload(wait_until='domcontentloaded'); until(lambda: hp.evaluate("document.querySelectorAll('#wCards .wcard').length") == 6, 10000); settle(hp)
