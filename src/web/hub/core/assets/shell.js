@@ -524,7 +524,7 @@
       if (canEdit()) items.push(editing()
         ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit }
         : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
-      itemEntries(anchor, t, true).forEach(function (x) { items.push(x); });
+      itemEntries(anchor, t, true).forEach(function (x) { if (/ Settings$/.test(x.label) && PAGE_TILE[APP]) x.pageIcon = APP; items.push(x); });
       EXTRA.forEach(function (x) { items.push(x); });
       if (items.length) items.push({ sep: true });
       items.push({ label: 'Main Settings', icon: ICON.gear, run: function () { settings(); } });
@@ -537,7 +537,7 @@
     if (canEdit()) items.push(editing()
       ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit }
       : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
-    itemEntries(anchor, t, true).forEach(function (x) { items.push(x); });
+    itemEntries(anchor, t, true).forEach(function (x) { if (/ Settings$/.test(x.label) && PAGE_TILE[APP]) x.pageIcon = APP; items.push(x); });   // (1.79.2) the page's own Settings wears the page's icon, like its tab in the bar
     EXTRA.forEach(function (x) { items.push(x); });
     if (!items.length) { toast('There is nothing to edit on this page.'); return; }
     popMenu(anchor, items);
@@ -1054,7 +1054,7 @@
     popEl = document.createElement('div'); popEl.id = 'ix-pop'; popEl.setAttribute('role', 'menu');
     popEl.innerHTML = items.map(function (it, i) {
       return it.sep ? '<hr>' : '<button type="button" role="menuitem" data-i="' + i + '"' + (it.danger ? ' class="danger"' : it.accent ? ' class="accent"' : '') + '>' +
-        (it.icon ? svg(it.icon) : '<span class="ix-gap"></span>') + '<span class="ix-pl">' + esc(it.label) + '</span>' +
+        (it.pageIcon ? '<svg viewBox="0 0 24 24" aria-hidden="true" style="color:' + pageColor(it.pageIcon) + '">' + PAGE_TILE[it.pageIcon][1] + '</svg>' : it.icon ? svg(it.icon) : '<span class="ix-gap"></span>') + '<span class="ix-pl">' + esc(it.label) + '</span>' +
         (it.note ? '<small' + (it.warn ? ' class="warn"' : '') + '>' + esc(it.note) + '</small>' : '') + '</button>';
     }).join('');
     document.body.appendChild(popEl);

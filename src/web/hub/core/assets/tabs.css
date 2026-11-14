@@ -70,3 +70,11 @@ body.dragtabs,body.dragtabs *{cursor:grabbing!important}
 #hubTabDlg .hubt-pl.enc{color:#3ecf8e}
 #hubTabDlg .hubt-pl[hidden]{display:none}
 #hubTabDlg .hubt-pl svg{width:16px;height:16px}
+#hubTabDlg .hubt-prevblk{padding:4px 0 14px}
+#hubTabDlg .hubt-sw{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+#hubTabDlg .hubt-swc{width:26px;height:26px;border-radius:50%;padding:0;border:2px solid transparent;cursor:pointer}
+#hubTabDlg .hubt-swc[aria-pressed="true"]{border-color:currentColor;box-shadow:0 0 0 2px #000 inset}
+#hubTabDlg .hubt-swc:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+#hubTabDlg .hubt-swb{padding-top:0}
+#hubTabDlg .hubt-ctl .btn:disabled{display:none}
+#hubTabDlg .hubt-lp{height:36px}

@@ -167,7 +167,9 @@ Nothing to migrate by hand unless an entry says so.
 
 - **Edit Tab** (Links and Info) is one page again, with a preview of the tab at the top: its icon, colour, name and lock. The preview follows what you type and pick. The three-step version from 1.79.1 is gone.
 - The tab bar no longer leaves a wide gap between tabs while you edit.
-- A small grey divider sits between the tabs and the links on Links.
+- A small grey divider sits between one tab and the next on Links.
+- Edit Tab is shorter: the preview sits in the first card, the Use Default buttons only show when a colour is set, and Tab Color has a row of usual colours.
+- In the gear menu, each page's own Settings item now wears that page's icon, the same as its tab in the bar.
 - **Login Approval** is now called **Telegram Login Approval**, so it is clear it needs Telegram.
 
 ---

@@ -250,7 +250,6 @@ body.is-locked .search{display:none}
 .tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:3px;border-radius:3px;background:var(--tab-ribbon,var(--ribbon))}
 .tab.add{transition:background .15s,color .15s}
 .tab.add:hover{background:color-mix(in srgb,var(--text) 8%,transparent)}
-/* (1.79.2) a small grey divider between the tabs and the links */
-header{position:relative}
-header::after{content:"";position:absolute;left:32px;right:32px;bottom:0;height:1px;background:color-mix(in srgb,var(--text) 16%,transparent)}
-@media (max-width:700px){header::after{left:16px;right:16px}}
+/* (1.79.2) a small grey divider between one tab and the next */
+.tabs>.tabi+.tabi{position:relative}
+.tabs>.tabi+.tabi::before{content:"";position:absolute;left:-14px;top:50%;width:1px;height:20px;transform:translateY(-50%);background:color-mix(in srgb,var(--text) 22%,transparent)}
