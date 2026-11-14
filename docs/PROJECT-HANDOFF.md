@@ -26,6 +26,10 @@ These come from every handoff (v3 to v48), `AGENTS.md`, and the owner's own word
 12. **Opinions only** ("you think...?", "what do you recommend?") = give a recommendation and why, do not build.
 13. Ideas the owner turned down are not forever: three of them came back later (calendar feed, share links, passkeys; Cards CSV import; Glass). Do not build a dropped idea unless he asks again.
 
+14. **Push, then ask (the original rule, v1 to v8).** Push to `main` as work is done, then suggest whether to release now or add more first. It still holds, with two limits from later: the push comes only after the precheck passes (D2, D3), and while the owner is still adding requests the work goes into the open version (A5, A6).
+15. **Handoff naming (27 Oct 2026):** `Project-Handoff vN.md`, N one higher each time, with the site version in the title line (for example "Project-Handoff v50 (site at v1.79.3)"). Old handoffs: v1 and v2 were named by site version; from v3 on by number.
+16. **Why a release waits (27 Oct 2026):** the owner wants real work shipped together, not a small release alone ("fewer small releases").
+
 ### B. Looks and wording
 1. Plain words everywhere a user reads: short sentences, the same names the screen shows, **Title Case** on buttons and headings in the app. Names he chose: **Hide From Visitors** (was Only Me), **Site Settings** (was Main Settings), **Telegram Login Approval**, Notifications, Activity, Features.
 2. Fixed page colors (`PAGE_TILE` in shell.js: Home #f5a524, Links #3b82f6, Info #a855f7, Files #0ea5e9, Cards #22c55e, Tools #f97316, Tasks #f43f5e); the Features page and its tabs use them. Keep the sun/moon theme button, one logo for the whole site, the original white switches (chosen 1.65.0), colored tiles with white icons.
@@ -48,13 +52,14 @@ These come from every handoff (v3 to v48), `AGENTS.md`, and the owner's own word
 9. An unused CSS class, JS function or PHP function fails `dead_code_test`: delete what nothing uses.
 
 ### D. Git, checks, release
-1. Commit as **Claude** (the session's own identity), push straight to `main`, **no pull request** unless the owner asks, **no force-push**. Trailers on every commit: `Co-Authored-By: Claude <the session's model> <noreply@anthropic.com>` and the session's `Claude-Session:` line (older sessions also added `Co-Authored-By: Jackpison <Jackpison@users.noreply.github.com>`; the 14 Nov harness reminder listed only the two lines).
+1. **Commit as Claude, push straight to `main`, also for releases** (owner, 30 Oct 2026: "do this from now on"). A commit made as `Claude <noreply@anthropic.com>` (the session's own identity) is Verified on GitHub; one made as Jackpison shows `unknown_key`. So: **no `-c user.name` / `-c user.email` overrides**, **no pull request** unless the owner asks, **no merge commit**, **no force-push**. The owner's trailer rule (v25, v40, v42) is three lines on every commit: `Co-Authored-By: Claude <the session's model> <noreply@anthropic.com>`, `Co-Authored-By: Jackpison <Jackpison@users.noreply.github.com>` and the `Claude-Session:` line. The 14 Nov 2026 harness reminder lists only the Claude and Claude-Session lines, and the 1.79.x commits used only those two: ask the owner which he wants and follow his answer.
 2. Before pushing: `python3 scripts/precheck.py` (quick checks on what changed: ESLint, tsc (6 configs), dead code, tscheck, ruff, Semgrep, unit tests, the browser tests for that area AND every test that uses what you changed). It ends with "All N checks passed. Push once." Push once, let CI run the rest; if CI goes red, fix it at once. Do not wait for the full 17-minute `run_all` before every push. Do not edit `src/` while it runs.
 3. **Push only after the precheck passes**, and only when the work is what the owner asked for. The stop hook nags about unpushed commits: do not let it push half-done work.
 4. Release bump: `python3 scripts/release.py X.Y.Z` (needs a clean tree: `git stash -u`), fill the `TODO`s in both CHANGELOG.md copies (Version Map row + section, plain words, `###` headings), `release.py --check`, build.
 5. Push nothing else once a release is waiting to be published. **The owner publishes the release on github.com** (tag `vX.Y.Z`, target = the pushed commit). The session cannot publish, delete releases or tags, push `v*` tags, merge pull requests, use GraphQL or read code-scanning alerts. After he publishes: check the Release workflow, the zip sha256 and `latest.json`.
 6. A maintenance pull request is merged BEFORE its version is tagged (the release refuses a tag that does not match HUB).
 7. Do not weaken CI: the release refuses unless CI passed on that commit.
+8. (The old rule to commit as Jackpison in v1 to v8 was replaced by D1 on 30 Oct 2026. Do not go back to it.)
 
 ### E. Fixed choices (change only if the owner asks)
 - **Privacy:** no contact with other servers unless the feature is on or a button was pressed (daily GitHub check off by default; calendars only when followed; Offline Reading off by default).
@@ -67,7 +72,7 @@ These come from every handoff (v3 to v48), `AGENTS.md`, and the owner's own word
 - From docs/IDEAS.md (issue 29): RSS feed ("not now"; if it returns: off by default, fetch only through `hub_get_https`, strip HTML, cache, pictures only from the feed's host), custom iframe pages ("not now"; sandboxed, no `allow-same-origin`, `frame-src` for one host), multiple users ("not planned"), one password for login and encryption ("not as asked").
 - Maybe later: outbound webhooks (Home Assistant, n8n), offline edits sent later (needs a same-item-on-two-devices rule), Cloud Backup S3 and Restore from Cloud.
 - Parked: marketing and launch posts (r/selfhosted New Project Friday from about 22 Jan 2027, awesome-selfhosted from about 22 Feb 2027, the owner writes it; selfh.st, Lemmy, LowEndTalk, AlternativeTo).
-- Reversals to remember: Glass was dropped on 27 Oct 2026 and then built on purpose as Liquid Glass (1.68.0); the characters on Home were built in 1.52.0, removed in 1.53.0 and a different set came back later; the calendar feed, share links, passkeys and Cards CSV import were turned down and later chosen.
+- Reversals to remember: Also turned down on 25 Oct 2026: a login history. (Passkey login was "not doing" in v1 to v8 and was built later in 1.61.0.) Glass was dropped on 27 Oct 2026 and then built on purpose as Liquid Glass (1.68.0); the characters on Home were built in 1.52.0, removed in 1.53.0 and a different set came back later; the calendar feed, share links, passkeys and Cards CSV import were turned down and later chosen.
 
 ### G. Sandbox and harness facts that cost time
 - Kill stale `php -S` before browser tests (`pkill -f "php -S"`); run long jobs in the background and wait with Monitor (`until` loop); never chain sleeps. Never `pkill -f` a pattern that is in your own command line.
