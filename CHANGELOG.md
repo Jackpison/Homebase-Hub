@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.0 | Clear the Activity log, a Cleanup section, turn Telegram, Tasks, Cards, Files and Tools off for real, a live countdown, an encryption step in first setup, and fixes for Add Your First Card and the logo message |
 | 1.78.2 | The domain and uptime watch is removed completely (code, schedule, backups and Telegram status); the optional update address stays |
 | 1.78.1 | Settings: Data Protection and Telegram Setup in the Sign-In style, Two-Step scan side by side, Look tab renamed; smoother pages, folds and hovers everywhere |
 | 1.78.0 | Settings: Sign-In boxes redesigned, Look and Bar in one tab, a clearer Telegram Setup, click-to-copy commands, an Activity log of what was done; Start Here and Domains and Uptime are gone |
@@ -155,6 +156,29 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.0
+
+### Added
+
+- **Settings › Logs › Activity › Clear.** Empties the list after you type your website password. One line stays that says it was cleared, so it can not be done unseen.
+- **Settings › Health › Cleanup.** Shows what the site has piled up and lets go of each kind with a held button: earlier versions beyond the newest three of each page, downloaded Home photos nothing uses, login files that ran out, and the host's error log. Nothing you made is touched.
+- **Settings › Features › Turn Off What You Do Not Use.** Telegram, Tasks, Cards, Files and Tools can be turned off for real, not only hidden: the page says it is off, its server address refuses, and Telegram's bot, reminders and backups stop. Your data stays, and turning it back on restores everything. Telegram can not be turned off while Login Approval is on, so you can not lock yourself out.
+- **A live countdown.** The Home countdown widget now counts days, hours, minutes and seconds, to an optional time you can add in its settings.
+- **First setup offers encryption.** The last step of a new site has a ticked box, "Lock my private data next", that opens the passphrase steps right after the site is made.
+- **Security › Data Protection › This Device.** One place to forget the keys this browser keeps when you tick "Keep unlocked on this device".
+
+### Fixed
+
+- **Add Your First Card** on an empty Cards page did nothing. It now opens the Holders window first (or the new card, if you have holders), like the Add Card menu entry.
+- **Site logo upload** now says what went wrong: the folder to give write permission to, or the server's answer, instead of a vague message.
+
+### Changed
+
+- The Set a Passphrase step lines Continue up with the tick box, under the right-hand field.
+- Requests and ideas that are not built yet are kept in `docs/IDEAS.md`.
 
 ---
 

@@ -109,6 +109,11 @@ try:
         shown = not pg.evaluate("document.querySelector('#ix-inst').hidden")
         pg.click('#ix-inst'); until(lambda: pg.evaluate("window.__prompted === 1 && document.querySelector('#ix-inst').hidden"), 3000)
         check('when the browser offers it, Install appears and opens the browser\'s prompt once', shown and pg.evaluate("window.__prompted") == 1 and pg.evaluate("document.querySelector('#ix-inst').hidden"), (shown, pg.evaluate("window.__prompted")))
+        # (1.79.0) Add Your First Card (an empty Cards page) opens the Holders window, like the Add Card menu entry; it used to do nothing
+        pg.goto(s.base + '/web/cards/'); wait_js(pg, "!!document.querySelector('#firstcard')", 15000)
+        pg.click('#firstcard')
+        opened = until(lambda: pg.evaluate("!!document.querySelector('dialog[open]')"), 5000)
+        check('Add Your First Card on an empty Cards page opens a window (Holders first, since there are none yet)', opened, opened)
         sw = pg.evaluate("fetch('../hub/core/api.php?action=state').then(r => r.ok)")
         check('no page error anywhere in this test', not errs and sw, errs)
         b.close()
