@@ -523,7 +523,7 @@
       var items = [], t = q1('toggle');
       if (canEdit()) items.push(editing()
         ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit }
-        : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
+        : { label: 'Edit This Page', icon: ICON.edit, tint: pageColor(APP), run: function () { startEdit(); } });
       itemEntries(anchor, t, true).forEach(function (x) { if (/ Settings$/.test(x.label) && PAGE_TILE[APP]) x.pageIcon = APP; items.push(x); });
       EXTRA.forEach(function (x) { items.push(x); });
       if (items.length) items.push({ sep: true });
@@ -536,7 +536,7 @@
     var items = [], t = q1('toggle');
     if (canEdit()) items.push(editing()
       ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit }
-      : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
+      : { label: 'Edit This Page', icon: ICON.edit, tint: pageColor(APP), run: function () { startEdit(); } });
     itemEntries(anchor, t, true).forEach(function (x) { if (/ Settings$/.test(x.label) && PAGE_TILE[APP]) x.pageIcon = APP; items.push(x); });   // (1.79.2) the page's own Settings wears the page's icon, like its tab in the bar
     EXTRA.forEach(function (x) { items.push(x); });
     if (!items.length) { toast('There is nothing to edit on this page.'); return; }
@@ -704,6 +704,9 @@
   }
   /* (1.61.5) the look inside a Settings window: each section's rows in one rounded card, a small coloured tile in front of each row */
   var RT = [
+    /* (1.79.3) the two tab privacy rows: one shield with a check; blue for Private Tab, green for Encrypted Tab (they must come before the wider words below) */
+    [/^\s*private tab\b/i, 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM8.7 12.3l2.4 2.4 4.2-4.6', '59,130,246'],
+    [/^\s*encrypted tab\b/i, 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM8.7 12.3l2.4 2.4 4.2-4.6', '62,207,142'],
     /* (1.64.3) Encrypt first: "Encrypt All Private Tabs" has the word private and took the green lock of Hide From Visitors; now it keeps its own purple shield */
     [/encrypt|passphrase|recovery/i, 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM9.5 12.5h5v3.5h-5zM10.5 12.5v-1a1.5 1.5 0 0 1 3 0v1', '179,146,240'],
     [/only me|private|lock|password/i, 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3', '80,200,140'],
@@ -940,7 +943,7 @@
     if (S.admin === undefined) return whenKnown(function () { if (S.admin !== undefined) cornerMenu(b); });
     if (!S.admin) { login().then(function () { location.reload(); }, function () {}); return; }
     var t = q1('toggle'), items = [];
-    if (canEdit()) items.push(editing() ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit } : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
+    if (canEdit()) items.push(editing() ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit } : { label: 'Edit This Page', icon: ICON.edit, tint: pageColor(APP), run: function () { startEdit(); } });
     itemEntries(b, t, true).forEach(function (x) { items.push(x); });
     items.push({ sep: true });
     pages().filter(function (p) { return p[0] !== APP; }).forEach(function (p) { items.push({ label: p[1], icon: p[3], run: function () { location.href = p[2]; } }); });
@@ -1054,7 +1057,7 @@
     popEl = document.createElement('div'); popEl.id = 'ix-pop'; popEl.setAttribute('role', 'menu');
     popEl.innerHTML = items.map(function (it, i) {
       return it.sep ? '<hr>' : '<button type="button" role="menuitem" data-i="' + i + '"' + (it.danger ? ' class="danger"' : it.accent ? ' class="accent"' : '') + '>' +
-        (it.pageIcon ? '<svg viewBox="0 0 24 24" aria-hidden="true" style="color:' + pageColor(it.pageIcon) + '">' + PAGE_TILE[it.pageIcon][1] + '</svg>' : it.icon ? svg(it.icon) : '<span class="ix-gap"></span>') + '<span class="ix-pl">' + esc(it.label) + '</span>' +
+        (it.pageIcon ? '<svg viewBox="0 0 24 24" aria-hidden="true" style="color:' + pageColor(it.pageIcon) + '">' + PAGE_TILE[it.pageIcon][1] + '</svg>' : it.icon ? (it.tint ? svg(it.icon).replace('<svg ', '<svg style="color:' + it.tint + '" ') : svg(it.icon)) : '<span class="ix-gap"></span>') + '<span class="ix-pl">' + esc(it.label) + '</span>' +
         (it.note ? '<small' + (it.warn ? ' class="warn"' : '') + '>' + esc(it.note) + '</small>' : '') + '</button>';
     }).join('');
     document.body.appendChild(popEl);
