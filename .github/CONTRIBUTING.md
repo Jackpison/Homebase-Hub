@@ -7,12 +7,4 @@ Thank you for helping with Homebase Hub.
 
 ## Changing the code
 
-Read `AGENTS.md` first: it has the full rules, the checks and the release checklist.
-
-
-- Edit the readable files in `src/`. The build makes the minified files; never edit those.
-- Each release raises the version in `src/web/hub/core/lib/boot.php` (`HUB`) and in every `?v=` on the pages, and adds an entry and a Version Map row to `src/web/hub/docs/CHANGELOG.md` (copied to the root `CHANGELOG.md`).
-- After changing any file in `src/web/tools/assets`, run `python3 scripts/tools-rev.py --write` (the build refuses to run otherwise).
-- Build with `python3 scripts/build.py`. The zip is named with dots (`site-update-1.39.0.zip`) and contains the full changelog.
-- Run the update tests and `python3 tests/repo/check_libraries.py` before a release: see `tests/README.md`. All of them must pass.
-- Never commit `site-data/`, `config.php`, passwords or tokens. The build refuses to run if private data is in `src/`.
+Read [AGENTS.md](../AGENTS.md) first. It holds the rules, the checks to run before a pull request and the release checklist, so they live in one place. `tests/README.md` explains the tests.

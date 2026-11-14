@@ -373,8 +373,8 @@ try:
         pops = []
         for on in (0, 1):
             s.php("hub_settings_update(function ($x) { $x['glassFx'] = ['wpop' => %d]; return $x; });" % on)
-            op.goto(s.base + '/web/links/'); wait_js(op, "!!document.getElementById('ix-editb') && !!(window.HUB && HUB.isAdmin())", 20000)
-            op.click('#ix-editb'); until(lambda: op.evaluate(POP) is not None, 5000); op.wait_for_timeout(300); pops.append(op.evaluate(POP)); op.keyboard.press('Escape')
+            op.goto(s.base + '/web/links/'); wait_js(op, "!!document.querySelector('#ix-bar [data-ix=account]') && !!(window.HUB && HUB.isAdmin())", 20000)
+            op.click('#ix-bar [data-ix=account]'); until(lambda: op.evaluate(POP) is not None, 5000); op.wait_for_timeout(300); pops.append(op.evaluate(POP)); op.keyboard.press('Escape')
         check('P63 Where > Menus and Pop-ups: off, the Edit menu is as before; on, it is glass (at least 14 px frost so it stays readable) (1.68.4)', pops[0] in ('none', '') and 'blur(14px)' in pops[1], pops)
         s.php("hub_settings_update(function ($x) { $x['glassFx'] = []; return $x; });")
         op.goto(s.base + '/web/settings/#glass'); wait_js(op, "!!document.getElementById('ix-gx-rim') && !!document.querySelector('.ix-gpv')", 20000)

@@ -345,7 +345,7 @@ try:
         ep = ectx.new_page(); eerr = []; page_errors(ep, eerr)
         def emenu(app):
             ep.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); until(lambda: ep.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(ep)
-            ep.click('#ix-editb'); until(lambda: ep.evaluate("!!document.querySelector('#ix-pop')"), 3000)
+            ep.click('#ix-bar [data-ix=account]'); until(lambda: ep.evaluate("!!document.querySelector('#ix-pop')"), 3000)
             return ep.evaluate("[...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)")
         def ebar(): return ep.evaluate("(() => { const e = document.getElementById('ix-ebar'); return e && !e.hidden ? [...e.querySelectorAll('.ix-eb')].map(b => b.getAttribute('aria-label')) : null })()")
         want = {'links': ['Colors', 'Fetch Icons', 'Import and Export', 'Links Settings', 'Done'], 'info': ['Export', 'Info Settings', 'Done'],
@@ -358,8 +358,8 @@ try:
             old[app] = ep.evaluate("[...document.querySelectorAll('[data-hub-ebar]')].every(e => getComputedStyle(e).display === 'none')")
             ep.click('#ix-ebar [data-ix-done]'); until(lambda: ebar() is None, 5000)
             done[app] = not ep.evaluate("document.body.classList.contains('editing')")
-        check('P50 the pencil menu offers only Edit This Page and the page\'s own Settings (Links, Info, Cards, Tasks)',
-              all(menus[a] == ['Edit This Page', a.title() + ' Settings'] for a in want), menus)
+        check('P50 the gear menu offers Edit This Page, the page\'s own Settings and Main Settings (Links, Info, Cards, Tasks)',
+              all(menus[a] == ['Edit This Page', a.title() + ' Settings', 'Main Settings'] for a in want), menus)
         check('P51 Edit This Page shows the shared edit bar with the page\'s tools, its Settings and Done, the old bar is hidden, and Done ends editing (also on Cards and Tasks, which have no edit mode of their own)',
               bars == want and all(old.values()) and all(done.values()), (bars, old, done))
         # the bar's buttons do what the old ones did
@@ -387,7 +387,7 @@ try:
         ep.click('#ix-ebar [data-tip="Export"]'); until(lambda: ep.evaluate("!!document.querySelector('#ix-pop')"), 3000)
         exp = ep.evaluate("[...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)"); ep.keyboard.press('Escape'); ep.click('#ix-ebar [data-ix-done]')
         ep.goto(B + '/web/settings/', wait_until='domcontentloaded'); until(lambda: ep.evaluate("!!(window.HUB && HUB.state().admin)"), 15000); settle(ep)
-        nopen = ep.evaluate("!document.getElementById('ix-editb') && !document.querySelector('[data-ix=edit]')")
+        nopen = ep.evaluate("!document.querySelector('[data-ix=edit]')")
         check('P53 the choice is kept on the server (Links still shows names after a reload) and is per page (Tasks keeps icons); Cards\' Export opens its two exports; Settings has no pencil',
               kept and other == '' and exp == ['PDF (print)', 'Excel Spreadsheet'] and nopen, (kept, other, exp, nopen))
         ectx.close()
@@ -401,16 +401,16 @@ try:
         # Cards' one Holders window; the tidied Settings windows of Links, Info and Tasks
         rctx2 = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); rctx2.add_cookies(cookies); rctx2.route('**/*', handle)
         rctx2.add_init_script("(() => { const f = window.fetch; window.fetch = function (u, o) { if (String(u).includes('action=state')) return new Promise(r => setTimeout(r, 2500)).then(() => f(u, o)); return f(u, o) } })()")
-        rp2 = rctx2.new_page(); rp2.goto(B + '/web/info/', wait_until='domcontentloaded'); rp2.wait_for_selector('#ix-editb', timeout=10000)
-        early = rp2.evaluate("HUB.state().admin === undefined"); rp2.click('#ix-editb')
+        rp2 = rctx2.new_page(); rp2.goto(B + '/web/info/', wait_until='domcontentloaded'); rp2.wait_for_selector('#ix-bar [data-ix=account]', timeout=10000)
+        early = rp2.evaluate("HUB.state().admin === undefined"); rp2.click('#ix-bar [data-ix=account]')
         until(lambda: rp2.evaluate("!!document.querySelector('#ix-pop') || !!document.querySelector('#ix-dlg.open')"), 8000)
         race = rp2.evaluate("[!!document.querySelector('#ix-dlg.open'), [...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)]"); rctx2.close()
-        check('P55 logged in, pressing the pencil before the page has heard from the server waits for it: the menu opens, no login box', early and race == [False, ['Edit This Page', 'Info Settings']], (early, race))
+        check('P55 logged in, pressing the gear before the page has heard from the server waits for it: the menu opens, no login box', early and race == [False, ['Edit This Page', 'Info Settings', 'Main Settings']], (early, race))
         hctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); hctx.add_cookies(cookies); hctx.route('**/*', handle); hp2 = hctx.new_page(); herr2 = []; page_errors(hp2, herr2)
         hp2.goto(B + '/web/cards/', wait_until='domcontentloaded'); until(lambda: hp2.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(hp2)
-        hp2.click('#ix-editb'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000)
+        hp2.click('#ix-bar [data-ix=account]'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000)
         lines = hp2.evaluate("document.querySelectorAll('#ix-pop hr').length")
-        check('P56 the pencil menu (Edit This Page, Cards Settings) has no dividing line', lines == 0, lines)
+        check('P56 the gear menu (Edit This Page, Cards Settings, then a line, Main Settings) has exactly one dividing line', lines == 1, lines)
         hp2.click('#ix-pop button'); until(lambda: hp2.evaluate("!!document.getElementById('ix-ebar') && !document.getElementById('ix-ebar').hidden"), 5000)
         hrows = lambda: hp2.evaluate("[...document.querySelectorAll('#hlist .hrow')].map(r => [r.querySelector('input').value, r.querySelector('.hn').textContent, r.querySelector('.hdel').disabled])")
         hp2.click('#ix-ebar [data-tip="Holders"]'); until(lambda: hp2.evaluate("document.getElementById('hdlg').open"), 5000)
@@ -433,7 +433,7 @@ try:
               and back == [r[0] for r in first] and not herr2, (first, cancelled, after, dupmsg, back, herr2))
         def sdlg(app, dlg):
             hp2.goto(B + '/web/%s/' % app, wait_until='domcontentloaded'); until(lambda: hp2.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(hp2)
-            hp2.click('#ix-editb'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000); hp2.click('#ix-pop button:nth-child(2)')
+            hp2.click('#ix-bar [data-ix=account]'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000); hp2.click('#ix-pop button:nth-child(2)')
             until(lambda: hp2.evaluate("document.getElementById('%s').open" % dlg), 8000); settle(hp2)
             return hp2.evaluate("""(() => { const d = document.getElementById('%s');
               return [[...d.querySelectorAll('h3, h4')].map(h => h.textContent.trim()), [...d.querySelectorAll('.ix-srow')].map(r => [[...r.children].find(c => !c.classList.contains('ix-rt')).firstChild.textContent.trim(), r.lastElementChild.tagName, r.lastElementChild.textContent.trim().slice(0, 12), r.getBoundingClientRect().width > 0 ? Math.round(r.lastElementChild.getBoundingClientRect().width) : 0]),
@@ -462,7 +462,7 @@ try:
               lw[0] and lw[1].startswith('Log In to ') and lw[2] and lw[3] and lw[4] and shownpw == ['text', 'true'] and hiddenpw == 'password' and lerr[0] and lerr[1] and lerr[2], (lw, shownpw, hiddenpw, lerr))
         cctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); cctx.add_cookies(cookies); cctx.route('**/*', handle); cp = cctx.new_page(); cerr = []; page_errors(cp, cerr)
         cp.goto(B + '/web/cards/', wait_until='domcontentloaded'); cp.wait_for_selector('#list .row.item', timeout=15000); settle(cp)
-        cp.click('#ix-editb'); until(lambda: cp.evaluate("!!document.querySelector('#ix-pop')"), 3000); cp.click('#ix-pop button'); until(lambda: cp.evaluate("!!document.getElementById('ix-ebar') && !document.getElementById('ix-ebar').hidden"), 5000)
+        cp.click('#ix-bar [data-ix=account]'); until(lambda: cp.evaluate("!!document.querySelector('#ix-pop')"), 3000); cp.click('#ix-pop button'); until(lambda: cp.evaluate("!!document.getElementById('ix-ebar') && !document.getElementById('ix-ebar').hidden"), 5000)
         icons = cp.evaluate("[...document.querySelectorAll('#ix-ebar .ix-eb')].map(b => [b.getAttribute('aria-label'), b.querySelector('path').getAttribute('d')])")
         idict = dict(icons)
         cp.click('#ix-ebar [data-tip="Cards Settings"]'); until(lambda: cp.evaluate("document.getElementById('tdlg').open"), 5000)

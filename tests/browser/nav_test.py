@@ -147,7 +147,7 @@ try:
                 if nav == 'side' and not phone:
                     w = rect(pg, '#ix-bar')['w']
                     check('%s: the rail is 80 px wide' % L, abs(w - 80) < 1, w)
-                    pg.click('#ix-editb'); until(lambda: pg.evaluate("!!document.querySelector('#ix-pop')"), 3000); settle(pg)
+                    pg.click('#ix-bar [data-ix=account]'); until(lambda: pg.evaluate("!!document.querySelector('#ix-pop')"), 3000); settle(pg)
                     pop, bar = rect(pg, '#ix-pop'), rect(pg, '#ix-bar')
                     check('%s: the Edit menu opens beside the rail' % L, pop and pop['x'] >= bar['r'], (pop, bar))
                     pg.keyboard.press('Escape')

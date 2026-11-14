@@ -36,8 +36,8 @@ CARDS = """(sel => [...document.querySelectorAll(sel + ' .ix-grp')].filter(g => 
 
 
 def open_menu(pg, base, path, label):
-    pg.goto(base + path); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.querySelector('[data-ix=edit],[data-ix=corner]')", 20000)
-    pg.evaluate("document.querySelector('[data-ix=edit],[data-ix=corner]').click()")
+    pg.goto(base + path); wait_js(pg, "!!(window.HUB && HUB.isAdmin()) && !!document.querySelector('[data-ix=account],[data-ix=corner]')", 20000)
+    pg.evaluate("document.querySelector('[data-ix=account],[data-ix=corner]').click()")
     wait_js(pg, "[...document.querySelectorAll('button,a,[role=menuitem]')].some(x => x.offsetParent && x.textContent.trim() === %r)" % label, 10000)
     pg.evaluate("(l => [...document.querySelectorAll('button,a,[role=menuitem]')].find(x => x.offsetParent && x.textContent.trim() === l).click())(%r)" % label)
     wait_js(pg, "!!document.querySelector('dialog[open]')", 10000)

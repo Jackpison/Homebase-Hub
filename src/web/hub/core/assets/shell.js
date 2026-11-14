@@ -517,6 +517,20 @@
     if (thenLabel) setTimeout(function () { runItem(thenLabel); }, 450);
   }
   function runItem(label) { hubItems().some(function (it) { if (it.label === label) { it.el.click(); return true; } }); }
+  /* (1.79.1) The gear menu: Edit This Page (or Done Editing), the page's own settings (data-hub-main), then Main Settings. Everything else is on the edit bar (3b). */
+  function gearMenu(anchor) {
+    whenKnown(function () {
+      var items = [], t = q1('toggle');
+      if (canEdit()) items.push(editing()
+        ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit }
+        : { label: 'Edit This Page', icon: ICON.edit, run: function () { startEdit(); } });
+      itemEntries(anchor, t, true).forEach(function (x) { items.push(x); });
+      EXTRA.forEach(function (x) { items.push(x); });
+      if (items.length) items.push({ sep: true });
+      items.push({ label: 'Main Settings', icon: ICON.gear, run: function () { settings(); } });
+      popMenu(anchor, items);
+    });
+  }
   /* The pencil menu: Edit This Page and the page's own Settings (data-hub-main). Everything else is on the edit bar (3b). */
   function editMenu(anchor) {
     var items = [], t = q1('toggle');
@@ -821,7 +835,7 @@
     if (!adm) return iconBtn('login', 'Log In', toolTile('login', svg(ICON.key)), 'ix-key');
     var due = backupDue();
     return '<button type="button" class="ix-ib ix-bk' + (due ? ' due' : '') + '" data-ix="backup" aria-label="' + (due ? 'Backup (a backup is due)' : 'Backup') + '" title="' +
-      (due ? 'A backup is due: open Backup' : 'Backup and Import') + '">' + toolTile(due ? 'due' : 'backup', svg(ICON.box)) + '</button><span class="ix-tdiv" aria-hidden="true"></span>' + iconBtn('account', 'Settings', toolTile('account', svg(ICON.gear)));
+      (due ? 'A backup is due: open Backup' : 'Backup and Import') + '">' + toolTile(due ? 'due' : 'backup', svg(ICON.box)) + '</button><span class="ix-tdiv" aria-hidden="true"></span>' + iconBtn('account', HAS_EDIT ? 'Edit and Settings' : 'Settings', toolTile('account', svg(ICON.gear)));
   }
   /* (1.67.1) The logo and the site name lead to the start page, so the top bar and the sidebar leave Home out of the page list
      (the dock has no logo: it keeps Home). On the start page the logo is the current page. Built with DOM calls, so no name is
@@ -848,7 +862,7 @@
     var adm = isAdmin(), nav = NAV();
     var brand = '<span data-ix-brand></span>';   // the logo and site name: brandEl() puts them in once the markup is in place
     var theme = iconBtn('theme', themeLabel(), toolTile('theme', themeIcon()));
-    var edit = HAS_EDIT ? iconBtn('edit', 'Edit', toolTile('edit', svg(ICON.edit)), '', 'ix-editb') : '';
+    var edit = '';   // (1.79.1) the pencil is gone from the bar: the gear opens Edit This Page, the page's settings and Main Settings
     var me = acctButtons(adm), links = pageLinks();
     var html;
     if (nav === 'side') {
@@ -933,7 +947,7 @@
     items.push({ sep: true }, { label: 'Settings', icon: ICON.gear, run: function () { settings(); } }, { label: 'Log Out', icon: ICON.out, danger: true, run: logout });
     popMenu(b, items, { corner: true });
   }
-  function markEditing() { var b = document.getElementById('ix-editb'); if (b) b.classList.toggle('on', editing()); drawEditBar(); }
+  function markEditing() { var b = document.querySelector('#ix-bar [data-ix=account]'); if (b) b.classList.toggle('on', editing() && HAS_EDIT); drawEditBar(); }   // (1.79.1) the gear lights up while the page is being edited
   /* The Backup icon is green, and red while a backup is due (Backup > Remind me every). Clicking it turns it green again
      for a day; exporting a full backup starts the countdown over. */
   function backupDue() {
@@ -1399,7 +1413,7 @@
     var kbd = function (a) { return a.split(' ').map(function (x) { return x === 'then' ? ' then ' : '<kbd>' + esc(x) + '</kbd>'; }).join(''); };
     openDlg('<div class="ix-ico">' + svg(ICON.keyboard) + '</div><h2>Keyboard Shortcuts</h2>' +
       '<div class="ix-keys" tabindex="0" role="region" aria-label="Keyboard shortcuts"><h3>Anywhere</h3>' + row(kbd('/') + ' or ' + kbd('Ctrl K'), 'Search the site') + row(kbd('?'), 'Show this list') + row(kbd('Esc'), 'Close a window') +
-      (S.admin ? row(kbd('E'), 'Edit this page (the pencil)') : '') + (SWIPE_APPS.indexOf(APP) >= 0 ? row(kbd('[') + ' and ' + kbd(']'), 'The page before or after (like a swipe on a phone)') : '') +
+      (S.admin ? row(kbd('E'), 'Edit this page (or open the gear menu)') : '') + (SWIPE_APPS.indexOf(APP) >= 0 ? row(kbd('[') + ' and ' + kbd(']'), 'The page before or after (like a swipe on a phone)') : '') +
       '<h3>Go to a Page</h3>' + go.map(function (g) { return row(kbd('G') + ' then ' + kbd(g[0].toUpperCase()), g[1]); }).join('') +
       (PAGEKEYS[APP] ? '<h3>On This Page</h3>' + PAGEKEYS[APP].filter(function (k) { return APP !== 'home' || S.admin; }).map(function (k) { return row(kbd(k[0]), k[1]); }).join('') : '') + '</div>' +
       '<div class="ix-acts"><button type="button" class="ix-btn pri" id="ix-kclose" autofocus>Close</button></div>');
@@ -1730,7 +1744,7 @@
     if (k === 'backup') { closePanels(); backupSeen(); return openBackup(); }
     if (k === 'corner') return cornerMenu(b);
     if (k === 'edit') return whenKnown(function () { if (!S.admin && canEdit()) { closePanels(); return startEdit(); } editMenu(b); });
-    if (k === 'account') { closePanels(); return settings(); }
+    if (k === 'account') { closePanels(); return HAS_EDIT && !inPanel ? gearMenu(b) : settings(); }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !popEl) closePanels(); });
 
