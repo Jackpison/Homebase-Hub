@@ -3,6 +3,7 @@
 // The helper functions are cut out of api.php itself (it runs a request when included), so this tests the real code.
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
+require $site . '/web/hub/core/lib/boot.php';
 $src = (string)file_get_contents($site . '/web/info/api.php');
 
 /** The source of one top-level function, found by counting braces. */
@@ -12,7 +13,7 @@ function fn_src(string $src, string $name): string {
     for ($k = $j, $n = strlen($src); $k < $n; $k++) { if ($src[$k] === '{') $d++; elseif ($src[$k] === '}' && --$d === 0) return substr($src, $i, $k - $i + 1); }
     return '';
 }
-foreach (['cut', 'rid', 'box_title', 'box_id_ok', 'box_w', 'box_h', 'color_ok', 'box_hc', 'norm_box', 'norm_boxes', 'default_boxes', 'tab_color', 'tab_hc', 'tab_layout', 'tab_icon', 'has_enc', 'norm_page', 'norm_timer', 'norm_data'] as $f) {
+foreach (['cut', 'rid', 'box_title', 'box_id_ok', 'box_w', 'box_h', 'color_ok', 'box_hc', 'norm_box', 'norm_boxes', 'default_boxes', 'tab_color', 'tab_hc', 'tab_layout', 'tab_icon', 'has_enc', 'icon_ok', 'norm_colors', 'norm_vault', 'norm_page', 'norm_timer', 'norm_data'] as $f) {
     $code = fn_src($src, $f); t("api.php has $f", $code !== '');
     if ($code !== '') eval($code);
 }
