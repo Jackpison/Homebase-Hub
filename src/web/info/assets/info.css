@@ -287,3 +287,5 @@ body.editing .tabi:not(.on) .tab:not(.add){padding-right:0}
 #bxdlg .bxsw{display:flex;gap:9px;flex-wrap:wrap;margin:6px 0 4px}
 #bxdlg .swc{width:26px;height:26px;border-radius:50%;padding:0;border:2px solid transparent;cursor:pointer}
 #bxdlg .swc[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
+/* (1.79.3) a small grey divider between one tab and the next, as in Links */
+.tabs>.tabi+.tabi::before{content:"";position:absolute;left:-5px;top:50%;width:1px;height:20px;transform:translateY(-50%);background:color-mix(in srgb,var(--fg) 22%,transparent)}

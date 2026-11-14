@@ -140,7 +140,6 @@
       '<span class="hubt-ctl">' + (noWell ? '' : '<input type="color" id="ht' + key + '" aria-label="' + esc(label) + '">') + '<input type="text" class="hubt-hx" id="ht' + key + 'Tx" maxlength="7" placeholder="Default" spellcheck="false" autocomplete="off" aria-label="' + esc(label) + ' as a hex code">' +
       '<button type="button" class="btn" id="ht' + key + 'Def">Use Default</button></span></div>';
   }
-  var SWATCHES = ['#e5484d', '#f5a524', '#d4a72c', '#3ecf8e', '#2dd4bf', '#3b82f6', '#8b5cf6', '#ec4899'];
   function build() {
     dlg = document.createElement('dialog'); dlg.id = 'hubTabDlg'; dlg.className = 'ix-sdlg';
     var icons = '<button type="button" role="radio" class="hubt-ico" data-i="" id="htIcoDef" aria-checked="false"><span class="hubt-def">Default</span></button>' + ICONS.map(function (i) {
@@ -151,9 +150,9 @@
       '<h4>Tab</h4>' +
       '<div class="hubt-block hubt-prevblk"><span class="hubt-pill" id="htPrev" title="How it looks in the tab bar"><span class="hubt-pi" id="htPrevIco"></span><b id="htPrevName"></b><span class="hubt-pl" id="htPrevLock">' + lockSvg + '</span></span></div>' +
       '<div class="hubt-line"><button type="button" class="hubt-icobtn" id="htIcoBtn" aria-expanded="false" aria-controls="htIcons" aria-label="Icon" title="Icon"><span class="hubt-cur" id="htIcoCur"></span><span class="hubt-chev" aria-hidden="true"></span></button>' +
-        '<input id="htName" maxlength="40" autocomplete="off" aria-label="Name" placeholder="Name"><input type="color" id="htColor" aria-label="Tab Color" title="Tab Color"></div>' +
+        '<input id="htName" maxlength="40" autocomplete="off" aria-label="Name" placeholder="Name"><input type="color" id="htColor" aria-label="Tab Color" title="Tab Color"><button type="button" class="btn hubt-cdef" id="htColorDef">Use Default</button></div>' +
       '<div class="hubt-icons" id="htIcons" role="radiogroup" aria-label="Icon" hidden>' + icons + '</div>' +
-      '<h4>Look</h4>' + '<div class="hubt-block hubt-swb"><span class="hubt-lt" id="htColorLbl">Tab Color</span><div class="hubt-sw" id="htSw" role="group" aria-label="Usual colors">' + SWATCHES.map(function (c) { return '<button type="button" class="hubt-swc" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="false"></button>'; }).join('') + '<button type="button" class="btn" id="htColorDef">Use Default</button><input type="text" id="htColorTx" hidden></div></div>' + colorRow('Hc', 'Box Headline Color', 'Default uses the normal text color.') +
+      '<input type="text" id="htColorTx" hidden>' + colorRow('Hc', 'Box Headline Color', 'Default uses the normal text color.') +
       '<div class="hubt-block" id="htLayBlock" hidden><span class="hubt-lt">Layout</span><div class="hubt-lays" id="htLays" role="radiogroup" aria-label="Layout">' +
         '<button type="button" class="hubt-lay" data-lay="cards" role="radio" aria-checked="true"><i class="hubt-lp hubt-lp-cards" aria-hidden="true"></i><b>Notebook Cards</b><small>Cards you can size and arrange. The default.</small></button>' +
         '<button type="button" class="hubt-lay" data-lay="doc" role="radio" aria-checked="false"><i class="hubt-lp hubt-lp-doc" aria-hidden="true"></i><b>Document</b><small>One page with an outline</small></button></div></div>' +
@@ -166,7 +165,7 @@
     if (window.HUB && HUB.settingsWindow) HUB.settingsWindow(dlg);
     wire();
   }
-  function setColor(key, v) { var el = $('ht' + key), tx = $('ht' + key + 'Tx'); cur[key.toLowerCase()] = v; tx.value = v || ''; tx.classList.remove('bad'); if (v) el.value = v; else el.value = key === 'Color' ? cur.colorShown || '#d4a72c' : '#ffffff'; $('ht' + key + 'Def').disabled = !v; if (key === 'Color') /** @type {any[]} */ ([]).forEach.call(dlg.querySelectorAll('.hubt-swc'), function (b) { b.setAttribute('aria-pressed', String(!!v && b.dataset.c === v)); }); prevUI(); }
+  function setColor(key, v) { var el = $('ht' + key), tx = $('ht' + key + 'Tx'); cur[key.toLowerCase()] = v; tx.value = v || ''; tx.classList.remove('bad'); if (v) el.value = v; else el.value = key === 'Color' ? cur.colorShown || '#d4a72c' : '#ffffff'; $('ht' + key + 'Def').disabled = !v; prevUI(); }
   function setLayout(v) { cur.layout = v; /** @type {any[]} */ ([]).forEach.call(dlg.querySelectorAll('.hubt-lay'), function (b) { var on = b.dataset.lay === v; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.tabIndex = on ? 0 : -1; }); }
   // (1.64.1) the 16 icons stay folded away; the row shows the one in use (its picture and name) and opens the picker
   function iconOpen(on) { var b = $('htIcoBtn'); b.setAttribute('aria-expanded', String(on)); $('htIcons').hidden = !on; }
@@ -200,7 +199,6 @@
       tx.addEventListener('input', function () { var h = hexOf(tx.value); tx.classList.toggle('bad', !h && !!tx.value.trim()); if (h) { cur[key.toLowerCase()] = h; el.value = h; $('ht' + key + 'Def').disabled = false; } else if (!tx.value.trim()) { cur[key.toLowerCase()] = ''; $('ht' + key + 'Def').disabled = true; } });
       $('ht' + key + 'Def').addEventListener('click', function () { setColor(key, ''); });
     });
-    $('htSw').addEventListener('click', function (e) { var b = e.target.closest('.hubt-swc'); if (b) setColor('Color', b.dataset.c); });
     $('htLays').addEventListener('click', function (e) { var b = e.target.closest('.hubt-lay'); if (b) setLayout(b.dataset.lay); });
     $('htLays').addEventListener('keydown', function (e) {
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(e.key) < 0) return; e.preventDefault();
@@ -243,7 +241,7 @@
     if (!dlg) build();
     cur = { cfg: cfg, color: cfg.color || '', hc: cfg.hc || '', layout: cfg.layout || 'cards', icon: isIcon(cfg.icon) ? cfg.icon : '', colorShown: cfg.colorShown };
     $('htTitle').textContent = cfg.title; $('htSave').textContent = cfg.saveLabel; $('htName').value = cfg.name || '';
-    $('htColorLbl').textContent = cfg.colorLabel || 'Tab Color'; $('htColor').setAttribute('aria-label', cfg.colorLabel || 'Tab Color'); $('htColor').title = cfg.colorLabel || 'Tab Color'; $('htColorDef').title = cfg.colorHint || '';
+    $('htColor').setAttribute('aria-label', cfg.colorLabel || 'Tab Color'); $('htColor').title = cfg.colorLabel || 'Tab Color'; $('htColorDef').title = cfg.colorHint || '';
     $('htHcRow').hidden = cfg.hc == null;
     $('htLayBlock').hidden = !cfg.layouts;
     setColor('Color', cur.color); setColor('Hc', cur.hc); setLayout(cur.layout);

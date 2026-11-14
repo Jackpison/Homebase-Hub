@@ -168,6 +168,8 @@ Nothing to migrate by hand unless an entry says so.
 
 - **Box Headline Color** is now set in each box (Box Settings > Headline Color), not in Edit Tab. Each box can have its own color, and Use Default puts it back to the normal text color.
 - Tabs that already had a headline color keep it: it is copied to each of their boxes the first time the page is read, so nothing changes on screen.
+- **Edit Tab** no longer shows the color twice: the row of usual colors under Look is gone. Pick the color with the square next to the name; Use Default appears beside it once a color is set.
+- The small grey divider between tabs now shows on Info too.
 
 ---
 

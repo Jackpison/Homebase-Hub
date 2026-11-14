@@ -65,7 +65,7 @@ try:
         d = pg.evaluate("""(() => { const d = document.getElementById('hubTabDlg'); return { x: !!d.querySelector('.ix-sh .ix-sx'), grp: d.querySelectorAll('.ix-grp').length,
             sw: d.querySelectorAll('input.ix-sw').length, icons: d.querySelectorAll('.hubt-ico').length, lay: !d.querySelector('#htLayBlock').hidden, hc: !d.querySelector('#htHcRow').hidden,
             title: d.querySelector('.ix-sh h3').textContent, del: !d.querySelector('#htDel').hidden }; })()""")
-        check('K2 Links: Edit Tab is a Settings-look window (title and X, cards, two switches), with 16 icons and Default; no layout or headline colour', d['x'] and d['grp'] >= 3 and d['sw'] == 2 and d['icons'] == 17 and not d['lay'] and not d['hc'] and d['title'] == 'Edit Tab' and d['del'], d)
+        check('K2 Links: Edit Tab is a Settings-look window (title and X, cards, two switches), with 16 icons and Default; no layout or headline colour', d['x'] and d['grp'] >= 2 and d['sw'] == 2 and d['icons'] == 17 and not d['lay'] and not d['hc'] and d['title'] == 'Edit Tab' and d['del'], d)
         col = pg.evaluate("[document.getElementById('htIcoBtn').getAttribute('aria-expanded'), document.getElementById('htIcons').hidden, getComputedStyle(document.getElementById('htIcons')).display, document.getElementById('htIcoCur').textContent.trim()]")
         check('K2b the Icon row is folded: the 16 icons are hidden when the window opens, and the row says which icon is in use', col == ['false', True, 'none', 'Default'], col)
         pg.click('#htIcoBtn'); opened = pg.evaluate("[document.getElementById('htIcoBtn').getAttribute('aria-expanded'), !document.getElementById('htIcons').hidden, document.querySelector('.hubt-ico[data-i=\"star\"]').offsetParent !== null]")
@@ -96,8 +96,8 @@ try:
         names0 = order('#tabs .tabi .tab')
         pg.evaluate("document.querySelectorAll('#tabs .pen')[0].click()"); pg.wait_for_selector('#hubTabDlg[open]')
         d = pg.evaluate("""(() => { const d = document.getElementById('hubTabDlg'); return { x: !!d.querySelector('.ix-sh .ix-sx'), icons: d.querySelectorAll('.hubt-ico').length, lay: !d.querySelector('#htLayBlock').hidden,
-            hc: !d.querySelector('#htHcRow').hidden, move: /Move (Left|Right)/.test(d.textContent), title: d.querySelector('.ix-sh h3').textContent, colorLabel: d.querySelector('#htColorLbl').textContent }; })()""")
-        check('K9 Info: the same window, with Layout and no Box Headline Color (1.79.3: it is set in each box), the same 16 icons, and no Move Left / Move Right', d['x'] and d['icons'] == 17 and d['lay'] and not d['hc'] and not d['move'] and d['title'] == 'Edit Tab' and d['colorLabel'] == 'Tab Color', d)
+            hc: !d.querySelector('#htHcRow').hidden, move: /Move (Left|Right)/.test(d.textContent), title: d.querySelector('.ix-sh h3').textContent }; })()""")
+        check('K9 Info: the same window, with Layout and no Box Headline Color (1.79.3: it is set in each box), the same 16 icons, and no Move Left / Move Right', d['x'] and d['icons'] == 17 and d['lay'] and not d['hc'] and not d['move'] and d['title'] == 'Edit Tab', d)
         check('K10 ...a tab with no icon chosen is marked Default and draws the document icon', pg.evaluate("document.querySelector('#htIcoDef').getAttribute('aria-checked')") == 'true' and pg.evaluate("!!document.querySelector('#tabs .tabi:first-child svg.ti')"))
         pg.click('#htIcoBtn'); pg.click('.hubt-ico[data-i="globe"]'); pg.click('#htSave')
         until(lambda: info_tabs(s)[0].get('icon') == 'globe', 10000)
@@ -140,6 +140,15 @@ try:
         pg.click('#bxhcdef'); pg.click('#bxform button[type=submit]'); until(lambda: not pg.evaluate("document.getElementById('bxdlg').open"), 10000)
         until(lambda: [b.get('hc') for t in info_tabs(s) for b in t['boxes']].count('#3b82f6') == 0, 10000)
         check('K20 Use Default puts the box back to the normal text color', [b.get('hc') for t in info_tabs(s) for b in t['boxes']].count('#3b82f6') == 0)
+        # (1.79.3) Edit Tab shows the color once (the square beside the name; Use Default only while one is set), and Info tabs have the grey divider like Links
+        pg.evaluate("document.querySelector('#tabs .tab:not(.add)').closest('.tabi').querySelector('.pen').click()"); pg.wait_for_selector('#hubTabDlg[open]')
+        d21 = pg.evaluate("({sw: document.querySelectorAll('#hubTabDlg .hubt-swc').length, look: [...document.querySelectorAll('#hubTabDlg h4')].some(h => h.textContent === 'Look'), def: !document.getElementById('htColorDef').offsetParent})")
+        check('K21 Edit Tab has no second row of colors and no Look heading, and Use Default is hidden while the color is the default', d21['sw'] == 0 and not d21['look'] and d21['def'], d21)
+        pg.evaluate("var c = document.getElementById('htColor'); c.value = '#3b82f6'; c.dispatchEvent(new Event('input', {bubbles: true}))")
+        check('K22 ...and Use Default shows beside the color once one is set', pg.evaluate("!!document.getElementById('htColorDef').offsetParent"))
+        pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('hubTabDlg').open"), 5000)
+        div = pg.evaluate("(() => { var t = document.querySelectorAll('#tabs > .tabi'); return t.length < 2 ? '' : getComputedStyle(t[1], '::before').width + '|' + getComputedStyle(t[1], '::before').content; })()")
+        check('K23 Info: a grey divider sits between one tab and the next', div == '1px|""', div)
         check('K17 no page errors', not errs, errs)
         b.close()
 finally:
