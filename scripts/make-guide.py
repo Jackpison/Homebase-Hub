@@ -280,10 +280,10 @@ story += chapter('11', 'Settings', 'Everything about the site, in one page.',
  *sub('Backup and Restore'),
  table(['Tab', 'What it holds'], [['Back Up', 'Choose the parts, see the size, and download one backup file. Send Backups to Telegram sets how often Telegram sends you one.'], ['Restore', 'Replace everything, or add or update only some tabs. The current data is kept as an earlier version first. Earlier Versions, with Restore for each page\'s saved versions, is in this tab.'],
    ['Export', 'Links, Cards or Tasks as CSV or JSON, and Bookmarks for Other Browsers.'], ['Start Over', 'Erase everything except your password and two-step login. Needs ERASE and your password.']]),
- Note('A backup holds every page and its settings, Telegram and the domain watch list. It does not hold your password, two-step login, trusted browsers or passphrase. Keep backup files somewhere other than your server.'),
+ Note('A backup holds every page and its settings, and Telegram. It does not hold your password, two-step login, trusted browsers or passphrase. Keep backup files somewhere other than your server.'),
  shot('s-backup', 'Settings, Backup and Restore.'),
  *sub('Health'),
- table(['Tab', 'What it holds'], [['Overview', 'Disk use, speed, errors, backups, and Test a Restore.'], ['Domains and Uptime', 'A watch on your domains, their SSL and whether they answer.'], ['Server Check', 'What your hosting allows: reaching other websites (including GitHub), writing folders, PHP limits and extensions; then Files That Do Not Belong.']]),
+ table(['Tab', 'What it holds'], [['Overview', 'Disk use, speed, errors, backups, and Test a Restore.'], ['Server Check', 'What your hosting allows: reaching other websites (including GitHub), writing folders, PHP limits and extensions; then Files That Do Not Belong.']]),
  shot('s-check', 'Health, Server Check.'),
  phones(['m-settings', 'm-tasks', 'm-info'], 'On a phone, Settings opens with its menu, and every page fits the screen.'))
 

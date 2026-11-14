@@ -208,7 +208,7 @@ try:
       'name' => hub_settings()['siteName'], 'totp' => !empty(hub_auth()['totp']['on'])]);""")
     left = json.loads(left)
     check('C3 ERASE and the password erase every page', r.get('ok') and not gone['info'] and not gone['cards'] and not gone['links'] and not gone['tasks'], (r, gone))
-    check('C4 ...and media, settings, Telegram, the watch list and the passphrase', not left['notify'] and not left['watch'] and not left['pp'] and not left['key'] and not left['media'] and left['name'] != 'Before Start Over', left)
+    check('C4 ...and media, settings, Telegram, an old watch file and the passphrase', not left['notify'] and not left['watch'] and not left['pp'] and not left['key'] and not left['media'] and left['name'] != 'Before Start Over', left)
     check('C5 two-step login is kept', left['totp'] is True, left)
     y = s.client('browser-y/1.0'); y.get('state')
     r1 = y.post('login', {'password': PW}, csrf=False); r2 = y.post('login', {'password': PW, 'code': codes[0]}, csrf=False)

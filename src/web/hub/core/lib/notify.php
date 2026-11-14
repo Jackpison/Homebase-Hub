@@ -356,12 +356,6 @@ function nt_tick(): void {
     // checks every 3 seconds on its own)
     $f = hub_jpath(nt_file());
     if (is_file($f)) { try { nt_poll(10); } catch (Throwable $e) {} }
-    // the domain watch and reminders: at most every 10 minutes
-    $wf = hub_dir('core') . '/watch-tick.txt';
-    if (time() - (int)@file_get_contents($wf) >= 600) {
-        @file_put_contents($wf, (string)time());
-        try { require_once __DIR__ . '/watch.php'; if (wt_load()['sites']) wt_run(false); } catch (Throwable $e) {}
-    }
     // (1.77.0) Cloud Backup: checked with the same ten-minute rhythm, only when it is on
     $cf = hub_jpath(hub_dir('core') . '/cloud.json');
     if (is_file($cf) && time() - (int)@file_get_contents(hub_dir('core') . '/cloud-tick.txt') >= 600) {
@@ -606,13 +600,6 @@ function nt_bot_status(): string {
     $s = hub_settings(); $m = '🩺 <b>' . nt_h($s['siteName']) . ' Status</b>' . "\n";
     $last = (int)$s['backupLast']; $m .= "\n💾 Last full backup: " . ($last ? nt_h(date('j M Y', $last)) . ' (' . (int)floor((time() - $last) / 86400) . ' days ago)' : 'never');
     if (is_file(HUB_WEB . '/tasks/lib.php')) { require_once HUB_WEB . '/tasks/lib.php'; [$late, $today] = nt_due_lists(); $m .= "\n📋 Overdue: " . count($late) . ', due today: ' . count($today); }
-    if (is_file(__DIR__ . '/watch.php')) {
-        require_once __DIR__ . '/watch.php';
-        foreach (wt_load()['sites'] as $w) {
-            $up = !empty($w['up']) ? (empty($w['st']) ? '…' : (!empty($w['st']['ok']) ? '🟢 up' : '🔴 down')) : '';
-            $m .= "\n🌐 " . nt_h($w['host']) . ($up ? ' ' . $up : '') . (!empty($w['dom']['exp']) ? ', domain to ' . nt_h(date('j M Y', strtotime($w['dom']['exp']))) : '') . (!empty($w['ssl']['exp']) ? ', SSL to ' . nt_h(date('j M', strtotime($w['ssl']['exp']))) : '');
-        }
-    }
     $m .= "\n🧩 Version " . HUB;
     return $m;
 }

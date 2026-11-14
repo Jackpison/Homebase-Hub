@@ -1,6 +1,6 @@
 <?php
 // 1.62.6: hub_with_lock() and hub_with_lock_or() (boot.php), the one copy of "take a lock on a file, change a data file, let go".
-// Before, wt_update, nt_update, ap_update, act_update, pk_lock_run, sv_swap, two backup swaps, hub_settings_update, pool_update, the visit
+// Before, nt_update, ap_update, act_update, pk_lock_run, sv_swap, two backup swaps, hub_settings_update, pool_update, the visit
 // counts, tasks_modify and fl_modify each wrote it out; this test proves the helper and that those functions use it.
 [$self, $site] = $argv + [1 => ''];
 require __DIR__ . '/lib.php';
@@ -48,7 +48,7 @@ function fn_src(string $src, string $name): string {
     for ($k = $j, $len = strlen($src); $k < $len; $k++) { if ($src[$k] === '{') $n++; elseif ($src[$k] === '}' && --$n === 0) return substr($src, $i, $k - $i + 1); }
     return '';
 }
-$where = ['wt_update' => 'hub/core/lib/watch.php', 'nt_update' => 'hub/core/lib/notify.php', 'ap_update' => 'hub/core/lib/approval.php', 'act_update' => 'hub/core/lib/activity.php',
+$where = ['nt_update' => 'hub/core/lib/notify.php', 'ap_update' => 'hub/core/lib/approval.php', 'act_update' => 'hub/core/lib/activity.php',
           'pk_lock_run' => 'hub/core/lib/passkey.php', 'sv_swap' => 'hub/core/lib/vault.php', 'bk_info_vault_swap' => 'hub/core/lib/backup.php', 'bk_links_vault_swap' => 'hub/core/lib/backup.php',
           'hub_settings_update' => 'hub/core/lib/settings.php', 'pool_update' => 'home/lib.php', 'visits_add' => 'links/lib.php', 'visits_prune' => 'links/lib.php',
           'tasks_modify' => 'tasks/lib.php', 'fl_modify' => 'files/lib.php'];

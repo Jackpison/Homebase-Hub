@@ -12,7 +12,7 @@ declare(strict_types=1);
  * The schedule (Settings > Telegram > Run It on a Schedule). Run it every 5 minutes from a cron job in your hosting panel:
  *   php /path/to/site/web/hub/core/cron.php                         (command line, preferred)
  *   curl -s "https://your-site/web/hub/core/cron.php?key=..."        (by address: the key is shown in Settings > Telegram)
- * Each run: new bot messages (when instant replies are off), the domain and uptime watch, the calendars you follow in Tasks, then reminders and backups.
+ * Each run: new bot messages (when instant replies are off), the calendars you follow in Tasks, then reminders and backups.
  */
 require __DIR__ . '/lib/notify.php';
 if (PHP_SAPI !== 'cli') {
@@ -25,7 +25,6 @@ if (PHP_SAPI !== 'cli') {
 @set_time_limit(240);
 $out = [];
 try { $n = nt_poll(); if ($n) $out[] = "Bot: $n message" . ($n === 1 ? '' : 's') . '.'; } catch (Throwable $e) { $out[] = 'Bot: ' . $e->getMessage(); }
-try { require_once __DIR__ . '/lib/watch.php'; if (wt_load()['sites']) { wt_run(false); $out[] = 'Watch: checked.'; } } catch (Throwable $e) { $out[] = 'Watch: ' . $e->getMessage(); }
 // (1.72.0) the calendars you follow in Tasks: fetched again every 6 hours (nothing happens while you follow none)
 try { require_once HUB_WEB . '/tasks/lib.php'; $n = tasks_subs_tick((string)(hub_settings()['tz'] ?? 'UTC')); if ($n) $out[] = "Calendars: $n fetched."; } catch (Throwable $e) { $out[] = 'Calendars: ' . $e->getMessage(); }
 try { require_once __DIR__ . '/lib/ghupdate.php'; gh_tick(); } catch (Throwable $e) { $out[] = 'GitHub check: ' . $e->getMessage(); }   // does nothing unless the daily check was switched on

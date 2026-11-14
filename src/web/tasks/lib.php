@@ -76,7 +76,7 @@ function tasks_clean_one($t): ?array {
         'auto' => !empty($t['auto']),
         'remind' => max(-1, min(365, (int)($t['remind'] ?? -1))),
         'url' => $url, 'notes' => tasks_str($t['notes'] ?? '', 4000),
-        'src' => is_string($t['src'] ?? null) && preg_match('/^[a-z]+:[a-z]+:[a-z0-9.-]{1,100}$/', $t['src']) ? $t['src'] : '',   // made by the site (domain watch): watch:dom:example.com
+        'src' => is_string($t['src'] ?? null) && preg_match('/^[a-z]+:[a-z]+:[a-z0-9.-]{1,100}$/', $t['src']) ? $t['src'] : '',   // made by the site (the domain watch of 1.78.1 and before): watch:dom:example.com
         'status' => in_array($t['status'] ?? '', ['active', 'paused', 'done'], true) ? $t['status'] : 'active',
         'created' => max(0, min($now + 86400, (int)($t['created'] ?? $now))) ?: $now,
         'updated' => max(0, min($now + 86400, (int)($t['updated'] ?? $now))) ?: $now,
@@ -440,7 +440,7 @@ function tasks_snapshot(bool $force = false): void {
 }
 
 /**
- * Changes Tasks from outside the page (Telegram bot, domain watch): under the same lock as the page's saves, from the file
+ * Changes Tasks from outside the page (Telegram bot): under the same lock as the page's saves, from the file
  * as it is now. $fn(&$data) changes $data and returns true when something changed; then an earlier version is kept and
  * rev goes up (an open Tasks page sees the change instead of overwriting it).
  */

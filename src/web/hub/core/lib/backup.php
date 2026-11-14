@@ -37,7 +37,7 @@ function bk_cards_file(): string { return hub_dir('cards') . '/cards.json'; }
 function bk_cards_data(): array { return hub_jread(bk_cards_file()) ?? []; }
 const BK_OPTIONAL = ['files'];   // parts that are in a backup only when asked for (Files can be large; its pieces are already locked)
 const BK_FILES_MAX = 24 * 1024 * 1024;   // the most a backup file carries of Files (bytes of locked pieces); more: copy the folder site-data/files
-const BK_PARTS = ['links', 'info', 'cards', 'tasks', 'home', 'settings', 'telegram', 'watch', 'tools'];   // every part of a full backup (tools: Tools' saved presets, 1.60)
+const BK_PARTS = ['links', 'info', 'cards', 'tasks', 'home', 'settings', 'telegram', 'tools'];   // every part of a full backup (tools: Tools' saved presets, 1.60)
 function bk_tasks_file(): string { return hub_dir('tasks') . '/tasks.json'; }
 function bk_tasks_data(): array { return hub_jread(bk_tasks_file()) ?? ['tasks' => [], 'settings' => []]; }
 function bk_home_file(): string { return hub_dir('home') . '/site.json'; }
@@ -59,7 +59,6 @@ function bk_overview(): array {
         'settings' => ['summary' => 'site name, logo, look and colors, navigation, pages, Tools branding'],
         'telegram' => (function () { require_once __DIR__ . '/notify.php'; $n = nt_load();
             return ['summary' => $n['token'] === '' ? 'not set up' : 'bot, chat, messages, schedule and backup settings (the bot token only in encrypted backups)']; })(),
-        'watch'    => (function () { require_once __DIR__ . '/watch.php'; $w = wt_load(); return ['summary' => count($w['sites']) . ' watched ' . (count($w['sites']) === 1 ? 'site' : 'sites')]; })(),
         'files'    => (function () { require_once HUB_WEB . '/files/lib.php'; $d = fl_load(); $n = 0; foreach ($d['items'] as $i) if ($i['t'] === 'f' && empty($i['up'])) $n++; $z = fl_usage($d);
             return ['summary' => $n . ($n === 1 ? ' file' : ' files') . ', ' . fl_bytes($z) . ', locked' . ($z > BK_FILES_MAX ? ' (too big for a backup file: copy the folder site-data/files)' : ''), 'size' => $z, 'tooBig' => $z > BK_FILES_MAX, 'optional' => true]; })(),
         'tools'    => (function () { require_once __DIR__ . '/presets.php'; $n = array_sum(array_map('count', pr_load()['kinds']));
@@ -112,7 +111,6 @@ function bk_export(array $pick, bool $secrets = false): array {
         if (!$secrets) { $t['tokenLeftOut'] = $t['token'] !== ''; $t['token'] = ''; }
         $parts['telegram'] = $t;
     }
-    if (!empty($pick['watch'])) { require_once __DIR__ . '/watch.php'; $w = wt_load(); $parts['watch'] = ['sites' => $w['sites'], 'tasks' => $w['tasks'], 'updateUrl' => $w['updateUrl']]; }
     if (!empty($pick['tools'])) { require_once __DIR__ . '/presets.php'; $parts['tools'] = pr_view(pr_load()); }
     if (!empty($pick['files'])) $parts['files'] = bk_files_export();
     if (!empty($pick['settings'])) {
@@ -337,15 +335,6 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
         nt_save_keys($k, array_keys($k));
         $done[] = 'Telegram';
     }
-    if (!empty($pick['watch']) && isset($parts['watch']) && is_array($parts['watch'])) {
-        require_once __DIR__ . '/watch.php'; $w = $parts['watch'];
-        wt_update(function (&$d) use ($w) {
-            if (isset($w['sites']) && is_array($w['sites'])) $d['sites'] = array_values(array_filter($w['sites'], 'is_array'));
-            if (isset($w['tasks']) && is_array($w['tasks'])) foreach (['dom', 'ssl', 'host'] as $x) if (isset($w['tasks'][$x])) $d['tasks'][$x] = (bool)$w['tasks'][$x];
-            if (isset($w['updateUrl']) && is_string($w['updateUrl']) && ($w['updateUrl'] === '' || preg_match('#^https://#', $w['updateUrl']))) $d['updateUrl'] = $w['updateUrl'];
-        });
-        $done[] = 'Domain watch';
-    }
     if (!empty($pick['files']) && isset($parts['files']['items']) && is_array($parts['files']['items'])) { bk_files_import($parts['files']); $done[] = 'Files'; }
     if (!empty($pick['tools']) && isset($parts['tools']['kinds']) && is_array($parts['tools']['kinds'])) {   // Tools' saved presets (1.60)
         require_once __DIR__ . '/presets.php'; $in = pr_clean($parts['tools']);
@@ -365,8 +354,8 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
 }
 
 /**
- * Start over: erases every page's data and its earlier versions, your pictures, icons and logo, the site settings, Telegram, the domain
- * watch list, the encryption passphrase and backup key, and Telegram login approval. Keeps only what lets you log in again: the password,
+ * Start over: erases every page's data and its earlier versions, your pictures, icons and logo, the site settings, Telegram, the
+ * encryption passphrase and backup key, and Telegram login approval. Keeps only what lets you log in again: the password,
  * two-step login and this session. Everything comes back by importing a backup file.
  */
 function bk_reset_all(): array {
@@ -380,10 +369,10 @@ function bk_reset_all(): array {
     require_once __DIR__ . '/notify.php';
     $n = nt_load();
     if ($n['hook'] && $n['token'] !== '') { try { nt_hook_set($n, false); } catch (Throwable $e) {} }   // tell Telegram to stop calling this site
-    foreach (['notify.json', 'cloud.json', 'watch.json', 'passphrase.json', 'backup-key.json', 'site-vault.json', 'passkeys.json', 'passkey-challenges.json'] as $f) { @unlink(hub_jpath("$core/$f")); @unlink("$core/$f"); }
+    foreach (['notify.json', 'cloud.json', 'watch.json', 'update-check.json', 'passphrase.json', 'backup-key.json', 'site-vault.json', 'passkeys.json', 'passkey-challenges.json'] as $f) { @unlink(hub_jpath("$core/$f")); @unlink("$core/$f"); }
     @unlink("$core/login-approval.php");   // Telegram is gone, so approving logins there is turned off too (or nobody could log in)
     @unlink("$core/settings.php"); unset($GLOBALS['__hub_settings']);
-    array_push($done, 'Site settings', 'Telegram', 'Cloud Backup', 'Domain watch', 'Encryption passphrase', 'Passkeys', 'Telegram login approval');
+    array_push($done, 'Site settings', 'Telegram', 'Cloud Backup', 'Encryption passphrase', 'Passkeys', 'Telegram login approval');
     return $done;
 }
 

@@ -9,7 +9,7 @@ FOLDERS
     hub/             the site's own engine, your pictures and these notes
       core/          the engine shared by every page
         api.php cron.php telegram.php   the only PHP files a browser calls: site API, schedule, Telegram replies
-        lib/         PHP that other files load: boot (which loads auth, fetch, settings), backup, cloud, notify, approval, watch, health, update, ghupdate, overview, activity, passkey, vault, presets (blocked from the web)
+        lib/         PHP that other files load: boot (which loads auth, fetch, settings), backup, cloud, notify, approval, health, update, ghupdate, overview, activity, passkey, vault, presets (blocked from the web)
         assets/      what every page loads: shell.js, shell.css, shell-admin.js, vendor/ (PDF, Excel and QR libraries)
         manifest.json  every file of this release with its fingerprint (made when the release is built; Updates uses it)
       media/         YOUR OWN FILES: brand (the site logo), home/photos, home/uploads, home/icons (start page) and links/icons
@@ -240,10 +240,9 @@ web/hub/core/lib/backup.php      what goes into and comes out of a backup file (
 web/hub/core/lib/cloud.php       Cloud Backup: the encrypted copy sent to a WebDAV folder, with the address checks and the clean-up of old copies
 web/hub/core/lib/notify.php      Telegram: digest, Due Now, backup reminder, login alerts, backup files, and the two-way bot
 web/hub/core/telegram.php        Telegram's instant replies (webhook), checked with a secret
-web/hub/core/cron.php            the schedule: bot messages, domain watch, reminders (the cron job in Settings > Telegram)
+web/hub/core/cron.php            the schedule: bot messages, calendars, reminders, backups (the cron job in Settings > Telegram)
 web/hub/core/lib/activity.php    login history and the list of logged-in devices (Settings > Security > Devices)
 web/hub/core/lib/approval.php    approve logins in Telegram (fallbacks: a two-step recovery code; delete site-data/core/login-approval.php)
-web/hub/core/lib/watch.php       domain, SSL and uptime watch; keeps renewal tasks in Tasks
 web/hub/core/lib/health.php      Health (Settings > Health): disk use, speed, backups and Test a Restore, PHP errors, updates
 web/hub/core/lib/ghupdate.php    Updates from GitHub: check (latest.json, API fallback), download, checksum, then update.php's check
 web/hub/core/lib/update.php      Updates: reads the zip (plain PHP), checks it, saves the current version, swaps files, rolls back, compares files

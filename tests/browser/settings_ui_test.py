@@ -150,7 +150,7 @@ try:
         pg.click('#ix-choose summary')
         check('U22 the Pages and Site switches are on, Files (when offered) is off', pg.is_checked('[data-grp=pages]') and pg.is_checked('[data-grp=site]') and not pg.evaluate("!!document.querySelector('[data-grp=files]:checked')"))
         pg.uncheck('[data-grp=site]')
-        check('U23 turning Site off clears Settings, Telegram and Domain Watch', not pg.evaluate("[...document.querySelectorAll('[data-part=settings],[data-part=telegram],[data-part=watch]')].some(c => c.checked)") and pg.evaluate("document.querySelector('[data-part=links]').checked"))
+        check('U23 turning Site off clears Settings and Telegram', not pg.evaluate("[...document.querySelectorAll('[data-part=settings],[data-part=telegram]')].some(c => c.checked)") and pg.evaluate("document.querySelector('[data-part=links]').checked"))
         pg.check('[data-grp=site]')
         hero = pg.evaluate("(() => { const h = document.querySelector('.ix-bkhero'); return [!!h, !!h && !!h.querySelector('#ix-exp'), !!document.querySelector('.ix-bkstat'), !!document.querySelector('.ix-rc #ix-every')]; })()")
         check('U21b Back Up opens with one hero box (Download Backup inside) and the reminder as a row, no three-box strip (1.77.4)', hero == [True, True, False, True], hero)

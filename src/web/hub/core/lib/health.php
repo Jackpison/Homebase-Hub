@@ -128,32 +128,41 @@ function health_leftovers(): array {
     }
     return $issues;
 }
+/** The optional update address and what the last check found: site-data/core/update-check.json (before 1.78.2 it sat in watch.json). */
+function health_upd_file(): string { return hub_dir('core') . '/update-check.json'; }
+function health_upd_load(): array {
+    $d = hub_jread(health_upd_file());
+    if ($d === null) {   // first time after 1.78.2: take the address over from the old domain-watch file, then drop that file
+        $old = hub_jread(hub_dir('core') . '/watch.json');
+        $d = ['updateUrl' => is_array($old) && is_string($old['updateUrl'] ?? null) ? $old['updateUrl'] : '', 'update' => []];
+        if (is_array($old)) { hub_jput(health_upd_file(), json_encode($d, JSON_UNESCAPED_SLASHES)); @unlink(hub_jpath(hub_dir('core') . '/watch.json')); @unlink(hub_dir('core') . '/watch.json'); }
+    }
+    return $d + ['updateUrl' => '', 'update' => []];
+}
+function health_upd_save(array $d): void { hub_jput(health_upd_file(), json_encode($d, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)); }
 /** Optional: an address that publishes {"version": "1.18.0", "notes": "...", "url": "..."}. Checked at most once a day. */
 function health_check_update(?string $url = null): array {
-    require_once __DIR__ . '/watch.php';
-    $d = wt_load();
+    $d = health_upd_load();
     if ($url !== null) {
         $url = trim($url);
         if ($url !== '' && !preg_match('~^https://[^\s<>"]+$~i', $url)) return ['err' => 'The update address must start with https://.', 'url' => $d['updateUrl']];
-        $d['updateUrl'] = $url; $d['update'] = [];
-        wt_update(function (&$x) use ($url) { $x['updateUrl'] = $url; $x['update'] = []; });
+        $d = ['updateUrl' => $url, 'update' => []]; health_upd_save($d);
     }
     if ($d['updateUrl'] === '') return ['url' => ''];
     $u = $d['update'] ?? [];
     if ($url !== null || time() - (int)($u['at'] ?? 0) > 86400) {
         $host = (string)parse_url($d['updateUrl'], PHP_URL_HOST);
-        $j = hub_public_ips($host) ? wt_json($d['updateUrl']) : null;
-        $u = $j && preg_match('/^\d+(\.\d+){1,3}$/', (string)($j['version'] ?? ''))
+        $r = hub_public_ips($host) ? hub_get_https($d['updateUrl'], ['Accept: application/json'], 2000000, 15) : null;   // every hop is pinned to a public address
+        $j = $r && $r[0] >= 200 && $r[0] < 400 ? json_decode($r[1], true) : null;
+        $u = is_array($j) && preg_match('/^\d+(\.\d+){1,3}$/', (string)($j['version'] ?? ''))
             ? ['at' => time(), 'version' => (string)$j['version'], 'notes' => mb_substr(strip_tags((string)($j['notes'] ?? '')), 0, 600), 'link' => preg_match('~^https://~', (string)($j['url'] ?? '')) ? (string)$j['url'] : '', 'err' => '']
             : ['at' => time(), 'err' => 'The update address did not answer with a version.'];
-        $d['update'] = $u; $upd = $d['updateUrl'];
-        wt_update(function (&$x) use ($u, $upd) { if ($x['updateUrl'] === $upd) $x['update'] = $u; });   // only the result: never undoes the domain list
+        $d['update'] = $u; health_upd_save($d);
     }
     return $u + ['url' => $d['updateUrl'], 'newer' => !empty($u['version']) && version_compare($u['version'], HUB, '>')];
 }
 function health_report(): array {
     require_once __DIR__ . '/notify.php';
-    require_once __DIR__ . '/watch.php';
     $sd = hub_data_root();
     $sec = [
         ['Links', $sd . '/links'], ['Info', $sd . '/info'], ['Cards', $sd . '/cards'], ['Tasks', $sd . '/tasks'], ['Files', $sd . '/files'], ['Start page data', $sd . '/home'],
@@ -187,6 +196,5 @@ function health_report(): array {
         'cron' => (int)@file_get_contents(hub_dir('core') . '/cron-last.txt'), 'reminders' => (int)$n['lastRun'],
         'bot' => ['ready' => $n['token'] !== '' && $n['chat'] !== '', 'on' => (bool)$n['on'], 'hook' => (bool)$n['hook'], 'error' => (string)$n['lastError']],
         'speed' => health_speed(), 'logs' => health_logs(), 'leftovers' => health_leftovers(), 'update' => health_check_update(null),
-        'watch' => array_map(function ($w) { return ['host' => $w['host'], 'ok' => $w['st']['ok'] ?? null, 'dom' => $w['dom']['exp'] ?? '', 'ssl' => $w['ssl']['exp'] ?? '']; }, wt_load()['sites']),
     ];
 }

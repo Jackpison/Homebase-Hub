@@ -2432,7 +2432,7 @@
 
 
   /* --- Backup --- */
-  var NAMES = { links: 'Links', info: 'Info', cards: 'Cards', tasks: 'Tasks', files: 'Files', home: 'Home', settings: 'Settings', telegram: 'Telegram', watch: 'Domain Watch', tools: 'Tools Presets' };
+  var NAMES = { links: 'Links', info: 'Info', cards: 'Cards', tasks: 'Tasks', files: 'Files', home: 'Home', settings: 'Settings', telegram: 'Telegram', tools: 'Tools Presets' };
   function size(n) { return n >= 1073741824 ? (n / 1073741824).toFixed(1) + ' GB' : n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }   // (1.61.6) GB from 1 GB up
   function openBackup() { go('backup'); }
   /* "3 days ago", "2 hours ago", "just now" */
@@ -2650,7 +2650,7 @@
             : '<p class="ix-note">Connect a Telegram bot first.</p><div class="ix-row"><button type="button" class="ix-btn pri" id="ix-tgsetup">Set Up Telegram</button></div>') + '</div>' +
         cloudCard(cl, enc) +
         '<details class="ix-more" id="ix-choose"><summary>Choose What to Include</summary>' +
-          [['pages', 'Pages', 'Links, Info, Cards, Tasks, Home and Tools presets.'], ['site', 'Site', 'Your settings, Telegram and the domain watch list.']].concat(parts.files ? [['files', 'Files', 'The files you keep on the Files page. Can be big, so it is off unless you want it.']] : []).map(function (g) {
+          [['pages', 'Pages', 'Links, Info, Cards, Tasks, Home and Tools presets.'], ['site', 'Site', 'Your settings and Telegram.']].concat(parts.files ? [['files', 'Files', 'The files you keep on the Files page. Can be big, so it is off unless you want it.']] : []).map(function (g) {
             return '<label class="ix-tg"><span>' + g[1] + '<small>' + g[2] + '</small></span><input type="checkbox" data-grp="' + g[0] + '"></label>'; }).join('') +
           '<details class="ix-more ix-onebyone"><summary>Pick Parts One by One</summary>' +
           '<div class="ix-bkh"><b>What to Include</b><span class="ix-mu"><a href="#" id="ix-bkall">All</a> · <a href="#" id="ix-bknone">None</a></span></div>' +
@@ -2710,7 +2710,7 @@
       stepper(p.querySelector('#ix-rsst'), { kind: 'numbers', linear: true, danger: true, lastId: 'ix-rsgo', lastClass: 'ix-erase',
         lastHtml: '<span class="ix-et">Erase Everything</span><span class="ix-ei" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/></svg></span>',
         steps: [
-          { title: 'What Gets Erased', html: '<p><b>This erases:</b> every page\'s data and earlier versions (Links, Info, Cards, Tasks, Start page), your pictures, icons and logo, the site settings and colors, Telegram, the domain watch list, the encryption passphrase and Telegram login approval.</p>' +
+          { title: 'What Gets Erased', html: '<p><b>This erases:</b> every page\'s data and earlier versions (Links, Info, Cards, Tasks, Start page), your pictures, icons and logo, the site settings and colors, Telegram, the encryption passphrase and Telegram login approval.</p>' +
               '<p><b>This keeps:</b> your password and two-step login, so you can log in again. Encrypted tabs cannot be opened afterwards unless you restore a backup and set the same passphrase.</p>' },
           { title: 'Back Up First', html: '<p>Everything comes back by restoring a backup file (Restore, above). <b>Download a full backup first</b>; it uses what is chosen under Back Up.</p>' +
               '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-rsbk">' + svg(ICON.down) + 'Download a Backup</button></div>' },
@@ -2740,7 +2740,7 @@
         var cs = [].slice.call(p.querySelectorAll('[data-part]')), on = cs.filter(function (c) { return c.checked; }), bytes = on.reduce(function (a, c) { return a + (+c.dataset.size || 0); }, 0), el = p.querySelector('#ix-bksum');
         if (el) el.textContent = on.length + ' of ' + cs.length + ' selected' + (bytes ? ' · about ' + size(bytes) : '');
       };
-      var GRP = { pages: ['links', 'info', 'cards', 'tasks', 'home', 'tools'], site: ['settings', 'telegram', 'watch'], files: ['files'] };
+      var GRP = { pages: ['links', 'info', 'cards', 'tasks', 'home', 'tools'], site: ['settings', 'telegram'], files: ['files'] };
       var syncGrp = function () { p.querySelectorAll('[data-grp]').forEach(function (g) { var cs = GRP[g.dataset.grp].map(function (k) { return p.querySelector('[data-part="' + k + '"]'); }).filter(Boolean); g.checked = cs.length > 0 && cs.every(function (c) { return c.checked; }); }); };
       p.querySelectorAll('[data-grp]').forEach(function (g) { g.onchange = function () { var on = g.checked; GRP[g.dataset.grp].forEach(function (k) { var c = p.querySelector('[data-part="' + k + '"]'); if (c) { c.checked = on; c.dispatchEvent(new Event('change')); } }); }; });
       p.querySelectorAll('[data-part]').forEach(function (c) { c.addEventListener('change', function () { bkSum(); syncGrp(); }); }); bkSum(); syncGrp();

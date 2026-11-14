@@ -744,45 +744,6 @@ case 'sv_save':   // {vault, prev, password}: the browser wrapped the key with t
     if ($why !== '') hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
     hub_json(200, ['ok' => true]);
 
-/* ---- Health > Domains: domain, SSL and uptime watch ---- */
-case 'watch':
-    need_admin(false);
-    require_once __DIR__ . '/lib/watch.php';
-    hub_json(200, ['ok' => true] + wt_load());
-
-case 'watch_add':
-case 'watch_set':
-case 'watch_del':
-case 'watch_check':
-case 'watch_tasks':
-    need_post(); need_admin();
-    require_once __DIR__ . '/lib/watch.php'; require_once __DIR__ . '/lib/notify.php';
-    @set_time_limit(180);
-    $b = body(); $d = wt_load(); $h = wt_host((string)($b['host'] ?? ''));
-    if ($action === 'watch_add') {
-        if ($h === '') hub_json(400, ['ok' => false, 'error' => 'Type a domain like example.com or shop.example.com.']);
-        foreach ($d['sites'] as $s) if ($s['host'] === $h) hub_json(400, ['ok' => false, 'error' => $h . ' is already on the list.']);
-        if (count($d['sites']) >= WT_MAX) hub_json(400, ['ok' => false, 'error' => 'At most ' . WT_MAX . ' domains.']);
-        $up = !empty($b['up']);
-        wt_update(function (&$x) use ($h, $up) { foreach ($x['sites'] as $s) if ($s['host'] === $h) return; $x['sites'][] = ['host' => $h, 'hosting' => '', 'up' => $up, 'dom' => [], 'ssl' => [], 'st' => []]; });
-        $d = wt_run(true, $h);   // only the new domain is checked now; the others keep their schedule
-    } elseif ($action === 'watch_set') {
-        $d = wt_update(function (&$x) use ($h, $b) {
-            foreach ($x['sites'] as &$s) if ($s['host'] === $h) {
-                if (isset($b['up'])) { $s['up'] = !empty($b['up']); if (!$s['up']) $s['st'] = []; }
-                if (isset($b['hosting'])) { $hd = (string)$b['hosting']; $s['hosting'] = preg_match('/^\d{4}-\d{2}-\d{2}$/', $hd) ? $hd : ''; }
-            }
-            unset($s);
-        });
-        wt_sync_tasks($d);
-    } elseif ($action === 'watch_del') {
-        wt_update(function (&$x) use ($h) { $x['sites'] = array_values(array_filter($x['sites'], function ($s) use ($h) { return $s['host'] !== $h; })); });
-    } elseif ($action === 'watch_tasks') {
-        $d = wt_update(function (&$x) use ($b) { foreach (['dom', 'ssl', 'host'] as $k) if (isset($b[$k])) $x['tasks'][$k] = !empty($b[$k]); });
-        wt_sync_tasks($d);
-    } else $d = wt_run(true);
-    hub_json(200, ['ok' => true] + wt_load());
-
 /* ---- Health ---- */
 case 'health':
     need_admin(false);
