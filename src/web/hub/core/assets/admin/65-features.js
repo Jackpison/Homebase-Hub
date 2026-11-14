@@ -59,6 +59,7 @@
         ["Calculators and documents", "Loans, savings, deposits, percentages, dates, units and amounts in words; invoices as PDF, text compare, Markdown and spreadsheets."],
         ["Saved presets", "Keep a signature, a watermark, a QR style, image sizes or your business details on your server, while logged in. They are in your backups too."]] }
   ];
+  FEATS.forEach(function (f) { f.c = K.pageColor(f.id); });   // (1.79.3) each page wears its own color, the one on its tab in the bar
   // (1.77.3) where each page keeps its settings: buttons on the page's Features tab that open them
   var REL = { home: [['Look', 'look'], ['Colors', 'colors'], ['Glass', 'glass']],
     links: [['Back Up Links', 'backup/overview'], ['Export Bookmarks', 'backup/export'], ['Import Bookmarks', 'backup/restore']],

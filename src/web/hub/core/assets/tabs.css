@@ -62,7 +62,7 @@ body.dragtabs,body.dragtabs *{cursor:grabbing!important}
 #hubTabDlg .hubt-prevblk{display:flex;flex-direction:column;align-items:center;gap:8px}
 #hubTabDlg .hubt-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid color-mix(in srgb,currentColor 18%,transparent);background:color-mix(in srgb,currentColor 6%,transparent);font-weight:800;letter-spacing:.02em;text-transform:uppercase}
 #hubTabDlg .hubt-pi .hubt-svg{width:18px;height:18px;display:block}
-#hubTabDlg .hubt-pl{display:grid;place-items:center;color:#ffbd1f}
+#hubTabDlg .hubt-pl{display:grid;place-items:center;color:#4a9bff}
 #hubTabDlg .hubt-pl.enc{color:#3ecf8e}
 #hubTabDlg .hubt-pl[hidden]{display:none}
 #hubTabDlg .hubt-pl svg{width:16px;height:16px}

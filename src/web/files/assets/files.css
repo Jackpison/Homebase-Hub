@@ -291,3 +291,6 @@ html[data-ix-nav="side"] .fdet{top:16px}
 
 .shend{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.shend label{color:var(--mute);font-size:13.5px}
 .fdet .pv.sum{height:110px}.fdet .pv.sum svg{width:48px;height:48px}.fdet .hint{margin:0;color:var(--mute);font-size:13.5px}
+/* (1.79.3) dragging files onto a folder, a folder in the path, or the Trash */
+.row.dragging{opacity:.45}
+.row.dropto,#crumbs button.dropto,#tabs button.dropto{outline:2px dashed var(--acc);outline-offset:-2px;background:color-mix(in srgb,var(--acc) 14%,transparent)}

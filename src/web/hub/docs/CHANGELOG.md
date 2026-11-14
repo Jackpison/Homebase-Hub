@@ -173,6 +173,12 @@ Nothing to migrate by hand unless an entry says so.
 - **Edit This Page** in the gear menu wears the page's color, like the page's own Settings item.
 - **New Tab** stays on the Links tab bar while you edit, even with all 6 tabs in use; pressing it says you can have up to 6. Before, it just disappeared.
 - In Edit Tab, **Private Tab** and **Encrypted Tab** now have a shield with a check: blue for Private, green for Encrypted.
+- **Private and encrypted tabs** have a new mark: a shield with a check, blue for Private and green for Encrypted. It shows on the tab bar of Links and Info, in the Edit Tab preview and on the two rows in Edit Tab.
+- **Links can have 20 tabs**, the same as Info (it was 6).
+- **Files: drag and drop.** Drag a file or folder onto a folder, onto a folder name in the path above the list, or onto the Trash. Drag one of several picked rows to move them all. It works with a mouse; on a phone use Move in the menu.
+- **Notifications are richer.** Settings > Logs now shows what kind of thing it was (Deleted, Added, Problem and so on), where it happened (the page, the tab and the open window) and the full date with seconds. Messages name what changed: "Tab saved: Bookmarks", "Link deleted: Router page", "Folder made: Photos", "Moved: report.pdf to Docs", "Uploaded: report.pdf".
+- **Features** uses each page's own color, the one on its tab in the bar, on its page and on its tabs.
+- The Telegram status card shows the Telegram logo.
 
 ---
 

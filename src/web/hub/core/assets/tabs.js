@@ -145,7 +145,7 @@
     var icons = '<button type="button" role="radio" class="hubt-ico" data-i="" id="htIcoDef" aria-checked="false"><span class="hubt-def">Default</span></button>' + ICONS.map(function (i) {
       return '<button type="button" role="radio" class="hubt-ico" data-i="' + i.id + '" aria-checked="false" title="' + esc(i.name) + '" aria-label="' + esc(i.name) + '">' + iconSvg(i.id, 'hubt-svg') + '</button>';
     }).join('');
-    var lockSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var lockSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4c2.3 2 5 3 8.1 3v6.2c0 4.8-3.2 8.5-8.1 10.4-4.9-1.9-8.1-5.6-8.1-10.4V5.4c3.1 0 5.8-1 8.1-3z" fill="currentColor"/><path d="M8.3 12.2l2.6 2.7 4.9-5.4" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     dlg.innerHTML = '<form method="dialog" novalidate><h3 id="htTitle">Edit Tab</h3>' +
       '<h4>Tab</h4>' +
       '<div class="hubt-block hubt-prevblk"><span class="hubt-pill" id="htPrev" title="How it looks in the tab bar"><span class="hubt-pi" id="htPrevIco"></span><b id="htPrevName"></b><span class="hubt-pl" id="htPrevLock">' + lockSvg + '</span></span></div>' +
@@ -188,7 +188,7 @@
     var c = cur.cfg, enc = $('htEnc'), priv = $('htPriv');
     enc.disabled = !!c.encWhy;
     if (enc.checked) { priv.checked = true; priv.disabled = true; } else priv.disabled = !!c.privWhy;
-    $('htPrivNote').textContent = c.privWhy || 'Gold lock. Only visible when you are logged in. Visitors never receive this tab.';
+    $('htPrivNote').textContent = c.privWhy || 'Blue shield. Only visible when you are logged in. Visitors never receive this tab.';
     prevUI();
     $('htEncNote').textContent = c.encWhy || (enc.checked ? (c.encOnNote || 'Locked in this browser with your encryption passphrase before it is saved. The server, earlier versions and backups only hold scrambled text. The tab name stays readable.') : (c.encOffNote || 'Lock it with your encryption passphrase. The tab name stays readable.'));
   }

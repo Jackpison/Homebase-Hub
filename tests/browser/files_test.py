@@ -241,6 +241,19 @@ try:
         check('B48 Move to Trash says so, with an Undo button', 'Moved to the Trash' in pg.inner_text('#ix-toast') and 'Undo' in pg.inner_text('#ix-toast'), pg.inner_text('#ix-toast'))
         pg.click('#ix-toast .ix-tact'); wait_names(pg, ['pack.zip'])
         check('B49 Undo brings it back', 'pack.zip' in names(pg))
+        # ---- (1.79.3) drag a file onto a folder, onto the path above the list, and onto the Trash ----
+        pg.reload(wait_until='domcontentloaded'); wait_names(pg, ['pack.zip', 'Docs'])   # a fresh list: nothing picked
+        n_docs = len([i for i in srv_items()[0] if i['p'] == docs])
+        row(pg, 'pack.zip').drag_to(row(pg, 'Docs')); until(lambda: 'pack.zip' not in names(pg), 10000)
+        check('B50 dragging a file onto a folder moves it there, and says so', len([i for i in srv_items()[0] if i['p'] == docs]) == n_docs + 1 and 'Moved: pack.zip to Docs' in pg.inner_text('#ix-toast'), pg.inner_text('#ix-toast'))
+        row(pg, 'Docs').locator('.nm').click(); wait_names(pg, ['pack.zip'])
+        pg.locator('#crumbs button[data-to=""]').wait_for()
+        row(pg, 'pack.zip').drag_to(pg.locator('#crumbs button[data-to=""]')); until(lambda: 'pack.zip' not in names(pg), 10000)
+        check('B51 dragging a file onto My Files in the path moves it back out', len([i for i in srv_items()[0] if i['p'] == docs]) == n_docs and 'to My Files' in pg.inner_text('#ix-toast'), pg.inner_text('#ix-toast'))
+        pg.locator('#crumbs button', has_text='My Files').click(); wait_names(pg, ['pack.zip', 'Docs'])
+        row(pg, 'pack.zip').drag_to(pg.locator('#tabs button[data-t="trash"]')); until(lambda: 'pack.zip' not in names(pg), 10000)
+        check('B52 dragging a file onto the Trash tab moves it to the Trash, with Undo', 'Moved to the Trash: pack.zip' in pg.inner_text('#ix-toast') and 'Undo' in pg.inner_text('#ix-toast'), pg.inner_text('#ix-toast'))
+        pg.click('#ix-toast .ix-tact'); wait_names(pg, ['pack.zip'])
         check('B39 no page error and no blocked request in all of it', not errs and not csp, (errs, csp))
         b.close()
 finally:

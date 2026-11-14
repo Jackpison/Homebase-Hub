@@ -9,7 +9,7 @@
 // @ts-check
 (() => {
 const API = 'api.php';
-const MAX_TABS = 6, COLS = 4;
+const MAX_TABS = 20, COLS = 4;
 const DEFAULT_COLORS = { dark: { bg: '#1a1a1a', accent: '#d9a85b' }, light: { bg: '#f4f4f5', accent: '#a5701c' } };
 // ribbon and the 4 column colors follow the accent until they're set on their own
 // [key, label, min, max, default] in px
@@ -112,8 +112,8 @@ const ICONS = {
   right: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"/></svg>',
   edit: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg>',
   del: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
-  lock: '<svg class="lock" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="#C98F00" stroke-width="2.4" stroke-linecap="round"/><rect x="4.5" y="10.5" width="15" height="10.5" rx="3" fill="#F7B500"/><rect x="4.5" y="10.5" width="15" height="3.2" rx="1.6" fill="#FFD25A" opacity=".55"/><circle cx="12" cy="15.2" r="1.7" fill="#5A3B00"/><rect x="11.2" y="15.9" width="1.6" height="3" rx=".8" fill="#5A3B00"/></svg>',   // a private tab
-  safe: '<svg class="lock" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="#13935A" stroke-width="2.4" stroke-linecap="round"/><rect x="4.5" y="10.5" width="15" height="10.5" rx="3" fill="#25C07D"/><rect x="4.5" y="10.5" width="15" height="3.2" rx="1.6" fill="#6EE0AC" opacity=".5"/><path d="M8.9 15.9l2.3 2.3 4-4.4" fill="none" stroke="#073D26" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',   // an encrypted tab
+  lock: '<svg class="lock" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 2.4c2.3 2 5 3 8.1 3v6.2c0 4.8-3.2 8.5-8.1 10.4-4.9-1.9-8.1-5.6-8.1-10.4V5.4c3.1 0 5.8-1 8.1-3z" fill="#4a9bff"/><path d="M12 2.4c2.3 2 5 3 8.1 3v6.2c0 4.8-3.2 8.5-8.1 10.4z" fill="#1c6fe8" opacity=".35"/><path d="M8.3 12.2l2.6 2.7 4.9-5.4" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',   // a private tab: a blue shield with a check (1.79.3)
+  safe: '<svg class="lock" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 2.4c2.3 2 5 3 8.1 3v6.2c0 4.8-3.2 8.5-8.1 10.4-4.9-1.9-8.1-5.6-8.1-10.4V5.4c3.1 0 5.8-1 8.1-3z" fill="#2fc983"/><path d="M12 2.4c2.3 2 5 3 8.1 3v6.2c0 4.8-3.2 8.5-8.1 10.4z" fill="#13935a" opacity=".35"/><path d="M8.3 12.2l2.6 2.7 4.9-5.4" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',   // an encrypted tab: the same shield, green (1.79.3)
   lgrip: '<svg viewBox="0 0 9 14" fill="currentColor"><circle cx="2" cy="2" r="1.3"/><circle cx="7" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="7" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="7" cy="12" r="1.3"/></svg>',
   grip: '<svg viewBox="0 0 12 16" fill="currentColor"><circle cx="3.5" cy="3" r="1.4"/><circle cx="8.5" cy="3" r="1.4"/><circle cx="3.5" cy="8" r="1.4"/><circle cx="8.5" cy="8" r="1.4"/><circle cx="3.5" cy="13" r="1.4"/><circle cx="8.5" cy="13" r="1.4"/></svg>',
   sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',
@@ -445,7 +445,7 @@ async function load() {
   }
 }
 /* (1.72.0) the Import Center hands over links (Raindrop, Pocket, bookmarks): a new private tab with a category per folder or tag (when all
-   6 tabs are in use, the categories go into the first tab that is not locked); a link already anywhere in Links is left out. With Undo. */
+   all the tabs are in use, the categories go into the first tab that is not locked); a link already anywhere in Links is left out. With Undo. */
 function takeImport() {
   const HB = /** @type {any} */ (window).HUB, p = HB && HB.importTake ? HB.importTake('links') : null;
   if (!p || !Array.isArray(p.cats)) return;
@@ -685,12 +685,12 @@ function editTab(t) {
         if (v.priv) tab.private = true; else delete tab.private;
       }
       ctl.close();
-      persist(t ? 'Tab saved' : 'Tab added');
+      persist((t ? 'Tab saved: ' : 'Tab added: ') + tab.title);
     },
     onDelete(ctl) {
       const tabs = S.data.tabs, ti = tabs.indexOf(t);   // (1.65.0) the Delete Tab button is held to confirm
       const gone = tabs.splice(ti, 1)[0]; S.tab = tabs[Math.max(0, ti - 1)].id; history.replaceState(null, '', '#' + S.tab); ctl.close(); persist('');
-      undoable('Tab deleted.', () => { tabs.splice(Math.min(ti, tabs.length), 0, gone); S.tab = gone.id; history.replaceState(null, '', '#' + S.tab); persist('Tab restored'); });
+      undoable('Tab deleted: ' + gone.title, () => { tabs.splice(Math.min(ti, tabs.length), 0, gone); S.tab = gone.id; history.replaceState(null, '', '#' + S.tab); persist('Tab restored'); });
     }
   });
 }
@@ -698,7 +698,7 @@ async function addCategory(col) {
   const t = curTab();
   const n = await askName(`Add category to ${t.title}`, '', 'Add category'); if (!n) return;
   t.categories.push({ id: uid(), title: n, links: [], col: col == null ? shortestCol(t) : col });
-  persist('Category added');
+  persist('Category added: ' + n);
 }
 
 /* (1.64.10) A category's drawn section is kept and used again while nothing it shows has changed: its links (and which objects they are, since
@@ -752,7 +752,7 @@ function renderCategory(t, cat, q, multi) {
       ib('down', 'Move Down', () => moveWithinCol(t, cat, 1) && persist('Moved'), '', pos === same.length - 1),
       ib('edit', 'Rename category', async () => { const n = await askName('Rename category', cat.title, 'Save category'); if (n) { cat.title = n; persist('Category renamed'); } }),
       ib('del', 'Delete category', () => {
-        { /* (1.65.0) held to confirm */ t.categories.splice(ci, 1); persist(''); undoable('Category deleted.', () => { t.categories.splice(Math.min(ci, t.categories.length), 0, cat); persist('Category restored'); }); }
+        { /* (1.65.0) held to confirm */ t.categories.splice(ci, 1); persist(''); undoable('Category deleted: ' + cat.title, () => { t.categories.splice(Math.min(ci, t.categories.length), 0, cat); persist('Category restored'); }); }
       }, 'del')));
 
   const ul = h('ul', { class: 'links', 'data-cat': cat.id });
@@ -778,7 +778,7 @@ function renderCategory(t, cat, q, multi) {
         ib('up', 'Move up', () => move(cat.links, i, -1) && persist('Moved')),
         ib('down', 'Move Down', () => move(cat.links, i, 1) && persist('Moved')),
         ib('edit', 'Edit link', () => openLink(cat, i)),
-        ib('del', 'Delete link', () => { { /* (1.65.0) held to confirm */ cat.links.splice(i, 1); persist(''); undoable('Link deleted.', () => { cat.links.splice(Math.min(i, cat.links.length), 0, l); persist('Link restored'); }); } }, 'del'))));
+        ib('del', 'Delete link', () => { { /* (1.65.0) held to confirm */ cat.links.splice(i, 1); persist(''); undoable('Link deleted: ' + (l.title || l.url), () => { cat.links.splice(Math.min(i, cat.links.length), 0, l); persist('Link restored'); }); } }, 'del'))));
     if (E) li.addEventListener('pointerdown', e => startLinkDrag(e, t, cat, l, li));
   }
   if (!cat.links.length) ul.append(h('li', { class: 'empty-cat' }, S.editing ? 'No links yet. Add one below.' : 'No links yet.'));

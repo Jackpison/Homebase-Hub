@@ -179,10 +179,10 @@ try:
         close()
 
         # ----- six tabs: the new-tab choice is off, existing tabs offered -----
-        s.php("""$d = hub_read_guarded(hub_dir('links') . '/bookmarks.php'); $d['tabs'][] = ['id' => 'locked1', 'title' => 'Locked Tab', 'private' => true, 'enc' => 'enc1:' . base64_encode(random_bytes(64)), 'categories' => []]; while (count($d['tabs']) < 6) $d['tabs'][] = ['id' => 'x' . count($d['tabs']), 'title' => 'Extra ' . count($d['tabs']), 'categories' => []]; hub_write_guarded(hub_dir('links') . '/bookmarks.php', $d);""")
+        s.php("""$d = hub_read_guarded(hub_dir('links') . '/bookmarks.php'); $d['tabs'][] = ['id' => 'locked1', 'title' => 'Locked Tab', 'private' => true, 'enc' => 'enc1:' . base64_encode(random_bytes(64)), 'categories' => []]; while (count($d['tabs']) < 20) $d['tabs'][] = ['id' => 'x' . count($d['tabs']), 'title' => 'Extra ' . count($d['tabs']), 'categories' => []]; hub_write_guarded(hub_dir('links') . '/bookmarks.php', $d);""")
         pg.reload(wait_until='domcontentloaded'); wait_js(pg, "!!(window.HUB && HUB.isAdmin && HUB.isAdmin()) && !!document.querySelector('#importBmBtn') && document.querySelectorAll('[data-hub=item]').length > 0", 15000)
         open_dlg()
-        check('I35 with 6 tabs (the most Links holds) the new-tab choice is off and says why', pg.is_disabled('#impToNew') and pg.is_checked('#impToTab') and '6 tabs' in pg.inner_text('#impTabNote'))
+        check('I35 with 20 tabs (the most Links holds) the new-tab choice is off and says why', pg.is_disabled('#impToNew') and pg.is_checked('#impToTab') and '20 tabs' in pg.inner_text('#impTabNote'))
         opts = pg.evaluate("[...document.querySelectorAll('#impTab option')].map(o => o.value)")
         check('I35b an encrypted tab is never offered as a target', 'locked1' not in opts and 'daily' in opts, opts)
         choose('chrome.html')

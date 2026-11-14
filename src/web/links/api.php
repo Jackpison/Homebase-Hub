@@ -27,7 +27,7 @@ declare(strict_types=1);
  *  Every POST needs the X-Requested-With: bookmarks header; changes also pass the site's security check (hub_csrf_ok).
  */
 
-const BM_MAX_TABS     = 6;
+const BM_MAX_TABS     = 20;
 const BM_MAX_BACKUPS  = 40;     // automatic backups kept in data/backups
 const BM_BACKUP_EVERY = 600;    // seconds: at most one automatic backup per 10 minutes
 const BM_GUARD        = "<?php http_response_code(404); exit; ?>\n";

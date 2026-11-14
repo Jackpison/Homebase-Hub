@@ -217,14 +217,14 @@ function bk_import(array $parts, array $pick, string $mode = 'replace'): array {
             foreach ($in['tabs'] as $t) {
                 $id = (string)($t['id'] ?? '');
                 if ($id !== '' && isset($byId[$id])) $cur['tabs'][$byId[$id]] = $t;
-                elseif (count($cur['tabs'] ?? []) < 6) $cur['tabs'][] = $t;
-                else throw new Exception('Links already has 6 tabs, the most allowed. Delete one first or use Replace.');
+                elseif (count($cur['tabs'] ?? []) < 20) $cur['tabs'][] = $t;
+                else throw new Exception('Links already has 20 tabs, the most allowed. Delete one first or use Replace.');
             }
             $new = $cur;
             // Encrypted tabs only open with the key they were locked with: this site keeps its own key, and takes the file's only when it has none.
             if (!hub_norm_vault($cur['settings']['vault'] ?? null) && ($iv = hub_norm_vault($in['settings']['vault'] ?? null))) { if (!is_array($new['settings'] ?? null)) $new['settings'] = []; $new['settings']['vault'] = $iv; }
         } else {
-            if (count($in['tabs']) > 6) throw new Exception('Links can have at most 6 tabs; this file has ' . count($in['tabs']) . '.');
+            if (count($in['tabs']) > 20) throw new Exception('Links can have at most 20 tabs; this file has ' . count($in['tabs']) . '.');
             $new = $in;
         }
         hub_links_enc_clean($new);

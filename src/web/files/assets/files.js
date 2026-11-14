@@ -281,7 +281,7 @@ function render() {
   else if (tab !== "files") cr.append(h("button", { type: "button", "aria-current": "page", text: { recent: "Recent: your newest files", shared: "Files with a share link", starred: "Starred" }[tab] }));
   else {
     const trail = [{ id: "", n: "My Files" }].concat(pathOf(cwd).map(i => ({ id: i.id, n: nameOf(i) })));
-    trail.forEach((c, k) => { if (k) cr.append(h("i", { "aria-hidden": "true", text: "/" })); cr.append(h("button", { type: "button", text: c.n, "aria-current": k === trail.length - 1 ? "page" : false, onclick: () => { if (k < trail.length - 1) { cwd = c.id; sel.clear(); render(); } } })); });
+    trail.forEach((c, k) => { if (k) cr.append(h("i", { "aria-hidden": "true", text: "/" })); cr.append(h("button", { type: "button", "data-to": c.id, text: c.n, "aria-current": k === trail.length - 1 ? "page" : false, onclick: () => { if (k < trail.length - 1) { cwd = c.id; sel.clear(); render(); } } })); });
   }
   $("empty").hidden = !(tab === "trash" && trashed().length);
   $("mk").hidden = $("up").hidden = true;   // the sidebar's New button does both
@@ -324,7 +324,7 @@ function row(i) {
     i.t === "f" && D.settings.shares ? h("button", { type: "button", class: "qb", "aria-label": "Share " + name, onclick: e => { e.stopPropagation(); shareBox(i); } }, "Share") : null,
     h("button", { type: "button", class: "ib qb", "aria-label": "Download " + name, title: "Download", onclick: e => { e.stopPropagation(); download([i.id]); } }, svg("down")),
     i.t === "f" ? h("button", { type: "button", class: "ib qb", "aria-label": ((meta(i) || {}).st ? "Unstar " : "Star ") + name, title: "Star", "aria-pressed": String(!!(meta(i) || {}).st), onclick: e => { e.stopPropagation(); star(i); } }, svg("star")) : null);
-  const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : ""), "data-id": i.id, ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); menu(more, i); } },
+  const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : ""), "data-id": i.id, draggable: tab === "trash" ? null : "true", ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); menu(more, i); } },
     ck, open, h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" : "Only you" }), h("span", { class: "cell sz num", text: isD ? "" : fmt(sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), quick, more, h("span", { class: "cell meta", text: sub }));
   if (D.settings.view === "grid") { const ic = open.querySelector(".ico"); if (ic) queueMicrotask(() => thumbWatch(ic, i)); }
   return el;
@@ -389,7 +389,7 @@ function selbtn() {
 async function star(i) {
   if (!await ensureKey()) return;
   const old = meta(i) || {}, m = await SITE.sealJson(Object.assign({}, old, { st: old.st ? 0 : 1 }));
-  await run(post("rename", { id: i.id, m }), old.st ? "Star removed." : "Starred.");
+  await run(post("rename", { id: i.id, m }), (old.st ? "Star removed: " : "Starred: ") + nameOf(i));
 }
 function newMenu() {
   closeMenu();
@@ -463,8 +463,8 @@ async function mkdir() {
   if (!await ensureKey()) return;
   const n = await nameBox("New Folder", "Folder Name", "", "Create");
   if (n == null) return;
-  const m = await SITE.sealJson({ n: uniqueName(cwd, n, "d") });
-  await run(post("mkdir", { p: cwd, m }), "Folder made.");
+  const fname = uniqueName(cwd, n, "d"), m = await SITE.sealJson({ n: fname });
+  await run(post("mkdir", { p: cwd, m }), "Folder made: " + fname);
 }
 function uniqueName(parent, name, t) {
   const have = new Set(live().filter(i => i.p === parent && i.t === t).map(nameOf));
@@ -479,7 +479,7 @@ async function rename(i) {
   if (n == null || n === nameOf(i)) return;
   const old = meta(i) || {};
   const m = await SITE.sealJson(Object.assign({}, old, { n }));
-  await run(post("rename", { id: i.id, m }), "Renamed.");
+  await run(post("rename", { id: i.id, m }), "Renamed: " + nameOf(i) + " to " + n);
 }
 function folderPicker(skip, current) {
   const skipSet = new Set(); for (const id of skip) { skipSet.add(id); (function walk(x) { for (const k of kidsOf(x)) if (k.t === "d") { skipSet.add(k.id); walk(k.id); } })(id); }
@@ -489,19 +489,53 @@ function folderPicker(skip, current) {
 }
 async function moveBox(ids) {
   if (!await ensureKey()) return;
-  let to = cwd;
+  let to = cwd; const what = ids.length === 1 ? nameOf(byId.get(ids[0])) : ids.length + " items";
   const box = h("div", { class: "pick", role: "group", "aria-label": "Folders" });
   const draw = () => { box.replaceChildren(...folderPicker(ids).map(f => h("button", { type: "button", "aria-pressed": String(f.id === to), style: "padding-left:" + (12 + f.d * 18) + "px", onclick: () => { to = f.id; draw(); } }, svg("folder", "i"), f.n))); };
   draw();
   await openDialog("Move " + (ids.length === 1 ? nameOf(byId.get(ids[0])) : ids.length + " Items"), [h("p", { text: "Pick the folder to move it into." }), box], [cancelBtn, { text: "Move Here", pri: true, run: async () => {
     const j = await post("move", { ids, p: to }); if (!j.ok) { derr(j.error); return false; }
-    sel.clear(); await refresh(); toast("Moved.");
+    sel.clear(); await refresh(); toast("Moved: " + what + (to === cwd ? "" : " to " + ((folderPicker(ids).filter(f => f.id === to)[0] || {}).n || "the folder")));
   } }]);
+}
+/* (1.79.3) Drag files and folders onto a folder, a folder name in the path above the list, or the Trash. A picked row drags everything picked. */
+async function moveTo(ids, to) {
+  const what = ids.length === 1 ? nameOf(byId.get(ids[0])) : ids.length + " items", dest = to ? nameOf(byId.get(to)) : "My Files";
+  const j = await post("move", { ids, p: to });
+  if (!j.ok) { toast(j.error || "That did not work.", true); return; }
+  sel.clear(); await refresh(); toast("Moved: " + what + " to " + dest);
+}
+function dragSetup() {
+  let ids = null, over = null;
+  const target = e => {
+    if (!ids) return null;
+    const r = e.target.closest ? e.target.closest(".row[data-id]") : null;
+    if (r) { const f = byId.get(r.dataset.id); return f && f.t === "d" && !ids.includes(f.id) ? { el: r, to: f.id } : null; }
+    const c = e.target.closest ? e.target.closest("#crumbs button[data-to]") : null;
+    if (c && c.getAttribute("aria-current") !== "page") return { el: c, to: c.dataset.to };
+    const t = e.target.closest ? e.target.closest('#tabs button[data-t="trash"]') : null;
+    return t ? { el: t, to: null } : null;
+  };
+  const clear = () => { if (over) over.classList.remove("dropto"); over = null; };
+  document.addEventListener("dragstart", e => {
+    const r = e.target.closest ? e.target.closest(".row[data-id]") : null; if (!r || tab === "trash" || !byId.has(r.dataset.id)) return;
+    ids = sel.has(r.dataset.id) ? [...sel] : [r.dataset.id];
+    e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("application/x-hub-files", JSON.stringify(ids));
+    for (const x of document.querySelectorAll(".row[data-id]")) x.classList.toggle("dragging", ids.includes(x.dataset.id));
+  });
+  document.addEventListener("dragend", () => { ids = null; clear(); for (const x of document.querySelectorAll(".row.dragging")) x.classList.remove("dragging"); });
+  document.addEventListener("dragover", e => { const t = target(e); if (!t) { clear(); return; } e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (over !== t.el) { clear(); over = t.el; over.classList.add("dropto"); } });
+  document.addEventListener("drop", e => {
+    const t = target(e); if (!t) return; e.preventDefault(); const go = ids; ids = null; clear();
+    for (const x of document.querySelectorAll(".row.dragging")) x.classList.remove("dragging");
+    if (t.to == null) trash(go); else moveTo(go, t.to);
+  });
 }
 async function trash(ids) {
   sel.clear();
+  const what = ids.length === 1 ? nameOf(byId.get(ids[0])) : ids.length + " items";
   if (!await run(post("trash", { ids }), "")) return;
-  const msg = ids.length === 1 ? "Moved to the Trash." : "Moved to the Trash: " + ids.length + " items.";
+  const msg = "Moved to the Trash: " + what;
   if (window.HUB) HUB.undo(msg, () => restore(ids)); else toast(msg);
 }
 async function restore(ids) { sel.clear(); await run(post("restore", { ids }), "Restored."); }
@@ -650,7 +684,7 @@ async function doUploads(jobs, base) {
     }
     return parent;
   };
-  let okN = 0;
+  let okN = 0, okName = "";
   const one = async j => {
     const c = j.card;
     if (!c) { await folderFor(j.e.parts); return; }   // an empty folder that was dropped
@@ -658,13 +692,13 @@ async function doUploads(jobs, base) {
     c.retry = () => { c.stopped = false; c.frac = 0; c.got = 0; c.set("wait", "Ready to upload"); queue = queue.then(() => one(j)).then(() => refresh()).catch(e => toast(e.message || "Upload stopped.", true)); };
     try {
       c.set("lock", "Locking in your browser");
-      const parent = await folderFor(j.e.parts); await uploadOne(j.e.file, parent, c); okN++;
+      const parent = await folderFor(j.e.parts); await uploadOne(j.e.file, parent, c); okN++; okName = j.e.file.name;
       c.done("Uploaded · " + fmt(j.e.file.size));
     } catch (x) { if (c.stopped) c.set("stop", "Stopped. Nothing was kept."); else c.fail(why(x) || "Upload failed. Try again."); }
   };
   for (const j of jobs) await one(j);
   await refresh();
-  if (okN) toast(okN === 1 ? "Uploaded." : "Uploaded " + okN + " files.");
+  if (okN) toast(okN === 1 ? "Uploaded: " + okName : "Uploaded " + okN + " files, the last one " + okName);
 }
 async function uploadOne(file, parent, p) {
   const raw = crypto.getRandomValues(new Uint8Array(32)), fk = await fileKey(raw, ["encrypt"]);
@@ -847,6 +881,7 @@ function wire() {
   $("vsw").onclick = e => { const b = e.target.closest("button"); if (!b) return; D.settings.view = b.dataset.v; render(); post("settings", { settings: { view: b.dataset.v } }); };
   $("sort").onchange = e => { D.settings.sort = e.target.value; render(); post("settings", { settings: { sort: e.target.value } }); };
   let qt; $("q").oninput = e => { clearTimeout(qt); qt = setTimeout(() => { q = e.target.value.trim(); if (q && tab !== "files") tab = "files"; render(); }, 120); };
+  dragSetup();
   const dz = $("drop"); let depth = 0;
   window.addEventListener("dragenter", e => { if ([...(e.dataTransfer?.types || [])].includes("Files")) { depth++; dz.classList.add("over"); } });
   window.addEventListener("dragleave", () => { depth = Math.max(0, depth - 1); if (!depth) dz.classList.remove("over"); });

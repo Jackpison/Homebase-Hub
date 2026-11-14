@@ -952,3 +952,15 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 
 /* (1.79.0) Settings > Features: the switches for turning pages off */
 #ix-page .ix-offl{display:grid;gap:4px}
+
+/* (1.79.3) a Features page tab wears the page's own color */
+#ix-page .ix-subt button[data-grp^="ft-"]::before{content:"";display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--sc);vertical-align:1px}
+#ix-page .ix-subt button[data-grp^="ft-"][aria-selected="true"]{box-shadow:0 1px 3px rgba(0,0,0,.35),inset 0 0 0 1px color-mix(in srgb,var(--sc) 70%,transparent)}
+#ix-page .ix-hero-i.tg{background:linear-gradient(160deg,#37aee2,#1e96c8);color:#fff;box-shadow:0 8px 20px -8px rgba(34,158,217,.7)}
+#ix-page .ix-hero-i.tg svg{fill:currentColor;stroke:none;width:32px;height:32px;margin-left:-2px}
+/* (1.79.3) Notifications in Logs: kind, where it happened, the detail, and the full date */
+#ix-page .ix-lgt{min-width:0}
+#ix-page .ix-lgt small{display:block;line-height:1.5}
+#ix-page .ix-lgd{display:block;font-style:normal;font-size:13px;color:var(--ix-mu);margin:2px 0 3px;overflow-wrap:anywhere}
+#ix-page .ix-lgk{display:inline-block;margin-right:8px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--ix-soft);color:var(--ix-accent-tx)}
+#ix-page .ix-lgk.bad{background:color-mix(in srgb,var(--ix-bad,#e5484d) 18%,transparent);color:var(--ix-bad,#ff8a8f)}

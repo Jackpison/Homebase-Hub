@@ -115,6 +115,12 @@ try:
         ok = at('#logsign', "document.querySelectorAll('#ix-pc .ix-chkrow').length >= 3")
         rows = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-chkrow b')].map(b => b.textContent)")
         check('S10e Logs > Activity (1.78.0, was Sign-Ins) lists what was done, with what it was about', ok and 'Backup: downloaded: links' in rows and 'Settings Saved: theme, accent color' in rows and 'Site Updated: 1.77.5 to 1.78.0' in rows and at('#logs', tabs + " === 'Notifications|Activity|PHP Errors'"), rows)
+        # (1.79.3) Notifications keep more: the kind, where it happened, the detail and the full date with seconds
+        pg.evaluate("HUB.toast('Link deleted: Router page', false, false, null, 'It was in the Home category')")
+        at('#logs', "!!document.querySelector('#ix-pc .ix-lgr .ix-lgk')"); pg.reload(wait_until='domcontentloaded')
+        ok = at('#logs', "[...document.querySelectorAll('#ix-pc .ix-lgr')].some(r => r.innerText.includes('Router page'))")
+        row1 = pg.evaluate("([...document.querySelectorAll('#ix-pc .ix-lgr')].find(r => r.innerText.includes('Router page')) || {innerText: ''}).innerText")
+        check('S10f Logs > Notifications shows what kind it was, where, the detail and the full date with seconds', ok and 'Link deleted: Router page' in row1 and 'Deleted' in row1 and 'It was in the Home category' in row1 and re.search(r'20\d\d.*\d:\d\d:\d\d', row1.replace('\n', ' ')) is not None, row1)
         # (1.79.0) Clear needs the website password; a wrong one clears nothing, the right one leaves a single "Activity Cleared" line
         at('#logsign', "!!document.querySelector('#ix-actgo') && !document.querySelector('#ix-actgo').disabled")
         pg.click('#ix-actgo'); pg.fill('#ix-actpw', 'not my password'); pg.click('#ix-actgo')

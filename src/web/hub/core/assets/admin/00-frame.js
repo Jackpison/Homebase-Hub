@@ -274,7 +274,7 @@
     var first = function (g) { return subs.filter(function (t) { return grpOf(t) === g; })[0][0]; };
     var inG = subs.filter(function (t) { return grpOf(t) === cg; });
     return (groups.length > 1 ? '<div class="ix-subt" role="tablist">' + groups.map(function (g) {
-        return '<button type="button" role="tab" data-grp="' + first(g) + '" aria-selected="' + (g === cg) + '">' + esc(g) + '</button>'; }).join('') + '<i class="ix-subi"></i></div>' : '') +
+        return '<button type="button" role="tab" data-grp="' + first(g) + '"' + (/^ft-/.test(first(g)) ? ' style="--sc:' + K.pageColor(first(g).slice(3)) + '"' : '') + ' aria-selected="' + (g === cg) + '">' + esc(g) + '</button>'; }).join('') + '<i class="ix-subi"></i></div>' : '') +
       (inG.length > 1 ? '<div class="ix-seg ix-subseg" role="tablist" aria-label="' + esc(cg) + '">' + inG.map(function (t) {
         return '<button type="button" role="tab" data-sub="' + t[0] + '" aria-selected="' + (t[0] === sub) + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>' : '');
   }

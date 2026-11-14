@@ -274,7 +274,7 @@
     var first = function (g) { return subs.filter(function (t) { return grpOf(t) === g; })[0][0]; };
     var inG = subs.filter(function (t) { return grpOf(t) === cg; });
     return (groups.length > 1 ? '<div class="ix-subt" role="tablist">' + groups.map(function (g) {
-        return '<button type="button" role="tab" data-grp="' + first(g) + '" aria-selected="' + (g === cg) + '">' + esc(g) + '</button>'; }).join('') + '<i class="ix-subi"></i></div>' : '') +
+        return '<button type="button" role="tab" data-grp="' + first(g) + '"' + (/^ft-/.test(first(g)) ? ' style="--sc:' + K.pageColor(first(g).slice(3)) + '"' : '') + ' aria-selected="' + (g === cg) + '">' + esc(g) + '</button>'; }).join('') + '<i class="ix-subi"></i></div>' : '') +
       (inG.length > 1 ? '<div class="ix-seg ix-subseg" role="tablist" aria-label="' + esc(cg) + '">' + inG.map(function (t) {
         return '<button type="button" role="tab" data-sub="' + t[0] + '" aria-selected="' + (t[0] === sub) + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>' : '');
   }
@@ -1114,7 +1114,7 @@
       var bkTxt = BK_TXT[n.bkEvery] || 'Off';
       var now = n.now || Math.floor(Date.now() / 1000), running = n.cronLast && now - n.cronLast < 1800;
       var toggle = function (k, title, hint, on, dis) { return '<label class="ix-tg"><span>' + title + '<small>' + hint + '</small></span><input type="checkbox" data-k="' + k + '"' + (on ? ' checked' : '') + (dis ? ' disabled' : '') + '></label>'; };
-      var hero = '<div class="ix-hero"><span class="ix-hero-i ' + (ready ? (running ? 'good' : 'warn') : 'warn') + '">' + svg(ICON.send) + '</span><div class="ix-hero-t"><div class="ix-hero-h">' +
+      var hero = '<div class="ix-hero"><span class="ix-hero-i tg" title="' + (ready ? (running ? 'Working' : 'Needs a look') : 'Not connected yet') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 3.4 2.9 10.6c-1.3.5-1.2 1.2-.2 1.5l4.8 1.5 1.9 5.7c.2.6.1.8.7.8.4 0 .7-.2 1-.5l2.3-2.2 4.8 3.5c.9.5 1.5.2 1.7-.8l3-14.7c.3-1.2-.5-1.7-1.3-1.4zM8.4 13.1l9.9-6.2c.5-.3.9-.1.5.2L10.6 14l-.3 3.6z"/></svg></span><div class="ix-hero-t"><div class="ix-hero-h">' +
         (ready ? 'Connected to ' + esc(n.chatName || n.chat) : n.hasToken ? 'One More Step: Connect Your Chat' : 'Connect Your Telegram Bot') + '</div><p>' +
         (ready ? (running ? 'Your bot is working and the schedule is running.' : 'Your bot is connected, but the schedule needs a look (see Right Now below).') : 'Reminders, login alerts and backups, sent to your phone by your own bot. It takes about two minutes.') + '</p>' +
         (ready ? '' : '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn pri" data-go="bot">' + (n.hasToken ? 'Continue Setup' : 'Start Setup') + '</button></div>') + '</div></div>';
@@ -1513,6 +1513,7 @@
         ["Calculators and documents", "Loans, savings, deposits, percentages, dates, units and amounts in words; invoices as PDF, text compare, Markdown and spreadsheets."],
         ["Saved presets", "Keep a signature, a watermark, a QR style, image sizes or your business details on your server, while logged in. They are in your backups too."]] }
   ];
+  FEATS.forEach(function (f) { f.c = K.pageColor(f.id); });   // (1.79.3) each page wears its own color, the one on its tab in the bar
   // (1.77.3) where each page keeps its settings: buttons on the page's Features tab that open them
   var REL = { home: [['Look', 'look'], ['Colors', 'colors'], ['Glass', 'glass']],
     links: [['Back Up Links', 'backup/overview'], ['Export Bookmarks', 'backup/export'], ['Import Bookmarks', 'backup/restore']],
@@ -3037,9 +3038,10 @@
         '<span class="ix-note" style="margin:0">' + list.length + (list.length === 1 ? ' message' : ' messages') + '</span><button type="button" class="ix-btn" id="ix-lgclr"' + (all.length ? '' : ' disabled') + '>Clear</button></div>' +
         (list.length ? '<div class="ix-lg">' + list.map(function (n) {
           var d = LOGDAY(n.ts), head = d !== day ? '<div class="ix-sect">' + esc(d) + '</div>' : ''; day = d;
-          return head + '<div class="ix-lgr">' + K.noteTile(n.k && ICON && K.noteKind ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-lgt"><b></b><small>' + esc(n.s || '') + ' · ' + esc(new Date(n.ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })) + '</small></div></div>'; }).join('') + '</div>'
+          return head + '<div class="ix-lgr">' + K.noteTile(n.k && ICON && K.noteKind ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-lgt"><b></b><i class="ix-lgd"></i><small><span class="ix-lgk' + (n.b ? ' bad' : '') + '">' + esc(K.noteLabel(n.k || (n.b ? 'bad' : 'ok'))) + '</span>' + esc(n.p || n.s || '') + (n.w ? ' · ' + esc(n.w) : '') + '</small><small>' + esc(new Date(n.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '</small></div></div>'; }).join('') + '</div>'
           : '<div class="ix-empty"><b>' + (only ? 'No Problems' : 'Nothing Yet') + '</b><p>' + (only ? 'Nothing has gone wrong on this device.' : 'Messages appear here as the site shows them.') + '</p></div>');
       [].forEach.call(p.querySelectorAll('.ix-lgr .ix-lgt b'), function (b, i) { b.textContent = list[i].m; });
+      [].forEach.call(p.querySelectorAll('.ix-lgr .ix-lgd'), function (d, i) { if (list[i].d) d.textContent = list[i].d; else d.remove(); });
       p.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { only = b.dataset.f === 'bad'; draw(); }; });
       var c = p.querySelector('#ix-lgclr'); if (c) c.onclick = function () { K.noteLogClear(); all = []; draw(); };
     };

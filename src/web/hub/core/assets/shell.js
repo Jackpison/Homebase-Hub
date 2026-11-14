@@ -378,6 +378,13 @@
     if (/added|created|uploaded|imported|new /.test(m)) return 'plus';
     return 'ok';
   }
+  /* (1.79.3) a richer record: what kind of thing it was, where on the site it happened (page, tab, open window) and a detail line when the page gives one */
+  var NOTE_LABEL = { ok: 'Done', bad: 'Problem', act: 'Can be undone', del: 'Deleted', box: 'Backup', send: 'Sent', copy: 'Copied', lock: 'Security', sync: 'Updated', plus: 'Added' };
+  function noteWhere() {
+    var tab = document.querySelector('.tabi.on .tab, .tab.active, .tab[aria-selected="true"]'), dl = [].slice.call(document.querySelectorAll('dialog[open]')).pop(), h = dl && dl.querySelector('h3, h2');
+    var t = tab && (tab.querySelector('span:not(.tslot):not(.lk)') || tab).textContent.trim().slice(0, 40), w = h && h.textContent.trim().slice(0, 40);
+    return { p: (NOTE_SRC[APP] || 'Homebase Hub') + (t ? ' › ' + t : ''), w: w && w !== t ? w : '' };
+  }
   /* (1.77.2) every message is also kept on this device (the last 300, in Settings > Logs), after the tab and its short list are gone */
   function noteLogGet() { try { return (JSON.parse(ls.get('hub-notelog') || '[]') || []).filter(function (n) { return n && typeof n.m === 'string'; }); } catch (e) { return []; } }
   function noteLogAdd(e) { try { var a = noteLogGet(); a.push(e); ls.set('hub-notelog', JSON.stringify(a.slice(-300))); } catch (x) {} }
@@ -401,7 +408,7 @@
     noteSeen = noteHist.length; noteSave(); noteBell();
     var l = document.createElement('div'); l.id = 'ix-nlist'; l.setAttribute('role', 'dialog'); l.setAttribute('aria-label', 'Messages');
     l.innerHTML = '<div class="ix-nlh"><b>Messages</b><span>' + (noteHist.length ? 'This tab, newest first' : 'Nothing yet') + '</span><button type="button" class="ix-nlc" ' + (noteHist.length ? '' : 'hidden ') + 'data-clear>Clear</button><button type="button" class="ix-nlx" aria-label="Close">×</button></div><div class="ix-nlb">' +
-      noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '">' + noteTile(n.k && NOTE_ICON[n.k] ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
+      noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '">' + noteTile(n.k && NOTE_ICON[n.k] ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.p || n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
     [].forEach.call(l.querySelectorAll('.ix-nm'), function (m, i) { m.textContent = noteHist[noteHist.length - 1 - i].m; });
     document.body.appendChild(l);
     l.querySelector('.ix-nlx').onclick = function () { l.remove(); };
@@ -420,7 +427,7 @@
       if (d) ch.animate([{ translate: '0 ' + d + 'px' }, { translate: '0 0' }], { duration: 450, easing: 'cubic-bezier(.3,1.25,.5,1)' });
     });
   }
-  function toast(msg, bad, sticky, act) {
+  function toast(msg, bad, sticky, act, detail) {
     msg = String(msg == null ? '' : msg); if (!msg) return;
     var t = document.getElementById('ix-toast');
     if (!t) { t = document.createElement('div'); t.id = 'ix-toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); }
@@ -431,13 +438,13 @@
     var same = [].filter.call(t.children, function (c) { return c.dataset.msg === msg; })[0];   // the same message again: one card, kept longer
     if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
     else {
-      var e = { m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', ts: Date.now() };
+      var wh = noteWhere(), e = { m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', ts: Date.now(), p: wh.p, w: wh.w, d: detail ? String(detail).slice(0, 200) : '' };
       noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteSave();
       if (!NOTE_HINT.test(msg)) noteLogAdd(e);   // (1.78.0) a hint ("Hold the button down to confirm.") is shown, but it is not something that got done: it stays out of Settings > Logs
     }
     var c = document.createElement('div'), kind = noteKind(msg, bad, act);
     c.className = 'ix-nc' + (bad ? ' bad' : ''); c.dataset.msg = msg;
-    c.innerHTML = noteTile(kind) + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(NOTE_SRC[APP] || 'Homebase Hub') + ' · now</small></div><button type="button" class="ix-nx" aria-label="Close message">×</button>';
+    c.innerHTML = noteTile(kind) + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(noteWhere().p) + ' · now</small></div><button type="button" class="ix-nx" aria-label="Close message">×</button>';
     c.querySelector('.ix-nm').textContent = msg;
     var gone = function () { clearTimeout(+c.dataset.tm); c.classList.remove('in'); setTimeout(function () { flip(t, function () { c.remove(); }); if (!t.querySelector('.ix-nc')) { t.classList.remove('on'); } noteBell(); }, 160); };
     var arm = function (ms) { clearTimeout(+c.dataset.tm); if (!sticky) c.dataset.tm = String(setTimeout(gone, ms)); };
@@ -1753,7 +1760,7 @@
 
 
   /* what shell-admin.js may use (it holds this same S object, so it always sees the current state) */
-  window.__ixShell = { S: S, esc: esc, toast: toast, noteLog: noteLogGet, noteLogClear: noteLogClear, noteTile: noteTile, noteKind: noteKind, legacyCopy: legacyCopy, api: api, ICON: ICON, dollar: $, svg: svg, drawBar: drawBar, redraw: function () { lastBar = ''; drawBar(); },
+  window.__ixShell = { S: S, esc: esc, toast: toast, noteLog: noteLogGet, noteLogClear: noteLogClear, noteTile: noteTile, noteKind: noteKind, noteLabel: function (k) { return NOTE_LABEL[k] || 'Done'; }, legacyCopy: legacyCopy, api: api, ICON: ICON, dollar: $, svg: svg, drawBar: drawBar, redraw: function () { lastBar = ''; drawBar(); },
     remember: remember, applySizes: applySizes, APP: APP, openDlg: openDlg, closeDlg: closeDlg, login: login, ROOT: ROOT, applyFont: applyFont,
     applyColors: applyColors, applyAttrs: applyAttrs, PG_APPS: PG_APPS, CORE: CORE, ASSETS: ASSETS, COLOR_DEFAULT: COLOR_DEFAULT, setTheme: setTheme, pageList: pageList,
     applyFavicon: applyFavicon, SIZE_SPEC: SIZE_SPEC, PAGE_DEF: PAGE_DEF, FONTS: FONTS, COLOR_KEYS: COLOR_KEYS, when: when, previewWith: previewWith,

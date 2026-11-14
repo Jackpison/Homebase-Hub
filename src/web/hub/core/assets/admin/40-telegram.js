@@ -35,7 +35,7 @@
       var bkTxt = BK_TXT[n.bkEvery] || 'Off';
       var now = n.now || Math.floor(Date.now() / 1000), running = n.cronLast && now - n.cronLast < 1800;
       var toggle = function (k, title, hint, on, dis) { return '<label class="ix-tg"><span>' + title + '<small>' + hint + '</small></span><input type="checkbox" data-k="' + k + '"' + (on ? ' checked' : '') + (dis ? ' disabled' : '') + '></label>'; };
-      var hero = '<div class="ix-hero"><span class="ix-hero-i ' + (ready ? (running ? 'good' : 'warn') : 'warn') + '">' + svg(ICON.send) + '</span><div class="ix-hero-t"><div class="ix-hero-h">' +
+      var hero = '<div class="ix-hero"><span class="ix-hero-i tg" title="' + (ready ? (running ? 'Working' : 'Needs a look') : 'Not connected yet') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 3.4 2.9 10.6c-1.3.5-1.2 1.2-.2 1.5l4.8 1.5 1.9 5.7c.2.6.1.8.7.8.4 0 .7-.2 1-.5l2.3-2.2 4.8 3.5c.9.5 1.5.2 1.7-.8l3-14.7c.3-1.2-.5-1.7-1.3-1.4zM8.4 13.1l9.9-6.2c.5-.3.9-.1.5.2L10.6 14l-.3 3.6z"/></svg></span><div class="ix-hero-t"><div class="ix-hero-h">' +
         (ready ? 'Connected to ' + esc(n.chatName || n.chat) : n.hasToken ? 'One More Step: Connect Your Chat' : 'Connect Your Telegram Bot') + '</div><p>' +
         (ready ? (running ? 'Your bot is working and the schedule is running.' : 'Your bot is connected, but the schedule needs a look (see Right Now below).') : 'Reminders, login alerts and backups, sent to your phone by your own bot. It takes about two minutes.') + '</p>' +
         (ready ? '' : '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn pri" data-go="bot">' + (n.hasToken ? 'Continue Setup' : 'Start Setup') + '</button></div>') + '</div></div>';
