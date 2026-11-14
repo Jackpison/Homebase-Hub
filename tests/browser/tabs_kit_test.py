@@ -149,6 +149,12 @@ try:
         pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('hubTabDlg').open"), 5000)
         div = pg.evaluate("(() => { var t = document.querySelectorAll('#tabs > .tabi'); return t.length < 2 ? '' : getComputedStyle(t[1], '::before').width + '|' + getComputedStyle(t[1], '::before').content; })()")
         check('K23 Info: a grey divider sits between one tab and the next', div == '1px|""', div)
+        # (1.79.3) Links at its limit of 6 tabs: New Tab stays on the bar and says why
+        lk = s.req(s.site_base + '/web/links/api.php?action=get'); data = lk['data']
+        while len(data['tabs']) < 6: data['tabs'].append({'id': 'zz%06d' % len(data['tabs']), 'title': 'Extra %d' % len(data['tabs']), 'categories': []})
+        s.req(s.site_base + '/web/links/api.php?action=save', data=json.dumps({'data': data, 'rev': lk.get('rev')}).encode(), method='POST', hdr={'Content-Type': 'application/json', 'X-Hub-CSRF': s.csrf, 'X-Requested-With': 'bookmarks'})
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "document.querySelectorAll('#tabs .tab:not(.add)').length >= 6", 20000); edit_on()
+        check('K24 Links with 6 tabs still shows New Tab, and pressing it says the limit', pg.evaluate("!!document.querySelector('#tabs .tab.add')") and (pg.click('#tabs .tab.add') or True) and until(lambda: 'up to 6 tabs' in pg.inner_text('body'), 5000))
         check('K17 no page errors', not errs, errs)
         b.close()
 finally:

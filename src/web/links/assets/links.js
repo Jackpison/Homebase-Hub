@@ -648,7 +648,7 @@ function renderTabs() {
         h('span', { class: 'tslot', 'aria-label': t.private ? (t.encrypted ? 'encrypted' : 'private') : null, title: t.private ? (t.encrypted ? 'Encrypted: locked with your passphrase' : 'Private: visible only when logged in') : null, html: t.private ? (t.encrypted ? ICONS.safe : ICONS.lock) : '' })),
       h('button', { class: 'pen', type: 'button', title: 'Edit Tab', 'aria-label': 'Edit tab ' + t.title, html: ICONS.edit, onclick: () => { if (!tabDrag.justDragged()) editTab(t); } })));
   });
-  if (S.editing && tabs.length < MAX_TABS) wrap.append(h('button', { class: 'tab add', type: 'button', onclick: addTab }, ribbon(true), 'New tab'));
+  if (S.editing) wrap.append(h('button', { class: 'tab add', type: 'button', onclick: addTab, title: tabs.length >= MAX_TABS ? `You can have up to ${MAX_TABS} tabs` : 'New tab' }, ribbon(true), 'New tab'));   // (1.79.3) still there at the limit: it says why instead of vanishing
   const act = wrap.querySelector('.tab.active');
   if (act && wrap.scrollWidth > wrap.clientWidth) act.scrollIntoView({ block: 'nearest', inline: 'center' });
 }
