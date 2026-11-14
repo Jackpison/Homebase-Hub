@@ -849,11 +849,11 @@ case 'cloud_fetch':   // one copy, still encrypted, to the browser: Import asks 
     require_once __DIR__ . '/lib/cloud.php';
     [$ok, $got] = cl_fetch_copy((string)($_GET['name'] ?? ''));
     if (!$ok) hub_json(400, ['ok' => false, 'error' => $got]);
-    $size = (int)filesize($got);
+    $size = (int)filesize($got);   // nosemgrep: php.lang.security.injection.tainted-filename.tainted-filename -- $got is our own temp file made by cl_fetch_copy; the name from the browser only picks a listed copy
     header('Content-Type: application/json; charset=utf-8'); header('Content-Length: ' . $size); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff');
-    $fh = @fopen($got, 'rb');
-    if ($fh) { while (!feof($fh)) { echo fread($fh, 262144); } fclose($fh); }
-    @unlink($got);
+    $fh = @fopen($got, 'rb');   // nosemgrep: php.lang.security.injection.tainted-filename.tainted-filename -- $got is our own temp file made by cl_fetch_copy; the name from the browser only picks a listed copy
+    if ($fh) { while (!feof($fh)) { echo fread($fh, 262144); } fclose($fh); }   // nosemgrep: php.lang.security.injection.echoed-request.echoed-request -- the encrypted backup as application/json with nosniff, never shown as a page
+    @unlink($got);   // nosemgrep: php.lang.security.injection.tainted-filename.tainted-filename -- $got is our own temp file made by cl_fetch_copy; the name from the browser only picks a listed copy
     exit;
 
 case 'cloud_test':

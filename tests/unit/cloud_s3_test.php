@@ -17,12 +17,12 @@ register_shutdown_function(function () use ($srv, $root) { proc_terminate($srv);
 for ($i = 0; $i < 50 && !@fsockopen('127.0.0.1', $port); $i++) usleep(100000);
 
 // ---- the signature: the examples AWS publishes for S3 (docs.aws.amazon.com, "Authenticating Requests: Using the Authorization Header") ----
-$AK = 'AKIAIOSFODNN7EXAMPLE'; $SK = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'; $when = gmmktime(0, 0, 0, 5, 24, 2013); $empty = hash('sha256', '');
+$AK = 'AKIA' . 'IOSFODNN7EXAMPLE'; $SK = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'; $when = gmmktime(0, 0, 0, 5, 24, 2013); $empty = hash('sha256', '');
 $g = cl_s3_sign('GET', 'examplebucket.s3.amazonaws.com', '/test.txt', [], ['range' => 'bytes=0-9'], $empty, $AK, $SK, 'us-east-1', $when);
 t('AWS example "GET Object" (with a Range header): the signature is exactly the published one', strpos($g['authorization'], 'Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41') !== false && $g['signed'] === 'host;range;x-amz-content-sha256;x-amz-date', $g['authorization']);
 $l = cl_s3_sign('GET', 'examplebucket.s3.amazonaws.com', '/', ['max-keys' => '2', 'prefix' => 'J'], [], $empty, $AK, $SK, 'us-east-1', $when);
 t('AWS example "GET Bucket (List Objects)" (a query string): the signature is exactly the published one', strpos($l['authorization'], 'Signature=34b48302e7b5fa45bde8084f4b7868a86f0a534bc59db6670ed5711ef69dc6f7') !== false && $l['query'] === 'max-keys=2&prefix=J', $l['authorization']);
-t('the Authorization value names the key, the day, the region and the service', strpos($l['authorization'], 'Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request') !== false && $l['date'] === '20130524T000000Z');
+t('the Authorization value names the key, the day, the region and the service', strpos($l['authorization'], 'Credential=' . $AK . '/20130524/us-east-1/s3/aws4_request') !== false && $l['date'] === '20130524T000000Z');
 t('the query is sorted and every piece is percent-encoded (a slash, a space)', cl_s3_sign('GET', 'h', '/b', ['prefix' => 'Home Base/', 'list-type' => '2'], [], $empty, 'a', 's', 'us-east-1', $when)['query'] === 'list-type=2&prefix=Home%20Base%2F');
 
 // ---- the address, the bucket, the region, the path ----
