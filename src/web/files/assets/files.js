@@ -507,24 +507,27 @@ async function moveTo(ids, to) {
 }
 function dragSetup() {
   let ids = null, over = null;
+  /** @param {Event} e */
   const target = e => {
     if (!ids) return null;
-    const r = e.target.closest ? e.target.closest(".row[data-id]") : null;
+    const at = /** @type {Element | null} */ (e.target);
+    const r = /** @type {HTMLElement | null} */ (at && at.closest ? at.closest(".row[data-id]") : null);
     if (r) { const f = byId.get(r.dataset.id); return f && f.t === "d" && !ids.includes(f.id) ? { el: r, to: f.id } : null; }
-    const c = e.target.closest ? e.target.closest("#crumbs button[data-to]") : null;
+    const c = /** @type {HTMLElement | null} */ (at && at.closest ? at.closest("#crumbs button[data-to]") : null);
     if (c && c.getAttribute("aria-current") !== "page") return { el: c, to: c.dataset.to };
-    const t = e.target.closest ? e.target.closest('#tabs button[data-t="trash"]') : null;
+    const t = at && at.closest ? at.closest('#tabs button[data-t="trash"]') : null;
     return t ? { el: t, to: null } : null;
   };
   const clear = () => { if (over) over.classList.remove("dropto"); over = null; };
   document.addEventListener("dragstart", e => {
-    const r = e.target.closest ? e.target.closest(".row[data-id]") : null; if (!r || tab === "trash" || !byId.has(r.dataset.id)) return;
+    const at = /** @type {Element | null} */ (e.target), r = /** @type {HTMLElement | null} */ (at && at.closest ? at.closest(".row[data-id]") : null), dt = e.dataTransfer;
+    if (!r || !dt || tab === "trash" || !byId.has(r.dataset.id)) return;
     ids = sel.has(r.dataset.id) ? [...sel] : [r.dataset.id];
-    e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("application/x-hub-files", JSON.stringify(ids));
-    for (const x of document.querySelectorAll(".row[data-id]")) x.classList.toggle("dragging", ids.includes(x.dataset.id));
+    dt.effectAllowed = "move"; dt.setData("application/x-hub-files", JSON.stringify(ids));
+    for (const x of document.querySelectorAll(".row[data-id]")) x.classList.toggle("dragging", ids.includes(/** @type {HTMLElement} */ (x).dataset.id));
   });
   document.addEventListener("dragend", () => { ids = null; clear(); for (const x of document.querySelectorAll(".row.dragging")) x.classList.remove("dragging"); });
-  document.addEventListener("dragover", e => { const t = target(e); if (!t) { clear(); return; } e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (over !== t.el) { clear(); over = t.el; over.classList.add("dropto"); } });
+  document.addEventListener("dragover", e => { const t = target(e); if (!t) { clear(); return; } e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "move"; if (over !== t.el) { clear(); over = t.el; over.classList.add("dropto"); } });
   document.addEventListener("drop", e => {
     const t = target(e); if (!t) return; e.preventDefault(); const go = ids; ids = null; clear();
     for (const x of document.querySelectorAll(".row.dragging")) x.classList.remove("dragging");
