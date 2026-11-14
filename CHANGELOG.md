@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.1 | The gear opens Edit This Page, the page's Settings and Main Settings; one-column Settings forms on a phone |
 | 1.79.0 | Clear the Activity log, a Cleanup section, turn Telegram, Tasks, Cards, Files and Tools off for real, a live countdown, an encryption step in first setup, and fixes for Add Your First Card and the logo message |
 | 1.78.2 | The domain and uptime watch is removed completely (code, schedule, backups and Telegram status); the optional update address stays |
 | 1.78.1 | Settings: Data Protection and Telegram Setup in the Sign-In style, Two-Step scan side by side, Look tab renamed; smoother pages, folds and hovers everywhere |
@@ -156,6 +157,19 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.1
+
+### Changed
+
+- The gear icon in the bar now opens a menu: **Edit This Page**, the page's own Settings (for example Links Settings) and **Main Settings**. The separate pencil is gone. While you edit, the gear is lit.
+- Settings forms use one column on a phone, so the fields are no longer cramped.
+
+### Housekeeping
+
+- The old `docs/FEATURES.md` worklist is removed, and `.github/CONTRIBUTING.md` now points to `AGENTS.md` so the rules live in one place.
 
 ---
 

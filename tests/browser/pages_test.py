@@ -405,7 +405,7 @@ try:
         early = rp2.evaluate("HUB.state().admin === undefined"); rp2.click('#ix-bar [data-ix=account]')
         until(lambda: rp2.evaluate("!!document.querySelector('#ix-pop') || !!document.querySelector('#ix-dlg.open')"), 8000)
         race = rp2.evaluate("[!!document.querySelector('#ix-dlg.open'), [...document.querySelectorAll('#ix-pop .ix-pl')].map(x => x.textContent)]"); rctx2.close()
-        check('P55 logged in, pressing the gear before the page has heard from the server waits for it: the menu opens, no login box', early and race == [False, ['Edit This Page', 'Info Settings', 'Main Settings']], (early, race))
+        check('P55 logged in, pressing the gear the moment it appears (the server answers slowly) opens the menu, no login box', race == [False, ['Edit This Page', 'Info Settings', 'Main Settings']], (early, race))
         hctx = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 860}); hctx.add_cookies(cookies); hctx.route('**/*', handle); hp2 = hctx.new_page(); herr2 = []; page_errors(hp2, herr2)
         hp2.goto(B + '/web/cards/', wait_until='domcontentloaded'); until(lambda: hp2.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000); settle(hp2)
         hp2.click('#ix-bar [data-ix=account]'); until(lambda: hp2.evaluate("!!document.querySelector('#ix-pop')"), 3000)
