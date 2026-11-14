@@ -672,9 +672,6 @@ label.ix-srow{cursor:pointer}
 /* "Save Settings" looks dim until something changes (it still works) */
 .ix-clean{filter:saturate(.3) brightness(.82)}   /* dim by colour, not by see-through: the text keeps its contrast */
 /* a small badge after a row's name ("1 waiting", "All encrypted") */
-.ix-tl{display:block}
-.ix-badge{display:inline-block;margin-left:8px;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;line-height:1.4;background:rgba(179,146,240,.18);color:rgb(179,146,240);vertical-align:1px}
-.ix-badge.done{background:rgba(95,214,138,.16);color:rgb(95,214,138)}
 .ix-srow>button:disabled{opacity:.45;cursor:default}
 /* a row that folds open (Add Link's Icon and Extra Links): a tile, a name with its hint, a chevron */
 .ix-sdlg .ix-sb details.ix-opt>summary{display:flex;align-items:center;gap:12px;list-style:none;cursor:pointer;font-size:15px;line-height:1.4;padding:2px 0}
