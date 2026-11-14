@@ -111,7 +111,7 @@ try:
         check('T12 ticking Private on a new Info tab ticks Encrypt too', pg.is_checked('#htEnc'))
         # (1.79.1) Edit Tab (Info, then Links) is one page with a preview of the tab at the top; the preview shows the lock of an encrypted tab
         prev = pg.evaluate("(() => { const p = document.getElementById('htPrev').getBoundingClientRect(), n = document.getElementById('htName').getBoundingClientRect(); return [p.top < n.top, document.getElementById('htPrevLock').classList.contains('enc'), !document.getElementById('htPrevLock').hidden, document.getElementById('htPrevName').textContent]; })()")
-        check('T15 Info Edit Tab: the preview of the tab is above the Name, and shows the green lock for an encrypted tab', prev[0] and prev[1] and prev[2] and prev[3] == 'Trip Notes', prev)
+        check('T15 Info New Tab (private, so encrypted): the preview of the tab is above the Name, shows its default name and the green lock', prev[0] and prev[1] and prev[2] and prev[3].startswith('Tab '), prev)
         pg.keyboard.press('Escape'); pg.goto(s.base + '/web/links/'); wait_js(pg, "document.querySelectorAll('.tab').length > 1", 20000)
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_selector('body.editing', timeout=10000)
         pg.evaluate("document.querySelector('#tabs .tabi.on .pen').click()"); pg.wait_for_selector('#hubTabDlg[open]')
