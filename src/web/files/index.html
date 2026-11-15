@@ -31,6 +31,7 @@
     <button type="button" data-t="starred" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>Starred</button>
     <button type="button" data-t="trash" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>Trash<em id="tn"></em></button>
   </nav>
+  <div class="pins" id="pins" hidden></div>
   <div class="usage" id="usage" aria-live="polite"></div>
 </aside>
 <main class="wrap" id="app">
@@ -57,6 +58,7 @@
 
   <div class="tabrow"><nav class="crumbs" id="crumbs" aria-label="Folder"></nav><button type="button" class="btn" id="sela" hidden>Select All</button><button type="button" class="btn danger" id="empty" hidden>Empty Trash</button></div>
 
+  <div class="chips" id="chips" role="group" aria-label="Show only" hidden></div>
   <div class="note" id="lock" hidden></div>
   <div class="bulk" id="bulk" hidden role="toolbar" aria-label="What to do with the picked items"></div>
   <div class="drop" id="drop">
