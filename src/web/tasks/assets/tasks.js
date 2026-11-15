@@ -1298,6 +1298,7 @@ $("form").onsubmit=e=>{
   }
   touch();
 };
+$("e-att").onclick=async()=>{try{const f=await HubSite.pickFile();if(f){$("e-url").value=f.link;HUB.toast("Linked to "+f.name+". Save the task to keep it.")}}catch(e){HUB.toast(e&&e.message?e.message:"Could not open your files.",true)}};
 $("e-del").onclick=()=>{
   const t=editing;$("dlg").close();act.del(t);
 };

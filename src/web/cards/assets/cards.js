@@ -409,6 +409,7 @@ document.addEventListener("click",e=>{
   if(r){const c=D.find(x=>x.id===+r.dataset.id);if(c)guard(()=>openCard(c))}
 });
 $("cancel").onclick=()=>dlg.close();
+$("attach").onclick=async()=>{try{const f=await HubSite.pickFile();if(f){$("url").value=f.link;HUB.toast("Linked to "+f.name+". Save the card to keep it.")}}catch(e){HUB.toast(e&&e.message?e.message:"Could not open your files.",true)}};
 $("hcancel").onclick=()=>hdlg.close();
 $("icancel").onclick=()=>idlg.close();
 

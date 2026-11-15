@@ -455,6 +455,16 @@ try:
         menu(pg, 'photo.png', 'Remove from This Device'); pg.wait_for_selector('#list .row:has(.nm[title="photo.png"]):not(:has(.offm))', timeout=15000)
         check('B113 Remove from This Device takes the mark away', row(pg, 'photo.png').locator('.offm').count() == 0)
 
+        # ---- (1.80.2) Attach a File: Tasks picks a file from Files, gets a link, and the link opens that file in Files ----
+        pg.goto(s.base + '/web/tasks/'); wait_js(pg, "typeof T !== 'undefined' && typeof openEditor === 'function'", 20000)
+        pg.click('#add'); wait_js(pg, "document.getElementById('dlg').open", 5000)
+        pg.click('#e-att'); pg.wait_for_selector('dialog.ix-fp[open] .ix-fpl button', timeout=20000)
+        pg.fill('dialog.ix-fp input', 'photo'); pg.click('dialog.ix-fp .ix-fpl button:has-text("photo.png")')
+        link = pg.input_value('#e-url')
+        check('B114 Attach a File puts a link to the chosen file in the Website field', re.search(r'/web/files/#file=[A-Za-z0-9_-]+$', link) is not None, link)
+        pg.goto(link); pg.wait_for_selector('#pbox img', timeout=30000)
+        check('B115 that link opens the file in Files, in its preview', pg.evaluate("(() => { const i = document.querySelector('#pbox img'); return !!i && i.complete && i.naturalWidth > 0; })()") and '#file=' not in pg.url, pg.url)
+
         check('B39 no page error and no blocked request in all of it', not errs and not csp, (errs, csp))
         b.close()
 finally:

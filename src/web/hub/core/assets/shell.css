@@ -1074,3 +1074,15 @@ html.ix-hide[data-ix-flat][data-ix-nav="top"] #ix-bar{transform:translateY(calc(
 .ix-nlh .ix-nlq{border:1px solid var(--ix-line2);color:var(--ix-tx)}
 @media (hover:none),(pointer:coarse){.ix-nlh [data-keys]{display:none}}
 html[data-ix-nav="top"] #ix-nlist.ix-under{top:calc(var(--ix-top-now,60px) + 6px);bottom:auto;right:16px}
+
+/* (1.80.2) Attach a File: a small picker over the page's own dialog */
+dialog.ix-fp{width:min(460px,calc(100% - 24px));max-height:min(520px,calc(100dvh - 24px));padding:18px 20px;border:1px solid var(--ix-line,rgba(128,128,128,.3));border-radius:16px;background:var(--ix-s1,#1a1a1a);color:inherit}
+dialog.ix-fp[open]{display:flex;flex-direction:column;gap:10px}
+dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
+.ix-fp h2{margin:0;font-size:19px}
+.ix-fp input{width:100%;padding:10px 12px;font:inherit;color:inherit;background:transparent;border:1px solid var(--ix-line,rgba(128,128,128,.4));border-radius:10px}
+.ix-fpl{flex:1;min-height:80px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.ix-fpl button{text-align:left;padding:10px 12px;font:inherit;color:inherit;background:transparent;border:0;border-radius:8px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ix-fpl button:hover,.ix-fpl button:focus-visible{background:rgba(128,128,128,.18)}
+.ix-fpl p{margin:8px 4px;opacity:.7}
+.ix-fpx{align-self:flex-end;padding:9px 16px;font:inherit;color:inherit;background:transparent;border:1px solid var(--ix-line,rgba(128,128,128,.4));border-radius:10px;cursor:pointer}

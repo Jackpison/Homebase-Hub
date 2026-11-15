@@ -2580,6 +2580,37 @@
   }
   function sealJson(o) { return seal(JSON.stringify(o)); }
   function openJson(s) { return open(s).then(function (t) { return JSON.parse(t); }); }
-  window.HubSite = { key: key, status: status, seal: seal, open: open, sealJson: sealJson, openJson: openJson, relock: relock, isSealed: V.isEnc,
+  /* (1.80.2) Attach File: Tasks and Cards pick a file from Files and get a link that opens it there. The names are opened here with the site key,
+     as in Files; nothing but the id goes into the link. Resolves {id, name, link}, or null when closed. */
+  function pickFile() {
+    return key().then(function () {
+      return window.HUB.fetch(new URL('../files/api.php?action=list', location.href).href, { cache: 'no-store' }).then(function (r) { return r.json(); });
+    }).then(function (j) {
+      var items = (j.items || []).filter(function (i) { return i.t === 'f' && i.del === 0 && !i.up && i.m; });
+      return Promise.all(items.map(function (i) { return openJson(i.m).then(function (m) { return { id: i.id, name: m.n, size: m.s, at: m.mt || i.at * 1000 }; }, function () { return null; }); }));
+    }).then(function (all) {
+      var list = all.filter(Boolean).sort(function (a, b) { return b.at - a.at; });
+      return new Promise(function (done) {
+        var d = document.createElement('dialog'); d.className = 'ix-fp'; d.setAttribute('aria-labelledby', 'ix-fpt');
+        var h = document.createElement('h2'); h.id = 'ix-fpt'; h.textContent = 'Attach a File';
+        var q = document.createElement('input'); q.type = 'search'; q.placeholder = 'Search Your Files'; q.setAttribute('aria-label', 'Search Your Files'); q.autocomplete = 'off';
+        var ul = document.createElement('div'); ul.className = 'ix-fpl';
+        var x = document.createElement('button'); x.type = 'button'; x.className = 'ix-fpx'; x.textContent = 'Cancel';
+        var fin = function (v) { d.close(); d.remove(); done(v); };
+        function draw() {
+          var w = q.value.trim().toLowerCase(); ul.textContent = ''; var n = 0;
+          list.forEach(function (f) {
+            if (w && f.name.toLowerCase().indexOf(w) < 0) return; if (++n > 200) return;
+            var b = document.createElement('button'); b.type = 'button'; b.textContent = f.name;
+            b.onclick = function () { fin({ id: f.id, name: f.name, link: new URL('../files/#file=' + f.id, location.href).href }); }; ul.appendChild(b);
+          });
+          if (!n) { var e = document.createElement('p'); e.textContent = list.length ? 'No file has that name.' : 'There are no files in Files yet.'; ul.appendChild(e); }
+        }
+        q.oninput = draw; x.onclick = function () { fin(null); }; d.addEventListener('cancel', function (e) { e.preventDefault(); fin(null); });
+        d.append(h, q, ul, x); document.body.appendChild(d); draw(); d.showModal(); q.focus();
+      });
+    });
+  }
+  window.HubSite = { pickFile: pickFile, key: key, status: status, seal: seal, open: open, sealJson: sealJson, openJson: openJson, relock: relock, isSealed: V.isEnc,
     unlocked: function () { return !!cached; }, kid: function () { return cachedKid; }, forget: function () { cached = null; cachedKid = ''; stat = null; return V.devForget(NAME); } };
 })();

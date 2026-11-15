@@ -633,6 +633,7 @@ function menu(anchor, i, at) {
     if (i.t === "f" && mine.length) acts.push(["link", "Copy Share Link", async () => { try { await navigator.clipboard.writeText(await linkOf(i, mine[mine.length - 1].token)); toast("Link copied."); } catch (e) { toast("Could not copy. Open Share Link instead.", true); } }]);
     if (i.t === "f" && "caches" in window) acts.push(["down", OFFSET.has(i.id) ? "Remove from This Device" : "Keep on This Device", async () => { if (OFFSET.has(i.id)) { await offDrop([i.id]); toast("Removed from this device."); render(); } else offKeep(i); }]);
     if (i.t === "f") acts.push(["file", "Open in Tools", () => openInTools(i)], ["share", "Send to Telegram", () => sendTelegram(i)]);
+    if (i.t === "f") acts.push(["link", "Copy Link to This File", async () => { try { await navigator.clipboard.writeText(new URL("./#file=" + i.id, location.href).href); toast("Link copied. It opens this file after you log in."); } catch (e) { toast("Could not copy the link.", true); } }]);
     acts.push(["edit", "Label and Note", () => labelBox(i)]);
     if (i.t === "f") acts.push(["star", (meta(i) || {}).st ? "Remove Star" : "Star", () => star(i)]);
     if (i.t === "d") acts.push(["folder", (meta(i) || {}).pin ? "Unpin from Sidebar" : "Pin to Sidebar", () => pin(i)]);
@@ -1235,6 +1236,9 @@ async function load() {
   apply(j); await names(); started = true; offView = cached; if (!cached) offSaveList();
   // (1.72.0) the site search finds files by name once they are opened here: only the names (and their folder), in this tab only
   if (unlocked) { try { sessionStorage.setItem("hub-find-files", JSON.stringify(live().filter(i => MC.has(i.m)).slice(0, 3000).map(i => ({ n: nameOf(i), d: i.p && byId.get(i.p) ? nameOf(byId.get(i.p)) : "", t: i.t === "f" ? dateOf(i) : 0 })))); } catch (e) { /* too big: no names */ } }
+  // (1.80.2) a link to one file (made by Attach File in Tasks and Cards, or Copy Link to This File): open its folder and show it
+  const hf = /^#file=([A-Za-z0-9_-]+)$/.exec(location.hash);
+  if (hf) { history.replaceState(null, "", location.pathname + location.search); const fi = byId.get(hf[1]); if (fi && fi.t === "f" && fi.del === 0) { tab = "files"; cwd = fi.p || ""; sel.clear(); sel.add(fi.id); cur = anchor = fi.id; render(); openItem(fi); } else { render(); toast("That file is not in Files any more."); } }
   const hq = /^#q=(.+)$/.exec(location.hash);   // a search result: show the file
   if (hq) { try { q = decodeURIComponent(hq[1]); } catch (e) { q = ""; } tab = "files"; $("q").value = q; history.replaceState(null, "", location.pathname + location.search); }
   render();
