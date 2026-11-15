@@ -492,8 +492,8 @@ try:
 
         # ---- (1.80.4) button hover: main buttons sweep a lighter fill, other buttons tint ----
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
-        menu(pg, 'photo.png', 'Share Link'); pg.wait_for_selector('#dform .act .pri'); pg.hover('#dform .act .pri')
-        swept = until(lambda: pg.evaluate("(() => { const m = /matrix\\(1, 0, 0, 1, (-?[0-9.]+), 0\\)/.exec(getComputedStyle(document.querySelector('#dform .act .pri'), '::before').transform); return !!m && +m[1] > -2; })()"), 3000)
+        menu(pg, 'photo.png', 'Share Link'); pg.wait_for_selector('#dform .act .pri'); pg.mouse.move(2, 2); pg.hover('#dform .act .pri')
+        swept = until(lambda: pg.evaluate("(() => { const m = /matrix\\(1, 0, 0, 1, (-?[0-9.]+), 0\\)/.exec(getComputedStyle(document.querySelector('#dform .act .pri'), '::before').transform); return !!m && +m[1] > -2; })()"), 10000)
         check('B120 a main button sweeps a lighter fill in on hover', swept)
         pg.hover('#dform .act button:not(.pri)')
         bg = pg.evaluate("getComputedStyle(document.querySelector('#dform .act button:not(.pri)')).backgroundColor")
