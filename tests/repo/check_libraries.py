@@ -27,6 +27,12 @@ for f in glob.glob(os.path.join(ROOT, 'tools-src', 'src', '**', '*.js'), recursi
     s = open(f, encoding='utf-8').read()
     if 'getDocument(' in s and 'isEvalSupported: false' not in s: bad.append('a PDF is opened without isEvalSupported: false in ' + os.path.relpath(f, ROOT))
 
+# 1b. (1.80.2) Files draws PDF thumbnails with a copy of the same pdf.js: it must be that exact file, and open PDFs with eval off
+FP = os.path.join(W, 'files', 'assets', 'vendor', 'pdf.min.mjs'); TP = os.path.join(ROOT, 'tools-src', 'node_modules', 'pdfjs-dist', 'legacy', 'build', 'pdf.min.mjs')
+if not os.path.isfile(FP): bad.append('Files has no pdf.js copy (web/files/assets/vendor/pdf.min.mjs): run python3 scripts/build-tools.py --install')
+elif os.path.isfile(TP) and open(FP, 'rb').read() != open(TP, 'rb').read(): bad.append('the pdf.js copy in Files is not the one Tools is built with: run python3 scripts/build-tools.py --install')
+if 'getDocument(' in open(os.path.join(W, 'files', 'assets', 'files.js'), encoding='utf-8').read() and 'isEvalSupported: false' not in open(os.path.join(W, 'files', 'assets', 'files.js'), encoding='utf-8').read(): bad.append('Files opens a PDF without isEvalSupported: false')
+
 # 2. SheetJS gone and not loaded
 if glob.glob(os.path.join(W, '**', 'xlsx*.js'), recursive=True): bad.append('a SheetJS file is in the site again')
 for f in glob.glob(os.path.join(W, '**', '*'), recursive=True):

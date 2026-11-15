@@ -435,6 +435,15 @@ try:
         pg.locator('#dlg .act button', has_text='Send It').click(); until(lambda: 'not set up' in pg.inner_text('#ups'), 20000)
         check('B109 with no Telegram set up it says so, and nothing is sent', 'not set up' in pg.inner_text('#ups'), pg.inner_text('#ups')[:200])
 
+        # ---- (1.80.2) a PDF shows its first page as the picture ----
+        upload(pg, 'paper.pdf', open(os.path.join(FIX, 'fixture-2pages.pdf'), 'rb').read(), 'application/pdf'); wait_names(pg, ['paper.pdf'])
+        pg.reload(wait_until='domcontentloaded'); wait_names(pg, ['paper.pdf'])
+        pg.click('button[data-v="grid"]')
+        try: pg.wait_for_selector('#list .row:has(.nm[title="paper.pdf"]) img.th', timeout=30000); got = True
+        except Exception: got = False
+        pg.click('button[data-v="list"]')
+        check('B110 a PDF shows a picture of its first page, drawn here (no server, no page error)', got and not errs, errs)
+
         check('B39 no page error and no blocked request in all of it', not errs and not csp, (errs, csp))
         b.close()
 finally:

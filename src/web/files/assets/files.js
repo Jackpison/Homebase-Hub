@@ -162,7 +162,20 @@ async function readFile(item, type, onBytes) {
 const THUMB = new Map(), THUMB_MAX = 12 * 1048576, thumbQ = [];
 let thumbBusy = false;
 const thumbKey = i => i.id + ":" + (dateOf(i) || "") + ":" + sizeOf(i);
-const thumbable = i => i.t === "f" && unlocked && sizeOf(i) > 0 && ((kindOf(nameOf(i)) === "image" && ext(nameOf(i)) !== "svg" && sizeOf(i) <= THUMB_MAX) || (kindOf(nameOf(i)) === "video" && sizeOf(i) <= 40 * 1048576));
+const thumbable = i => i.t === "f" && unlocked && sizeOf(i) > 0 && ((kindOf(nameOf(i)) === "image" && ext(nameOf(i)) !== "svg" && sizeOf(i) <= THUMB_MAX) || (kindOf(nameOf(i)) === "video" && sizeOf(i) <= 40 * 1048576) || (ext(nameOf(i)) === "pdf" && sizeOf(i) <= 20 * 1048576));
+/** (1.80.2) a PDF's picture: page 1, drawn with the same pdf.js Tools uses (its own copy here; eval off, worker is Tools' file) */
+async function pdfFrame(blob) {
+  /** @type {any} */ const pdfjs = await import("./vendor/pdf.min.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL("../tools/assets/pdf.worker.min.mjs", location.href).href;
+  const task = pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }), doc = await task.promise;
+  try {
+    const pg = await doc.getPage(1), v0 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: 320 / Math.max(v0.width, v0.height) });
+    const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(vp.width)); c.height = Math.max(1, Math.round(vp.height));
+    const g = /** @type {any} */ (c.getContext("2d")); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+    await pg.render({ canvasContext: g, viewport: vp }).promise;
+    return c;
+  } finally { task.destroy(); }
+}
 /** (1.80.0) a video's picture: its first second, drawn from the opened file (videos up to 40 MB) */
 async function videoFrame(blob) {
   const u = URL.createObjectURL(blob), v = document.createElement("video"); v.muted = true; v.preload = "auto"; v.playsInline = true;
@@ -173,6 +186,10 @@ async function videoFrame(blob) {
   } finally { URL.revokeObjectURL(u); }
 }
 async function thumbMake(i) {
+  if (ext(nameOf(i)) === "pdf") {
+    const c = await pdfFrame((await readFile(i, "application/pdf")).blob), b = await new Promise(res => c.toBlob(res, "image/webp", 0.8)); if (!b) throw new Error("no thumbnail");
+    return URL.createObjectURL(/** @type {Blob} */ (b));
+  }
   const r = await readFile(i, MIME[ext(nameOf(i))] || "image/png"), bmp = kindOf(nameOf(i)) === "video" ? await videoFrame(r.blob) : await createImageBitmap(r.blob), sc = Math.min(1, 320 / Math.max(bmp.width, bmp.height));
   const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(bmp.width * sc)); c.height = Math.max(1, Math.round(bmp.height * sc));
   /** @type {any} */ (c.getContext("2d")).drawImage(bmp, 0, 0, c.width, c.height); bmp.close();

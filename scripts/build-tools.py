@@ -30,6 +30,9 @@ for d in (APP, ROOT):
 install = '--install' in sys.argv
 out = os.path.join(ROOT, 'src', 'web', 'tools') if install else os.path.join(ROOT, 'build', 'tools-new')
 subprocess.run(['node', os.path.join(APP, 'build.mjs'), '--out', out], check=True)
+if install:   # (1.80.2) Files draws PDF thumbnails with the same pdf.js: its copy follows Tools (the worker is Tools' own file)
+    os.makedirs(os.path.join(ROOT, 'src', 'web', 'files', 'assets', 'vendor'), exist_ok=True)
+    shutil.copy(os.path.join(ROOT, 'tools-src', 'node_modules', 'pdfjs-dist', 'legacy', 'build', 'pdf.min.mjs'), os.path.join(ROOT, 'src', 'web', 'files', 'assets', 'vendor', 'pdf.min.mjs'))
 if install:   # the fingerprint tools-rev.py checks, and a policy without the old inline-script hash
     subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'tools-rev.py'), '--write'], check=True)
 else:   # the staging copy also needs the page's server rules
