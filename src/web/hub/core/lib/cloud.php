@@ -207,7 +207,7 @@ function cl_slug(): string {
     return $s !== '' ? substr($s, 0, 40) : 'site';
 }
 /** Deletes the copies beyond $keep (the newest are kept). Returns how many went. */
-function cl_tidy(array $cfg, array $parts, string $slug, int $keep, string $justMade, ?int &$failed = null): int {
+function cl_tidy(array $cfg, array $parts, string $slug, int $keep, string $justMade, int &$failed = 0): int {
     $failed = 0;
     $z = cl_names($cfg, $parts);
     if ($z === null) return 0;

@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.6 | The Cloud Backup card starts folded and shrinks to a short list with Edit, a held Disconnect button, and a refused delete is now reported |
 | 1.79.5 | Cloud Backup can send to an S3 bucket, and Restore From Cloud brings a copy back; every failed request now answers in one shape; the big page scripts are cut into labelled parts |
 | 1.79.3 | Box Headline Color moved from Edit Tab into each box |
 | 1.79.2 | Edit Tab is one page with a preview on top; tab bar gaps fixed; a divider under the Links tabs; Telegram Login Approval |
@@ -160,6 +161,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.6
+
+### Added
+
+- **Disconnect** for Cloud Backup. Hold the button on the Cloud Backup card to drop the saved address, keys, bucket and schedule. The copies already in your folder or bucket are not touched.
+
+### Changed
+
+- **The Cloud Backup card starts folded.** It shows one line (where it goes, how often, how many copies, whether the schedule is on) and an **Expand** button. Once Cloud Backup is set up, the open card shows a short list instead of the whole form, and **Edit** opens the fields. Until it is set up, the form shows at once. The card stays open or folded as you left it.
+- **Test Connection and each backup now say when a delete was refused.** If your key may write but not delete, Test Connection says the small test file could not be removed, and a backup says how many older copies could not be removed, so copies do not pile up unseen.
+- The Bucket hint tells Backblaze B2 users that B2 keeps older versions of deleted files unless the bucket's Lifecycle Settings say Keep Only the Last Version.
 
 ---
 
