@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.1 | Files: folders show their size, gallery links for several pictures, Send to Telegram (asks first), a floating selection bar, Folders and Files parts in the grid, coloured filter chips and folder colours; Settings and Cards messages name what changed; better icons in Home Settings and Widgets |
 | 1.80.0 | A much better Files page: keyboard use, right-click and long-press menus, a bigger preview, filters, pinned folders, name-clash choices, resume, labels and notes, Undo, share link passwords and download limits with a QR code, a Storage view, and swipes on a phone; the Home refresh button is back at the bottom right |
 | 1.79.12 | Messages are now Alerts with the bell in the bar, the same Logs list on every device, Hide the Bar While Scrolling and Show Widgets are per device (a phone starts with no widgets), and the CI fix |
 | 1.79.11 | Home on an iPhone: the bar floats below the status bar and the clock starts below it; the wallpaper refresh button moves to the bottom left; disabled main buttons look the same on every page |
@@ -170,6 +171,25 @@ Nothing to migrate by hand unless an entry says so.
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
 
 ---
+
+## 1.80.1
+
+### Files
+- A folder shows how much it holds (everything inside it, folders within folders included), in the list, the details panel and the Biggest First sort.
+- A colour label now paints a folder in that colour. The label window's "none" swatch is fixed.
+- Pick several pictures and press Share as Gallery: one link shows them all together, with an optional password and end date. Each picture also keeps its own link.
+- Send to Telegram sends one file to the chat set up in Telegram Setup. It asks first, because the file has to be opened in your browser and sent readable through your server; Telegram then holds a readable copy. Bots can send up to 50 MB.
+- The picked items sit in a dark bar at the bottom of the page with the total size. The grid has a Folders part and a Files part, and the header counts both.
+- The filter chips have their own colours, and the Storage window is redesigned: one coloured bar for the whole picture, and a card for each part.
+
+### Messages
+- Saving Settings says what changed ("Saved: Theme, Accent Color."). Saving or deleting a card says which card.
+
+### Home Settings and Widgets
+- Each row has an icon that fits it: lock for Hide From Visitors, compass for the Home Tour, sliders for the Edit Bar, and an hourglass, globe, cloud, note and clock for the widgets.
+
+### Not in this version
+- PDF thumbnails (they need the PDF reader inside Files), offline copies of files and attaching a file to a Card, Task or Info entry were left out.
 
 ## 1.80.0
 
