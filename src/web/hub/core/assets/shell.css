@@ -1086,3 +1086,14 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 .ix-fpl button:hover,.ix-fpl button:focus-visible{background:rgba(128,128,128,.18)}
 .ix-fpl p{margin:8px 4px;opacity:.7}
 .ix-fpx{align-self:flex-end;padding:9px 16px;font:inherit;color:inherit;background:transparent;border:1px solid var(--ix-line,rgba(128,128,128,.4));border-radius:10px;cursor:pointer}
+
+/* (1.80.4) Button hover. Main (yellow) buttons: a lighter fill sweeps in from the left (Fill Sweep). Every other button: a soft tint and a brighter edge, and a small press (Soft Glow). */
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  :where(.btn:not(.ib):not(.square):not(.pri):not(.primary),.ix-btn:not(.pri),dialog .act button:not(.pri),dialog .df .btn:not(.pri)){transition:background-color .18s,border-color .18s,box-shadow .18s,transform .12s}
+  :where(.btn:not(.ib):not(.square):not(.pri):not(.primary),.ix-btn:not(.pri),dialog .act button:not(.pri),dialog .df .btn:not(.pri)):not(:disabled):not([data-hold]):hover{background-color:color-mix(in srgb,currentColor 9%,transparent);border-color:color-mix(in srgb,currentColor 38%,transparent)}
+  :where(.btn.danger,.ix-btn.danger,dialog .act .danger):not(:disabled):not([data-hold]):hover{background-color:color-mix(in srgb,#ff6b6b 14%,transparent);border-color:#ff6b6b}
+  :where(.btn:not(.ib):not(.square),.ix-btn,dialog .act button,dialog .df .btn):not(:disabled):not([data-hold]):active{transform:scale(.97)}
+  .btn.pri,.btn.primary,.ix-btn.pri,dialog .act .pri,dialog .df .pri{position:relative;overflow:hidden;isolation:isolate}
+  .btn.pri::before,.btn.primary::before,.ix-btn.pri::before,dialog .act .pri::before,dialog .df .pri::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,#fff 38%,transparent);transform:translateX(-101%);transition:transform .28s cubic-bezier(.3,.7,.2,1);pointer-events:none}
+  .btn.pri:not(:disabled):hover::before,.btn.primary:not(:disabled):hover::before,.ix-btn.pri:not(:disabled):hover::before,dialog .act .pri:not(:disabled):hover::before,dialog .df .pri:not(:disabled):hover::before{transform:none}
+}

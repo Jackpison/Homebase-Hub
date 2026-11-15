@@ -490,6 +490,16 @@ try:
         check('B122 the Share window is framed, with Your Links and New Link parts', sh[0] == ['Your Links', 'New Link'] and sh[1], sh)
         pg.click('#dlg .ix-sx')
 
+        # ---- (1.80.4) button hover: main buttons sweep a lighter fill, other buttons tint ----
+        pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
+        menu(pg, 'photo.png', 'Share Link'); pg.wait_for_selector('#dform .act .pri'); pg.hover('#dform .act .pri')
+        swept = until(lambda: pg.evaluate("(() => { const m = /matrix\\(1, 0, 0, 1, (-?[0-9.]+), 0\\)/.exec(getComputedStyle(document.querySelector('#dform .act .pri'), '::before').transform); return !!m && +m[1] > -2; })()"), 3000)
+        check('B120 a main button sweeps a lighter fill in on hover', swept)
+        pg.hover('#dform .act button:not(.pri)')
+        bg = pg.evaluate("getComputedStyle(document.querySelector('#dform .act button:not(.pri)')).backgroundColor")
+        check('B120b another button tints on hover', bg not in ('rgba(0, 0, 0, 0)', 'transparent'), bg)
+        pg.click('#dlg .ix-sx')
+
         # ---- (1.80.2) Info: the paperclip button in a box's toolbar writes a [name](link) link ----
         pg.goto(s.base + '/web/info/'); wait_js(pg, "!!document.querySelector('#boxTpl') && document.querySelectorAll('.box').length > 0", 20000)
         pg.evaluate("document.querySelector('.box [data-r=edit]').click()")

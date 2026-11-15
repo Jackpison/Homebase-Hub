@@ -41,3 +41,11 @@ p{margin:0 0 14px;color:var(--mute)}
 .galc.bad{border-color:var(--bad)}
 .btn.sm{height:32px;padding:0 14px;font-size:13px}
 
+ 
+/* (1.80.4) the same button hover as the rest of the site */
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .btn{transition:background-color .18s,box-shadow .18s,transform .12s;position:relative;overflow:hidden;isolation:isolate}
+  .btn::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,#fff 38%,transparent);transform:translateX(-101%);transition:transform .28s cubic-bezier(.3,.7,.2,1);pointer-events:none}
+  .btn:not([disabled]):hover::before{transform:none}
+  .btn:not([disabled]):active{transform:scale(.97)}
+}
