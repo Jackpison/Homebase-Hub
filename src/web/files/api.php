@@ -14,7 +14,7 @@ declare(strict_types=1);
  *  GET  list                    { items, shares, settings, usage, free, max }   (visitors: { private: true, auth: false })
  *  GET  chunk?id=&n=            one piece of a file, as a plain download (still locked: the browser opens it)
  *  POST mkdir {p, m}            a folder         POST rename {id, m}      POST move {ids, p}
- *  POST put_start {p, m, k, c, z}   starts a file (c pieces, z bytes in all); POST put_chunk?id=&n= (the piece, raw); POST put_done {id}; POST put_abort {id}
+ *  GET put_status?id=  the pieces an open upload already has (Resume);  POST put_start {p, m, k, c, z}   starts a file (c pieces, z bytes in all); POST put_chunk?id=&n= (the piece, raw); POST put_done {id}; POST put_abort {id}
  *  POST trash {ids}  restore {ids, p?}  purge {ids}  empty_trash
  *  POST share_create {id, sm, exp}  share_delete {token}  settings {settings}
  *  GET  s_meta?t=  /  s_chunk?t=&n=     a share link's file, for anyone who has the link (the key is in the part of the link after #, never sent here)
@@ -68,6 +68,11 @@ if ($method === 'GET') {
         if (!fl_id_ok($id) || !$i || $i['t'] !== 'f' || !empty($i['up'])) hub_json(404, ['ok' => false, 'error' => 'Not found.']);
         if (ob_get_level()) @ob_end_clean();   // a binary download is not compressed again
         piece_out($id, num($_GET['n'] ?? null), $i['c']);
+    }
+    if ($action === 'put_status') {
+        $have = fl_put_have(fl_load(), (string)($_GET['id'] ?? ''));
+        if ($have === null) hub_json(404, ['ok' => false, 'error' => 'That upload is not open any more.']);
+        hub_json(200, ['ok' => true, 'have' => $have]);
     }
     if ($action !== 'list') hub_json(400, ['ok' => false, 'error' => 'Unknown action.']);
     $d = fl_load();

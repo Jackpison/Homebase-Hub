@@ -109,7 +109,7 @@ async function names() {
   try { key = await SITE.key({ ask: false }); } catch (e) { key = null; }
   unlocked = !!key;
   if (!unlocked) return;
-  const todo = D.items.filter(i => !i.up && !MC.has(i.m));
+  const todo = D.items.filter(i => !MC.has(i.m));
   for (let k = 0; k < todo.length; k += 150) {
     await Promise.all(todo.slice(k, k + 150).map(async i => { try { MC.set(i.m, await SITE.openJson(i.m)); } catch (e) { /* stays locked */ } }));
   }
@@ -162,9 +162,18 @@ async function readFile(item, type, onBytes) {
 const THUMB = new Map(), THUMB_MAX = 12 * 1048576, thumbQ = [];
 let thumbBusy = false;
 const thumbKey = i => i.id + ":" + (dateOf(i) || "") + ":" + sizeOf(i);
-const thumbable = i => i.t === "f" && unlocked && kindOf(nameOf(i)) === "image" && ext(nameOf(i)) !== "svg" && sizeOf(i) > 0 && sizeOf(i) <= THUMB_MAX;
+const thumbable = i => i.t === "f" && unlocked && sizeOf(i) > 0 && ((kindOf(nameOf(i)) === "image" && ext(nameOf(i)) !== "svg" && sizeOf(i) <= THUMB_MAX) || (kindOf(nameOf(i)) === "video" && sizeOf(i) <= 40 * 1048576));
+/** (1.80.0) a video's picture: its first second, drawn from the opened file (videos up to 40 MB) */
+async function videoFrame(blob) {
+  const u = URL.createObjectURL(blob), v = document.createElement("video"); v.muted = true; v.preload = "auto"; v.playsInline = true;
+  try {
+    await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error("no frame")); v.src = u; setTimeout(() => rej(new Error("slow")), 8000); });
+    await new Promise(res => { v.onseeked = res; v.currentTime = Math.min(1, (v.duration || 2) / 4); setTimeout(res, 3000); });
+    return await createImageBitmap(v);
+  } finally { URL.revokeObjectURL(u); }
+}
 async function thumbMake(i) {
-  const r = await readFile(i, MIME[ext(nameOf(i))] || "image/png"), bmp = await createImageBitmap(r.blob), sc = Math.min(1, 320 / Math.max(bmp.width, bmp.height));
+  const r = await readFile(i, MIME[ext(nameOf(i))] || "image/png"), bmp = kindOf(nameOf(i)) === "video" ? await videoFrame(r.blob) : await createImageBitmap(r.blob), sc = Math.min(1, 320 / Math.max(bmp.width, bmp.height));
   const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(bmp.width * sc)); c.height = Math.max(1, Math.round(bmp.height * sc));
   /** @type {any} */ (c.getContext("2d")).drawImage(bmp, 0, 0, c.width, c.height); bmp.close();
   const b = await new Promise(res => c.toBlob(res, "image/webp", 0.8)); if (!b) throw new Error("no thumbnail");
@@ -254,7 +263,7 @@ function shown() {
   else if (tab === "recent" && !q) list = live().filter(i => i.t === "f");
   else if (tab === "starred" && !q) list = live().filter(i => (meta(i) || {}).st);
   else if (tab === "shared" && !q) { const ids = new Set(D.shares.map(x => x.id)); list = live().filter(i => ids.has(i.id)); }
-  else if (q) { const t = q.toLowerCase(); list = live().filter(i => nameOf(i).toLowerCase().includes(t) && (everywhere || i.p === cwd)); }
+  else if (q) { const t = q.toLowerCase(); list = live().filter(i => (nameOf(i).toLowerCase().includes(t) || String((meta(i) || {}).nt || "").toLowerCase().includes(t)) && (everywhere || i.p === cwd)); }
   else list = kidsOf(cwd);
   if (tab !== "trash") list = list.filter(passes);
   const s = D.settings.sort || "name";
@@ -295,7 +304,7 @@ function render() {
     trail.forEach((c, k) => { if (k) cr.append(h("i", { "aria-hidden": "true", text: "/" })); cr.append(h("button", { type: "button", "data-to": c.id, text: c.n, "aria-current": k === trail.length - 1 ? "page" : false, onclick: () => { if (k < trail.length - 1) { cwd = c.id; sel.clear(); render(); } } })); });
   }
   if (tab === "files" && !q && unlocked && live().some(i => i.t === "d")) cr.append(h("button", { type: "button", class: "cjump", id: "cjump", "aria-label": "Jump to a folder", "aria-haspopup": "menu", title: "Jump to a folder", onclick: e => { e.stopPropagation(); if (pm && pm.classList.contains("jump")) closeMenu(); else jumpMenu(e.currentTarget); } }, "▾"));
-  pins(); chips();
+  pins(); chips(); resumeNote();
   $("empty").hidden = !(tab === "trash" && trashed().length);
   $("mk").hidden = $("up").hidden = true;   // the sidebar's New button does both
   $("newb").hidden = tab === "trash";
@@ -321,6 +330,47 @@ function render() {
   }
   bulk(); usage(); details();
   $("sync").textContent = D.items.length ? "Saved on your server, locked" : "";
+}
+
+/** (1.80.0) Resume: uploads the server still holds half of (the tab was closed, the network dropped). Pick the same file again and only the missing pieces are sent. */
+function resumeNote() {
+  const box = $("resume"), busy = xfers.some(x => x.up && (x.state === "go" || x.state === "lock" || x.state === "wait"));
+  const open = D.items.filter(i => i.up && i.t === "f" && MC.has(i.m) && Date.now() / 1000 - i.at > 90);
+  box.hidden = !open.length || busy || tab === "trash"; box.replaceChildren(); if (box.hidden) return;
+  box.append(h("p", {}, h("b", { text: open.length === 1 ? "An upload did not finish: " : open.length + " uploads did not finish. " }), open.length === 1 ? (MC.get(open[0].m) || {}).n : "Pick the same file again to carry on where it stopped."));
+  for (const i of open.slice(0, 5)) {
+    const nm = (MC.get(i.m) || {}).n || "file";
+    box.append(h("div", { class: "rs" }, h("span", { text: nm + " · " + fmt((MC.get(i.m) || {}).s) }), h("button", { type: "button", class: "btn pri", "data-resume": i.id, text: "Resume", "aria-label": "Resume " + nm, onclick: () => { resumeId = i.id; $("pickres").click(); } }), h("button", { type: "button", class: "btn", text: "Discard", "aria-label": "Discard " + nm, onclick: async () => { await post("put_abort", { id: i.id }); await refresh(); } })));
+  }
+}
+let resumeId = "";
+async function resumeUpload(file) {
+  const i = byId.get(resumeId), m = i && MC.get(i.m); resumeId = "";
+  if (!i || !m) return;
+  if (file.size !== m.s || (m.n && file.name !== m.n && !(await confirmBox("Different Name", "This file is called " + file.name + ", the unfinished one is " + m.n + ". Carry on anyway?", "Carry On")))) { if (file.size !== m.s) toast("That is not the same file: its size is different.", true); return; }
+  const c = xfer("Uploading " + m.n, m.n, file.size, true); c.set("lock", "Checking what arrived");
+  try {
+    const raw = await rawKeyOf(i), fk = await fileKey(raw, ["encrypt"]); raw.fill(0);
+    const r = await HF("api.php?action=put_status&id=" + i.id, { cache: "no-store" }), j = await r.json().catch(() => ({}));
+    if (!j.ok) throw new Error(j.error || "That upload is not open any more.");
+    let sent = 0; await sendPieces(file, fk, i.id, i.c, c, new Set(j.have), () => sent, v => { sent = v; }, true);
+    c.done("Finished · " + fmt(file.size)); toast("Uploaded: " + m.n); await refresh();
+  } catch (e) { if (c.stopped) c.set("stop", "Stopped. Press Resume to carry on."); else c.fail(why(e)); await refresh(); }
+}
+
+/** (1.80.0) Colour labels and a short note: kept in the item's own locked details (fields lb and nt), so the server never sees them */
+const LABELS = [["", "None"], ["red", "Red"], ["orange", "Orange"], ["yellow", "Yellow"], ["green", "Green"], ["blue", "Blue"], ["purple", "Purple"], ["gray", "Gray"]];
+async function labelBox(i) {
+  if (!await ensureKey()) return;
+  const old = meta(i) || {}; let lb = old.lb || "";
+  const sw = h("div", { class: "lbs", role: "group", "aria-label": "Colour" });
+  const draw = () => sw.replaceChildren(...LABELS.map(l => h("button", { type: "button", class: "lbb" + (l[0] ? " lb-" + l[0] : " none"), "aria-label": l[1], "aria-pressed": String(lb === l[0]), title: l[1], onclick: () => { lb = l[0]; draw(); } })));
+  draw();
+  const nt = h("textarea", { id: "lnote", rows: "3", maxlength: "300", "aria-label": "Note", placeholder: "A short note, only you see it" }); nt.value = old.nt || "";
+  const r = await openDialog("Label and Note", [h("p", { text: nameOf(i) }), sw, h("label", { for: "lnote", text: "Note" }), nt], [cancelBtn, { text: "Save", pri: true, run: () => {} }]);
+  if (r !== "Save") return;
+  const next = Object.assign({}, old); if (lb) next.lb = lb; else delete next.lb; const note = nt.value.trim(); if (note) next.nt = note; else delete next.nt;
+  await run(post("rename", { id: i.id, m: await SITE.sealJson(next) }), "Saved: " + nameOf(i));
 }
 
 /** (1.80.0) Pin a folder to the sidebar: it is kept in the folder's own locked details, so it follows you to every device */
@@ -364,7 +414,7 @@ function row(i) {
   const sub = tab === "trash" ? "Removed for good in " + left + (left === 1 ? " day" : " days") : (isD ? "Folder" : fmt(sz)) + " · " + when(at) + (where ? " · in " + where : "");
   const ck = h("input", { type: "checkbox", class: "ck", "aria-label": "Pick " + name, checked: sel.has(i.id), onchange: e => { anchor = cur = i.id; e.target.checked ? sel.add(i.id) : sel.delete(i.id); row.sync(); } });
   const open = h("button", { type: "button", class: "nm", title: name, onclick: ev => { cur = i.id; if (ev.shiftKey && anchor) return range(i.id); if (ev.ctrlKey || ev.metaKey) { anchor = i.id; sel.has(i.id) ? sel.delete(i.id) : sel.add(i.id); return row.sync(); } anchor = i.id; if (i.t === "d" || tab === "trash") return openItem(i); pick1(i.id); } },
-    h("span", { class: "ico " + icoOf(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, D.settings.view === "grid" ? "m" : "s")), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
+    h("span", { class: "ico " + icoOf(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, D.settings.view === "grid" ? "m" : "s")), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, (meta(i) || {}).lb ? h("span", { class: "lbd lb-" + (meta(i) || {}).lb, role: "img", "aria-label": "Label: " + (meta(i) || {}).lb }) : null, (meta(i) || {}).nt ? h("span", { class: "ntm", title: (meta(i) || {}).nt, role: "img", "aria-label": "Has a note", text: "✎" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
   const more = h("button", { type: "button", class: "ib more", "aria-label": "More for " + name, "aria-haspopup": "menu", onclick: e => menu(e.currentTarget, i) }, svg("more"));
   const shared = D.shares.some(x => x.id === i.id);
   const quick = tab === "trash" ? null : h("span", { class: "qa" },
@@ -426,6 +476,7 @@ function details() {
     h("div", { class: "dh" }, h("b", { text: "Details" }), h("button", { type: "button", class: "ib", "aria-label": "Close details", onclick: () => { sel.clear(); row.sync(); } }, svg("x"))),
     (() => { const pv = h("div", { class: "pv " + icoOf(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, "l")); queueMicrotask(() => thumbWatch(pv, i)); return pv; })(),
     h("h3", { text: name }), acts,
+    m.nt ? h("p", { class: "dnote", text: m.nt }) : null,
     h("div", { class: "locknote" }, svg("lock"), "Locked in your browser. The server can't read it."),
     h("dl", {}, h("dt", { text: "Type" }), h("dd", { text: isD ? "Folder" : (KIND[kindOf(name)] || (/\.([A-Za-z0-9]{1,8})$/.exec(name) || [, "File"])[1].toUpperCase() + " file") }),
       isD ? null : h("dt", { text: "Size" }), isD ? null : h("dd", { text: fmt(sizeOf(i)) }),
@@ -446,7 +497,8 @@ async function star(i) {
 function newMenu() {
   closeMenu();
   /** @type {any[][]} */
-  const acts = [["up", "Upload Files", () => $("pick").click()], ["folder", "New Folder", mkdir]];
+  const acts = [["up", "Upload Files", () => $("pick").click()], ["folder", "Upload Folder", () => $("pickdir").click()], ["folder", "New Folder", mkdir]];
+  if (matchMedia("(pointer:coarse)").matches) acts.splice(2, 0, ["image", "Take Photo or Video", () => $("pickcam").click()]);
   pm = h("div", { class: "pm newm", role: "menu" }, acts.map(a => h("button", { type: "button", role: "menuitem", onclick: () => { closeMenu(); a[2](); } }, svg(a[0]), a[1])));
   document.body.append(pm);
   const r = $("newb").getBoundingClientRect(); pm.style.left = r.left + "px"; pm.style.top = (r.bottom + 4) + "px"; pm.querySelector("button").focus();
@@ -465,6 +517,7 @@ function menu(anchor, i, at) {
     acts.push([i.t === "d" ? "folder" : "file", i.t === "d" ? "Open" : (previewable(i) ? "Preview" : "Open"), () => openItem(i)]);
     acts.push(["down", i.t === "d" ? "Download as Zip" : "Download", () => download([i.id])]);
     if (i.t === "f" && D.settings.shares) acts.push(["share", "Share Link", () => shareBox(i)]);
+    acts.push(["edit", "Label and Note", () => labelBox(i)]);
     if (i.t === "f") acts.push(["star", (meta(i) || {}).st ? "Remove Star" : "Star", () => star(i)]);
     if (i.t === "d") acts.push(["folder", (meta(i) || {}).pin ? "Unpin from Sidebar" : "Pin to Sidebar", () => pin(i)]);
     acts.push(["edit", "Rename", () => rename(i)], ["move", "Move", () => moveBox([i.id])], ["trash", "Move to Trash", () => trash([i.id])]);
@@ -535,8 +588,10 @@ async function rename(i) {
   const n = await nameBox(i.t === "d" ? "Rename Folder" : "Rename File", "Name", nameOf(i), "Save");
   if (n == null || n === nameOf(i)) return;
   const old = meta(i) || {};
-  const m = await SITE.sealJson(Object.assign({}, old, { n }));
-  await run(post("rename", { id: i.id, m }), "Renamed: " + nameOf(i) + " to " + n);
+  const m = await SITE.sealJson(Object.assign({}, old, { n })), was = nameOf(i), id = i.id;
+  if (!await run(post("rename", { id, m }), "")) return;
+  const msg = "Renamed: " + was + " to " + n;
+  if (window.HUB) HUB.undo(msg, async () => { await run(post("rename", { id, m: await SITE.sealJson(old) }), "Name put back: " + was); }); else toast(msg);
 }
 function folderPicker(skip, current) {
   const skipSet = new Set(); for (const id of skip) { skipSet.add(id); (function walk(x) { for (const k of kidsOf(x)) if (k.t === "d") { skipSet.add(k.id); walk(k.id); } })(id); }
@@ -551,16 +606,27 @@ async function moveBox(ids) {
   const draw = () => { box.replaceChildren(...folderPicker(ids).map(f => h("button", { type: "button", "aria-pressed": String(f.id === to), style: "padding-left:" + (12 + f.d * 18) + "px", onclick: () => { to = f.id; draw(); } }, svg("folder", "i"), f.n))); };
   draw();
   await openDialog("Move " + (ids.length === 1 ? nameOf(byId.get(ids[0])) : ids.length + " Items"), [h("p", { text: "Pick the folder to move it into." }), box], [cancelBtn, { text: "Move Here", pri: true, run: async () => {
+    const back = ids.map(id => [id, (byId.get(id) || {}).p || ""]);
     const j = await post("move", { ids, p: to }); if (!j.ok) { derr(j.error); return false; }
-    sel.clear(); await refresh(); toast("Moved: " + what + (to === cwd ? "" : " to " + ((folderPicker(ids).filter(f => f.id === to)[0] || {}).n || "the folder")));
+    sel.clear(); await refresh(); movedMsg("Moved: " + what + (to === cwd ? "" : " to " + ((folderPicker(ids).filter(f => f.id === to)[0] || {}).n || "the folder")), back);
   } }]);
 }
 /* (1.79.3) Drag files and folders onto a folder, a folder name in the path above the list, or the Trash. A picked row drags everything picked. */
 async function moveTo(ids, to) {
   const what = ids.length === 1 ? nameOf(byId.get(ids[0])) : ids.length + " items", dest = to ? nameOf(byId.get(to)) : "My Files";
+  const back = ids.map(id => [id, (byId.get(id) || {}).p || ""]);
   const j = await post("move", { ids, p: to });
   if (!j.ok) { toast(j.error || "That did not work.", true); return; }
-  sel.clear(); await refresh(); toast("Moved: " + what + " to " + dest);
+  sel.clear(); await refresh(); movedMsg("Moved: " + what + " to " + dest, back);
+}
+/** (1.80.0) Move can be undone: each item goes back to the folder it came from */
+function movedMsg(msg, back) {
+  if (!window.HUB) return toast(msg);
+  HUB.undo(msg, async () => {
+    const by = new Map(); for (const [id, p] of back) { if (!by.has(p)) by.set(p, []); /** @type {any[]} */ (by.get(p)).push(id); }
+    for (const [p, ids] of by) await post("move", { ids, p });
+    await refresh(); toast("Moved back");
+  });
 }
 function dragSetup() {
   let ids = null, over = null;
@@ -801,7 +867,14 @@ async function doUploads(jobs, base) {
     c.retry = () => { c.stopped = false; c.frac = 0; c.got = 0; c.set("wait", "Ready to upload"); queue = queue.then(() => one(j)).then(() => refresh()).catch(e => toast(e.message || "Upload stopped.", true)); };
     try {
       c.set("lock", "Locking in your browser");
-      const parent = await folderFor(j.e.parts); await uploadOne(j.e.file, parent, c); okN++; okName = j.e.file.name;
+      const parent = await folderFor(j.e.parts);
+      const same = live().find(x => x.t === "f" && x.p === parent && nameOf(x) === j.e.file.name);
+      if (same) {
+        const ch = await clashChoice(j.e.file.name);
+        if (ch === "skip") { c.set("stop", "Skipped. The same name is already there."); return; }
+        if (ch === "replace") { await post("trash", { ids: [same.id] }); await refresh(); toast("The old " + j.e.file.name + " is in the Trash."); }
+      }
+      await uploadOne(j.e.file, parent, c); okN++; okName = j.e.file.name;
       c.done("Uploaded · " + fmt(j.e.file.size));
     } catch (x) { if (c.stopped) c.set("stop", "Stopped. Nothing was kept."); else c.fail(why(x) || "Upload failed. Try again."); }
   };
@@ -809,7 +882,19 @@ async function doUploads(jobs, base) {
   await refresh();
   if (okN) toast(okN === 1 ? "Uploaded: " + okName : "Uploaded " + okN + " files, the last one " + okName);
 }
-async function uploadOne(file, parent, p) {
+/** (1.80.0) A file with this name is already in the folder: Keep Both (the new one gets a number), Replace (the old one goes to the Trash), or Skip. "Do this for the rest" remembers the answer for this batch. */
+let clashAll = "";
+async function clashChoice(name) {
+  if (clashAll) return clashAll;
+  const all = h("input", { type: "checkbox", id: "clall" });
+  let ch = "skip";
+  const r = await openDialog("Name Already Used", [h("p", { text: "A file called " + name + " is already in this folder." }), h("label", { class: "chk", for: "clall" }, all, " Do this for the rest")],
+    [{ text: "Skip", run: () => { ch = "skip"; } }, { text: "Replace", run: () => { ch = "replace"; } }, { text: "Keep Both", pri: true, run: () => { ch = "keep"; } }]);
+  if (r == null) ch = "skip";
+  if (all.checked) { clashAll = ch; setTimeout(() => { clashAll = ""; }, 60000); }
+  return ch;
+}
+async function uploadOne(file, parent, p, resume) {
   const raw = crypto.getRandomValues(new Uint8Array(32)), fk = await fileKey(raw, ["encrypt"]);
   const n = Math.max(1, Math.ceil(file.size / PIECE)), z = file.size + n * OVER;
   const name = uniqueName(parent, file.name || "file", "f");
@@ -818,18 +903,24 @@ async function uploadOne(file, parent, p) {
   const st = await post("put_start", { p: parent, m, k, c: n, z });
   if (!st.ok) throw new Error(st.error || "Could not start.");
   const id = st.id; let sent = 0;
+  await sendPieces(file, fk, id, n, p, new Set(), () => sent, v => { sent = v; });
+}
+/** The pieces of one file, one by one. have: pieces the server already holds (Resume skips them). A failed or stopped upload is thrown away on the server unless keep is set. */
+async function sendPieces(file, fk, id, n, p, have, getSent, setSent, keep) {
+  let sent = getSent();
   try {
     for (let i = 0; i < n; i++) {
+      if (have.has(i)) { sent += Math.min(PIECE, file.size - i * PIECE); setSent(sent); p.add(sent, file.size || 1, true); continue; }
       const plain = await file.slice(i * PIECE, Math.min(file.size, (i + 1) * PIECE)).arrayBuffer();
       const body = await lockPiece(fk, plain, i, n);
       let r = null;
       for (let t = 0; t < 3 && !(r && r.ok); t++) { r = await HF("api.php?action=put_chunk&id=" + id + "&n=" + i, { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body }).catch(() => null); if (r && !r.ok && r.status !== 502 && r.status !== 504) break; }
       if (!r || !r.ok) { const j = r ? await r.json().catch(() => ({})) : {}; throw new Error(j.error || "A piece did not arrive."); }
-      sent += plain.byteLength; p.add(sent, file.size || 1, true);
+      sent += plain.byteLength; setSent(sent); p.add(sent, file.size || 1, true);
       if (p.stopped) throw new Error("Stopped");   // (1.66.0) × on its card: the half file is thrown away below
     }
     const dn = await post("put_done", { id }); if (!dn.ok) throw new Error(dn.error || "The file did not finish.");
-  } catch (e) { await post("put_abort", { id }); throw e; }
+  } catch (e) { if (!keep) await post("put_abort", { id }); throw e; }
 }
 /* what was dropped: files, and folders with everything in them */
 async function dropped(dt) {
@@ -1007,7 +1098,7 @@ function keys(e) {
 function areaMenu(at) {
   closeMenu();
   /** @type {any[][]} */
-  const acts = [["up", "Upload Files", () => $("pick").click()], ["folder", "New Folder", mkdir]];
+  const acts = [["up", "Upload Files", () => $("pick").click()], ["folder", "Upload Folder", () => $("pickdir").click()], ["folder", "New Folder", mkdir]];
   pm = h("div", { class: "pm newm", role: "menu" }, acts.map(a => h("button", { type: "button", role: "menuitem", onclick: () => { closeMenu(); a[2](); } }, svg(a[0]), a[1])));
   document.body.append(pm);
   pm.style.left = Math.max(8, Math.min(innerWidth - pm.offsetWidth - 8, at.x)) + "px"; pm.style.top = Math.max(8, Math.min(innerHeight - pm.offsetHeight - 8, at.y)) + "px";
@@ -1020,6 +1111,11 @@ function wire() {
   $("mk").onclick = $("mkh").onclick = mkdir;
   $("psets").onclick = settingsBox;
   $("pick").onchange = e => { uploadAll([...e.target.files].map(f => ({ file: f, parts: [] }))); e.target.value = ""; };
+  $("pickdir").onchange = e => { const fl = [...e.target.files]; uploadAll(fl.map(f => ({ file: f, parts: String(f.webkitRelativePath || "").split("/").slice(0, -1) }))); e.target.value = ""; };
+  $("pickcam").onchange = e => { uploadAll([...e.target.files].map(f => ({ file: f, parts: [] }))); e.target.value = ""; };
+  $("pickres").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) resumeUpload(f); };
+  /* (1.80.0) paste a picture or a file anywhere on the page: it is uploaded here */
+  document.addEventListener("paste", e => { const fl = [...((e.clipboardData && e.clipboardData.files) || [])]; if (!fl.length || tab !== "files" || document.querySelector("dialog[open]") || /INPUT|TEXTAREA/.test(document.activeElement?.tagName || "")) return; e.preventDefault(); uploadAll(fl.map((f, k) => ({ file: f.name && f.name !== "image.png" ? f : new File([f], "Pasted " + new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-") + (k ? " " + (k + 1) : "") + "." + (ext(f.name) || (f.type.split("/")[1] || "png")), { type: f.type, lastModified: Date.now() }), parts: [] }))); });
   $("sela").onclick = toggleAll;
   $("empty").onclick = async () => { if (await confirmBox("Empty the Trash?", "Everything in the Trash is deleted for good. This can't be undone.", "Empty Trash", true)) await run(post("empty_trash"), "Trash emptied."); };
   $("tabs").onclick = e => { const b = e.target.closest("button"); if (!b) return; tab = b.dataset.t; sel.clear(); q = ""; $("q").value = ""; render(); };

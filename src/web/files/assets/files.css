@@ -329,3 +329,19 @@ select.chs{height:32px;font-size:13.5px;padding:0 8px}
 #pbox .md hr{border:0;border-top:1px solid var(--line);margin:1.2em 0}
 #pbox .pv:fullscreen{background:#000;max-height:none;height:100%}
 #pbox .pv:fullscreen img,#pbox .pv:fullscreen video{max-height:100vh;max-width:100vw}
+
+/* (1.80.0) resume, labels, notes */
+.note.resume{flex-direction:column;align-items:stretch;gap:8px}
+.note.resume p{margin:0}
+.note.resume .rs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.note.resume .rs span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbd{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:7px;vertical-align:middle;background:var(--lbc,#888)}
+.lb-red{--lbc:#ef5350}.lb-orange{--lbc:#ff9800}.lb-yellow{--lbc:#fbc02d}.lb-green{--lbc:#43a047}.lb-blue{--lbc:#1e88e5}.lb-purple{--lbc:#8e24aa}.lb-gray{--lbc:#9e9e9e}
+.ntm{margin-left:6px;color:var(--mute);font-size:12px}
+.lbs{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+.lbb{width:30px;height:30px;border-radius:50%;border:2px solid transparent;background:var(--lbc,transparent);cursor:pointer}
+.lbb.none{border-color:var(--line);background:var(--field)}
+.lbb[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--box) inset}
+.dnote{margin:8px 0;padding:8px 10px;border-radius:9px;background:color-mix(in srgb,var(--fg) 6%,transparent);white-space:pre-wrap;font-size:13.5px}
+dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--field);color:var(--fg);padding:9px 10px;font:inherit;resize:vertical}
+.chk{display:flex;align-items:center;gap:8px}

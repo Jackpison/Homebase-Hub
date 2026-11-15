@@ -210,3 +210,12 @@ $d = fl_load(); $d['items'][$f2]['z'] = BK_FILES_MAX + 10; fl_save($d);
 $threw = false; try { bk_export(['files' => true]); } catch (Exception $e) { $threw = strpos($e->getMessage(), 'site-data/files') !== false; }
 t('Files too big for a backup file say what to do instead (copy the folder)', $threw && bk_overview()['files']['tooBig'] === true && strpos(bk_overview()['files']['summary'], 'copy the folder') !== false);
 t('Start Over removes Files and the site key', in_array('Files', bk_reset_all(), true) && fl_load()['items'] === [] && sv_get() === null && glob(fl_blob_dir() . '/*') === []);
+
+// ---- (1.80.0) Resume: an open upload says which pieces it already has ----
+$d = fl_load(); $out = [];
+fl_op_put_start($d, '', $enc('name'), $enc('key'), 3, 3 * 100, $out); $rid = $out['id']; fl_save($d);
+hub_write(fl_blob_path($rid, 0), str_repeat('B', 100)); hub_write(fl_blob_path($rid, 2), str_repeat('B', 100));
+t('an open upload lists the pieces it has (0 and 2, not 1)', fl_put_have(fl_load(), $rid) === [0, 2]);
+t('an upload that is not open says so (null)', fl_put_have(fl_load(), str_repeat('c', 16)) === null && fl_put_have(fl_load(), 'bad') === null);
+$d = fl_load(); fl_op_put_done($d, $rid); fl_save($d);
+t('a finished file is no longer an open upload', fl_put_have(fl_load(), $rid) === null);

@@ -215,6 +215,14 @@ function fl_op_put_start(array &$d, string $p, string $m, string $k, int $c, int
     $out['id'] = $id;
     return '';
 }
+/** (1.80.0) Resume: which pieces of an open upload are already on the server. null when that upload is not open. */
+function fl_put_have(array $d, string $id): ?array {
+    $i = $d['items'][$id] ?? null;
+    if (!fl_id_ok($id) || !$i || $i['t'] !== 'f' || empty($i['up'])) return null;
+    $have = [];
+    for ($n = 0; $n < $i['c']; $n++) if (is_file(fl_blob_path($id, $n))) $have[] = $n;
+    return $have;
+}
 function fl_op_put_done(array &$d, string $id) {
     $i = $d['items'][$id] ?? null;
     if (!$i || $i['t'] !== 'f' || empty($i['up'])) return ['That upload is not open.', 404];
