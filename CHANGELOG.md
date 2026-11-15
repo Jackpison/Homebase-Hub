@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.4 | A new button hover (main buttons sweep a lighter fill, others tint), Files columns with Last Modified time and Access, hover actions before Size, solid folder tiles, and a framed Share window with clearer text |
 | 1.80.3 | Files list reordered (Name, Size, Star, Modified, Access) with hover actions, details closed until you pick one, HEIC counts as a picture, Home date and a smaller, centred clock, and one lift-and-shadow button hover on every page |
 | 1.80.2 | Files: PDFs show their first page as a picture, Keep on This Device for offline use, and Attach a File From Files in Tasks and Cards (the link opens the file in Files) |
 | 1.80.1 | Files: folders show their size, gallery links for several pictures, Send to Telegram (asks first), a floating selection bar, Folders and Files parts in the grid, coloured filter chips and folder colours; Settings and Cards messages name what changed; better icons in Home Settings and Widgets |
@@ -171,6 +172,20 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.4
+
+### Every page
+- The lift-and-shadow button hover from 1.80.3 is replaced. Main (yellow) buttons fill with a lighter colour that sweeps in from the left. Every other button gets a soft tint and a brighter edge, and shrinks a little when pressed. Nothing moves for people whose device asks for less motion.
+
+### Files
+- Last Modified shows the date and time (15/11/2026 9:29pm). The last column is called Access. Headers are in normal case.
+- Pointing at a row shows Share, Download, Rename and Move to Trash just before the Size column. While the details panel is open, Access and these actions step aside because the panel has the same ones.
+- Folders are solid tiles with a white outline, like the icons in the top bar.
+- The Share window is framed like the other windows: the file name and size, Your Links, and New Link with Link Ends and Downloads Allowed side by side. The text is clearer, and Done now comes before Make a New Link.
+- The page a visitor opens says Open File and Download on yellow buttons, and its notes are shorter and plainer.
 
 ---
 
