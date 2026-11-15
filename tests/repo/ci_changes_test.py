@@ -10,7 +10,7 @@ res = []
 def check(name, ok, extra=''):
     res.append(bool(ok)); print(('PASS ' if ok else 'FAIL ') + name + ('' if ok or not extra else '  -> ' + str(extra)))
 
-check('X1 README, AGENTS, CONTRIBUTING, tests/README and an issue template are docs', all(is_doc(f) for f in ('README.md', 'AGENTS.md', '.github/CONTRIBUTING.md', 'tests/README.md', 'tools-app/README.md', '.github/ISSUE_TEMPLATE/bug_report.md', '.github/ISSUE_TEMPLATE/config.yml')))
+check('X1 README, AGENTS, tests/README and an issue template are docs', all(is_doc(f) for f in ('README.md', 'AGENTS.md', 'tests/README.md', 'tools-app/README.md', '.github/ISSUE_TEMPLATE/bug_report.md', '.github/ISSUE_TEMPLATE/config.yml')))
 check('X2 CHANGELOG.md is not docs (the release check reads it)', not is_doc('CHANGELOG.md'))
 check('X3 anything in src/ is not docs, even .md (it ships)', not is_doc('src/web/hub/docs/README.txt') and not is_doc('src/web/hub/docs/THIRD-PARTY.md'))
 check('X4 website, workflows, scripts, tests and code are not docs', not any(is_doc(f) for f in ('website/content/install.html', 'website/style.css', '.github/workflows/ci.yml', 'scripts/build.py', 'tests/browser/pages_test.py', 'tools-app/src/main.js', 'package.json')))

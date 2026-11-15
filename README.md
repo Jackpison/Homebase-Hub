@@ -329,7 +329,7 @@ On Telegram: <a href="https://t.me/Jackpison">@Jackpison</a>. For bugs, use <a h
 
 ## Contributing
 
-Bug reports and ideas are welcome. [CONTRIBUTING.md](.github/CONTRIBUTING.md) has the short version, and [AGENTS.md](AGENTS.md) lists every check to run before a change.
+Bug reports and ideas are welcome. Found a problem? [Open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose) with your version (Settings > Changelog), what you did, what you expected and what happened. An idea or a question? Message [@Jackpison](https://t.me/Jackpison) on Telegram. [AGENTS.md](AGENTS.md) lists the rules and every check to run before a change.
 
 ### Building and testing
 
