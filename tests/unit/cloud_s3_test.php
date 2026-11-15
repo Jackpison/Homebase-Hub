@@ -53,6 +53,16 @@ $left = array_values(array_diff(scandir("$root/s3"), ['.', '..']));
 t('only the newest 2 own copies are kept; other files and other folders are never touched', in_array("Backups__$name", $left, true) && in_array("Backups__$slug-backup-2020-10-03.enc.json", $left, true) && !in_array("Backups__$slug-backup-2020-10-01.enc.json", $left, true) && !in_array("Backups__$slug-backup-2020-10-02.enc.json", $left, true)
   && in_array('Backups__holiday.jpg', $left, true) && in_array("Backups__$slug-backup-2020-10-09.json", $left, true) && in_array("Other__$slug-backup-2020-10-01.enc.json", $left, true), json_encode($left));
 
+// (1.79.6) a key that may write but not delete: the run and the test say so, and the copy it just made stays
+file_put_contents("$root/.nodelete", '1');
+$r = cl_test([]);
+t('Test Connection still works but says the test file could not be removed, and what to check', $r['ok'] && strpos($r['message'], 'could not be removed') !== false && strpos($r['message'], 'may delete files') !== false, json_encode($r));
+$d = cl_load(); $d['keep'] = 1; cl_save($d); $r = cl_run();
+t('a run whose old-copy deletes are refused still succeeds and says how many could not be removed', $r['ok'] && strpos((string)($r['note'] ?? ''), 'could not be removed') !== false && is_file($file), json_encode($r));
+unlink("$root/.nodelete"); array_map('unlink', glob("$root/s3/*write-test*") ?: []); $d = cl_load(); $d['keep'] = 2; cl_save($d);
+$r = cl_test([]);
+t('...and with delete allowed again the test is plain', $r['ok'] && strpos($r['message'], 'could not be removed') === false);
+
 // ---- Restore from Cloud ----
 file_put_contents("$root/s3/Backups__otherhome-backup-2021-01-05.enc.json", 'from another site');
 [$ok, $why, $copies] = cl_copies();
@@ -90,4 +100,9 @@ $r = cl_test([]);
 t('Test Connection lists the bucket, writes a file and removes it', $r['ok'] && strpos($r['message'], 'bucket') !== false && !glob("$root/s3/*write-test*"), json_encode($r));
 t('...says what is wrong in plain words (secret, region, bucket)', strpos(cl_test(['pass' => 'bad'])['message'], 'secret key') !== false && strpos(cl_test(['region' => 'x-1'])['message'], 'eu-test-1') !== false && strpos(cl_test(['bucket' => 'other'])['message'], 'no bucket') !== false);
 t('...and does not use the saved secret for a different kind of server on its own', (function () use ($B) { $r = cl_test(['type' => 'webdav', 'url' => $B]); return !$r['ok']; })());
+t('(1.79.6) Disconnect drops the saved address, keys, bucket and schedule, and leaves the copies in the bucket alone', (function () use ($root, $B) {
+    $d = cl_load(); $d['on'] = true; $d['last'] = time(); cl_save($d); $before = count(glob("$root/s3/*") ?: []);
+    $ok = cl_forget(); $n = cl_load(); $v = cl_view($n);
+    return $ok && $n['pass'] === '' && $n['user'] === '' && $n['url'] === '' && $n['bucket'] === '' && $n['on'] === false && $n['last'] === 0 && $v['hasPass'] === false && count(glob("$root/s3/*") ?: []) === $before;
+})());
 t('Start Over removes the cloud settings (and so the secret key)', (function () { $c = hub_jpath(cl_file()); $had = is_file($c); bk_reset_all(); return $had && !is_file($c); })());

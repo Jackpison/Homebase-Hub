@@ -36,6 +36,8 @@ function cl_defaults(): array {
     return ['on' => false, 'type' => 'webdav', 'url' => '', 'user' => '', 'pass' => '', 'dir' => 'Homebase Hub', 'every' => 1, 'keep' => 14,
             'region' => 'us-east-1', 'bucket' => '', 'last' => 0, 'lastName' => '', 'lastSize' => 0, 'error' => '', 'tried' => '', 'note' => ''];
 }
+/** (1.79.6) Disconnect: the saved address, keys and schedule are dropped. Copies already in the cloud are not touched. */
+function cl_forget(): bool { return cl_save(cl_defaults()); }
 function cl_load(): array {
     $d = hub_jread(cl_file());
     $d = is_array($d) ? array_merge(cl_defaults(), $d) : cl_defaults();
@@ -205,7 +207,8 @@ function cl_slug(): string {
     return $s !== '' ? substr($s, 0, 40) : 'site';
 }
 /** Deletes the copies beyond $keep (the newest are kept). Returns how many went. */
-function cl_tidy(array $cfg, array $parts, string $slug, int $keep, string $justMade): int {
+function cl_tidy(array $cfg, array $parts, string $slug, int $keep, string $justMade, ?int &$failed = null): int {
+    $failed = 0;
     $z = cl_names($cfg, $parts);
     if ($z === null) return 0;
     $own = cl_own_names(array_map('strval', array_keys($z)), $slug);
@@ -214,7 +217,7 @@ function cl_tidy(array $cfg, array $parts, string $slug, int $keep, string $just
     foreach (array_slice($own, $keep) as $n) {
         if ($n === $justMade) continue;
         [$s] = cl_delete($cfg, $parts, $n);
-        if (in_array($s, [200, 202, 204, 404], true)) $gone++;
+        if (in_array($s, [200, 202, 204, 404], true)) $gone++; else $failed++;   // (1.79.6) a refused delete is counted, so the run can say so
     }
     return $gone;
 }
@@ -407,7 +410,8 @@ function cl_run(): array {
         [$s, $rb, $e] = cl_put($d, $parts, $name, $tmp);
         if ($e !== '') { $r = ['ok' => false, 'message' => $e]; goto done; }
         if (!in_array($s, [200, 201, 204], true)) { $r = ['ok' => false, 'message' => cl_fail_text($d, $s, $rb, 'the upload')]; goto done; }
-        $gone = cl_tidy($d, $parts, cl_slug(), (int)$d['keep'], $name);
+        $failed = 0; $gone = cl_tidy($d, $parts, cl_slug(), (int)$d['keep'], $name, $failed);
+        if ($failed > 0) $note = trim($note . ' ' . $failed . ' older ' . ($failed === 1 ? 'copy' : 'copies') . ' could not be removed: the server refused the delete. Check that the key may delete files.');
         $r = ['ok' => true, 'message' => 'Saved ' . $name . ($gone ? ' and removed ' . $gone . ' older ' . ($gone === 1 ? 'copy' : 'copies') : '') . '.', 'name' => $name, 'size' => strlen($data), 'note' => $note];
     } catch (Throwable $e) { $r = ['ok' => false, 'message' => 'Cloud Backup stopped: ' . $e->getMessage()]; }
     done:
@@ -450,8 +454,10 @@ function cl_test(array $in): array {
     [$s, $b, $e] = cl_put($cfg, $parts, $name, $tmp, 30); @unlink($tmp);
     if ($e !== '') return ['ok' => false, 'message' => $e];
     if (!in_array($s, [200, 201, 204], true)) return ['ok' => false, 'message' => cl_fail_text($cfg, $s, $b, 'writing a file')];
-    cl_delete($cfg, $parts, $name);
-    return ['ok' => true, 'message' => cl_is_s3($cfg) ? 'It works: the bucket is there and the server accepts files.' : 'It works: the folder is there and the server accepts files.'];
+    [$ds, $db, $de] = cl_delete($cfg, $parts, $name);   // (1.79.6) the answer is read: a key that may write but not delete would otherwise pile up copies unseen
+    $left = $de !== '' ? $de : (in_array($ds, [200, 202, 204, 404], true) ? '' : cl_fail_text($cfg, $ds, $db, 'removing a file'));
+    $tail = $left !== '' ? ' But the small test file ' . $name . ' could not be removed (' . rtrim($left, '.') . '). Delete it yourself, and check that this key may delete files, or old copies will not be cleaned up.' : '';
+    return ['ok' => true, 'message' => (cl_is_s3($cfg) ? 'It works: the bucket is there and the server accepts files.' : 'It works: the folder is there and the server accepts files.') . $tail];
 }
 /** The schedule: called from cron.php and, without a cron job, after a page's answer. One try a day, however it ends. */
 function cl_tick(): ?array {

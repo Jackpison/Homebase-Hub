@@ -837,6 +837,12 @@ case 'cloud_save':
     if (!cl_save($d)) hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
     hub_json(200, cl_view($d));
 
+case 'cloud_clear':   // Disconnect (1.79.6)
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/cloud.php';
+    if (!cl_forget()) hub_json(500, ['ok' => false, 'error' => 'Could not save (check the folder permissions).']);
+    hub_json(200, cl_view(cl_load()) + ['message' => 'Disconnected. The copies already in the cloud were not touched.']);
+
 case 'cloud_list':   // Restore from Cloud (1.79.5): the copies in the saved folder or bucket
     need_admin(false);
     require_once __DIR__ . '/lib/cloud.php';

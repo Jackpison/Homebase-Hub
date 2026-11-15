@@ -157,6 +157,11 @@ try:
 
         # ---- 1.77.0: Cloud Backup (the card in Backup & Restore) ----
         pg.goto(s.base + '/web/settings/#backup'); wait_js(pg, "!!document.getElementById('ix-cloud')", 20000)
+        fold = pg.evaluate("[document.querySelector('#ix-cloud .ix-ec-b').offsetParent === null, document.getElementById('ix-clexp').textContent, document.querySelector('#ix-cloud .ix-ec-d').textContent.length > 10]")
+        check('L30i Cloud Backup starts folded: the card shows one line and an Expand button, and the fields are out of sight', fold == [True, 'Expand', True], fold)
+        pg.click('#ix-clexp')
+        opened = pg.evaluate("[document.querySelector('#ix-cloud .ix-ec-b').offsetParent !== null, document.getElementById('ix-clexp').textContent, document.getElementById('ix-clexp').getAttribute('aria-expanded'), document.getElementById('ix-clform').hidden]")
+        check('L30j Expand opens it (the button says Collapse) and, with nothing saved yet, the form is shown', opened == [True, 'Collapse', 'true', False], opened)
         cb = pg.evaluate("(() => [...['ix-clurl', 'ix-cluser', 'ix-clpass', 'ix-cldir', 'ix-clevery', 'ix-clkeep', 'ix-clon', 'ix-clsave', 'ix-cltest', 'ix-clnow'].map(i => !!document.getElementById(i)), document.getElementById('ix-clpass').type, document.getElementById('ix-clpass').value])()")
         check('L30 Cloud Backup: the card has its fields, a password box that is empty, and the three buttons', cb == [True] * 10 + ['password', ''], cb)
         pg.fill('#ix-clurl', 'http://8.8.8.8/dav'); pg.fill('#ix-cluser', 'me'); pg.fill('#ix-clpass', 'x'); pg.click('#ix-cltest')
@@ -164,7 +169,7 @@ try:
         check('L30b an address on the internet without https is refused in plain words, before anything is sent', 'https://' in pg.inner_text('#ix-clmsg'), pg.inner_text('#ix-clmsg'))
 
         # ---- 1.79.5: Cloud Backup to an S3 bucket, and Restore From Cloud ----
-        pg.reload(); wait_js(pg, "!!document.getElementById('ix-cloud')", 20000)
+        pg.reload(); wait_js(pg, "!!document.getElementById('ix-cloud')", 20000); pg.click('#ix-clexp')
         pg.select_option('#ix-cltype', 's3')
         vis = pg.evaluate("(() => { const g = k => document.querySelector('.ix-cltp[data-for=' + k + ']'); return [g('s3').hidden, g('webdav').hidden, ['ix-cls3url', 'ix-clregion', 'ix-clbucket', 'ix-clak', 'ix-clsk'].every(i => !!document.getElementById(i)), document.getElementById('ix-clsk').type, !!document.getElementById('ix-clrestore')]; })()")
         check('L30c Cloud Backup: choosing S3 shows its fields (address, region, bucket, access key, secret key, hidden) and hides the WebDAV ones; Restore From Cloud is there', vis == [False, True, True, 'password', True], vis)
@@ -178,6 +183,10 @@ try:
         wait_js(pg, "document.getElementById('ix-clsk') && document.getElementById('ix-clsk').placeholder === 'Saved'", 15000)
         sv = pg.evaluate("[document.getElementById('ix-cltype').value, document.getElementById('ix-clbucket').value, document.getElementById('ix-clregion').value, document.getElementById('ix-clak').value, document.getElementById('ix-clsk').value, document.body.innerHTML.indexOf('SECRETKEY1') < 0]")
         check('L30f saving S3 keeps the kind, bucket, region and access key, shows only "Saved" for the secret key and never puts it in the page', sv == ['s3', 'my-backups', 'eu-central-1', 'AKID', '', True], sv)
+        short = pg.evaluate("[!!document.querySelector('#ix-cloud .ix-clsum'), document.getElementById('ix-clform').hidden, document.getElementById('ix-clexp').textContent, document.querySelector('#ix-cloud .ix-ec-d').textContent, document.querySelector('#ix-cloud .ix-clsum').textContent.indexOf('my-backups') >= 0, !document.querySelector('#ix-cloud .ix-clsum').textContent.includes('SECRETKEY1')]")
+        check('L30k once saved, the card stays open as left, shows a short list (kind, address, bucket, folder, copy, schedule) and the form is closed behind Edit', short[:3] == [True, True, 'Collapse'] and 'S3 bucket my-backups' in short[3] and short[4] and short[5], short)
+        pg.click('#ix-cledit')
+        check('L30l Edit opens the form again (the button says Close)', pg.evaluate("[document.getElementById('ix-clform').hidden, document.getElementById('ix-cledit').textContent]") == [False, 'Close'])
         pg.click('#ix-clrestore'); wait_js(pg, "document.getElementById('ix-clmsg').textContent.length > 8 && !/Looking/.test(document.getElementById('ix-clmsg').textContent)", 20000)
         rm = pg.inner_text('#ix-clmsg')
         check('L30g Restore From Cloud with nothing reachable says what is wrong in plain words and lists nothing', len(rm) > 8 and pg.evaluate("document.querySelectorAll('#ix-cllist [data-cn]').length") == 0, rm)
@@ -185,6 +194,15 @@ try:
         wait_js(pg, "document.getElementById('ix-clsk') && document.getElementById('ix-clsk').placeholder === '' && document.getElementById('ix-cltype').value === 'webdav' && document.getElementById('ix-clurl').value === 'https://8.8.8.8/dav'", 15000)   # the saved S3 secret said Saved until this save redrew the card
         sw = pg.evaluate("[document.getElementById('ix-clpass').placeholder, document.getElementById('ix-clsk').placeholder]")
         check('L30h changing the kind of cloud without a new password drops the saved secret (a key for one kind of server is never sent to the other)', sw == ['', ''], sw)
+        pg.fill('#ix-clpass', 'pw-for-the-test'); pg.click('#ix-clsave'); wait_js(pg, "!!document.querySelector('#ix-cloud .ix-clsum') && !!document.getElementById('ix-clclear')", 15000)
+        check('L30m a set-up card has a Disconnect button that must be held', pg.evaluate("(() => { const b = document.getElementById('ix-clclear'); return !!b && b.hasAttribute('data-hold') && b.offsetParent !== null; })()"))
+        pg.locator('#ix-clclear').scroll_into_view_if_needed(); pg.wait_for_timeout(300)
+        bb = pg.locator('#ix-clclear').bounding_box(); pg.mouse.move(bb['x'] + bb['width'] / 2, bb['y'] + bb['height'] / 2); pg.mouse.down(); pg.wait_for_timeout(300); pg.mouse.up(); pg.wait_for_timeout(700)
+        check('L30n pressing it for a moment does nothing: the connection is still there', pg.evaluate("!!document.querySelector('#ix-cloud .ix-clsum')"))
+        bb = pg.locator('#ix-clclear').bounding_box(); pg.mouse.move(bb['x'] + bb['width'] / 2, bb['y'] + bb['height'] / 2); pg.mouse.down(); pg.wait_for_timeout(1400); pg.mouse.up()
+        wait_js(pg, "!document.querySelector('#ix-cloud .ix-clsum') && !document.getElementById('ix-clform').hidden", 15000)
+        gone = pg.evaluate("[document.getElementById('ix-clbucket').value, document.getElementById('ix-clak').value, document.getElementById('ix-clsk').placeholder, !!document.getElementById('ix-clclear')]")
+        check('L30o holding it disconnects: the summary is gone, the form is open and empty (no saved secret), and the button is gone', gone == ['', '', '', False], gone)
 
         # ---- Files: the grid ----
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)

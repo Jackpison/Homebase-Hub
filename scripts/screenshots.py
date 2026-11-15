@@ -56,6 +56,12 @@ write_json(weather_file(), ['key' => 'bengaluru|c', 'town' => 'bengaluru', 'plac
              'days' => array_map(fn($x) => ['date' => $x[0], 'max' => $x[1], 'min' => $x[2], 'text' => $x[3], 'pic' => $x[4]], $days)]]);
 pad_write("Ask about the rent receipt.");
 '''
+CLOUD_SEED = r'''
+require $argv[1] . '/web/home/lib.php'; require_once $argv[1] . '/web/hub/core/lib/cloud.php';
+$d = cl_load();
+cl_save(array_merge($d, ['type' => 's3', 'url' => 'https://s3.eu-central-003.backblazeb2.com', 'region' => 'eu-central-003', 'bucket' => 'my-homebase-backups', 'user' => 'example-access-key', 'pass' => 'example-secret-key',
+  'dir' => 'Homebase Hub', 'every' => 1, 'keep' => 14, 'on' => true, 'last' => time() - 3600, 'lastName' => 'homebase-hub-backup-' . date('Y-m-d') . '.enc.json', 'lastSize' => 27300000, 'error' => '']));
+'''
 VISITS = r'''
 require $argv[1] . '/web/links/lib.php';
 $d = hub_read_guarded(hub_dir('links') . '/bookmarks.php');
@@ -102,10 +108,12 @@ with sync_playwright() as p:
             snap(pg,'tools','/web/tools/')
             for n,h in [('general','general'),('appearance','look'),('presets','themes'),('colors','colors'),('security','security'),('telegram','telegram'),('backup','backup'),('updates','updates'),('files','files'),('health','health'),('features','features'),('check','check'),('changelog','changelog')]:
                 snap(pg,'s-'+n,'/web/settings/#'+h)
-            # (1.79.5) Cloud Backup to an S3 bucket, filled in with made-up values, and Restore From Cloud beside it
-            pg.goto(B+'/web/settings/#backup',wait_until='domcontentloaded'); pg.wait_for_selector('#ix-cltype',timeout=20000); pg.select_option('#ix-cltype','s3')
-            for i,v in [('#ix-cls3url','https://s3.eu-central-003.backblazeb2.com'),('#ix-clregion','eu-central-003'),('#ix-clbucket','my-homebase-backups'),('#ix-clak','example-access-key'),('#ix-clsk','example-secret-key')]: pg.fill(i,v)
-            pg.locator('#ix-cltype').scroll_into_view_if_needed(); pg.evaluate("document.querySelector('#ix-cltype').scrollIntoView({block:'start'})"); pg.wait_for_timeout(500)
+            # (1.79.5, 1.79.6) Cloud Backup to an S3 bucket, made-up values written as a save would (the server refuses to save an address it cannot reach from here):
+            # the card starts folded, and opens as a short list with Edit
+            subprocess.run(['php','-r',CLOUD_SEED,'--',D],check=True)
+            pg.goto(B+'/web/settings/#backup',wait_until='domcontentloaded'); pg.wait_for_selector('#ix-clexp',state='attached',timeout=20000); pg.wait_for_timeout(600)
+            pg.click('#ix-clexp'); pg.wait_for_selector('#ix-cloud .ix-clsum',timeout=15000); pg.wait_for_timeout(600)
+            pg.evaluate("document.querySelector('#ix-cloud').scrollIntoView({block:'start'})"); pg.wait_for_timeout(500)
             pg.screenshot(path=f'{OUT}/s-cloud.png'); print('s-cloud')
         else:
             snap(pg,'s-general-light','/web/settings/#general'); snap(pg,'tools-light','/web/tools/')

@@ -331,6 +331,10 @@ try:
     fm = s.req(core + 'cloud_fetch&name=' + '..%2Fcore%2Fconfig.php'); fm_st = s.last_status
     check('E11 Restore From Cloud: a visitor gets nothing from cloud_list or cloud_fetch; you get a refusal with ok:false for no settings and for a name that is not a copy',
           la_st in (401, 403) and fa_st in (401, 403) and lm_st == 400 and lm.get('ok') is False and fm_st == 400 and fm.get('ok') is False and 'error' in fm, (la_st, fa_st, lm_st, lm, fm_st, fm))
+    # E12 (1.79.6): Disconnect (cloud_clear) is for you only, and answers in the one shape
+    dn = anon2.req(core + 'cloud_clear', {}); dn_st = anon2.last_status
+    dm = s.req(core + 'cloud_clear', {}, hdr={'X-Hub-CSRF': s.csrf}); dm_st = s.last_status
+    check('E12 Disconnect Cloud Backup: a visitor is refused; you get ok, no secret and a plain message that the copies in the cloud were not touched', dn_st in (401, 403) and dm_st == 200 and dm.get('ok') is True and dm.get('hasPass') is False and 'not touched' in str(dm.get('message')), (dn_st, dm_st, dm))
 finally:
     stop_all()
 sys.exit(check.done())

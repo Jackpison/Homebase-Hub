@@ -52,6 +52,6 @@ if ($m === 'GET' && $key === '' && ($q['list-type'] ?? '') === '2') {
 switch ($m) {
     case 'PUT': file_put_contents($file, $body); header('ETag: "x"'); http_response_code(200); exit;
     case 'GET': if (!is_file($file)) xerr(404, 'NoSuchKey'); header('Content-Type: application/json'); readfile($file); exit;
-    case 'DELETE': if (is_file($file)) unlink($file); http_response_code(204); exit;
+    case 'DELETE': if (is_file($root . '/.nodelete')) xerr(403, 'AccessDenied', 'this key may not delete'); if (is_file($file)) unlink($file); http_response_code(204); exit;
 }
 xerr(405, 'MethodNotAllowed');
