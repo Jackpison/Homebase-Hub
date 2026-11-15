@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.7 | Settings cards with one control are slim rows, Security Overview sorts what to do first, Log Out in every gear menu, a ? button for the shortcuts, and closer shields on private tabs |
 | 1.79.6 | The Cloud Backup card starts folded and shrinks to a short list with Edit, a held Disconnect button, and a refused delete is now reported |
 | 1.79.5 | Cloud Backup can send to an S3 bucket, and Restore From Cloud brings a copy back; every failed request now answers in one shape; the big page scripts are cut into labelled parts |
 | 1.79.3 | Box Headline Color moved from Edit Tab into each box |
@@ -161,6 +162,28 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.7
+
+### Changed
+
+- **Settings cards with one control are slim rows.** A card with one field, one choice, one or two buttons now shows its text on the left and the control on the right. This covers Site Name, Site Logo, Time Zone, Theme, Font and Text Sizes. Cards with several controls stay cards. On a phone the row stacks again.
+- **Security Overview** is shorter. A slim header shows the score, the next best step and a button for it. The tiles are in three groups: Needs Attention, In Place and Manage.
+- **Telegram Login Approval is part of Sign-In again.** The 1.79.2 rename had made it a tab of its own. Security has four tabs again: Overview, Sign-In, Data Protection and Devices.
+- **Log Out** is the last item in the gear menu on every page, as on the start page.
+- **The Tools gear menu** shows its Tools Settings icon in the Tools colour, like the other pages.
+- **A ? button** in the bar opens the keyboard shortcuts on computers. The search box now just says Search.
+- **The shield on a private or encrypted tab** sits closer to the tab name in Links and Info.
+
+### Added
+
+- **Site Address** in General: the address of your site, with a Copy button.
+
+### Security
+
+- **SVG to PNG** in Tools removes scripts, embedded pages, event attributes and links to other files from an SVG before it draws it.
 
 ---
 

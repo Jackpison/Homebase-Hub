@@ -121,7 +121,7 @@ try:
         pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
         pg.click('#ix-bar [data-ix=keys]'); wait_js(pg, "!!document.querySelector('#ix-dlg.open .ix-keys')", 5000)
         check('P20b (1.79.7) the ? button in the bar opens the keyboard shortcuts', True)
-        pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+        pg.keyboard.press('Escape'); wait_js(pg, "!document.querySelector('#ix-dlg.open')", 5000)
 
         # ---- (1.65.1) Settings > Start Here (General before 1.70.0): Keyboard Shortcuts; closing that window and changing section still works ----
         pg.goto(s.base + '/web/settings/#features'); wait_js(pg, "!!document.getElementById('ix-keysb')", 20000)
