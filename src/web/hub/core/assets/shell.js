@@ -447,7 +447,7 @@
     }
     if (tools) { if (b.parentNode !== tools) tools.insertBefore(b, tools.querySelector('[data-ix="theme"]') || tools.firstChild); b.classList.add('ix-bb'); }
     else { if (b.parentNode !== document.body) document.body.appendChild(b); b.classList.remove('ix-bb'); }
-    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' + (n > 0 ? '<b>' + Math.min(n, 9) + (n > 9 ? '+' : '') + '</b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.hidden = false;
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' + (n > 0 ? '<b aria-hidden="true"></b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.setAttribute('aria-label', n > 0 ? 'Alerts: ' + n + ' new' : 'Alerts you may have missed'); b.hidden = false;
   }
   noteFlushSoon(4000);   // lines that were not sent yet (this browser was logged out, or offline) go once the page is up
   whenBody(noteBell);   // the bell is there from the first moment on every page
@@ -497,7 +497,7 @@
     if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
     else {
       var wh = noteWhere(), e = { id: noteNewId(), m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', a: APP, ts: Date.now(), p: wh.p, w: wh.w, d: detail ? String(detail).slice(0, 200) : '' };
-      noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteSave();
+      noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteSave(); noteBell();   // (1.80.5) the bell shows its dot at once, even while the message is still on screen
       if (!NOTE_HINT.test(msg)) noteLogAdd(e);   // (1.78.0) a hint ("Hold the button down to confirm.") is shown, but it is not something that got done: it stays out of Settings > Logs
     }
     var c = document.createElement('div'), kind = noteKind(msg, bad, act);
@@ -508,10 +508,10 @@
     var arm = function (ms) { clearTimeout(+c.dataset.tm); if (!sticky) c.dataset.tm = String(setTimeout(gone, ms)); };
     if (act && act.label) {
       var ab = document.createElement('button'); ab.type = 'button'; ab.className = 'ix-tact'; ab.textContent = act.label;
-      ab.onclick = function () { noteSeen = noteHist.length; noteSave(); gone(); act.run(); };
+      ab.onclick = function () { gone(); act.run(); };
       c.insertBefore(ab, c.querySelector('.ix-nx'));
     }
-    c.querySelector('.ix-nx').onclick = function () { noteSeen = noteHist.length; noteSave(); gone(); };
+    c.querySelector('.ix-nx').onclick = function () { gone(); };   // (1.80.5) closing a message does not clear the bell's dot: opening the list does
     c.addEventListener('pointerenter', function () { clearTimeout(+c.dataset.tm); });
     c.addEventListener('pointerleave', function () { arm(2500); });
     // (1.77.2) like Magic UI's Animated List: the newest message is on top and springs in from nothing; the others slide to their new place

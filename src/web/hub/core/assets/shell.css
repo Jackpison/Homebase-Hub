@@ -996,7 +996,9 @@ html[data-ix-nav="dock"] #ix-toast,html[data-ix-nav="dock"] #ix-bell{bottom:calc
 #ix-bell.ix-quiet{width:38px;height:38px;opacity:.6;box-shadow:none}
 #ix-bell.ix-quiet:hover,#ix-bell.ix-quiet:focus-visible{opacity:1}
 #ix-bell svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#ix-bell b{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ix-accent);color:#111;font:700 11px/18px var(--ix-font);text-align:center}
+#ix-bell b{position:absolute;top:5px;right:6px;width:10px;height:10px;border-radius:50%;background:var(--ix-accent);box-shadow:0 0 0 2px var(--ix-s1);animation:ix-dotin .3s cubic-bezier(.3,1.5,.5,1)}
+@keyframes ix-dotin{from{transform:scale(0)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){#ix-bell b{animation:none}}
 #ix-nlist{position:fixed;right:16px;bottom:16px;z-index:2147483004;width:min(400px,calc(100vw - 32px));max-height:min(520px,calc(100vh - 32px));display:flex;flex-direction:column;border:1px solid var(--ix-line2);border-radius:18px;background:var(--ix-s1);color:var(--ix-tx);box-shadow:0 18px 48px -10px rgba(0,0,0,.65);font:14px var(--ix-font)}
 html[data-ix-nav="dock"] #ix-nlist{bottom:calc(var(--ix-dock) + 34px + env(safe-area-inset-bottom,0px))}
 .ix-nlh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--ix-line)}
@@ -1069,6 +1071,7 @@ html.ix-hide[data-ix-flat][data-ix-nav="top"] #ix-bar{transform:translateY(calc(
 #ix-bar #ix-bell.ix-bb{position:relative;right:auto;bottom:auto;z-index:auto;width:32px;height:32px;border:0;border-radius:10px;background:none;box-shadow:none;opacity:1;color:inherit;display:grid;place-items:center;flex:none;cursor:pointer}
 #ix-bar #ix-bell.ix-bb[hidden]{display:none}
 #ix-bar #ix-bell.ix-bb.ix-quiet{opacity:.85}
+#ix-bar #ix-bell.ix-bb b{top:3px;right:3px}
 #ix-bar #ix-bell.ix-bb:hover{background:color-mix(in srgb,currentColor 12%,transparent);opacity:1}
 #ix-bar #ix-bell.ix-bb b{top:-3px;right:-3px}
 .ix-nlh .ix-nlq{border:1px solid var(--ix-line2);color:var(--ix-tx)}
@@ -1090,8 +1093,8 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 /* (1.80.4) Button hover. Main (yellow) buttons: a lighter fill sweeps in from the left (Fill Sweep). Every other button: a soft tint and a brighter edge, and a small press (Soft Glow). */
 @media (hover:hover) and (prefers-reduced-motion:no-preference){
   :where(.btn:not(.ib):not(.square):not(.pri):not(.primary),.ix-btn:not(.pri),dialog .act button:not(.pri),dialog .df .btn:not(.pri)){transition:background-color .18s,border-color .18s,box-shadow .18s,transform .12s}
-  :where(.btn:not(.ib):not(.square):not(.pri):not(.primary),.ix-btn:not(.pri),dialog .act button:not(.pri),dialog .df .btn:not(.pri)):not(:disabled):not([data-hold]):hover{background-color:color-mix(in srgb,currentColor 9%,transparent);border-color:color-mix(in srgb,currentColor 38%,transparent)}
-  :where(.btn.danger,.ix-btn.danger,dialog .act .danger):not(:disabled):not([data-hold]):hover{background-color:color-mix(in srgb,#ff6b6b 14%,transparent);border-color:#ff6b6b}
+  :where(.btn:not(.ib):not(.square):not(.pri):not(.primary),.ix-btn:not(.pri),dialog .act button:not(.pri),dialog .df .btn:not(.pri)):not(:disabled):not([data-hold]):hover{background-color:color-mix(in srgb,currentColor 9%,transparent)!important;border-color:color-mix(in srgb,currentColor 38%,transparent)!important}
+  :where(.btn.danger,.ix-btn.danger,dialog .act .danger):not(:disabled):not([data-hold]):hover{background-color:color-mix(in srgb,#ff6b6b 14%,transparent)!important;border-color:#ff6b6b!important}
   :where(.btn:not(.ib):not(.square),.ix-btn,dialog .act button,dialog .df .btn):not(:disabled):not([data-hold]):active{transform:scale(.97)}
   .btn.pri,.btn.primary,.ix-btn.pri,dialog .act .pri,dialog .df .pri{position:relative;overflow:hidden;isolation:isolate}
   .btn.pri::before,.btn.primary::before,.ix-btn.pri::before,dialog .act .pri::before,dialog .df .pri::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,#fff 38%,transparent);transform:translateX(-101%);transition:transform .28s cubic-bezier(.3,.7,.2,1);pointer-events:none}

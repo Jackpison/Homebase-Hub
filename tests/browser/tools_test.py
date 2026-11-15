@@ -37,6 +37,8 @@ try:
         pg.goto(U); wait_js(pg, "document.querySelectorAll('#root .tc').length > 0")
         n = pg.evaluate("new Set([...document.querySelectorAll('#root .tc .tcm')].map(a => a.getAttribute('href'))).size")
         check('N1 the home lists all %d tools, with no page error' % len(DATA['tools']), n == len(DATA['tools']) and not errs, (n, errs))
+        ti = pg.evaluate("(() => { const t = document.querySelector('#root .tci'), c = getComputedStyle(t); return [c.backgroundImage.includes('linear-gradient'), c.color]; })()")
+        check('N1b (1.80.5) a tool card icon is a solid gradient tile with a white glyph, like the bar icons', ti[0] and ti[1] == 'rgb(255, 255, 255)', ti)
         NULLS = "(() => { const w = document.createTreeWalker(document.getElementById('root'), NodeFilter.SHOW_TEXT); let n = 0; while (w.nextNode()) if (/^(null|undefined)+$/.test(w.currentNode.nodeValue.trim())) n++; return n; })()"
         check('N1b no stray "null" or "undefined" text on the home', pg.evaluate(NULLS) == 0)
         st = pg.evaluate("JSON.parse(localStorage.getItem('tools.v3'))")

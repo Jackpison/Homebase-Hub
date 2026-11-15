@@ -18,9 +18,9 @@ body{background:var(--bg);color:var(--text);margin:0}
 .ni{display:flex;align-items:center;gap:11px;padding:6px 10px;border-radius:12px;color:var(--text);border:0;background:none;font:inherit;font-weight:600;cursor:pointer;text-align:left;width:100%;min-width:0}
 /* 1.60: the page you are on: a soft tint in its section's colour and a filled icon (no edge bar); the section of the open tool: a lighter tint */
 .ni:hover{background:var(--card-2)}.ni[aria-current=page]{background:color-mix(in srgb,var(--cc) 14%,transparent)}.ni.open:not([aria-current]){background:color-mix(in srgb,var(--cc) 7%,transparent)}
-.ni[aria-current=page] .nt{background:var(--cc);color:var(--on-c)}.ni[aria-current=page] .nb{background:color-mix(in srgb,var(--cc) 24%,transparent);color:var(--text)}
+.ni[aria-current=page] .nt{box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),0 0 0 2px color-mix(in srgb,var(--cc) 45%,transparent)}.ni[aria-current=page] .nb{background:color-mix(in srgb,var(--cc) 24%,transparent);color:var(--text)}
 .nsep{display:block;margin:14px 12px 6px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.nt{width:32px;height:32px;flex:none;border-radius:10px;display:grid;place-items:center;color:var(--cc);background:color-mix(in srgb,var(--cc) 16%,transparent)}.nl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nt{width:32px;height:32px;flex:none;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--cc,var(--accent)) 92%,#fff),color-mix(in srgb,var(--cc,var(--accent)) 58%,#000))}.nl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nb{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--card-2);color:var(--muted)}
 .nbot{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);display:grid;gap:2px}.nrow{display:flex;gap:6px;align-items:center}.nrow .ni{flex:1}
 .ncollapse{width:38px;height:38px;flex:none;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:none;color:var(--muted);cursor:pointer}.ncollapse:hover{color:var(--text);background:var(--card-2)}
@@ -41,7 +41,7 @@ body{background:var(--bg);color:var(--text);margin:0}
 .chip{padding:6px 13px;border-radius:999px;background:var(--card-2);border:1px solid var(--line);font-size:13px;font-weight:600}.chip:hover{border-color:var(--accent-t)}
 .count{color:var(--muted);font-weight:600;margin:0 0 12px}
 .sec{margin-top:26px}.sh{display:flex;align-items:center;justify-content:space-between;gap:12px}.sh h2,.sec>h2{display:flex;align-items:center;gap:10px;margin:0;font-size:19px}
-.sh h2 .sdot{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--cc);background:color-mix(in srgb,var(--cc) 16%,transparent)}.sh h2 .sdot .i{width:18px;height:18px}.sec[class*=" c-"] .sh a{color:var(--cc)}
+.sh h2 .sdot{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--cc,var(--accent)) 92%,#fff),color-mix(in srgb,var(--cc,var(--accent)) 58%,#000))}.sh h2 .sdot .i{width:18px;height:18px}.sec[class*=" c-"] .sh a{color:var(--cc)}
 .sh small{font-size:12px;color:var(--muted);font-weight:700;padding:2px 8px;border-radius:999px;background:var(--card-2)}.sh a{font-weight:700;color:var(--accent-t)}
 .sd{margin:4px 0 0;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:14px}
@@ -51,7 +51,7 @@ body{background:var(--bg);color:var(--text);margin:0}
 .fc{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.f{font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:2px 6px;border-radius:6px;border:1px solid var(--line-2);color:var(--muted)}.f.o{color:var(--cc);border-color:color-mix(in srgb,var(--cc) 45%,transparent);background:color-mix(in srgb,var(--cc) 8%,transparent)}.fa{color:var(--muted);font-size:12px}
 .go{width:32px;height:32px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--cc);color:var(--on-c);margin-left:auto}.go .i{width:16px;height:16px}
 .pop-b{position:absolute;top:15px;right:46px;font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;background:var(--c-gold);color:var(--on-c)}
-.tci{width:40px;height:40px;flex:none;border-radius:11px;display:grid;place-items:center;color:var(--cc);background:color-mix(in srgb,var(--cc) 16%,transparent)}
+.tci{width:40px;height:40px;flex:none;border-radius:11px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--cc,var(--accent)) 92%,#fff),color-mix(in srgb,var(--cc,var(--accent)) 58%,#000))}
 .c-images{--cc:var(--c-images)}.c-photos{--cc:var(--c-photos)}.c-pdf{--cc:var(--c-pdf)}.c-utilities{--cc:var(--c-utilities)}.c-calculators{--cc:var(--c-calculators)}.c-documents{--cc:var(--c-documents)}.c-gold{--cc:var(--c-gold)}
 .tct b{display:block;font-size:15px}.tct span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
 .star{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:8px;border:0;background:none;color:var(--muted);display:grid;place-items:center;cursor:pointer}
@@ -166,3 +166,6 @@ ins.dw{text-decoration:none;background:color-mix(in srgb,var(--good) 26%,transpa
 .osh{display:flex;align-items:center;gap:6px}.osh h2{flex:1;margin:0}
 /* (1.61.9) Image Converter's tabs: Convert Images, SVG to PNG, Image and Base64 */
 .tabseg{margin:0 0 14px;flex-wrap:wrap}
+
+/* (1.80.5) icon tiles like the bar's app icons: a solid gradient of the section colour with a white glyph */
+.nt,.sdot,.tci{box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 2px 8px color-mix(in srgb,var(--cc,var(--accent)) 28%,transparent)}
