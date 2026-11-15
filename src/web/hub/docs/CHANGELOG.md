@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.0 | A much better Files page: keyboard use, right-click and long-press menus, a bigger preview, filters, pinned folders, name-clash choices, resume, labels and notes, Undo, share link passwords and download limits with a QR code, a Storage view, and swipes on a phone; the Home refresh button is back at the bottom right |
 | 1.79.12 | Messages are now Alerts with the bell in the bar, the same Logs list on every device, Hide the Bar While Scrolling and Show Widgets are per device (a phone starts with no widgets), and the CI fix |
 | 1.79.11 | Home on an iPhone: the bar floats below the status bar and the clock starts below it; the wallpaper refresh button moves to the bottom left; disabled main buttons look the same on every page |
 | 1.79.10 | A floating rounded top bar with a Rounded Bar switch, the theme button is only its icon, the Files storage limit sits at the right, and Save Settings is never dimmed |
@@ -169,6 +170,40 @@ Nothing to migrate by hand unless an entry says so.
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
 
 ---
+
+## 1.80.0
+
+### Files: easier to use
+- Use the keyboard: arrows move, Enter opens, Space picks, F2 renames, Delete removes, Ctrl+A picks everything, Escape clears. Shift-click picks a range.
+- Right-click a file (or press and hold on a phone) for its menu. Right-click the empty part of the list to upload or make a folder.
+- The preview goes to the next and the previous file (arrow keys), zooms pictures, goes full screen, shows Markdown nicely, and has Share and Download in its bar.
+- Filter by Pictures, Documents, Videos or Audio, by size and by date. A search can look in this folder or everywhere, and it also finds words in a note.
+- Pin a folder to the sidebar, and use the arrow next to the path to jump to any folder.
+- Give a file or folder a colour label and a short note. Both are locked together with the name, so the server never sees them.
+- Move and Rename can be undone, like the Trash.
+
+### Files: uploads
+- Paste a picture or a file anywhere on the page to upload it. New has Upload Folder, and Take Photo or Video on a phone.
+- When a file with the same name is already there, choose Keep Both, Replace (the old one goes to the Trash) or Skip, once or for the rest.
+- An upload that stopped half way shows a note with Resume. Pick the same file again and only the missing pieces are sent.
+- Videos get a small picture in the grid (videos up to 40 MB).
+
+### Files: sharing
+- A share link can have a password and a limit of 1, 5, 10 or 50 downloads. The password never reaches the server; only a hash of a proof made from it is kept, and too many wrong tries pause the link for ten minutes.
+- Each link shows its state (password, downloads used, end date) and has a QR Code button, made in your browser. Copy Share Link is in the file menu.
+- The link page asks for the password before it shows even the file name.
+
+### Files: tidy up and phone
+- Storage shows what takes the room by type, your biggest files, empty folders and files that look the same (same name and size, copy numbers like (2) ignored) with a button to send the extras to the Trash.
+- Open in Tools hands a stored file to Tools through the browser's own storage.
+- Logs > Activity shows one line when files were uploaded, trashed, deleted for good or shared (never a name).
+- On a phone: the actions for picked files sit in a bar at the bottom, swipe a row left for the Trash or right to Star, and pull the list down to reload it.
+
+### Home
+- The wallpaper refresh button and the credit are back at the bottom right.
+
+### Not in this version
+- A gallery page for several shared pictures, offline copies of files, attaching a file to a Card, Task or Info entry, Send to Telegram and PDF thumbnails were left out.
 
 ## 1.79.12
 
