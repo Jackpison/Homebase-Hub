@@ -1119,7 +1119,10 @@ function siteToday(){
 const dParse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
 const dStr = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 const dDiff = (a, b) => Math.round((+dParse(a) - +dParse(b)) / 86400000);   // days from b to a
-const dLong = s => dParse(s).toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long' });
+/* (1.80.3) dates read "November 15th 2026, Sunday" */
+const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ({ 1:'st', 2:'nd', 3:'rd' })[n % 10] || 'th');
+const dFull = d => d.toLocaleDateString('en-US', { month:'long' }) + ' ' + ordinal(d.getDate()) + ' ' + d.getFullYear() + ', ' + d.toLocaleDateString('en-US', { weekday:'long' });
+const dLong = s => dFull(dParse(s));
 const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
 
 /* ---------- the clock ---------- */
@@ -1132,7 +1135,7 @@ function renderClock(){
   const now = new Date(), h = now.getHours();
   $('#greet').textContent = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night';
   $('#time').textContent = now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit', second:'2-digit' });   // (1.79.9) with seconds
-  $('#date').textContent = now.toLocaleDateString([], { weekday:'long', day:'numeric', month:'long' });
+  $('#date').textContent = dFull(now);
   clockT = setTimeout(() => (WCFG ? renderWidgets(true) : renderClock()), 60500 - now.getSeconds() * 1000 - now.getMilliseconds());
   clearInterval(secT);
   secT = setInterval(() => { if (document.hidden) return; $('#time').textContent = new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit', second:'2-digit' }); }, 1000);

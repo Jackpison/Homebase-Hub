@@ -272,6 +272,8 @@ try:
         bar_on = home_bar(True); bar_off = home_bar(False)
         check('P39 Home Settings > Show the Bar on the Home Page turns the bar on and off (the same setting as in Settings)', bar_on == [True, True, True] and bar_off[:2] == [False, False], (bar_on, bar_off))
         check('P39b (1.80.0) with the bar shown the credit and the refresh button sit at the bottom right, where they were before the bell moved into the bar', bar_on[2], bar_on)
+        dt = hp.evaluate("(() => { const d = document.getElementById('date'), t = document.getElementById('time'), r = document.querySelector('.clock').getBoundingClientRect(); return [d && d.textContent, parseFloat(getComputedStyle(t).fontSize), (r.top + r.bottom) / 2 / innerHeight]; })()")
+        check('P39c (1.80.3) the Home date reads like "November 15th 2026, Sunday", the clock is a quarter smaller, and the block sits in the middle of the screen', re.match(r'^[A-Z][a-z]+ \d{1,2}(st|nd|rd|th) \d{4}, [A-Z][a-z]+day$', dt[0] or '') and dt[1] <= 75.5 and 0.3 < dt[2] < 0.55, dt)
         hctx.close()
         # P39c: Home opened from a copy of the page that came without the widgets (the phone app) still shows them once the site knows you are logged in
         sc = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); sc.add_cookies(cookies)
