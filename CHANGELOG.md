@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.12 | Messages are now Alerts with the bell in the bar, the same Logs list on every device, Hide the Bar While Scrolling and Show Widgets are per device (a phone starts with no widgets), and the CI fix |
 | 1.79.11 | Home on an iPhone: the bar floats below the status bar and the clock starts below it; the wallpaper refresh button moves to the bottom left; disabled main buttons look the same on every page |
 | 1.79.10 | A floating rounded top bar with a Rounded Bar switch, the theme button is only its icon, the Files storage limit sits at the right, and Save Settings is never dimmed |
 | 1.79.9 | Backup & Restore shows one list of places for automatic backups, messages wear the colour of the page they came from and have an Open Logs button, one pencil icon everywhere, and a typed storage limit in Files |
@@ -166,6 +167,22 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.12
+
+### Changed
+
+- **Alerts:** Messages is now called Alerts. The "This tab, newest first" line is gone. The list has boxed **Logs** and **Shortcuts** buttons next to Clear, so the small ? button in the corner is removed.
+- **Bell:** with the bar showing, the bell sits in the bar right before the theme button. With no bar it floats in the corner as before. With a top bar the list opens right under the bar.
+- **Logs > Notifications is shared by every device.** Each alert is sent to your site when you are logged in, so your phone and your computer show the same list, with the device named on each line. Clear empties it for all devices. Only a logged-in browser can read or clear it, and the newest 300 are kept. Alerts from Files and Cards never leave the device (they can name locked files and cards).
+- **Per device:** Hide the Bar While Scrolling and Show Widgets are now choices of each device. A phone starts with no widgets (the clock stays); turn them on in Home Settings > Widgets on that phone.
+- **Home:** the wallpaper refresh button sits first, with the credit to its right, at the bottom left.
+
+### Fixed
+
+- A new library file was missing from the README list, which failed the checks on GitHub.
 
 ---
 

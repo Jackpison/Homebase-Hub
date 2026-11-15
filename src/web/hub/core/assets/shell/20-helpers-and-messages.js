@@ -83,7 +83,7 @@
   /* (1.77.2) every message is also kept on this device (the last 300, in Settings > Logs), after the tab and its short list are gone */
   /* (1.79.12) The list in Settings > Logs is shared by every device: each message is kept here at once and sent to the site when this browser is logged in
      (a line that could not be sent waits and goes with the next one). Reading it brings the other devices' lines in too. */
-  var noteTimer = 0, noteBusy = false;
+  var noteTimer = 0, noteBusy = false, NOTE_LOCAL = ['Files', 'Cards'];
   function noteNewId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
   function noteLogGet() { try { return (JSON.parse(ls.get('hub-notelog') || '[]') || []).filter(function (n) { return n && typeof n.m === 'string'; }); } catch (e) { return []; } }
   function notePendGet() { try { return (JSON.parse(ls.get('hub-notepend') || '[]') || []).filter(function (x) { return typeof x === 'string'; }); } catch (e) { return []; } }
@@ -97,8 +97,8 @@
     var a = noteLogGet(), p = notePendGet(), fix = false;
     a.forEach(function (n) { if (!n.id) { n.id = 'l' + (+n.ts || 0).toString(36) + String(n.m).length.toString(36) + noteNewId().slice(-4); p.push(n.id); fix = true; } });   // lines from before 1.79.12 get an id once
     if (fix) { noteLogPut(a); ls.set('hub-notepend', JSON.stringify(p)); }
-    var send = a.filter(function (n) { return p.indexOf(n.id) >= 0; }).slice(0, 50);
-    if (!send.length) { if (p.length) ls.set('hub-notepend', '[]'); return; }
+    var send = a.filter(function (n) { return p.indexOf(n.id) >= 0 && NOTE_LOCAL.indexOf(n.s) < 0; }).slice(0, 50);   // Files and Cards alerts can name locked things: they stay on this device
+    if (!send.length) { if (p.length) ls.set('hub-notepend', '[]'); return; }   // (all that is left to send stays here)
     noteBusy = true;
     api('notelog_add', { items: send }).then(function (j) {
       noteBusy = false;

@@ -22,4 +22,5 @@ t('N6 at most 50 lines are taken at once', nl_add($batch) === 50);
 for ($r = 0; $r < 8; $r++) { $b = []; for ($i = 0; $i < 50; $i++) $b[] = ['id' => 'rb' . $r . str_pad((string)$i, 4, '0', STR_PAD_LEFT), 'm' => 'r' . $r . '-' . $i, 'ts' => $now + 1000 + $r * 100 + $i]; nl_add($b); }
 $l = nl_list();
 t('N7 only the newest 300 are kept, oldest first', count($l) === NL_KEEP && end($l)['m'] === 'r7-49' && $l[0]['ts'] <= $l[1]['ts'], json_encode(count($l)));
+t('N7b alerts from Files and Cards are never kept on the site (they can name locked things)', nl_add([['id' => 'fl00001', 'm' => 'Moved: secret.pdf', 's' => 'Files', 'ts' => $now + 5000], ['id' => 'cd00001', 'm' => 'Card added: Bank', 's' => 'Cards', 'ts' => $now + 5000]]) === 0);
 t('N8 clearing empties the list and says how many went', nl_clear() === NL_KEEP && nl_list() === []);

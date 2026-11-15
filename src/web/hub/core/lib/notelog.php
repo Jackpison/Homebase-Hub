@@ -14,12 +14,13 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  *
  * Every message the site shows is also kept in the browser it was shown in. A logged-in browser sends those lines here, so another phone or
  * computer sees them too. The newest 300 are kept in site-data/core/notelog.json (guarded). Only a logged-in browser can read, add or clear
- * them. A line has an id (the same line sent twice is kept once), the message, a kind, where it came from, when, and which browser showed it.
+ * them. Alerts from Files and Cards never leave the device (they can name locked files and cards). A line has an id (the same line sent twice is kept once), the message, a kind, where it came from, when, and which browser showed it.
  */
 require_once __DIR__ . '/boot.php';
 require_once __DIR__ . '/activity.php';
 
 const NL_KEEP = 300;
+const NL_LOCAL_ONLY = ['Files', 'Cards'];
 const NL_KINDS = ['bad', 'ok', 'act', 'del', 'box', 'send', 'copy', 'lock', 'sync', 'plus'];
 
 function nl_file(): string { return hub_dir('core') . '/notelog.json'; }
@@ -31,6 +32,7 @@ function nl_clean(mixed $e): ?array {
     if (strlen($id) < 6) return null;
     $ts = is_numeric($e['ts'] ?? null) ? (int)$e['ts'] : 0;
     if ($ts < 1e12 || $ts > (time() + 86400) * 1000) return null;   // milliseconds, and not from the far future
+    if (in_array($e['s'] ?? '', NL_LOCAL_ONLY, true)) return null;   // Files and Cards can name locked things: those alerts stay on the device that showed them
     $k = is_string($e['k'] ?? null) && in_array($e['k'], NL_KINDS, true) ? $e['k'] : '';
     $s = static fn(mixed $v, int $n): string => is_string($v) ? mb_substr(trim($v), 0, $n) : '';
     return ['id' => substr($id, 0, 24), 'm' => $s($e['m'], 300), 'b' => !empty($e['b']), 'k' => $k, 's' => $s($e['s'] ?? '', 20), 'p' => $s($e['p'] ?? '', 80),
