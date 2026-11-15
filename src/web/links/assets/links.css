@@ -243,7 +243,7 @@ body.is-locked .search{display:none}
 .nores.first{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 16px;border:1px dashed var(--line2,var(--line));border-radius:16px}.nores.first b{font-size:1.15em;color:var(--text)}
 /* (1.79.1) Tab bar: the pencil only on the tab you are on, a line under the active tab, a New tab button that looks like a tab */
 .tabi:not(.on) .pen{display:none!important}
-.tab .tslot{display:inline-grid;place-items:center;flex:none;width:20px;height:20px}
+.tab .tslot{display:inline-grid;place-items:center;flex:none;width:16px;height:20px;margin-left:-4px}   /* (1.79.7) the shield sits close to the name */
 .tab .tslot svg,.tab .tslot img{width:16px;height:16px;display:block}
 .tab .tslot:empty{display:none}
 .tab:not(.add){position:relative}

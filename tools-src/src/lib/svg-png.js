@@ -2,10 +2,19 @@
 import { h, field, textarea, input, seg, check, button, dropzone, panel, busy, note, toast } from '../ui.js';
 import { encode, canvas, outName, results, each } from './image.js';
 
+/** Takes out everything that can run or load something: scripts, embedded pages, event attributes and links to other files. An image shown through <img> runs none of it, but the converter never passes it on. */
+function clean(doc) {
+  doc.querySelectorAll('script,foreignObject,iframe,object,embed,audio,video').forEach((n) => n.remove());
+  doc.querySelectorAll('*').forEach((n) => [...n.attributes].forEach((a) => {
+    const v = a.value.trim().toLowerCase();
+    if (/^on/i.test(a.name) || ((a.name === 'href' || a.name === 'xlink:href') && !v.startsWith('#') && !v.startsWith('data:image/')) || v.startsWith('javascript:')) n.removeAttribute(a.name);
+  }));
+}
 /** The SVG's own size, from width and height or its viewBox. */
 export function svgSize(text) {
   const doc = new DOMParser().parseFromString(text, 'image/svg+xml'), s = doc.documentElement;
   if (!s || s.nodeName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) throw new Error('That is not valid SVG.');
+  clean(doc);
   const num = (v) => (v && /^[\d.]+(px)?$/.test(v.trim()) ? parseFloat(v) : 0);
   let w = num(s.getAttribute('width')), ht = num(s.getAttribute('height'));
   const vb = (s.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);

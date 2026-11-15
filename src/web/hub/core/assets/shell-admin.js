@@ -305,7 +305,7 @@
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
   var CARDIFY = { general: 1, look: 1, glass: 1 };
   var OFFL = function () { return K.offline(); };
-  var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
+  var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'site address': ICON.site, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages, 'glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear, 'liquid': ICON.sparkle, 'where': ICON.grid };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
@@ -320,8 +320,20 @@
       sec.querySelector('.ix-ec-t').textContent = title;
       if (desc) { sec.querySelector('.ix-ec-d').innerHTML = desc.innerHTML; desc.remove(); } else sec.querySelector('.ix-ec-d').remove();   // moved into the card head, not shown twice
       var b = sec.querySelector('.ix-ec-b'); g.body.forEach(function (n) { b.appendChild(n); });
-      pc.insertBefore(sec, g.h); g.h.remove();
+      pc.insertBefore(sec, g.h); g.h.remove(); rowify(sec);
     });
+  }
+  /* (1.79.7) One rule for every Settings card: a card with a single control (one field, one select, one short choice, one or two buttons or one switch)
+     and nothing else becomes a slim row, text on the left and the control on the right. Cards with several controls, a list, a note or a status stay cards. */
+  function rowify(sec) {
+    var b = sec.querySelector(':scope > .ix-ec-b'); if (!b || sec.classList.contains('good') || sec.classList.contains('danger')) return;
+    if (b.querySelector('p,.ix-note,.ix-err,input[type=range],.ix-gpv,.ix-gxt,.ix-acc,.ix-list,ul,table')) return;
+    var segs = b.querySelectorAll('.ix-seg'), segBtns = b.querySelectorAll('.ix-seg button');
+    var rest = [].filter.call(b.querySelectorAll('input,select,textarea,button'), function (e) { return !e.closest('.ix-seg') && e.type !== 'file' && !(e.tagName === 'INPUT' && e.hidden); });
+    var tg = b.querySelectorAll('.ix-tg').length, btnOnly = rest.length && rest.every(function (e) { return e.tagName === 'BUTTON'; });
+    var fields = rest.filter(function (e) { return e.tagName !== 'BUTTON' && !e.closest('.ix-tg'); });
+    var units = segs.length + tg + (btnOnly ? (rest.length <= 2 ? 1 : 99) : fields.length + rest.filter(function (e) { return e.tagName === 'BUTTON'; }).length);
+    if (units === 1 && segBtns.length <= 4 && tg === 0) sec.classList.add('ix-row1');
   }
   function mountPane(sub) {
     var draw = PANE_FN.get(sub); if (typeof draw !== 'function') { sub = 'general'; draw = PANE_FN.get(sub); }   // only a pane of ours runs, whatever the address says
@@ -448,7 +460,9 @@
       '<button type="button" class="ix-btn" id="ix-lu">' + svg(ICON.image) + 'Change Logo</button><button type="button" class="ix-btn" id="ix-lx"' + (S.logo ? '' : ' hidden') + '>Remove</button>' +
       '<input type="file" id="ix-lf2" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>' +
       '<h3>Time Zone</h3><p>Today, due times, backups and Telegram all follow it.</p>' +
-      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>';
+      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>' +
+      '<h3>Site Address</h3><p>Where this site lives' + (S.v ? ', and the version running: ' + esc(S.v) : '') + '. Read only.</p>' +
+      linkField({ id: 'ix-addr', value: location.origin + ROOT, readonly: true, label: 'Site Address', prefix: 'URL' });
     p.querySelector('#ix-tz').onchange = function (e) { draft.tz = e.target.value; };
     p.querySelector('#ix-name').oninput = function (e) { draft.siteName = e.target.value; };
     p.querySelector('#ix-lu').onclick = function () { p.querySelector('#ix-lf2').click(); };
@@ -1783,7 +1797,7 @@
   function pSecurity(p) {
     var SECS = [['pw', 'Password'], ['enc', 'Encryption'], ['pk', 'Passkeys'], ['2fa', 'Two-Step Login'],
                 ['ap', 'Telegram Login Approval'], ['tr', 'Trusted Browsers'], ['dev', 'Devices']];
-    p.innerHTML = '<div class="ix-hero" id="ix-sov">' + spinRow('Checking your protections…') + '</div><div class="ix-tiles" id="ix-stiles"></div><div id="ix-schk"></div>' +
+    p.innerHTML = '<div class="ix-hero" id="ix-sov">' + spinRow('Checking your protections…') + '</div><div id="ix-stiles"></div><div id="ix-schk"></div>' +
       SECS.map(function (x) { return '<details class="ix-acc" data-sec="' + x[0] + '"><summary><span>' + x[1] + '</span><small data-sum="' + x[0] + '">…</small></summary><div class="ix-accb" data-body="' + x[0] + '"></div></details>'; }).join('');
     var body = function (k) { return p.querySelector('[data-body="' + k + '"]'); }, sum = function (k, t) { p.querySelector('[data-sum="' + k + '"]').textContent = t; };
     var acc = function (k) { return p.querySelector('[data-sec="' + k + '"]'); };
@@ -1798,27 +1812,33 @@
 
     function overview() {
       var v = st.vault, bk = st.bk, a = st.ap;
-      var have = [['HTTPS', !!S.https, 'Turn on HTTPS (see Site Checks below).'], ['Two-Step Login', !!S.twoStep, 'Turn on Two-Step Login: a stolen password alone then gets nobody in.'],
-                  ['Encryption', encOn(), 'Set an encryption passphrase: encrypted tabs and backup files stay private even if someone copies the server.'],
-                  ['Recovery Key', !!st.rec, 'Create a recovery key (Encryption): without it a forgotten passphrase means lost encrypted tabs.'],
-                  ['Telegram Approval', !!a.on, 'Approve new logins in Telegram: you see every login and can refuse it.']];
+      var have = [['HTTPS', !!S.https, 'Turn on HTTPS (see Site Checks below).', ''], ['Two-Step Login', !!S.twoStep, 'Turn on Two-Step Login: a stolen password alone then gets nobody in.', '2fa'],
+                  ['Encryption', encOn(), 'Set an encryption passphrase: encrypted tabs and backup files stay private even if someone copies the server.', 'enc'],
+                  ['Recovery Key', !!st.rec, 'Create a recovery key (Encryption): without it a forgotten passphrase means lost encrypted tabs.', 'enc'],
+                  ['Telegram Approval', !!a.on, 'Approve new logins in Telegram: you see every login and can refuse it.', 'ap']];
       var on = have.filter(function (x) { return x[1]; }).length, todo = have.filter(function (x) { return !x[1]; })[0], total = have.length + 1, count = on + 1, pct = Math.round(count / total * 100);
+      p.querySelector('#ix-sov').className = 'ix-hero ix-slim';   // (1.79.7) a slim header: the ring, what to do next, and a button for it
       p.querySelector('#ix-sov').innerHTML =
         '<div class="ix-ring ' + (todo ? '' : 'ok') + '" style="--p:' + pct + '"><b>' + count + '</b><small>of ' + total + '</small></div>' +
         '<div class="ix-hero-t"><div class="ix-hero-h">' + (todo ? (count / total < 0.5 ? 'Your Site Needs More Protection' : 'A Good Start, With Room to Grow') : 'Everything Recommended Is On') + '</div>' +
           '<p>' + (todo ? '<b>Next best step:</b> ' + esc(todo[2]) : 'Your website password and every extra protection are on. Nothing to do here.') + '</p>' +
-          '</div>';   // (1.74.2) the row of status chips is gone: the cards below say the same
+          '</div>' + (todo && todo[3] ? '<button type="button" class="ix-btn pri" data-go="' + todo[3] + '">' + (todo[3] === '2fa' ? 'Set Up Two-Step Login' : todo[3] === 'ap' ? 'Set Up Approval' : encOn() ? 'Create the Recovery Key' : 'Set Up Encryption') + '</button>' : '');
 
       var trN = (a.trusted || []).length;
-      p.querySelector('#ix-stiles').innerHTML =
-        tile('pw', ICON.key, 'Password', 'Set', 'good', 'One password for every page.') +
-        tile('enc', ICON.lock, 'Encryption', encLabel(), encOn() ? 'good' : 'warn', encOn() ? 'Info: ' + (v ? st.tabs + ' locked' : 'none') + ' · Links: ' + (st.lenc ? st.lenc + ' locked' : 'none') + ' · Backups: ' + (bk.set ? 'locked' : 'not locked') + '.' : 'Lock private tabs and backups with one passphrase.') +
-        (encOn() ? tile('enc', ICON.shield, 'Recovery Key', st.rec ? 'Created' : 'Not Created', st.rec ? 'good' : 'warn', st.rec ? 'A spare way in if you ever forget the passphrase.' : 'Create one, so a forgotten passphrase does not mean lost tabs.') : '') +
-        tile('2fa', ICON.device, 'Two-Step Login', S.twoStep ? 'On' : 'Off', S.twoStep ? 'good' : 'warn', S.twoStep ? S.recoveryLeft + ' recovery ' + (S.recoveryLeft === 1 ? 'code' : 'codes') + ' left.' : 'A 6-digit code from your phone on top of the password.') +
-        tile('pk', ICON.device, 'Passkeys', st.pk.length ? st.pk.length + (st.pk.length === 1 ? ' Passkey' : ' Passkeys') : 'None', st.pk.length ? 'good' : '', st.pk.length ? 'Log in with your fingerprint, face or PIN.' : (st.pkSecure ? 'Log in with your fingerprint, face or PIN.' : 'Needs HTTPS.')) +   // (1.61.6) it had a tab but no card
-        tile('ap', ICON.send, 'Telegram Login Approval', a.on ? 'On' : 'Off', a.on ? 'good' : '', a.on ? 'Every new browser waits for your tap in Telegram.' : (a.telegram ? 'Approve new logins with one tap in Telegram.' : 'Needs the Telegram bot to be set up first.')) +
-        tile('tr', ICON.desktop, 'Trusted Browsers', trN ? trN + (trN === 1 ? ' Browser' : ' Browsers') : 'None', '', 'Browsers that skip the code and the tap for 30 days.') +
-        tile('dev', ICON.out, 'Devices', '', '', 'Log out every other device in one tap.');
+      /* (1.79.7) the same tiles, sorted by what you need to do: first what is missing, then what is in place, then what you manage */
+      var T = [
+        ['in', tile('pw', ICON.key, 'Password', 'Set', 'good', 'One password for every page.')],
+        [encOn() ? 'in' : 'need', tile('enc', ICON.lock, 'Encryption', encLabel(), encOn() ? 'good' : 'warn', encOn() ? 'Info: ' + (v ? st.tabs + ' locked' : 'none') + ' · Links: ' + (st.lenc ? st.lenc + ' locked' : 'none') + ' · Backups: ' + (bk.set ? 'locked' : 'not locked') + '.' : 'Lock private tabs and backups with one passphrase.')],
+        [st.rec ? 'in' : 'need', encOn() ? tile('enc', ICON.shield, 'Recovery Key', st.rec ? 'Created' : 'Not Created', st.rec ? 'good' : 'warn', st.rec ? 'A spare way in if you ever forget the passphrase.' : 'Create one, so a forgotten passphrase does not mean lost tabs.') : ''],
+        [S.twoStep ? 'in' : 'need', tile('2fa', ICON.device, 'Two-Step Login', S.twoStep ? 'On' : 'Off', S.twoStep ? 'good' : 'warn', S.twoStep ? S.recoveryLeft + ' recovery ' + (S.recoveryLeft === 1 ? 'code' : 'codes') + ' left.' : 'A 6-digit code from your phone on top of the password.')],
+        [st.pk.length ? 'in' : 'need', tile('pk', ICON.device, 'Passkeys', st.pk.length ? st.pk.length + (st.pk.length === 1 ? ' Passkey' : ' Passkeys') : 'None', st.pk.length ? 'good' : '', st.pk.length ? 'Log in with your fingerprint, face or PIN.' : (st.pkSecure ? 'Log in with your fingerprint, face or PIN.' : 'Needs HTTPS.'))],
+        [a.on ? 'in' : 'need', tile('ap', ICON.send, 'Telegram Login Approval', a.on ? 'On' : 'Off', a.on ? 'good' : '', a.on ? 'Every new browser waits for your tap in Telegram.' : (a.telegram ? 'Approve new logins with one tap in Telegram.' : 'Needs the Telegram bot to be set up first.'))],
+        ['manage', tile('tr', ICON.desktop, 'Trusted Browsers', trN ? trN + (trN === 1 ? ' Browser' : ' Browsers') : 'None', '', 'Browsers that skip the code and the tap for 30 days.')],
+        ['manage', tile('dev', ICON.out, 'Devices', '', '', 'Log out every other device in one tap.')]];
+      p.querySelector('#ix-stiles').innerHTML = [['need', 'Needs Attention'], ['in', 'In Place'], ['manage', 'Manage']].map(function (g) {
+        var h = T.filter(function (t) { return t[0] === g[0] && t[1]; }).map(function (t) { return t[1]; }).join('');
+        return h ? '<div class="ix-sect">' + g[1] + '</div><div class="ix-tiles" data-grp="' + g[0] + '">' + h + '</div>' : '';
+      }).join('');
       p.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { var d = acc(b.dataset.go); d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }; });
       sum('pw', 'Change the one password');
       sum('enc', (encOn() ? 'Passphrase Set' : 'Not Set') + ' · Info tabs: ' + (v ? st.tabs + ' encrypted' : 'none') + ' · Links tabs: ' + (st.lenc ? st.lenc + ' encrypted' : 'none') + ' · Backups: ' + (bk.set ? 'encrypted' : 'not encrypted'));

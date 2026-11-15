@@ -55,6 +55,8 @@ try:
               and 'Hidden Bank Login' not in everything(s.dir + '/site-data/links', '/**/*') and 'bank.example.com' not in everything(s.dir + '/site-data/links', '/**/*'))
         check('T6 the public tab is untouched and still readable', 'Public Daily Link' in everything(s.dir + '/site-data/links', '/bookmarks.php'))
         pg.reload(); wait_js(pg, "document.querySelectorAll('.tab').length > 1", 20000)
+        gap = pg.evaluate("(() => { const t = [...document.querySelectorAll('#tabs .tab')].find(x => x.querySelector('svg.lock')); if (!t) return null; const l = t.querySelector('svg.lock'), n = l.parentElement.previousElementSibling.getBoundingClientRect(), k = l.getBoundingClientRect(); return Math.round(k.left - n.right); })()")
+        check('T6b (1.79.7) the shield on a private or encrypted tab sits close to the name (at most 8 px)', gap is not None and 0 <= gap <= 8, gap)
         # a new private tab starts encrypted
         pg.evaluate("document.querySelector('[data-hub=toggle]').click()"); pg.wait_for_selector('body.editing', timeout=10000)
         pg.evaluate("document.querySelector('.tab.add').click()"); pg.wait_for_selector('#hubTabDlg[open]')

@@ -975,3 +975,27 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-lgk{justify-self:end;min-width:74px;text-align:center;padding:2px 11px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--ix-soft);color:var(--ix-accent-tx)}
 #ix-page .ix-lgk.bad{background:color-mix(in srgb,var(--ix-bad,#e5484d) 18%,transparent);color:var(--ix-bad,#ff8a8f)}
 @media (max-width:760px){#ix-page .ix-lgr{grid-template-columns:auto 1fr auto}#ix-page .ix-lgm{grid-column:2 / 4;grid-row:2;left:0;align-items:flex-start;text-align:left}#ix-page .ix-lgk{grid-column:3;grid-row:1}}
+
+/* (1.79.7) A card with one control is a slim row: the text on the left, the control on the right. Under 640 px it stacks again. */
+#ix-page .ix-ec.ix-row1{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px 24px;padding:12px 18px;margin-bottom:10px}
+#ix-page .ix-ec.ix-row1 .ix-ec-i{width:36px;height:36px;border-radius:11px}
+#ix-page .ix-ec.ix-row1 .ix-ec-i svg{width:19px;height:19px}
+#ix-page .ix-ec.ix-row1 .ix-ec-t{font-size:16px}
+#ix-page .ix-ec.ix-row1.ix-auto .ix-ec-b{margin:0;padding:0;border:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+#ix-page .ix-ec.ix-row1 .ix-ec-b>*{margin:0}
+#ix-page .ix-ec.ix-row1 .ix-ec-b input[type=text],#ix-page .ix-ec.ix-row1 .ix-ec-b select{width:min(280px,100%)}
+#ix-page .ix-ec.ix-row1 .ix-ec-b .ix-row{margin:0;flex-wrap:nowrap}
+#ix-page .ix-ec.ix-row1 .ix-logoprev{width:36px;height:36px;border-radius:10px}
+@media (max-width:640px){#ix-page .ix-ec.ix-row1{grid-template-columns:minmax(0,1fr)}#ix-page .ix-ec.ix-row1.ix-auto .ix-ec-b{justify-content:flex-start}#ix-page .ix-ec.ix-row1 .ix-ec-b input[type=text],#ix-page .ix-ec.ix-row1 .ix-ec-b select{width:100%}#ix-page .ix-ec.ix-row1 .ix-ec-b .ix-row{flex-wrap:wrap}}
+
+/* (1.79.7) Security > Overview: a slim header and the tiles in three groups. */
+#ix-page .ix-hero.ix-slim{padding:14px 20px;gap:16px;margin-bottom:6px;max-width:var(--ix-cw)}
+#ix-page .ix-slim .ix-ring{width:64px;height:64px}
+#ix-page .ix-slim .ix-ring::before{inset:6px}
+#ix-page .ix-slim .ix-ring b{font-size:20px}
+#ix-page .ix-slim .ix-ring small{font-size:10px}
+#ix-page .ix-slim .ix-hero-h{font-size:17px}
+#ix-page .ix-slim .ix-hero-t p{margin-top:3px}
+#ix-page #ix-stiles .ix-sect{margin:16px 0 8px}
+#ix-page #ix-stiles .ix-tiles[data-grp=in] .ix-tile small,#ix-page #ix-stiles .ix-tiles[data-grp=manage] .ix-tile small{font-size:12.5px}
+@media (max-width:600px){#ix-page .ix-hero.ix-slim{flex-direction:row;flex-wrap:wrap;padding:14px}#ix-page .ix-slim .ix-btn{width:100%}}

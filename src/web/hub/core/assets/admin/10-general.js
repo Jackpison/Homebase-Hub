@@ -51,7 +51,9 @@
       '<button type="button" class="ix-btn" id="ix-lu">' + svg(ICON.image) + 'Change Logo</button><button type="button" class="ix-btn" id="ix-lx"' + (S.logo ? '' : ' hidden') + '>Remove</button>' +
       '<input type="file" id="ix-lf2" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>' +
       '<h3>Time Zone</h3><p>Today, due times, backups and Telegram all follow it.</p>' +
-      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>';
+      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>' +
+      '<h3>Site Address</h3><p>Where this site lives' + (S.v ? ', and the version running: ' + esc(S.v) : '') + '. Read only.</p>' +
+      linkField({ id: 'ix-addr', value: location.origin + ROOT, readonly: true, label: 'Site Address', prefix: 'URL' });
     p.querySelector('#ix-tz').onchange = function (e) { draft.tz = e.target.value; };
     p.querySelector('#ix-name').oninput = function (e) { draft.siteName = e.target.value; };
     p.querySelector('#ix-lu').onclick = function () { p.querySelector('#ix-lf2').click(); };

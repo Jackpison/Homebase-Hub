@@ -1047,3 +1047,6 @@ html[data-ix-glass]:not([data-ix-gsolid]) #ix-ebar{background:color-mix(in srgb,
 #ix-offp .ix-offc{max-width:420px;display:grid;gap:12px;justify-items:center}
 #ix-offp h1{margin:0;font-size:22px}
 #ix-offp p{margin:0;color:var(--ix-mu,inherit);opacity:.8}
+
+/* (1.79.7) the ? button for the keyboard shortcuts: only where there is a keyboard and a mouse */
+@media (hover:none),(pointer:coarse){.ix-keysb{display:none!important}}

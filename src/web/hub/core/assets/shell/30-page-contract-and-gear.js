@@ -3,7 +3,7 @@
      so adding an option to a page never means touching this file. */
   var HAS_EDIT = APP !== 'settings';   // Settings has nothing to edit: no pencil there (1.53.5)
   /* options a page has no buttons for (Tools is a separate app): [label, icon, action] */
-  var EXTRA = { tools: [{ label: 'Tools Settings', icon: ICON.gear, run: function () { location.hash = '#/settings'; } }] }[APP] || [];
+  var EXTRA = { tools: [{ label: 'Tools Settings', pageIcon: 'tools', run: function () { location.hash = '#/settings'; } }] }[APP] || [];
   var q1 = function (kind) { return document.querySelector('[data-hub="' + kind + '"]'); };
   function hubItems() {
     return [].slice.call(document.querySelectorAll('[data-hub="item"]')).map(function (el, i) {
@@ -56,6 +56,7 @@
       EXTRA.forEach(function (x) { items.push(x); });
       if (items.length) items.push({ sep: true });
       items.push({ label: 'Site Settings', icon: ICON.gear, run: function () { settings(); } });
+      items.push({ label: 'Log Out', icon: ICON.out, danger: true, run: logout });   // (1.79.7) on every page, like the start page's menu
       popMenu(anchor, items);
     });
   }

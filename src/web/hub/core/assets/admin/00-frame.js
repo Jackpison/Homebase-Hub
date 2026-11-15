@@ -305,7 +305,7 @@
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
   var CARDIFY = { general: 1, look: 1, glass: 1 };
   var OFFL = function () { return K.offline(); };
-  var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
+  var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'site address': ICON.site, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages, 'glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear, 'liquid': ICON.sparkle, 'where': ICON.grid };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
@@ -320,8 +320,20 @@
       sec.querySelector('.ix-ec-t').textContent = title;
       if (desc) { sec.querySelector('.ix-ec-d').innerHTML = desc.innerHTML; desc.remove(); } else sec.querySelector('.ix-ec-d').remove();   // moved into the card head, not shown twice
       var b = sec.querySelector('.ix-ec-b'); g.body.forEach(function (n) { b.appendChild(n); });
-      pc.insertBefore(sec, g.h); g.h.remove();
+      pc.insertBefore(sec, g.h); g.h.remove(); rowify(sec);
     });
+  }
+  /* (1.79.7) One rule for every Settings card: a card with a single control (one field, one select, one short choice, one or two buttons or one switch)
+     and nothing else becomes a slim row, text on the left and the control on the right. Cards with several controls, a list, a note or a status stay cards. */
+  function rowify(sec) {
+    var b = sec.querySelector(':scope > .ix-ec-b'); if (!b || sec.classList.contains('good') || sec.classList.contains('danger')) return;
+    if (b.querySelector('p,.ix-note,.ix-err,input[type=range],.ix-gpv,.ix-gxt,.ix-acc,.ix-list,ul,table')) return;
+    var segs = b.querySelectorAll('.ix-seg'), segBtns = b.querySelectorAll('.ix-seg button');
+    var rest = [].filter.call(b.querySelectorAll('input,select,textarea,button'), function (e) { return !e.closest('.ix-seg') && e.type !== 'file' && !(e.tagName === 'INPUT' && e.hidden); });
+    var tg = b.querySelectorAll('.ix-tg').length, btnOnly = rest.length && rest.every(function (e) { return e.tagName === 'BUTTON'; });
+    var fields = rest.filter(function (e) { return e.tagName !== 'BUTTON' && !e.closest('.ix-tg'); });
+    var units = segs.length + tg + (btnOnly ? (rest.length <= 2 ? 1 : 99) : fields.length + rest.filter(function (e) { return e.tagName === 'BUTTON'; }).length);
+    if (units === 1 && segBtns.length <= 4 && tg === 0) sec.classList.add('ix-row1');
   }
   function mountPane(sub) {
     var draw = PANE_FN.get(sub); if (typeof draw !== 'function') { sub = 'general'; draw = PANE_FN.get(sub); }   // only a pane of ours runs, whatever the address says

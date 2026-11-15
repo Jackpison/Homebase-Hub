@@ -127,6 +127,8 @@ try:
         check('L15 a tab that saves at once (Security) has no Save bar', until(lambda: pg.evaluate("document.getElementById('ix-sf').hidden"), 4000))
         tiles = pg.evaluate("(() => { const t = [...document.querySelectorAll('#ix-stiles .ix-tile b')].map(b => b.textContent); return t; })()") if until(lambda: pg.evaluate("document.querySelectorAll('#ix-stiles .ix-tile').length > 4"), 15000) else []
         check('L16 Security Overview: a Passkeys card, and the password card says just "Password"', 'Passkeys' in tiles and 'Password' in tiles and 'Website Password' not in tiles, tiles)
+        grp = pg.evaluate("[...document.querySelectorAll('#ix-stiles .ix-sect')].map(x => x.textContent)")
+        check('L16b (1.79.7) Security Overview: a slim header, then the tiles in groups (Needs Attention, In Place, Manage) with Password in place and Devices under Manage', 'Manage' in grp and 'In Place' in grp and pg.evaluate("!!document.querySelector('#ix-sov.ix-slim') && !!document.querySelector('#ix-stiles [data-grp=in] [data-go=pw]') && !!document.querySelector('#ix-stiles [data-grp=manage] [data-go=dev]')"), grp)
         check('L17 no backup reminder pops up on the Settings page', 'Backup reminder' not in (pg.evaluate("(document.getElementById('ix-toast') || {}).textContent || ''") or ''))
 
         pg.goto(s.base + '/web/settings/#health'); until(lambda: pg.evaluate("document.querySelectorAll('.ix-hcards.six .ix-hc').length") == 6, 20000)
@@ -139,6 +141,9 @@ try:
             pg.goto(s.base + '/web/settings/#' + sec); wait_js(pg, "!!document.querySelector('#ix-pc') && document.querySelector('#ix-pc').children.length > 0", 20000); pg.wait_for_timeout(500)
             widths[sec] = pg.evaluate("Math.max(...[...document.querySelectorAll('#ix-pc > *')].filter(e => !e.classList.contains('ix-tabbar') && e.offsetParent).map(e => Math.round(e.getBoundingClientRect().width)))")
         check('L19 every section stops at the same width (the content width, 1160 px at most)', len(set(widths.values())) == 1 and all(w <= 1161 for w in widths.values()), widths)
+        pg.goto(s.base + '/web/settings/#look'); wait_js(pg, "!!document.querySelector('#ix-pc .ix-ec.ix-row1')", 20000)
+        lr = pg.evaluate("Object.fromEntries([...document.querySelectorAll('#ix-pc .ix-ec')].map(c => [c.querySelector('.ix-ec-t').textContent, c.classList.contains('ix-row1')]))")
+        check('L1r (1.79.7) Look: Theme, Font and Text Sizes are slim rows; Navigation Style (a picker and switches) stays a card', lr.get('Theme') and lr.get('Font') and lr.get('Text Sizes') and lr.get('Navigation Style') is False, lr)
         pg.goto(s.base + '/web/settings/#colors'); wait_js(pg, "!!document.querySelector('#ix-pc .ix-seg')", 20000)
         gap = pg.evaluate("(() => { const s = document.querySelector('#ix-pc .ix-row .ix-seg'), b = [...document.querySelectorAll('#ix-pc .ix-row button')].find(x => /^Reset/.test(x.textContent)); return Math.round(b.getBoundingClientRect().left - s.getBoundingClientRect().right); })()")
         check('L20 Colors: Reset sits next to the Dark/Light choice', 0 <= gap <= 30, gap)
