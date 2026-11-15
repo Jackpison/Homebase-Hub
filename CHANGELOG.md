@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.10 | A floating rounded top bar with a Rounded Bar switch, the theme button is only its icon, the Files storage limit sits at the right, and Save Settings is never dimmed |
 | 1.79.9 | Backup & Restore shows one list of places for automatic backups, messages wear the colour of the page they came from and have an Open Logs button, one pencil icon everywhere, and a typed storage limit in Files |
 | 1.79.8 | Security Devices is one clear screen, a small ? above the bell opens the keyboard shortcuts, Telegram and Bookmarks cards are slim rows, and the SVG converter no longer parses SVG text into the page |
 | 1.79.7 | Settings cards with one control are slim rows, Security Overview sorts what to do first, Log Out in every gear menu, a ? button for the shortcuts, and closer shields on private tabs |
@@ -164,6 +165,17 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.10
+
+### Changed
+
+- **Top bar:** it floats with rounded corners on all four sides. Settings > Appearance > Rounded Bar turns that off for a flat bar across the top edge.
+- **Theme button:** only the sun or moon, white on dark and black on light, with no tile behind it.
+- **Files Settings:** the storage limit number and GB or TB sit at the right of the name, like every other row. The GB and TB list now matches the dark and light look.
+- **Save Settings:** the button in every window looks the same all the time. It no longer fades to grey until something changes.
 
 ---
 
