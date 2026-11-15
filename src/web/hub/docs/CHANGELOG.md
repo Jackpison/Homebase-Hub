@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.2 | Files: PDFs show their first page as a picture, Keep on This Device for offline use, and Attach a File From Files in Tasks and Cards (the link opens the file in Files) |
 | 1.80.1 | Files: folders show their size, gallery links for several pictures, Send to Telegram (asks first), a floating selection bar, Folders and Files parts in the grid, coloured filter chips and folder colours; Settings and Cards messages name what changed; better icons in Home Settings and Widgets |
 | 1.80.0 | A much better Files page: keyboard use, right-click and long-press menus, a bigger preview, filters, pinned folders, name-clash choices, resume, labels and notes, Undo, share link passwords and download limits with a QR code, a Storage view, and swipes on a phone; the Home refresh button is back at the bottom right |
 | 1.79.12 | Messages are now Alerts with the bell in the bar, the same Logs list on every device, Hide the Bar While Scrolling and Show Widgets are per device (a phone starts with no widgets), and the CI fix |
@@ -169,6 +170,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.2
+
+### Files
+- A PDF shows its first page as its picture in the grid view. It is drawn in your browser, one at a time, for PDFs up to 20 MB.
+- Keep on This Device (in a file's menu) copies the file's locked pieces into this browser. A kept file shows a small arrow and opens with no connection. Remove from This Device takes the copy away. While a file is kept, the page also remembers the last list of names, so it can still open when the server cannot be reached. Your key must be unlocked on the device.
+- Copy Link to This File makes a link that opens the file in its folder, in its preview, after you log in.
+
+### Tasks and Cards
+- Attach a File From Files opens a small picker that searches your file names. The chosen file's link goes into the Website field (Tasks) or the Card link (Cards), and you save as usual. Info has no link field, so it has no button.
 
 ---
 
