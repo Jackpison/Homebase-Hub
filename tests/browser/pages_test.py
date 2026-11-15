@@ -268,9 +268,10 @@ try:
             (hp.check if on else hp.uncheck)('#sHomeBar')
             with hp.expect_navigation(timeout=15000): hp.click('#saveSettings')   # the bar comes or goes with a reload
             until(lambda: hp.evaluate("!!(window.HUB && HUB.state && 'homeBar' in HUB.state())"), 10000); settle(hp)
-            return hp.evaluate("[document.documentElement.hasAttribute('data-ix-bar'), HUB.state().homeBar]")
+            return hp.evaluate("[document.documentElement.hasAttribute('data-ix-bar'), HUB.state().homeBar, document.querySelector('.corner').getBoundingClientRect().left < innerWidth / 2]")
         bar_on = home_bar(True); bar_off = home_bar(False)
-        check('P39 Home Settings > Show the Bar on the Home Page turns the bar on and off (the same setting as in Settings)', bar_on == [True, True] and bar_off == [False, False], (bar_on, bar_off))
+        check('P39 Home Settings > Show the Bar on the Home Page turns the bar on and off (the same setting as in Settings)', bar_on == [True, True, True] and bar_off[:2] == [False, False], (bar_on, bar_off))
+        check('P39b (1.79.11) with the bar shown the credit and refresh buttons sit bottom left, clear of the bell', bar_on[2], bar_on)
         hctx.close()
         # P41: an open widget never sits on top of the cards (Glance and Expand, nine cards in two rows) or the dock, and the clock
         # steps aside when there is no room for both (seen on the owner's screen: the panel lay over the cards, unreadable)

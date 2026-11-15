@@ -145,6 +145,13 @@ try:
         pg.goto(s.base + '/web/links/'); wait_js(pg, "!!document.getElementById('ix-bar')", 15000)
         rr = pg.evaluate("(() => { const bar = document.getElementById('ix-bar'), f = () => bar.getBoundingClientRect().top; const a = [f(), parseFloat(getComputedStyle(bar).borderTopLeftRadius)]; document.documentElement.setAttribute('data-ix-flat', ''); const b = [f(), parseFloat(getComputedStyle(bar).borderTopLeftRadius)]; document.documentElement.removeAttribute('data-ix-flat'); return [a, b]; })()")
         check('L16i (1.79.10) the top bar floats with rounded corners, and Rounded Bar off makes it flat across the top', rr[0][0] > 4 and rr[0][1] >= 16 and rr[1][0] == 0 and rr[1][1] == 0, rr)
+        s.php("$x = hub_settings(); $x['homeBar'] = true; hub_settings_save($x);")
+        pg.set_viewport_size({'width': 393, 'height': 852}); pg.goto(s.base + '/web/home/'); wait_js(pg, "!!document.getElementById('ix-bar') && !!document.getElementById('greet')", 20000)
+        pg.evaluate("document.documentElement.style.setProperty('--ix-safe-top', '59px')")
+        ph = wait_js(pg, "(() => { const b = document.getElementById('ix-bar').getBoundingClientRect(), g = document.getElementById('greet').getBoundingClientRect(); return b.top >= 59 && g.top >= b.bottom && getComputedStyle(document.getElementById('ix-bar')).paddingTop === '0px'; })()", 5000) or True
+        ph = pg.evaluate("(() => { const b = document.getElementById('ix-bar').getBoundingClientRect(), g = document.getElementById('greet').getBoundingClientRect(); return [Math.round(b.top), Math.round(b.bottom), Math.round(g.top)]; })()")
+        check('L16j (1.79.11) on an iPhone-sized Home the bar floats below the status bar and the clock starts below the bar', ph[0] >= 59 and ph[2] >= ph[1], ph)
+        s.php("$x = hub_settings(); $x['homeBar'] = false; hub_settings_save($x);"); pg.set_viewport_size({'width': 1280, 'height': 900})
         check('L17 no backup reminder pops up on the Settings page', 'Backup reminder' not in (pg.evaluate("(document.getElementById('ix-toast') || {}).textContent || ''") or ''))
 
         pg.goto(s.base + '/web/settings/#health'); until(lambda: pg.evaluate("document.querySelectorAll('.ix-hcards.six .ix-hc').length") == 6, 20000)
