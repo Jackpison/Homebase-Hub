@@ -96,7 +96,7 @@
   function P() { return PAGE || D(); }
   var OV = null;                         // what the Overview last learned: the little status labels in the menu come from it
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
-  var TABMERGE = { security: [['Sign-In', ['password', 'passkeys', 'two-step-login', 'telegram-login-approval', 'login-approval']], ['Data Protection', ['encryption']], ['Devices', ['trusted-browsers', 'devices']]] };   // (1.74.2) Security: eight tabs become four
+  var TABMERGE = { security: [['Sign-In', ['password', 'passkeys', 'two-step-login', 'telegram-login-approval', 'login-approval']], ['Data Protection', ['encryption']], ['Devices', ['devices', 'trusted-browsers']]] };   // (1.74.2) Security: eight tabs become four
   var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Back Up' };   // sections whose accordions become tabs, and the name of their first tab
   var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
   var draft;

@@ -37,7 +37,6 @@
     if (k === 'spotx') { if (spot) spot.classList.remove('open'); return; }
     if (k === 'menu') return drawer(true, b);
     if (k === 'sheet') return sheet(true, b);
-    if (k === 'keys') return showKeys();
     if (k === 'theme') { if (inPanel) closePanels(); return setTheme(themeNow() === 'light' ? 'dark' : 'light', inPanel ? null : b); }
     if (k === 'login') return login().then(function () { location.reload(); }, function () {});
     if (k === 'logout') return logout();

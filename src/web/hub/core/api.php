@@ -497,9 +497,9 @@ case 'diag':   // Settings > Server check
     $add('GD (image resizing)', extension_loaded('gd'), extension_loaded('gd') ? 'Available.' : 'Missing; start page photos are saved without shrinking.');
     $ml = trim((string)ini_get('memory_limit')); $mlb = $ml === '-1' ? PHP_INT_MAX : (int)$ml * (['g' => 1 << 30, 'm' => 1 << 20, 'k' => 1 << 10][strtolower(substr($ml, -1))] ?? 1);
     $add('PHP memory limit', $mlb >= (192 << 20), $ml === '-1' ? 'No limit.' : $ml . ($mlb >= (192 << 20) ? '. Plenty for shrinking big start page photos.' : '. Start page photos wider than about 4500 px are saved as they are instead of being shrunk. For all of them, choose 256M for memory_limit in your hosting PHP settings.'));
-    $pool = hub_jread(hub_dir('home') . '/photos.json'); $perr = [];
-    foreach (is_array($pool['errors'] ?? null) ? $pool['errors'] : [] as $psrc => $pe) if (is_array($pe) && !empty($pe['msg']) && (int)($pe['time'] ?? 0) > time() - 7 * 86400) $perr[] = $psrc . ': ' . $pe['msg'] . ' (' . date('j M', (int)$pe['time']) . ')';
-    $add('Start page photo sources', !$perr, $perr ? 'Problems in the last 7 days: ' . implode('; ', array_slice($perr, 0, 4)) . '.' : (is_array($pool) ? 'No download problems in the last 7 days.' : 'Nothing downloaded yet.'));
+    require_once __DIR__ . '/lib/health.php';
+    $pool = hub_jread(hub_dir('home') . '/photos.json'); $ph = hub_photo_sources_note(is_array($pool) ? $pool : null, time());
+    $add('Start page photo sources', $ph['ok'], $ph['text']);
     $add('Passkeys', function_exists('openssl_verify') && function_exists('openssl_pkey_get_public'), function_exists('openssl_verify') ? 'PHP\'s OpenSSL can check passkeys. They also need your site to be opened over https (or localhost).' : 'Passkeys need the OpenSSL extension in PHP, which is not on this server. Ask your host to turn it on.');
     $add('Upload limits', true, 'upload_max_filesize ' . ini_get('upload_max_filesize') . ', post_max_size ' . ini_get('post_max_size') . ' (a big backup import needs these to be larger than the file).');
     hub_json(200, ['ok' => true, 'checks' => $c]);

@@ -577,7 +577,8 @@ label>.ix-sgc>button{flex:1}
 dialog.ix-sdlg>form>.actions{flex-direction:row;flex-wrap:nowrap}
 
 /* ---------- keyboard shortcuts (1.61.0) ---------- */
-#ix-dlg .ix-keys{text-align:left;margin:4px 0 12px;max-height:min(60vh,460px);overflow:auto}
+#ix-dlg .ix-keys{text-align:left;margin:4px 0 12px;max-height:min(66vh,560px);overflow:auto;scrollbar-width:none}   /* (1.79.8) no scroll bar beside the list */
+#ix-dlg .ix-keys::-webkit-scrollbar{display:none}
 #ix-dlg .ix-keys h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ix-mu);margin:16px 0 6px}
 #ix-dlg .ix-krow{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:7px 0;border-bottom:1px solid var(--ix-line);font-size:14.5px}
 #ix-dlg .ix-kk{white-space:nowrap}
@@ -1049,4 +1050,8 @@ html[data-ix-glass]:not([data-ix-gsolid]) #ix-ebar{background:color-mix(in srgb,
 #ix-offp p{margin:0;color:var(--ix-mu,inherit);opacity:.8}
 
 /* (1.79.7) the ? button for the keyboard shortcuts: only where there is a keyboard and a mouse */
-@media (hover:none),(pointer:coarse){.ix-keysb{display:none!important}}
+#ix-keysf{position:fixed;right:23px;bottom:72px;z-index:2147483002;width:30px;height:30px;border-radius:50%;border:1px solid var(--ix-line2);background:var(--ix-s1);color:var(--ix-mu);font:700 14px/1 var(--ix-font);display:grid;place-items:center;cursor:pointer;opacity:.7;padding:0}
+#ix-keysf[hidden]{display:none}
+#ix-keysf:hover,#ix-keysf:focus-visible{opacity:1;color:var(--ix-tx)}
+html[data-ix-nav="dock"] #ix-keysf{bottom:calc(var(--ix-dock) + 34px + 56px + env(safe-area-inset-bottom,0px))}
+@media (hover:none),(pointer:coarse){#ix-keysf{display:none!important}}

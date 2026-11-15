@@ -73,7 +73,7 @@
     tools: ['#f97316', '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'],
     tasks: ['#f43f5e', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/>']
   };
-  var TOOL_C = { theme: '#f5a524', edit: '#3b82f6', backup: '#22c55e', due: '#ef4444', account: '#71717a', login: '#f5a524', search: '#71717a', keys: '#8b5cf6' };
+  var TOOL_C = { theme: '#f5a524', edit: '#3b82f6', backup: '#22c55e', due: '#ef4444', account: '#71717a', login: '#f5a524', search: '#71717a' };
   var pageColor = function (id) { return (PAGE_TILE[id] || ['#71717a'])[0]; };
   var pageIcon = function (p) { var t = PAGE_TILE[p[0]]; return '<span class="ix-pt" aria-hidden="true">' + (t ? '<svg viewBox="0 0 24 24">' + t[1] + '</svg>' : svg(p[3])) + '</span>'; };
   var ICON = {
@@ -394,12 +394,20 @@
   function noteTile(kind) { return '<span class="ix-nt ' + kind + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + NOTE_ICON[kind] + '"/></svg></span>'; }
   function noteBell() {
     var b = document.getElementById('ix-bell'), n = noteHist.length - noteSeen, box = document.getElementById('ix-toast'), live = box && box.querySelector('.ix-nc');
-    if (live) { if (b) b.hidden = true; return; }   // (1.77.2) the bell stays on every page, so the messages can always be read again; the number shows only what was missed
+    if (live) { if (b) { b.hidden = true; keysButton(b); } return; }   // (1.77.2) the bell stays on every page, so the messages can always be read again; the number shows only what was missed
     if (!b) {
       b = document.createElement('button'); b.type = 'button'; b.id = 'ix-bell'; b.setAttribute('aria-label', 'Messages you may have missed');
       b.onclick = function () { noteList(); }; document.body.appendChild(b);
     }
     b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' + (n > 0 ? '<b>' + Math.min(n, 9) + (n > 9 ? '+' : '') + '</b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.hidden = false;
+    keysButton(b);
+  }
+  /* (1.79.8) a small ? above the bell opens the keyboard shortcuts (computers only; the ? key does the same) */
+  function keysButton(bell) {
+    var k = document.getElementById('ix-keysf');
+    if (!k) { k = document.createElement('button'); k.type = 'button'; k.id = 'ix-keysf'; k.setAttribute('aria-label', 'Keyboard shortcuts'); k.title = 'Keyboard shortcuts (press ?)'; k.textContent = '?'; k.onclick = function () { showKeys(); }; document.body.appendChild(k); }
+    k.hidden = bell.hidden;
+    k.classList.toggle('ix-quiet', bell.classList.contains('ix-quiet'));
   }
   whenBody(noteBell);   // the bell is there from the first moment on every page
   /* the list behind the bell: the last messages of this tab, newest first */
@@ -462,7 +470,7 @@
       while (t.children.length > NOTE_MAX) { clearTimeout(+t.lastChild.dataset.tm); t.removeChild(t.lastChild); }
     });
     requestAnimationFrame(function () { c.classList.add('in'); });
-    var bell = document.getElementById('ix-bell'); if (bell) bell.hidden = true;
+    var bell = document.getElementById('ix-bell'); if (bell) { bell.hidden = true; keysButton(bell); }
     arm(bad ? 7000 : act ? 8000 : 4500);
   }
   function remember(st) {
@@ -873,13 +881,12 @@
     var adm = isAdmin(), nav = NAV();
     var brand = '<span data-ix-brand></span>';   // the logo and site name: brandEl() puts them in once the markup is in place
     var theme = iconBtn('theme', themeLabel(), toolTile('theme', themeIcon()));
-    var keys = iconBtn('keys', 'Keyboard Shortcuts (press ?)', toolTile('keys', svg(ICON.keyboard)), 'ix-keysb');   // (1.79.7) a ? button on computers; the list opens from it and from the ? key
     var edit = '';   // (1.79.1) the pencil is gone from the bar: the gear opens Edit This Page, the page's settings and Site Settings
     var me = acctButtons(adm), links = pageLinks();
     var html;
     if (nav === 'side') {
       html = brand + iconBtn('search', 'Search (press /)', svg(ICON.search), 'ix-sbtn') + links +
-        '<div class="ix-tools">' + keys + theme + edit + me + '</div>' +
+        '<div class="ix-tools">' + theme + edit + me + '</div>' +
         '<button type="button" class="ix-fab" data-ix="menu" aria-label="Pages and Menu" title="Pages and Menu">' + svg(ICON.menu) + '</button>';
     } else if (nav === 'dock') {
       html = '<div class="ix-pill">' + links + '<span class="ix-div" aria-hidden="true"></span><div class="ix-tools">' +
@@ -889,7 +896,7 @@
       html = '<button type="button" class="ix-ib ix-menu" data-ix="menu" aria-label="Pages" title="Pages">' + svg(ICON.menu) + '</button>' + brand + links +
         '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + 'Search' + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
           '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
-        '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + keys + theme + edit + me + '</div>';
+        '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + theme + edit + me + '</div>';
     }
     var key = html + '|' + (S.siteName || '') + '|' + (S.logo || '');   // a new name or logo draws the bar again too
     if (key === lastBar && bar) { glass(); return; }
@@ -1748,7 +1755,6 @@
     if (k === 'spotx') { if (spot) spot.classList.remove('open'); return; }
     if (k === 'menu') return drawer(true, b);
     if (k === 'sheet') return sheet(true, b);
-    if (k === 'keys') return showKeys();
     if (k === 'theme') { if (inPanel) closePanels(); return setTheme(themeNow() === 'light' ? 'dark' : 'light', inPanel ? null : b); }
     if (k === 'login') return login().then(function () { location.reload(); }, function () {});
     if (k === 'logout') return logout();

@@ -73,7 +73,7 @@
     tools: ['#f97316', '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'],
     tasks: ['#f43f5e', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/>']
   };
-  var TOOL_C = { theme: '#f5a524', edit: '#3b82f6', backup: '#22c55e', due: '#ef4444', account: '#71717a', login: '#f5a524', search: '#71717a', keys: '#8b5cf6' };
+  var TOOL_C = { theme: '#f5a524', edit: '#3b82f6', backup: '#22c55e', due: '#ef4444', account: '#71717a', login: '#f5a524', search: '#71717a' };
   var pageColor = function (id) { return (PAGE_TILE[id] || ['#71717a'])[0]; };
   var pageIcon = function (p) { var t = PAGE_TILE[p[0]]; return '<span class="ix-pt" aria-hidden="true">' + (t ? '<svg viewBox="0 0 24 24">' + t[1] + '</svg>' : svg(p[3])) + '</span>'; };
   var ICON = {

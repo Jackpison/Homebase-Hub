@@ -64,6 +64,8 @@ try:
         pg.goto(s.base + '/web/settings/#telegram'); wait_js(pg, "document.querySelectorAll('#ix-pc .ix-tabbar [role=tab]').length >= 4", 20000)
         ttabs = pg.evaluate("[...document.querySelectorAll('#ix-pc .ix-tabbar [role=tab]')].map(e => e.textContent)")
         today = pg.evaluate("(() => { const b = document.getElementById('nt-today'); return b ? b.closest('.ix-tpane').dataset.tab : ''; })()")
+        trow = pg.evaluate("(() => { const c = id => { const e = document.getElementById(id); return e ? e.closest('.ix-ec') : null; }; const h = c('nt-hour'), t = c('nt-today'); return [!!h && h.classList.contains('ix-row1') && !!h.querySelector('#nt-now'), !!t && t.classList.contains('ix-row1')]; })()")
+        check('S7c (1.79.8) Telegram: Delivery Time (hour and Send Now) and Send Today\'s Tasks are slim rows', trow == [True, True], trow)
         pg.click('#ix-pc .ix-tile[data-go="bk"]'); wait_js(pg, "!!document.querySelector('#ix-tgbk')", 10000)
         check("S7b Telegram's tabs are Status, Setup, Messages and Instant Replies; Send Today's Tasks is in Messages; the Backups card opens Backup & Restore",
               ttabs == ['Status', 'Setup', 'Messages', 'Instant Replies'] and today == 'messages' and pg.evaluate(h2x) == 'Backup & Restore', (ttabs, today, pg.evaluate(h2x)))

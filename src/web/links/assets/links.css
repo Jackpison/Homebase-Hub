@@ -253,3 +253,6 @@ body.is-locked .search{display:none}
 /* (1.79.2) a small grey divider between one tab and the next */
 .tabs>.tabi+.tabi{position:relative}
 .tabs>.tabi+.tabi::before{content:"";position:absolute;left:-14px;top:50%;width:1px;height:20px;transform:translateY(-50%);background:color-mix(in srgb,var(--text) 22%,transparent)}
+
+/* (1.79.8) in edit mode the pen keeps a clear gap from the tab name */
+body.editing .tabi .pen{margin-left:8px}

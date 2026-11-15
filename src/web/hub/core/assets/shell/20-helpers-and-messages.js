@@ -89,12 +89,20 @@
   function noteTile(kind) { return '<span class="ix-nt ' + kind + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + NOTE_ICON[kind] + '"/></svg></span>'; }
   function noteBell() {
     var b = document.getElementById('ix-bell'), n = noteHist.length - noteSeen, box = document.getElementById('ix-toast'), live = box && box.querySelector('.ix-nc');
-    if (live) { if (b) b.hidden = true; return; }   // (1.77.2) the bell stays on every page, so the messages can always be read again; the number shows only what was missed
+    if (live) { if (b) { b.hidden = true; keysButton(b); } return; }   // (1.77.2) the bell stays on every page, so the messages can always be read again; the number shows only what was missed
     if (!b) {
       b = document.createElement('button'); b.type = 'button'; b.id = 'ix-bell'; b.setAttribute('aria-label', 'Messages you may have missed');
       b.onclick = function () { noteList(); }; document.body.appendChild(b);
     }
     b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' + (n > 0 ? '<b>' + Math.min(n, 9) + (n > 9 ? '+' : '') + '</b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.hidden = false;
+    keysButton(b);
+  }
+  /* (1.79.8) a small ? above the bell opens the keyboard shortcuts (computers only; the ? key does the same) */
+  function keysButton(bell) {
+    var k = document.getElementById('ix-keysf');
+    if (!k) { k = document.createElement('button'); k.type = 'button'; k.id = 'ix-keysf'; k.setAttribute('aria-label', 'Keyboard shortcuts'); k.title = 'Keyboard shortcuts (press ?)'; k.textContent = '?'; k.onclick = function () { showKeys(); }; document.body.appendChild(k); }
+    k.hidden = bell.hidden;
+    k.classList.toggle('ix-quiet', bell.classList.contains('ix-quiet'));
   }
   whenBody(noteBell);   // the bell is there from the first moment on every page
   /* the list behind the bell: the last messages of this tab, newest first */
@@ -157,7 +165,7 @@
       while (t.children.length > NOTE_MAX) { clearTimeout(+t.lastChild.dataset.tm); t.removeChild(t.lastChild); }
     });
     requestAnimationFrame(function () { c.classList.add('in'); });
-    var bell = document.getElementById('ix-bell'); if (bell) bell.hidden = true;
+    var bell = document.getElementById('ix-bell'); if (bell) { bell.hidden = true; keysButton(bell); }
     arm(bad ? 7000 : act ? 8000 : 4500);
   }
   function remember(st) {

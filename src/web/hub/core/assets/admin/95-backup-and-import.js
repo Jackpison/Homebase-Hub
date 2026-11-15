@@ -303,7 +303,8 @@
            ['tasks', 'Tasks', ICON.check, 'Every task with its due date, repeat, price and notes.']].map(function (x) {
             return ecCard('', x[2], x[1], x[3], '<div class="ix-row"><button type="button" class="ix-btn pri" data-export="' + x[0] + '" data-fmt="csv">' + svg(ICON.down) + 'Download CSV</button><button type="button" class="ix-btn" data-export="' + x[0] + '" data-fmt="json">' + svg(ICON.down) + 'Download JSON</button></div>'); }).join('') +
           ecCard('', ICON.bookmark, 'Bookmarks for Other Browsers', 'The standard bookmark file that Chrome, Edge, Firefox and Safari can import. Encrypted tabs stay locked here; to include them, unlock them and use Export Bookmarks in Links Settings.',
-            '<label class="ix-tg"><span>Include Private Tabs<small>Also writes your private tabs. The file is plain text: keep it safe.</small></span><input type="checkbox" id="ix-bmpriv"></label><div class="ix-row"><button type="button" class="ix-btn pri" data-export="links" data-fmt="html">' + svg(ICON.down) + 'Download Bookmark File</button></div>') +
+            '<div class="ix-bmrow"><button type="button" class="ix-btn pri" data-export="links" data-fmt="html">' + svg(ICON.down) + 'Download Bookmark File</button>' +
+              '<label class="ix-tg"><span>Include Private Tabs<small>Also writes your private tabs. The file is plain text: keep it safe.</small></span><input type="checkbox" id="ix-bmpriv"></label></div>') +
           '<p class="ix-note" id="ix-xs">The files hold your data as plain text. Keep them somewhere safe.</p></div></details>' +
         // (1.72.0) the Import Center: another app's export becomes tasks, notes, links or cards (importer.js reads it here in the browser)
         '<details class="ix-acc" id="ix-iacc"><summary><span>Import</span><small>From Todoist, Google Keep, Notion, a calendar, Raindrop, Pocket and more</small></summary><div class="ix-accb">' +

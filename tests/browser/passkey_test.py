@@ -67,7 +67,7 @@ try:
         creds = cdp.send('WebAuthn.getCredentials', {'authenticatorId': auth})['credentials']
         keys = s.get('pk_list').get('keys', [])
         check('K10 the passkey\'s last-used time is recorded', keys[0]['last'] > 0, keys)
-        pg.goto(L + '/web/settings/#security/devices'); wait_js(pg, "document.body.innerText.includes('Logged In')", 20000)
+        pg.goto(L + '/web/settings/#security/devices'); wait_js(pg, "document.body.innerText.includes('This Device')", 20000)
 
         # ---- a device that cannot verify the person ----
         cdp.send('WebAuthn.setUserVerified', {'authenticatorId': auth, 'isUserVerified': False})

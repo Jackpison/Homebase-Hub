@@ -26,3 +26,14 @@ t('W7 an empty address turns the check off', ($r['url'] ?? 'x') === '' && health
 // a backup file from 1.78.1 or before still has a "watch" part: restoring ignores it and does not fail
 $done = bk_import(['watch' => ['sites' => [['host' => 'example.com']], 'tasks' => [], 'updateUrl' => '']], ['watch' => true], 'replace');
 t('W8 an old backup\'s watch part is ignored on restore', is_array($done) && !is_file(hub_jpath("$core/watch.json")), json_encode($done));
+
+// 1.79.8: Settings > Health. A passing problem of a photo source (the other site down: HTTP 5xx, a timeout) younger than a day is only a note; anything else stays a warning.
+$now = 1_700_000_000;
+$soft = hub_photo_sources_note(['items' => [], 'errors' => ['picsum' => ['msg' => 'Download failed (HTTP 522)', 'time' => $now - 3600]]], $now);
+t('W9 a source that answered HTTP 522 an hour ago is a note, not a warning', $soft['ok'] === true && strpos($soft['text'], 'picsum') !== false && strpos($soft['text'], 'usually passes') !== false, json_encode($soft));
+$old = hub_photo_sources_note(['errors' => ['picsum' => ['msg' => 'Download failed (HTTP 522)', 'time' => $now - 3 * 86400]]], $now);
+t('W10 the same problem three days old is a warning', $old['ok'] === false && strpos($old['text'], 'Problems in the last 7 days') === 0, json_encode($old));
+$bad = hub_photo_sources_note(['errors' => ['x' => ['msg' => 'Not a usable image', 'time' => $now - 60], 'picsum' => ['msg' => 'Download failed (HTTP 522)', 'time' => $now - 60]]], $now);
+t('W11 a problem that is not a passing one warns, and lists the passing one after it', $bad['ok'] === false && strpos($bad['text'], 'x: Not a usable image') !== false, json_encode($bad));
+$none = hub_photo_sources_note(['errors' => ['picsum' => null]], $now); $nope = hub_photo_sources_note(null, $now);
+t('W12 no problems, and nothing downloaded yet, are both fine', $none['ok'] && $nope['ok'] && $nope['text'] === 'Nothing downloaded yet.', json_encode([$none, $nope]));

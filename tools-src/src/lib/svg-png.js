@@ -2,31 +2,26 @@
 import { h, field, textarea, input, seg, check, button, dropzone, panel, busy, note, toast } from '../ui.js';
 import { encode, canvas, outName, results, each } from './image.js';
 
-/** Takes out everything that can run or load something: scripts, embedded pages, event attributes and links to other files. An image shown through <img> runs none of it, but the converter never passes it on. */
-function clean(doc) {
-  doc.querySelectorAll('script,foreignObject,iframe,object,embed,audio,video').forEach((n) => n.remove());
-  doc.querySelectorAll('*').forEach((n) => [...n.attributes].forEach((a) => {
-    const v = a.value.trim().toLowerCase();
-    if (/^on/i.test(a.name) || ((a.name === 'href' || a.name === 'xlink:href') && !v.startsWith('#') && !v.startsWith('data:image/')) || v.startsWith('javascript:')) n.removeAttribute(a.name);
-  }));
-}
+/* The SVG text is never turned into page elements here: its first tag is read as text, and the picture is drawn through an image,
+   which runs no script and loads nothing from other places. Embedded web pages (foreignObject) are left out: a canvas cannot save them. */
+const ROOT = /<svg\b[^>]*>/i;
+const attr = (tag, name) => { const m = new RegExp('\\s' + name + '\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\')', 'i').exec(tag); return m ? (m[1] ?? m[2]) : ''; };
 /** The SVG's own size, from width and height or its viewBox. */
 export function svgSize(text) {
-  const doc = new DOMParser().parseFromString(text, 'image/svg+xml'), s = doc.documentElement;
-  if (!s || s.nodeName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) throw new Error('That is not valid SVG.');
-  clean(doc);
+  const m = ROOT.exec(text);
+  if (!m || !/<\/svg\s*>\s*$/i.test(text.trim()) && !/\/>$/.test(m[0])) throw new Error('That is not valid SVG.');
   const num = (v) => (v && /^[\d.]+(px)?$/.test(v.trim()) ? parseFloat(v) : 0);
-  let w = num(s.getAttribute('width')), ht = num(s.getAttribute('height'));
-  const vb = (s.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
+  let w = num(attr(m[0], 'width')), ht = num(attr(m[0], 'height'));
+  const vb = attr(m[0], 'viewBox').split(/[\s,]+/).map(Number);
   if ((!w || !ht) && vb.length === 4 && vb[2] > 0 && vb[3] > 0) { if (w) ht = w * vb[3] / vb[2]; else if (ht) w = ht * vb[2] / vb[3]; else { w = vb[2]; ht = vb[3]; } }
-  return { doc, w: w || 300, h: ht || 150 };
+  return { w: w || 300, h: ht || 150, tag: m[0], vb: vb.length === 4 && vb.every(Number.isFinite) };
 }
 export async function render(text, width, bg) {
-  const { doc, w, h: ht } = svgSize(text), W = Math.round(width), H = Math.round(width * ht / w), s = doc.documentElement;
-  if (!s.getAttribute('viewBox')) s.setAttribute('viewBox', '0 0 ' + w + ' ' + ht);
-  s.setAttribute('width', W); s.setAttribute('height', H);
-  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(s)], { type: 'image/svg+xml' })), img = new Image();
-  try { img.src = url; await img.decode(); } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
+  const { w, h: ht, tag, vb } = svgSize(text), W = Math.round(width), H = Math.round(width * ht / w);
+  const strip = (t, n) => t.replace(new RegExp('\\s' + n + '\\s*=\\s*(?:"[^"]*"|\'[^\']*\')', 'ig'), '');
+  const root = strip(strip(tag, 'width'), 'height').replace(/\s*(\/?)>$/, (_, c) => (vb ? '' : ' viewBox="0 0 ' + w + ' ' + ht + '"') + ' width="' + W + '" height="' + H + '"' + c + '>');
+  const url = URL.createObjectURL(new Blob([text.replace(/<foreignObject\b[\s\S]*?<\/foreignObject\s*>/gi, '').replace(ROOT, () => root)], { type: 'image/svg+xml' })), img = new Image();
+  try { img.src = url; await img.decode(); } catch { throw new Error('That is not valid SVG.'); } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
   const c = canvas(W, H), x = c.getContext('2d'); if (bg) { x.fillStyle = bg; x.fillRect(0, 0, W, H); } x.drawImage(img, 0, 0, W, H); return c;
 }
 export default function (root) {

@@ -198,3 +198,22 @@ function health_report(): array {
         'speed' => health_speed(), 'logs' => health_logs(), 'leftovers' => health_leftovers(), 'update' => health_check_update(null),
     ];
 }
+
+/**
+ * Settings > Health: how the start page's photo sources are doing. A problem from the last 7 days is a warning, except a
+ * passing one (the other site was down or slow: HTTP 5xx, a timeout) that is less than a day old: that only gets a note,
+ * because the next download usually works by itself. Returns ['ok' => bool, 'text' => string].
+ */
+function hub_photo_sources_note(?array $pool, int $now): array
+{
+    $warn = []; $soft = [];
+    foreach (is_array($pool['errors'] ?? null) ? $pool['errors'] : [] as $src => $e) {
+        if (!is_array($e) || empty($e['msg']) || (int)($e['time'] ?? 0) <= $now - 7 * 86400) continue;
+        $line = $src . ': ' . $e['msg'] . ' (' . date('j M', (int)$e['time']) . ')';
+        $passing = (int)$e['time'] > $now - 86400 && preg_match('/HTTP 5\d\d|timed out|timeout|could not resolve|connection/i', (string)$e['msg']) === 1;
+        if ($passing) $soft[] = $line; else $warn[] = $line;
+    }
+    if ($warn) return ['ok' => false, 'text' => 'Problems in the last 7 days: ' . implode('; ', array_slice(array_merge($warn, $soft), 0, 4)) . '.'];
+    if ($soft) return ['ok' => true, 'text' => 'A source did not answer lately, which usually passes by itself: ' . implode('; ', array_slice($soft, 0, 4)) . '. It is tried again at the next download.'];
+    return ['ok' => true, 'text' => $pool !== null ? 'No download problems in the last 7 days.' : 'Nothing downloaded yet.'];
+}

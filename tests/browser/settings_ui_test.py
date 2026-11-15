@@ -163,6 +163,8 @@ try:
         with pg.expect_download() as dl: pg.click('[data-export=links][data-fmt=html]')
         fh = os.path.join(TMP, 'settings.html'); dl.value.save_as(fh); th = open(fh, encoding='utf-8').read()
         check('U26 Export > Bookmarks for Other Browsers saves the bookmark file (public tabs only until Include Private Tabs is on)', 'Public &quot;Daily&quot; Link' in th and 'Hidden Bank' not in th, th[:1200])
+        bm = pg.evaluate("(() => { const b = document.querySelector('.ix-bmrow [data-export=links]'), t = document.querySelector('.ix-bmrow #ix-bmpriv'); if (!b || !t) return null; const x = b.getBoundingClientRect(), y = t.getBoundingClientRect(); return [Math.abs((x.top + x.bottom) / 2 - (y.top + y.bottom) / 2) < 30, x.left < y.left]; })()")
+        check('U26b (1.79.8) Bookmarks for Other Browsers: the download button on the left and the Include Private Tabs switch beside it, on one line', bm == [True, True], bm)
         pg.check('#ix-bmpriv')
         with pg.expect_download() as dl: pg.click('[data-export=links][data-fmt=html]')
         fh2 = os.path.join(TMP, 'settings2.html'); dl.value.save_as(fh2)

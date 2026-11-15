@@ -86,11 +86,10 @@
           ecCard('', ICON.shield, 'Site Alerts', 'News about the site itself.',
             toggle('backup', 'Backup Reminder', 'Once a day while a backup is due.', n.backup) +
             toggle('login', 'Login Alerts', 'Straight away: logins, paused logins, password and two-step changes, restores.', n.login)) +
-          ecCard('', ICON.clock, 'Delivery Time', 'When the daily message goes out.',
-            '<div class="ix-row"><select id="nt-hour" style="width:auto">' + Array.apply(null, Array(24)).map(function (x, h) { return '<option value="' + h + '"' + (n.hour === h ? ' selected' : '') + '>' + hourLabel(h) + '</option>'; }).join('') + '</select>' +
-            '<span class="ix-note" style="margin:0">' + esc(String(n.tz).replace(/_/g, ' ')) + ' time</span><button type="button" class="ix-btn" id="nt-now"' + (ready ? '' : ' disabled') + '>Send Now</button></div>' +
-            '<p class="ix-note">Last checked: ' + (n.lastRun ? when(n.lastRun) : 'never') + '. Last message: ' + (n.lastSent ? when(n.lastSent) : 'none yet') + '.' + (n.lastError ? ' <span class="ix-err">Last problem: ' + esc(n.lastError) + '</span>' : '') + '</p>') +
-          ecCard('', ICON.send, 'Send Today\'s Tasks', 'The daily list, sent to your chat right now.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="nt-today"' + (ready ? '' : ' disabled') + '>Send Today\'s Tasks Now</button></div>')) +
+          ecCard('ix-row1', ICON.clock, 'Delivery Time', 'When the daily message goes out, in ' + esc(String(n.tz).replace(/_/g, ' ')) + ' time.<span class="ix-sub">Last checked: ' + (n.lastRun ? when(n.lastRun) : 'never') + '. Last message: ' + (n.lastSent ? when(n.lastSent) : 'none yet') + '.' + (n.lastError ? ' <span class="ix-err">Last problem: ' + esc(n.lastError) + '</span>' : '') + '</span>',
+            '<select id="nt-hour" class="ix-sel">' + Array.apply(null, Array(24)).map(function (x, h) { return '<option value="' + h + '"' + (n.hour === h ? ' selected' : '') + '>' + hourLabel(h) + '</option>'; }).join('') + '</select>' +
+            '<button type="button" class="ix-btn" id="nt-now"' + (ready ? '' : ' disabled') + '>Send Now</button>') +
+          ecCard('ix-row1', ICON.send, 'Send Today\'s Tasks', 'The daily list, sent to your chat right now.', '<button type="button" class="ix-btn pri" id="nt-today"' + (ready ? '' : ' disabled') + '>Send Today\'s Tasks Now</button>')) +
 
         acc('two', 'Instant Replies', (n.hook ? 'On: the bot answers your commands within a second.' : 'Off: the bot answers within a few minutes.') + ' It understands 8 commands.',
           '<div class="ix-rcl">' + rowCard({ ic: ICON.pulse, color: n.hook ? '#22c55e' : '', title: 'Instant Replies', desc: (n.hook ? 'On: the bot answers within a second.' : 'Off: the bot answers within a few minutes.') +

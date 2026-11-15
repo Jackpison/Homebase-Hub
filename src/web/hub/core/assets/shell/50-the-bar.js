@@ -101,13 +101,12 @@
     var adm = isAdmin(), nav = NAV();
     var brand = '<span data-ix-brand></span>';   // the logo and site name: brandEl() puts them in once the markup is in place
     var theme = iconBtn('theme', themeLabel(), toolTile('theme', themeIcon()));
-    var keys = iconBtn('keys', 'Keyboard Shortcuts (press ?)', toolTile('keys', svg(ICON.keyboard)), 'ix-keysb');   // (1.79.7) a ? button on computers; the list opens from it and from the ? key
     var edit = '';   // (1.79.1) the pencil is gone from the bar: the gear opens Edit This Page, the page's settings and Site Settings
     var me = acctButtons(adm), links = pageLinks();
     var html;
     if (nav === 'side') {
       html = brand + iconBtn('search', 'Search (press /)', svg(ICON.search), 'ix-sbtn') + links +
-        '<div class="ix-tools">' + keys + theme + edit + me + '</div>' +
+        '<div class="ix-tools">' + theme + edit + me + '</div>' +
         '<button type="button" class="ix-fab" data-ix="menu" aria-label="Pages and Menu" title="Pages and Menu">' + svg(ICON.menu) + '</button>';
     } else if (nav === 'dock') {
       html = '<div class="ix-pill">' + links + '<span class="ix-div" aria-hidden="true"></span><div class="ix-tools">' +
@@ -117,7 +116,7 @@
       html = '<button type="button" class="ix-ib ix-menu" data-ix="menu" aria-label="Pages" title="Pages">' + svg(ICON.menu) + '</button>' + brand + links +
         '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + 'Search' + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
           '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
-        '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + keys + theme + edit + me + '</div>';
+        '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + theme + edit + me + '</div>';
     }
     var key = html + '|' + (S.siteName || '') + '|' + (S.logo || '');   // a new name or logo draws the bar again too
     if (key === lastBar && bar) { glass(); return; }

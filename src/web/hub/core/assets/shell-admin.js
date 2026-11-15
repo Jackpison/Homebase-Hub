@@ -96,7 +96,7 @@
   function P() { return PAGE || D(); }
   var OV = null;                         // what the Overview last learned: the little status labels in the menu come from it
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
-  var TABMERGE = { security: [['Sign-In', ['password', 'passkeys', 'two-step-login', 'telegram-login-approval', 'login-approval']], ['Data Protection', ['encryption']], ['Devices', ['trusted-browsers', 'devices']]] };   // (1.74.2) Security: eight tabs become four
+  var TABMERGE = { security: [['Sign-In', ['password', 'passkeys', 'two-step-login', 'telegram-login-approval', 'login-approval']], ['Data Protection', ['encryption']], ['Devices', ['devices', 'trusted-browsers']]] };   // (1.74.2) Security: eight tabs become four
   var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Back Up' };   // sections whose accordions become tabs, and the name of their first tab
   var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
   var draft;
@@ -1179,11 +1179,10 @@
           ecCard('', ICON.shield, 'Site Alerts', 'News about the site itself.',
             toggle('backup', 'Backup Reminder', 'Once a day while a backup is due.', n.backup) +
             toggle('login', 'Login Alerts', 'Straight away: logins, paused logins, password and two-step changes, restores.', n.login)) +
-          ecCard('', ICON.clock, 'Delivery Time', 'When the daily message goes out.',
-            '<div class="ix-row"><select id="nt-hour" style="width:auto">' + Array.apply(null, Array(24)).map(function (x, h) { return '<option value="' + h + '"' + (n.hour === h ? ' selected' : '') + '>' + hourLabel(h) + '</option>'; }).join('') + '</select>' +
-            '<span class="ix-note" style="margin:0">' + esc(String(n.tz).replace(/_/g, ' ')) + ' time</span><button type="button" class="ix-btn" id="nt-now"' + (ready ? '' : ' disabled') + '>Send Now</button></div>' +
-            '<p class="ix-note">Last checked: ' + (n.lastRun ? when(n.lastRun) : 'never') + '. Last message: ' + (n.lastSent ? when(n.lastSent) : 'none yet') + '.' + (n.lastError ? ' <span class="ix-err">Last problem: ' + esc(n.lastError) + '</span>' : '') + '</p>') +
-          ecCard('', ICON.send, 'Send Today\'s Tasks', 'The daily list, sent to your chat right now.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="nt-today"' + (ready ? '' : ' disabled') + '>Send Today\'s Tasks Now</button></div>')) +
+          ecCard('ix-row1', ICON.clock, 'Delivery Time', 'When the daily message goes out, in ' + esc(String(n.tz).replace(/_/g, ' ')) + ' time.<span class="ix-sub">Last checked: ' + (n.lastRun ? when(n.lastRun) : 'never') + '. Last message: ' + (n.lastSent ? when(n.lastSent) : 'none yet') + '.' + (n.lastError ? ' <span class="ix-err">Last problem: ' + esc(n.lastError) + '</span>' : '') + '</span>',
+            '<select id="nt-hour" class="ix-sel">' + Array.apply(null, Array(24)).map(function (x, h) { return '<option value="' + h + '"' + (n.hour === h ? ' selected' : '') + '>' + hourLabel(h) + '</option>'; }).join('') + '</select>' +
+            '<button type="button" class="ix-btn" id="nt-now"' + (ready ? '' : ' disabled') + '>Send Now</button>') +
+          ecCard('ix-row1', ICON.send, 'Send Today\'s Tasks', 'The daily list, sent to your chat right now.', '<button type="button" class="ix-btn pri" id="nt-today"' + (ready ? '' : ' disabled') + '>Send Today\'s Tasks Now</button>')) +
 
         acc('two', 'Instant Replies', (n.hook ? 'On: the bot answers your commands within a second.' : 'Off: the bot answers within a few minutes.') + ' It understands 8 commands.',
           '<div class="ix-rcl">' + rowCard({ ic: ICON.pulse, color: n.hook ? '#22c55e' : '', title: 'Instant Replies', desc: (n.hook ? 'On: the bot answers within a second.' : 'Off: the bot answers within a few minutes.') +
@@ -1425,7 +1424,7 @@
           (e.ver === cur ? '<span class="ix-sd ix-sd-live">Installed</span>' : '') +
           clTags(e).slice(0, 3).map(function (t) { return '<span class="ix-cl-tag">' + esc(t) + '</span>'; }).join('') + '</span></span></summary><div class="ix-cl-b ix-md"></div></details>';
       };
-      p.innerHTML = (now ? '<div class="ix-hero ix-clhero"><span class="ix-hero-i good">' + svg(ICON.log) + '</span><div class="ix-hero-t"><div class="ix-hero-h">You Have Version ' + esc(cur) + '</div>' +
+      p.innerHTML = (now ? '<div class="ix-hero ix-clhero"><span class="ix-hero-i good">' + svg(ICON.sparkle) + '</span><div class="ix-hero-t"><div class="ix-hero-h">You Have Version ' + esc(cur) + '</div>' +
           '<p>' + mdInline(now.summary || now.label || 'Read what is in this version.') + '</p></div><button type="button" class="ix-btn pri" id="ix-clnow">Read the Notes</button></div>' : '') +
         '<div class="ix-cl-bar"><div class="ix-cl-search">' + svg(ICON.search) + '<input type="search" id="ix-clq" placeholder="Search the Changelog" aria-label="Search the Changelog" autocomplete="off" spellcheck="false"></div>' +
           '<button type="button" class="ix-btn" id="ix-clall">Expand All</button><button type="button" class="ix-btn" id="ix-clnone">Collapse All</button></div>' +
@@ -1796,7 +1795,7 @@
 
   function pSecurity(p) {
     var SECS = [['pw', 'Password'], ['enc', 'Encryption'], ['pk', 'Passkeys'], ['2fa', 'Two-Step Login'],
-                ['ap', 'Telegram Login Approval'], ['tr', 'Trusted Browsers'], ['dev', 'Devices']];
+                ['ap', 'Telegram Login Approval'], ['dev', 'Devices'], ['tr', 'Trusted Browsers']];
     p.innerHTML = '<div class="ix-hero" id="ix-sov">' + spinRow('Checking your protections…') + '</div><div id="ix-stiles"></div><div id="ix-schk"></div>' +
       SECS.map(function (x) { return '<details class="ix-acc" data-sec="' + x[0] + '"><summary><span>' + x[1] + '</span><small data-sum="' + x[0] + '">…</small></summary><div class="ix-accb" data-body="' + x[0] + '"></div></details>'; }).join('');
     var body = function (k) { return p.querySelector('[data-body="' + k + '"]'); }, sum = function (k, t) { p.querySelector('[data-sum="' + k + '"]').textContent = t; };
@@ -2125,40 +2124,42 @@
     /* Trusted browsers: skip the two-step code and the Telegram question for 30 days */
     function drawTrusted() {
       var b = body('tr'), t = st.ap.trusted || [];
-      b.innerHTML = tabHead(ICON.desktop, 'Trusted Browsers', 'Skip the code and the Telegram tap for 30 days on a browser you trust. Add one with "Trust this browser" when you log in.') +
+      b.innerHTML = '<div class="ix-sect">Trusted Browsers' + (t.length ? '<button type="button" class="ix-btn danger ix-sectb" data-untrust="-1">Remove All</button>' : '') + '</div>' +
+        '<p class="ix-note">Skip the code and the Telegram tap for 30 days on a browser you trust. Add one with "Trust this browser" when you log in.</p>' +
         (t.length ? '<div class="ix-devs">' + t.map(function (x) {
           return '<div class="ix-dev"><span class="ix-dev-i">' + svg(ICON.desktop) + '</span><div class="ix-dev-b"><b>' + esc(x.name) + (x.me ? ' <span class="ix-pill good">This One</span>' : '') + '</b>' +
             '<small>' + esc(x.ip || 'Unknown Address') + ' · last used ' + esc(when(x.last)) + ' · trusted until ' + esc(new Date(x.until * 1000).toLocaleDateString()) + '</small></div>' +
-            '<button type="button" class="ix-btn" data-untrust="' + x.i + '">Remove</button></div>'; }).join('') + '</div>' +
-          '<div class="ix-row" style="margin-top:14px"><button type="button" class="ix-btn danger" data-untrust="-1">Remove All</button></div>'
+            '<button type="button" class="ix-btn" data-untrust="' + x.i + '">Remove</button></div>'; }).join('') + '</div>'
           : '<div class="ix-empty"><span class="ix-empty-i">' + svg(ICON.desktop) + '</span><b>No Trusted Browsers Yet</b><p>Tick "Trust this browser" the next time you log in, and it shows up here.</p></div>');
       b.querySelectorAll('[data-untrust]').forEach(function (x) { x.onclick = function () {
         api('approval_untrust', { i: +x.dataset.untrust }).then(function (j) { if (j.ok) { toast('Removed.'); api('approval').then(function (n) { st.ap = n; overview(); drawTrusted(); }); } });
       }; });
     }
 
-    /* Devices: who is logged in (end any login), the two log-out buttons, and the recent login history */
+    /* Devices (1.79.8): a summary with the two log-out buttons, This Device, Other Logins, then the recent security activity. Trusted Browsers follow, in their own part. */
     function drawDevices() {
       var b = body('dev');
-      b.innerHTML = tabHead(ICON.out, 'Devices and Login History', 'See where you are logged in, end any login, and look back at recent activity.') +
-        '<div class="ix-sect" style="margin-top:0">Logged In Now</div><div id="ix-devl">' + spinRow() + '</div>' +
-        '<div class="ix-sect">Log Out</div><div class="ix-duo">' +
-          ecCard('', ICON.users, 'Log Out Other Devices', 'Ends every login except this one, on every page. Use it if you lost a phone or used a shared computer.', '<div class="ix-row"><button type="button" class="ix-btn pri" id="ix-lo">Log Out Other Devices</button></div>') +
-          ecCard('danger', ICON.out, 'Log Out Here', 'Ends the login on this browser only. Other devices stay logged in.', '<div class="ix-row"><button type="button" class="ix-btn danger" data-ix="logout">Log Out Here</button></div>') + '</div>' +
-        '<div class="ix-sect">Recent Activity</div><div id="ix-act">' + spinRow() + '</div>';
-      b.querySelector('#ix-lo').onclick = function () { api('logoutall', {}).then(function (j) { if (j.ok) { S.csrf = j.csrf; toast('Every other device is logged out.'); drawDevices(); } else toast(j.error); }); };
+      b.innerHTML = '<div id="ix-devsum"></div><div id="ix-devl">' + spinRow() + '</div><div class="ix-sect">Recent Activity</div><div id="ix-act">' + spinRow() + '</div>';
+      var devRow = function (x) {
+        var phone = /Android|iOS/.test(x.who);
+        return '<div class="ix-dev"><span class="ix-dev-i">' + svg(phone ? ICON.device : ICON.desktop) + '</span><div class="ix-dev-b"><b>' + esc(x.who || 'Unknown Browser') + (x.me ? ' <span class="ix-pill good">This Device</span>' : '') + '</b>' +
+          '<small>' + esc(x.ip || 'Unknown address') + ' · logged in ' + esc(ago(x.t)) + '</small></div>' + (x.me ? '' : '<button type="button" class="ix-btn" data-rev="' + esc(x.id) + '">Log Out</button>') + '</div>';
+      };
       api('activity').then(function (j) {
         var dl = b.querySelector('#ix-devl'), al = b.querySelector('#ix-act'); if (!dl) return;
         if (!j || !j.ok) { dl.innerHTML = al.innerHTML = '<p class="ix-err">' + esc((j && j.error) || 'Could not load.') + '</p>'; return; }
-        dl.innerHTML = j.sessions.length ? '<div class="ix-devs">' + j.sessions.map(function (x) {
-          var phone = /Android|iOS/.test(x.who);
-          return '<div class="ix-dev"><span class="ix-dev-i">' + svg(phone ? ICON.device : ICON.desktop) + '</span><div class="ix-dev-b"><b>' + esc(x.who || 'Unknown Browser') + (x.me ? ' <span class="ix-pill good">This Device</span>' : '') + '</b>' +
-            '<small>' + esc(x.ip || 'Unknown address') + ' · logged in ' + esc(ago(x.t)) + '</small></div>' + (x.me ? '' : '<button type="button" class="ix-btn" data-rev="' + esc(x.id) + '">Log Out</button>') + '</div>'; }).join('') + '</div>'
-          : '<div class="ix-empty"><b>Nothing Recorded Yet</b><p>Logins from now on are listed here. Logins made before this version are not.</p></div>';
+        var mine = j.sessions.filter(function (x) { return x.me; }), others = j.sessions.filter(function (x) { return !x.me; }), trN = (st.ap.trusted || []).length;
+        b.querySelector('#ix-devsum').innerHTML = ecCard('ix-row1', ICON.users, j.sessions.length + (j.sessions.length === 1 ? ' Login' : ' Logins') + ' · ' + trN + ' Trusted ' + (trN === 1 ? 'Browser' : 'Browsers'),
+          'Lost a phone or used a shared computer? End every other login in one press (hold the button).',
+          '<button type="button" class="ix-btn danger" data-ix="logout">Log Out Here</button><button type="button" class="ix-btn pri" id="ix-lo" data-hold' + (others.length ? '' : ' disabled') + '>Log Out Other Devices</button>');
+        b.querySelector('#ix-lo').onclick = function () { api('logoutall', {}).then(function (k) { if (k.ok) { S.csrf = k.csrf; toast('Every other device is logged out.'); drawDevices(); } else toast(k.error); }); };
+        dl.innerHTML = (mine.length ? '<div class="ix-sect">This Device</div><div class="ix-devs">' + mine.map(devRow).join('') + '</div>' : '') +
+          '<div class="ix-sect">Other Logins</div>' + (others.length ? '<div class="ix-devs">' + others.map(devRow).join('') + '</div>'
+          : '<div class="ix-empty"><b>' + (j.sessions.length ? 'No Other Logins' : 'Nothing Recorded Yet') + '</b><p>' + (j.sessions.length ? 'You are logged in on this device only.' : 'Logins from now on are listed here. Logins made before this version are not.') + '</p></div>');
         dl.querySelectorAll('[data-rev]').forEach(function (x) { x.onclick = function () {
           x.disabled = true; api('session_revoke', { id: x.dataset.rev }).then(function (k) { toast(k.ok ? 'That device is logged out.' : (k.error || 'Could not log it out.')); drawDevices(); }); }; });
         var rows = j.events.filter(function (e) { return LOGSEC[e.ev]; }).map(actRow);   // only the security events here; everything else is in Logs > Activity
-        al.innerHTML = rows.length ? '<div class="ix-checks">' + rows.slice(0, 15).join('') + '</div>' + (rows.length > 15 ? '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn" id="ix-actmore">Show ' + (rows.length - 15) + ' More</button></div>' : '')
+        al.innerHTML = rows.length ? '<div class="ix-checks">' + rows.slice(0, 6).join('') + '</div>' + (rows.length > 6 ? '<div class="ix-row" style="margin-top:12px"><button type="button" class="ix-btn" id="ix-actmore">Show ' + (rows.length - 6) + ' More</button></div>' : '')
           : '<div class="ix-empty"><b>No Activity Yet</b><p>Logins, wrong passwords and security changes appear here.</p></div>';
         var more = al.querySelector('#ix-actmore'); if (more) more.onclick = function () { al.querySelector('.ix-checks').innerHTML = rows.join(''); more.remove(); };
       }).catch(function () { var dl = b.querySelector('#ix-devl'); if (dl) dl.innerHTML = b.querySelector('#ix-act').innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
@@ -2787,7 +2788,8 @@
            ['tasks', 'Tasks', ICON.check, 'Every task with its due date, repeat, price and notes.']].map(function (x) {
             return ecCard('', x[2], x[1], x[3], '<div class="ix-row"><button type="button" class="ix-btn pri" data-export="' + x[0] + '" data-fmt="csv">' + svg(ICON.down) + 'Download CSV</button><button type="button" class="ix-btn" data-export="' + x[0] + '" data-fmt="json">' + svg(ICON.down) + 'Download JSON</button></div>'); }).join('') +
           ecCard('', ICON.bookmark, 'Bookmarks for Other Browsers', 'The standard bookmark file that Chrome, Edge, Firefox and Safari can import. Encrypted tabs stay locked here; to include them, unlock them and use Export Bookmarks in Links Settings.',
-            '<label class="ix-tg"><span>Include Private Tabs<small>Also writes your private tabs. The file is plain text: keep it safe.</small></span><input type="checkbox" id="ix-bmpriv"></label><div class="ix-row"><button type="button" class="ix-btn pri" data-export="links" data-fmt="html">' + svg(ICON.down) + 'Download Bookmark File</button></div>') +
+            '<div class="ix-bmrow"><button type="button" class="ix-btn pri" data-export="links" data-fmt="html">' + svg(ICON.down) + 'Download Bookmark File</button>' +
+              '<label class="ix-tg"><span>Include Private Tabs<small>Also writes your private tabs. The file is plain text: keep it safe.</small></span><input type="checkbox" id="ix-bmpriv"></label></div>') +
           '<p class="ix-note" id="ix-xs">The files hold your data as plain text. Keep them somewhere safe.</p></div></details>' +
         // (1.72.0) the Import Center: another app's export becomes tasks, notes, links or cards (importer.js reads it here in the browser)
         '<details class="ix-acc" id="ix-iacc"><summary><span>Import</span><small>From Todoist, Google Keep, Notion, a calendar, Raindrop, Pocket and more</small></summary><div class="ix-accb">' +
