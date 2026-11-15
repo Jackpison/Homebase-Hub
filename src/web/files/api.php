@@ -103,8 +103,9 @@ function ids_in(array $b): array {
     foreach ($ids as $id) if (!fl_id_ok($id)) hub_json(400, ['ok' => false, 'error' => 'Bad data.']);
     return array_values(array_unique($ids));
 }
-function done(array $r, array $extra = []): never {
+function done(array $r, array $extra = [], string $log = ''): never {
     if (!$r['ok']) hub_json((int)($r['code'] ?? 400), ['ok' => false, 'error' => $r['error']]);
+    if ($log !== '') fl_act($log);   // (1.80.0) one line in Logs > Activity
     hub_json(200, ['ok' => true, 'rev' => $r['data']['rev']] + $extra);
 }
 
@@ -139,7 +140,7 @@ case 'put_start':
     done($r, ['id' => $out['id'] ?? '']);
 case 'put_done':
     $id = $one();
-    done(fl_modify(function (array &$d) use ($id) { return fl_op_put_done($d, $id); }));
+    done(fl_modify(function (array &$d) use ($id) { return fl_op_put_done($d, $id); }), [], 'uploaded');
 case 'put_abort':
     $id = $one();
     done(fl_modify(function (array &$d) use ($id) {
@@ -154,22 +155,22 @@ case 'move':
     done(fl_modify(function (array &$d) use ($ids, $p) { return fl_op_move($d, $ids, $p); }));
 case 'trash':
     $ids = ids_in($b);
-    done(fl_modify(function (array &$d) use ($ids) { return fl_op_trash($d, $ids); }));
+    done(fl_modify(function (array &$d) use ($ids) { return fl_op_trash($d, $ids); }), [], 'trashed');
 case 'restore':
     $ids = ids_in($b); $p = array_key_exists('p', $b) ? $pid() : null;
     done(fl_modify(function (array &$d) use ($ids, $p) { return fl_op_restore($d, $ids, $p); }));
 case 'purge':
     $ids = ids_in($b);
-    done(fl_modify(function (array &$d) use ($ids) { return fl_op_purge($d, $ids); }));
+    done(fl_modify(function (array &$d) use ($ids) { return fl_op_purge($d, $ids); }), [], 'purged');
 case 'empty_trash':
-    done(fl_modify(function (array &$d) { return fl_op_empty_trash($d); }));
+    done(fl_modify(function (array &$d) { return fl_op_empty_trash($d); }), [], 'purged');
 case 'share_create':
     $id = $one(); $sm = $str('sm'); $exp = (int)($b['exp'] ?? 0); $pw = $str('pw'); $lim = (int)($b['lim'] ?? 0); $out = [];
     $r = fl_modify(function (array &$d) use ($id, $sm, $exp, $pw, $lim, &$out) { return fl_op_share_create($d, $id, $sm, $exp, $out, $pw, $lim); });
-    done($r, ['token' => $out['token'] ?? '']);
+    done($r, ['token' => $out['token'] ?? ''], 'shared');
 case 'share_delete':
     $t = $str('token'); if (!fl_token_ok($t)) hub_json(400, ['ok' => false, 'error' => 'Bad data.']);
-    done(fl_modify(function (array &$d) use ($t) { return fl_op_share_delete($d, $t); }));
+    done(fl_modify(function (array &$d) use ($t) { return fl_op_share_delete($d, $t); }), [], 'unshared');
 case 'settings':
     $in = is_array($b['settings'] ?? null) ? $b['settings'] : [];
     $r = fl_modify(function (array &$d) use ($in) {

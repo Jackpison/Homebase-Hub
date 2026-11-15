@@ -228,6 +228,16 @@ function fl_put_have(array $d, string $id): ?array {
     for ($n = 0; $n < $i['c']; $n++) if (is_file(fl_blob_path($id, $n))) $have[] = $n;
     return $have;
 }
+/** (1.80.0) Files activity: one line in Settings > Logs > Activity for what matters (never a name). The same kind is written at most once a minute, so 100 uploads are one line. */
+const FL_ACT_WORDS = ['uploaded' => 'Uploaded files', 'trashed' => 'Moved to the Trash', 'purged' => 'Deleted for good', 'shared' => 'Made a share link', 'unshared' => 'Removed a share link'];
+function fl_act(string $kind, ?int $now = null): bool {
+    if (!isset(FL_ACT_WORDS[$kind])) return false;
+    $now = $now ?? time(); $f = fl_dir() . '/act.json'; $j = @json_decode((string)@file_get_contents($f), true); $j = is_array($j) ? $j : [];
+    if ($now - (int)($j[$kind] ?? 0) < 60) return false;
+    $j[$kind] = $now; hub_write($f, (string)json_encode($j));
+    if (function_exists('hub_act')) hub_act('files', FL_ACT_WORDS[$kind]);
+    return true;
+}
 function fl_op_put_done(array &$d, string $id) {
     $i = $d['items'][$id] ?? null;
     if (!$i || $i['t'] !== 'f' || empty($i['up'])) return ['That upload is not open.', 404];

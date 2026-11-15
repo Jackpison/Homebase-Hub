@@ -372,6 +372,40 @@ try:
         check('B92 no page error on the link pages', not v2e, v2e)
         pg.click('#tabs button[data-t=files]'); wait_names(pg, ['pack.zip'])
 
+        # ---- (1.80.0) Storage view, Files activity, Open in Tools, phone swipes and pull to refresh ----
+        pg.reload(wait_until='domcontentloaded'); wait_names(pg, ['pack.zip', 'Docs'])
+        upload(pg, 'dup.txt', b'same words here'); wait_names(pg, ['dup.txt'], 20000)
+        upload(pg, 'dup.txt', b'same words here'); pg.wait_for_selector('#dlg[open] h2', timeout=15000); pg.locator('#dlg .act button', has_text='Keep Both').click(); wait_names(pg, ['dup (2).txt'], 20000)
+        upload(pg, 'dup (2).txt', b'same words here'); pg.wait_for_selector('#dlg[open] h2', timeout=15000); pg.locator('#dlg .act button', has_text='Skip').click()
+        pg.click('#stbtn'); pg.wait_for_selector('#dlg[open] .stor', timeout=10000)
+        buckets = pg.evaluate("[...document.querySelectorAll('#dlg .stb')].map(r => r.querySelector('span').textContent)")
+        check('B93 Storage lists what takes the room: Pictures, Videos, Audio, Documents, Archives, Other and the Trash', buckets == ['Pictures', 'Videos', 'Audio', 'Documents', 'Archives', 'Other', 'In the Trash'], buckets)
+        check('B94 Storage lists the biggest files, biggest first, with the 5 MB file at the top', 'big.bin' in pg.inner_text('#stbig li:first-child') or 'half.bin' in pg.inner_text('#stbig li:first-child'), pg.inner_text('#stbig'))
+        check('B95 Storage finds files that look the same (same name and size)', pg.is_visible('#stdel') and 'dup' in pg.inner_text('#stdup'), pg.inner_text('#stdup'))
+        pg.click('#stdel'); until(lambda: 'dup (2).txt' not in names(pg) or 'dup.txt' not in names(pg), 15000)
+        check('B96 Move Extra Copies to the Trash keeps one copy', ('dup.txt' in names(pg)) != ('dup (2).txt' in names(pg)) or names(pg).count('dup.txt') == 1, [n for n in names(pg) if n.startswith('dup')])
+        acts = open(s.dir + '/site-data/core/activity.php').read()
+        check('B97 Files activity: Logs shows "files" lines (uploaded, trashed, share link) and no file name', '"ev":"files"' in acts.replace(' ', '') and 'Uploaded files' in acts and 'dup' not in acts and 'pack' not in acts, acts[-300:])
+        navs = []; pg.on('request', lambda r: navs.append(r.url) if r.is_navigation_request() else None)
+        menu(pg, 'pack.zip', 'Open in Tools'); pg.wait_for_url('**/web/tools/**', timeout=30000)   # (the page asks Tools by ?shared=ID; Tools takes the file and drops the ID at once)
+        check('B98 Open in Tools opens Tools with the file handed over (?shared=...)', any(re.search(r'/web/tools/\?shared=[a-f0-9]{20}$', u) for u in navs), navs)
+        pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000); wait_names(pg, ['pack.zip'])
+        # phone: swipe a row left to Trash, right to Star, pull down to reload (touch events)
+        SW = """async ([name, dx]) => { const r = [...document.querySelectorAll('#list .row')].find(x => x.querySelector('.nm').title === name); const b = r.getBoundingClientRect(); const x0 = b.left + 120, y0 = b.top + 20;
+          const mk = (x, y) => new Touch({identifier: 1, target: r, clientX: x, clientY: y}); const fire = (t, x, y) => r.dispatchEvent(new TouchEvent(t, {bubbles: true, cancelable: true, touches: t === 'touchend' ? [] : [mk(x, y)], changedTouches: [mk(x, y)]}));
+          fire('touchstart', x0, y0); for (let k = 1; k <= 6; k++) fire('touchmove', x0 + dx * k / 6, y0 + 1); fire('touchend', x0 + dx, y0 + 1); }"""
+        pg.evaluate(SW, ['pack.zip', 130]); until(lambda: pg.evaluate("!!document.querySelector('#list .row .stm')"), 10000)
+        check('B99 swiping a row right stars it', pg.evaluate("[...document.querySelectorAll('#list .row')].some(r => r.querySelector('.nm').title === 'pack.zip' && !!r.querySelector('.stm'))"))
+        pg.evaluate(SW, ['pack.zip', -130]); until(lambda: 'pack.zip' not in names(pg), 10000)
+        check('B100 swiping a row left moves it to the Trash', 'pack.zip' not in names(pg), names(pg)); pg.wait_for_selector('#ix-toast.on .ix-tact', timeout=5000); pg.click('#ix-toast .ix-tact'); wait_names(pg, ['pack.zip'])
+        pg.evaluate("""(() => { window.__pull = 0; const el = document.body; const mk = (y) => new Touch({identifier: 2, target: el, clientX: 200, clientY: y}); const fire = (t, y) => el.dispatchEvent(new TouchEvent(t, {bubbles: true, cancelable: true, touches: t === 'touchend' ? [] : [mk(y)], changedTouches: [mk(y)]}));
+          fire('touchstart', 200); for (let k = 1; k <= 6; k++) fire('touchmove', 200 + k * 25); fire('touchend', 350); })()""")
+        check('B101 pulling the page down reloads the list ("Up to date.")', until(lambda: 'Up to date' in pg.inner_text('#ix-toast'), 10000), pg.inner_text('#ix-toast'))
+        pg.set_viewport_size({'width': 420, 'height': 800}); row(pg, 'pack.zip').locator('.ck').check(); row(pg, 'Docs').locator('.ck').check()
+        bp = pg.evaluate("(() => { const b = document.getElementById('bulk'); const r = b.getBoundingClientRect(); return [getComputedStyle(b).position, Math.round(r.bottom), innerHeight]; })()")
+        check('B102 on a phone, the actions for picked items sit in a bar at the bottom of the screen', bp[0] == 'fixed' and bp[1] > bp[2] * 0.6, bp)
+        pg.set_viewport_size({'width': 1280, 'height': 900}); pg.keyboard.press('Escape')
+
         check('B39 no page error and no blocked request in all of it', not errs and not csp, (errs, csp))
         b.close()
 finally:

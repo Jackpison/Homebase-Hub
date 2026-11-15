@@ -310,7 +310,7 @@ html[data-ix-bar][data-ix-app="info"] .top{display:none}
 /* its title,search and buttons are all replaced by the bar */
 html[data-ix-app="tools"] .search{display:none!important}
 /* Tools' own search box: the bar has it */
-html[data-ix-app="home"][data-ix-bar] .corner{top:auto!important;right:auto!important;left:max(16px,env(safe-area-inset-left))!important;bottom:max(14px,env(safe-area-inset-bottom))!important}   /* (1.79.11) bottom left */
+html[data-ix-app="home"][data-ix-bar] .corner{top:auto!important;bottom:max(14px,env(safe-area-inset-bottom))!important}   /* (1.80.0) back at the bottom right, where it was: the credit, then the refresh button */
 html[data-ix-app="home"][data-ix-bar][data-ix-nav="dock"] .corner{bottom:auto!important;top:max(14px,env(safe-area-inset-top))!important}
 /* the pages' own bottom edit bars move up above the dock */
 html[data-ix-nav="dock"][data-ix-app="links"] .editbar,html[data-ix-nav="dock"][data-ix-app="info"] #ebar,html[data-ix-nav="dock"][data-ix-app="home"] .toolbar{margin-bottom:calc(var(--ix-dock) + 24px)!important}
@@ -1074,4 +1074,3 @@ html.ix-hide[data-ix-flat][data-ix-nav="top"] #ix-bar{transform:translateY(calc(
 .ix-nlh .ix-nlq{border:1px solid var(--ix-line2);color:var(--ix-tx)}
 @media (hover:none),(pointer:coarse){.ix-nlh [data-keys]{display:none}}
 html[data-ix-nav="top"] #ix-nlist.ix-under{top:calc(var(--ix-top-now,60px) + 6px);bottom:auto;right:16px}
-html[data-ix-app="home"][data-ix-bar]:not([data-ix-nav="dock"]) .corner #nextBg{order:-1}   /* (1.79.12) the refresh button first, then the credit */

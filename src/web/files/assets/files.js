@@ -358,6 +358,46 @@ async function resumeUpload(file) {
   } catch (e) { if (c.stopped) c.set("stop", "Stopped. Press Resume to carry on."); else c.fail(why(e)); await refresh(); }
 }
 
+/** (1.80.0) Storage: what takes the room, the biggest files, empty folders and files that look the same (same name and size). Everything is worked out here from the opened names. */
+const BUCKETS = [["image", "Pictures"], ["video", "Videos"], ["audio", "Audio"], ["doc", "Documents"], ["zip", "Archives"], ["other", "Other"]];
+const bucketOf = i => { const n = nameOf(i), k = kindOf(n); return k === "image" || k === "video" || k === "audio" || k === "zip" ? k : (k === "pdf" || k === "text" || DOCS.includes(ext(n)) ? "doc" : "other"); };
+function storageInfo() {
+  const files = live().filter(i => i.t === "f"), by = {}; for (const b of BUCKETS) by[b[0]] = 0;
+  for (const f of files) by[bucketOf(f)] += sizeOf(f) || 0;
+  const trashBytes = D.items.filter(i => !i.up && i.t === "f" && i.del > 0).reduce((a, f) => a + (sizeOf(f) || 0), 0);
+  const big = files.slice().sort((a, b) => (sizeOf(b) || 0) - (sizeOf(a) || 0)).slice(0, 8);
+  const empty = live().filter(f => f.t === "d" && !D.items.some(k => !k.up && k.del === 0 && k.p === f.id));
+  /* "photo (2).jpg" counts as "photo.jpg" */
+  const groups = new Map(); for (const f of files) { const k = nameOf(f).replace(/ \(\d+\)(\.[A-Za-z0-9]{1,8})?$/, "$1").toLowerCase() + "|" + sizeOf(f); if (!(sizeOf(f) > 0)) continue; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(f); }
+  const dups = [...groups.values()].filter(g => g.length > 1).map(g => g.slice().sort((a, b) => dateOf(a) - dateOf(b)));
+  return { by, trashBytes, big, empty, dups, total: Object.values(by).reduce((a, b) => a + b, 0) };
+}
+async function storageBox() {
+  if (!await ensureKey()) return;
+  const st = storageInfo(), box = h("div", { class: "stor" });
+  const go = async (act) => { dlg.close(); await act(); };
+  box.append(h("h3", { text: "What Takes the Room" }), h("div", { class: "stbars" }, BUCKETS.map(b => { const v = st.by[b[0]], pc = st.total ? Math.round(v / st.total * 100) : 0; return h("div", { class: "stb", "data-bucket": b[0] }, h("span", { text: b[1] }), h("span", { class: "bar", role: "img", "aria-label": pc + " percent" }, h("i", { class: "b-" + b[0], style: "width:" + pc + "%" })), h("small", { text: fmt(v) })); }),
+    h("div", { class: "stb" }, h("span", { text: "In the Trash" }), h("span", { class: "bar" }, h("i", { class: "b-trash", style: "width:" + (st.total + st.trashBytes ? Math.round(st.trashBytes / (st.total + st.trashBytes) * 100) : 0) + "%" })), h("small", { text: fmt(st.trashBytes) }))));
+  box.append(h("h3", { text: "Biggest Files" }), st.big.length ? h("ul", { class: "stl", id: "stbig" }, st.big.map(f => h("li", {}, h("span", { class: "n", text: nameOf(f), title: pathOf(f.p || "").map(nameOf).concat(nameOf(f)).join(" / ") }), h("small", { text: fmt(sizeOf(f)) }), h("button", { type: "button", class: "btn", text: "Show", "aria-label": "Show " + nameOf(f), onclick: () => go(async () => { tab = "files"; cwd = f.p || ""; q = ""; $("q").value = ""; sel.clear(); sel.add(f.id); cur = anchor = f.id; render(); }) }), h("button", { type: "button", class: "btn", text: "Trash", "aria-label": "Move " + nameOf(f) + " to the Trash", onclick: () => go(() => trash([f.id])) })))) : h("p", { class: "hint", text: "No files yet." }));
+  box.append(h("h3", { text: "Empty Folders" }), st.empty.length ? h("div", { id: "stempty" }, h("p", { class: "hint", text: st.empty.length + (st.empty.length === 1 ? " folder has" : " folders have") + " nothing in " + (st.empty.length === 1 ? "it" : "them") + ": " + st.empty.slice(0, 6).map(nameOf).join(", ") + (st.empty.length > 6 ? ", …" : "") }), h("button", { type: "button", class: "btn", id: "stclr", text: "Move Empty Folders to the Trash", onclick: () => go(() => trash(st.empty.map(f => f.id))) })) : h("p", { class: "hint", id: "stempty", text: "None. Good." }));
+  const extra = st.dups.reduce((a, g) => a + (g.length - 1) * (sizeOf(g[0]) || 0), 0);
+  box.append(h("h3", { text: "Files That Look the Same" }), st.dups.length ? h("div", { id: "stdup" }, h("p", { class: "hint", text: st.dups.length + (st.dups.length === 1 ? " file has" : " files have") + " copies with the same name (numbers like (2) ignored) and size: " + st.dups.slice(0, 4).map(g => nameOf(g[0]) + " (" + g.length + ")").join(", ") + (st.dups.length > 4 ? ", …" : "") + ". Removing the extra copies frees " + fmt(extra) + "." }), h("button", { type: "button", class: "btn", id: "stdel", text: "Move Extra Copies to the Trash", onclick: () => go(() => trash(st.dups.flatMap(g => g.slice(1).map(f => f.id)))) })) : h("p", { class: "hint", id: "stdup", text: "None found." }));
+  box.append(h("p", { class: "hint", text: "Same name and size is only a likely match. The oldest copy stays, the rest go to the Trash, where you can bring them back." }));
+  await openDialog("Storage", box, [{ text: "Done", pri: true, run: () => {} }], { frame: false });
+}
+/** (1.80.0) Open a stored file in Tools: it is opened here, handed over through the browser's own storage (the same way Share from the phone does), and never sent anywhere */
+async function openInTools(i) {
+  if (!await ensureKey()) return;
+  if ((sizeOf(i) || 0) > 300 * 1048576) return toast("That file is too big to hand to Tools (300 MB at most).", true);
+  const p = progress("Opening " + nameOf(i), nameOf(i), sizeOf(i));
+  try {
+    const name = nameOf(i), r = await readFile(i, MIME[ext(name)] || "application/octet-stream", n => p.add(n, sizeOf(i) || 1)), id = [...crypto.getRandomValues(new Uint8Array(10))].map(b => b.toString(16).padStart(2, "0")).join("");
+    const c = await caches.open("hub-share");
+    await c.put(shareKey(id, "f0"), new Response(r.blob)); await c.put(shareKey(id, "meta"), new Response(JSON.stringify({ title: "", text: "", url: "", files: [{ n: name, type: r.blob.type || "application/octet-stream" }] }), { headers: { "Content-Type": "application/json" } }));
+    p.done("Handed to Tools"); location.href = "../tools/?shared=" + id;
+  } catch (e) { p.fail(why(e)); }
+}
+
 /** (1.80.0) Colour labels and a short note: kept in the item's own locked details (fields lb and nt), so the server never sees them */
 const LABELS = [["", "None"], ["red", "Red"], ["orange", "Orange"], ["yellow", "Yellow"], ["green", "Green"], ["blue", "Blue"], ["purple", "Purple"], ["gray", "Gray"]];
 async function labelBox(i) {
@@ -520,6 +560,7 @@ function menu(anchor, i, at) {
     if (i.t === "f" && D.settings.shares) acts.push(["share", "Share Link", () => shareBox(i)]);
     const mine = D.shares.filter(x => x.id === i.id);
     if (i.t === "f" && mine.length) acts.push(["link", "Copy Share Link", async () => { try { await navigator.clipboard.writeText(await linkOf(i, mine[mine.length - 1].token)); toast("Link copied."); } catch (e) { toast("Could not copy. Open Share Link instead.", true); } }]);
+    if (i.t === "f") acts.push(["file", "Open in Tools", () => openInTools(i)]);
     acts.push(["edit", "Label and Note", () => labelBox(i)]);
     if (i.t === "f") acts.push(["star", (meta(i) || {}).st ? "Remove Star" : "Star", () => star(i)]);
     if (i.t === "d") acts.push(["folder", (meta(i) || {}).pin ? "Unpin from Sidebar" : "Pin to Sidebar", () => pin(i)]);
@@ -1121,6 +1162,27 @@ function keys(e) {
   else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") { e.preventDefault(); for (const x of vis) sel.add(x.id); row.sync(); }
   else if (e.key === "Escape") { if (sel.size) { sel.clear(); row.sync(); } else if (cur) { cur = ""; row.sync(); } }
 }
+/** (1.80.0) On a phone: swipe a row left for Trash and right for Star, and pull the list down to reload it */
+function phone() {
+  let sx = 0, sy = 0, row1 = null, dx = 0, mode = "", pull = 0;
+  const reset = () => { if (row1) { row1.style.transform = ""; row1.classList.remove("swl", "swr"); } row1 = null; mode = ""; dx = 0; };
+  document.addEventListener("touchstart", e => {
+    if (e.touches.length !== 1 || document.querySelector("dialog[open]")) return; const t = e.touches[0]; sx = t.clientX; sy = t.clientY; dx = 0; mode = ""; pull = 0;
+    const r = /** @type {Element} */ (e.target).closest && /** @type {Element} */ (e.target).closest("#list .row"); row1 = r && tab !== "trash" && D.settings.view !== "grid" ? /** @type {HTMLElement} */ (r) : null;
+  }, { passive: true });
+  document.addEventListener("touchmove", e => {
+    const t = e.touches[0], mx = t.clientX - sx, my = t.clientY - sy;
+    if (!mode) { if (Math.abs(mx) > 12 && Math.abs(mx) > Math.abs(my) * 1.6 && row1) mode = "swipe"; else if (my > 12 && Math.abs(my) > Math.abs(mx) && scrollY <= 0 && !row1) mode = "pull"; else if (Math.abs(my) > 12) { mode = "scroll"; } }
+    if (mode === "swipe" && row1) { dx = Math.max(-140, Math.min(140, mx)); row1.style.transform = "translateX(" + dx + "px)"; row1.classList.toggle("swl", dx < -8); row1.classList.toggle("swr", dx > 8); }
+    if (mode === "pull") pull = my;
+  }, { passive: true });
+  document.addEventListener("touchend", () => {
+    const r = row1, d = dx, m = mode, pl = pull; reset(); pull = 0;
+    if (m === "swipe" && r) { const i = byId.get(/** @type {any} */ (r).dataset.id); if (!i) return; if (d <= -90) trash([i.id]); else if (d >= 90 && i.t === "f") star(i); }
+    else if (m === "pull" && pl > 90) refresh().then(ok => { if (ok) toast("Up to date."); });
+  }, { passive: true });
+  document.addEventListener("touchcancel", () => { reset(); pull = 0; }, { passive: true });
+}
 function areaMenu(at) {
   closeMenu();
   /** @type {any[][]} */
@@ -1136,6 +1198,8 @@ function wire() {
   $("newb").onclick = e => { e.stopPropagation(); if (pm && pm.classList.contains("newm")) closeMenu(); else newMenu(); };
   $("mk").onclick = $("mkh").onclick = mkdir;
   $("psets").onclick = settingsBox;
+  $("stbtn").onclick = storageBox;
+  phone();
   $("pick").onchange = e => { uploadAll([...e.target.files].map(f => ({ file: f, parts: [] }))); e.target.value = ""; };
   $("pickdir").onchange = e => { const fl = [...e.target.files]; uploadAll(fl.map(f => ({ file: f, parts: String(f.webkitRelativePath || "").split("/").slice(0, -1) }))); e.target.value = ""; };
   $("pickcam").onchange = e => { uploadAll([...e.target.files].map(f => ({ file: f, parts: [] }))); e.target.value = ""; };

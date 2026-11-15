@@ -245,3 +245,12 @@ $d = fl_load(); $o2 = []; fl_op_share_create($d, $fid, $enc('sm'), 0, $o2); fl_s
 t('a plain link has no password, no limit and is never counted', fl_share_get($o2['token'])['pw'] === false && fl_share_get($o2['token'])['dl'] === 0 && fl_share_proof($o2['token'], '') === 'ok');
 $view = fl_view(fl_load()); $row = null; foreach ($view['shares'] as $r) if ($r['token'] === $tk) $row = $r;
 t('the list shows the password flag, the limit and the count, not the hash', $row && $row['pw'] === true && $row['lim'] === 2 && $row['dl'] === 2 && !isset($row['hash']) && strpos(json_encode($view), hash('sha256', $proof)) === false);
+
+// ---- (1.80.0) Files activity: one line per kind a minute, never a name ----
+$now = 1700000000; $lines = [];
+t('an unknown kind is not logged', fl_act('weird', $now) === false);
+t('the first upload line is written', fl_act('uploaded', $now) === true);
+t('a second one in the same minute is not (100 uploads are one line)', fl_act('uploaded', $now + 30) === false);
+t('another kind is still written', fl_act('trashed', $now + 30) === true);
+t('the same kind a minute later is written again', fl_act('uploaded', $now + 61) === true);
+t('the words are plain and hold no name', FL_ACT_WORDS['uploaded'] === 'Uploaded files' && count(FL_ACT_WORDS) === 5);
