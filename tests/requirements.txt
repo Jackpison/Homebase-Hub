@@ -2,7 +2,7 @@
 # Pinned so CI is reproducible; Dependabot proposes the bumps.
 playwright==1.64.1
 openpyxl==3.1.5
-pypdf==6.21.3
+pypdf==7.0.0
 pillow==13.0.0
 reportlab==5.1.0
 cryptography==50.0.2   # pypdf needs it to open AES-encrypted PDFs (the Protect or Unlock checks)
