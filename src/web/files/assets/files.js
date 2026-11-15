@@ -326,7 +326,11 @@ function render() {
   const list = shown(), box = $("list"), grid = D.settings.view === "grid";
   box.className = "list" + (grid ? " grid" : ""); box.replaceChildren();
   if (list.length && !grid) box.append(h("div", { class: "lh" }, h("span", {}, h("input", { type: "checkbox", class: "ck", id: "lhck", "aria-label": "Select all", onchange: toggleAll })), h("span", { "aria-hidden": "true", text: "Name" }), h("span", { "aria-hidden": "true", text: "Who Can See It" }), h("span", { "aria-hidden": "true", text: "Size" }), h("span", { "aria-hidden": "true", text: "Modified" }), h("span")));
-  for (const i of list) box.append(row(i));
+  /* (1.80.1) the grid has a Folders part and a Files part, each with its count; the header says how many of each are here */
+  const nF = list.filter(x => x.t === "d").length, nFi = list.length - nF, sect = grid && tab === "files" && !q && nF && nFi;
+  let lastT = "";
+  for (const i of list) { if (sect && i.t !== lastT) { lastT = i.t; box.append(h("div", { class: "gh", text: (i.t === "d" ? "Folders · " + nF : "Files · " + nFi) })); } box.append(row(i)); }
+  const cnt = $("cnt"); cnt.textContent = list.length && (tab === "files" || q) ? nF + (nF === 1 ? " folder" : " folders") + " · " + nFi + (nFi === 1 ? " file" : " files") : "";
   const none = $("none"); none.hidden = list.length > 0;
   none.classList.toggle("zone", !list.length && !q && (tab === "files" || !tab));   // (1.75.0) an empty folder is a drop zone
   if (!list.length) {
@@ -613,7 +617,8 @@ function bulk() {
   const b = $("bulk"); b.replaceChildren();
   const ids = [...sel]; b.hidden = ids.length < 2 && !(ids.length === 1 && tab === "trash"); if (b.hidden) return;
   const btn = (t, f, o) => h("button", { type: "button", class: "btn" + (o && o.danger ? " danger" : ""), text: t, onclick: f });
-  b.append(h("b", { text: ids.length + (ids.length === 1 ? " picked" : " picked") }));
+  const total = ids.reduce((a, id) => a + bytesOf(byId.get(id) || { t: "f" }), 0);
+  b.append(h("b", { text: ids.length + (ids.length === 1 ? " item selected" : " items selected") }), total ? h("span", { class: "bsz", text: fmt(total) }) : null);
   if (tab === "trash") b.append(btn("Restore", () => restore(ids)), btn("Delete Forever", () => purge(ids), { danger: true }));
   else {
     b.append(btn("Download", () => download(ids)), btn("Move", () => moveBox(ids)));

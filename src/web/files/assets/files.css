@@ -381,8 +381,6 @@ dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);bo
 .row.swl{background:color-mix(in srgb,var(--late) 18%,transparent)}
 .row.swr{background:color-mix(in srgb,var(--acc) 18%,transparent)}
 @media (max-width:760px){
-  .bulk{position:fixed;left:8px;right:8px;top:auto;bottom:calc(var(--ix-dock,58px) + 14px + env(safe-area-inset-bottom,0px));z-index:30;box-shadow:0 8px 28px rgba(0,0,0,.45);justify-content:center}
-  .bulk b{width:100%;text-align:center;margin:0}
   .stbtn{width:auto}
 }
 
@@ -398,3 +396,15 @@ dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);bo
 .chip[data-k]{border-color:color-mix(in srgb,var(--cc) 40%,var(--line));color:color-mix(in srgb,var(--cc) 55%,var(--fg))}
 .chip[data-k]:hover{border-color:var(--cc)}
 .chip[data-k][aria-pressed="true"]{background:color-mix(in srgb,var(--cc) 22%,var(--box));border-color:var(--cc);color:var(--cc)}
+
+/* (1.80.1) from the inspiration pictures: a dark pill with the picked items floats at the bottom, folders and files have their own parts, and the header counts both */
+.bulk{position:fixed;left:50%;transform:translateX(-50%);top:auto;bottom:calc(var(--ix-dock,0px) + 24px + env(safe-area-inset-bottom,0px));z-index:40;max-width:calc(100% - 20px);justify-content:center;gap:6px;
+  background:#16161b;color:#f2f2f2;border:1px solid #2c2c34;border-radius:16px;padding:8px 10px;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.bulk b{margin:0 4px 0 6px;font-size:13.5px;white-space:nowrap}
+.bulk .bsz{background:#2a2a33;border-radius:99px;padding:3px 10px;font-size:12.5px;margin-right:6px;white-space:nowrap}
+.bulk .btn{background:transparent;border-color:transparent;color:#f2f2f2;height:34px}
+.bulk .btn:hover{background:#2a2a33;border-color:transparent}
+.bulk .btn.danger{color:#ff8a8a}
+.cnt{color:var(--mute);font-size:13.5px;white-space:nowrap}
+.list.grid .gh{grid-column:1/-1;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:700;padding:4px 2px 0}
+.list.grid .gh:not(:first-child){margin-top:10px}
