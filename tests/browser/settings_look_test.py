@@ -137,6 +137,11 @@ try:
         pg.evaluate("HUB.toast('Log check')"); pcol = pg.evaluate("document.querySelector('#ix-toast .ix-nc').style.getPropertyValue('--pc')"); check('L16f (1.79.9) a message wears the colour of the page it came from', pcol.startswith('#'), pcol); pg.click('#ix-toast .ix-nx'); pg.wait_for_selector('#ix-bell:not([hidden])', timeout=9000); pg.click('#ix-bell'); pg.wait_for_selector('#ix-nlist [data-logs]'); pg.click('#ix-nlist [data-logs]')
         wait_js(pg, "location.hash.includes('logs') && !document.getElementById('ix-nlist')", 8000)
         check('L16e (1.79.9) the messages list has an Open Logs button that opens Settings > Logs', pg.evaluate("location.hash.includes('logs')"), pg.evaluate("location.hash"))
+        wait_js(pg, "!!document.querySelector('#ix-page .ix-lgr')", 8000)
+        lg = pg.evaluate("(() => { const r = document.querySelector('#ix-page .ix-lgr'), k = r && r.querySelector('.ix-lgk'); return [r ? r.style.getPropertyValue('--pc') : '', k ? getComputedStyle(k).color : '', getComputedStyle(document.querySelector('#ix-page')).color]; })()")
+        check('L16g (1.79.9) Logs rows wear their page colour and the little labels are plain text colour, not yellow', lg[0].startswith('#') and (not lg[1] or lg[1] == lg[2]), lg)
+        th = pg.evaluate("(() => { const t = document.querySelector('#ix-bar [data-ix=\"theme\"] .ix-tt'); return t ? [getComputedStyle(t).backgroundColor, getComputedStyle(t.querySelector('svg')).stroke] : null; })()")
+        check('L16h (1.79.9) the theme button tile is plain (white on dark) with a yellow icon', th is None or (th[0] != 'rgb(245, 165, 36)' and '245' in th[1]), th)
         check('L17 no backup reminder pops up on the Settings page', 'Backup reminder' not in (pg.evaluate("(document.getElementById('ix-toast') || {}).textContent || ''") or ''))
 
         pg.goto(s.base + '/web/settings/#health'); until(lambda: pg.evaluate("document.querySelectorAll('.ix-hcards.six .ix-hc').length") == 6, 20000)

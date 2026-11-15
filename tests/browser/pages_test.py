@@ -182,6 +182,8 @@ try:
               dock == ['today', 'countdown', 'note', 'tools', 'calendar', 'quote'] and hp.evaluate("!document.getElementById('clock').hidden && /\\d/.test(document.getElementById('time').textContent) && !document.getElementById('wDock').hidden && document.getElementById('wCards').hidden"), dock)
         glass = hp.evaluate("[...document.querySelectorAll('.corner button')].filter(b => getComputedStyle(b).display !== 'none').map(b => { const c = getComputedStyle(b); return [b.getAttribute('aria-label') || b.textContent, c.backgroundImage.includes('gradient') && (c.backdropFilter || c.webkitBackdropFilter || 'none') !== 'none'] })")
         check('P20b the corner buttons, the site menu (gear) included, are glass like the widgets (not a plain white button)', len(glass) >= 2 and all(g[1] for g in glass) and any(g[0] == 'Menu' for g in glass), glass)
+        t1 = hp.evaluate("document.getElementById('time').textContent"); until(lambda: hp.evaluate("document.getElementById('time').textContent") != t1, 4000); t2 = hp.evaluate("document.getElementById('time').textContent")
+        check('P20d (1.79.9) the Home clock shows seconds and ticks', len(t1.split(':')) == 3 and t1 != t2, (t1, t2))
         hp.click('.corner button[aria-label="Menu"]'); hp.wait_for_selector('#ix-pop', timeout=5000)
         hs = hp.evaluate("(() => { const b = [...document.querySelectorAll('#ix-pop button')].find(x => /Home Settings/.test(x.textContent)); return b ? [b.querySelector('svg').style.color, !!b.querySelector('svg path[d^=\"M3 10\"]')] : null; })()")
         check('P20c (1.79.9) Home Settings in the start page menu wears the Home colour and icon, like every other page', bool(hs) and hs[0] != '' and hs[1], hs)

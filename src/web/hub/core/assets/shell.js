@@ -31,7 +31,7 @@
   window.fetch._ixHost = true;
 })();
 /* Hub shell. Loaded first in the <head> of every page:
- *   <script src="../hub/core/assets/shell.js?v=1.79.8" data-app="links"></script>
+ *   <script src="../hub/core/assets/shell.js?v=1.79.9" data-app="links"></script>
  * It draws the shared bar (top, side or dock), keeps ONE theme across pages, handles the one login,
  * the unified search and the Edit menu.  window.HUB is the small API pages use.
  * Settings, Security, Telegram, Health (with Server Check) and Backup live in shell-admin.js, loaded the first time you open them
@@ -1783,7 +1783,7 @@
     applyColors: applyColors, applyAttrs: applyAttrs, PG_APPS: PG_APPS, CORE: CORE, ASSETS: ASSETS, COLOR_DEFAULT: COLOR_DEFAULT, setTheme: setTheme, pageList: pageList,
     applyFavicon: applyFavicon, SIZE_SPEC: SIZE_SPEC, PAGE_DEF: PAGE_DEF, FONTS: FONTS, COLOR_KEYS: COLOR_KEYS, when: when, previewWith: previewWith,
     previewTheme: previewTheme, restoreTheme: restoreTheme, storeTheme: storeTheme, resolveTheme: resolveTheme,
-    stepper: stepper, linkField: linkField, offline: function () { return offline; }, pageColor: pageColor, pageTile: function (id) { var x = PAGE_TILE[id]; return x ? '<svg viewBox="0 0 24 24">' + x[1] + '</svg>' : ''; } };
+    stepper: stepper, linkField: linkField, offline: function () { return offline; }, pageColor: pageColor, noteColor: noteColor, pageTile: function (id) { var x = PAGE_TILE[id]; return x ? '<svg viewBox="0 0 24 24">' + x[1] + '</svg>' : ''; } };
 
   /* ---------- (1.69.0) Stepper: a flow of a few steps in one box. Ported to plain JavaScript from React Bits' Stepper (David Haz, MIT +
      Commons Clause; credited in THIRD-PARTY.md). The current step sits on a raised tile that slides along; a finished step turns into a tick

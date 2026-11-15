@@ -1060,3 +1060,10 @@ html[data-ix-nav="dock"] #ix-keysf{bottom:calc(var(--ix-dock) + 34px + 56px + en
 .ix-nc[style*="--pc"]{border-left:3px solid var(--pc)}
 .ix-nc[style*="--pc"] .ix-nt:not(.bad){background:linear-gradient(145deg,color-mix(in srgb,var(--pc) 65%,#fff),var(--pc));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px var(--pc)}
 .ix-nc[style*="--pc"] .ix-nb small{color:color-mix(in srgb,var(--pc) 70%,#fff)}
+/* (1.79.9) the theme button: a white tile on dark, a black one on light, with only the icon yellow */
+#ix-bar [data-ix="theme"] .ix-tt{background:var(--ix-tx);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.3)}
+#ix-bar [data-ix="theme"] .ix-tt svg{stroke:#f5a524;filter:none}
+/* (1.79.9) the top bar has rounded bottom corners */
+html[data-ix-nav="top"] #ix-bar{border-radius:0 0 22px 22px}
+/* (1.79.9) a disabled main button is a clean neutral, not the accent faded into a muddy grey-yellow */
+html .ix-btn.pri:disabled,html .btn.pri:disabled,html .btn.primary:disabled,#ix-page .ix-btn.pri:disabled,#ix-dlg .ix-btn.pri:disabled{opacity:1;background:var(--ix-soft,rgba(255,255,255,.08));border-color:var(--ix-line2,rgba(255,255,255,.14));color:var(--ix-mu,#8a8a93);box-shadow:none}

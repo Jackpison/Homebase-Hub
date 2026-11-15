@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.9 | Backup & Restore shows one list of places for automatic backups, messages wear the colour of the page they came from and have an Open Logs button, one pencil icon everywhere, and a typed storage limit in Files |
 | 1.79.8 | Security Devices is one clear screen, a small ? above the bell opens the keyboard shortcuts, Telegram and Bookmarks cards are slim rows, and the SVG converter no longer parses SVG text into the page |
 | 1.79.7 | Settings cards with one control are slim rows, Security Overview sorts what to do first, Log Out in every gear menu, a ? button for the shortcuts, and closer shields on private tabs |
 | 1.79.6 | The Cloud Backup card starts folded and shrinks to a short list with Edit, a held Disconnect button, and a refused delete is now reported |
@@ -163,6 +164,28 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.9
+
+### Changed
+
+- **Backup & Restore:** the Back Up tab has one slim backup row, then one list called Automatic Backups with Reminder, Telegram and Cloud in it.
+- **Messages:** each message wears the colour of the page (or Settings) it came from, so you can see where a change happened. The list has an Open Logs button, and it closes when you press anywhere outside it.
+- **Files:** the storage limit is a number you type, with GB or TB. Leave it empty for no limit.
+- **Pencil icon:** one clean pencil with a short line is used for every Edit button.
+- **Log Out:** the icon in the Settings menu is red.
+- **Logs:** each row's tile wears the colour of its page, and the little labels (Done, Added) are plain white on dark and black on light.
+- **Theme button:** a white tile on dark and a black one on light, with only the sun or moon yellow.
+- **Top bar:** the bottom corners are rounded.
+- **Home clock:** shows seconds and ticks every second.
+- **Main buttons:** a disabled one (such as Save Settings with nothing to save) is a clean neutral instead of a muddy grey-yellow.
+- **Home Settings:** in the start page menu it wears the Home colour and icon, like every other page.
+
+### Fixed
+
+- The gap in edit mode next to the tab pencil is small again.
 
 ---
 

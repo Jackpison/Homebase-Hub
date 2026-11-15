@@ -52,7 +52,7 @@ svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .clock p{margin:0}
 .greet,.date{font-size:clamp(15px,2.2vw,19px);font-weight:600}
 .date{font-weight:500}
-.time{font-size:clamp(76px,13vw,128px);font-weight:800;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums}
+.time{font-size:clamp(48px,9vw,100px);font-weight:800;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums}
 body:not(.has-widgets) .stage{justify-content:center;padding-top:0;padding-bottom:6vh}
 
 /* ================= liquid glass ================= */
@@ -207,7 +207,7 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
   body[data-wstyle="glance"] .wpanel{top:auto;bottom:max(12px,env(safe-area-inset-bottom))}
   .wcount b{font-size:48px}
 }
-@media (max-width:640px) and (max-height:700px){ .time{font-size:64px} }
+@media (max-width:640px) and (max-height:700px){ .time{font-size:44px} }
 
 /* ================= sheets ================= */
 .sheet{border:0;padding:0;margin:auto;width:min(480px,calc(100% - 24px));max-height:min(86vh,820px);border-radius:var(--r-sheet);

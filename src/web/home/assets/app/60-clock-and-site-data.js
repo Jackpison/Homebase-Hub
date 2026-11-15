@@ -44,7 +44,7 @@ const dLong = s => dParse(s).toLocaleDateString(undefined, { weekday:'long', day
 const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
 
 /* ---------- the clock ---------- */
-let clockT = 0;
+let clockT = 0, secT = 0;
 function renderClock(){
   clearTimeout(clockT);
   const on = !!(WCFG ? WCFG.clock : PUB.clock);
@@ -52,9 +52,11 @@ function renderClock(){
   if (!on) return;
   const now = new Date(), h = now.getHours();
   $('#greet').textContent = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night';
-  $('#time').textContent = now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+  $('#time').textContent = now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit', second:'2-digit' });   // (1.79.9) with seconds
   $('#date').textContent = now.toLocaleDateString([], { weekday:'long', day:'numeric', month:'long' });
   clockT = setTimeout(() => (WCFG ? renderWidgets(true) : renderClock()), 60500 - now.getSeconds() * 1000 - now.getMilliseconds());
+  clearInterval(secT);
+  secT = setInterval(() => { if (document.hidden) return; $('#time').textContent = new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit', second:'2-digit' }); }, 1000);
 }
 
 /* ---------- reading this site's data ---------- */

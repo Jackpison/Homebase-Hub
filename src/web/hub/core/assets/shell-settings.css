@@ -563,7 +563,6 @@ html[data-ix-bar][data-ix-nav="dock"] #ix-page .ix-sf{bottom:calc(var(--ix-dock)
 #ix-page .ix-how .ix-steps{display:block;padding:0;margin:10px 0 0}
 @media (max-width:600px){#ix-page .ix-ec .ix-seg{display:flex;width:100%;flex-wrap:nowrap}#ix-page .ix-ec .ix-seg button{flex:1;padding:10px 4px;font-size:13px;white-space:nowrap}}
 /* (1.61.0) Backup: one big button, and what to include folded away */
-#ix-page .ix-btn.ix-big{height:52px;padding:0 28px;font-size:16px}
 #ix-page .ix-more#ix-choose{margin:14px 0}
 #ix-page .ix-more#ix-choose>.ix-tg:first-of-type{margin-top:8px}
 #ix-page .ix-h3{margin:22px 0 4px;font-size:16px}
@@ -972,7 +971,7 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-lgd{display:block;font-style:normal;font-size:13px;color:var(--ix-mu);margin:3px 0 0;overflow-wrap:anywhere}
 #ix-page .ix-lgm{min-width:0;position:relative;left:-27px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
 #ix-page .ix-lgm small{color:var(--ix-mu);font-size:12.5px;line-height:1.4}
-#ix-page .ix-lgk{justify-self:end;min-width:74px;text-align:center;padding:2px 11px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--ix-soft);color:var(--ix-accent-tx)}
+#ix-page .ix-lgk{justify-self:end;min-width:74px;text-align:center;padding:2px 11px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--ix-soft);color:var(--ix-tx)}
 #ix-page .ix-lgk.bad{background:color-mix(in srgb,var(--ix-bad,#e5484d) 18%,transparent);color:var(--ix-bad,#ff8a8f)}
 @media (max-width:760px){#ix-page .ix-lgr{grid-template-columns:auto 1fr auto}#ix-page .ix-lgm{grid-column:2 / 4;grid-row:2;left:0;align-items:flex-start;text-align:left}#ix-page .ix-lgk{grid-column:3;grid-row:1}}
 
@@ -1025,3 +1024,6 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-autob .ix-ec,#ix-page .ix-autob .ix-ec.good,#ix-page .ix-autob .ix-rc{border:0;border-radius:0;background:none;box-shadow:none;margin:0;max-width:none}
 #ix-page .ix-autob .ix-ec.good .ix-ec-i{--tc:#22c55e}
 @media (max-width:640px){#ix-page .ix-bkhero-a{margin-left:0;width:100%}}
+
+/* (1.79.9) Logs: each row's tile wears its page's colour; the little labels are plain white on dark and black on light */
+#ix-page .ix-lgr[style*="--pc"] .ix-nt:not(.bad){background:linear-gradient(145deg,color-mix(in srgb,var(--pc) 65%,#fff),var(--pc));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px var(--pc)}
