@@ -339,7 +339,7 @@ select.chs{height:32px;font-size:13.5px;padding:0 8px}
 .lb-red{--lbc:#ef5350}.lb-orange{--lbc:#ff9800}.lb-yellow{--lbc:#fbc02d}.lb-green{--lbc:#43a047}.lb-blue{--lbc:#1e88e5}.lb-purple{--lbc:#8e24aa}.lb-gray{--lbc:#9e9e9e}
 .ntm{margin-left:6px;color:var(--mute);font-size:12px}
 .lbs{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
-.lbb{width:30px;height:30px;border-radius:50%;border:2px solid transparent;background:var(--lbc,transparent);cursor:pointer}
+.lbb{flex:none;box-sizing:border-box;width:30px;min-width:30px;max-width:30px;height:30px;min-height:30px;max-height:30px;padding:0;border-radius:50%;border:2px solid transparent;background:var(--lbc,transparent);cursor:pointer}
 .lbb.none{border-color:var(--line);background:var(--field)}
 .lbb[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--box) inset}
 .dnote{margin:8px 0;padding:8px 10px;border-radius:9px;background:color-mix(in srgb,var(--fg) 6%,transparent);white-space:pre-wrap;font-size:13.5px}
@@ -355,19 +355,28 @@ dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);bo
 
 /* (1.80.0) storage view, phone bar and swipes */
 .stbtn{margin-top:10px;width:100%}
-.stor h3{margin:14px 0 6px;font-size:14px}
-.stbars{display:grid;gap:7px}
-.stb{display:grid;grid-template-columns:96px 1fr 72px;gap:10px;align-items:center;font-size:13.5px}
-.stb .bar{height:8px;border-radius:99px;background:color-mix(in srgb,var(--fg) 12%,transparent);overflow:hidden}
-.stb .bar i{display:block;height:100%;background:var(--acc);border-radius:99px}
-.stb .b-image{background:#42a5f5}.stb .b-video{background:#ab47bc}.stb .b-audio{background:#26a69a}.stb .b-doc{background:#ffa726}.stb .b-zip{background:#8d6e63}.stb .b-other{background:#9e9e9e}.stb .b-trash{background:var(--late)}
-.stb small{text-align:right;color:var(--mute)}
-.stl{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.stl li{display:flex;align-items:center;gap:8px}
+.stor{display:grid;gap:12px}
+.stsec{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:14px 16px}
+.sth{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.sth h3{margin:0;font-size:15px}
+.sth small{color:var(--mute)}
+.stack{display:flex;height:12px;border-radius:99px;overflow:hidden;background:color-mix(in srgb,var(--fg) 10%,transparent);gap:2px}
+.stack i{display:block;height:100%;min-width:3px}
+.stleg{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 18px}
+.stb{display:flex;align-items:center;gap:9px;font-size:13.5px}
+.stb span{flex:1;min-width:0}
+.stb small{color:var(--mute);white-space:nowrap}
+.stb .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.b-image{background:#42a5f5}.b-video{background:#ab47bc}.b-audio{background:#26a69a}.b-doc{background:#ffa726}.b-zip{background:#8d6e63}.b-other{background:#9e9e9e}.b-trash{background:var(--late)}
+.stl{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.stl li{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:9px}
+.stl li:hover{background:color-mix(in srgb,var(--fg) 5%,transparent)}
+.stl .sic{flex:none;display:grid;place-items:center;width:34px}
 .stl .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stl small{color:var(--mute)}
-.stl .btn{height:30px;font-size:13px;padding:0 10px}
+.stl small{color:var(--mute);white-space:nowrap}
+.stl .btn{height:30px;font-size:13px;padding:0 11px;flex:none}
 .hint{color:var(--mute);margin:4px 0 8px}
+@media (max-width:560px){.stl li{flex-wrap:wrap}.stl .n{flex-basis:calc(100% - 50px)}}
 .row{position:relative;transition:transform .12s}
 .row.swl{background:color-mix(in srgb,var(--late) 18%,transparent)}
 .row.swr{background:color-mix(in srgb,var(--acc) 18%,transparent)}
@@ -376,3 +385,16 @@ dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);bo
   .bulk b{width:100%;text-align:center;margin:0}
   .stbtn{width:auto}
 }
+
+/* (1.80.1) a colour label paints a folder */
+.ico.d[class*="lb-"],.pv.d[class*="lb-"]{--c:var(--lbc)}
+.ico.d[class*="lb-"] svg,.pv.d[class*="lb-"] svg{color:var(--lbc)}
+.lbb.none{position:relative}
+.lbb.none::after{content:"";position:absolute;left:5px;right:5px;top:50%;border-top:2px solid var(--mute);transform:rotate(-45deg)}
+
+/* (1.80.1) each filter chip has its colour (the same colours as the Storage view) */
+.chip{--cc:var(--acc)}
+.chip[data-k="image"]{--cc:#42a5f5}.chip[data-k="doc"]{--cc:#ffa726}.chip[data-k="video"]{--cc:#ab47bc}.chip[data-k="audio"]{--cc:#26a69a}
+.chip[data-k]{border-color:color-mix(in srgb,var(--cc) 40%,var(--line));color:color-mix(in srgb,var(--cc) 55%,var(--fg))}
+.chip[data-k]:hover{border-color:var(--cc)}
+.chip[data-k][aria-pressed="true"]{background:color-mix(in srgb,var(--cc) 22%,var(--box));border-color:var(--cc);color:var(--cc)}

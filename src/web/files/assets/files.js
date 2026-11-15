@@ -376,14 +376,18 @@ async function storageBox() {
   if (!await ensureKey()) return;
   const st = storageInfo(), box = h("div", { class: "stor" });
   const go = async (act) => { dlg.close(); await act(); };
-  box.append(h("h3", { text: "What Takes the Room" }), h("div", { class: "stbars" }, BUCKETS.map(b => { const v = st.by[b[0]], pc = st.total ? Math.round(v / st.total * 100) : 0; return h("div", { class: "stb", "data-bucket": b[0] }, h("span", { text: b[1] }), h("span", { class: "bar", role: "img", "aria-label": pc + " percent" }, h("i", { class: "b-" + b[0], style: "width:" + pc + "%" })), h("small", { text: fmt(v) })); }),
-    h("div", { class: "stb" }, h("span", { text: "In the Trash" }), h("span", { class: "bar" }, h("i", { class: "b-trash", style: "width:" + (st.total + st.trashBytes ? Math.round(st.trashBytes / (st.total + st.trashBytes) * 100) : 0) + "%" })), h("small", { text: fmt(st.trashBytes) }))));
-  box.append(h("h3", { text: "Biggest Files" }), st.big.length ? h("ul", { class: "stl", id: "stbig" }, st.big.map(f => h("li", {}, h("span", { class: "n", text: nameOf(f), title: pathOf(f.p || "").map(nameOf).concat(nameOf(f)).join(" / ") }), h("small", { text: fmt(sizeOf(f)) }), h("button", { type: "button", class: "btn", text: "Show", "aria-label": "Show " + nameOf(f), onclick: () => go(async () => { tab = "files"; cwd = f.p || ""; q = ""; $("q").value = ""; sel.clear(); sel.add(f.id); cur = anchor = f.id; render(); }) }), h("button", { type: "button", class: "btn", text: "Trash", "aria-label": "Move " + nameOf(f) + " to the Trash", onclick: () => go(() => trash([f.id])) })))) : h("p", { class: "hint", text: "No files yet." }));
-  box.append(h("h3", { text: "Empty Folders" }), st.empty.length ? h("div", { id: "stempty" }, h("p", { class: "hint", text: st.empty.length + (st.empty.length === 1 ? " folder has" : " folders have") + " nothing in " + (st.empty.length === 1 ? "it" : "them") + ": " + st.empty.slice(0, 6).map(nameOf).join(", ") + (st.empty.length > 6 ? ", …" : "") }), h("button", { type: "button", class: "btn", id: "stclr", text: "Move Empty Folders to the Trash", onclick: () => go(() => trash(st.empty.map(f => f.id))) })) : h("p", { class: "hint", id: "stempty", text: "None. Good." }));
+  const sec = (title, sub, ...kids) => h("section", { class: "stsec" }, h("div", { class: "sth" }, h("h3", { text: title }), sub ? h("small", { text: sub }) : null), ...kids);
+  const all = st.total + st.trashBytes, pct = v => all ? Math.round(v / all * 1000) / 10 : 0;
+  /* the whole picture: one bar in colours, and a legend that doubles as the list */
+  const parts = BUCKETS.map(b => [b[0], b[1], st.by[b[0]]]).concat([["trash", "In the Trash", st.trashBytes]]);
+  box.append(sec("What Takes the Room", fmt(all) + " in all" + (D.max ? " · " + fmt(D.usage) + " of " + fmt(D.max) + " used" : ""),
+    h("div", { class: "stack", role: "img", "aria-label": "Share of the room by type" }, parts.filter(x => x[2] > 0).map(x => h("i", { class: "b-" + x[0], style: "width:" + pct(x[2]) + "%", title: x[1] + " " + fmt(x[2]) }))),
+    h("ul", { class: "stleg" }, parts.map(x => h("li", { class: "stb", "data-bucket": x[0] }, h("i", { class: "dot b-" + x[0] }), h("span", { text: x[1] }), h("small", { text: fmt(x[2]) + (x[2] ? " · " + Math.round(pct(x[2])) + "%" : "") }))))));
+  box.append(sec("Biggest Files", st.big.length ? "The biggest first" : "", st.big.length ? h("ul", { class: "stl", id: "stbig" }, st.big.map(f => h("li", {}, h("span", { class: "sic" }, FC ? FC.make(nameOf(f), "s") : svg("file")), h("span", { class: "n", text: nameOf(f), title: pathOf(f.p || "").map(nameOf).concat(nameOf(f)).join(" / ") }), h("small", { text: fmt(sizeOf(f)) }), h("button", { type: "button", class: "btn", text: "Show", "aria-label": "Show " + nameOf(f), onclick: () => go(async () => { tab = "files"; cwd = f.p || ""; q = ""; $("q").value = ""; sel.clear(); sel.add(f.id); cur = anchor = f.id; render(); }) }), h("button", { type: "button", class: "btn", text: "Trash", "aria-label": "Move " + nameOf(f) + " to the Trash", onclick: () => go(() => trash([f.id])) })))) : h("p", { class: "hint", text: "No files yet." })));
+  box.append(sec("Empty Folders", st.empty.length ? st.empty.length + (st.empty.length === 1 ? " folder" : " folders") : "", st.empty.length ? h("div", { id: "stempty" }, h("p", { class: "hint", text: st.empty.slice(0, 6).map(nameOf).join(", ") + (st.empty.length > 6 ? ", …" : "") }), h("button", { type: "button", class: "btn", id: "stclr", text: "Move Empty Folders to the Trash", onclick: () => go(() => trash(st.empty.map(f => f.id))) })) : h("p", { class: "hint", id: "stempty", text: "None. Good." })));
   const extra = st.dups.reduce((a, g) => a + (g.length - 1) * (sizeOf(g[0]) || 0), 0);
-  box.append(h("h3", { text: "Files That Look the Same" }), st.dups.length ? h("div", { id: "stdup" }, h("p", { class: "hint", text: st.dups.length + (st.dups.length === 1 ? " file has" : " files have") + " copies with the same name (numbers like (2) ignored) and size: " + st.dups.slice(0, 4).map(g => nameOf(g[0]) + " (" + g.length + ")").join(", ") + (st.dups.length > 4 ? ", …" : "") + ". Removing the extra copies frees " + fmt(extra) + "." }), h("button", { type: "button", class: "btn", id: "stdel", text: "Move Extra Copies to the Trash", onclick: () => go(() => trash(st.dups.flatMap(g => g.slice(1).map(f => f.id)))) })) : h("p", { class: "hint", id: "stdup", text: "None found." }));
-  box.append(h("p", { class: "hint", text: "Same name and size is only a likely match. The oldest copy stays, the rest go to the Trash, where you can bring them back." }));
-  await openDialog("Storage", box, [{ text: "Done", pri: true, run: () => {} }], { frame: false });
+  box.append(sec("Files That Look the Same", st.dups.length ? "Frees " + fmt(extra) : "", st.dups.length ? h("div", { id: "stdup" }, h("p", { class: "hint", text: st.dups.slice(0, 4).map(g => nameOf(g[0]) + " (" + g.length + " copies)").join(", ") + (st.dups.length > 4 ? ", …" : "") + ". Same name (numbers like (2) ignored) and same size." }), h("button", { type: "button", class: "btn", id: "stdel", text: "Move Extra Copies to the Trash", onclick: () => go(() => trash(st.dups.flatMap(g => g.slice(1).map(f => f.id)))) }), h("p", { class: "hint", text: "The oldest copy stays. The rest go to the Trash, where you can bring them back." })) : h("p", { class: "hint", id: "stdup", text: "None found." })));
+  await openDialog("Storage", box, [{ text: "Done", pri: true, run: () => {} }], { frame: true });
 }
 /** (1.80.0) Open a stored file in Tools: it is opened here, handed over through the browser's own storage (the same way Share from the phone does), and never sent anywhere */
 async function openInTools(i) {
@@ -448,6 +452,8 @@ function jumpMenu(anchor) {
 }
 
 const shareFlags = i => { const l = D.shares.filter(x => x.id === i.id); return (l.some(x => x.pw) ? " · Password" : "") + (l.some(x => x.lim) ? " · " + l.filter(x => x.lim).map(x => x.dl + "/" + x.lim).join(", ") + " downloads" : ""); };
+/** (1.80.1) a folder with a colour label is painted in that colour */
+const lbCls = i => i.t === "d" && (meta(i) || {}).lb ? " lb-" + (meta(i) || {}).lb : "";
 function row(i) {
   const isD = i.t === "d", name = nameOf(i), sz = sizeOf(i), at = dateOf(i);
   const where = q && i.p ? pathOf(i.p).map(nameOf).join(" / ") : "";
@@ -455,7 +461,7 @@ function row(i) {
   const sub = tab === "trash" ? "Removed for good in " + left + (left === 1 ? " day" : " days") : (isD ? "Folder" : fmt(sz)) + " · " + when(at) + (where ? " · in " + where : "");
   const ck = h("input", { type: "checkbox", class: "ck", "aria-label": "Pick " + name, checked: sel.has(i.id), onchange: e => { anchor = cur = i.id; e.target.checked ? sel.add(i.id) : sel.delete(i.id); row.sync(); } });
   const open = h("button", { type: "button", class: "nm", title: name, onclick: ev => { cur = i.id; if (ev.shiftKey && anchor) return range(i.id); if (ev.ctrlKey || ev.metaKey) { anchor = i.id; sel.has(i.id) ? sel.delete(i.id) : sel.add(i.id); return row.sync(); } anchor = i.id; if (i.t === "d" || tab === "trash") return openItem(i); pick1(i.id); } },
-    h("span", { class: "ico " + icoOf(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, D.settings.view === "grid" ? "m" : "s")), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, (meta(i) || {}).lb ? h("span", { class: "lbd lb-" + (meta(i) || {}).lb, role: "img", "aria-label": "Label: " + (meta(i) || {}).lb }) : null, (meta(i) || {}).nt ? h("span", { class: "ntm", title: (meta(i) || {}).nt, role: "img", "aria-label": "Has a note", text: "✎" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
+    h("span", { class: "ico " + icoOf(i) + lbCls(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, D.settings.view === "grid" ? "m" : "s")), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, (meta(i) || {}).lb && i.t !== "d" ? h("span", { class: "lbd lb-" + (meta(i) || {}).lb, role: "img", "aria-label": "Label: " + (meta(i) || {}).lb }) : null, (meta(i) || {}).nt ? h("span", { class: "ntm", title: (meta(i) || {}).nt, role: "img", "aria-label": "Has a note", text: "✎" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
   const more = h("button", { type: "button", class: "ib more", "aria-label": "More for " + name, "aria-haspopup": "menu", onclick: e => menu(e.currentTarget, i) }, svg("more"));
   const shared = D.shares.some(x => x.id === i.id);
   const quick = tab === "trash" ? null : h("span", { class: "qa" },
@@ -515,7 +521,7 @@ function details() {
   const shares = D.shares.filter(x => x.id === i.id).length;
   det.replaceChildren(
     h("div", { class: "dh" }, h("b", { text: "Details" }), h("button", { type: "button", class: "ib", "aria-label": "Close details", onclick: () => { sel.clear(); row.sync(); } }, svg("x"))),
-    (() => { const pv = h("div", { class: "pv " + icoOf(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, "l")); queueMicrotask(() => thumbWatch(pv, i)); return pv; })(),
+    (() => { const pv = h("div", { class: "pv " + icoOf(i) + lbCls(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, "l")); queueMicrotask(() => thumbWatch(pv, i)); return pv; })(),
     h("h3", { text: name }), acts,
     m.nt ? h("p", { class: "dnote", text: m.nt }) : null,
     h("div", { class: "locknote" }, svg("lock"), "Locked in your browser. The server can't read it."),
