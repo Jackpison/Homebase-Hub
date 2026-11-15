@@ -418,7 +418,7 @@ try:
         pg.click('#bulk button:has-text("Share as Gallery")'); pg.wait_for_selector('#dform button:has-text("Make the Gallery Link")')
         pg.fill('#gpw', 'gallery pass'); pg.click('#dform button:has-text("Make the Gallery Link")'); pg.wait_for_selector('#dform .linkbox input', timeout=30000)
         glink = pg.locator('#dform .linkbox input').first.input_value()
-        check('B104 the gallery link holds one token and one key for each picture', len(pics) == 2 and re.search(r'share\.html\?t=[A-Za-z0-9_-]{32},[A-Za-z0-9_-]{32}#[A-Za-z0-9_-]{43},[A-Za-z0-9_-]{43}$', glink), glink)
+        check('B104 the gallery link holds one token and one key for each picture', len(pics) == 2 and re.search(r'share\.html\?t=[A-Za-z0-9_-]{32}(,|%2C)[A-Za-z0-9_-]{32}#[A-Za-z0-9_-]{43},[A-Za-z0-9_-]{43}$', glink), glink)
         pg.click('#dform .act button:has-text("Done")')
         v4 = b.new_context(viewport={'width': 1100, 'height': 800}); vp4 = v4.new_page(); e4 = []; page_errors(vp4, e4)
         vp4.goto(glink); vp4.wait_for_selector('#pwf:not([hidden])', timeout=15000); vp4.fill('#pw', 'gallery pass'); vp4.click('#pwf button')
@@ -427,6 +427,13 @@ try:
         check('B106 each picture is captioned with its name', all(n in vp4.inner_text('.galg') for n in pics), vp4.inner_text('.galg'))
         check('B107 no page error on the gallery page', not e4, e4)
         pg.keyboard.press('Escape')
+
+        # ---- (1.80.1) Send to Telegram asks first, and says so when Telegram is not set up ----
+        pg.reload(wait_until='domcontentloaded'); wait_names(pg, ['photo.png'])
+        menu(pg, 'photo.png', 'Send to Telegram'); pg.wait_for_selector('#dlg[open] h2', timeout=10000)
+        check('B108 Send to Telegram first explains that the readable file goes through the server', 'readable' in pg.inner_text('#dlg') and 'Telegram' in pg.inner_text('#dlg h2'), pg.inner_text('#dlg'))
+        pg.locator('#dlg .act button', has_text='Send It').click(); until(lambda: 'not set up' in pg.inner_text('#ups'), 20000)
+        check('B109 with no Telegram set up it says so, and nothing is sent', 'not set up' in pg.inner_text('#ups'), pg.inner_text('#ups')[:200])
 
         check('B39 no page error and no blocked request in all of it', not errs and not csp, (errs, csp))
         b.close()
