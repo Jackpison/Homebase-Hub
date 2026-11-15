@@ -273,6 +273,16 @@ try:
         check('P39 Home Settings > Show the Bar on the Home Page turns the bar on and off (the same setting as in Settings)', bar_on == [True, True, True] and bar_off[:2] == [False, False], (bar_on, bar_off))
         check('P39b (1.79.11) with the bar shown the credit and refresh buttons sit bottom left, clear of the bell', bar_on[2], bar_on)
         hctx.close()
+        # P39c: Home opened from a copy of the page that came without the widgets (the phone app) still shows them once the site knows you are logged in
+        sc = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 800}); sc.add_cookies(cookies)
+        sc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+        def no_widgets(route):
+            resp = route.fetch(); route.fulfill(response=resp, body=re.sub(r'(window\.PUB = .*?);</script>', r'\1;window.PUB.widgets=null;</script>', resp.text(), count=1, flags=re.S))
+        sc.route(re.compile(r'/web/home/(index\.php)?(\?.*)?$'), no_widgets)
+        sp = sc.new_page(); sp.goto(B + '/web/home/', wait_until='domcontentloaded')
+        got = until(lambda: sp.evaluate("document.querySelectorAll('#wDock [data-w], #wCards [data-w]').length") > 0, 12000)
+        check('P39c (1.79.11) Home opened from a copy of the page without the widgets still brings them in when you are logged in', got, sp.evaluate("document.body.className"))
+        sc.close()
         # P41: an open widget never sits on top of the cards (Glance and Expand, nine cards in two rows) or the dock, and the clock
         # steps aside when there is no room for both (seen on the owner's screen: the panel lay over the cards, unreadable)
         def placed(style, w, h, wid):

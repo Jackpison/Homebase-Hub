@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.11 | Home on an iPhone: the bar floats below the status bar and the clock starts below it; the wallpaper refresh button moves to the bottom left; disabled main buttons look the same on every page |
 | 1.79.10 | A floating rounded top bar with a Rounded Bar switch, the theme button is only its icon, the Files storage limit sits at the right, and Save Settings is never dimmed |
 | 1.79.9 | Backup & Restore shows one list of places for automatic backups, messages wear the colour of the page they came from and have an Open Logs button, one pencil icon everywhere, and a typed storage limit in Files |
 | 1.79.8 | Security Devices is one clear screen, a small ? above the bell opens the keyboard shortcuts, Telegram and Bookmarks cards are slim rows, and the SVG converter no longer parses SVG text into the page |
@@ -165,6 +166,17 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.11
+
+### Fixed
+
+- **Home on an iPhone:** the floating bar sat over the status bar and hid the greeting. It now floats below the status bar, and the clock starts below the bar.
+- **Home background credit and refresh button:** with the bar shown they sit at the bottom left, so the notification bell no longer covers the refresh button.
+- **Home widgets on a phone:** when the app opened from a saved copy of the page, Home could come up without the widgets and the tasks and weather chips, until you visited another page and came back. It now asks the site who you are and brings the widgets in at once, so Home looks the same every time.
+- **Disabled main buttons:** in Info, Home, Links and the other page windows they are the same clean neutral as in Settings, not a faded accent.
 
 ---
 

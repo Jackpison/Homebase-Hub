@@ -1680,7 +1680,9 @@ try { if (localStorage.getItem('hl-tour-due') === '1') setTimeout(tour, 1800); }
    START
    ====================================================================== */
 renderWidgets();
-if (WCFG) api('state').then(st => { CSRF = st.csrf || CSRF; }).catch(() => {}).finally(loadWidgets);   // the pad needs the login's security token
+// the pad needs the login's security token. (1.79.11) Opened from a saved or restored copy of the page (the app on a phone), it can arrive without the
+// widgets although you are logged in: the answer here brings them in, so Home looks the same every time.
+api('state').then(st => { CSRF = st.csrf || CSRF; if (st.admin && st.widgets && !WCFG) { setWidgets(st.widgets); return 'set'; } }).catch(() => {}).then(r => { if (WCFG && r !== 'set') loadWidgets(); });
 // coming back to Home later (another tab, or the phone woke up): the tasks may have changed, and the date too
 let wSeen = Date.now();
 document.addEventListener('visibilitychange', () => {

@@ -96,7 +96,7 @@ switch ($action) {
     /* ---------- auth ---------- */
 
     case 'state':
-        out(['hasPassword' => auth() !== null, 'admin' => is_admin(), 'csrf' => is_admin() ? hub_csrf() : null]);
+        out(['hasPassword' => auth() !== null, 'admin' => is_admin(), 'csrf' => is_admin() ? hub_csrf() : null, 'widgets' => is_admin() ? load_site()['widgets'] : null]);
 
     case 'logout':
         require_post();
