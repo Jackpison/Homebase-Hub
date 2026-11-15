@@ -58,8 +58,8 @@ select.sel{height:36px;border:1px solid var(--line);border-radius:9px;background
 .dropmsg{display:none;position:absolute;inset:0;place-items:center;background:color-mix(in srgb,var(--acc) 14%,var(--box));border:2px dashed var(--acc);border-radius:14px;font-weight:700;z-index:3;pointer-events:none}
 .drop.over .dropmsg{display:grid}
 .list{display:flex;flex-direction:column}
-.lh{display:grid;grid-template-columns:34px minmax(0,1fr) 170px 100px 130px 44px;gap:8px;align-items:center;padding:8px 12px;color:var(--mute);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line)}
-.row{display:grid;grid-template-columns:34px minmax(0,1fr) 170px 100px 130px 44px;gap:8px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--line);min-height:50px}
+.lh{display:grid;grid-template-columns:34px minmax(0,1fr) 90px 52px 120px 170px 44px;gap:8px;align-items:center;padding:8px 12px;color:var(--mute);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:34px minmax(0,1fr) 90px 52px 120px 170px 44px;gap:8px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--line);min-height:50px}
 .row:last-child{border-bottom:0}
 .row:hover{background:color-mix(in srgb,var(--fg) 4%,transparent)}
 .row.sel{background:color-mix(in srgb,var(--acc) 10%,transparent)}
@@ -90,7 +90,7 @@ select.sel{height:36px;border:1px solid var(--line);border-radius:9px;background
 .list.grid .ico svg{width:40px;height:40px}
 .list.grid .ico img.th,.fdet .pv img.th{width:100%;height:100%;object-fit:cover;display:block}
 .list.grid .t{padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.list.grid .cell.dt,.list.grid .cell.meta,.list.grid .cell.vis,.list.grid .qa{display:none}
+.list.grid .cell.dt,.list.grid .cell.meta,.list.grid .cell.vis,.list.grid .cell.starc,.list.grid .qa{display:none}
 .list.grid .ib.more{position:absolute;top:12px;right:12px;background:color-mix(in srgb,var(--panel) 85%,transparent)}
 .list.grid .cell.sz{font-size:12.5px;color:var(--mute);padding:0 4px 2px}
 .fdet .pv.hasth{overflow:hidden;padding:0}
@@ -161,7 +161,7 @@ dialog input:focus,dialog select:focus{outline:0;border-color:var(--acc)}
   .row{grid-template-columns:34px minmax(0,1fr) 44px;grid-template-areas:"ck nm more" "ck meta more"}
   .row .ck{grid-area:ck;align-self:start;margin-top:12px}
   .row .nm{grid-area:nm}
-  .row .cell.sz,.row .cell.dt,.row .cell.vis,.row .qa{display:none}
+  .row .cell.sz,.row .cell.dt,.row .cell.vis,.row .cell.starc,.row .qa{display:none}
   .row .meta{grid-area:meta;display:block}
   .row .ib.more{grid-area:more}
   .top .lbl{display:none}
@@ -408,3 +408,19 @@ dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);bo
 .cnt{color:var(--mute);font-size:13.5px;white-space:nowrap}
 .list.grid .gh{grid-column:1/-1;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:700;padding:4px 2px 0}
 .list.grid .gh:not(:first-child){margin-top:10px}
+
+/* (1.80.3) list view: the current row is an inset line that follows the rounded frame, and the first and last rows share its corners */
+.list:not(.grid) .row.cur{outline:0;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--acc) 70%,transparent)}
+.list:not(.grid) .row:last-child{border-radius:0 0 13px 13px}
+.list:not(.grid) .row:first-child{border-radius:13px 13px 0 0}
+.list:not(.grid) .row:first-child:last-child{border-radius:13px}
+.pvno{margin:0 0 12px;text-align:center;color:var(--mute);max-width:420px}
+#pv:has(.pvno){display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+
+/* (1.80.3) the Star column: a star you press, filled when starred */
+.row .starc{overflow:visible}
+.row .starc .ib{width:30px;height:30px;border:0;background:none;color:var(--mute);display:inline-grid;place-items:center;border-radius:8px;cursor:pointer}
+.row .starc .ib:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.row .starc .ib svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.row .starc .ib[aria-pressed=true]{color:var(--acc)}.row .starc .ib[aria-pressed=true] svg{fill:currentColor}
+.zone .zbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}.zone .zsub{display:block;margin-top:4px;line-height:1.5}

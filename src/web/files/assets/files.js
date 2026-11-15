@@ -61,10 +61,10 @@ const b64 = u => V.b64(u), ub64 = s => V.ub64(s);
 const b64u = u => b64(u).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const ext = n => { const m = /\.([A-Za-z0-9]{1,8})$/.exec(n || ""); return m ? m[1].toLowerCase() : ""; };
 const KINDS = {
-  image: ["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp", "svg"], video: ["mp4", "webm", "mov", "m4v", "ogv"], audio: ["mp3", "m4a", "wav", "ogg", "oga", "flac", "aac", "opus"],
+  image: ["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp", "svg", "heic", "heif"], video: ["mp4", "webm", "mov", "m4v", "ogv"], audio: ["mp3", "m4a", "wav", "ogg", "oga", "flac", "aac", "opus"],
   pdf: ["pdf"], text: ["txt", "md", "csv", "json", "log", "xml", "html", "css", "js", "py", "php", "sh", "yml", "yaml", "ini", "tsv", "rtf", "ics", "vcf"], zip: ["zip", "7z", "rar", "tar", "gz"]
 };
-const MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", avif: "image/avif", bmp: "image/bmp", svg: "image/svg+xml", mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime", m4v: "video/mp4", ogv: "video/ogg",
+const MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", avif: "image/avif", heic: "image/heic", heif: "image/heif", bmp: "image/bmp", svg: "image/svg+xml", mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime", m4v: "video/mp4", ogv: "video/ogg",
   mp3: "audio/mpeg", m4a: "audio/mp4", wav: "audio/wav", ogg: "audio/ogg", oga: "audio/ogg", flac: "audio/flac", aac: "audio/aac", opus: "audio/ogg", pdf: "application/pdf" };
 const kindOf = n => { const e = ext(n); for (const k in KINDS) if (KINDS[k].includes(e)) return k; return "file"; };
 const PREVIEW_MAX = 80 * 1024 * 1024;
@@ -364,7 +364,7 @@ function render() {
   /* rows */
   const list = shown(), box = $("list"), grid = D.settings.view === "grid";
   box.className = "list" + (grid ? " grid" : ""); box.replaceChildren();
-  if (list.length && !grid) box.append(h("div", { class: "lh" }, h("span", {}, h("input", { type: "checkbox", class: "ck", id: "lhck", "aria-label": "Select all", onchange: toggleAll })), h("span", { "aria-hidden": "true", text: "Name" }), h("span", { "aria-hidden": "true", text: "Who Can See It" }), h("span", { "aria-hidden": "true", text: "Size" }), h("span", { "aria-hidden": "true", text: "Modified" }), h("span")));
+  if (list.length && !grid) box.append(h("div", { class: "lh" }, h("span", {}, h("input", { type: "checkbox", class: "ck", id: "lhck", "aria-label": "Select all", onchange: toggleAll })), h("span", { "aria-hidden": "true", text: "Name" }), h("span", { "aria-hidden": "true", text: "Size" }), h("span", { "aria-hidden": "true", text: "Star" }), h("span", { "aria-hidden": "true", text: "Modified" }), h("span", { "aria-hidden": "true", text: "Who Can See It" }), h("span")));
   /* (1.80.1) the grid has a Folders part and a Files part, each with its count; the header says how many of each are here */
   const nF = list.filter(x => x.t === "d").length, nFi = list.length - nF, sect = grid && tab === "files" && !q && nF && nFi;
   let lastT = "";
@@ -378,7 +378,7 @@ function render() {
       : tab === "starred" ? [h("b", { text: "Nothing starred yet" }), "Pick a file and press Star to keep it here."]
       : tab === "shared" ? [h("b", { text: "No share links yet" }), "Pick a file and press Share to make a link."]
       : tab === "recent" ? [h("b", { text: "No files yet" }), "Your newest files show up here."]
-      : [h("b", { text: cwd ? "This folder is empty" : "No files yet" }), "Drag files here, or press New, then Upload. Everything is locked in your browser before it is sent.", cwd ? null : h("div", { style: "margin-top:12px" }, h("button", { type: "button", class: "btn pri", text: "Upload Your First File", onclick: () => $("pick").click() }))]));
+      : [h("b", { text: cwd ? "This folder is empty" : "No files yet" }), h("span", { class: "zsub" }, "Drag files here, or use the buttons below.", h("br"), "Everything is locked in your browser before it is sent."), h("div", { class: "zbtns" }, h("button", { type: "button", class: "btn pri", text: cwd ? "Upload Files" : "Upload Your First File", onclick: () => $("pick").click() }), h("button", { type: "button", class: "btn", text: "New Folder", onclick: () => mkdir() }))]).filter(Boolean));
   }
   bulk(); usage(); details();
   $("sync").textContent = offView ? "Offline: showing the last list. Files kept on this device still open." : D.items.length ? "Saved on your server, locked" : "";
@@ -533,9 +533,13 @@ function row(i) {
   const quick = tab === "trash" ? null : h("span", { class: "qa" },
     i.t === "f" && D.settings.shares ? h("button", { type: "button", class: "qb", "aria-label": "Share " + name, onclick: e => { e.stopPropagation(); shareBox(i); } }, "Share") : null,
     h("button", { type: "button", class: "ib qb", "aria-label": "Download " + name, title: "Download", onclick: e => { e.stopPropagation(); download([i.id]); } }, svg("down")),
-    i.t === "f" ? h("button", { type: "button", class: "ib qb", "aria-label": ((meta(i) || {}).st ? "Unstar " : "Star ") + name, title: "Star", "aria-pressed": String(!!(meta(i) || {}).st), onclick: e => { e.stopPropagation(); star(i); } }, svg("star")) : null);
+    h("button", { type: "button", class: "ib qb", "aria-label": "Rename " + name, title: "Rename", onclick: e => { e.stopPropagation(); rename(i); } }, svg("edit")),
+    h("button", { type: "button", class: "ib qb", "aria-label": "Move " + name + " to Trash", title: "Move to Trash", onclick: e => { e.stopPropagation(); trash([i.id]); } }, svg("trash")));
   const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : "") + (cur === i.id ? " cur" : ""), "data-id": i.id, draggable: tab === "trash" ? null : "true", ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); e.stopPropagation(); cur = i.id; if (!sel.has(i.id)) { sel.clear(); sel.add(i.id); row.sync(); } menu(more, i, { x: e.clientX, y: e.clientY }); } },
-    ck, open, h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" + shareFlags(i) : "Only you" }), h("span", { class: "cell sz num", text: fmt(isD ? bytesOf(i) : sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), quick, more, h("span", { class: "cell meta", text: sub }));
+    ck, open, h("span", { class: "cell sz num", text: fmt(isD ? bytesOf(i) : sz) }),
+    h("span", { class: "cell starc" }, i.t === "f" && tab !== "trash" ? h("button", { type: "button", class: "ib", "aria-label": ((meta(i) || {}).st ? "Unstar " : "Star ") + name, title: "Star", "aria-pressed": String(!!(meta(i) || {}).st), onclick: e => { e.stopPropagation(); star(i); } }, svg("star")) : null),
+    h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }),
+    h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" + shareFlags(i) : "Only you" }), quick, more, h("span", { class: "cell meta", text: sub }));
   if (D.settings.view === "grid") { const ic = open.querySelector(".ico"); if (ic) queueMicrotask(() => thumbWatch(ic, i)); }
   return el;
 }
@@ -558,24 +562,16 @@ function usage() {
 
 /* ---------- the details panel (right side) ---------- */
 const KIND = { d: "Folder", image: "Picture", video: "Video", audio: "Sound", pdf: "PDF document", text: "Text", zip: "Zip archive" };
-function details() {
+let detWait = 0;
+function details(now) {
   const det = $("det"), fa = $("fa"), ids = [...sel];
   selbtn();
   const i = ids.length === 1 ? byId.get(ids[0]) : null;
-  /* (1.77.2) open by default: nothing (or several) picked shows a summary of what is here, with Select All. Phones keep it closed until you pick one. */
-  if (!i) {
-    const wide = matchMedia("(min-width:1101px)").matches, vis = shown();
-    if (tab === "trash" || !wide || !vis.length) { det.hidden = true; fa.classList.remove("hasdet"); selbtn(); return; }
-    const many = ids.length > 1, files = vis.filter(x => x.t === "f"), total = files.reduce((n, x) => n + (sizeOf(x) || 0), 0);
-    det.hidden = false; fa.classList.add("hasdet");
-    det.replaceChildren(h("div", { class: "dh" }, h("b", { text: many ? ids.length + " Picked" : "Details" })),
-      h("div", { class: "pv sum" }, svg(many ? "file" : "folder")),
-      h("h3", { text: many ? ids.length + " items picked" : vis.length + (vis.length === 1 ? " item here" : " items here") }),
-      h("dl", {}, h("dt", { text: "Folders" }), h("dd", { text: String(vis.length - files.length) }), h("dt", { text: "Files" }), h("dd", { text: String(files.length) }), h("dt", { text: "Size" }), h("dd", { text: fmt(total) })),
-      h("div", { class: "acts" }, h("button", { type: "button", class: "btn pri", id: "selall", onclick: toggleAll }, ids.length === vis.length ? "Clear Selection" : "Select All")),
-      h("p", { class: "hint", text: many ? "Use the bar above the list to download, move or remove them." : "Pick a file or folder to see its details here." }));
-    selbtn(); return;
-  }
+  if (!i) { clearTimeout(detWait); detWait = 0; }
+  // (1.80.3) the panel opens a moment after a pick, so a double-click (open) is not thrown off by the list narrowing under the pointer
+  else if (det.hidden && !now) { if (!detWait) detWait = setTimeout(() => { detWait = 0; details(true); }, 300); return; }
+  /* (1.80.3) closed until you pick one file or folder (it used to open with a summary of the folder) */
+  if (!i) { det.hidden = true; fa.classList.remove("hasdet"); selbtn(); return; }
   if (tab === "trash") { det.hidden = true; fa.classList.remove("hasdet"); return; }
   det.hidden = false; fa.classList.add("hasdet");
   const isD = i.t === "d", name = nameOf(i), m = meta(i) || {};
@@ -585,7 +581,7 @@ function details() {
     h("button", { type: "button", class: "btn", onclick: () => download([i.id]) }, svg("down", "i"), "Download"),
     h("button", { type: "button", class: "btn star", "aria-pressed": String(!!m.st), onclick: () => star(i) }, m.st ? "★ Starred" : "☆ Star"));
   const shares = D.shares.filter(x => x.id === i.id).length;
-  det.replaceChildren(
+  det.replaceChildren(...[
     h("div", { class: "dh" }, h("b", { text: "Details" }), h("button", { type: "button", class: "ib", "aria-label": "Close details", onclick: () => { sel.clear(); row.sync(); } }, svg("x"))),
     (() => { const pv = h("div", { class: "pv " + icoOf(i) + lbCls(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, "l")); queueMicrotask(() => thumbWatch(pv, i)); return pv; })(),
     h("h3", { text: name }), acts,
@@ -594,7 +590,7 @@ function details() {
     h("dl", {}, h("dt", { text: "Type" }), h("dd", { text: isD ? "Folder" : (KIND[kindOf(name)] || (/\.([A-Za-z0-9]{1,8})$/.exec(name) || [, "File"])[1].toUpperCase() + " file") }),
       h("dt", { text: "Size" }), h("dd", { text: fmt(bytesOf(i)) }),
       h("dt", { text: "Modified" }), h("dd", { text: when(dateOf(i)) }), h("dt", { text: "Location" }), h("dd", { text: "My Files" + (where ? " / " + where : "") })),
-    !isD && D.settings.shares ? h("div", { class: "shb" }, h("b", { text: "Share link" }), h("small", { text: shares ? shares + " active. Anyone with a link opens this file." : "None yet. Anyone with a link can open this file." }), h("button", { type: "button", class: "btn", onclick: () => shareBox(i) }, shares ? "Manage Links" : "Make a Link")) : null);
+    !isD && D.settings.shares ? h("div", { class: "shb" }, h("b", { text: "Share link" }), h("small", { text: shares ? shares + " active. Anyone with a link opens this file." : "None yet. Anyone with a link can open this file." }), h("button", { type: "button", class: "btn", onclick: () => shareBox(i) }, shares ? "Manage Links" : "Make a Link")) : null].filter(Boolean));
 }
 function toggleAll() { const vis = shown(); if (sel.size === vis.length) sel.clear(); else for (const x of vis) sel.add(x.id); row.sync(); }
 /** The Select All button above the list (small screens use it too). */
@@ -881,7 +877,14 @@ async function pvShow(i) {
     pv.replaceChildren();
     if (k === "text") { const t = await r.blob.slice(0, 600000).text(), more = r.size > 600000 ? "\n\n… (only the start is shown)" : ""; if (gen !== pvGen) return; if (ext(name) === "md") { pv.classList.add("mdv"); pv.append(markdown(t + more)); } else pv.append(h("pre", { text: t + more })); return; }
     pvUrl = URL.createObjectURL(r.blob);
-    if (k === "image") { const im = h("img", { src: pvUrl, alt: name, onload: e => { zoom.w = e.target.naturalWidth; } }); pv.append(im); }
+    if (k === "image") {
+      const heic = /^hei[cf]$/.test(ext(name));
+      const im = h("img", { src: pvUrl, alt: name, onload: e => { zoom.w = e.target.naturalWidth; }, onerror: () => {
+        // (1.80.3) HEIC is a picture, but only Safari and a few browsers can draw it: elsewhere the preview says so and offers Tools' converter
+        if (!heic || gen !== pvGen) return;
+        pv.replaceChildren(h("p", { class: "pvno", text: "This browser cannot show HEIC pictures. Open it in Tools to convert it to JPG or PNG, or download it." }), h("button", { type: "button", class: "btn pri", text: "Open in Tools", onclick: () => { pdlg.close(); openInTools(i); } }));
+      } }); pv.append(im);
+    }
     else if (k === "video") pv.append(h("video", { src: pvUrl, controls: true }));
     else if (k === "audio") pv.append(h("audio", { src: pvUrl, controls: true }));
     else pv.append(h("iframe", { src: pvUrl, title: name }));

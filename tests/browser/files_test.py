@@ -141,14 +141,11 @@ try:
         # ---- (1.77.2) the details panel is open by default, with Select All
         pg.locator('.row .ck').first.wait_for()
         pg.evaluate("document.querySelectorAll('.row.sel').length && document.querySelector('#bulk .btn:last-child')?.click()")
-        pn = pg.evaluate("(() => { const d = document.getElementById('det'); return [!d.hidden, !!document.getElementById('selall'), !!document.getElementById('lhck') && document.getElementById('sela').hidden]; })()")
-        check('B24b nothing picked: the details panel is open with Select All, and the list has a Select All box at the top instead of a button (1.79.1)', pn == [True, True, True], pn)
-        pg.click('#selall'); n_all = pg.evaluate("[document.querySelectorAll('.row.sel').length, document.querySelectorAll('.row').length]")
-        check('B24c Select All picks every item, and the button then says Clear Selection', n_all[0] == n_all[1] and n_all[0] > 0 and pg.inner_text('#selall') == 'Clear Selection', n_all)
-        pg.click('#lhck'); until(lambda: pg.evaluate("document.querySelectorAll('.row.sel').length") == 0, 3000)
+        pn = pg.evaluate("(() => [document.getElementById('det').hidden, !document.getElementById('selall'), !!document.getElementById('lhck') && document.getElementById('sela').hidden])()")
+        check('B24b nothing picked: the details panel stays closed (1.80.3), and the list has a Select All box at the top', pn == [True, True, True], pn)
         pg.click('#lhck'); until(lambda: pg.evaluate("document.querySelectorAll('.row.sel').length") == pg.evaluate("document.querySelectorAll('.row').length"), 3000)
         check('B24e the box at the top of the list picks every row, and clears them when pressed again (1.79.1)', pg.evaluate("document.getElementById('lhck').checked") and pg.evaluate("document.querySelectorAll('.row.sel').length") == pg.evaluate("document.querySelectorAll('.row').length"))
-        pg.click('#lhck'); pg.click('#selall'); pg.click('#selall'); check('B24d Clear Selection empties the pick', pg.evaluate("document.querySelectorAll('.row.sel').length") == 0)
+        pg.click('#lhck'); check('B24d the top box clears the pick', pg.evaluate("document.querySelectorAll('.row.sel').length") == 0)
 
         # ---- share links ----
         pg.locator('.nm[title="Docs"]').click(); wait_names(pg, ['greeting.txt'])
@@ -464,6 +461,24 @@ try:
         check('B114 Attach a File puts a link to the chosen file in the Website field', re.search(r'/web/files/#file=[A-Za-z0-9_-]+$', link) is not None, link)
         pg.goto(link); pg.wait_for_selector('#pbox img', timeout=30000)
         check('B115 that link opens the file in Files, in its preview', pg.evaluate("(() => { const i = document.querySelector('#pbox img'); return !!i && i.complete && i.naturalWidth > 0; })()") and '#file=' not in pg.url, pg.url)
+
+        # ---- (1.80.3) list view: the current row follows the rounded frame (inset line, rounded last row) ----
+        pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
+        pg.click('#list .row:last-child .nm'); pg.keyboard.press('ArrowDown')
+        st = pg.evaluate("(() => { const r = document.querySelector('#list .row:last-child'), c = getComputedStyle(r); return [c.borderBottomLeftRadius, c.outlineStyle]; })()")
+        check('B117 the last list row has rounded bottom corners like the frame, and the current row uses no square outline', st[0] == '13px' and st[1] == 'none', st)
+
+        pg.screenshot(path='/tmp/claude-0/-home-user-homebase-hub/c92d2661-ab66-5c0d-9223-a322b3014135/scratchpad/list.png', clip={'x': 0, 'y': 0, 'width': 1280, 'height': 500})
+
+        # ---- (1.80.3) a HEIC file is a picture: it is in Pictures and opens in the preview (or says what to do when the browser cannot draw it) ----
+        pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
+        upload(pg, 'camera.heic', open(os.path.join(FIX, 'fixture-photo.heic'), 'rb').read(), 'image/heic'); wait_names(pg, ['camera.heic'])
+        pg.click('#chips .chip:has-text("Pictures")')
+        check('B118 a HEIC file is listed under the Pictures filter', 'camera.heic' in names(pg), names(pg))
+        row(pg, 'camera.heic').locator('.nm').dblclick(); pg.wait_for_selector('#pbox img, #pbox .pvno', timeout=20000)
+        ok = pg.evaluate("(() => { const i = document.querySelector('#pbox img'); return !!i && i.complete && i.naturalWidth > 0; })()") or pg.locator('#pbox button:has-text("Open in Tools")').count() == 1
+        check('B119 the HEIC preview shows the picture, or Open in Tools when this browser cannot draw HEIC', ok)
+        pg.keyboard.press('Escape'); pg.click('#chips .chip:has-text("All")')
 
         # ---- (1.80.2) Info: the paperclip button in a box's toolbar writes a [name](link) link ----
         pg.goto(s.base + '/web/info/'); wait_js(pg, "!!document.querySelector('#boxTpl') && document.querySelectorAll('.box').length > 0", 20000)
