@@ -104,6 +104,11 @@ try:
                   ('#telegram/backups', 'Backup & Restore', 'Back Up')]
         bad = [h for h, t, u in places if not at(h, h2 + " === %s && %s === %s" % (json.dumps(t), sel, json.dumps(u)))]
         check('S10 every address opens its section and tab (#system, from 1.48, opens Updates; #pages and #nav open Appearance > Look (1.78.0), #domains Health, #setup General; 1.70.0: #files opens Server Check, #changelog Changelog, #telegram/backups Backup & Restore)', not bad, bad)
+        sp = [(h, u) for h, u in (('#security/login-approval', 'Sign-In'), ('#security/telegram-login-approval', 'Sign-In'), ('#security/passkeys', 'Sign-In'), ('#security/encryption', 'Data Protection'))]
+        bad_s = [h for h, u in sp if not at(h, h2 + " === 'Security' && " + sel + " === " + json.dumps(u))]
+        at('#security', h2 + " === 'Security'")
+        st_tabs = pg.evaluate(tabs); in_signin = pg.evaluate("[...document.querySelectorAll('#ix-pane details.ix-acc[data-tab=sign-in] > summary > span')].map(e => e.textContent).join('|')")
+        check('S10h (1.79.7) Telegram Login Approval is part of Sign-In, not a tab of its own: Security has Overview, Sign-In, Data Protection and Devices, and the old and new addresses open Sign-In', not bad_s and st_tabs == 'Overview|Sign-In|Data Protection|Devices' and 'Telegram Login Approval' in in_signin, (bad_s, st_tabs, in_signin))
         odd = [h for h in ('#constructor', '#__proto__', '#hasOwnProperty', '#toString/x') if not at(h, h2 + " === 'General'")]
         check('S10d an address that is a built-in JavaScript name (#constructor, #__proto__ ...) opens General, not a broken page (2026-11)', not odd, odd)
         ok = at('#changelog', tabs + " === \"Update|Changelog\"")
