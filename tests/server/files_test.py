@@ -126,7 +126,7 @@ try:
     r = call(s, 'share_create', {'id': fid, 'sm': locked('meta'), 'exp': 0}); tok = r.get('token', '')
     check('F35 a link is made: 32 letters and digits', re.fullmatch(r'[A-Za-z0-9_-]{32}', tok), r)
     m = visitor.req(base + '?action=s_meta&t=' + tok)
-    check('F36 anyone with the link gets the locked meta, the number of pieces and the size, and nothing else', m.get('ok') and m['c'] == 2 and m['z'] == 700 and m['sm'].startswith('enc1:') and set(m) == {'ok', 'sm', 'c', 'z', 'exp'}, m)
+    check('F36 anyone with the link gets the locked meta, the number of pieces and the size, and nothing else', m.get('ok') and m['c'] == 2 and m['z'] == 700 and m['sm'].startswith('enc1:') and set(m) == {'ok', 'sm', 'c', 'z', 'exp', 'lim', 'left'}, m)
     st, hd, b = visitor.raw(base + '?action=s_chunk&t=%s&n=1' % tok)
     H = {k.lower(): v for k, v in hd.items()}
     check('F37 ...and the pieces, as plain downloads', st == 200 and len(b) == 350 and H.get('content-type', '').startswith('application/octet-stream') and H.get('x-content-type-options') == 'nosniff')
