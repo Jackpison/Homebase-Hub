@@ -24,7 +24,8 @@ t('A5 lines from the last 30 days all stay (no 300 limit any more)', count($ev) 
 $old = [['t' => time() - 31 * 86400, 'ev' => 'login'], ['t' => time() - 29 * 86400, 'ev' => 'login'], ['t' => time(), 'ev' => 'login']];
 t('A5b (1.80.6) a line older than 30 days is dropped, a newer one stays', count(act_trim($old)) === 2 && act_trim($old)[0]['t'] === $old[1]['t']);
 $many = []; for ($i = 0; $i < ACT_KEEP + 5; $i++) $many[] = ['t' => time(), 'ev' => 'login', 'x' => 'm' . $i];
-t('A5c (1.80.6) never more than 3000 lines: the newest stay', count(act_trim($many)) === ACT_KEEP && end(act_trim($many))['x'] === 'm' . (ACT_KEEP + 4));
+$kept = act_trim($many);
+t('A5c (1.80.6) never more than 3000 lines: the newest stay', count($kept) === ACT_KEEP && end($kept)['x'] === 'm' . (ACT_KEEP + 4));
 
 // ---- 1.79.0: Clear Activity empties the list but leaves one line saying it was done ----
 hub_act('backup', 'x'); hub_act('settings', 'theme');
