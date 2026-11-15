@@ -180,7 +180,7 @@
     if (!S.admin) { login().then(function () { location.reload(); }, function () {}); return; }
     var t = q1('toggle'), items = [];
     if (canEdit()) items.push(editing() ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit } : { label: 'Edit This Page', icon: ICON.edit, tint: pageColor(APP), run: function () { startEdit(); } });
-    itemEntries(b, t, true).forEach(function (x) { items.push(x); });
+    itemEntries(b, t, true).forEach(function (x) { if (/ Settings$/.test(x.label) && PAGE_TILE[APP]) x.pageIcon = APP; items.push(x); });   // (1.79.9) Home Settings wears the page's colour, like on every other page
     items.push({ sep: true });
     pages().filter(function (p) { return p[0] !== APP; }).forEach(function (p) { items.push({ label: p[1], icon: p[3], run: function () { location.href = p[2]; } }); });
     items.push({ sep: true }, { label: 'Settings', icon: ICON.gear, run: function () { settings(); } }, { label: 'Log Out', icon: ICON.out, danger: true, run: logout });

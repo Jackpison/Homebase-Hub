@@ -100,7 +100,7 @@
     eyeoff: 'M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6',
     bank: 'M3 10l9-6 9 6M5 10v8M10 10v8M14 10v8M19 10v8M3 21h18',
     pages: 'M4 5h7v7H4zM13 5h7v4h-7zM13 11h7v8h-7zM4 14h7v5H4z',
-    edit: 'M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497zM15 5l4 4',
+    edit: 'M13 21h8M15 5l4 4M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z',
     check: 'M5 12l5 5L20 7',
     search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
     image: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21M11 9a2 2 0 1 1-4 0 2 2 0 0 1 4 0z',
@@ -391,6 +391,8 @@
   function noteLogClear() { try { ls.set('hub-notelog', '[]'); } catch (x) {} }
   function noteSave() { try { sessionStorage.setItem('ix-notes', JSON.stringify(noteHist.slice(-NOTE_KEEP))); sessionStorage.setItem('ix-notes-seen', String(noteSeen)); } catch (e) {} }
   function noteAgo(ts) { var s = Math.max(0, Math.round((Date.now() - ts) / 1000)); return s < 45 ? 'now' : s < 3600 ? Math.round(s / 60) + 'm ago' : Math.round(s / 3600) + 'h ago'; }
+  /* (1.79.9) every message wears the colour of the page (or Settings) it came from, so the source can be guessed at a glance */
+  function noteColor(n) { var a = n.a; if (!a) Object.keys(NOTE_SRC).forEach(function (k) { if (String(n.s) === NOTE_SRC[k]) a = k; }); return a === 'settings' || !PAGE_TILE[a] ? '#8b5cf6' : pageColor(a); }
   function noteTile(kind) { return '<span class="ix-nt ' + kind + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + NOTE_ICON[kind] + '"/></svg></span>'; }
   function noteBell() {
     var b = document.getElementById('ix-bell'), n = noteHist.length - noteSeen, box = document.getElementById('ix-toast'), live = box && box.querySelector('.ix-nc');
@@ -415,14 +417,21 @@
     var old = document.getElementById('ix-nlist'); if (old) { old.remove(); return; }
     noteSeen = noteHist.length; noteSave(); noteBell();
     var l = document.createElement('div'); l.id = 'ix-nlist'; l.setAttribute('role', 'dialog'); l.setAttribute('aria-label', 'Messages');
-    l.innerHTML = '<div class="ix-nlh"><b>Messages</b><span>' + (noteHist.length ? 'This tab, newest first' : 'Nothing yet') + '</span><button type="button" class="ix-nlc" ' + (noteHist.length ? '' : 'hidden ') + 'data-clear>Clear</button><button type="button" class="ix-nlx" aria-label="Close">×</button></div><div class="ix-nlb">' +
-      noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '">' + noteTile(n.k && NOTE_ICON[n.k] ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.p || n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
+    l.innerHTML = '<div class="ix-nlh"><b>Messages</b><span>' + (noteHist.length ? 'This tab, newest first' : 'Nothing yet') + '</span><button type="button" class="ix-nlc" ' + (noteHist.length ? '' : 'hidden ') + 'data-clear>Clear</button><button type="button" class="ix-nlc" data-logs>Open Logs</button><button type="button" class="ix-nlx" aria-label="Close">×</button></div><div class="ix-nlb">' +
+      noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '" style="--pc:' + noteColor(n) + '">' + noteTile(n.k && NOTE_ICON[n.k] ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.p || n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
     [].forEach.call(l.querySelectorAll('.ix-nm'), function (m, i) { m.textContent = noteHist[noteHist.length - 1 - i].m; });
     document.body.appendChild(l);
     l.querySelector('.ix-nlx').onclick = function () { l.remove(); };
+    l.querySelector('[data-logs]').onclick = function () { l.remove(); settings('logs'); };   // (1.79.9) the full list is in Settings > Logs
     var c = l.querySelector('[data-clear]'); if (c) c.onclick = function () { noteHist = []; noteSeen = 0; noteSave(); l.remove(); };
     l.querySelector('.ix-nlx').focus();
     l.addEventListener('keydown', function (e) { if (e.key === 'Escape') { l.remove(); } });
+    /* (1.79.9) a press anywhere outside the list (the bell itself toggles it) puts it back to the bell */
+    var away = function (e) {
+      if (l.isConnected && (l.contains(e.target) || (e.target.closest && e.target.closest('#ix-bell')))) return;
+      document.removeEventListener('pointerdown', away, true); l.remove();
+    };
+    setTimeout(function () { document.addEventListener('pointerdown', away, true); }, 0);
   }
   /* runs a change to a list and slides every item that stayed from where it was to where it is now (a spring-like curve) */
   function flip(box, change) {
@@ -446,12 +455,12 @@
     var same = [].filter.call(t.children, function (c) { return c.dataset.msg === msg; })[0];   // the same message again: one card, kept longer
     if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
     else {
-      var wh = noteWhere(), e = { m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', ts: Date.now(), p: wh.p, w: wh.w, d: detail ? String(detail).slice(0, 200) : '' };
+      var wh = noteWhere(), e = { m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', a: APP, ts: Date.now(), p: wh.p, w: wh.w, d: detail ? String(detail).slice(0, 200) : '' };
       noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteSave();
       if (!NOTE_HINT.test(msg)) noteLogAdd(e);   // (1.78.0) a hint ("Hold the button down to confirm.") is shown, but it is not something that got done: it stays out of Settings > Logs
     }
     var c = document.createElement('div'), kind = noteKind(msg, bad, act);
-    c.className = 'ix-nc' + (bad ? ' bad' : ''); c.dataset.msg = msg;
+    c.className = 'ix-nc' + (bad ? ' bad' : ''); c.dataset.msg = msg; c.style.setProperty('--pc', noteColor({ a: APP }));
     c.innerHTML = noteTile(kind) + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(noteWhere().p) + ' · now</small></div><button type="button" class="ix-nx" aria-label="Close message">×</button>';
     c.querySelector('.ix-nm').textContent = msg;
     var gone = function () { clearTimeout(+c.dataset.tm); c.classList.remove('in'); setTimeout(function () { flip(t, function () { c.remove(); }); if (!t.querySelector('.ix-nc')) { t.classList.remove('on'); } noteBell(); }, 160); };
@@ -738,7 +747,7 @@
     [/storage|limit|disk|photo|upload|background/i, 'M4 7h16v10H4zM8 17v3M16 17v3M4 11h16', '255,138,92'],
     [/trash|delete|erase/i, 'M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13', '170,170,170'],
     [/export|import|backup/i, 'M12 4v11m-4-4 4 4 4-4M5 20h14', '255,138,92'],
-    [/title|name|page/i, 'M4 20h4L19 9l-4-4L4 16zM13 7l4 4', '91,141,255'],
+    [/title|name|page/i, 'M13 21h8M15 5l4 4M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z', '91,141,255'],
     [/welcome|hello|greeting/i, 'M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z', '255,194,26'],
     [/tint|opacity|blur|glass/i, 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z', '179,146,240'],
     [/widget|clock|show/i, 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', '76,201,240']
@@ -960,7 +969,7 @@
     if (!S.admin) { login().then(function () { location.reload(); }, function () {}); return; }
     var t = q1('toggle'), items = [];
     if (canEdit()) items.push(editing() ? { label: 'Done Editing', icon: ICON.check, accent: true, run: doneEdit } : { label: 'Edit This Page', icon: ICON.edit, tint: pageColor(APP), run: function () { startEdit(); } });
-    itemEntries(b, t, true).forEach(function (x) { items.push(x); });
+    itemEntries(b, t, true).forEach(function (x) { if (/ Settings$/.test(x.label) && PAGE_TILE[APP]) x.pageIcon = APP; items.push(x); });   // (1.79.9) Home Settings wears the page's colour, like on every other page
     items.push({ sep: true });
     pages().filter(function (p) { return p[0] !== APP; }).forEach(function (p) { items.push({ label: p[1], icon: p[3], run: function () { location.href = p[2]; } }); });
     items.push({ sep: true }, { label: 'Settings', icon: ICON.gear, run: function () { settings(); } }, { label: 'Log Out', icon: ICON.out, danger: true, run: logout });

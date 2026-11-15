@@ -23,7 +23,7 @@ const dim=(y,m)=>new Date(y,m+1,0).getDate();
 const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)};
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const SVG=(p,c)=>'<svg class="'+(c||"i")+'" viewBox="0 0 24 24" aria-hidden="true"><path d="'+p+'"/></svg>';
-const IC={check:"M5 12.5l4.5 4.5L19 7.5",edit:"M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",dots:"M5 12h.01M12 12h.01M19 12h.01",x:"M6 6l12 12M18 6L6 18",
+const IC={check:"M5 12.5l4.5 4.5L19 7.5",edit:"M13 21h8M15 5l4 4M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z",dots:"M5 12h.01M12 12h.01M19 12h.01",x:"M6 6l12 12M18 6L6 18",
   copy:"M9 9h11v11H9zM5 15H4V4h11v1",skip:"M5 5l9 7-9 7zM17 5v14",pause:"M8 5v14M16 5v14",play:"M7 5l12 7-12 7z",prev:"M15 6l-6 6 6 6",next:"M9 6l6 6-6 6",
   trash:"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",undo:"M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3",open:"M14 4h6v6M20 4l-9 9M18 14v6H4V6h6",
   link:"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",note:"M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6",

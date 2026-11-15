@@ -101,7 +101,7 @@
     [/storage|limit|disk|photo|upload|background/i, 'M4 7h16v10H4zM8 17v3M16 17v3M4 11h16', '255,138,92'],
     [/trash|delete|erase/i, 'M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13', '170,170,170'],
     [/export|import|backup/i, 'M12 4v11m-4-4 4 4 4-4M5 20h14', '255,138,92'],
-    [/title|name|page/i, 'M4 20h4L19 9l-4-4L4 16zM13 7l4 4', '91,141,255'],
+    [/title|name|page/i, 'M13 21h8M15 5l4 4M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z', '91,141,255'],
     [/welcome|hello|greeting/i, 'M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z', '255,194,26'],
     [/tint|opacity|blur|glass/i, 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z', '179,146,240'],
     [/widget|clock|show/i, 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', '76,201,240']

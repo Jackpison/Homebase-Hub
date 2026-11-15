@@ -279,7 +279,7 @@ function rowHtml(c){
     <div class="ce">${exp}</div>
     <div class="cd">${pills(c)}</div>
     <div class="ph2">${fee} · ${exp}</div>
-    <div class="ced"><button type="button" class="rowedit" data-id="${esc(c.id)}" aria-label="Edit ${esc(c.bank)} ${esc(c.name)}" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button></div>
+    <div class="ced"><button type="button" class="rowedit" data-id="${esc(c.id)}" aria-label="Edit ${esc(c.bank)} ${esc(c.name)}" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 21h8M15 5l4 4M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg></button></div>
   </div>`;
 }
 const ROW_BATCH=60;let cardJob=0,statsRolled=false;   // rows drawn per frame; a newer drawing stops an older one that is still adding rows

@@ -274,9 +274,6 @@ html[data-ix-nav="side"] .fdet{top:16px}
 
 /* (1.76.0) the storage limit: usual sizes as chips, the number and its unit, what is left on the server */
 #dlg .limx{padding:0 0 10px}
-#dlg .limchips{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 8px}
-#dlg .limchips .chip{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--ix-line);background:var(--ix-s1);color:var(--ix-mu);font:600 13px inherit;cursor:pointer}
-#dlg .limchips .chip[aria-pressed=true]{background:var(--ix-tx);color:var(--ix-bg);border-color:var(--ix-tx)}
 #dlg .limn{display:block;color:var(--ix-mu);font-size:12.5px;line-height:1.45}
 
 /* (1.77.1) Files, the Dropbox way: who can see each file, and Share / Download / Star that appear when you point at a row */
@@ -294,3 +291,8 @@ html[data-ix-nav="side"] .fdet{top:16px}
 /* (1.79.3) dragging files onto a folder, a folder in the path, or the Trash */
 .row.dragging{opacity:.45}
 .row.dropto,#crumbs button.dropto,#tabs button.dropto{outline:2px dashed var(--acc);outline-offset:-2px;background:color-mix(in srgb,var(--acc) 14%,transparent)}
+
+/* (1.79.9) the storage limit: a number and a GB or TB choice */
+#dlg .limin{display:flex;gap:8px;align-items:center;margin:0 0 8px}
+#dlg .limin input{width:150px}
+#dlg .limin select{width:auto}

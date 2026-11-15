@@ -656,7 +656,7 @@ html[data-theme="light"] #ix-page .ix-snav .ix-sp.warn{color:#8a3a06}html[data-t
 #ix-page .ix-snav .ix-scard div{flex:1;min-width:0;line-height:1.25}
 #ix-page .ix-snav .ix-scard b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ix-page .ix-snav .ix-scard small{display:block;font-size:11.5px;color:var(--ix-mu2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#ix-page .ix-snav .ix-scard .ix-out{width:34px;height:34px;flex:none;margin:0;padding:0;border:0!important;border-radius:9px!important;display:grid;place-items:center;background:none;color:var(--ix-mu);cursor:pointer;transition:color .2s,background-color .2s}
+#ix-page .ix-snav .ix-scard .ix-out{width:34px;height:34px;flex:none;margin:0;padding:0;border:0!important;border-radius:9px!important;display:grid;place-items:center;background:none;color:var(--ix-err);cursor:pointer;transition:color .2s,background-color .2s}
 #ix-page .ix-snav .ix-scard .ix-out svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 #ix-page .ix-snav .ix-scard .ix-out:hover,#ix-page .ix-snav .ix-scard .ix-out:focus-visible{color:var(--ix-err);background:color-mix(in srgb,var(--ix-err) 12%,transparent)}
 @media (max-width:859px){#ix-page .ix-snav .ix-shl{display:none}#ix-page .ix-snav .ix-sti{width:32px;height:32px;border-radius:9px}#ix-page .ix-snav .ix-sti svg{width:18px;height:18px}}
@@ -1011,3 +1011,17 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 
 /* (1.79.8) Security > Devices: a section title can carry a small button on its right (Remove All). */
 #ix-page .ix-sect .ix-sectb{margin-left:auto;padding:4px 12px;font-size:12px;text-transform:none;letter-spacing:0}
+
+/* (1.79.9) Backup & Restore > Back Up: a slim backup row, then one list of the places copies go. */
+#ix-page .ix-bkhero{padding:12px 16px;gap:12px 16px;margin-bottom:10px}
+#ix-page .ix-bkhero-i{width:38px;height:38px;border-radius:11px}
+#ix-page .ix-bkhero-t b{font-size:16px}
+#ix-page .ix-bkhero-t .ix-status{background:none;padding:0;margin:3px 0 0;font-size:12.5px;color:var(--ix-mu2)}
+#ix-page .ix-bkhero-a{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-left:auto}
+#ix-page .ix-bkinc>summary{display:none}
+#ix-page .ix-bkinc{margin-bottom:10px}
+#ix-page .ix-autob{border:1px solid var(--ix-line);border-radius:18px;background:var(--ix-s1);overflow:hidden;max-width:var(--ix-cw);margin:0 0 14px}
+#ix-page .ix-autob>div+div{border-top:1px solid var(--ix-line)}
+#ix-page .ix-autob .ix-ec,#ix-page .ix-autob .ix-ec.good,#ix-page .ix-autob .ix-rc{border:0;border-radius:0;background:none;box-shadow:none;margin:0;max-width:none}
+#ix-page .ix-autob .ix-ec.good .ix-ec-i{--tc:#22c55e}
+@media (max-width:640px){#ix-page .ix-bkhero-a{margin-left:0;width:100%}}

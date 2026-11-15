@@ -42,7 +42,7 @@ const ICONS = {
   trash: "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
   back: "M3 12a9 9 0 1 0 3-6.7M3 4v5h5",
   move: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM10 13h6M13.5 10.5l2.5 2.5-2.5 2.5",
-  edit: "M4 20h4L19 9l-4-4L4 16zM13 7l4 4",
+  edit: "M13 21h8M15 5l4 4M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z",
   x: "M6 6l12 12M18 6L6 18",
   lock: "M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3",
   up: "M12 16V4M7 9l5-5 5 5M5 20h14",
@@ -780,26 +780,28 @@ async function shareBox(i) {
 }
 
 /* ---------- settings ---------- */
-/** (1.76.0) A storage limit chosen from usual sizes (1.79.1: no typed number), with what the server has left. A limit set earlier that is not one of them shows as one more size. */
-const GB = 1073741824;
+/** (1.79.9) The storage limit is one typed number with a GB or TB choice (empty or 0 = no limit), with what the server has left. */
+const GB = 1073741824, TB = 1024 * GB;
 function limitControl(bytes) {
   let cur = bytes;
   const note = h("small", { id: "dlimn", class: "limn" });
-  const chips = h("div", { class: "limchips", role: "group", "aria-label": "Usual sizes" });
+  const asTB = bytes >= TB && bytes % TB === 0, shown = bytes ? String(Math.round(bytes / (asTB ? TB : GB) * 100) / 100) : "";
+  const num = /** @type {HTMLInputElement} */ (h("input", { type: "number", id: "dlimv", min: "0", step: "any", inputmode: "decimal", placeholder: "No limit", value: shown, "aria-label": "Storage limit" }));
+  const unit = /** @type {HTMLSelectElement} */ (h("select", { id: "dlimu", "aria-label": "Unit" }, [h("option", { value: "gb", selected: !asTB, text: "GB" }), h("option", { value: "tb", selected: asTB, text: "TB" })]));
+  const el = h("div", { class: "limin" }, num, unit);
   const paint = () => {
+    const n = parseFloat(num.value);
+    cur = n > 0 ? Math.round(n * (unit.value === "tb" ? TB : GB)) : 0;
     const v = cur, free = D.free, used = D.usage;
-    for (const c of chips.children) c.setAttribute("aria-pressed", String(+c.dataset.b === v));
     let t = "Used now: " + fmt(used) + (free != null ? ". Free on the server: " + fmt(free) + "." : ".");
     if (v && v < used) t += " That is less than you use now, so new uploads stop until you free some space.";
     else if (v && free != null && v > used + free) t += " That is more than the server has room for, so the server's free space limits you first.";
     else if (!v) t += " No limit: only the server's free space limits you.";
     note.textContent = t;
   };
-  /** @type {[string, number][]} */ const sizes = [["5 GB", 5 * GB], ["10 GB", 10 * GB], ["25 GB", 25 * GB], ["50 GB", 50 * GB], ["100 GB", 100 * GB], ["No Limit", 0]];
-  if (bytes && !sizes.some(x => x[1] === bytes)) sizes.unshift([fmt(bytes), bytes]);
-  for (const [name, b] of sizes) chips.append(h("button", { type: "button", class: "chip", "data-b": String(b), "aria-pressed": "false", text: name, onclick: () => { cur = b; paint(); } }));
+  num.oninput = paint; unit.onchange = paint;
   paint();
-  return { chips, note, value: () => cur };
+  return { el, note, value: () => cur };
 }
 async function settingsBox() {
   const s = D.settings, lc = limitControl(s.limit || 0);
@@ -810,8 +812,8 @@ async function settingsBox() {
     h("h3", { text: "Privacy" }),
     row("donly", "Hide From Visitors", "Always on: visitors must log in to see Files.", only),
     h("h3", { text: "Storage" }),
-    h("div", { class: "ix-srow lim" }, h("span", {}, "Storage Limit", h("small", { text: "Pick a size." }))),
-    h("div", { class: "limx" }, lc.chips, lc.note),
+    h("div", { class: "ix-srow lim" }, h("span", {}, "Storage Limit", h("small", { text: "Type a size. Leave it empty for no limit." }))),
+    h("div", { class: "limx" }, lc.el, lc.note),
     h("h3", { text: "Sharing" }),
     row("dsh", "Share Links", "Off ends every link.", sh),
     h("h3", { text: "Trash" }),

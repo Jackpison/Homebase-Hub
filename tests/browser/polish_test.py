@@ -437,6 +437,10 @@ try:
         pg.click('#ix-bell'); pg.wait_for_selector('#ix-nlist .ix-nc')
         lst = pg.evaluate("[...document.querySelectorAll('#ix-nlist .ix-nm')].map(e => e.textContent)")
         check('P71 a message that went away unseen is kept behind the bell, newest first', lst[0] == 'Quiet note' and 'Second note' in lst and 'First note' in lst, lst)
+        pg.mouse.click(5, 300); wait_js(pg, "!document.getElementById('ix-nlist')", 5000)
+        gone = pg.evaluate("!document.getElementById('ix-nlist') && !!document.getElementById('ix-bell')")
+        pg.click('#ix-bell'); pg.wait_for_selector('#ix-nlist .ix-nc')
+        check('P71b (1.79.9) a press anywhere outside the messages list puts it back to the bell (the bell itself still toggles it), and the list has an Open Logs button', gone and pg.evaluate("!!document.getElementById('ix-nlist') && !!document.querySelector('#ix-nlist [data-logs]')"), gone)
         pg.click('#ix-nlist [data-clear]')
         check('P72 Clear empties the list; the bell stays on the page (quiet, no number) so messages can be read again later (1.77.2)', pg.evaluate("!document.getElementById('ix-nlist') && !!document.getElementById('ix-bell') && !document.getElementById('ix-bell').hidden && !document.querySelector('#ix-bell b')"))
         check('P67 Start Over is a Stepper: three steps, a step ahead cannot be clicked, a done step shows a tick, Erase Everything only on the last step and it asks for ERASE (1.69.0)',

@@ -86,6 +86,8 @@
   function noteLogClear() { try { ls.set('hub-notelog', '[]'); } catch (x) {} }
   function noteSave() { try { sessionStorage.setItem('ix-notes', JSON.stringify(noteHist.slice(-NOTE_KEEP))); sessionStorage.setItem('ix-notes-seen', String(noteSeen)); } catch (e) {} }
   function noteAgo(ts) { var s = Math.max(0, Math.round((Date.now() - ts) / 1000)); return s < 45 ? 'now' : s < 3600 ? Math.round(s / 60) + 'm ago' : Math.round(s / 3600) + 'h ago'; }
+  /* (1.79.9) every message wears the colour of the page (or Settings) it came from, so the source can be guessed at a glance */
+  function noteColor(n) { var a = n.a; if (!a) Object.keys(NOTE_SRC).forEach(function (k) { if (String(n.s) === NOTE_SRC[k]) a = k; }); return a === 'settings' || !PAGE_TILE[a] ? '#8b5cf6' : pageColor(a); }
   function noteTile(kind) { return '<span class="ix-nt ' + kind + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + NOTE_ICON[kind] + '"/></svg></span>'; }
   function noteBell() {
     var b = document.getElementById('ix-bell'), n = noteHist.length - noteSeen, box = document.getElementById('ix-toast'), live = box && box.querySelector('.ix-nc');
@@ -110,14 +112,21 @@
     var old = document.getElementById('ix-nlist'); if (old) { old.remove(); return; }
     noteSeen = noteHist.length; noteSave(); noteBell();
     var l = document.createElement('div'); l.id = 'ix-nlist'; l.setAttribute('role', 'dialog'); l.setAttribute('aria-label', 'Messages');
-    l.innerHTML = '<div class="ix-nlh"><b>Messages</b><span>' + (noteHist.length ? 'This tab, newest first' : 'Nothing yet') + '</span><button type="button" class="ix-nlc" ' + (noteHist.length ? '' : 'hidden ') + 'data-clear>Clear</button><button type="button" class="ix-nlx" aria-label="Close">×</button></div><div class="ix-nlb">' +
-      noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '">' + noteTile(n.k && NOTE_ICON[n.k] ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.p || n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
+    l.innerHTML = '<div class="ix-nlh"><b>Messages</b><span>' + (noteHist.length ? 'This tab, newest first' : 'Nothing yet') + '</span><button type="button" class="ix-nlc" ' + (noteHist.length ? '' : 'hidden ') + 'data-clear>Clear</button><button type="button" class="ix-nlc" data-logs>Open Logs</button><button type="button" class="ix-nlx" aria-label="Close">×</button></div><div class="ix-nlb">' +
+      noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '" style="--pc:' + noteColor(n) + '">' + noteTile(n.k && NOTE_ICON[n.k] ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.p || n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
     [].forEach.call(l.querySelectorAll('.ix-nm'), function (m, i) { m.textContent = noteHist[noteHist.length - 1 - i].m; });
     document.body.appendChild(l);
     l.querySelector('.ix-nlx').onclick = function () { l.remove(); };
+    l.querySelector('[data-logs]').onclick = function () { l.remove(); settings('logs'); };   // (1.79.9) the full list is in Settings > Logs
     var c = l.querySelector('[data-clear]'); if (c) c.onclick = function () { noteHist = []; noteSeen = 0; noteSave(); l.remove(); };
     l.querySelector('.ix-nlx').focus();
     l.addEventListener('keydown', function (e) { if (e.key === 'Escape') { l.remove(); } });
+    /* (1.79.9) a press anywhere outside the list (the bell itself toggles it) puts it back to the bell */
+    var away = function (e) {
+      if (l.isConnected && (l.contains(e.target) || (e.target.closest && e.target.closest('#ix-bell')))) return;
+      document.removeEventListener('pointerdown', away, true); l.remove();
+    };
+    setTimeout(function () { document.addEventListener('pointerdown', away, true); }, 0);
   }
   /* runs a change to a list and slides every item that stayed from where it was to where it is now (a spring-like curve) */
   function flip(box, change) {
@@ -141,12 +150,12 @@
     var same = [].filter.call(t.children, function (c) { return c.dataset.msg === msg; })[0];   // the same message again: one card, kept longer
     if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
     else {
-      var wh = noteWhere(), e = { m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', ts: Date.now(), p: wh.p, w: wh.w, d: detail ? String(detail).slice(0, 200) : '' };
+      var wh = noteWhere(), e = { m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', a: APP, ts: Date.now(), p: wh.p, w: wh.w, d: detail ? String(detail).slice(0, 200) : '' };
       noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteSave();
       if (!NOTE_HINT.test(msg)) noteLogAdd(e);   // (1.78.0) a hint ("Hold the button down to confirm.") is shown, but it is not something that got done: it stays out of Settings > Logs
     }
     var c = document.createElement('div'), kind = noteKind(msg, bad, act);
-    c.className = 'ix-nc' + (bad ? ' bad' : ''); c.dataset.msg = msg;
+    c.className = 'ix-nc' + (bad ? ' bad' : ''); c.dataset.msg = msg; c.style.setProperty('--pc', noteColor({ a: APP }));
     c.innerHTML = noteTile(kind) + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(noteWhere().p) + ' · now</small></div><button type="button" class="ix-nx" aria-label="Close message">×</button>';
     c.querySelector('.ix-nm').textContent = msg;
     var gone = function () { clearTimeout(+c.dataset.tm); c.classList.remove('in'); setTimeout(function () { flip(t, function () { c.remove(); }); if (!t.querySelector('.ix-nc')) { t.classList.remove('on'); } noteBell(); }, 160); };

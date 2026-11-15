@@ -83,7 +83,7 @@ try:
         fs = pg.evaluate("""(() => { const d = document.querySelector('dialog[open]'), t = d.querySelector('#dtd');
             const row = x => x.closest('.ix-srow'), same = x => { const a = x.getBoundingClientRect(), l = row(x).querySelector('label').getBoundingClientRect(); return a.left > l.right - 2 && Math.abs(a.top + a.height / 2 - (l.top + l.height / 2)) < 30; };
             return [d.querySelectorAll('.ix-grp').length, d.querySelectorAll('.ix-rt').length >= 4, same(t)]; })()""")
-        check('L7 Files Settings: four cards with tiles; the Trash choice sits small at the right of its row (1.79.1: the storage limit is chips only)', fs == [4, True, True], fs)
+        check('L7 Files Settings: four cards with tiles; the Trash choice sits small at the right of its row (1.79.9: the storage limit is a typed number)', fs == [4, True, True], fs)
         pg.keyboard.press('Escape')
 
         pg.goto(s.base + '/web/tasks/'); pg.wait_for_selector('#sdlg', state='attached'); pg.evaluate("document.getElementById('sdlg').showModal()")
@@ -132,6 +132,11 @@ try:
         pg.goto(s.base + '/web/settings/#security/devices'); wait_js(pg, "!!document.querySelector('#ix-devsum .ix-ec') && !!document.querySelector('#ix-devl .ix-sect')", 20000)
         dv = pg.evaluate("(() => ({ sects: [...document.querySelectorAll('#ix-pc .ix-sect')].filter(x => x.offsetParent).map(x => x.firstChild.textContent.trim()), sum: document.querySelector('#ix-devsum .ix-ec-t').textContent, row: document.querySelector('#ix-devsum .ix-ec').classList.contains('ix-row1'), hold: document.getElementById('ix-lo').hasAttribute('data-hold'), here: !!document.querySelector('#ix-devsum [data-ix=logout]'), tabs: [...document.querySelectorAll('#ix-pc .ix-tabbar [role=tab]')].map(e => e.textContent).join('|') }))()")
         check('L16c (1.79.8) Security > Devices: a summary row (held Log Out Other Devices, Log Out Here), then This Device, Other Logins, Recent Activity and Trusted Browsers; still four Security tabs', dv['sects'][:2] == ['This Device', 'Other Logins'] and 'Recent Activity' in dv['sects'] and dv['sects'][-1] == 'Trusted Browsers' and 'Login' in dv['sum'] and dv['row'] and dv['hold'] and dv['here'] and dv['tabs'] == 'Overview|Sign-In|Data Protection|Devices', dv)
+        red = pg.evaluate("(() => { const b = document.querySelector('#ix-page .ix-snav .ix-scard .ix-out'); if (!b) return null; const c = getComputedStyle(b).color, e = document.createElement('i'); e.style.color = getComputedStyle(document.getElementById('ix-page')).getPropertyValue('--ix-err'); document.body.append(e); const r = getComputedStyle(e).color; e.remove(); return [c, r]; })()")
+        check('L16d (1.79.9) the Log Out icon in the Settings menu is red', red is not None and red[0] == red[1], red)
+        pg.evaluate("HUB.toast('Log check')"); pcol = pg.evaluate("document.querySelector('#ix-toast .ix-nc').style.getPropertyValue('--pc')"); check('L16f (1.79.9) a message wears the colour of the page it came from', pcol.startswith('#'), pcol); pg.click('#ix-toast .ix-nx'); pg.wait_for_selector('#ix-bell:not([hidden])', timeout=9000); pg.click('#ix-bell'); pg.wait_for_selector('#ix-nlist [data-logs]'); pg.click('#ix-nlist [data-logs]')
+        wait_js(pg, "location.hash.includes('logs') && !document.getElementById('ix-nlist')", 8000)
+        check('L16e (1.79.9) the messages list has an Open Logs button that opens Settings > Logs', pg.evaluate("location.hash.includes('logs')"), pg.evaluate("location.hash"))
         check('L17 no backup reminder pops up on the Settings page', 'Backup reminder' not in (pg.evaluate("(document.getElementById('ix-toast') || {}).textContent || ''") or ''))
 
         pg.goto(s.base + '/web/settings/#health'); until(lambda: pg.evaluate("document.querySelectorAll('.ix-hcards.six .ix-hc').length") == 6, 20000)
