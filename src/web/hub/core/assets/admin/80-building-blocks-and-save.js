@@ -2,6 +2,9 @@
     var b = $('#ix-save'); if (b.disabled) return; b.disabled = true; b.textContent = 'Saving…';
     var fail = function (msg) { b.disabled = false; b.textContent = 'Save Settings'; $('#ix-sferr').textContent = msg; };
     var send = { siteName: draft.siteName, nav: draft.nav, theme: draft.theme, accent: draft.accent, accentPg: canonAccents(draft.accentPg), look: draft.look, homeBar: draft.homeBar, glass: draft.glass === true, glassFx: canonGfx(draft.glassFx), barRound: draft.barRound !== false, font: draft.font, fontCustom: draft.fontCustom, colors: draft.colors, tools: draft.tools, backupEvery: draft.backupEvery, pages: draft.pages || [], tz: draft.tz || 'Asia/Kolkata' };
+    /* (1.80.1) the message names what was changed */
+    var NAMES = { siteName: 'Site Name', nav: 'Navigation', theme: 'Theme', accent: 'Accent Color', accentPg: 'Page Colors', look: 'Look', homeBar: 'Bar on Home', glass: 'Glass Bar', glassFx: 'Glass Effects', barRound: 'Rounded Bar', font: 'Font', fontCustom: 'Custom Font', colors: 'Colors', tools: 'Tools', backupEvery: 'Backup Reminder', pages: 'Pages', tz: 'Time Zone' };
+    var changed = Object.keys(send).filter(function (k) { var a = JSON.stringify(send[k]), o = JSON.stringify(k === 'glass' ? S.glass === true : k === 'barRound' ? S.barRound !== false : k === 'accentPg' ? canonAccents(S.accentPg) : k === 'glassFx' ? canonGfx(S.glassFx) : k === 'pages' ? (S.pages || []) : k === 'tz' ? (S.tz || 'Asia/Kolkata') : S[k]); return a !== o; }).map(function (k) { return NAMES[k] || k; });
     api('settings', { settings: send }).then(function (j) {
       if (!j.ok || !j.state) {
         return fail(j._status === 401 ? 'You were logged out. Log in again, then save.' : j._status === 403 ? 'Security check failed. Reload the page, then save again.' : (j.error || 'Could not save (server answered ' + (j._status || 'nothing') + ').'));
@@ -13,7 +16,7 @@
       draft = JSON.parse(JSON.stringify(S));
       if (curSub) pane(curSub);   // the open section edits the new draft from here on
       var dr = document.getElementById('ix-drawer'); if (dr) dr.remove();   // the phone menu is drawn again with the new tab names
-      toast('Settings saved for every page.');
+      toast(changed.length ? 'Saved: ' + changed.slice(0, 4).join(', ') + (changed.length > 4 ? ' and ' + (changed.length - 4) + ' more' : '') + '.' : 'Settings saved. Nothing had changed.');
     }, function () { fail("Couldn't reach the server, so nothing was saved. Check your connection and save again."); });
   }
 

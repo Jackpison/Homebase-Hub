@@ -32,3 +32,11 @@ p{margin:0 0 14px;color:var(--mute)}
 .pwf label{position:absolute;left:-9999px}
 .pwf input{height:42px;min-width:220px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:0 12px;font:inherit}
 .pwf input:focus{outline:2px solid var(--acc);outline-offset:1px}
+/* (1.80.1) a gallery link */
+.card.gal{width:min(1100px,100%)}
+.galg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin:12px 0;text-align:left}
+.galc{margin:0;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg);display:grid;gap:8px;align-content:start;min-height:120px}
+.galc img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;cursor:pointer;background:var(--box)}
+.galc figcaption{font-size:13px;color:var(--mute);word-break:break-word}
+.galc.bad{border-color:var(--bad)}
+.btn.sm{height:32px;padding:0 14px;font-size:13px}

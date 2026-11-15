@@ -72,6 +72,15 @@
     /* (1.64.3) Encrypt first: "Encrypt All Private Tabs" has the word private and took the green lock of Hide From Visitors; now it keeps its own purple shield */
     [/encrypt|passphrase|recovery/i, 'M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6zM9.5 12.5h5v3.5h-5zM10.5 12.5v-1a1.5 1.5 0 0 1 3 0v1', '179,146,240'],
     [/only me|private|lock|password/i, 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3', '80,200,140'],
+    /* (1.80.1) Home Settings and Widgets: each row has an icon that fits it */
+    [/hide from visitors/i, 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3', '80,200,140'],
+    [/home tour|tour\b/i, 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z', '255,194,26'],
+    [/^\s*edit bar/i, 'M4 7h10M18 7h2M4 17h2M10 17h10M14 5v4M8 15v4', '179,146,240'],
+    [/countdown/i, 'M9 3h6M12 8v5l3 2M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16z', '255,107,129'],
+    [/world clock|time zone/i, 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18', '91,141,255'],
+    [/weather/i, 'M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9.5 4 4 0 0 1 17 18z', '76,201,240'],
+    [/pinned note|note\b/i, 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h4', '255,194,26'],
+    [/show the clock|^\s*clock/i, 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', '255,194,26'],
     [/google|icons?\b/i, 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18', '255,138,92'],
     [/colou?r|ribbon|accent|palette/i, 'M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2-.5-1.2.3-2.5 1.6-2.5H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5zM7.5 11h.01M10 7.5h.01M14.5 7.5h.01', '255,107,129'],
     [/visit|count|analytics/i, 'M5 20V10M12 20V4M19 20v-7', '91,141,255'],

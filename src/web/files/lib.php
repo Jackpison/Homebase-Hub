@@ -220,6 +220,12 @@ function fl_op_put_start(array &$d, string $p, string $m, string $k, int $c, int
     $out['id'] = $id;
     return '';
 }
+/** (1.80.1) The name a file is sent to Telegram under: no folders, no control characters, at most 120 characters, never empty. */
+function fl_tg_name($n): string {
+    $n = is_string($n) ? $n : ''; $n = str_replace(['\\', '/'], '-', $n); $n = preg_replace('/[\x00-\x1f\x7f]+/u', '', $n) ?? ''; $n = trim($n, " .\t");
+    if (mb_strlen($n) > 120) { $e = (string)pathinfo($n, PATHINFO_EXTENSION); $n = mb_substr($n, 0, 110) . ($e !== '' && strlen($e) <= 8 ? '.' . $e : ''); }
+    return $n === '' ? 'file' : $n;
+}
 /** (1.80.0) Resume: which pieces of an open upload are already on the server. null when that upload is not open. */
 function fl_put_have(array $d, string $id): ?array {
     $i = $d['items'][$id] ?? null;

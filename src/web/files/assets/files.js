@@ -270,7 +270,7 @@ function shown() {
   list.sort((a, b) => {
     if (tab === "files" && a.t !== b.t) return a.t === "d" ? -1 : 1;
     if (s === "date" || (tab === "recent" && !q)) return dateOf(b) - dateOf(a);
-    if (s === "size") return (sizeOf(b) || 0) - (sizeOf(a) || 0);
+    if (s === "size") return bytesOf(b) - bytesOf(a);
     return nameOf(a).localeCompare(nameOf(b), undefined, { numeric: true, sensitivity: "base" });
   });
   return list;
@@ -283,6 +283,14 @@ function passes(i) {
   if (i.t === "f" && dateF && dateOf(i) < Date.now() - +dateF * 86400000) return false;
   return true;
 }
+/** (1.80.1) how much a folder holds: every file inside it, folders within folders included (worked out once per list) */
+let fbCache = new Map();
+function folderBytes(id) {
+  if (fbCache.has(id)) return fbCache.get(id);
+  let n = 0; for (const k of D.items.filter(x => !x.up && x.p === id && (tab === "trash" ? x.del > 0 : x.del === 0))) n += k.t === "d" ? folderBytes(k.id) : (sizeOf(k) || 0);
+  fbCache.set(id, n); return n;
+}
+const bytesOf = i => i.t === "d" ? folderBytes(i.id) : (sizeOf(i) || 0);
 const icoOf = i => i.t === "d" ? "d" : kindOf(nameOf(i));
 /** (1.66.0) a file's type card (filecard.js); folders keep the folder icon */
 const FC = /** @type {any} */ (window).FileCard;
@@ -290,6 +298,7 @@ const icoBody = (i, size) => i.t === "d" || !FC ? svg(icoName(i)) : FC.make(name
 const icoName = i => i.t === "d" ? "folder" : ({ image: "image", video: "video", audio: "audio", pdf: "pdf", text: "text", zip: "zip" }[kindOf(nameOf(i))] || "file");
 
 function render() {
+  fbCache = new Map();
   $("tn").textContent = trashed().length ? " " + trashed().length : "";
   for (const b of $("tabs").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.t === tab));
   for (const b of $("vsw").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.v === D.settings.view));
@@ -389,6 +398,20 @@ async function storageBox() {
   box.append(sec("Files That Look the Same", st.dups.length ? "Frees " + fmt(extra) : "", st.dups.length ? h("div", { id: "stdup" }, h("p", { class: "hint", text: st.dups.slice(0, 4).map(g => nameOf(g[0]) + " (" + g.length + " copies)").join(", ") + (st.dups.length > 4 ? ", …" : "") + ". Same name (numbers like (2) ignored) and same size." }), h("button", { type: "button", class: "btn", id: "stdel", text: "Move Extra Copies to the Trash", onclick: () => go(() => trash(st.dups.flatMap(g => g.slice(1).map(f => f.id)))) }), h("p", { class: "hint", text: "The oldest copy stays. The rest go to the Trash, where you can bring them back." })) : h("p", { class: "hint", id: "stdup", text: "None found." })));
   await openDialog("Storage", box, [{ text: "Done", pri: true, run: () => {} }], { frame: true });
 }
+/** (1.80.1) Send to Telegram. This is the one place a file leaves locked: it is opened here and sent readable through your server to your own Telegram chat, so it asks first. */
+async function sendTelegram(i) {
+  if (!await ensureKey()) return;
+  if ((sizeOf(i) || 0) > 49 * 1048576) return toast("Telegram bots can send at most 50 MB.", true);
+  const ok = await confirmBox("Send to Telegram?", "Your files are locked on your server. To send " + nameOf(i) + ", this browser opens it and sends the readable file through your server to your Telegram chat. Telegram will keep a readable copy. Send it?", "Send It");
+  if (!ok) return;
+  const p = progress("Sending " + nameOf(i), nameOf(i), sizeOf(i));
+  try {
+    const r = await readFile(i, "application/octet-stream", n => p.add(n, sizeOf(i) || 1));
+    const res = await HF("api.php?action=tg_send&name=" + encodeURIComponent(nameOf(i)), { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: r.blob }), j = await res.json().catch(() => ({}));
+    if (!j.ok) throw new Error(j.error || "Telegram did not take it.");
+    p.done("Sent to Telegram"); toast("Sent: " + nameOf(i) + ". Check Telegram.");
+  } catch (e) { p.fail(why(e)); }
+}
 /** (1.80.0) Open a stored file in Tools: it is opened here, handed over through the browser's own storage (the same way Share from the phone does), and never sent anywhere */
 async function openInTools(i) {
   if (!await ensureKey()) return;
@@ -458,7 +481,7 @@ function row(i) {
   const isD = i.t === "d", name = nameOf(i), sz = sizeOf(i), at = dateOf(i);
   const where = q && i.p ? pathOf(i.p).map(nameOf).join(" / ") : "";
   const left = tab === "trash" ? Math.max(0, Math.ceil((i.del + D.settings.trashDays * 86400 - Date.now() / 1000) / 86400)) : 0;
-  const sub = tab === "trash" ? "Removed for good in " + left + (left === 1 ? " day" : " days") : (isD ? "Folder" : fmt(sz)) + " · " + when(at) + (where ? " · in " + where : "");
+  const sub = tab === "trash" ? "Removed for good in " + left + (left === 1 ? " day" : " days") : (isD ? "Folder · " + fmt(bytesOf(i)) : fmt(sz)) + " · " + when(at) + (where ? " · in " + where : "");
   const ck = h("input", { type: "checkbox", class: "ck", "aria-label": "Pick " + name, checked: sel.has(i.id), onchange: e => { anchor = cur = i.id; e.target.checked ? sel.add(i.id) : sel.delete(i.id); row.sync(); } });
   const open = h("button", { type: "button", class: "nm", title: name, onclick: ev => { cur = i.id; if (ev.shiftKey && anchor) return range(i.id); if (ev.ctrlKey || ev.metaKey) { anchor = i.id; sel.has(i.id) ? sel.delete(i.id) : sel.add(i.id); return row.sync(); } anchor = i.id; if (i.t === "d" || tab === "trash") return openItem(i); pick1(i.id); } },
     h("span", { class: "ico " + icoOf(i) + lbCls(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, D.settings.view === "grid" ? "m" : "s")), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, (meta(i) || {}).lb && i.t !== "d" ? h("span", { class: "lbd lb-" + (meta(i) || {}).lb, role: "img", "aria-label": "Label: " + (meta(i) || {}).lb }) : null, (meta(i) || {}).nt ? h("span", { class: "ntm", title: (meta(i) || {}).nt, role: "img", "aria-label": "Has a note", text: "✎" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
@@ -469,7 +492,7 @@ function row(i) {
     h("button", { type: "button", class: "ib qb", "aria-label": "Download " + name, title: "Download", onclick: e => { e.stopPropagation(); download([i.id]); } }, svg("down")),
     i.t === "f" ? h("button", { type: "button", class: "ib qb", "aria-label": ((meta(i) || {}).st ? "Unstar " : "Star ") + name, title: "Star", "aria-pressed": String(!!(meta(i) || {}).st), onclick: e => { e.stopPropagation(); star(i); } }, svg("star")) : null);
   const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : "") + (cur === i.id ? " cur" : ""), "data-id": i.id, draggable: tab === "trash" ? null : "true", ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); e.stopPropagation(); cur = i.id; if (!sel.has(i.id)) { sel.clear(); sel.add(i.id); row.sync(); } menu(more, i, { x: e.clientX, y: e.clientY }); } },
-    ck, open, h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" + shareFlags(i) : "Only you" }), h("span", { class: "cell sz num", text: isD ? "" : fmt(sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), quick, more, h("span", { class: "cell meta", text: sub }));
+    ck, open, h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" + shareFlags(i) : "Only you" }), h("span", { class: "cell sz num", text: fmt(isD ? bytesOf(i) : sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), quick, more, h("span", { class: "cell meta", text: sub }));
   if (D.settings.view === "grid") { const ic = open.querySelector(".ico"); if (ic) queueMicrotask(() => thumbWatch(ic, i)); }
   return el;
 }
@@ -526,7 +549,7 @@ function details() {
     m.nt ? h("p", { class: "dnote", text: m.nt }) : null,
     h("div", { class: "locknote" }, svg("lock"), "Locked in your browser. The server can't read it."),
     h("dl", {}, h("dt", { text: "Type" }), h("dd", { text: isD ? "Folder" : (KIND[kindOf(name)] || (/\.([A-Za-z0-9]{1,8})$/.exec(name) || [, "File"])[1].toUpperCase() + " file") }),
-      isD ? null : h("dt", { text: "Size" }), isD ? null : h("dd", { text: fmt(sizeOf(i)) }),
+      h("dt", { text: "Size" }), h("dd", { text: fmt(bytesOf(i)) }),
       h("dt", { text: "Modified" }), h("dd", { text: when(dateOf(i)) }), h("dt", { text: "Location" }), h("dd", { text: "My Files" + (where ? " / " + where : "") })),
     !isD && D.settings.shares ? h("div", { class: "shb" }, h("b", { text: "Share link" }), h("small", { text: shares ? shares + " active. Anyone with a link opens this file." : "None yet. Anyone with a link can open this file." }), h("button", { type: "button", class: "btn", onclick: () => shareBox(i) }, shares ? "Manage Links" : "Make a Link")) : null);
 }
@@ -566,7 +589,7 @@ function menu(anchor, i, at) {
     if (i.t === "f" && D.settings.shares) acts.push(["share", "Share Link", () => shareBox(i)]);
     const mine = D.shares.filter(x => x.id === i.id);
     if (i.t === "f" && mine.length) acts.push(["link", "Copy Share Link", async () => { try { await navigator.clipboard.writeText(await linkOf(i, mine[mine.length - 1].token)); toast("Link copied."); } catch (e) { toast("Could not copy. Open Share Link instead.", true); } }]);
-    if (i.t === "f") acts.push(["file", "Open in Tools", () => openInTools(i)]);
+    if (i.t === "f") acts.push(["file", "Open in Tools", () => openInTools(i)], ["share", "Send to Telegram", () => sendTelegram(i)]);
     acts.push(["edit", "Label and Note", () => labelBox(i)]);
     if (i.t === "f") acts.push(["star", (meta(i) || {}).st ? "Remove Star" : "Star", () => star(i)]);
     if (i.t === "d") acts.push(["folder", (meta(i) || {}).pin ? "Unpin from Sidebar" : "Pin to Sidebar", () => pin(i)]);
@@ -594,6 +617,8 @@ function bulk() {
   if (tab === "trash") b.append(btn("Restore", () => restore(ids)), btn("Delete Forever", () => purge(ids), { danger: true }));
   else {
     b.append(btn("Download", () => download(ids)), btn("Move", () => moveBox(ids)));
+    const pics = ids.map(id => byId.get(id)).filter(x => x && x.t === "f" && kindOf(nameOf(x)) === "image");
+    if (D.settings.shares && ids.length > 1 && pics.length === ids.length && ids.length <= 20) b.append(btn("Share as Gallery", () => galleryBox(pics)));
     if (ids.length === 1 && byId.get(ids[0]).t === "f" && D.settings.shares) b.append(btn("Share Link", () => shareBox(byId.get(ids[0]))));
     b.append(btn("Move to Trash", () => trash(ids), { danger: true }));
   }
@@ -1004,6 +1029,31 @@ let qrLoad = null;
 function qrMake(text, into) {
   if (!qrLoad) qrLoad = new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "../hub/core/assets/vendor/qrcode.js"; sc.onload = res; sc.onerror = rej; document.head.append(sc); });
   return qrLoad.then(() => { const q = /** @type {any} */ (window).qrcode(0, "M"); q.addData(text); q.make(); into.innerHTML = q.createImgTag(5, 8); const im = into.querySelector("img"); if (im) im.setAttribute("alt", "QR code of the link"); }).catch(() => { into.textContent = "Could not make the QR code."; });
+}
+/** (1.80.1) One link for several pictures: each picture gets its own share link (same end date, limit and password), and the gallery link holds them all */
+async function galleryBox(pics) {
+  if (!await ensureKey()) return;
+  const exp = h("select", { id: "gexp", "aria-label": "Link ends" }, [["0", "Never"], ["86400", "After 1 day"], ["604800", "After 7 days"], ["2592000", "After 30 days"]].map(o => h("option", { value: o[0], text: o[1] })));
+  const pw = h("input", { type: "password", id: "gpw", autocomplete: "new-password", placeholder: "No password", "aria-label": "Password" });
+  const out = h("div", { class: "links" });
+  await openDialog("Share " + pics.length + " Pictures", [h("p", { text: "Makes one link that shows all " + pics.length + " pictures together. Each picture also has its own link, so you can remove them one by one in Shared Links. Pictures stay locked in your browser: the keys are in the link, after the #." }),
+    h("div", { class: "shend" }, h("label", { for: "gexp", text: "The link ends" }), exp, h("label", { for: "gpw", text: "Password (optional)" }), pw), out],
+  [{ text: "Make the Gallery Link", pri: true, left: true, run: async () => {
+    const ts = [], ks = [];
+    for (const i of pics) {
+      const raw = await rawKeyOf(i), fk = await fileKey(raw, ["encrypt"]), m1 = meta(i) || { n: nameOf(i), s: sizeOf(i) };
+      const body = { id: i.id, sm: await V.seal(fk, JSON.stringify({ n: m1.n, ty: m1.ty || "", s: m1.s })), exp: +exp.value ? Math.floor(Date.now() / 1000) + +exp.value : 0, lim: 0 };
+      if (pw.value) body.pw = await shareProof(pw.value, raw);
+      const j = await post("share_create", body); if (!j.ok) { derr(j.error); raw.fill(0); return false; }
+      ts.push(j.token); ks.push(b64u(raw)); raw.fill(0);
+    }
+    const u = new URL("share.html", location.href); u.searchParams.set("t", ts.join(",")); u.hash = ks.join(",");
+    await refresh();
+    const fld = h("div", { class: "uf-host" }); fld.innerHTML = HUB.linkField({ value: u.href, prefix: "Link", readonly: true, label: "Gallery link" });
+    out.replaceChildren(h("div", { class: "lk" }, h("div", { class: "meta", text: "Gallery link for " + pics.length + " pictures" }), h("div", { class: "linkbox" }, fld)));
+    try { await navigator.clipboard.writeText(u.href); toast("Gallery link made and copied."); } catch (e) { toast("Gallery link made."); }
+    return false;
+  } }, { text: "Done", run: () => {} }]);
 }
 async function shareBox(i) {
   if (!await ensureKey()) return;

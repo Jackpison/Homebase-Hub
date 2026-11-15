@@ -25,8 +25,73 @@ const MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "im
 const TEXT = ["txt", "md", "csv", "json", "log", "xml", "html", "css", "js", "py", "php", "sh", "yml", "yaml", "ini", "tsv"];
 const fail = t => { $("name").textContent = "This link does not work"; $("info").textContent = ""; $("err").textContent = t; document.title = "Link Ended"; };
 
+/** (1.80.1) A gallery link: ?t=T1,T2,...#K1,K2,... (up to 20 pictures). Each picture is its own share link; this page shows them together. */
+const proofOf = async (password, raw) => {
+  const salt = new Uint8Array(raw.length + 12); salt.set(new TextEncoder().encode("hub-share-pw"), 0); salt.set(raw, 12);
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 150000 }, base, 256));
+  return btoa(String.fromCharCode(...bits)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+async function gallery(ts, keys) {
+  const app = $("app"); document.title = "Shared Pictures";
+  $("name").textContent = "Shared Pictures"; $("info").textContent = "Opening…"; app.classList.add("gal");
+  $("dl").hidden = true;
+  const grid = document.createElement("div"); grid.className = "galg"; $("pv").after(grid);
+  let password = "";
+  const items = ts.map((t, i) => ({ t, raw: ub64u(keys[i]), proof: "" }));
+  const open = async it => {
+    const fk = await crypto.subtle.importKey("raw", it.raw, "AES-GCM", false, ["decrypt"]);
+    const hd = /** @type {Record<string, string>} */ (it.proof ? { "X-Share-Proof": it.proof } : {});
+    let r = await fetch("api.php?action=s_meta&t=" + it.t, { cache: "no-store", headers: hd });
+    let j = await r.json().catch(() => ({}));
+    if (j.pw && !it.proof) {
+      if (!password) { $("pwf").hidden = false; $("name").textContent = "These Pictures Have a Password"; $("info").textContent = "Type the password you were given."; password = await new Promise(res => { $("pwf").onsubmit = ev => { ev.preventDefault(); res($("pw").value); }; }); $("pwf").hidden = true; }
+      it.proof = await proofOf(password, it.raw); return open(it);
+    }
+    if (r.status === 403) { password = ""; it.proof = ""; $("err").textContent = j.error || "That password is not right."; return open(it); }
+    if (!r.ok) throw new Error("ended");
+    const w = ub64(j.sm.slice(5)), info = JSON.parse(td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: w.subarray(0, 12) }, fk, w.subarray(12))));
+    const name = String(info.n || "file"), size = +info.s || 0;
+    const bytes = async () => {
+      const parts = [];
+      for (let k = 0; k < j.c; k++) {
+        const p = await fetch("api.php?action=s_chunk&t=" + it.t + "&n=" + k, { cache: "no-store", headers: hd });
+        if (!p.ok) throw new Error("Could not download (" + p.status + ").");
+        const d = new Uint8Array(await p.arrayBuffer());
+        parts.push(new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: d.subarray(0, 12), additionalData: aad(k, j.c) }, fk, d.subarray(12))));
+      }
+      return parts;
+    };
+    return { name, size, bytes };
+  };
+  const save = (blob, name) => { const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); };
+  const loaded = [];
+  for (const it of items) {
+    const card = document.createElement("figure"); card.className = "galc"; const cap = document.createElement("figcaption"); card.append(cap); grid.append(card);
+    try {
+      const f = await open(it); loaded.push(f); cap.textContent = f.name + " · " + fmt(f.size);
+      const e = ext(f.name), isImg = MIME[e] && MIME[e].startsWith("image/");
+      if (isImg && f.size <= 25 * 1024 * 1024) {
+        const img = document.createElement("img"); img.alt = f.name; img.loading = "lazy"; card.prepend(img);
+        f.bytes().then(parts => { const b = new Blob(parts, { type: MIME[e] }); img.src = URL.createObjectURL(b); img.onclick = () => save(b, f.name); img.title = "Download " + f.name; }).catch(x => { cap.textContent = f.name + " · " + why(x); });
+      }
+      const b = document.createElement("button"); b.type = "button"; b.className = "btn sm"; b.textContent = "Download"; b.setAttribute("aria-label", "Download " + f.name);
+      b.onclick = async () => { b.disabled = true; try { save(new Blob(await f.bytes(), { type: MIME[e] || "application/octet-stream" }), f.name); } catch (x) { $("err").textContent = why(x); } b.disabled = false; };
+      card.append(b);
+    } catch (x) { cap.textContent = why(x) === "ended" ? "This link has ended." : why(x); card.classList.add("bad"); }
+  }
+  $("err").textContent = ""; $("name").textContent = "Shared Pictures"; $("info").textContent = loaded.length + (loaded.length === 1 ? " file" : " files");
+}
+
 async function main() {
-  const t = new URLSearchParams(location.search).get("t") || "", key = location.hash.slice(1);
+  const tq = new URLSearchParams(location.search).get("t") || "";
+  if (tq.includes(",")) {
+    const ts = tq.split(","), ks = location.hash.slice(1).split(",");
+    if (ts.length > 20 || ts.length !== ks.length || !ts.every(x => /^[A-Za-z0-9_-]{32}$/.test(x)) || !ks.every(x => /^[A-Za-z0-9_-]{43}$/.test(x))) return fail("This link is not complete. Ask for it again, and copy the whole address.");
+    if (!(window.isSecureContext && crypto && crypto.subtle)) return fail("Opening a locked file needs a secure (https) connection.");
+    return gallery(ts, ks);
+  }
+  const t = tq, key = location.hash.slice(1);
   if (!/^[A-Za-z0-9_-]{32}$/.test(t) || !/^[A-Za-z0-9_-]{43}$/.test(key)) return fail("This link is not complete. Ask for it again, and copy the whole address.");
   if (!(window.isSecureContext && crypto && crypto.subtle)) return fail("Opening a locked file needs a secure (https) connection.");
   let fk;

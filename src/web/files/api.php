@@ -122,6 +122,24 @@ if ($action === 'put_chunk') {
     hub_json(200, ['ok' => true]);
 }
 
+/* ---------- (1.80.1) Send to Telegram: the browser opened the file and sends it readable, on purpose, after asking you. Only the logged-in owner, only to the chat set up in Telegram Setup. ---------- */
+if ($action === 'tg_send') {
+    require_once __DIR__ . '/../hub/core/lib/notify.php';
+    $d = nt_load();
+    if (empty($d['token']) || empty($d['chat'])) hub_json(400, ['ok' => false, 'error' => 'Telegram is not set up. Open Settings, Telegram Setup first.']);
+    $body = (string)file_get_contents('php://input', false, null, 0, 50 * 1048576 + 1);
+    if (strlen($body) > 49 * 1048576) hub_json(413, ['ok' => false, 'error' => 'Telegram bots can send at most 50 MB.']);
+    if ($body === '') hub_json(400, ['ok' => false, 'error' => 'There was nothing to send.']);
+    $name = fl_tg_name($_GET['name'] ?? '');
+    $tmp = fl_dir() . '/tg-' . bin2hex(random_bytes(6)) . '.tmp';
+    if (@file_put_contents($tmp, $body) === false) hub_json(500, ['ok' => false, 'error' => 'Could not write a temporary file.']);
+    $r = nt_tg_file((string)$d['token'], (string)$d['chat'], $tmp, $name, '📎 ' . nt_h($name));
+    @unlink($tmp);
+    if (empty($r['ok'])) hub_json(502, ['ok' => false, 'error' => (string)($r['description'] ?? 'Telegram refused the file.')]);
+    hub_act('files', 'Sent a file to Telegram');
+    hub_json(200, ['ok' => true]);
+}
+
 $raw = (string)file_get_contents('php://input', false, null, 0, 262145);
 if (strlen($raw) > 262144) hub_json(413, ['ok' => false, 'error' => 'Too much data.']);
 $b = json_decode($raw, true);

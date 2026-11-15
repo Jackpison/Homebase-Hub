@@ -416,15 +416,17 @@ $("form").addEventListener("submit",()=>{
   const v={owner:$("owner").value,bank:$("bank").value.trim(),name:$("name").value.trim(),
     network:$("network").value.trim(),variant:$("variant").value.trim(),type:$("type").value,kind:$("kind").value,expiry:normExp($("expiry").value)||"",
     limit:num($("limit").value),fee:num($("fee").value),remark:$("remark").value.trim(),url:safeUrl($("url").value)};
+  const was=!!editing,nm=[v.bank,v.name].filter(Boolean).join(" ")||"Card";
   if(editing)Object.assign(editing,v);
   else D.push({id:Math.max(-1,...D.map(c=>c.id))+1,...v});
   persist();render();
+  if(window.HUB)HUB.toast((was?"Card saved: ":"Card added: ")+nm+".");   // (1.80.1) says which card
 });
 $("expiry").addEventListener("input",()=>{const v=$("expiry").value;$("expiry").setCustomValidity(v.trim()===""||normExp(v)!==null?"":"Use MM/YYYY, for example 03/2033")});
 $("del").onclick=()=>{
   const gone=editing,at=D.indexOf(gone);D=D.filter(c=>c!==gone);persist();dlg.close();render();
   // (1.61.9) a deleted card can come back for 7 seconds: Undo puts it where it was and saves again
-  if(window.HUB)HUB.undo("Card deleted.",()=>{if(!D.includes(gone))D.splice(Math.max(0,Math.min(at,D.length)),0,gone);persist();render()});
+  if(window.HUB)HUB.undo("Card deleted: "+([gone.bank,gone.name].filter(Boolean).join(" ")||"Card")+".",()=>{if(!D.includes(gone))D.splice(Math.max(0,Math.min(at,D.length)),0,gone);persist();render()});
 };
 
 $("hlist").addEventListener("input",e=>{const x=e.target.closest("[data-hi]");if(x){HD[+x.dataset.hi].name=x.value;$("hmsg").textContent=""}});

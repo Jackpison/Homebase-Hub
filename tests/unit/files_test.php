@@ -254,3 +254,8 @@ t('a second one in the same minute is not (100 uploads are one line)', fl_act('u
 t('another kind is still written', fl_act('trashed', $now + 30) === true);
 t('the same kind a minute later is written again', fl_act('uploaded', $now + 61) === true);
 t('the words are plain and hold no name', FL_ACT_WORDS['uploaded'] === 'Uploaded files' && count(FL_ACT_WORDS) === 5);
+
+// ---- (1.80.1) the name a file is sent to Telegram under ----
+t('a Telegram file name loses folders and control characters', fl_tg_name("a/b\\c\x07d.txt") === 'a-b-cd.txt');
+t('an empty or odd name becomes "file"', fl_tg_name('') === 'file' && fl_tg_name(' .. ') === 'file' && fl_tg_name(null) === 'file');
+t('a long name is cut to about 120 characters and keeps its ending', mb_strlen(fl_tg_name(str_repeat('x', 300) . '.pdf')) <= 121 && substr(fl_tg_name(str_repeat('x', 300) . '.pdf'), -4) === '.pdf');

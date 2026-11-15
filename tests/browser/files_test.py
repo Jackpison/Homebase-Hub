@@ -406,6 +406,28 @@ try:
         check('B102 on a phone, the actions for picked items sit in a bar at the bottom of the screen', bp[0] == 'fixed' and bp[1] > bp[2] * 0.6, bp)
         pg.set_viewport_size({'width': 1280, 'height': 900}); pg.keyboard.press('Escape')
 
+        # ---- (1.80.1) a folder shows how much it holds ----
+        pg.reload(wait_until='domcontentloaded'); wait_names(pg, ['Docs', 'trip'])
+        fsz = pg.evaluate("[...document.querySelectorAll('#list .row')].filter(r => r.querySelector('.nm').title === 'trip').map(r => r.querySelector('.sz').textContent)[0]")
+        check('B103 a folder shows the size of everything inside it, folders in folders included ("trip" holds 3 B + 3 B)', fsz == '6 B', fsz)
+
+        # ---- (1.80.1) a gallery link for several pictures ----
+        pg.reload(wait_until='domcontentloaded'); wait_names(pg, ['photo.png'])
+        pics = [n for n in names(pg) if n.lower().endswith('.png')][:2]
+        for n in pics: row(pg, n).locator('.ck').check()
+        pg.click('#bulk button:has-text("Share as Gallery")'); pg.wait_for_selector('#dform button:has-text("Make the Gallery Link")')
+        pg.fill('#gpw', 'gallery pass'); pg.click('#dform button:has-text("Make the Gallery Link")'); pg.wait_for_selector('#dform .linkbox input', timeout=30000)
+        glink = pg.locator('#dform .linkbox input').first.input_value()
+        check('B104 the gallery link holds one token and one key for each picture', len(pics) == 2 and re.search(r'share\.html\?t=[A-Za-z0-9_-]{32},[A-Za-z0-9_-]{32}#[A-Za-z0-9_-]{43},[A-Za-z0-9_-]{43}$', glink), glink)
+        pg.click('#dform .act button:has-text("Done")')
+        v4 = b.new_context(viewport={'width': 1100, 'height': 800}); vp4 = v4.new_page(); e4 = []; page_errors(vp4, e4)
+        vp4.goto(glink); vp4.wait_for_selector('#pwf:not([hidden])', timeout=15000); vp4.fill('#pw', 'gallery pass'); vp4.click('#pwf button')
+        until(lambda: vp4.evaluate("document.querySelectorAll('.galg img[src^=blob]').length") == 2, 40000)
+        check('B105 the gallery page asks for the password once, then shows both pictures', vp4.evaluate("document.querySelectorAll('.galg img[src^=blob]').length") == 2 and 'Shared Pictures' in vp4.inner_text('#name'), vp4.inner_text('#info'))
+        check('B106 each picture is captioned with its name', all(n in vp4.inner_text('.galg') for n in pics), vp4.inner_text('.galg'))
+        check('B107 no page error on the gallery page', not e4, e4)
+        pg.keyboard.press('Escape')
+
         check('B39 no page error and no blocked request in all of it', not errs and not csp, (errs, csp))
         b.close()
 finally:
