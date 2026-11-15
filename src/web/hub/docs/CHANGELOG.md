@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.6 | One button hover everywhere, the Alerts dot works, Info says what it did, Logs keep 30 days in pages of 100 |
 | 1.80.5 | A dot on the alerts bell as soon as anything happens, the new button hover on buttons that had their own hover (Cancel, Check for Update and the like), and Tools icons as solid gradient tiles |
 | 1.80.4 | A new button hover (main buttons sweep a lighter fill, others tint), Files columns with Last Modified time and Access, hover actions before Size, solid folder tiles, and a framed Share window with clearer text |
 | 1.80.3 | Files list reordered (Name, Size, Star, Modified, Access) with hover actions, details closed until you pick one, HEIC counts as a picture, Home date and a smaller, centred clock, and one lift-and-shadow button hover on every page |
@@ -173,6 +174,31 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.6
+
+### Buttons
+
+- Every button now has the same hover: a colour fills in from the left and the text turns to match. The old diagonal sweep from the bottom right is gone, including in Import, Export, Cancel and Check for Update.
+- The Colors window in Links is tidy again (its rows no longer overlap).
+
+### Alerts
+- The bell shows a dot as soon as a new message arrives, even when many old ones are kept.
+- Info now says what it did: boxes added, deleted or saved, tabs added or deleted, and settings saved with the names of what changed.
+- The bar now reads Theme, Alerts, Backup, Settings.
+
+### Logs
+- Notifications and Activity keep 30 days instead of the last 300 (never more than 3000 lines, so they stay small).
+- Both lists show 100 lines to a page, with Previous and Next.
+
+### Settings
+- The Time Zone list shows its whole name (for example India Standard Time, IST (UTC+5:30)).
+- The Site Address card is gone from General; it showed the address twice and is not needed.
+
+### Tools
+- The icons in Tools match the new tile look.
 
 ---
 
