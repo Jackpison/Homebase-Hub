@@ -145,12 +145,33 @@ const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n+
 const crcUp = (c, u) => { c ^= 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
 async function rawKeyOf(item) { return ub64(await SITE.open(item.k)); }
 
+/* (1.80.2) Keep on This Device: the file's locked pieces (the same bytes the server holds) are copied into this browser's storage, so the file opens with no
+   connection. Opening one still needs your key unlocked on this device. The last list is kept too (only while a file is kept) so the page can show names offline. */
+let offView = false;
+const OFF = "hub-files-offline", OFFSET = new Set(), offUrl = (id, n) => new URL("api.php?action=chunk&id=" + id + "&n=" + n, location.href).href, offMark = id => new URL("api.php?kept=" + id, location.href).href, offList = () => new URL("api.php?action=list", location.href).href;
+const offCache = () => ("caches" in window ? caches.open(OFF).catch(() => null) : Promise.resolve(null));
+async function offScan() { OFFSET.clear(); const c = await offCache(); if (!c) return; for (const r of await c.keys()) { const m = /api\.php\?kept=([A-Za-z0-9_-]+)$/.exec(r.url); if (m) OFFSET.add(m[1]); } }
+async function offKeep(i) {
+  const c = await offCache(); if (!c) { toast("This browser cannot keep files offline.", true); return; }
+  toast("Keeping " + nameOf(i) + " on this device…");
+  try {
+    for (let n = 0; n < i.c; n++) { const r = await HF("api.php?action=chunk&id=" + i.id + "&n=" + n, { cache: "no-store" }); if (!r.ok) throw new Error("Could not download (" + r.status + ")."); await c.put(offUrl(i.id, n), r); }
+    await c.put(offMark(i.id), new Response("1")); OFFSET.add(i.id); toast(nameOf(i) + " is kept on this device."); offSaveList();
+  } catch (e) { for (let n = 0; n < i.c; n++) await c.delete(offUrl(i.id, n)); toast((e && /** @type {any} */ (e).message) || "Could not keep it.", true); }
+  finally { render(); }
+}
+async function offDrop(ids) { const c = await offCache(); if (!c) return; for (const id of ids) { const i = byId.get(id); for (let n = 0; n < ((i && i.c) || 1); n++) await c.delete(offUrl(id, n)); await c.delete(offMark(id)); OFFSET.delete(id); } if (!OFFSET.size) await c.delete(offList()); }
+async function offSaveList() { const c = await offCache(); if (c && OFFSET.size) try { await c.put(offList(), new Response(JSON.stringify(D), { headers: { "Content-Type": "application/json" } })); } catch (e) { /* the list is a convenience */ } }
+async function offGet(id, n) { const c = await offCache(); return c ? c.match(offUrl(id, n)) : undefined; }
 /* A whole file, opened: {blob, crc, size}. Pieces are fetched one after the other, so a big file never has two copies in memory. */
 async function readFile(item, type, onBytes) {
   const raw = await rawKeyOf(item), fk = await fileKey(raw, ["decrypt"]); raw.fill(0);
   const parts = []; let crc = 0, size = 0;
   for (let i = 0; i < item.c; i++) {
-    const r = await HF("api.php?action=chunk&id=" + item.id + "&n=" + i, { cache: "no-store" });
+    /** @type {Response | undefined} */ let r;
+    try { r = await HF("api.php?action=chunk&id=" + item.id + "&n=" + i, { cache: "no-store" }); } catch (e) { r = undefined; }
+    if (!r || (!r.ok && r.status >= 500)) { const k = await offGet(item.id, i); if (k) r = k; }
+    if (!r) throw new Error("No connection, and this file is not kept on this device.");
     if (!r.ok) throw new Error(r.status === 404 ? "A piece of this file is missing on the server." : "Could not download (" + r.status + ").");
     const plain = new Uint8Array(await openPiece(fk, new Uint8Array(await r.arrayBuffer()), i, item.c).catch(() => { throw new Error("This file did not open: it was changed, or your key does not fit."); }));
     crc = crcUp(crc, plain); size += plain.length; parts.push(plain); if (onBytes) onBytes(plain.length);
@@ -359,7 +380,7 @@ function render() {
       : [h("b", { text: cwd ? "This folder is empty" : "No files yet" }), "Drag files here, or press New, then Upload. Everything is locked in your browser before it is sent.", cwd ? null : h("div", { style: "margin-top:12px" }, h("button", { type: "button", class: "btn pri", text: "Upload Your First File", onclick: () => $("pick").click() }))]));
   }
   bulk(); usage(); details();
-  $("sync").textContent = D.items.length ? "Saved on your server, locked" : "";
+  $("sync").textContent = offView ? "Offline: showing the last list. Files kept on this device still open." : D.items.length ? "Saved on your server, locked" : "";
 }
 
 /** (1.80.0) Resume: uploads the server still holds half of (the tab was closed, the network dropped). Pick the same file again and only the missing pieces are sent. */
@@ -505,7 +526,7 @@ function row(i) {
   const sub = tab === "trash" ? "Removed for good in " + left + (left === 1 ? " day" : " days") : (isD ? "Folder · " + fmt(bytesOf(i)) : fmt(sz)) + " · " + when(at) + (where ? " · in " + where : "");
   const ck = h("input", { type: "checkbox", class: "ck", "aria-label": "Pick " + name, checked: sel.has(i.id), onchange: e => { anchor = cur = i.id; e.target.checked ? sel.add(i.id) : sel.delete(i.id); row.sync(); } });
   const open = h("button", { type: "button", class: "nm", title: name, onclick: ev => { cur = i.id; if (ev.shiftKey && anchor) return range(i.id); if (ev.ctrlKey || ev.metaKey) { anchor = i.id; sel.has(i.id) ? sel.delete(i.id) : sel.add(i.id); return row.sync(); } anchor = i.id; if (i.t === "d" || tab === "trash") return openItem(i); pick1(i.id); } },
-    h("span", { class: "ico " + icoOf(i) + lbCls(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, D.settings.view === "grid" ? "m" : "s")), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, (meta(i) || {}).lb && i.t !== "d" ? h("span", { class: "lbd lb-" + (meta(i) || {}).lb, role: "img", "aria-label": "Label: " + (meta(i) || {}).lb }) : null, (meta(i) || {}).nt ? h("span", { class: "ntm", title: (meta(i) || {}).nt, role: "img", "aria-label": "Has a note", text: "✎" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
+    h("span", { class: "ico " + icoOf(i) + lbCls(i) + (i.t === "d" ? "" : " fc") }, icoBody(i, D.settings.view === "grid" ? "m" : "s")), h("span", { class: "t" }, name, (meta(i) || {}).st ? h("span", { class: "stm", "aria-label": "Starred", text: "★" }) : null, OFFSET.has(i.id) ? h("span", { class: "stm offm", title: "Kept on this device", "aria-label": "Kept on this device", text: "⬇" }) : null, (meta(i) || {}).lb && i.t !== "d" ? h("span", { class: "lbd lb-" + (meta(i) || {}).lb, role: "img", "aria-label": "Label: " + (meta(i) || {}).lb }) : null, (meta(i) || {}).nt ? h("span", { class: "ntm", title: (meta(i) || {}).nt, role: "img", "aria-label": "Has a note", text: "✎" }) : null, where && tab === "files" ? h("small", { text: "in " + where }) : null));
   const more = h("button", { type: "button", class: "ib more", "aria-label": "More for " + name, "aria-haspopup": "menu", onclick: e => menu(e.currentTarget, i) }, svg("more"));
   const shared = D.shares.some(x => x.id === i.id);
   const quick = tab === "trash" ? null : h("span", { class: "qa" },
@@ -610,6 +631,7 @@ function menu(anchor, i, at) {
     if (i.t === "f" && D.settings.shares) acts.push(["share", "Share Link", () => shareBox(i)]);
     const mine = D.shares.filter(x => x.id === i.id);
     if (i.t === "f" && mine.length) acts.push(["link", "Copy Share Link", async () => { try { await navigator.clipboard.writeText(await linkOf(i, mine[mine.length - 1].token)); toast("Link copied."); } catch (e) { toast("Could not copy. Open Share Link instead.", true); } }]);
+    if (i.t === "f" && "caches" in window) acts.push(["down", OFFSET.has(i.id) ? "Remove from This Device" : "Keep on This Device", async () => { if (OFFSET.has(i.id)) { await offDrop([i.id]); toast("Removed from this device."); render(); } else offKeep(i); }]);
     if (i.t === "f") acts.push(["file", "Open in Tools", () => openInTools(i)], ["share", "Send to Telegram", () => sendTelegram(i)]);
     acts.push(["edit", "Label and Note", () => labelBox(i)]);
     if (i.t === "f") acts.push(["star", (meta(i) || {}).st ? "Remove Star" : "Star", () => star(i)]);
@@ -763,6 +785,7 @@ async function trash(ids) {
 }
 async function restore(ids) { sel.clear(); await run(post("restore", { ids }), "Restored."); }
 async function purge(ids) {
+  offDrop(ids);
   if (!await confirmBox("Delete Forever?", ids.length === 1 ? "This can't be undone." : "These " + ids.length + " items can't be brought back.", "Delete Forever", true)) return;
   sel.clear(); await run(post("purge", { ids }), "Deleted.");
 }
@@ -1204,10 +1227,12 @@ async function sharedBox(id) {
 }
 async function load() {
   let j = null;
+  await offScan(); let cached = false;
   try { const r = await HF("api.php?action=list", { cache: "no-store" }); j = await r.json(); } catch (e) { j = null; }
+  if (!j && OFFSET.size) { try { const c = await offCache(), r = c && await c.match(offList()); if (r) { j = await r.json(); cached = true; } } catch (e) { j = null; } }
   if (!j) { $("sync").textContent = "Could not reach the server."; return; }
   if (j.private && !j.auth) return privateScreen(j);
-  apply(j); await names(); started = true;
+  apply(j); await names(); started = true; offView = cached; if (!cached) offSaveList();
   // (1.72.0) the site search finds files by name once they are opened here: only the names (and their folder), in this tab only
   if (unlocked) { try { sessionStorage.setItem("hub-find-files", JSON.stringify(live().filter(i => MC.has(i.m)).slice(0, 3000).map(i => ({ n: nameOf(i), d: i.p && byId.get(i.p) ? nameOf(byId.get(i.p)) : "", t: i.t === "f" ? dateOf(i) : 0 })))); } catch (e) { /* too big: no names */ } }
   const hq = /^#q=(.+)$/.exec(location.hash);   // a search result: show the file
