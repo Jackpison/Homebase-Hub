@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.79.8 | Security Devices is one clear screen, a small ? above the bell opens the keyboard shortcuts, Telegram and Bookmarks cards are slim rows, and the SVG converter no longer parses SVG text into the page |
 | 1.79.7 | Settings cards with one control are slim rows, Security Overview sorts what to do first, Log Out in every gear menu, a ? button for the shortcuts, and closer shields on private tabs |
 | 1.79.6 | The Cloud Backup card starts folded and shrinks to a short list with Edit, a held Disconnect button, and a refused delete is now reported |
 | 1.79.5 | Cloud Backup can send to an S3 bucket, and Restore From Cloud brings a copy back; every failed request now answers in one shape; the big page scripts are cut into labelled parts |
@@ -162,6 +163,27 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.79.8
+
+### Changed
+
+- **Security > Devices** is one clear screen. A summary row shows how many logins and trusted browsers you have, with Log Out Here and a held Log Out Other Devices. Then come This Device, Other Logins, the recent security activity (six lines, Show More for the rest) and Trusted Browsers, with Remove All in its title.
+- **A small ? above the bell** opens the keyboard shortcuts on computers (the ? key still works). The ? button added to the bar in 1.79.7 is gone. The shortcuts window has no scroll bar beside the list.
+- **Telegram:** Delivery Time and Send Today's Tasks are slim rows.
+- **Bookmarks for Other Browsers:** the download button is on the left and the Include Private Tabs switch beside it.
+- **Edit mode:** the pen keeps a clear gap from the tab name in Links and Info.
+- **You Have Version** (What's New) has a brighter green icon.
+
+### Fixed
+
+- **Health > Server Check** no longer warns when a start page photo source failed with HTTP 5xx or a timeout less than a day ago. That is the other site being down, and the next download usually works.
+
+### Security
+
+- **SVG to PNG** in Tools reads only the first tag of the SVG as text and draws the picture through an image, so the SVG is never turned into page elements. Embedded web pages in an SVG (foreignObject) are left out.
 
 ---
 
