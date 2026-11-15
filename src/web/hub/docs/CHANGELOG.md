@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.5 | A dot on the alerts bell as soon as anything happens, the new button hover on buttons that had their own hover (Cancel, Check for Update and the like), and Tools icons as solid gradient tiles |
 | 1.80.4 | A new button hover (main buttons sweep a lighter fill, others tint), Files columns with Last Modified time and Access, hover actions before Size, solid folder tiles, and a framed Share window with clearer text |
 | 1.80.3 | Files list reordered (Name, Size, Star, Modified, Access) with hover actions, details closed until you pick one, HEIC counts as a picture, Home date and a smaller, centred clock, and one lift-and-shadow button hover on every page |
 | 1.80.2 | Files: PDFs show their first page as a picture, Keep on This Device for offline use, and Attach a File From Files in Tasks and Cards (the link opens the file in Files) |
@@ -172,6 +173,19 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.5
+
+### Alerts
+- The bell now shows a dot as soon as a message appears, even while the message is still on screen. Closing a message no longer clears the dot; opening the list does. The number badge is replaced by the dot.
+
+### Every page
+- The new button hover (a lighter fill sweeping across main buttons, a soft tint on the others) now also wins over buttons that had their own hover style, such as Cancel and Check for Update in Settings windows.
+
+### Tools
+- Tool, section and menu icons are solid gradient tiles in the section's colour with a white glyph, like the icons in the top bar.
 
 ---
 
