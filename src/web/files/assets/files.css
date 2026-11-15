@@ -58,8 +58,8 @@ select.sel{height:36px;border:1px solid var(--line);border-radius:9px;background
 .dropmsg{display:none;position:absolute;inset:0;place-items:center;background:color-mix(in srgb,var(--acc) 14%,var(--box));border:2px dashed var(--acc);border-radius:14px;font-weight:700;z-index:3;pointer-events:none}
 .drop.over .dropmsg{display:grid}
 .list{display:flex;flex-direction:column}
-.lh{display:grid;grid-template-columns:34px minmax(0,1fr) 90px 52px 120px 170px 44px;gap:8px;align-items:center;padding:8px 12px;color:var(--mute);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line)}
-.row{display:grid;grid-template-columns:34px minmax(0,1fr) 90px 52px 120px 170px 44px;gap:8px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--line);min-height:50px}
+.lh{display:grid;grid-template-columns:34px minmax(0,1fr) var(--cSize) var(--cStar) var(--cMod) var(--cAcc) var(--cMore);gap:8px;align-items:center;padding:8px 12px;color:var(--mute);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:34px minmax(0,1fr) var(--cSize) var(--cStar) var(--cMod) var(--cAcc) var(--cMore);gap:8px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--line);min-height:50px}
 .row:last-child{border-bottom:0}
 .row:hover{background:color-mix(in srgb,var(--fg) 4%,transparent)}
 .row.sel{background:color-mix(in srgb,var(--acc) 10%,transparent)}
@@ -424,3 +424,31 @@ dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);bo
 .row .starc .ib svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .row .starc .ib[aria-pressed=true]{color:var(--acc)}.row .starc .ib[aria-pressed=true] svg{fill:currentColor}
 .zone .zbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}.zone .zsub{display:block;margin-top:4px;line-height:1.5}
+
+/* (1.80.4) list columns, their headers, and the row actions that sit just before Size */
+.list{--cSize:92px;--cStar:56px;--cMod:176px;--cAcc:120px;--cMore:44px}
+.lh{text-transform:none;letter-spacing:0;font-size:14.5px;font-weight:500;padding-top:12px;padding-bottom:12px}
+.row .cell.dt,.row .cell.vis,.row .cell.sz{font-size:15px;color:color-mix(in srgb,var(--fg) 78%,transparent)}
+.row .cell.vis.on{color:var(--acc)}
+.row .qa{right:calc(12px + var(--cMore) + var(--cAcc) + var(--cMod) + var(--cStar) + var(--cSize) + 40px);padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+/* folders: a solid tile like the app icons in the bar */
+.ico.d{background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 58%,#000));box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),0 2px 8px color-mix(in srgb,var(--c) 30%,transparent)}
+.ico.d svg,.ico.d[class*="lb-"] svg{color:#fff;stroke:#fff}
+.pv.d{background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 58%,#000))}
+.pv.d svg{color:#fff;stroke:#fff}
+
+/* (1.80.4) Share window: framed, a file header, Your Links, and New Link with two choices side by side */
+.shintro{margin:0 0 4px;color:var(--mute);font-size:14px;line-height:1.5}
+.shfc .shfn{display:flex;flex-direction:column;gap:2px;min-width:0}.shfc .shfn small{color:var(--mute)}
+.shnone{margin:0;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;color:var(--mute);font-size:14px}
+.ix-sb .shend{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.ix-sb .shend label{align-self:end}
+.ix-sb .shend .shw{grid-column:1/-1}
+.ix-sb .shend select,.ix-sb .shend input{width:100%;height:42px;background:var(--box);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit}
+.ix-sb .shend select:focus,.ix-sb .shend input:focus{border-color:var(--acc);outline:0}
+.ix-sb .shend .pwn{font-size:12.5px;line-height:1.45}
+@media (max-width:520px){.ix-sb .shend{grid-template-columns:1fr}}
+/* (1.80.4) with the details panel open the list is narrow: Access and the hover actions step aside (the panel has the same actions) */
+.fa.hasdet .list{--cAcc:-8px}
+.fa.hasdet .lh,.fa.hasdet .row{grid-template-columns:34px minmax(0,1fr) var(--cSize) var(--cStar) var(--cMod) var(--cMore)}
+.fa.hasdet .row .cell.vis,.fa.hasdet .lh>span:nth-child(6),.fa.hasdet .row .qa{display:none}

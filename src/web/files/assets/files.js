@@ -56,6 +56,8 @@ const h = (tag, attrs, ...kids) => {
   return e;
 };
 const fmt = n => { if (n == null) return ""; const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return (i ? (n >= 100 ? n.toFixed(0) : n.toFixed(1)).replace(/\.0$/, "") : String(n)) + " " + u[i]; };
+/** (1.80.4) the list's date: 15/11/2026 9:29pm */
+const stamp = ms => { try { const d = new Date(ms), h12 = d.getHours() % 12 || 12; return d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear() + " " + h12 + ":" + String(d.getMinutes()).padStart(2, "0") + (d.getHours() < 12 ? "am" : "pm"); } catch (e) { return ""; } };
 const when = ms => { try { return new Date(ms).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return ""; } };
 const b64 = u => V.b64(u), ub64 = s => V.ub64(s);
 const b64u = u => b64(u).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -364,7 +366,7 @@ function render() {
   /* rows */
   const list = shown(), box = $("list"), grid = D.settings.view === "grid";
   box.className = "list" + (grid ? " grid" : ""); box.replaceChildren();
-  if (list.length && !grid) box.append(h("div", { class: "lh" }, h("span", {}, h("input", { type: "checkbox", class: "ck", id: "lhck", "aria-label": "Select all", onchange: toggleAll })), h("span", { "aria-hidden": "true", text: "Name" }), h("span", { "aria-hidden": "true", text: "Size" }), h("span", { "aria-hidden": "true", text: "Star" }), h("span", { "aria-hidden": "true", text: "Modified" }), h("span", { "aria-hidden": "true", text: "Who Can See It" }), h("span")));
+  if (list.length && !grid) box.append(h("div", { class: "lh" }, h("span", {}, h("input", { type: "checkbox", class: "ck", id: "lhck", "aria-label": "Select all", onchange: toggleAll })), h("span", { "aria-hidden": "true", text: "Name" }), h("span", { "aria-hidden": "true", text: "Size" }), h("span", { "aria-hidden": "true", text: "Star" }), h("span", { "aria-hidden": "true", text: "Last Modified" }), h("span", { "aria-hidden": "true", text: "Access" }), h("span")));
   /* (1.80.1) the grid has a Folders part and a Files part, each with its count; the header says how many of each are here */
   const nF = list.filter(x => x.t === "d").length, nFi = list.length - nF, sect = grid && tab === "files" && !q && nF && nFi;
   let lastT = "";
@@ -538,7 +540,7 @@ function row(i) {
   const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : "") + (cur === i.id ? " cur" : ""), "data-id": i.id, draggable: tab === "trash" ? null : "true", ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); e.stopPropagation(); cur = i.id; if (!sel.has(i.id)) { sel.clear(); sel.add(i.id); row.sync(); } menu(more, i, { x: e.clientX, y: e.clientY }); } },
     ck, open, h("span", { class: "cell sz num", text: fmt(isD ? bytesOf(i) : sz) }),
     h("span", { class: "cell starc" }, i.t === "f" && tab !== "trash" ? h("button", { type: "button", class: "ib", "aria-label": ((meta(i) || {}).st ? "Unstar " : "Star ") + name, title: "Star", "aria-pressed": String(!!(meta(i) || {}).st), onclick: e => { e.stopPropagation(); star(i); } }, svg("star")) : null),
-    h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }),
+    h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : stamp(at) }),
     h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" + shareFlags(i) : "Only you" }), quick, more, h("span", { class: "cell meta", text: sub }));
   if (D.settings.view === "grid") { const ic = open.querySelector(".ico"); if (ic) queueMicrotask(() => thumbWatch(ic, i)); }
   return el;
@@ -1123,7 +1125,7 @@ async function shareBox(i) {
         h("div", { class: "linkbox" }, fld,
           h("button", { type: "button", class: "btn", text: "QR Code", "aria-expanded": "false", onclick: e => { qr.hidden = !qr.hidden; e.currentTarget.setAttribute("aria-expanded", String(!qr.hidden)); if (!qr.hidden && !qr.firstChild) qrMake(url, qr); } }),
           h("button", { type: "button", class: "btn danger", text: "Remove", onclick: async () => { const j = await post("share_delete", { token: s.token }); if (!j.ok) return derr(j.error); await refresh(); draw(); } })), qr);
-    }) : [h("p", { text: "No link yet. Make one, and send it to the person who should have this file." })]));
+    }) : [h("p", { class: "shnone", text: "No link yet. Choose the options below, then press Make a New Link. The link is copied for you." })]));
   };
   draw();
   /* (1.77.2) one window, no steps: your links on top, then how long the next one lasts. Making a link copies it for you. */
@@ -1142,10 +1144,14 @@ async function shareBox(i) {
   };
   const pw = h("input", { type: "password", id: "dpw", autocomplete: "new-password", placeholder: "No password", "aria-label": "Password for the next link" });
   const lim = h("select", { id: "dlim", "aria-label": "Downloads allowed" }, [["0", "No limit"], ["1", "1 download"], ["5", "5 downloads"], ["10", "10 downloads"], ["50", "50 downloads"]].map(o => h("option", { value: o[0], text: o[1] })));
-  const ends = h("div", { class: "shend" }, h("label", { for: "dexp", text: "The next link ends" }), exp, h("label", { for: "dlim", text: "Downloads allowed" }), lim, h("label", { for: "dpw", text: "Password (optional)" }), pw,
-    h("small", { class: "pwn", text: "With a password, the person needs it as well as the link. It is not sent to your server." }));
-  await openDialog("Share " + nameOf(i), [FC ? h("div", { class: "shfc" }, FC.make(nameOf(i), "m"), h("b", { text: nameOf(i) })) : null, h("p", { text: "Anyone with the link can open this one file. The key to unlock it is in the link itself (after the #), so it never reaches your server, and the file stays locked there." }), box, ends],
-    [{ text: "Make a New Link", pri: true, left: true, run: async () => { await make(); return false; } }, { text: "Done", run: () => {} }]);
+  const ends = h("div", { class: "shend" }, h("label", { for: "dexp", text: "Link Ends" }), exp, h("label", { for: "dlim", text: "Downloads Allowed" }), lim, h("label", { for: "dpw", class: "shw", text: "Password (Optional)" }), h("div", { class: "shw" }, pw),
+    h("small", { class: "pwn shw", text: "With a password, the person needs it and the link. Your server only keeps a fingerprint of it, never the password." }));
+  await openDialog("Share " + nameOf(i), [
+    FC ? h("div", { class: "shfc" }, FC.make(nameOf(i), "m"), h("div", { class: "shfn" }, h("b", { text: nameOf(i) }), h("small", { text: fmt(sizeOf(i)) }))) : null,
+    h("p", { class: "shintro", text: "Anyone with the link can open this file, and nothing else. The key that unlocks it is part of the link (after the #), so your server never sees it and the file stays locked there." }),
+    h("h3", { text: "Your Links" }), box,
+    h("h3", { text: "New Link" }), ends],
+    [{ text: "Done", run: () => {} }, { text: "Make a New Link", pri: true, run: async () => { await make(); return false; } }], { frame: true });
   raw.fill(0);
 }
 

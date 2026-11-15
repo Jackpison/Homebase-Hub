@@ -45,7 +45,7 @@ async function gallery(ts, keys) {
     let r = await fetch("api.php?action=s_meta&t=" + it.t, { cache: "no-store", headers: hd });
     let j = await r.json().catch(() => ({}));
     if (j.pw && !it.proof) {
-      if (!password) { $("pwf").hidden = false; $("name").textContent = "These Pictures Have a Password"; $("info").textContent = "Type the password you were given."; password = await new Promise(res => { $("pwf").onsubmit = ev => { ev.preventDefault(); res($("pw").value); }; }); $("pwf").hidden = true; }
+      if (!password) { $("pwf").hidden = false; $("name").textContent = "These Pictures Have a Password"; $("info").textContent = "Type the password the sender gave you."; password = await new Promise(res => { $("pwf").onsubmit = ev => { ev.preventDefault(); res($("pw").value); }; }); $("pwf").hidden = true; }
       it.proof = await proofOf(password, it.raw); return open(it);
     }
     if (r.status === 403) { password = ""; it.proof = ""; $("err").textContent = j.error || "That password is not right."; return open(it); }
@@ -100,7 +100,7 @@ async function main() {
   let proof = "";
   const hd = () => /** @type {Record<string, string>} */ (proof ? { "X-Share-Proof": proof } : {});
   const askPw = () => new Promise(res => {
-    const f = $("pwf"), inp = $("pw"); f.hidden = false; $("name").textContent = "This File Has a Password"; $("info").textContent = "Type the password you were given."; inp.focus();
+    const f = $("pwf"), inp = $("pw"); f.hidden = false; $("name").textContent = "This File Has a Password"; $("info").textContent = "Type the password the sender gave you."; inp.focus();
     f.onsubmit = async ev => {
       ev.preventDefault(); const b = f.querySelector("button"); b.disabled = true; $("err").textContent = "";
       const raw = ub64u(key), salt = new Uint8Array(raw.length + 12); salt.set(new TextEncoder().encode("hub-share-pw"), 0); salt.set(raw, 12);

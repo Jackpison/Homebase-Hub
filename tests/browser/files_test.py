@@ -160,7 +160,7 @@ try:
         vctx = b.new_context(viewport={'width': 1000, 'height': 800}, accept_downloads=True); vctx.add_init_script(CSP_REPORTER)
         vp = vctx.new_page(); seen = []; vp.on('request', lambda r: seen.append(r.url)); verrs = []
         vp.on('console', lambda m: verrs.append(m.text[:160]) if m.type == 'error' and 'security policy' in m.text.lower() else None)
-        vp.goto(link); wait_js(vp, "document.getElementById('name').textContent !== 'Opening…'", 20000)
+        vp.goto(link); wait_js(vp, "document.getElementById('name').textContent !== 'Opening the File…'", 20000)
         check('B26 someone who is not logged in opens the link and sees the file name and size', vp.inner_text('#name') == 'greeting.txt' and '38 B' in vp.inner_text('#info'), (vp.inner_text('#name'), vp.inner_text('#info')))
         until(lambda: 'hello files' in vp.inner_text('#pv'), 15000)
         check('B27 ...and a quick look at the words', 'hello files' in vp.inner_text('#pv'))
@@ -185,7 +185,7 @@ try:
         # ---- the limit ----
         pg.click('#crumbs button:first-child')
         sg = pg.evaluate("(() => [document.querySelectorAll('#app .sug').length === 0 ? 2 : 0, document.querySelectorAll('#list .row .qa').length > 0, [...document.querySelectorAll('#list .row .cell.vis')].every(c => /^(Only you|Anyone with the link)$/.test(c.textContent)), (document.querySelector('#list .lh') || {}).textContent])()")
-        check('B34c (1.79.1: no Suggested for You cards any more) each row says who can see it, and has Share / Download / Star for when you point at it', 2 <= sg[0] <= 5 and sg[1] and sg[2] and 'Who Can See It' in sg[3], sg)
+        check('B34c (1.79.1: no Suggested for You cards any more) each row says who can see it, and has Share / Download / Star for when you point at it', 2 <= sg[0] <= 5 and sg[1] and sg[2] and 'Access' in sg[3], sg)
         pg.evaluate("document.getElementById('psets').click()"); pg.wait_for_selector('#dform .limin')
         fs = pg.evaluate("(() => { const d = document.getElementById('dlg'); const o = document.getElementById('donly'), sh = document.getElementById('dsh'); return [d.classList.contains('ix-sdlg'), !!d.querySelector('.ix-sh .ix-sx'), !!d.querySelector('.ix-sb'), o.checked, o.disabled, o.classList.contains('ix-sw'), sh.classList.contains('ix-sw'), d.querySelector('.ix-sh h2').textContent]; })()")
         check('B34b Files Settings is the shared Settings window: a close X, Hide From Visitors locked on, Share Links as a switch', fs == [True, True, True, True, True, True, True, 'Files Settings'], fs)
@@ -480,12 +480,15 @@ try:
         check('B119 the HEIC preview shows the picture, or Open in Tools when this browser cannot draw HEIC', ok)
         pg.keyboard.press('Escape'); pg.click('#chips .chip:has-text("All")')
 
-        # ---- (1.80.3) buttons lift on hover ----
+        # ---- (1.80.4) list headers and dates; folder tiles; the Share window ----
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
-        bt = pg.locator('.btn:not(.ib):visible').first; bt.hover()
-        try: pg.wait_for_function("(() => { const b = [...document.querySelectorAll('.btn:not(.ib)')].find(x => x.matches(':hover')); return !!b && getComputedStyle(b).transform !== 'none' && getComputedStyle(b).boxShadow !== 'none'; })()", timeout=3000); lifted = True
-        except Exception: lifted = False
-        check('B120 a button lifts and casts a shadow when pointed at', lifted)
+        hd = pg.evaluate("[...document.querySelectorAll('#list .lh span')].map(x => x.textContent.trim()).filter(Boolean)")
+        dts = pg.evaluate("[...document.querySelectorAll('#list .row .cell.dt')].map(x => x.textContent)")
+        check('B121 the list headers read Name, Size, Star, Last Modified, Access, and dates read 15/11/2026 9:29pm', hd == ['Name', 'Size', 'Star', 'Last Modified', 'Access'] and dts and all(re.match(r'^\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2}(am|pm)$', d) for d in dts), (hd, dts[:2]))
+        menu(pg, 'photo.png', 'Share Link'); pg.wait_for_selector('#dlg.ix-sdlg #dform .shend')
+        sh = pg.evaluate("[document.querySelector('#dform h3') && [...document.querySelectorAll('#dform h3')].map(x => x.textContent), !!document.querySelector('#dform .ix-sx')]")
+        check('B122 the Share window is framed, with Your Links and New Link parts', sh[0] == ['Your Links', 'New Link'] and sh[1], sh)
+        pg.click('#dlg .ix-sx')
 
         # ---- (1.80.2) Info: the paperclip button in a box's toolbar writes a [name](link) link ----
         pg.goto(s.base + '/web/info/'); wait_js(pg, "!!document.querySelector('#boxTpl') && document.querySelectorAll('.box').length > 0", 20000)

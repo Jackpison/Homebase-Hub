@@ -13,13 +13,13 @@
 <body>
 <main class="card" id="app">
   <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5"/></svg></div>
-  <h1 id="name">Opening…</h1>
+  <h1 id="name">Opening the File…</h1>
   <p id="info"></p>
-  <form id="pwf" class="pwf" hidden><label for="pw">Password</label><input type="password" id="pw" autocomplete="off" required><button type="submit" class="btn">Open</button></form>
+  <form id="pwf" class="pwf" hidden><label for="pw">Password</label><input type="password" id="pw" autocomplete="off" required><button type="submit" class="btn pri">Open File</button></form>
   <div id="pv" class="pv" hidden></div>
   <p class="err" id="err" role="alert"></p>
-  <div class="acts"><button type="button" id="dl" class="btn" hidden>Download</button></div>
-  <p class="foot">Locked in the sender's browser. The key to open it is in this link, after the #, and never reaches the server it is stored on.</p>
+  <div class="acts"><button type="button" id="dl" class="btn pri" hidden>Download</button></div>
+  <p class="foot">This file was locked in the sender's browser. The key that opens it is in this link (after the #) and never reaches the server that stores it.</p>
 </main>
 <script src="assets/filecard.js?v=1.80.3"></script>
 <script src="assets/share.js?v=1.80.3"></script>
