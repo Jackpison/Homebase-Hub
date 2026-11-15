@@ -33,7 +33,7 @@ const busy=new Set(); // boxes with a save on its way to the server
 async function save(b,force){
   const e=b.el,text=e.ta.value,title=e.tin.value.trim().slice(0,80)||b.title;
   if(busy.has(b.key))return; // a second Ctrl+S while saving would look like a conflict
-  if(!server){Object.assign(b,{notes:text,title,saved:Math.floor(Date.now()/1000)});keepLocal();renderBox(b);closeEditor(b);setStatus("Saved in this browser only.");return}
+  if(!server){Object.assign(b,{notes:text,title,saved:Math.floor(Date.now()/1000)});keepLocal();renderBox(b);closeEditor(b);setStatus("Saved in this browser only.");HUB.toast("Box saved in this browser: "+(title||"Untitled"));return}
   // Show the new text straight away; the server catches up in the background.
   // The draft stays in this browser until the server confirms, so nothing is lost if it fails.
   const prev={title:b.title,notes:b.notes};
@@ -52,7 +52,7 @@ async function save(b,force){
     const j=await r.json();
     busy.delete(b.key);
     intake(b,j.box,tabOfBox(b).enc);
-    dSet(b,null);keepLocal();renderBox(b);setStatus(savedMsg());
+    dSet(b,null);keepLocal();renderBox(b);setStatus(savedMsg());HUB.toast("Box saved: "+(b.title||"Untitled"));   // (1.80.6) Info names what it did, like the other pages
   }catch(err){
     back("Couldn't reach the server. Your text is kept in this browser; try Save again.");
     setStatus("Not saved to the server.");

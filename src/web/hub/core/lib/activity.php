@@ -12,7 +12,7 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
 /**
  * Login history and signed-in devices (Settings > Security > Devices).
  *
- *   activity   the last 300 events (logins, wrong passwords, password and two-step changes, logout-everywhere, and what was done in Settings: backups, updates, restores, encryption...): when, what,
+ *   activity   the last 30 days of events (at most 3000) (logins, wrong passwords, password and two-step changes, logout-everywhere, and what was done in Settings: backups, updates, restores, encryption...): when, what,
  *              which browser, which address. site-data/core/activity.php (guarded).
  *   devices    one line for each login that can still be used: the browser, the address, when it started. Only a fingerprint of the
  *              session is kept, never the session itself, so this file cannot be used to get in. site-data/core/devices.php (guarded).
@@ -21,7 +21,8 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
  */
 require_once __DIR__ . '/boot.php';
 
-const ACT_KEEP = 300;
+const ACT_DAYS = 30;     // (1.80.6) kept for 30 days: a line is about 200 bytes, so this stays small
+const ACT_KEEP = 3000;   // and never more than this many lines, so the file can not grow without end
 
 function act_file(): string  { return hub_dir('core') . '/activity.json'; }
 function act_dfile(): string { return hub_dir('core') . '/devices.json'; }
@@ -49,8 +50,14 @@ function act_log(string $what, string $extra = ''): void {
         $ev = ['t' => time(), 'ev' => preg_replace('/[^a-z_0-9]/', '', $what), 'ip' => hub_ip(),
                'cc' => preg_replace('/[^A-Z]/', '', strtoupper((string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? ''))),
                'who' => act_browser((string)($_SERVER['HTTP_USER_AGENT'] ?? '')), 'x' => mb_substr($extra, 0, 80)];
-        act_update(act_file(), function ($d) use ($ev) { $d[] = $ev; return array_slice($d, -ACT_KEEP); });
+        act_update(act_file(), function ($d) use ($ev) { $d[] = $ev; return act_trim($d); });
     } catch (Throwable $e) {}
+}
+/** (1.80.6) Lines older than 30 days go, and at most ACT_KEEP stay (the newest). */
+function act_trim(array $d, ?int $now = null): array {
+    $min = ($now ?? time()) - ACT_DAYS * 86400;
+    $d = array_values(array_filter($d, static fn($e): bool => is_array($e) && (int)($e['t'] ?? 0) >= $min));
+    return array_slice($d, -ACT_KEEP);
 }
 /** (1.79.0) Empties the activity list. One line is left behind that says it was emptied, by whom and from where, so clearing it can not be done unseen. Returns how many lines went. */
 function act_clear(): int {

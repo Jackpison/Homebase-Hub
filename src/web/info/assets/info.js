@@ -639,7 +639,7 @@ const busy=new Set(); // boxes with a save on its way to the server
 async function save(b,force){
   const e=b.el,text=e.ta.value,title=e.tin.value.trim().slice(0,80)||b.title;
   if(busy.has(b.key))return; // a second Ctrl+S while saving would look like a conflict
-  if(!server){Object.assign(b,{notes:text,title,saved:Math.floor(Date.now()/1000)});keepLocal();renderBox(b);closeEditor(b);setStatus("Saved in this browser only.");return}
+  if(!server){Object.assign(b,{notes:text,title,saved:Math.floor(Date.now()/1000)});keepLocal();renderBox(b);closeEditor(b);setStatus("Saved in this browser only.");HUB.toast("Box saved in this browser: "+(title||"Untitled"));return}
   // Show the new text straight away; the server catches up in the background.
   // The draft stays in this browser until the server confirms, so nothing is lost if it fails.
   const prev={title:b.title,notes:b.notes};
@@ -658,7 +658,7 @@ async function save(b,force){
     const j=await r.json();
     busy.delete(b.key);
     intake(b,j.box,tabOfBox(b).enc);
-    dSet(b,null);keepLocal();renderBox(b);setStatus(savedMsg());
+    dSet(b,null);keepLocal();renderBox(b);setStatus(savedMsg());HUB.toast("Box saved: "+(b.title||"Untitled"));   // (1.80.6) Info names what it did, like the other pages
   }catch(err){
     back("Couldn't reach the server. Your text is kept in this browser; try Save again.");
     setStatus("Not saved to the server.");
@@ -773,12 +773,14 @@ function takeImport(){
     if(nt&&HUB.undo)HUB.undo(msg,()=>saveTabsList(TABS.filter(t=>t.id!==nt.id).map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private})),m=>HUB.toast(m,true)));else HUB.toast(msg);
   });
 }
+/* (1.80.6) what a tab change did, said in a message with the tab's name */
+function tabSaid(before,list){const now=new Set(list.map(x=>x.id)),added=list.filter(x=>!before.has(x.id)),gone=[...before].filter(id=>!now.has(id));HUB.toast(added.length?"Tab added: "+(added[0].name||"New tab")+".":gone.length?(gone.length===1?"Tab deleted.":gone.length+" tabs deleted."):"Tabs saved.")}
 async function saveTabsList(list,say,done){
   const before=new Set(TABS.map(t=>t.id));
   const showNew=()=>{const t=TABS.find(x=>!before.has(x.id));if(t)showTab(t.id)};
   if(!server){
     mergeTabs({rev:REV+1,tabs:list.map(x=>{const t=plainTabs().find(y=>y.id===x.id);return t?{...t,name:x.name,color:x.color,hc:x.hc,layout:x.layout||t.layout,icon:x.icon!=null?x.icon:t.icon,private:x.private}:{id:rid(),name:x.name,color:x.color,hc:x.hc,layout:x.layout,icon:x.icon,private:x.private,boxes:x.restore?x.restore.boxes:undefined}})});
-    showNew();if(done)done();return;
+    showNew();tabSaid(before,list);if(done)done();return;
   }
   try{
     const r=await api({action:"save_tabs",tabs:list,rev:REV});
@@ -791,18 +793,20 @@ async function saveTabsList(list,say,done){
     // Text of removed tabs is gone, so their unsaved drafts go too.
     const keep=new Set(j.data.tabs.map(t=>t.id));
     TABS.filter(t=>!keep.has(t.id)).forEach(t=>t.boxes.forEach(b=>dSet(b,null)));
-    mergeTabs(j.data);showNew();setStatus(savedMsg());if(done)done();
+    mergeTabs(j.data);showNew();setStatus(savedMsg());tabSaid(before,list);if(done)done();
   }catch(e){say("Couldn't reach the server, so the tabs weren't changed.");renderTabs()}
 }
 
 /* ---------- Boxes: add, resize, move and delete ---------- */
 // Saves the box list of one tab: [{id or null for a new box, w, h}] in the order wanted. done(before) gets the ids that existed before.
+/* (1.80.6) what a box change did, said in a message: added, removed, or just moved or resized */
+function boxSaid(t,before,list){const now=new Set(list.map(e=>e.id)),added=list.filter(e=>!before.has(e.id)).length,gone=[...before].filter(id=>!now.has(id)).length;HUB.toast(added?"Box added to "+t.name+".":gone?(gone===1?"Box deleted from ":gone+" boxes deleted from ")+t.name+".":"Boxes updated in "+t.name+".")}
 async function saveBoxList(t,list,say,done){
   const before=new Set(t.boxes.map(b=>b.id));
   if(!server){
     const pt=plainTabs(),x=pt.find(y=>y.id===t.id);
     x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h,hc:e.hc!=null?e.hc:o.hc}:{id:e.restore&&e.id?e.id:rid(),title:e.restore?e.restore.title:"",notes:e.restore?e.restore.notes:"",rev:0,saved:0,w:e.w,h:e.h,hc:e.hc||""}});
-    mergeTabs({rev:REV+1,tabs:pt});if(done)done(before);return;
+    mergeTabs({rev:REV+1,tabs:pt});boxSaid(t,before,list);if(done)done(before);return;
   }
   try{
     const r=await api({action:"save_boxes",tab:t.id,boxes:list,rev:REV});
@@ -812,7 +816,7 @@ async function saveBoxList(t,list,say,done){
     if(!r.ok)throw 0;
     const j=await r.json(),keep=new Set(j.data.tabs.flatMap(x=>x.boxes.map(b=>x.id+"-"+b.id)));
     t.boxes.forEach(b=>{if(!keep.has(b.key))dSet(b,null)});   // the text of a removed box is gone, so its unsaved draft goes too
-    mergeTabs(j.data);setStatus(savedMsg());if(done)done(before);
+    mergeTabs(j.data);setStatus(savedMsg());boxSaid(t,before,list);if(done)done(before);
   }catch(e){say("Couldn't reach the server, so nothing was changed.")}
 }
 function addBox(t){
@@ -1178,7 +1182,8 @@ $("setsizes").onclick=()=>setdlg.close();   // the shell then opens Text Sizes (
 async function saveSettings(){
   const p={title:$("gin").value.trim().slice(0,60),icon:"",private:$("spriv").checked},m=$("setmsg");   // icon "": the page icon is gone, the site logo is used
   m.textContent="";
-  if(!server){Object.assign(PAGE,p);keepLocal();renderPage();setdlg.close();return}
+  const changed=(p.title!==PAGE.title?["Page Title"]:[]).concat(p.private!==PAGE.private?["Hide From Visitors"]:[]),said=()=>HUB.toast(changed.length?"Info settings saved: "+changed.join(", ")+".":"Info settings saved: nothing changed.");
+  if(!server){Object.assign(PAGE,p);keepLocal();renderPage();setdlg.close();said();return}
   $("setsave").disabled=true;
   // The window closes and the title changes at once; the server catches up. If it refuses, the old settings come back and the window opens again with the reason.
   const prev={title:PAGE.title,private:PAGE.private};
@@ -1190,7 +1195,7 @@ async function saveSettings(){
     if(r.status===429){back("Too many wrong password tries. Wait a few minutes, then try again.");setStatus("Not saved");return}
     if(r.status===400){back("That icon couldn't be saved. Try a different image.");setStatus("Not saved");return}
     if(!r.ok)throw 0;
-    const j=await r.json();PAGE=normPage(j.page);PAGE.iconHash="";keepLocal();renderPage();setStatus(savedMsg());
+    const j=await r.json();PAGE=normPage(j.page);PAGE.iconHash="";keepLocal();renderPage();setStatus(savedMsg());said();
   }catch(e){back("Couldn't reach the server, so nothing was changed.");setStatus("Not saved to the server.")}
   finally{$("setsave").disabled=false}
 }

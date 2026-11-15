@@ -1027,3 +1027,9 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 
 /* (1.79.9) Logs: each row's tile wears its page's colour; the little labels are plain white on dark and black on light */
 #ix-page .ix-lgr[style*="--pc"] .ix-nt:not(.bad){background:linear-gradient(145deg,color-mix(in srgb,var(--pc) 65%,#fff),var(--pc));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px var(--pc)}
+
+/* (1.80.6) the Time Zone and other drop-downs in Settings: smaller, regular weight, so "India Standard Time, IST (UTC+5:30)" fits whole; a longer name ends in … */
+#ix-page select.ix-sel{font-size:14px;font-weight:500;padding:0 8px 0 12px;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+
+/* (1.80.6) Logs: Previous, "Page 2 of 5", Next under 100 lines */
+#ix-page .ix-lgpg{justify-content:space-between;margin-top:14px}

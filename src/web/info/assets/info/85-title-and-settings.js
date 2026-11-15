@@ -25,7 +25,8 @@ $("setsizes").onclick=()=>setdlg.close();   // the shell then opens Text Sizes (
 async function saveSettings(){
   const p={title:$("gin").value.trim().slice(0,60),icon:"",private:$("spriv").checked},m=$("setmsg");   // icon "": the page icon is gone, the site logo is used
   m.textContent="";
-  if(!server){Object.assign(PAGE,p);keepLocal();renderPage();setdlg.close();return}
+  const changed=(p.title!==PAGE.title?["Page Title"]:[]).concat(p.private!==PAGE.private?["Hide From Visitors"]:[]),said=()=>HUB.toast(changed.length?"Info settings saved: "+changed.join(", ")+".":"Info settings saved: nothing changed.");
+  if(!server){Object.assign(PAGE,p);keepLocal();renderPage();setdlg.close();said();return}
   $("setsave").disabled=true;
   // The window closes and the title changes at once; the server catches up. If it refuses, the old settings come back and the window opens again with the reason.
   const prev={title:PAGE.title,private:PAGE.private};
@@ -37,7 +38,7 @@ async function saveSettings(){
     if(r.status===429){back("Too many wrong password tries. Wait a few minutes, then try again.");setStatus("Not saved");return}
     if(r.status===400){back("That icon couldn't be saved. Try a different image.");setStatus("Not saved");return}
     if(!r.ok)throw 0;
-    const j=await r.json();PAGE=normPage(j.page);PAGE.iconHash="";keepLocal();renderPage();setStatus(savedMsg());
+    const j=await r.json();PAGE=normPage(j.page);PAGE.iconHash="";keepLocal();renderPage();setStatus(savedMsg());said();
   }catch(e){back("Couldn't reach the server, so nothing was changed.");setStatus("Not saved to the server.")}
   finally{$("setsave").disabled=false}
 }

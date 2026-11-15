@@ -80,12 +80,14 @@ function takeImport(){
     if(nt&&HUB.undo)HUB.undo(msg,()=>saveTabsList(TABS.filter(t=>t.id!==nt.id).map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private})),m=>HUB.toast(m,true)));else HUB.toast(msg);
   });
 }
+/* (1.80.6) what a tab change did, said in a message with the tab's name */
+function tabSaid(before,list){const now=new Set(list.map(x=>x.id)),added=list.filter(x=>!before.has(x.id)),gone=[...before].filter(id=>!now.has(id));HUB.toast(added.length?"Tab added: "+(added[0].name||"New tab")+".":gone.length?(gone.length===1?"Tab deleted.":gone.length+" tabs deleted."):"Tabs saved.")}
 async function saveTabsList(list,say,done){
   const before=new Set(TABS.map(t=>t.id));
   const showNew=()=>{const t=TABS.find(x=>!before.has(x.id));if(t)showTab(t.id)};
   if(!server){
     mergeTabs({rev:REV+1,tabs:list.map(x=>{const t=plainTabs().find(y=>y.id===x.id);return t?{...t,name:x.name,color:x.color,hc:x.hc,layout:x.layout||t.layout,icon:x.icon!=null?x.icon:t.icon,private:x.private}:{id:rid(),name:x.name,color:x.color,hc:x.hc,layout:x.layout,icon:x.icon,private:x.private,boxes:x.restore?x.restore.boxes:undefined}})});
-    showNew();if(done)done();return;
+    showNew();tabSaid(before,list);if(done)done();return;
   }
   try{
     const r=await api({action:"save_tabs",tabs:list,rev:REV});
@@ -98,7 +100,7 @@ async function saveTabsList(list,say,done){
     // Text of removed tabs is gone, so their unsaved drafts go too.
     const keep=new Set(j.data.tabs.map(t=>t.id));
     TABS.filter(t=>!keep.has(t.id)).forEach(t=>t.boxes.forEach(b=>dSet(b,null)));
-    mergeTabs(j.data);showNew();setStatus(savedMsg());if(done)done();
+    mergeTabs(j.data);showNew();setStatus(savedMsg());tabSaid(before,list);if(done)done();
   }catch(e){say("Couldn't reach the server, so the tabs weren't changed.");renderTabs()}
 }
 

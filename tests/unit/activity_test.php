@@ -6,7 +6,7 @@ require __DIR__ . '/lib.php';
 require $site . '/web/hub/core/lib/boot.php';
 require_once $site . '/web/hub/core/lib/activity.php';
 
-t('A1 the list keeps 300 lines', ACT_KEEP === 300);
+t('A1 the list keeps 30 days, and at most 3000 lines', ACT_DAYS === 30 && ACT_KEEP === 3000);
 @unlink(hub_jpath(act_file()));
 hub_act('backup', 'downloaded: links, info');
 hub_act('settings', 'theme, accent');
@@ -20,7 +20,11 @@ $last = end($ev);
 t('A4 the event name is cleaned and the detail is cut to 80 characters', $last['ev'] === 'adame' && mb_strlen($last['x']) === 80, json_encode($last['ev']));
 for ($i = 0; $i < 320; $i++) hub_act('settings', 'n' . $i);
 $ev = hub_jread(act_file());
-t('A5 only the newest 300 are kept', count($ev) === 300 && end($ev)['x'] === 'n319' && $ev[0]['x'] === 'n20');
+t('A5 lines from the last 30 days all stay (no 300 limit any more)', count($ev) === 324 && end($ev)['x'] === 'n319' && $ev[4]['x'] === 'n0');
+$old = [['t' => time() - 31 * 86400, 'ev' => 'login'], ['t' => time() - 29 * 86400, 'ev' => 'login'], ['t' => time(), 'ev' => 'login']];
+t('A5b (1.80.6) a line older than 30 days is dropped, a newer one stays', count(act_trim($old)) === 2 && act_trim($old)[0]['t'] === $old[1]['t']);
+$many = []; for ($i = 0; $i < ACT_KEEP + 5; $i++) $many[] = ['t' => time(), 'ev' => 'login', 'x' => 'm' . $i];
+t('A5c (1.80.6) never more than 3000 lines: the newest stay', count(act_trim($many)) === ACT_KEEP && end(act_trim($many))['x'] === 'm' . (ACT_KEEP + 4));
 
 // ---- 1.79.0: Clear Activity empties the list but leaves one line saying it was done ----
 hub_act('backup', 'x'); hub_act('settings', 'theme');

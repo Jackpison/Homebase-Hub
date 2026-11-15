@@ -54,8 +54,8 @@
      where it came from and when. A message that goes away on its own is still kept in the list behind the bell (this tab's last 30), so
      nothing is missed when it was not looked at. Hovering a card keeps it; the cross closes it. toast() keeps its old form, so every page
      and every pane calls it the same way. bad: a problem (red, stays longer); sticky: stays until closed; act: {label, run} adds a button, such as Undo. */
-  var NOTE_MAX = 4, NOTE_KEEP = 30, noteHist = [], noteSeen = 0;
-  try { noteHist = JSON.parse(sessionStorage.getItem('ix-notes') || '[]').filter(function (n) { return n && typeof n.m === 'string'; }).slice(-NOTE_KEEP); noteSeen = +sessionStorage.getItem('ix-notes-seen') || 0; } catch (e) {}
+  var NOTE_MAX = 4, NOTE_KEEP = 30, noteHist = [], noteSeen = 0, noteNew = 0;   // noteNew: messages since the list was last opened (the history is capped, so its length cannot count them)
+  try { noteHist = JSON.parse(sessionStorage.getItem('ix-notes') || '[]').filter(function (n) { return n && typeof n.m === 'string'; }).slice(-NOTE_KEEP); noteSeen = +sessionStorage.getItem('ix-notes-seen') || 0; noteNew = +sessionStorage.getItem('ix-notes-new') || 0; } catch (e) {}
   var NOTE_SRC = { home: 'Home', links: 'Links', info: 'Info', cards: 'Cards', tasks: 'Tasks', files: 'Files', tools: 'Tools', settings: 'Settings' };
   /* (1.77.2) each message gets the icon and color of what it did: saved, deleted, backed up, sent, copied, locked, updated, added, or a problem */
   var NOTE_ICON = { bad: 'M12 3l10 18H2zM12 10v5M12 18h.01', ok: 'M5 12l5 5 9-10', act: 'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',
@@ -80,14 +80,14 @@
     var t = tab && (tab.querySelector('span:not(.tslot):not(.lk)') || tab).textContent.trim().slice(0, 40), w = h && h.textContent.trim().slice(0, 40);
     return { p: (NOTE_SRC[APP] || 'Homebase Hub') + (t ? ' › ' + t : ''), w: w && w !== t ? w : '' };
   }
-  /* (1.77.2) every message is also kept on this device (the last 300, in Settings > Logs), after the tab and its short list are gone */
+  /* (1.77.2) every message is also kept on this device (the last 30 days, in Settings > Logs), after the tab and its short list are gone */
   /* (1.79.12) The list in Settings > Logs is shared by every device: each message is kept here at once and sent to the site when this browser is logged in
      (a line that could not be sent waits and goes with the next one). Reading it brings the other devices' lines in too. */
   var noteTimer = 0, noteBusy = false, NOTE_LOCAL = ['Files', 'Cards'];
   function noteNewId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
   function noteLogGet() { try { return (JSON.parse(ls.get('hub-notelog') || '[]') || []).filter(function (n) { return n && typeof n.m === 'string'; }); } catch (e) { return []; } }
   function notePendGet() { try { return (JSON.parse(ls.get('hub-notepend') || '[]') || []).filter(function (x) { return typeof x === 'string'; }); } catch (e) { return []; } }
-  function noteLogPut(a) { try { ls.set('hub-notelog', JSON.stringify(a.slice(-300))); } catch (x) {} }
+  function noteLogPut(a) { try { ls.set('hub-notelog', JSON.stringify(a.filter(function (n) { return !n.ts || n.ts > Date.now() - 30 * 864e5; }).slice(-3000))); } catch (x) {} }   // (1.80.6) 30 days, at most 3000
   function noteLogAdd(e) {
     try { var a = noteLogGet(); a.push(e); noteLogPut(a); var p = notePendGet(); p.push(e.id); ls.set('hub-notepend', JSON.stringify(p.slice(-300))); noteFlushSoon(2000); } catch (x) {}
   }
@@ -116,7 +116,7 @@
       if (!j || !j.ok) return noteLogGet();
       var by = {}, out = [];
       (j.items || []).concat(noteLogGet()).forEach(function (n) { if (n && n.id && !by[n.id]) { by[n.id] = 1; out.push(n); } else if (n && !n.id) out.push(n); });
-      out.sort(function (x, y) { return (x.ts || 0) - (y.ts || 0); }); out = out.slice(-300);
+      out.sort(function (x, y) { return (x.ts || 0) - (y.ts || 0); }); out = out.filter(function (n) { return !n.ts || n.ts > Date.now() - 30 * 864e5; }).slice(-3000);
       noteLogPut(out); return out;
     }, function () { return noteLogGet(); });
   }
@@ -125,20 +125,20 @@
     try { ls.set('hub-notelog', '[]'); ls.set('hub-notepend', '[]'); } catch (x) {}
     return isAdmin() ? api('notelog_clear', {}).then(function () {}, function () {}) : Promise.resolve();
   }
-  function noteSave() { try { sessionStorage.setItem('ix-notes', JSON.stringify(noteHist.slice(-NOTE_KEEP))); sessionStorage.setItem('ix-notes-seen', String(noteSeen)); } catch (e) {} }
+  function noteSave() { try { sessionStorage.setItem('ix-notes', JSON.stringify(noteHist.slice(-NOTE_KEEP))); sessionStorage.setItem('ix-notes-seen', String(noteSeen)); sessionStorage.setItem('ix-notes-new', String(noteNew)); } catch (e) {} }
   function noteAgo(ts) { var s = Math.max(0, Math.round((Date.now() - ts) / 1000)); return s < 45 ? 'now' : s < 3600 ? Math.round(s / 60) + 'm ago' : Math.round(s / 3600) + 'h ago'; }
   /* (1.79.9) every message wears the colour of the page (or Settings) it came from, so the source can be guessed at a glance */
   function noteColor(n) { var a = n.a; if (!a) Object.keys(NOTE_SRC).forEach(function (k) { if (String(n.s) === NOTE_SRC[k]) a = k; }); return a === 'settings' || !PAGE_TILE[a] ? '#8b5cf6' : pageColor(a); }
-  function noteTile(kind) { return '<span class="ix-nt ' + kind + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + NOTE_ICON[kind] + '"/></svg></span>'; }
+  function noteTile(kind) { return '<span class="ix-ntl ' + kind + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + NOTE_ICON[kind] + '"/></svg></span>'; }
   function noteBell() {
-    var b = document.getElementById('ix-bell'), n = noteHist.length - noteSeen, box = document.getElementById('ix-toast'), live = box && box.querySelector('.ix-nc');
+    var b = document.getElementById('ix-bell'), n = noteNew, box = document.getElementById('ix-toast'), live = box && box.querySelector('.ix-nc');
     var tools = document.querySelector('#ix-bar .ix-tools');   // (1.79.12) with the bar showing, the bell sits in it next to the theme button; without a bar it floats in the corner
     if (live && !tools) { if (b) b.hidden = true; return; }   // (1.77.2) the bell stays on every page, so the alerts can always be read again; the number shows only what was missed
     if (!b) {
       b = document.createElement('button'); b.type = 'button'; b.id = 'ix-bell'; b.setAttribute('aria-label', 'Alerts you may have missed'); b.title = 'Alerts';
       b.onclick = function () { noteList(); };
     }
-    if (tools) { if (b.parentNode !== tools) tools.insertBefore(b, tools.querySelector('[data-ix="theme"]') || tools.firstChild); b.classList.add('ix-bb'); }
+    if (tools) { if (b.parentNode !== tools) { var th = tools.querySelector('[data-ix="theme"]'); tools.insertBefore(b, th ? th.nextSibling : tools.firstChild); } /* (1.80.6) order: theme, alerts, backup, settings */ b.classList.add('ix-bb'); }
     else { if (b.parentNode !== document.body) document.body.appendChild(b); b.classList.remove('ix-bb'); }
     b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' + (n > 0 ? '<b aria-hidden="true"></b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.setAttribute('aria-label', n > 0 ? 'Alerts: ' + n + ' new' : 'Alerts you may have missed'); b.hidden = false;
   }
@@ -147,7 +147,7 @@
   /* the list behind the bell: the last messages of this tab, newest first */
   function noteList() {
     var old = document.getElementById('ix-nlist'); if (old) { old.remove(); return; }
-    noteSeen = noteHist.length; noteSave(); noteBell();
+    noteSeen = noteHist.length; noteNew = 0; noteSave(); noteBell();
     var l = document.createElement('div'); l.id = 'ix-nlist'; l.setAttribute('role', 'dialog'); l.setAttribute('aria-label', 'Alerts');
     l.innerHTML = '<div class="ix-nlh"><b>Alerts</b><span>' + (noteHist.length ? '' : 'Nothing yet') + '</span><button type="button" class="ix-nlc" ' + (noteHist.length ? '' : 'hidden ') + 'data-clear>Clear</button><button type="button" class="ix-nlc ix-nlq" data-logs>Logs</button><button type="button" class="ix-nlc ix-nlq" data-keys>Shortcuts</button><button type="button" class="ix-nlx" aria-label="Close">×</button></div><div class="ix-nlb">' +
       noteHist.slice().reverse().map(function (n) { return '<div class="ix-nc ' + (n.b ? 'bad' : '') + '" style="--pc:' + noteColor(n) + '">' + noteTile(n.k && NOTE_ICON[n.k] ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-nb"><div class="ix-nm"></div><small>' + esc(n.p || n.s) + ' · ' + esc(noteAgo(n.ts)) + '</small></div></div>'; }).join('') + '</div>';
@@ -157,7 +157,7 @@
     l.querySelector('.ix-nlx').onclick = function () { l.remove(); };
     l.querySelector('[data-keys]').onclick = function () { l.remove(); showKeys(); };
     l.querySelector('[data-logs]').onclick = function () { l.remove(); settings('logs'); };   // (1.79.9) the full list is in Settings > Logs
-    var c = l.querySelector('[data-clear]'); if (c) c.onclick = function () { noteHist = []; noteSeen = 0; noteSave(); l.remove(); };
+    var c = l.querySelector('[data-clear]'); if (c) c.onclick = function () { noteHist = []; noteSeen = 0; noteNew = 0; noteSave(); l.remove(); };
     l.querySelector('.ix-nlx').focus();
     l.addEventListener('keydown', function (e) { if (e.key === 'Escape') { l.remove(); } });
     /* (1.79.9) a press anywhere outside the list (the bell itself toggles it) puts it back to the bell */
@@ -190,7 +190,7 @@
     if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
     else {
       var wh = noteWhere(), e = { id: noteNewId(), m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', a: APP, ts: Date.now(), p: wh.p, w: wh.w, d: detail ? String(detail).slice(0, 200) : '' };
-      noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteSave(); noteBell();   // (1.80.5) the bell shows its dot at once, even while the message is still on screen
+      noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteNew++; noteSave(); noteBell();   // (1.80.5) the bell shows its dot at once, even while the message is still on screen
       if (!NOTE_HINT.test(msg)) noteLogAdd(e);   // (1.78.0) a hint ("Hold the button down to confirm.") is shown, but it is not something that got done: it stays out of Settings > Logs
     }
     var c = document.createElement('div'), kind = noteKind(msg, bad, act);

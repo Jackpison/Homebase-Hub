@@ -19,7 +19,8 @@ if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && @realpath($_SERV
 require_once __DIR__ . '/boot.php';
 require_once __DIR__ . '/activity.php';
 
-const NL_KEEP = 300;
+const NL_DAYS = 30;     // (1.80.6) kept for 30 days (a line is a few hundred bytes), never more than NL_KEEP lines
+const NL_KEEP = 3000;
 const NL_LOCAL_ONLY = ['Files', 'Cards'];
 const NL_KINDS = ['bad', 'ok', 'act', 'del', 'box', 'send', 'copy', 'lock', 'sync', 'plus'];
 
@@ -52,6 +53,8 @@ function nl_add(array $items): int {
         }
         if ($new === 0) return;
         usort($d, static fn(array $a, array $b): int => $a['ts'] <=> $b['ts']);
+        $min = (time() - NL_DAYS * 86400) * 1000;
+        $d = array_values(array_filter($d, static fn(array $e): bool => (int)$e['ts'] >= $min));
         hub_jput(nl_file(), json_encode(array_slice($d, -NL_KEEP), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
     });
     return $new;

@@ -1,11 +1,13 @@
 /* ---------- Boxes: add, resize, move and delete ---------- */
 // Saves the box list of one tab: [{id or null for a new box, w, h}] in the order wanted. done(before) gets the ids that existed before.
+/* (1.80.6) what a box change did, said in a message: added, removed, or just moved or resized */
+function boxSaid(t,before,list){const now=new Set(list.map(e=>e.id)),added=list.filter(e=>!before.has(e.id)).length,gone=[...before].filter(id=>!now.has(id)).length;HUB.toast(added?"Box added to "+t.name+".":gone?(gone===1?"Box deleted from ":gone+" boxes deleted from ")+t.name+".":"Boxes updated in "+t.name+".")}
 async function saveBoxList(t,list,say,done){
   const before=new Set(t.boxes.map(b=>b.id));
   if(!server){
     const pt=plainTabs(),x=pt.find(y=>y.id===t.id);
     x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h,hc:e.hc!=null?e.hc:o.hc}:{id:e.restore&&e.id?e.id:rid(),title:e.restore?e.restore.title:"",notes:e.restore?e.restore.notes:"",rev:0,saved:0,w:e.w,h:e.h,hc:e.hc||""}});
-    mergeTabs({rev:REV+1,tabs:pt});if(done)done(before);return;
+    mergeTabs({rev:REV+1,tabs:pt});boxSaid(t,before,list);if(done)done(before);return;
   }
   try{
     const r=await api({action:"save_boxes",tab:t.id,boxes:list,rev:REV});
@@ -15,7 +17,7 @@ async function saveBoxList(t,list,say,done){
     if(!r.ok)throw 0;
     const j=await r.json(),keep=new Set(j.data.tabs.flatMap(x=>x.boxes.map(b=>x.id+"-"+b.id)));
     t.boxes.forEach(b=>{if(!keep.has(b.key))dSet(b,null)});   // the text of a removed box is gone, so its unsaved draft goes too
-    mergeTabs(j.data);setStatus(savedMsg());if(done)done(before);
+    mergeTabs(j.data);setStatus(savedMsg());boxSaid(t,before,list);if(done)done(before);
   }catch(e){say("Couldn't reach the server, so nothing was changed.")}
 }
 function addBox(t){
