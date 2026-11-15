@@ -27,3 +27,8 @@ p{margin:0 0 14px;color:var(--mute)}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 /* (1.66.0) the file's type card */
 .ico.fc{width:auto;height:auto;background:none;margin-bottom:14px;padding-right:10px}
+/* (1.80.0) a link with a password */
+.pwf{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin:6px 0 12px}
+.pwf label{position:absolute;left:-9999px}
+.pwf input{height:42px;min-width:220px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:0 12px;font:inherit}
+.pwf input:focus{outline:2px solid var(--acc);outline-offset:1px}

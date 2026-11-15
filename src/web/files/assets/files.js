@@ -407,6 +407,7 @@ function jumpMenu(anchor) {
   pm.addEventListener("keydown", e => { const b = [...pm.querySelectorAll("button")], k = b.indexOf(document.activeElement); if (e.key === "ArrowDown") { b[(k + 1) % b.length].focus(); e.preventDefault(); } if (e.key === "ArrowUp") { b[(k - 1 + b.length) % b.length].focus(); e.preventDefault(); } if (e.key === "Escape") { closeMenu(); anchor.focus(); } });
 }
 
+const shareFlags = i => { const l = D.shares.filter(x => x.id === i.id); return (l.some(x => x.pw) ? " · Password" : "") + (l.some(x => x.lim) ? " · " + l.filter(x => x.lim).map(x => x.dl + "/" + x.lim).join(", ") + " downloads" : ""); };
 function row(i) {
   const isD = i.t === "d", name = nameOf(i), sz = sizeOf(i), at = dateOf(i);
   const where = q && i.p ? pathOf(i.p).map(nameOf).join(" / ") : "";
@@ -422,7 +423,7 @@ function row(i) {
     h("button", { type: "button", class: "ib qb", "aria-label": "Download " + name, title: "Download", onclick: e => { e.stopPropagation(); download([i.id]); } }, svg("down")),
     i.t === "f" ? h("button", { type: "button", class: "ib qb", "aria-label": ((meta(i) || {}).st ? "Unstar " : "Star ") + name, title: "Star", "aria-pressed": String(!!(meta(i) || {}).st), onclick: e => { e.stopPropagation(); star(i); } }, svg("star")) : null);
   const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : "") + (cur === i.id ? " cur" : ""), "data-id": i.id, draggable: tab === "trash" ? null : "true", ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); e.stopPropagation(); cur = i.id; if (!sel.has(i.id)) { sel.clear(); sel.add(i.id); row.sync(); } menu(more, i, { x: e.clientX, y: e.clientY }); } },
-    ck, open, h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" : "Only you" }), h("span", { class: "cell sz num", text: isD ? "" : fmt(sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), quick, more, h("span", { class: "cell meta", text: sub }));
+    ck, open, h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" + shareFlags(i) : "Only you" }), h("span", { class: "cell sz num", text: isD ? "" : fmt(sz) }), h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : when(at) }), quick, more, h("span", { class: "cell meta", text: sub }));
   if (D.settings.view === "grid") { const ic = open.querySelector(".ico"); if (ic) queueMicrotask(() => thumbWatch(ic, i)); }
   return el;
 }
@@ -517,6 +518,8 @@ function menu(anchor, i, at) {
     acts.push([i.t === "d" ? "folder" : "file", i.t === "d" ? "Open" : (previewable(i) ? "Preview" : "Open"), () => openItem(i)]);
     acts.push(["down", i.t === "d" ? "Download as Zip" : "Download", () => download([i.id])]);
     if (i.t === "f" && D.settings.shares) acts.push(["share", "Share Link", () => shareBox(i)]);
+    const mine = D.shares.filter(x => x.id === i.id);
+    if (i.t === "f" && mine.length) acts.push(["link", "Copy Share Link", async () => { try { await navigator.clipboard.writeText(await linkOf(i, mine[mine.length - 1].token)); toast("Link copied."); } catch (e) { toast("Could not copy. Open Share Link instead.", true); } }]);
     acts.push(["edit", "Label and Note", () => labelBox(i)]);
     if (i.t === "f") acts.push(["star", (meta(i) || {}).st ? "Remove Star" : "Star", () => star(i)]);
     if (i.t === "d") acts.push(["folder", (meta(i) || {}).pin ? "Unpin from Sidebar" : "Pin to Sidebar", () => pin(i)]);
@@ -940,6 +943,21 @@ async function dropped(dt) {
 }
 
 /* ---------- share links ---------- */
+/** (1.80.0) The proof of a link's password: PBKDF2 of the password with the file key as salt. The server keeps only a hash of it; share.js makes the same proof. */
+async function shareProof(password, raw) {
+  const salt = new Uint8Array(raw.length + 12); salt.set(te.encode("hub-share-pw"), 0); salt.set(raw, 12);
+  const base = await crypto.subtle.importKey("raw", te.encode(password), "PBKDF2", false, ["deriveBits"]);
+  return b64u(new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 150000 }, base, 256)));
+}
+const linkOf = async (i, token) => { const raw = await rawKeyOf(i); const u = new URL("share.html", location.href); u.searchParams.set("t", token); u.hash = b64u(raw); raw.fill(0); return u.href; };
+/** a line about each link: password, downloads used, end date */
+const shareNote = x => [x.pw ? "Password" : "", x.lim ? x.dl + " of " + x.lim + " downloads used" : "", x.exp ? "ends " + when(x.exp * 1000) : "never ends"].filter(Boolean).join(" · ");
+/** (1.80.0) a QR code of a link, made here (the library is the one Settings uses) */
+let qrLoad = null;
+function qrMake(text, into) {
+  if (!qrLoad) qrLoad = new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "../hub/core/assets/vendor/qrcode.js"; sc.onload = res; sc.onerror = rej; document.head.append(sc); });
+  return qrLoad.then(() => { const q = /** @type {any} */ (window).qrcode(0, "M"); q.addData(text); q.make(); into.innerHTML = q.createImgTag(5, 8); const im = into.querySelector("img"); if (im) im.setAttribute("alt", "QR code of the link"); }).catch(() => { into.textContent = "Could not make the QR code."; });
+}
 async function shareBox(i) {
   if (!await ensureKey()) return;
   const raw = await rawKeyOf(i), fk = await fileKey(raw, ["encrypt"]);
@@ -953,9 +971,11 @@ async function shareBox(i) {
       const url = linkFor(s.token), fld = h("div", { class: "uf-host" });
       fld.innerHTML = HUB.linkField({ value: url, prefix: "Link", readonly: true, label: "Share link" });
       fld.querySelector("input").addEventListener("focus", e => e.target.select());
-      return h("div", { class: "lk" }, h("div", { class: "meta", text: "Made " + when(s.at * 1000) + (s.exp ? " · ends " + when(s.exp * 1000) : " · never ends") }),
+      const qr = h("div", { class: "qrbox", hidden: true });
+      return h("div", { class: "lk" }, h("div", { class: "meta", "data-meta": s.token, text: "Made " + when(s.at * 1000) + " · " + shareNote(s) }),
         h("div", { class: "linkbox" }, fld,
-          h("button", { type: "button", class: "btn danger", text: "Remove", onclick: async () => { const j = await post("share_delete", { token: s.token }); if (!j.ok) return derr(j.error); await refresh(); draw(); } })));
+          h("button", { type: "button", class: "btn", text: "QR Code", "aria-expanded": "false", onclick: e => { qr.hidden = !qr.hidden; e.currentTarget.setAttribute("aria-expanded", String(!qr.hidden)); if (!qr.hidden && !qr.firstChild) qrMake(url, qr); } }),
+          h("button", { type: "button", class: "btn danger", text: "Remove", onclick: async () => { const j = await post("share_delete", { token: s.token }); if (!j.ok) return derr(j.error); await refresh(); draw(); } })), qr);
     }) : [h("p", { text: "No link yet. Make one, and send it to the person who should have this file." })]));
   };
   draw();
@@ -964,13 +984,19 @@ async function shareBox(i) {
   const make = async () => {
     const meta1 = meta(i) || { n: nameOf(i), s: sizeOf(i) };
     const sm = await V.seal(fk, JSON.stringify({ n: meta1.n, ty: meta1.ty || "", s: meta1.s }));
-    const e = +exp.value, j = await post("share_create", { id: i.id, sm, exp: e ? Math.floor(Date.now() / 1000) + e : 0 });
+    const e = +exp.value, pwv = pw.value, body = { id: i.id, sm, exp: e ? Math.floor(Date.now() / 1000) + e : 0, lim: +lim.value || 0 };
+    if (pwv) body.pw = await shareProof(pwv, raw);
+    const j = await post("share_create", body);
     if (!j.ok) { derr(j.error); return false; }
+    pw.value = "";
     await refresh(); draw();
     const made = D.shares.filter(x => x.id === i.id).find(x => x.token === j.token) || D.shares.filter(x => x.id === i.id).slice(-1)[0];
     toast(made && await copyNew(linkFor(made.token)) ? "Link made and copied." : "Link made."); return true;
   };
-  const ends = h("div", { class: "shend" }, h("label", { for: "dexp", text: "The next link ends" }), exp);
+  const pw = h("input", { type: "password", id: "dpw", autocomplete: "new-password", placeholder: "No password", "aria-label": "Password for the next link" });
+  const lim = h("select", { id: "dlim", "aria-label": "Downloads allowed" }, [["0", "No limit"], ["1", "1 download"], ["5", "5 downloads"], ["10", "10 downloads"], ["50", "50 downloads"]].map(o => h("option", { value: o[0], text: o[1] })));
+  const ends = h("div", { class: "shend" }, h("label", { for: "dexp", text: "The next link ends" }), exp, h("label", { for: "dlim", text: "Downloads allowed" }), lim, h("label", { for: "dpw", text: "Password (optional)" }), pw,
+    h("small", { class: "pwn", text: "With a password, the person needs it as well as the link. It is not sent to your server." }));
   await openDialog("Share " + nameOf(i), [FC ? h("div", { class: "shfc" }, FC.make(nameOf(i), "m"), h("b", { text: nameOf(i) })) : null, h("p", { text: "Anyone with the link can open this one file. The key to unlock it is in the link itself (after the #), so it never reaches your server, and the file stays locked there." }), box, ends],
     [{ text: "Make a New Link", pri: true, left: true, run: async () => { await make(); return false; } }, { text: "Done", run: () => {} }]);
   raw.fill(0);

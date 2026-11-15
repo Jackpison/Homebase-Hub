@@ -217,5 +217,31 @@ fl_op_put_start($d, '', $enc('name'), $enc('key'), 3, 3 * 100, $out); $rid = $ou
 hub_write(fl_blob_path($rid, 0), str_repeat('B', 100)); hub_write(fl_blob_path($rid, 2), str_repeat('B', 100));
 t('an open upload lists the pieces it has (0 and 2, not 1)', fl_put_have(fl_load(), $rid) === [0, 2]);
 t('an upload that is not open says so (null)', fl_put_have(fl_load(), str_repeat('c', 16)) === null && fl_put_have(fl_load(), 'bad') === null);
+hub_write(fl_blob_path($rid, 1), str_repeat('B', 100));
 $d = fl_load(); fl_op_put_done($d, $rid); fl_save($d);
 t('a finished file is no longer an open upload', fl_put_have(fl_load(), $rid) === null);
+
+// ---- (1.80.0) share link options: password proof, download limit, wrong-try lock ----
+$d = fl_load(); $fid = put($d, '', 1, 120, $enc); fl_save($d);
+$proof = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '='); $wrong = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+$d = fl_load(); $o = [];
+t('a password that is not a proof is refused', fl_op_share_create($d, $fid, $enc('sm'), 0, $o, 'plain words', 0)[1] === 400);
+t('a download limit below 0 or above 10000 is refused', fl_op_share_create($d, $fid, $enc('sm'), 0, $o, '', -1)[1] === 400 && fl_op_share_create($d, $fid, $enc('sm'), 0, $o, '', 10001)[1] === 400);
+t('a link with a proof and a limit of 2 is made', fl_op_share_create($d, $fid, $enc('sm'), 0, $o, $proof, 2) === '' && isset($d['shares'][$o['token']])); fl_save($d); $tk = $o['token'];
+t('only a hash of the proof is kept, never the proof', strpos(json_encode(fl_load()['shares'][$tk]), $proof) === false && fl_load()['shares'][$tk]['pw'] === hash('sha256', $proof));
+$g = fl_share_get($tk);
+t('the link says it has a password and a limit of 2, none used', $g !== null && $g['pw'] === true && $g['lim'] === 2 && $g['dl'] === 0);
+t('no proof sent: need; the right proof: ok', fl_share_proof($tk, '') === 'need' && fl_share_proof($tk, $proof) === 'ok');
+t('a wrong proof is refused and counted', fl_share_proof($tk, $wrong) === 'wrong' && fl_load()['shares'][$tk]['bad'] === 1);
+for ($k = 0; $k < FL_SHARE_TRIES; $k++) fl_share_proof($tk, $wrong);
+t('too many wrong proofs lock the link for a while, even for the right one', fl_share_proof($tk, $proof) === 'wait');
+t('...and the lock ends after the wait', fl_share_proof($tk, $proof, time() + FL_SHARE_WAIT + 5) === 'ok');
+fl_share_count($tk);
+t('one download is counted', fl_share_get($tk)['dl'] === 1);
+fl_share_count($tk);
+t('a link whose limit is used up looks ended', fl_share_get($tk) === null);
+t('...but a download that already began may still fetch its other pieces', fl_share_get($tk, null, true) !== null);
+$d = fl_load(); $o2 = []; fl_op_share_create($d, $fid, $enc('sm'), 0, $o2); fl_save($d); fl_share_count($o2['token']);
+t('a plain link has no password, no limit and is never counted', fl_share_get($o2['token'])['pw'] === false && fl_share_get($o2['token'])['dl'] === 0 && fl_share_proof($o2['token'], '') === 'ok');
+$view = fl_view(fl_load()); $row = null; foreach ($view['shares'] as $r) if ($r['token'] === $tk) $row = $r;
+t('the list shows the password flag, the limit and the count, not the hash', $row && $row['pw'] === true && $row['lim'] === 2 && $row['dl'] === 2 && !isset($row['hash']) && strpos(json_encode($view), hash('sha256', $proof)) === false);

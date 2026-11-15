@@ -84,6 +84,11 @@ function fl_load(): array {
     foreach ((array)($j['shares'] ?? []) as $tok => $s) {
         if (!fl_token_ok($tok) || !is_array($s) || !isset($d['items'][$s['id'] ?? '']) || !fl_enc_ok($s['sm'] ?? null, 1200)) continue;
         $d['shares'][$tok] = ['id' => $s['id'], 'exp' => max(0, (int)($s['exp'] ?? 0)), 'at' => max(0, (int)($s['at'] ?? 0)), 'sm' => $s['sm']];
+        $k = &$d['shares'][$tok];   // (1.80.0) options: a password hash, a download limit and its count, and the wrong-try count
+        if (is_string($s['pw'] ?? null) && preg_match('/^[a-f0-9]{64}$/', $s['pw'])) $k['pw'] = $s['pw'];
+        if ((int)($s['lim'] ?? 0) > 0) { $k['lim'] = min(10000, (int)$s['lim']); $k['dl'] = max(0, (int)($s['dl'] ?? 0)); }
+        if ((int)($s['bad'] ?? 0) > 0) { $k['bad'] = (int)$s['bad']; $k['bt'] = max(0, (int)($s['bt'] ?? 0)); }
+        unset($k);
     }
     return $d;
 }
@@ -184,7 +189,7 @@ function fl_view(array $d): array {
         $items[] = $o;
     }
     $shares = [];
-    foreach ($d['shares'] as $tok => $s) $shares[] = ['token' => $tok, 'id' => $s['id'], 'exp' => $s['exp'], 'at' => $s['at']];
+    foreach ($d['shares'] as $tok => $s) $shares[] = ['token' => $tok, 'id' => $s['id'], 'exp' => $s['exp'], 'at' => $s['at'], 'pw' => !empty($s['pw']), 'lim' => (int)($s['lim'] ?? 0), 'dl' => (int)($s['dl'] ?? 0)];
     $free = fl_free();
     return ['ok' => true, 'rev' => $d['rev'], 'items' => $items, 'shares' => $shares, 'settings' => $d['settings'], 'usage' => fl_usage($d), 'free' => $free,
             'max' => $d['settings']['limit'] > 0 ? $d['settings']['limit'] : null];
@@ -276,15 +281,25 @@ function fl_op_empty_trash(array &$d) {
     $ids = []; foreach ($d['items'] as $i) if (!empty($i['top']) && $i['del'] > 0) $ids[] = $i['id'];
     fl_purge($d, $ids); return '';
 }
-function fl_op_share_create(array &$d, string $id, string $sm, int $exp, array &$out) {
+/* (1.80.0) Share link options. A password is checked on this side as a "proof": the browser makes it from the password and the link's token (PBKDF2), so the
+   password itself never arrives; only a hash of the proof is kept. A download limit counts how many times the first piece is fetched. */
+const FL_SHARE_TRIES = 15;    // wrong passwords allowed per link ...
+const FL_SHARE_WAIT = 600;    // ... in this many seconds
+function fl_proof_ok($p): bool { return is_string($p) && (bool)preg_match('/^[A-Za-z0-9_-]{43}$/', $p); }
+function fl_proof_hash(string $proof): string { return hash('sha256', $proof); }
+function fl_op_share_create(array &$d, string $id, string $sm, int $exp, array &$out, string $pw = '', int $lim = 0) {
     if (empty($d['settings']['shares'])) return ['Share links are turned off in Files Settings.', 403];
     $i = $d['items'][$id] ?? null;
     if (!$i || $i['t'] !== 'f' || $i['del'] > 0 || !empty($i['up'])) return ['Only a finished file can be shared.', 404];
     if (!fl_enc_ok($sm, 1200)) return ['That link does not look right.', 400];
     if ($exp !== 0 && ($exp < time() + 60 || $exp > time() + 3650 * 86400)) return ['Pick an end date that is still to come (within ten years).', 400];
+    if ($pw !== '' && !fl_proof_ok($pw)) return ['That password does not look right.', 400];
+    if ($lim < 0 || $lim > 10000) return ['Pick a download limit from 1 to 10000, or none.', 400];
     if (count($d['shares']) >= FL_MAX_SHARES) return ['That is the most share links Files keeps (' . FL_MAX_SHARES . '). Remove some first.', 400];
     $tok = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
     $d['shares'][$tok] = ['id' => $id, 'exp' => $exp, 'at' => time(), 'sm' => $sm];
+    if ($pw !== '') $d['shares'][$tok]['pw'] = fl_proof_hash($pw);
+    if ($lim > 0) { $d['shares'][$tok]['lim'] = $lim; $d['shares'][$tok]['dl'] = 0; }
     $out['token'] = $tok;
     return '';
 }
@@ -293,13 +308,33 @@ function fl_op_share_delete(array &$d, string $tok) {
     unset($d['shares'][$tok]); return '';
 }
 /** What a share link shows its holder, or null when it is not valid (missing, ended, or its file is gone: all look the same). */
-function fl_share_get(string $tok, ?int $now = null): ?array {
+function fl_share_get(string $tok, ?int $now = null, bool $more = false): ?array {
     if (!fl_token_ok($tok)) return null;
     $d = fl_load(); $s = $d['settings']['shares'] ? ($d['shares'][$tok] ?? null) : null;
     if (!$s || ($s['exp'] > 0 && $s['exp'] < ($now ?? time()))) return null;
+    $lim = (int)($s['lim'] ?? 0); $dl = (int)($s['dl'] ?? 0);
+    if ($lim > 0 && $dl >= $lim && !$more) return null;   // used up (a download that has started may still fetch its other pieces: $more)
     $i = $d['items'][$s['id']] ?? null;
     if (!$i || $i['t'] !== 'f' || $i['del'] > 0 || !empty($i['up'])) return null;
-    return ['id' => $i['id'], 'c' => $i['c'], 'z' => $i['z'], 'sm' => $s['sm'], 'exp' => $s['exp']];
+    return ['id' => $i['id'], 'c' => $i['c'], 'z' => $i['z'], 'sm' => $s['sm'], 'exp' => $s['exp'], 'pw' => !empty($s['pw']), 'lim' => $lim, 'dl' => $dl];
+}
+/** Does this proof open the link? 'ok', 'need' (none sent), 'wrong', or 'wait' (too many wrong ones lately). A wrong proof is counted. */
+function fl_share_proof(string $tok, string $proof, ?int $now = null): string {
+    $now = $now ?? time(); $d = fl_load(); $s = $d['shares'][$tok] ?? null;
+    if (!$s || empty($s['pw'])) return 'ok';
+    if ((int)($s['bad'] ?? 0) >= FL_SHARE_TRIES && $now - (int)($s['bt'] ?? 0) < FL_SHARE_WAIT) return 'wait';
+    if ($proof === '' ) return 'need';
+    if (fl_proof_ok($proof) && hash_equals($s['pw'], fl_proof_hash($proof))) return 'ok';
+    fl_modify(function (array &$x) use ($tok, $now) {
+        if (!isset($x['shares'][$tok])) return '';
+        $r = &$x['shares'][$tok]; if ($now - (int)($r['bt'] ?? 0) >= FL_SHARE_WAIT) $r['bad'] = 0;
+        $r['bad'] = (int)($r['bad'] ?? 0) + 1; $r['bt'] = $now; return '';
+    });
+    return 'wrong';
+}
+/** One more download of a link (called when its first piece is sent). */
+function fl_share_count(string $tok): void {
+    fl_modify(function (array &$x) use ($tok) { if (isset($x['shares'][$tok]) && !empty($x['shares'][$tok]['lim'])) $x['shares'][$tok]['dl'] = (int)($x['shares'][$tok]['dl'] ?? 0) + 1; return ''; });
 }
 
 function fl_bytes(int $n): string {

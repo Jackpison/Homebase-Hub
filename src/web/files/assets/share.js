@@ -29,29 +29,53 @@ async function main() {
   const t = new URLSearchParams(location.search).get("t") || "", key = location.hash.slice(1);
   if (!/^[A-Za-z0-9_-]{32}$/.test(t) || !/^[A-Za-z0-9_-]{43}$/.test(key)) return fail("This link is not complete. Ask for it again, and copy the whole address.");
   if (!(window.isSecureContext && crypto && crypto.subtle)) return fail("Opening a locked file needs a secure (https) connection.");
-  let r; try { r = await fetch("api.php?action=s_meta&t=" + t, { cache: "no-store" }); } catch (e) { return fail("Can't reach the server."); }
-  if (!r.ok) return fail("This link has ended or was removed.");
-  const m = await r.json();
   let fk;
   try { fk = await crypto.subtle.importKey("raw", ub64u(key), "AES-GCM", false, ["decrypt"]); } catch (e) { return fail("The key in this link is damaged."); }
+  /* (1.80.0) a link with a password: the proof is PBKDF2 of the password with the key as salt (the same as Files makes), sent in a header; the password is never sent */
+  let proof = "";
+  const hd = () => /** @type {Record<string, string>} */ (proof ? { "X-Share-Proof": proof } : {});
+  const askPw = () => new Promise(res => {
+    const f = $("pwf"), inp = $("pw"); f.hidden = false; $("name").textContent = "This File Has a Password"; $("info").textContent = "Type the password you were given."; inp.focus();
+    f.onsubmit = async ev => {
+      ev.preventDefault(); const b = f.querySelector("button"); b.disabled = true; $("err").textContent = "";
+      const raw = ub64u(key), salt = new Uint8Array(raw.length + 12); salt.set(new TextEncoder().encode("hub-share-pw"), 0); salt.set(raw, 12);
+      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(inp.value), "PBKDF2", false, ["deriveBits"]);
+      const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 150000 }, base, 256));
+      proof = btoa(String.fromCharCode(...bits)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      res(true); b.disabled = false;
+    };
+  });
+  let m;
+  for (;;) {
+    let r; try { r = await fetch("api.php?action=s_meta&t=" + t, { cache: "no-store", headers: hd() }); } catch (e) { return fail("Can't reach the server."); }
+    if (r.status === 429) { const j0 = await r.json().catch(() => ({})); return fail(j0.error || "Too many tries. Wait a while."); }
+    if (!r.ok && r.status !== 403) return fail("This link has ended or was removed.");
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 403) { $("err").textContent = j.error || "That password is not right."; proof = ""; await askPw(); continue; }
+    if (j.pw && !proof) { await askPw(); continue; }
+    m = j; break;
+  }
+  $("pwf").hidden = true; $("err").textContent = "";
   let info;
   try { const w = ub64(m.sm.slice(5)); info = JSON.parse(td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: w.subarray(0, 12) }, fk, w.subarray(12)))); }
   catch (e) { return fail("This link's key does not open the file. Ask for the link again."); }
   const name = String(info.n || "file"), size = +info.s || Math.max(0, m.z - m.c * 28);
+  let cache = /** @type {any} */ (null);   // the opened file: the quick look and Download share it, so a download limit counts once
   $("name").textContent = name; document.title = name;
   const FC = /** @type {any} */ (window).FileCard, ic = document.querySelector("#app > .ico");   // (1.66.0) the file's type card instead of a plain page icon
-  if (FC && ic) { ic.replaceChildren(FC.make(name, "l")); ic.classList.add("fc"); } $("info").textContent = fmt(size) + (m.exp ? " · link ends " + new Date(m.exp * 1000).toLocaleDateString() : "");
+  if (FC && ic) { ic.replaceChildren(FC.make(name, "l")); ic.classList.add("fc"); } $("info").textContent = fmt(size) + (m.exp ? " · link ends " + new Date(m.exp * 1000).toLocaleDateString() : "") + (m.lim ? " · " + m.left + (m.left === 1 ? " download" : " downloads") + " left" : "");
   const get = async onBytes => {
+    if (cache) return cache;
     const parts = [];
     for (let i = 0; i < m.c; i++) {
-      const p = await fetch("api.php?action=s_chunk&t=" + t + "&n=" + i, { cache: "no-store" });
+      const p = await fetch("api.php?action=s_chunk&t=" + t + "&n=" + i, { cache: "no-store", headers: hd() });
       if (!p.ok) throw new Error(p.status === 404 ? "This link has ended or was removed." : "Could not download (" + p.status + ").");
       const d = new Uint8Array(await p.arrayBuffer());
       try { parts.push(new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: d.subarray(0, 12), additionalData: aad(i, m.c) }, fk, d.subarray(12)))); }
       catch (e) { throw new Error("The file did not open: it was changed, or the key does not fit."); }
       if (onBytes) onBytes(parts.reduce((a, x) => a + x.length, 0));
     }
-    return parts;
+    cache = parts; return parts;
   };
   const e = ext(name), dl = $("dl"); dl.hidden = false;
   dl.onclick = async () => {

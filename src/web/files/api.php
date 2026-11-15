@@ -16,8 +16,8 @@ declare(strict_types=1);
  *  POST mkdir {p, m}            a folder         POST rename {id, m}      POST move {ids, p}
  *  GET put_status?id=  the pieces an open upload already has (Resume);  POST put_start {p, m, k, c, z}   starts a file (c pieces, z bytes in all); POST put_chunk?id=&n= (the piece, raw); POST put_done {id}; POST put_abort {id}
  *  POST trash {ids}  restore {ids, p?}  purge {ids}  empty_trash
- *  POST share_create {id, sm, exp}  share_delete {token}  settings {settings}
- *  GET  s_meta?t=  /  s_chunk?t=&n=     a share link's file, for anyone who has the link (the key is in the part of the link after #, never sent here)
+ *  POST share_create {id, sm, exp, pw?, lim?}  share_delete {token}  settings {settings}
+ *  GET  s_meta?t=  /  s_chunk?t=&n=     a share link's file, for anyone who has the link (a link with a password also needs the header X-Share-Proof) (the key is in the part of the link after #, never sent here)
  *
  * Every POST passes the same-site checks and the site's security check. Names, types and keys arrive already locked ("enc1:..."):
  * this file only checks their shape. Pieces are stored under random names with no extension and are only ever sent as downloads.
@@ -51,10 +51,19 @@ function piece_out(string $id, int $n, int $c): never {
 if ($action === 's_meta' || $action === 's_chunk') {
     if ($method !== 'GET') hub_json(405, ['ok' => false, 'error' => 'Use GET.']);
     header('Content-Type: application/json; charset=utf-8');
-    $s = fl_share_get((string)($_GET['t'] ?? ''));
-    if ($s === null) hub_json(404, ['ok' => false, 'error' => 'This link has ended or was removed.']);   // missing, ended and removed look the same
-    if ($action === 's_meta') hub_json(200, ['ok' => true, 'sm' => $s['sm'], 'c' => $s['c'], 'z' => $s['z'], 'exp' => $s['exp']]);
-    piece_out($s['id'], num($_GET['n'] ?? null), $s['c']);
+    $tok = (string)($_GET['t'] ?? ''); $n = num($_GET['n'] ?? null);
+    $s = fl_share_get($tok, null, $action === 's_chunk' && $n > 0);
+    if ($s === null) hub_json(404, ['ok' => false, 'error' => 'This link has ended or was removed.']);   // missing, ended, used up and removed look the same
+    $proof = (string)($_SERVER['HTTP_X_SHARE_PROOF'] ?? '');
+    if ($s['pw']) {   // (1.80.0) a link with a password: no name, size or piece without the proof
+        $pr = fl_share_proof($tok, $proof);
+        if ($pr === 'wait') hub_json(429, ['ok' => false, 'pw' => true, 'error' => 'Too many wrong passwords. Wait ten minutes and try again.']);
+        if ($pr === 'need' && $action === 's_meta') hub_json(200, ['ok' => true, 'pw' => true]);
+        if ($pr !== 'ok') hub_json(403, ['ok' => false, 'pw' => true, 'error' => $pr === 'wrong' ? 'That password is not right.' : 'This link needs its password.']);
+    }
+    if ($action === 's_meta') hub_json(200, ['ok' => true, 'sm' => $s['sm'], 'c' => $s['c'], 'z' => $s['z'], 'exp' => $s['exp'], 'lim' => $s['lim'], 'left' => $s['lim'] > 0 ? max(0, $s['lim'] - $s['dl']) : null]);
+    if ($n === 0) fl_share_count($tok);
+    piece_out($s['id'], $n, $s['c']);
 }
 
 header('Content-Type: application/json; charset=utf-8');
@@ -155,8 +164,8 @@ case 'purge':
 case 'empty_trash':
     done(fl_modify(function (array &$d) { return fl_op_empty_trash($d); }));
 case 'share_create':
-    $id = $one(); $sm = $str('sm'); $exp = (int)($b['exp'] ?? 0); $out = [];
-    $r = fl_modify(function (array &$d) use ($id, $sm, $exp, &$out) { return fl_op_share_create($d, $id, $sm, $exp, $out); });
+    $id = $one(); $sm = $str('sm'); $exp = (int)($b['exp'] ?? 0); $pw = $str('pw'); $lim = (int)($b['lim'] ?? 0); $out = [];
+    $r = fl_modify(function (array &$d) use ($id, $sm, $exp, $pw, $lim, &$out) { return fl_op_share_create($d, $id, $sm, $exp, $out, $pw, $lim); });
     done($r, ['token' => $out['token'] ?? '']);
 case 'share_delete':
     $t = $str('token'); if (!fl_token_ok($t)) hub_json(400, ['ok' => false, 'error' => 'Bad data.']);

@@ -345,3 +345,10 @@ select.chs{height:32px;font-size:13.5px;padding:0 8px}
 .dnote{margin:8px 0;padding:8px 10px;border-radius:9px;background:color-mix(in srgb,var(--fg) 6%,transparent);white-space:pre-wrap;font-size:13.5px}
 dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--field);color:var(--fg);padding:9px 10px;font:inherit;resize:vertical}
 .chk{display:flex;align-items:center;gap:8px}
+
+/* (1.80.0) share link options and QR code */
+.shend{display:grid;gap:6px}
+.shend .pwn{color:var(--mute)}
+.qrbox{margin:8px 0 0;padding:10px;background:#fff;border-radius:10px;width:fit-content}
+.qrbox img{display:block;image-rendering:pixelated}
+.lk .linkbox{flex-wrap:wrap}
