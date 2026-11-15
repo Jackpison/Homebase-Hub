@@ -286,6 +286,9 @@ story += chapter('11', 'Settings', 'Everything about the site, in one page.',
  *sub('Health'),
  table(['Tab', 'What it holds'], [['Overview', 'Disk use, speed, errors, backups, and Test a Restore.'], ['Cleanup', 'What the site has piled up (old page versions, unused Home photos, expired login files, the host error log), each let go with a held button. Nothing you made is touched.'], ['Server Check', 'What your hosting allows: reaching other websites (including GitHub), writing folders, PHP limits and extensions; then Files That Do Not Belong.']]),
  shot('s-check', 'Health, Server Check.'),
+ *sub('Features'),
+ P('%s turns off what you do not use: Telegram, Tasks, Cards, Files and Tools. Off is real: the page says it is off, its server address refuses requests, and Telegram\'s bot, reminders and backups stop. Your data stays, and turning a feature back on restores everything. Install on Your Phone is here too.' % C('Turn Off What You Do Not Use')),
+ shot('s-features', 'Settings, Features.'),
  phones(['m-settings', 'm-tasks', 'm-info'], 'On a phone, Settings opens with its menu, and every page fits the screen.'))
 
 story += chapter('12', 'Updates', 'Update from GitHub with one click and your password, or by uploading a zip.',
