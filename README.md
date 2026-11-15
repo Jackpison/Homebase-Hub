@@ -329,7 +329,7 @@ On Telegram: <a href="https://t.me/Jackpison">@Jackpison</a>. For bugs, use <a h
 
 ## Contributing
 
-Bug reports and ideas are welcome. Found a problem? [Open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose) with your version (Settings > Changelog), what you did, what you expected and what happened. An idea or a question? Message [@Jackpison](https://t.me/Jackpison) on Telegram. [AGENTS.md](AGENTS.md) lists the rules and every check to run before a change.
+Bug reports and ideas are welcome. Found a bug? [Open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose) with your version (Settings > Changelog), what you did, what you expected and what happened. An idea or a question? Message [@Jackpison](https://t.me/Jackpison) on Telegram. [AGENTS.md](AGENTS.md) lists the rules and every check to run before a change.
 
 ### Building and testing
 
@@ -352,7 +352,8 @@ Every version is in [CHANGELOG.md](CHANGELOG.md) and on the [website](https://ja
 
 ## Contact
 
-- 🐞 **Bugs and other problems, security problems included:** [open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose) (see [SECURITY.md](.github/SECURITY.md))
+- 🐞 **Bugs and other problems:** [open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose)
+- 🛡️ **Security problems:** report them privately, as [SECURITY.md](.github/SECURITY.md) explains
 - 💬 **Questions, feature requests and anything else:** Telegram [@Jackpison](https://t.me/Jackpison)
 
 ## Licence and credits
