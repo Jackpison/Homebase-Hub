@@ -40,3 +40,10 @@ p{margin:0 0 14px;color:var(--mute)}
 .galc figcaption{font-size:13px;color:var(--mute);word-break:break-word}
 .galc.bad{border-color:var(--bad)}
 .btn.sm{height:32px;padding:0 14px;font-size:13px}
+
+/* (1.80.3) the same button hover as the rest of the site */
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .btn{transition:transform .3s ease-in-out,box-shadow .3s ease-in-out,background-color .15s,border-color .15s,opacity .15s;box-shadow:0 0 0 0 currentColor}
+  .btn:not([disabled]):hover{transform:translate(-2px,-4px);box-shadow:2px 5px 0 0 currentColor}
+  .btn:not([disabled]):active{transform:translate(1px,2px);box-shadow:0 0 0 0 currentColor}
+}

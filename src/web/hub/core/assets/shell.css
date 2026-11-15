@@ -1089,7 +1089,7 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 
 /* (1.80.3) Button hover: the button lifts up and to the left and casts a hard shadow; pressed, it drops back. The shadow takes the button's own text colour. */
 @media (hover:hover) and (prefers-reduced-motion:no-preference){
-  .btn:not(.ib),.ix-btn,dialog .act button,dialog .df .btn{transition:transform .3s ease-in-out,box-shadow .3s ease-in-out,background-color .15s,border-color .15s,opacity .15s;box-shadow:0 0 0 0 currentColor}
-  .btn:not(.ib):not(:disabled):not([data-hold]):hover,.ix-btn:not(:disabled):not([data-hold]):hover,dialog .act button:not(:disabled):not([data-hold]):hover,dialog .df .btn:not(:disabled):not([data-hold]):hover{transform:translate(-2px,-4px);box-shadow:2px 5px 0 0 currentColor}
-  .btn:not(.ib):not(:disabled):not([data-hold]):active,.ix-btn:not(:disabled):not([data-hold]):active,dialog .act button:not(:disabled):not([data-hold]):active,dialog .df .btn:not(:disabled):not([data-hold]):active{transform:translate(1px,2px);box-shadow:0 0 0 0 currentColor}
+  .btn:not(.ib):not(.square),.ix-btn,dialog .act button,dialog .df .btn{transition:transform .3s ease-in-out,box-shadow .3s ease-in-out,background-color .15s,border-color .15s,opacity .15s;box-shadow:0 0 0 0 currentColor}
+  .btn:not(.ib):not(.square):not(:disabled):not([data-hold]):hover,.ix-btn:not(:disabled):not([data-hold]):hover,dialog .act button:not(:disabled):not([data-hold]):hover,dialog .df .btn:not(:disabled):not([data-hold]):hover{transform:translate(-2px,-4px);box-shadow:2px 5px 0 0 currentColor}
+  .btn:not(.ib):not(.square):not(:disabled):not([data-hold]):active,.ix-btn:not(:disabled):not([data-hold]):active,dialog .act button:not(:disabled):not([data-hold]):active,dialog .df .btn:not(:disabled):not([data-hold]):active{transform:translate(1px,2px);box-shadow:0 0 0 0 currentColor}
 }
