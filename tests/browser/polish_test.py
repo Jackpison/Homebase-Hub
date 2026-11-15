@@ -119,8 +119,8 @@ try:
         pg.keyboard.press('Enter'); wait_js(pg, "!!document.querySelector('#ix-dlg.open .ix-keys')", 5000)
         check('P20 (1.79.7) the search box just says "Search"; typing ? shows Keyboard Shortcuts first and Enter opens the list', ph == 'Search' and first == 'Keyboard Shortcuts', (ph, first))
         pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
-        pg.click('#ix-keysf'); wait_js(pg, "!!document.querySelector('#ix-dlg.open .ix-keys')", 5000)
-        check('P20b (1.79.8) the small ? above the bell opens the keyboard shortcuts', True)
+        pg.click('#ix-bell'); pg.click('#ix-nlist [data-keys]'); wait_js(pg, "!!document.querySelector('#ix-dlg.open .ix-keys')", 5000)
+        check('P20b (1.79.12) the Alerts list has a Shortcuts button that opens the keyboard shortcuts, and there is no floating ? button', pg.evaluate("!document.getElementById('ix-keysf') && !document.getElementById('ix-nlist')"))
         pg.keyboard.press('Escape'); wait_js(pg, "!document.querySelector('#ix-dlg.open')", 5000)
 
         # ---- (1.65.1) Settings > Start Here (General before 1.70.0): Keyboard Shortcuts; closing that window and changing section still works ----
@@ -353,6 +353,9 @@ try:
         s.php("hub_settings_update(function ($x) { $x['barHide'] = true; return $x; });")
         tp.goto(s.base + '/web/settings/#nav'); wait_js(tp, "!!document.getElementById('ix-bh')", 20000)
         sw = tp.evaluate("document.getElementById('ix-bh').checked")
+        tp.evaluate("localStorage.setItem('hub-barhide', '0')"); tp.goto(s.base + '/web/links/'); wait_js(tp, "document.documentElement.hasAttribute('data-ix-nohide') && !!document.getElementById('ix-bar')", 20000)
+        mine = tp.evaluate("document.documentElement.hasAttribute('data-ix-nohide')"); tp.evaluate("localStorage.removeItem('hub-barhide')")
+        check('P60b (1.79.12) Hide the Bar While Scrolling is a choice of the device: this device switched it off while the site says on', mine)
         check('P60 Hide the Bar While Scrolling: on, the top bar slides away as you scroll down; off, it stays; the switch is in Appearance > Bar (1.68.2; Look before 1.70.0)', hid_on is True and hid_off is False and sw is True, (hid_on, hid_off, sw))
         tp.context.close()
         # ---- (1.68.4) one glass for the whole site: the Home widgets, Liquid only over photos, Where, Tone / Rim / Saturation ----

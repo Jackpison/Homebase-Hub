@@ -28,7 +28,7 @@ let widgetsDraft = null;
 function openWidgets(){
   widgetsDraft = structuredClone(ADMIN.widgets);
   const w = widgetsDraft;
-  $('#wShow').checked = w.show;
+  $('#wShow').checked = wShowNow();
   seg($('#wStyle'), w.style);
   $('#wClock').checked = w.clock;
   $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date; $('#wCdTime').value = w.countdown.time || '';
@@ -93,7 +93,7 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   const zones = [0, 1, 2].map(i => ({ tz:$(`[data-zt="${i}"]`).value.trim(), name:$(`[data-zn="${i}"]`).value.trim() })).filter(z => z.tz);
   const badZone = zones.find(z => !tzOk(z.tz));
   if (badZone){ toast(`“${badZone.tz}” is not a time zone. Pick one from the list, like Europe/London.`, true); $(`[data-zt]`)?.focus(); return; }
-  w.show = $('#wShow').checked;
+  try { localStorage.setItem('hl-wshow', $('#wShow').checked ? '1' : '0'); } catch {}   // this device only
   w.zones = zones;
   w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
@@ -102,6 +102,7 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   ADMIN.widgets = w;
   try {
     await saveAll('Widgets saved');
+    renderWidgets(); loadWidgets();   // (1.79.12) this device's Show Widgets switch is not part of the saved settings, so draw again
     closeSheet('widgetsSheet');
   } catch (err){ ADMIN.widgets = prev; toast(err.message, true); }
 }));

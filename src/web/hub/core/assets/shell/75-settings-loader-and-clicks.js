@@ -51,7 +51,7 @@
 
 
   /* what shell-admin.js may use (it holds this same S object, so it always sees the current state) */
-  window.__ixShell = { S: S, esc: esc, toast: toast, noteLog: noteLogGet, noteLogClear: noteLogClear, noteTile: noteTile, noteKind: noteKind, noteLabel: function (k) { return NOTE_LABEL[k] || 'Done'; }, legacyCopy: legacyCopy, api: api, ICON: ICON, dollar: $, svg: svg, drawBar: drawBar, redraw: function () { lastBar = ''; drawBar(); },
+  window.__ixShell = { S: S, esc: esc, toast: toast, noteLog: noteLogGet, noteLogSync: noteLogSync, noteLogClear: noteLogClear, noteTile: noteTile, noteKind: noteKind, noteLabel: function (k) { return NOTE_LABEL[k] || 'Done'; }, legacyCopy: legacyCopy, api: api, ICON: ICON, dollar: $, svg: svg, drawBar: drawBar, redraw: function () { lastBar = ''; drawBar(); },
     remember: remember, applySizes: applySizes, APP: APP, openDlg: openDlg, closeDlg: closeDlg, login: login, ROOT: ROOT, applyFont: applyFont,
     applyColors: applyColors, applyAttrs: applyAttrs, PG_APPS: PG_APPS, CORE: CORE, ASSETS: ASSETS, COLOR_DEFAULT: COLOR_DEFAULT, setTheme: setTheme, pageList: pageList,
     applyFavicon: applyFavicon, SIZE_SPEC: SIZE_SPEC, PAGE_DEF: PAGE_DEF, FONTS: FONTS, COLOR_KEYS: COLOR_KEYS, when: when, previewWith: previewWith,

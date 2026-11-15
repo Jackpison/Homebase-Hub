@@ -208,7 +208,7 @@ if (!empty($site['private']) && !hub_admin()) {
       <section>
         <p class="hint">Only you see widgets. Visitors see the clock.</p>
         <div class="group">
-          <label class="g-row"><span class="g-label">Show Widgets<small>Off: only the clock and your background, also for you.</small></span>
+          <label class="g-row"><span class="g-label">Show Widgets<small>Off: only the clock and your background, also for you. This device only: a phone starts with none.</small></span>
             <input type="checkbox" class="switch" id="wShow"></label>
         </div>
         <h3>Style</h3>

@@ -310,7 +310,7 @@ html[data-ix-bar][data-ix-app="info"] .top{display:none}
 /* its title,search and buttons are all replaced by the bar */
 html[data-ix-app="tools"] .search{display:none!important}
 /* Tools' own search box: the bar has it */
-html[data-ix-app="home"][data-ix-bar] .corner{top:auto!important;right:auto!important;left:max(16px,env(safe-area-inset-left))!important;bottom:max(14px,env(safe-area-inset-bottom))!important}   /* (1.79.11) bottom left: the bell and the ? sit at the bottom right */
+html[data-ix-app="home"][data-ix-bar] .corner{top:auto!important;right:auto!important;left:max(16px,env(safe-area-inset-left))!important;bottom:max(14px,env(safe-area-inset-bottom))!important}   /* (1.79.11) bottom left */
 html[data-ix-app="home"][data-ix-bar][data-ix-nav="dock"] .corner{bottom:auto!important;top:max(14px,env(safe-area-inset-top))!important}
 /* the pages' own bottom edit bars move up above the dock */
 html[data-ix-nav="dock"][data-ix-app="links"] .editbar,html[data-ix-nav="dock"][data-ix-app="info"] #ebar,html[data-ix-nav="dock"][data-ix-app="home"] .toolbar{margin-bottom:calc(var(--ix-dock) + 24px)!important}
@@ -1048,11 +1048,6 @@ html[data-ix-glass]:not([data-ix-gsolid]) #ix-ebar{background:color-mix(in srgb,
 #ix-offp p{margin:0;color:var(--ix-mu,inherit);opacity:.8}
 
 /* (1.79.7) the ? button for the keyboard shortcuts: only where there is a keyboard and a mouse */
-#ix-keysf{position:fixed;right:23px;bottom:72px;z-index:2147483002;width:30px;height:30px;border-radius:50%;border:1px solid var(--ix-line2);background:var(--ix-s1);color:var(--ix-mu);font:700 14px/1 var(--ix-font);display:grid;place-items:center;cursor:pointer;opacity:.7;padding:0}
-#ix-keysf[hidden]{display:none}
-#ix-keysf:hover,#ix-keysf:focus-visible{opacity:1;color:var(--ix-tx)}
-html[data-ix-nav="dock"] #ix-keysf{bottom:calc(var(--ix-dock) + 34px + 56px + env(safe-area-inset-bottom,0px))}
-@media (hover:none),(pointer:coarse){#ix-keysf{display:none!important}}
 
 /* (1.79.9) messages wear the colour of the page they came from */
 .ix-nc[style*="--pc"]{border-left:3px solid var(--pc)}
@@ -1070,3 +1065,13 @@ html.ix-hide[data-ix-flat][data-ix-nav="top"] #ix-bar{transform:translateY(calc(
 #dlg select option,#ix-page select option,.ix-sdlg select option{background:var(--ix-s1,#1b1b1f);color:var(--ix-tx,#fff)}
 /* (1.79.11) on a phone Home's clock starts below the bar, also under an iPhone's status bar */
 @media (max-width:640px){html[data-ix-app="home"][data-ix-bar][data-ix-nav="top"] body.has-widgets .stage,html[data-ix-app="home"][data-ix-bar][data-ix-nav="top"] .stage{padding-top:max(clamp(56px,12vh,110px),calc(var(--ix-top) + 14px))}}
+/* (1.79.12) Alerts: the bell lives in the bar next to the theme button; the list has boxed Logs and Shortcuts buttons and, with a top bar, opens under it */
+#ix-bar #ix-bell.ix-bb{position:relative;right:auto;bottom:auto;z-index:auto;width:32px;height:32px;border:0;border-radius:10px;background:none;box-shadow:none;opacity:1;color:inherit;display:grid;place-items:center;flex:none;cursor:pointer}
+#ix-bar #ix-bell.ix-bb[hidden]{display:none}
+#ix-bar #ix-bell.ix-bb.ix-quiet{opacity:.85}
+#ix-bar #ix-bell.ix-bb:hover{background:color-mix(in srgb,currentColor 12%,transparent);opacity:1}
+#ix-bar #ix-bell.ix-bb b{top:-3px;right:-3px}
+.ix-nlh .ix-nlq{border:1px solid var(--ix-line2);color:var(--ix-tx)}
+@media (hover:none),(pointer:coarse){.ix-nlh [data-keys]{display:none}}
+html[data-ix-nav="top"] #ix-nlist.ix-under{top:calc(var(--ix-top-now,60px) + 6px);bottom:auto;right:16px}
+html[data-ix-app="home"][data-ix-bar]:not([data-ix-nav="dock"]) .corner #nextBg{order:-1}   /* (1.79.12) the refresh button first, then the credit */

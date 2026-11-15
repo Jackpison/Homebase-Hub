@@ -35,7 +35,8 @@
     gfx = (S.glassFx && typeof S.glassFx === 'object' && !Array.isArray(S.glassFx)) ? S.glassFx : {};
     glassVars();
     // (1.68.2) Settings > Appearance > Hide the Bar While Scrolling (on unless switched off)
-    if (S.barHide === false) { H.setAttribute('data-ix-nohide', ''); H.classList.remove('ix-hide', 'ix-scrolling'); } else H.removeAttribute('data-ix-nohide');
+    var bhl = ls.get('hub-barhide');   // (1.79.12) Hide the Bar While Scrolling is a choice of this device; the site's value is only the start
+    if (bhl === '0' || (bhl !== '1' && S.barHide === false)) { H.setAttribute('data-ix-nohide', ''); H.classList.remove('ix-hide', 'ix-scrolling'); } else H.removeAttribute('data-ix-nohide');
     if (S.barRound === false) H.setAttribute('data-ix-flat', ''); else H.removeAttribute('data-ix-flat');   // (1.79.10) Appearance > Rounded Bar
     var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Appearance > Colors)
     H.style.setProperty('--ix-accent', acc);

@@ -2,7 +2,7 @@
 function renderWidgets(quiet = false){
   renderClock();
   const a = /** @type {HTMLElement} */ (document.activeElement), keep = a && a.dataset && a.dataset.w && !$('#wPanel').contains(a) ? [/** @type {HTMLElement} */ (a.parentNode).id, a.dataset.w] : null;
-  const list = WCFG && WCFG.show ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];   // Widgets > Show Widgets off: none
+  const list = wShowNow() ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];   // Widgets > Show Widgets off: none
   const dock = WCFG && WCFG.style === 'dock';
   if (wOpen && !list.includes(wOpen)) wOpen = '';
   document.body.classList.toggle('has-widgets', list.length > 0);

@@ -98,7 +98,7 @@
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
   var TABMERGE = { security: [['Sign-In', ['password', 'passkeys', 'two-step-login', 'telegram-login-approval', 'login-approval']], ['Data Protection', ['encryption']], ['Devices', ['devices', 'trusted-browsers']]] };   // (1.74.2) Security: eight tabs become four
   var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Back Up' };   // sections whose accordions become tabs, and the name of their first tab
-  var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'barRound', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
+  var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barRound', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
   var draft;
   /* what Save Settings would send, written the same way every time (empty color sets and their order don't count) */
   function canonColors(c) {
@@ -134,7 +134,7 @@
   function canonAccents(a) { var out = {}; Object.keys(a || {}).sort().forEach(function (k) { if (a[k]) out[k] = a[k]; }); return out; }
   function pick(o) {
     var r = {};
-    SAVED_KEYS.forEach(function (k) { r[k] = k === 'colors' ? canonColors(o.colors) : k === 'accentPg' ? canonAccents(o.accentPg) : k === 'glassFx' ? canonGfx(o.glassFx) : k === 'barHide' ? o.barHide !== false : k === 'barRound' ? o.barRound !== false : k === 'pages' ? (o.pages || []) : (o[k] === undefined ? null : o[k]); });
+    SAVED_KEYS.forEach(function (k) { r[k] = k === 'colors' ? canonColors(o.colors) : k === 'accentPg' ? canonAccents(o.accentPg) : k === 'glassFx' ? canonGfx(o.glassFx) : k === 'barRound' ? o.barRound !== false : k === 'pages' ? (o.pages || []) : (o[k] === undefined ? null : o[k]); });
     return JSON.stringify(r);
   }
   function dirty() { return !!draft && pick(draft) !== pick(S); }
@@ -500,15 +500,17 @@
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
       '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
       '<label class="ix-tg"><span>Rounded Bar<small>The top bar floats with rounded corners. Off makes it a flat bar across the top edge.</small></span><input type="checkbox" id="ix-br"' + (draft.barRound !== false ? ' checked' : '') + '></label>' +
-      '<label class="ix-tg"><span>Hide the Bar While Scrolling<small>The top bar slides away as you scroll down and comes back as you scroll up; the dock shrinks a little. Off keeps the bar in place.</small></span><input type="checkbox" id="ix-bh"' + (draft.barHide !== false ? ' checked' : '') + '></label>' +
+      '<label class="ix-tg"><span>Hide the Bar While Scrolling<small>The top bar slides away as you scroll down and comes back as you scroll up; the dock shrinks a little. Off keeps the bar in place. This device only: your phone and your computer can differ.</small></span><input type="checkbox" id="ix-bh"' + (barHideNow() ? ' checked' : '') + '></label>' +
       '<p class="ix-note">Glass for the bar: the Glass tab.</p>';
   }
+  /* (1.79.12) this device's own choice, else the site's value */
+  function barHideNow() { var v = null; try { v = localStorage.getItem('hub-barhide'); } catch (x) {} return v === '1' ? true : v === '0' ? false : draft.barHide !== false; }
   function bindBar(p) {
     p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
       draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
     p.querySelector('#ix-hb').onchange = function (e) { draft.homeBar = e.target.checked; preview(); };
     p.querySelector('#ix-br').onchange = function (e) { draft.barRound = e.target.checked; preview(); };
-    p.querySelector('#ix-bh').onchange = function (e) { draft.barHide = e.target.checked; preview(); };
+    p.querySelector('#ix-bh').onchange = function (e) { try { localStorage.setItem('hub-barhide', e.target.checked ? '1' : '0'); } catch (x) {} preview(); };
   }
   /* Accent Color (on the Colors tab since 1.70.0). (1.65.3) The picker is adapted from Uiverse.io by Cobp, "horrible-quail-18" (MIT; see web/hub/docs/THIRD-PARTY.md):
      ten squares in a row that swell around the mouse, the hex code in a bubble; a click chooses (the original copies), the arrow keys move along the row */
@@ -1740,7 +1742,7 @@
   function saveSettings() {
     var b = $('#ix-save'); if (b.disabled) return; b.disabled = true; b.textContent = 'Saving…';
     var fail = function (msg) { b.disabled = false; b.textContent = 'Save Settings'; $('#ix-sferr').textContent = msg; };
-    var send = { siteName: draft.siteName, nav: draft.nav, theme: draft.theme, accent: draft.accent, accentPg: canonAccents(draft.accentPg), look: draft.look, homeBar: draft.homeBar, glass: draft.glass === true, glassFx: canonGfx(draft.glassFx), barHide: draft.barHide !== false, barRound: draft.barRound !== false, font: draft.font, fontCustom: draft.fontCustom, colors: draft.colors, tools: draft.tools, backupEvery: draft.backupEvery, pages: draft.pages || [], tz: draft.tz || 'Asia/Kolkata' };
+    var send = { siteName: draft.siteName, nav: draft.nav, theme: draft.theme, accent: draft.accent, accentPg: canonAccents(draft.accentPg), look: draft.look, homeBar: draft.homeBar, glass: draft.glass === true, glassFx: canonGfx(draft.glassFx), barRound: draft.barRound !== false, font: draft.font, fontCustom: draft.fontCustom, colors: draft.colors, tools: draft.tools, backupEvery: draft.backupEvery, pages: draft.pages || [], tz: draft.tz || 'Asia/Kolkata' };
     api('settings', { settings: send }).then(function (j) {
       if (!j.ok || !j.state) {
         return fail(j._status === 401 ? 'You were logged out. Log in again, then save.' : j._status === 403 ? 'Security check failed. Reload the page, then save again.' : (j.error || 'Could not save (server answered ' + (j._status || 'nothing') + ').'));
@@ -3123,19 +3125,20 @@
   var LOGDAY = function (ts) { var d = new Date(ts), t = new Date(), y = new Date(Date.now() - 864e5); return d.toDateString() === t.toDateString() ? 'Today' : d.toDateString() === y.toDateString() ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }); };
   function pLogNotes(p) {
     var all = K.noteLog().slice().reverse(), only = false;
+    K.noteLogSync().then(function (l) { if (p.isConnected) { all = l.slice().reverse(); draw(); } });   // (1.79.12) the lines of every device
     var draw = function () {
       var list = only ? all.filter(function (n) { return n.b; }) : all, day = '';
-      p.innerHTML = tabHead(ICON.bell, 'Notifications', 'Every message the site showed you on this device, newest first. The last 300 are kept here.') +
+      p.innerHTML = tabHead(ICON.bell, 'Notifications', 'Every message the site showed you, from every device you log in from, newest first. The last 300 are kept.') +
         '<div class="ix-row ix-lgbar"><div class="ix-seg" role="tablist" aria-label="Show"><button type="button" role="tab" data-f="all" aria-selected="' + !only + '">All</button><button type="button" role="tab" data-f="bad" aria-selected="' + only + '">Problems</button></div>' +
         '<span class="ix-note" style="margin:0">' + list.length + (list.length === 1 ? ' message' : ' messages') + '</span><button type="button" class="ix-btn" id="ix-lgclr"' + (all.length ? '' : ' disabled') + '>Clear</button></div>' +
         (list.length ? '<div class="ix-lg">' + list.map(function (n) {
           var d = LOGDAY(n.ts), head = d !== day ? '<div class="ix-sect">' + esc(d) + '</div>' : ''; day = d;
-          return head + '<div class="ix-lgr" style="--pc:' + K.noteColor(n) + '">' + K.noteTile(n.k && ICON && K.noteKind ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-lgt"><b></b><i class="ix-lgd"></i></div><div class="ix-lgm"><small>' + esc(n.p || n.s || '') + (n.w ? ' · ' + esc(n.w) : '') + '</small><small>' + esc(new Date(n.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '</small></div><span class="ix-lgk' + (n.b ? ' bad' : '') + '">' + esc(K.noteLabel(n.k || (n.b ? 'bad' : 'ok'))) + '</span></div>'; }).join('') + '</div>'
+          return head + '<div class="ix-lgr" style="--pc:' + K.noteColor(n) + '">' + K.noteTile(n.k && ICON && K.noteKind ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-lgt"><b></b><i class="ix-lgd"></i></div><div class="ix-lgm"><small>' + esc(n.p || n.s || '') + (n.w ? ' · ' + esc(n.w) : '') + (n.dev ? ' · ' + esc(n.dev) : '') + '</small><small>' + esc(new Date(n.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '</small></div><span class="ix-lgk' + (n.b ? ' bad' : '') + '">' + esc(K.noteLabel(n.k || (n.b ? 'bad' : 'ok'))) + '</span></div>'; }).join('') + '</div>'
           : '<div class="ix-empty"><b>' + (only ? 'No Problems' : 'Nothing Yet') + '</b><p>' + (only ? 'Nothing has gone wrong on this device.' : 'Messages appear here as the site shows them.') + '</p></div>');
       [].forEach.call(p.querySelectorAll('.ix-lgr .ix-lgt b'), function (b, i) { b.textContent = list[i].m; });
       [].forEach.call(p.querySelectorAll('.ix-lgr .ix-lgd'), function (d, i) { if (list[i].d) d.textContent = list[i].d; else d.remove(); });
       p.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { only = b.dataset.f === 'bad'; draw(); }; });
-      var c = p.querySelector('#ix-lgclr'); if (c) c.onclick = function () { K.noteLogClear(); all = []; draw(); };
+      var c = p.querySelector('#ix-lgclr'); if (c) c.onclick = function () { K.noteLogClear(); all = []; draw(); };   // for every device
     };
     draw();
   }

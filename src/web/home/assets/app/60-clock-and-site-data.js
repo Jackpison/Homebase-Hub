@@ -71,7 +71,9 @@ async function siteJSON(url, body, opts = {}){
   if (!r.ok || j.error) throw Object.assign(new Error(j.error || 'Request failed'), { status:r.status });
   return j;
 }
-const wOn = id => !!WCFG && WCFG.show && WCFG.list.some(w => w.id === id && w.on);
+/* (1.79.12) Show Widgets is a choice of this device. Without one, a phone shows none and a computer follows the site's setting. */
+const wShowNow = () => { if (!WCFG) return false; let d = null; try { d = localStorage.getItem('hl-wshow'); } catch {} return d === '1' ? true : d === '0' ? false : !!WCFG.show && !matchMedia('(max-width:640px)').matches; };
+const wOn = id => wShowNow() && WCFG.list.some(w => w.id === id && w.on);
 async function loadTasks(){
   try { const j = await siteJSON('../tasks/api.php'); WD.tasks = j.auth ? j.tasks : []; WD.set = j.settings || {}; WD.tasksErr = ''; }
   catch (e){ WD.tasksErr = e.message; }

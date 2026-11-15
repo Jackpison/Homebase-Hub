@@ -461,7 +461,7 @@ let widgetsDraft = null;
 function openWidgets(){
   widgetsDraft = structuredClone(ADMIN.widgets);
   const w = widgetsDraft;
-  $('#wShow').checked = w.show;
+  $('#wShow').checked = wShowNow();
   seg($('#wStyle'), w.style);
   $('#wClock').checked = w.clock;
   $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date; $('#wCdTime').value = w.countdown.time || '';
@@ -526,7 +526,7 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   const zones = [0, 1, 2].map(i => ({ tz:$(`[data-zt="${i}"]`).value.trim(), name:$(`[data-zn="${i}"]`).value.trim() })).filter(z => z.tz);
   const badZone = zones.find(z => !tzOk(z.tz));
   if (badZone){ toast(`“${badZone.tz}” is not a time zone. Pick one from the list, like Europe/London.`, true); $(`[data-zt]`)?.focus(); return; }
-  w.show = $('#wShow').checked;
+  try { localStorage.setItem('hl-wshow', $('#wShow').checked ? '1' : '0'); } catch {}   // this device only
   w.zones = zones;
   w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
@@ -535,6 +535,7 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   ADMIN.widgets = w;
   try {
     await saveAll('Widgets saved');
+    renderWidgets(); loadWidgets();   // (1.79.12) this device's Show Widgets switch is not part of the saved settings, so draw again
     closeSheet('widgetsSheet');
   } catch (err){ ADMIN.widgets = prev; toast(err.message, true); }
 }));
@@ -1149,7 +1150,9 @@ async function siteJSON(url, body, opts = {}){
   if (!r.ok || j.error) throw Object.assign(new Error(j.error || 'Request failed'), { status:r.status });
   return j;
 }
-const wOn = id => !!WCFG && WCFG.show && WCFG.list.some(w => w.id === id && w.on);
+/* (1.79.12) Show Widgets is a choice of this device. Without one, a phone shows none and a computer follows the site's setting. */
+const wShowNow = () => { if (!WCFG) return false; let d = null; try { d = localStorage.getItem('hl-wshow'); } catch {} return d === '1' ? true : d === '0' ? false : !!WCFG.show && !matchMedia('(max-width:640px)').matches; };
+const wOn = id => wShowNow() && WCFG.list.some(w => w.id === id && w.on);
 async function loadTasks(){
   try { const j = await siteJSON('../tasks/api.php'); WD.tasks = j.auth ? j.tasks : []; WD.set = j.settings || {}; WD.tasksErr = ''; }
   catch (e){ WD.tasksErr = e.message; }
@@ -1390,7 +1393,7 @@ function summary(id){
 function renderWidgets(quiet = false){
   renderClock();
   const a = /** @type {HTMLElement} */ (document.activeElement), keep = a && a.dataset && a.dataset.w && !$('#wPanel').contains(a) ? [/** @type {HTMLElement} */ (a.parentNode).id, a.dataset.w] : null;
-  const list = WCFG && WCFG.show ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];   // Widgets > Show Widgets off: none
+  const list = wShowNow() ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];   // Widgets > Show Widgets off: none
   const dock = WCFG && WCFG.style === 'dock';
   if (wOpen && !list.includes(wOpen)) wOpen = '';
   document.body.classList.toggle('has-widgets', list.length > 0);

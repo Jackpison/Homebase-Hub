@@ -96,7 +96,7 @@
   function drawBar() {
     var bar = document.getElementById('ix-bar');
     cornerButton();
-    if (!H.hasAttribute('data-ix-bar')) { if (bar) bar.remove(); lastBar = ''; glass(); return; }
+    if (!H.hasAttribute('data-ix-bar')) { if (bar) { bar.remove(); noteBell(); } lastBar = ''; glass(); return; }
     if (!document.body) return whenBody(drawBar);
     var adm = isAdmin(), nav = NAV();
     var brand = '<span data-ix-brand></span>';   // the logo and site name: brandEl() puts them in once the markup is in place
@@ -131,6 +131,7 @@
     bindInlineSearch();
     markEditing();
     tipNames(bar);
+    noteBell();
     glass();
   }
   /* (1.68.0) Bar Glass: the top bar, or the dock's pill, turns to glass (React Bits GlassSurface, glass.js, loaded only when it is on).

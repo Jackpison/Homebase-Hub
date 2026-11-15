@@ -274,7 +274,7 @@ try:
         check('P39b (1.79.11) with the bar shown the credit and refresh buttons sit bottom left, clear of the bell', bar_on[2], bar_on)
         hctx.close()
         # P39c: Home opened from a copy of the page that came without the widgets (the phone app) still shows them once the site knows you are logged in
-        sc = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 800}); sc.add_cookies(cookies)
+        sc = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); sc.add_cookies(cookies)
         sc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
         def no_widgets(route):
             resp = route.fetch(); route.fulfill(response=resp, body=re.sub(r'(window\.PUB = .*?);</script>', r'\1;window.PUB.widgets=null;</script>', resp.text(), count=1, flags=re.S))
@@ -283,12 +283,20 @@ try:
         got = until(lambda: sp.evaluate("document.querySelectorAll('#wDock [data-w], #wCards [data-w]').length") > 0, 12000)
         check('P39c (1.79.11) Home opened from a copy of the page without the widgets still brings them in when you are logged in', got, sp.evaluate("document.body.className"))
         sc.close()
+        # P39d (1.79.12): Show Widgets is a choice of each device: a phone starts with none (the clock stays), and one switch on that phone brings them
+        pc2 = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 800}); pc2.add_cookies(cookies); pc2.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+        pp2 = pc2.new_page(); pp2.goto(B + '/web/home/', wait_until='domcontentloaded'); until(lambda: pp2.evaluate("!!document.getElementById('time') && document.getElementById('time').textContent.length > 3"), 10000); settle(pp2)
+        none = pp2.evaluate("[document.querySelectorAll('#wDock [data-w], #wCards [data-w]').length, document.body.classList.contains('has-widgets')]")
+        pp2.evaluate("localStorage.setItem('hl-wshow', '1')"); pp2.reload(wait_until='domcontentloaded')
+        shown = until(lambda: pp2.evaluate("document.querySelectorAll('#wDock [data-w], #wCards [data-w]').length") > 0, 12000)
+        check('P39d (1.79.12) Show Widgets is per device: a phone starts with no widgets, and its own switch brings them', none == [0, False] and shown, (none, shown))
+        pc2.close()
         # P41: an open widget never sits on top of the cards (Glance and Expand, nine cards in two rows) or the dock, and the clock
         # steps aside when there is no room for both (seen on the owner's screen: the panel lay over the cards, unreadable)
         def placed(style, w, h, wid):
             subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = '%s'; write_json(SITE_FILE, clean_site($s));" % (D, style)], check=True)
             pc = b.new_context(user_agent=UA, viewport={'width': w, 'height': h}); pc.add_cookies(cookies); pc.route('**/*', handle); pc.add_init_script(TRACK_REQUESTS)
-            pc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}"); pp = pc.new_page(); pp.goto(B + '/web/home/', wait_until='domcontentloaded')
+            pc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('hl-wshow','1')}catch(e){}"); pp = pc.new_page(); pp.goto(B + '/web/home/', wait_until='domcontentloaded')
             sel = '#wCards' if style == 'glance' else '#wDock'
             until(lambda: pp.evaluate("document.querySelectorAll('%s [data-w]').length") == 9, 10000); settle(pp)
             out = []
@@ -305,7 +313,7 @@ try:
         def glass(fx=None, reduce=False):
             subprocess.run(['php', '-r', "chdir('%s'); require '%s/web/hub/core/lib/boot.php'; hub_settings_update(function ($x) { $x['glassFx'] = json_decode('%s', true); return $x; });" % (D, D, json.dumps(fx or {}))], check=True)
             gc = b.new_context(user_agent=UA, viewport={'width': 1280, 'height': 800}); gc.add_cookies(cookies); gc.route('**/*', handle); gc.add_init_script(TRACK_REQUESTS)
-            gc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}"); gp = gc.new_page()
+            gc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('hl-wshow','1')}catch(e){}"); gp = gc.new_page()
             if reduce: gc.new_cdp_session(gp).send('Emulation.setEmulatedMedia', {'features': [{'name': 'prefers-reduced-transparency', 'value': 'reduce'}]}) if BROWSER == 'chromium' else None
             gp.goto(B + '/web/home/', wait_until='domcontentloaded'); until(lambda: gp.evaluate("document.querySelectorAll('.wcard, .wdb').length > 0"), 10000); settle(gp)
             el = '.wcard' if gp.evaluate("!!document.querySelector('.wcard')") else '#wDock'
@@ -517,7 +525,7 @@ try:
               el.dispatchEvent(new TouchEvent('touchmove', { bubbles: true, touches: [mk(x1, y1)], changedTouches: [mk(x1, y1)] }));
               el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [mk(x1, y1)] })); return el.tagName }"""
             gctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 780}, has_touch=True, is_mobile=True); gctx.add_cookies(cookies); gctx.route('**/*', handle)
-            gctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+            gctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('hl-wshow','1')}catch(e){}")
             gp = gctx.new_page(); gerr = []; page_errors(gp, gerr)
             ready = lambda: until(lambda: gp.evaluate("!!(window.HUB && HUB.state().admin) && document.readyState === 'complete'"), 15000)
             gp.goto(B + '/web/links/', wait_until='domcontentloaded'); ready(); gp.wait_for_selector('#tabs [role=tab]', timeout=10000); settle(gp)
@@ -623,7 +631,7 @@ try:
         # does not sit on top of the chips (on a short screen they make way)
         subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = 'dock'; write_json(SITE_FILE, clean_site($s));" % D], check=True)
         mctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 700}); mctx.add_cookies(cookies); mctx.route('**/*', handle); mctx.add_init_script(TRACK_REQUESTS)
-        mctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+        mctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('hl-wshow','1')}catch(e){}")
         mp = mctx.new_page(); mp.goto(B + '/web/home/', wait_until='domcontentloaded'); until(lambda: mp.evaluate("document.querySelectorAll('#wDock .wdb').length") == 9, 10000); settle(mp)
         fit = mp.evaluate("(() => { const d = document.getElementById('wDock'); return [d.scrollWidth <= d.clientWidth + 1, [...d.children].every(b => { const r = b.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth }) ] })()")
         mp.click('#wDock [data-w=today]'); mp.wait_for_selector('#wQa', timeout=5000)
@@ -632,7 +640,7 @@ try:
         mctx.close()
         # a visitor: the clock, no widgets, and nothing private in the page or asked of the server
         vctx = b.new_context(user_agent=UA, viewport={'width': 390, 'height': 844}); vctx.route('**/*', handle); vctx.add_init_script(TRACK_REQUESTS)
-        vctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}")
+        vctx.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('hl-wshow','1')}catch(e){}")
         vreq = []; vctx.on('request', lambda r: vreq.append(r.url.replace(B, '')))
         vctx.on('request', lambda r: outside.append(r.url) if not r.url.startswith((B, 'data:', 'blob:')) else None)
         vp = vctx.new_page(); page_errors(vp, herr); vp.goto(B + '/web/home/', wait_until='domcontentloaded'); settle(vp)
