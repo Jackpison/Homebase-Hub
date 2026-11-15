@@ -633,6 +633,22 @@ case 'activity_clear':   // (1.79.0) Logs > Activity > Clear: empties the list; 
     need_password((string)(body()['password'] ?? ''));
     hub_json(200, ['ok' => true, 'cleared' => act_clear()]);
 
+case 'notelog':   // (1.79.12) Logs > Notifications: the messages every device showed
+    need_admin(false);
+    require_once __DIR__ . '/lib/notelog.php';
+    hub_json(200, ['ok' => true, 'items' => nl_list()]);
+
+case 'notelog_add':   // a logged-in browser sends the messages it showed ({items: [...]}, at most 50)
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/notelog.php';
+    $nli = body()['items'] ?? [];
+    hub_json(200, ['ok' => true, 'added' => nl_add(is_array($nli) ? $nli : [])]);
+
+case 'notelog_clear':   // Logs > Notifications > Clear for every device
+    need_post(); need_admin();
+    require_once __DIR__ . '/lib/notelog.php';
+    hub_json(200, ['ok' => true, 'cleared' => nl_clear()]);
+
 case 'session_revoke':   // log out one device from the list ({id}); the one you are using is "Log Out Here"
     need_post(); need_admin();
     require_once __DIR__ . '/lib/activity.php';
