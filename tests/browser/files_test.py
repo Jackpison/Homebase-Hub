@@ -480,6 +480,13 @@ try:
         check('B119 the HEIC preview shows the picture, or Open in Tools when this browser cannot draw HEIC', ok)
         pg.keyboard.press('Escape'); pg.click('#chips .chip:has-text("All")')
 
+        # ---- (1.80.3) buttons lift on hover ----
+        pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
+        bt = pg.locator('.btn:not(.ib):visible').first; bt.hover()
+        try: pg.wait_for_function("(() => { const b = [...document.querySelectorAll('.btn:not(.ib)')].find(x => x.matches(':hover')); return !!b && getComputedStyle(b).transform !== 'none' && getComputedStyle(b).boxShadow !== 'none'; })()", timeout=3000); lifted = True
+        except Exception: lifted = False
+        check('B120 a button lifts and casts a shadow when pointed at', lifted)
+
         # ---- (1.80.2) Info: the paperclip button in a box's toolbar writes a [name](link) link ----
         pg.goto(s.base + '/web/info/'); wait_js(pg, "!!document.querySelector('#boxTpl') && document.querySelectorAll('.box').length > 0", 20000)
         pg.evaluate("document.querySelector('.box [data-r=edit]').click()")

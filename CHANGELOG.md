@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.3 | Files list reordered (Name, Size, Star, Modified, Access) with hover actions, details closed until you pick one, HEIC counts as a picture, Home date and a smaller, centred clock, and one lift-and-shadow button hover on every page |
 | 1.80.2 | Files: PDFs show their first page as a picture, Keep on This Device for offline use, and Attach a File From Files in Tasks and Cards (the link opens the file in Files) |
 | 1.80.1 | Files: folders show their size, gallery links for several pictures, Send to Telegram (asks first), a floating selection bar, Folders and Files parts in the grid, coloured filter chips and folder colours; Settings and Cards messages name what changed; better icons in Home Settings and Widgets |
 | 1.80.0 | A much better Files page: keyboard use, right-click and long-press menus, a bigger preview, filters, pinned folders, name-clash choices, resume, labels and notes, Undo, share link passwords and download limits with a QR code, a Storage view, and swipes on a phone; the Home refresh button is back at the bottom right |
@@ -170,6 +171,23 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.3
+
+### Files
+- The list reads Name, Size, Star, Modified, Who Can See It. The star is a column you press. Pointing at a row shows Share, Download, Rename and Move to Trash.
+- The details panel stays closed until you pick one file or folder. It opens a moment after the pick, so a double-click is not thrown off.
+- HEIC files count as pictures: they are in the Pictures filter and open in the preview. A browser that cannot draw HEIC says so and offers Open in Tools.
+- An empty folder offers Upload Files and New Folder. The first and last rows of the list follow the rounded frame, and the current row is an inset line.
+- Fixed: a stray "null" under the Star button in the details panel and after the sentence in an empty folder.
+
+### Home
+- The date reads "November 15th 2026, Sunday". The clock is a quarter smaller, and the clock block sits in the middle between the bar and the dock.
+
+### Every page
+- Buttons lift up and to the left with a hard shadow when you point at them, and drop back when pressed (not for icon buttons or hold-to-confirm buttons, and not when your device asks for less motion).
 
 ---
 
