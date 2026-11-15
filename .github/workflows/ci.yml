@@ -73,9 +73,9 @@ jobs:
       - name: npm packages
         run: npm ci --ignore-scripts
       - name: ESLint (undefined names, redeclarations, duplicate keys, unreachable code)
-        run: npx eslint src tools-app
+        run: npx eslint src tools-src
       - name: TypeScript check (the files that start with ts-check - keys, locked data, share links)
-        run: npx tsc -p config/tsconfig.json && npx tsc -p config/tsconfig.links.json && npx tsc -p config/tsconfig.home.json && npx tsc -p config/tsconfig.cards.json && npx tsc -p config/tsconfig.tasks.json && npx tsc -p config/tsconfig.info.json && python3 tests/repo/tscheck_test.py
+        run: npx tsc -p tests/types/tsconfig.json && npx tsc -p tests/types/tsconfig.links.json && npx tsc -p tests/types/tsconfig.home.json && npx tsc -p tests/types/tsconfig.cards.json && npx tsc -p tests/types/tsconfig.tasks.json && npx tsc -p tests/types/tsconfig.info.json && python3 tests/repo/tscheck_test.py
       - name: Dead code (a PHP function, constant, JavaScript function or CSS class that nothing uses)
         run: python3 tests/repo/dead_code_test.py
       - name: Python lint (ruff, for syntax errors and unused or undefined names in tests and scripts)
@@ -114,7 +114,7 @@ jobs:
           ./actionlint -color
       - name: Build
         run: npm ci --ignore-scripts && python3 scripts/build.py
-      - name: Tools is exactly what tools-app builds (no stale library in the committed files)
+      - name: Tools is exactly what tools-src builds (no stale library in the committed files)
         run: python3 scripts/build-tools.py --check
       - name: Check zip name and changelog
         run: |

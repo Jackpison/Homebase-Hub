@@ -1,4 +1,4 @@
-// ESLint for the readable site scripts in src/web (run: npx eslint src tools-app), and the Tools source in tools-app. Build and test tool only; nothing here ships.
+// ESLint for the readable site scripts in src/web (run: npx eslint src tools-src), and the Tools source in tools-src. Build and test tool only; nothing here ships.
 // Not linted: Tools (prebuilt and minified, src/web/tools/assets) and every vendor/ folder (third-party libraries).
 const globals = require('globals');
 
@@ -32,8 +32,8 @@ module.exports = [
   // (top-level names in info.js). It checks with typeof that they exist before using them.
   { files: ['src/web/hub/core/assets/shell.js'],
     languageOptions: { globals: { TABS: 'readonly', showTab: 'readonly', setHighlight: 'readonly' } } },
-  // The Tools page's source (tools-app/): ES modules bundled by esbuild.
-  { files: ['tools-app/src/**/*.js', 'tools-app/build.mjs'], languageOptions: { ecmaVersion: 2022, sourceType: 'module', globals: { ...globals.browser, ...globals.node } }, rules },
+  // The Tools page's source (tools-src/): ES modules bundled by esbuild.
+  { files: ['tools-src/src/**/*.js', 'tools-src/build.mjs'], languageOptions: { ecmaVersion: 2022, sourceType: 'module', globals: { ...globals.browser, ...globals.node } }, rules },
   // The Tools service worker runs in a worker, not a page.
   { files: ['src/web/tools/sw.js'], languageOptions: { globals: { ...globals.serviceworker } } },
 ];

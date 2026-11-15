@@ -78,7 +78,7 @@ The libraries bundled inside the site (pdf.js, JSZip, libheif, ONNX Runtime Web,
 - `python3 tests/repo/releases_test.py`: `tests/lib/releases.py` picks the previous release (the newest one older than the build, compared as numbers); CI uses `python3 tests/lib/releases.py previous` and `download TAG DIR` (checked against the release's `.sha256`).
 - `python3 tests/repo/workflows_test.py`: the workflow files keep their safety settings: every outside Action pinned to a full commit SHA, `persist-credentials: false` on every checkout, a time limit on every job, `npm ci --ignore-scripts` everywhere (also in `build-tools.py`), CI checks the committed Tools against a fresh build, the release checks CI before it builds, `ci-ok` needs every other job, and only the slow jobs skip on a docs-only change.
 - `python3 tests/repo/release_test.py`: tests `release.py` itself on a temporary copy of the repo (a bump, then each thing broken in turn must fail the check). Needs git.
-- `npx eslint src tools-app`: `no-undef`, `no-redeclare`, `no-dupe-keys`, `no-unreachable` and `no-const-assign` on the readable scripts in `src/web` and the Tools source in `tools-app/` (not the built Tools files, not `vendor/`). `eslint.config.js` lists each page's real globals and says why.
+- `npx eslint src tools-src`: `no-undef`, `no-redeclare`, `no-dupe-keys`, `no-unreachable` and `no-const-assign` on the readable scripts in `src/web` and the Tools source in `tools-src/` (not the built Tools files, not `vendor/`). `eslint.config.js` lists each page's real globals and says why.
 
 ## Update tests
 

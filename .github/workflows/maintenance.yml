@@ -49,7 +49,7 @@ jobs:
           python3 scripts/maintain.py apply
           python3 scripts/build-tools.py --install
           python3 tests/repo/check_libraries.py
-          git add -A tools-app src
+          git add -A tools-src src
           git commit -m "Update the Tools libraries (monthly maintenance)"
           NEXT=$(python3 scripts/maintain.py next)
           python3 scripts/release.py "$NEXT"

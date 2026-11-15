@@ -70,7 +70,7 @@ check('W12 the weekly check also tries the next PHP version (development build) 
 cs = open(os.path.join(ROOT, '.github', 'workflows', 'code-scanning.yml'), encoding='utf-8').read()
 check('W13 CodeQL and Semgrep run on every push to main and every pull request, and weekly; a Semgrep finding fails the run', all(x in cs for x in ('push:', 'pull_request:', 'schedule:', 'github/codeql-action/analyze@', 'semgrep scan', '--error', 'security-events: write')))
 check('W13b Semgrep is pinned to one version and has time enough for big files (--timeout 60; the default gave up on shell-admin.js)', re.search(r'semgrep==\d+\.\d+\.\d+', cs) is not None and '--timeout 60' in cs)
-check('W14 CI runs the JavaScript type check', 'npx tsc -p config/tsconfig.json' in ci)
+check('W14 CI runs the JavaScript type check', 'npx tsc -p tests/types/tsconfig.json' in ci)
 bj = '\n'.join(cij['browsers'])
 ci_code = '\n'.join(l.split('   #')[0] for l in ci.split('\n') if not l.strip().startswith('#'))   # the comments may say Firefox
 check('W15 CI runs the browser tests in Chromium only: the pages half on every push, the tools half when the matrix from ci_changes.py says so (Tools, designs, a release, a manual run); WebKit, Firefox and the visual report job are not in CI (WebKit and Firefox run in scheduled.yml)',
@@ -115,7 +115,7 @@ db = open(os.path.join(ROOT, '.github', 'dependabot.yml'), encoding='utf-8').rea
 check('W16d Dependabot: once a month, one group per kind, a version only once it is 7 days old; for Tools only new major versions (the monthly maintenance takes the rest)',
       db.count('package-ecosystem:') == 6 and all(db.count(x) == 6 for x in ('interval: monthly', 'default-days: 7', 'patterns: ["*"]')) and 'interval: weekly' not in db
       and 'package-ecosystem: docker\n' in db and 'package-ecosystem: docker-compose' in db
-      and 'version-update:semver-minor' in db[db.index('directory: /tools-app'):])
+      and 'version-update:semver-minor' in db[db.index('directory: /tools-src'):])
 loose = []
 for f in FILES:
     for i, line in enumerate(open(f, encoding='utf-8').read().split('\n')):

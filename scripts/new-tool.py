@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Adds a new tool to Tools (1.60): its line in tools-app/src/tools.json and a working starter file tools-app/src/tools/<id>.js.
+"""Adds a new tool to Tools (1.60): its line in tools-src/src/tools.json and a working starter file tools-src/src/tools/<id>.js.
 
   python3 scripts/new-tool.py <id> "<Name>" <section> <icon> "<one-line description>" [keyword ...]
 
   id        lower-case words with dashes, for example loan-emi. It becomes the address (#/tool/<id>) and is kept in favourites:
             never rename it later.
   section   one of the sections in tools.json (images, photos, pdf, utilities, calculators, documents).
-  icon      a name from tools-app/src/icons.js.
+  icon      a name from tools-src/src/icons.js.
 
 Then: write the tool in its file, add at least one check for it to tests/browser/tools_test.py (tests/repo/tools_list_test.py fails
 until the id is named there), and run  python3 scripts/build-tools.py --install  (it builds the list of tools from tools.json).
@@ -14,7 +14,7 @@ until the id is named there), and run  python3 scripts/build-tools.py --install 
 import json, os, re, sys
 
 ROOT = os.environ.get('HUB_REPO_ROOT') or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'tools-app', 'src')
+SRC = os.path.join(ROOT, 'tools-src', 'src')
 
 STARTER = '''// {name}: {desc}
 import {{ h, panel, field, input, button, note }} from '../ui.js';

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the Tools page from tools-app/ (its source) with esbuild.
+"""Builds the Tools page from tools-src/ (its source) with esbuild.
   python3 scripts/build-tools.py              into build/tools-new (a staging copy to test)
   python3 scripts/build-tools.py --install    into src/web/tools (replaces the page; then commit the result)
   python3 scripts/build-tools.py --check      builds a staging copy and fails if its assets/ differ from src/web/tools/assets
@@ -8,7 +8,7 @@ Installs the npm packages first (npm ci --ignore-scripts, from the lock files) w
 match the lock file, so a build never uses an older library left on disk."""
 import filecmp, json, os, shutil, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APP = os.path.join(ROOT, 'tools-app')
+APP = os.path.join(ROOT, 'tools-src')
 
 
 def stale(d):
@@ -41,6 +41,6 @@ if '--check' in sys.argv:
     fa, fb = files(a), files(b)
     diff = sorted(fa ^ fb) + sorted(f for f in fa & fb if not filecmp.cmp(os.path.join(a, f), os.path.join(b, f), shallow=False))
     if diff:
-        sys.exit('The committed Tools (src/web/tools/assets) is not what tools-app builds now: %d file(s) differ, for example %s.\n'
+        sys.exit('The committed Tools (src/web/tools/assets) is not what tools-src builds now: %d file(s) differ, for example %s.\n'
                  'Run python3 scripts/build-tools.py --install and commit src/web/tools.' % (len(diff), ', '.join(diff[:5])))
-    print('OK: the committed Tools is exactly what tools-app builds (%d files).' % len(fa))
+    print('OK: the committed Tools is exactly what tools-src builds (%d files).' % len(fa))

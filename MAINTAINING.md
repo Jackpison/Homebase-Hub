@@ -62,7 +62,7 @@ Each store then updates on its own schedule; the site itself always updates in S
 
 The maintenance pull request lists them under "Waiting for a person to decide":
 
-- **A new major version of a library** (for example pdf.js 6 → 7). It can change how the library works, so someone must try it and run all the tests. Follow `AGENTS.md`: change `tools-app/package.json`, run `python3 scripts/build-tools.py --install`, run every check, commit.
+- **A new major version of a library** (for example pdf.js 6 → 7). It can change how the library works, so someone must try it and run all the tests. Follow `AGENTS.md`: change `tools-src/package.json`, run `python3 scripts/build-tools.py --install`, run every check, commit.
 - **PDF writer:** since 1.60 Tools uses `@cantoo/pdf-lib`, the maintained copy of pdf-lib (the original is no longer updated). The monthly maintenance updates it like the other libraries.
 - **PHP versions:** when a PHP version stops getting security fixes (the dates are in `hub_php_eol()` in `src/web/hub/core/lib/boot.php`), raise `HUB_MIN_PHP` and the CI versions together.
 
@@ -74,4 +74,4 @@ Give the new person or AI:
 2. `AGENTS.md` (the rules for changing the code, and every check to run);
 3. the newest `Project-Handoff vN.md`, if you keep one (it holds the history and the plans).
 
-They need nothing else. Everything is in the repository: the site in `src/`, Tools' source in `tools-app/`, the website in `website/`, the tests in `tests/`, and the scripts in `scripts/`.
+They need nothing else. Everything is in the repository: the site in `src/`, Tools' source in `tools-src/`, the website in `website/`, the tests in `tests/`, and the scripts in `scripts/`.

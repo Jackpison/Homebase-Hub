@@ -21,7 +21,7 @@ Every bundled component is compatible with GPL-3.0, with one exception the owner
 | ogl 1.0.11, three 0.187.0, vgpu 0.6.0 | bundled into Crystal Ball and Pattern Waves (ogl), Hyperspeed (three), Aero Shards (vgpu) | Unlicense (ogl); MIT (three, vgpu) | npm packages |
 | exifr 7.1.3, utif2 4.1.0, fflate 0.8.3, qrcode-generator 2.0.4, @noble/hashes 2.4.0 | Tools | MIT | npm packages |
 
-The Animated Designs are built from `src/web/home/designs-src/` by `scripts/build-designs.py` (versions pinned in `package-lock.json`); Tools is built from its source in `tools-app/` (pinned in `tools-app/package-lock.json`); the bundled files keep their licence comments.
+The Animated Designs are built from `src/web/home/designs-src/` by `scripts/build-designs.py` (versions pinned in `package-lock.json`); Tools is built from its source in `tools-src/` (pinned in `tools-src/package-lock.json`); the bundled files keep their licence comments.
 
 If you find an entry that is wrong, please open an issue.
 
@@ -39,7 +39,7 @@ Last checked 23 October 2026 with `npm audit` against the exact versions in the 
 | SheetJS | removed | Its last npm version (0.18.5) had GHSA-4r6h-8v6p-xvw6 and GHSA-5pgg-2g8v-p4x9 and gets no fixes there. Cards now writes Excel files with its own small writer, and the check fails if SheetJS comes back. |
 | ONNX Runtime Web (Tools) | 1.31.1 | No advisory. Replaces 1.17.3, which could not be updated while Tools had no source. |
 | libheif-js (Tools) | 1.23.5 | No advisory. The newest release. |
-| jsPDF, @cantoo/pdf-lib, Tesseract.js, qpdf, JsBarcode | 4.2.1, 2.11.1, 7.0.0, 0.3.0, 3.12.3 | No advisory. `npm audit` on `tools-app/package-lock.json` finds nothing. React, JSZip, Sortable and framer-motion are no longer used. |
+| jsPDF, @cantoo/pdf-lib, Tesseract.js, qpdf, JsBarcode | 4.2.1, 2.11.1, 7.0.0, 0.3.0, 3.12.3 | No advisory. `npm audit` on `tools-src/package-lock.json` finds nothing. React, JSZip, Sortable and framer-motion are no longer used. |
 
 ## Uiverse elements (1.65.0 to 1.69.1)
 

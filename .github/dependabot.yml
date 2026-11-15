@@ -43,7 +43,7 @@ updates:
       test-tools:
         patterns: ["*"]
   - package-ecosystem: npm
-    directory: /tools-app
+    directory: /tools-src
     schedule:
       interval: monthly
     cooldown:

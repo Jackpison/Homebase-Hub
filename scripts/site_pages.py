@@ -53,7 +53,7 @@ def looks_row():
 # ---------------------------------------------------------------- the seven app pages
 # Each: what it is, the facts worth a glance, the everyday problems it solves, the details we are proud of, and the
 # numbered points on its screenshot (tour = text, hot = where on the picture, in percent).
-NT = len(json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))['tools'])   # the number of tools, from the one list
+NT = len(json.load(open(os.path.join(ROOT, 'tools-src', 'src', 'tools.json'), encoding='utf-8'))['tools'])   # the number of tools, from the one list
 FEATURES = [
     dict(id='home', name='Home', ac='a-home', icon='home', url='yourdomain.com',
          h1='A start page that feels like *yours*.',
@@ -170,7 +170,7 @@ for _f in FEATURES: assert len(_f['tour']) == len(_f['hot']), _f['id']
 
 
 def load_tools():
-    d = json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))   # the one list the Tools page is built from
+    d = json.load(open(os.path.join(ROOT, 'tools-src', 'src', 'tools.json'), encoding='utf-8'))   # the one list the Tools page is built from
     return d['categories'], [{**t, 'desc': t['desc'], 'kw': t['kw']} for t in d['tools']]
 
 

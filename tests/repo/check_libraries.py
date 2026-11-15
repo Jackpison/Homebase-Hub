@@ -3,7 +3,7 @@
   python3 tests/repo/check_libraries.py            fast checks on the source tree, offline
   python3 tests/repo/check_libraries.py --audit    also asks npm for advisories on the exact versions (needs network and npm)
 
-1. pdf.js (Tools, from tools-app/package-lock.json) must be 6.2.108 or newer, opened with eval switched off: older versions have two advisories where a crafted PDF can run script
+1. pdf.js (Tools, from tools-src/package-lock.json) must be 6.2.108 or newer, opened with eval switched off: older versions have two advisories where a crafted PDF can run script
    (GHSA-wgrm-67xf-hhpq before 4.2.67, GHSA-hq66-cqwq-w95j from 5.6.83 to 6.2.107). No older copy may be left behind.
 2. SheetJS is no longer used (its last npm version has advisories and gets no fixes): Cards writes Excel files itself.
    No code may load it again."""
@@ -15,15 +15,15 @@ bad = []
 
 def ver(v): return tuple(int(x) for x in v.split('.'))
 
-# 1. pdf.js: the version Tools is built with (tools-app/package-lock.json), no old copy left, every PDF opened with eval off
-LOCK = json.load(open(os.path.join(ROOT, 'tools-app', 'package-lock.json'), encoding='utf-8'))
+# 1. pdf.js: the version Tools is built with (tools-src/package-lock.json), no old copy left, every PDF opened with eval off
+LOCK = json.load(open(os.path.join(ROOT, 'tools-src', 'package-lock.json'), encoding='utf-8'))
 pv = LOCK['packages'].get('node_modules/pdfjs-dist', {}).get('version', '?')
 print('pdf.js:', pv)
 if pv == '?' or ver(pv) < (6, 2, 108): bad.append('pdf.js is %s; it must be 6.2.108 or newer' % pv)
 if not os.path.isfile(os.path.join(T, 'pdf.worker.min.mjs')): bad.append('the pdf.js worker is missing from Tools: run python3 scripts/build-tools.py --install')
 old = [os.path.basename(f) for f in glob.glob(os.path.join(T, 'pdfjs6')) + glob.glob(os.path.join(T, 'pdf.worker.min-*.js')) + glob.glob(os.path.join(T, 'index-ToolsAll*.js'))]
 if old: bad.append('an old Tools file is still in web/tools/assets: ' + ', '.join(old))
-for f in glob.glob(os.path.join(ROOT, 'tools-app', 'src', '**', '*.js'), recursive=True):
+for f in glob.glob(os.path.join(ROOT, 'tools-src', 'src', '**', '*.js'), recursive=True):
     s = open(f, encoding='utf-8').read()
     if 'getDocument(' in s and 'isEvalSupported: false' not in s: bad.append('a PDF is opened without isEvalSupported: false in ' + os.path.relpath(f, ROOT))
 
@@ -38,7 +38,7 @@ if '--audit' in sys.argv:
     import tempfile
     found = {}
     # Tools: npm audit on its own lock file (the exact versions the page is built with)
-    r = subprocess.run(['npm', 'audit', '--json', '--omit=dev'], cwd=os.path.join(ROOT, 'tools-app'), capture_output=True, text=True)
+    r = subprocess.run(['npm', 'audit', '--json', '--omit=dev'], cwd=os.path.join(ROOT, 'tools-src'), capture_output=True, text=True)
     found.update(json.loads(r.stdout or '{}').get('vulnerabilities', {}))
     # the rest of the site: jsPDF, copied into hub/core/assets/vendor
     d = tempfile.mkdtemp()

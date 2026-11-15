@@ -7,7 +7,7 @@ prints one table. A failure here would have been a red CI run, so fix everything
     python3 scripts/precheck.py --no-bump    do not demand a version bump
     python3 scripts/precheck.py --install-hook  run it automatically before every `git push` (skip once: git push --no-verify)
     python3 scripts/precheck.py --plan       only print what it would run
-The version rule: a push that changes the site (src/ or tools-app/) must raise the version in the same push, unless the version
+The version rule: a push that changes the site (src/ or tools-src/) must raise the version in the same push, unless the version
 in the code has no tag yet (it is still unreleased). Pass --no-bump for the rare exception.
 Exit 0 only when every check passed. See MAINTAINING.md."""
 import concurrent.futures, fnmatch, hashlib, os, re, shutil, subprocess, sys, time
@@ -34,7 +34,7 @@ BROWSER_MAP = [
     ('src/web/cards/*', ['pages_test']),
     ('src/web/tasks/*', ['pages_test', 'tasks_more_test']),
     ('src/web/tools/*', ['tools_test']),
-    ('tools-app/*', ['tools_test']),
+    ('tools-src/*', ['tools_test']),
     ('website/*', ['website_test']),
     ('scripts/make-site.py', ['website_test']),
     ('scripts/site_pages.py', ['website_test']),
@@ -80,7 +80,7 @@ def hub_version(text):
 
 def version_problem(files):
     """None when fine, or the sentence that says what to do."""
-    if not any(f.startswith(('src/', 'tools-app/')) for f in files):
+    if not any(f.startswith(('src/', 'tools-src/')) for f in files):
         return None
     now = hub_version(open(os.path.join(ROOT, BOOT)).read())
     if sh(['git', 'rev-parse', '--verify', '-q', 'origin/main']).returncode != 0:
@@ -100,15 +100,15 @@ def digest(path):
 
 def plan(files, fast, all_browser):
     """The ordered list of (name, command) for what changed. Pure: no running, so it can be tested."""
-    src = [f for f in files if f.startswith(('src/', 'tools-app/', 'config/', 'eslint.config.js'))]
+    src = [f for f in files if f.startswith(('src/', 'tools-src/', 'tests/types/', 'eslint.config.js'))]
     js = [f for f in src if f.endswith(('.js', '.mjs', '.ts'))]
     php = [f for f in files if f.endswith('.php')]
     py = [f for f in files if f.endswith('.py')]
     p = []
     p.append(('Version agrees everywhere', [PY, 'scripts/release.py', '--check']))
     if js:
-        p.append(('ESLint', ['npx', 'eslint', 'src', 'tools-app']))
-        p.append(('TypeScript check', ['sh', '-c', 'npx tsc -p config/tsconfig.json && npx tsc -p config/tsconfig.links.json && npx tsc -p config/tsconfig.home.json && npx tsc -p config/tsconfig.cards.json && npx tsc -p config/tsconfig.tasks.json && npx tsc -p config/tsconfig.info.json && python3 tests/repo/tscheck_test.py']))
+        p.append(('ESLint', ['npx', 'eslint', 'src', 'tools-src']))
+        p.append(('TypeScript check', ['sh', '-c', 'npx tsc -p tests/types/tsconfig.json && npx tsc -p tests/types/tsconfig.links.json && npx tsc -p tests/types/tsconfig.home.json && npx tsc -p tests/types/tsconfig.cards.json && npx tsc -p tests/types/tsconfig.tasks.json && npx tsc -p tests/types/tsconfig.info.json && python3 tests/repo/tscheck_test.py']))
     if php or src:
         p.append(('PHP unit tests', ['php', 'tests/unit/run.php']))
     ph = os.environ.get('PHPSTAN') or next((x for x in ('phpstan.phar', '/tmp/claude-0/phpstan.phar') if os.path.isfile(x if os.path.isabs(x) else os.path.join(ROOT, x))), None)
@@ -119,7 +119,7 @@ def plan(files, fast, all_browser):
     repo = ['root_test', 'dead_code_test', 'fixed_waits_test', 'helpers_test', 'release_test']
     if any(f.startswith('.github/') for f in files) or any(f.startswith('scripts/ci') or f.startswith('tests/lib/run_parallel') for f in files):
         repo += ['workflows_test', 'ci_status_test', 'ci_changes_test', 'parallel_test']
-    if any(f.startswith('tools-app/') or f.startswith('src/web/tools/') for f in files):
+    if any(f.startswith('tools-src/') or f.startswith('src/web/tools/') for f in files):
         repo += ['tools_list_test']
     if any(f.startswith(('deploy/', 'src/web/.htaccess')) or f.endswith('.htaccess') for f in files):
         repo += ['deploy_test']
@@ -129,7 +129,7 @@ def plan(files, fast, all_browser):
         repo += ['precheck_test']
     for t in repo:
         p.append(('repo/' + t, [PY, 'tests/repo/%s.py' % t]))
-    if any(f.startswith('tools-app/') for f in files):
+    if any(f.startswith('tools-src/') for f in files):
         p.append(('Tools build is current', [PY, 'scripts/build-tools.py', '--check']))
     br, sv = [], []
     if not fast:
@@ -142,7 +142,7 @@ def plan(files, fast, all_browser):
             if m and m.group(1) not in sv: sv.append(m.group(1))
         if all_browser and not br:
             br = ['pages_test', 'nav_test', 'app_test', 'settings_test']
-        if src and not br and not any(f.startswith('tools-app/') for f in files) and any(f.startswith('src/web/') for f in files):
+        if src and not br and not any(f.startswith('tools-src/') for f in files) and any(f.startswith('src/web/') for f in files):
             br = ['pages_test']   # a change to the site with no more specific test still gets the pages check
     return p, br, sv
 

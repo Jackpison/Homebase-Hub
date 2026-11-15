@@ -40,8 +40,8 @@ def run(name, cmd, shell=False):
 if not os.path.isfile(ZIP): sys.exit('No zip at %s: build it first (python3 scripts/build.py).' % ZIP)
 b = ['--browser', BROWSER] if BROWSER else []
 
-run('ESLint', ['npx', 'eslint', 'src', 'tools-app'])
-run('TypeScript check', ['sh', '-c', 'npx tsc -p config/tsconfig.json && npx tsc -p config/tsconfig.links.json && npx tsc -p config/tsconfig.home.json && npx tsc -p config/tsconfig.cards.json && npx tsc -p config/tsconfig.tasks.json && npx tsc -p config/tsconfig.info.json'])
+run('ESLint', ['npx', 'eslint', 'src', 'tools-src'])
+run('TypeScript check', ['sh', '-c', 'npx tsc -p tests/types/tsconfig.json && npx tsc -p tests/types/tsconfig.links.json && npx tsc -p tests/types/tsconfig.home.json && npx tsc -p tests/types/tsconfig.cards.json && npx tsc -p tests/types/tsconfig.tasks.json && npx tsc -p tests/types/tsconfig.info.json'])
 run('Unit tests', ['php', 'tests/unit/run.php'])
 run('Version agrees everywhere', [PY, 'scripts/release.py', '--check'])
 for t in ('release_test', 'workflows_test', 'secrets_test', 'dead_code_test', 'designs_test', 'parallel_test', 'ci_status_test', 'ci_changes_test', 'releases_test', 'maintain_test', 'presets_test', 'overrides_test', 'helpers_test', 'fixed_waits_test', 'tools_list_test', 'tscheck_test', 'root_test', 'speculation_test', 'precheck_test', 'php_matrix', 'build_test'):

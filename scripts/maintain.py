@@ -2,11 +2,11 @@
 """Update Tools libraries (1.59): keeps the libraries inside Tools current, so the project keeps going with only a few clicks.
 The workflow .github/workflows/maintenance.yml runs it; a person can run the same steps by hand (see MAINTAINING.md).
 
-  python3 scripts/maintain.py plan          asks npm for newer versions of the libraries in tools-app/package.json.
+  python3 scripts/maintain.py plan          asks npm for newer versions of the libraries in tools-src/package.json.
                                             Only updates within the same major version are taken (they promise not to
                                             break anything); a new major version is only listed, for a person to decide.
                                             Writes build/maintenance.json and prints a summary. Changes nothing else.
-  python3 scripts/maintain.py apply         writes the planned versions into tools-app/package.json and its lock file
+  python3 scripts/maintain.py apply         writes the planned versions into tools-src/package.json and its lock file
                                             (npm install --package-lock-only --ignore-scripts: no package script runs).
   python3 scripts/maintain.py next          prints the next patch version (1.59.0 -> 1.59.1).
   python3 scripts/maintain.py notes         fills the TODO markers that scripts/release.py X.Y.Z left in the changelog
@@ -18,7 +18,7 @@ person merges. A release still needs a person to publish it on GitHub.
 import json, os, re, subprocess, sys
 
 ROOT = os.environ.get('HUB_REPO_ROOT') or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PKG = os.path.join(ROOT, 'tools-app', 'package.json')
+PKG = os.path.join(ROOT, 'tools-src', 'package.json')
 PLAN = os.path.join(ROOT, 'build', 'maintenance.json')
 BOOT = os.path.join(ROOT, 'src', 'web', 'hub', 'core', 'lib', 'boot.php')
 LOG = os.path.join(ROOT, 'src', 'web', 'hub', 'docs', 'CHANGELOG.md')

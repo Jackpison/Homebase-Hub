@@ -16,7 +16,7 @@ def is_doc(path):
     return path.endswith('.md') and not path.startswith('src/') and os.path.basename(path) != 'CHANGELOG.md'
 
 
-APP = ('src/', 'tools-app/', 'scripts/build.py', 'scripts/build-tools.py', 'tests/browser/visual_compare.py', 'tests/lib/')
+APP = ('src/', 'tools-src/', 'scripts/build.py', 'scripts/build-tools.py', 'tests/browser/visual_compare.py', 'tests/lib/')
 
 
 def app_changed(files):

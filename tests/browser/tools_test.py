@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The Tools page (built from tools-app/), installed in a real site: the app (sections, search, favourites, recent, organise,
+"""The Tools page (built from tools-src/), installed in a real site: the app (sections, search, favourites, recent, organise,
 settings, the carry-over from the old Tools, light and dark) and every tool built so far, in a real browser, plus axe.
 1.60: the Calculators, Documents and new Utilities (C1-C34), and saved presets while logged in (R1-R9).
     python3 tests/browser/tools_test.py build/site-update-X.Y.Z.zip [build/tools-new] [--browser ...]
@@ -16,7 +16,7 @@ BROWSER = browser_name()
 if len(sys.argv) < 2: sys.exit(__doc__)
 ZIP = sys.argv[1]
 NEW = sys.argv[2] if len(sys.argv) > 2 else ''
-DATA = json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))
+DATA = json.load(open(os.path.join(ROOT, 'tools-src', 'src', 'tools.json'), encoding='utf-8'))
 AXE = open(os.path.join(ROOT, 'node_modules', 'axe-core', 'axe.min.js'), encoding='utf-8').read()
 RUN = "async()=>{const r=await axe.run(document.querySelector('#root'),{resultTypes:['violations'],runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return r.violations.map(v=>v.id+' x'+v.nodes.length+' '+v.nodes[0].target.join(' '))}"
 check = Checks()

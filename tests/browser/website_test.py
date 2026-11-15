@@ -114,11 +114,11 @@ for m in re.finditer(r'https://jackpison\.github\.io/Homebase-Hub/([^\s)"\'<>]*)
     if not os.path.isfile(os.path.join(SITE, f)): rb.append(m.group(0)); continue
     if frag and frag not in parsed.get(f, parse(f)).ids: rb.append(m.group(0))
 check('W8 every link from the README to this website still works (pages and #anchors)', not rb, rb[:5])
-data = json.load(open(os.path.join(ROOT, 'tools-app', 'src', 'tools.json'), encoding='utf-8'))
+data = json.load(open(os.path.join(ROOT, 'tools-src', 'src', 'tools.json'), encoding='utf-8'))
 ids = {t['id'] for t in data['tools']}
-loads = {f[:-3] for f in os.listdir(os.path.join(ROOT, 'tools-app', 'src', 'tools')) if f.endswith('.js')}   # 1.60: Tools builds its list of modules from tools.json, one file per tool
+loads = {f[:-3] for f in os.listdir(os.path.join(ROOT, 'tools-src', 'src', 'tools')) if f.endswith('.js')}   # 1.60: Tools builds its list of modules from tools.json, one file per tool
 listed = set(re.findall(r'data-cat="[a-z]+" data-text', open(os.path.join(SITE, 'tools', 'index.html'), encoding='utf-8').read()))
-check('W9 the website lists the %d tools of tools-app/src/tools.json, and every one of them is built into the Tools page' % len(ids), len(ids) >= 30 and ids == loads and open(os.path.join(SITE, 'tools', 'index.html'), encoding='utf-8').read().count('class="tool ') == len(ids), sorted(ids ^ loads)[:5])
+check('W9 the website lists the %d tools of tools-src/src/tools.json, and every one of them is built into the Tools page' % len(ids), len(ids) >= 30 and ids == loads and open(os.path.join(SITE, 'tools', 'index.html'), encoding='utf-8').read().count('class="tool ') == len(ids), sorted(ids ^ loads)[:5])
 
 # ---------- B. in a browser ----------
 socketserver.ThreadingTCPServer.allow_reuse_address = True

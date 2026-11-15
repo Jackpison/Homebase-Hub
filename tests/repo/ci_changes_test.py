@@ -10,10 +10,10 @@ res = []
 def check(name, ok, extra=''):
     res.append(bool(ok)); print(('PASS ' if ok else 'FAIL ') + name + ('' if ok or not extra else '  -> ' + str(extra)))
 
-check('X1 README, AGENTS, tests/README and an issue template are docs', all(is_doc(f) for f in ('README.md', 'AGENTS.md', 'tests/README.md', 'tools-app/README.md', '.github/ISSUE_TEMPLATE/bug_report.md', '.github/ISSUE_TEMPLATE/config.yml')))
+check('X1 README, AGENTS, tests/README and an issue template are docs', all(is_doc(f) for f in ('README.md', 'AGENTS.md', 'tests/README.md', 'tools-src/README.md', '.github/ISSUE_TEMPLATE/bug_report.md', '.github/ISSUE_TEMPLATE/config.yml')))
 check('X2 CHANGELOG.md is not docs (the release check reads it)', not is_doc('CHANGELOG.md'))
 check('X3 anything in src/ is not docs, even .md (it ships)', not is_doc('src/web/hub/docs/README.txt') and not is_doc('src/web/hub/docs/THIRD-PARTY.md'))
-check('X4 website, workflows, scripts, tests and code are not docs', not any(is_doc(f) for f in ('website/content/install.html', 'website/style.css', '.github/workflows/ci.yml', 'scripts/build.py', 'tests/browser/pages_test.py', 'tools-app/src/main.js', 'package.json')))
+check('X4 website, workflows, scripts, tests and code are not docs', not any(is_doc(f) for f in ('website/content/install.html', 'website/style.css', '.github/workflows/ci.yml', 'scripts/build.py', 'tests/browser/pages_test.py', 'tools-src/src/main.js', 'package.json')))
 check('X5 only docs changed: the slow jobs skip', code_changed(['README.md', 'AGENTS.md']) is False)
 check('X6 docs plus one code file: everything runs', code_changed(['README.md', 'src/web/links/assets/links.js']) is True)
 check('X7 the changes could not be listed, or none were found: everything runs', code_changed(None) is True and code_changed([]) is True)
@@ -21,7 +21,7 @@ check('X7 the changes could not be listed, or none were found: everything runs',
 def run(env):
     e = dict(os.environ, **env)
     return '\n'.join(subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'ci_changes.py')], cwd=ROOT, env=e, capture_output=True, text=True).stdout.strip().split('\n')[:2])
-check('X12 the visual report runs when the site, Tools or the build changed', all(app_changed([f]) for f in ('src/web/home/index.php', 'tools-app/src/main.js', 'scripts/build.py', 'tests/browser/visual_compare.py')))
+check('X12 the visual report runs when the site, Tools or the build changed', all(app_changed([f]) for f in ('src/web/home/index.php', 'tools-src/src/main.js', 'scripts/build.py', 'tests/browser/visual_compare.py')))
 check('X13 ...and not for workflows, website, other tests or docs; any doubt makes it', not app_changed(['.github/workflows/ci.yml', 'website/style.css', 'tests/browser/pages_test.py', 'README.md']) and app_changed(None) and app_changed([]))
 check('X8 a new branch (before = 000...), a manual run or an unknown base: code=true', run({'EVENT': 'push', 'BEFORE': '0' * 40}) == 'code=true\napp=true' and run({'EVENT': 'workflow_dispatch'}) == 'code=true\napp=true' and run({'EVENT': 'push', 'BEFORE': 'f' * 40}) == 'code=true\napp=true')
 head = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
