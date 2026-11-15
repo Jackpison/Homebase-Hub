@@ -150,13 +150,14 @@ async function rawKeyOf(item) { return ub64(await SITE.open(item.k)); }
 let offView = false;
 const OFF = "hub-files-offline", OFFSET = new Set(), offUrl = (id, n) => new URL("api.php?action=chunk&id=" + id + "&n=" + n, location.href).href, offMark = id => new URL("api.php?kept=" + id, location.href).href, offList = () => new URL("api.php?action=list", location.href).href;
 const offCache = () => ("caches" in window ? caches.open(OFF).catch(() => null) : Promise.resolve(null));
+const offReading = () => { try { return localStorage.getItem("hub-offline") === "1"; } catch (e) { return true; } };
 async function offScan() { OFFSET.clear(); const c = await offCache(); if (!c) return; for (const r of await c.keys()) { const m = /api\.php\?kept=([A-Za-z0-9_-]+)$/.exec(r.url); if (m) OFFSET.add(m[1]); } }
 async function offKeep(i) {
   const c = await offCache(); if (!c) { toast("This browser cannot keep files offline.", true); return; }
   toast("Keeping " + nameOf(i) + " on this device…");
   try {
     for (let n = 0; n < i.c; n++) { const r = await HF("api.php?action=chunk&id=" + i.id + "&n=" + n, { cache: "no-store" }); if (!r.ok) throw new Error("Could not download (" + r.status + ")."); await c.put(offUrl(i.id, n), r); }
-    await c.put(offMark(i.id), new Response("1")); OFFSET.add(i.id); toast(nameOf(i) + " is kept on this device."); offSaveList();
+    await c.put(offMark(i.id), new Response("1")); OFFSET.add(i.id); toast(nameOf(i) + " is kept on this device." + (offReading() ? "" : " Turn on Offline Reading in Settings so this page opens with no connection too.")); offSaveList();
   } catch (e) { for (let n = 0; n < i.c; n++) await c.delete(offUrl(i.id, n)); toast((e && /** @type {any} */ (e).message) || "Could not keep it.", true); }
   finally { render(); }
 }

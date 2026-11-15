@@ -465,6 +465,15 @@ try:
         pg.goto(link); pg.wait_for_selector('#pbox img', timeout=30000)
         check('B115 that link opens the file in Files, in its preview', pg.evaluate("(() => { const i = document.querySelector('#pbox img'); return !!i && i.complete && i.naturalWidth > 0; })()") and '#file=' not in pg.url, pg.url)
 
+        # ---- (1.80.2) Info: the paperclip button in a box's toolbar writes a [name](link) link ----
+        pg.goto(s.base + '/web/info/'); wait_js(pg, "!!document.querySelector('#boxTpl') && document.querySelectorAll('.box').length > 0", 20000)
+        pg.evaluate("document.querySelector('.box [data-r=edit]').click()")
+        pg.wait_for_selector('.box .form:not([hidden]) [data-f=file]', timeout=10000)
+        pg.click('.box .form:not([hidden]) [data-f=file]'); pg.wait_for_selector('dialog.ix-fp[open] .ix-fpl button', timeout=20000)
+        pg.click('dialog.ix-fp .ix-fpl button:has-text("photo.png")')
+        got = pg.input_value('.box .form:not([hidden]) textarea')
+        check('B116 the Info paperclip button writes a link to the chosen file into the box', re.search(r'\[photo\.png\]\(http[^)]*/web/files/#file=[A-Za-z0-9_-]+\)', got) is not None, got[-200:])
+
         check('B39 no page error and no blocked request in all of it', not errs and not csp, (errs, csp))
         b.close()
 finally:

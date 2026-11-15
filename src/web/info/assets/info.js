@@ -445,6 +445,12 @@ function fmt(bx,f,btn){
     if(/^https?:\/\/\S+$/.test(sel)){insertText(ta,`[link](${sel})`,a,b);ta.setSelectionRange(a+1,a+5)}
     else{const x=sel||"text";insertText(ta,`[${x}](https://)`,a,b);ta.setSelectionRange(a+x.length+3,a+x.length+11)}
   }
+  else if(f==="file"){
+    // (1.80.2) a link to a file in Files: the picker gives its name and address, written as a normal [name](address) link
+    const a=ta.selectionStart,b=ta.selectionEnd;
+    HubSite.pickFile().then(r=>{if(!r)return;const nm=r.name.replace(/[\[\]]/g,"");ta.focus();insertText(ta,`[${nm}](${r.link})`,a,b);saveDraftSoon(bx)}).catch(e=>HUB.toast(e&&e.message?e.message:"Could not open your files.",true));
+    return;
+  }
   else if(f==="codeblock"){
     const {s,e}=lineRange(ta),body=ta.value.slice(s,e);
     const out="```\n"+body+(body?"\n":"")+"```";insertText(ta,out,s,e);ta.setSelectionRange(s+4,s+4+body.length);
