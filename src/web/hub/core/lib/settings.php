@@ -83,6 +83,7 @@ function hub_settings_default(): array {
         'glass'    => false,        // (1.68.0) Bar Glass: the top bar and the dock turn to glass (React Bits GlassSurface)
         'glassFx'  => [],           // (1.68.2) Settings > Appearance > Glass: {bend, edge, fringe, frost, tint, sat}; missing = the built-in look
         'glassV'   => 0,            // (1.68.4) 1 once Home's own glass look has been moved into the one glass
+        'barRound' => true,         // (1.79.10) the top bar floats with rounded corners; false = a flat bar across the top
         'barHide'  => true,         // (1.68.2) the top bar slides away while you scroll down (and the dock shrinks); false = it stays
         'editBar'  => [],           // the edit bar per page: {links: 'text'} = icons and text; missing = icons only (1.53.5)
         'font'     => 'default',    // site-wide font: default | trebuchet | system | verdana | tahoma | segoe | arial | georgia | palatino | mono | custom
@@ -140,6 +141,7 @@ function hub_clean_settings(array $in): array {
     $o['homeBar']  = (bool)($in['homeBar'] ?? false);
     $o['glass']    = ($in['glass'] ?? false) === true;
     $o['glassFx']  = hub_clean_glass($in['glassFx'] ?? []);
+    $o['barRound'] = ($in['barRound'] ?? true) !== false;
     $o['barHide']  = ($in['barHide'] ?? true) !== false;
     $o['glassV']   = (int)($in['glassV'] ?? 0) === 1 ? 1 : 0;
     $o['editBar']  = [];
@@ -243,7 +245,7 @@ function hub_public_state(): array {
     $s = hub_settings(); $admin = hub_admin();
     $o = ['v' => HUB, 'admin' => $admin, 'setup' => hub_auth() === null, 'passkeys' => is_file(hub_jpath(hub_dir('core') . '/passkeys.json')),   // the login box offers a passkey when one is set up
           'tz' => $s['tz'] ?? 'Asia/Kolkata', 'siteName' => $s['siteName'], 'logo' => $s['logo'], 'nav' => $s['nav'], 'theme' => $s['theme'], 'accent' => $s['accent'], 'accentPg' => (object)$s['accentPg'],
-          'look' => $s['look'], 'homeBar' => $s['homeBar'], 'glass' => $s['glass'], 'glassFx' => (object)$s['glassFx'], 'barHide' => $s['barHide'], 'editBar' => (object)$s['editBar'], 'font' => $s['font'], 'fontCustom' => $s['fontCustom'], 'colors' => ['dark' => (object)$s['colors']['dark'], 'light' => (object)$s['colors']['light'], 'pg' => (object)array_map(function ($a) { return (object)$a; }, $s['colors']['pg'])],
+          'look' => $s['look'], 'homeBar' => $s['homeBar'], 'glass' => $s['glass'], 'glassFx' => (object)$s['glassFx'], 'barHide' => $s['barHide'], 'barRound' => $s['barRound'], 'editBar' => (object)$s['editBar'], 'font' => $s['font'], 'fontCustom' => $s['fontCustom'], 'colors' => ['dark' => (object)$s['colors']['dark'], 'light' => (object)$s['colors']['light'], 'pg' => (object)array_map(function ($a) { return (object)$a; }, $s['colors']['pg'])],
           'sizes' => (object)array_map(function ($a) { return (object)$a; }, $s['sizes']), 'pages' => $s['pages'], 'off' => $s['off']];
     if ($o['setup']) {   // brand-new site: make sure the one-time code file exists, and say where it is
         hub_setup_code();

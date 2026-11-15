@@ -98,7 +98,7 @@
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
   var TABMERGE = { security: [['Sign-In', ['password', 'passkeys', 'two-step-login', 'telegram-login-approval', 'login-approval']], ['Data Protection', ['encryption']], ['Devices', ['devices', 'trusted-browsers']]] };   // (1.74.2) Security: eight tabs become four
   var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Back Up' };   // sections whose accordions become tabs, and the name of their first tab
-  var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
+  var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'barRound', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
   var draft;
   /* what Save Settings would send, written the same way every time (empty color sets and their order don't count) */
   function canonColors(c) {
@@ -134,7 +134,7 @@
   function canonAccents(a) { var out = {}; Object.keys(a || {}).sort().forEach(function (k) { if (a[k]) out[k] = a[k]; }); return out; }
   function pick(o) {
     var r = {};
-    SAVED_KEYS.forEach(function (k) { r[k] = k === 'colors' ? canonColors(o.colors) : k === 'accentPg' ? canonAccents(o.accentPg) : k === 'glassFx' ? canonGfx(o.glassFx) : k === 'barHide' ? o.barHide !== false : k === 'pages' ? (o.pages || []) : (o[k] === undefined ? null : o[k]); });
+    SAVED_KEYS.forEach(function (k) { r[k] = k === 'colors' ? canonColors(o.colors) : k === 'accentPg' ? canonAccents(o.accentPg) : k === 'glassFx' ? canonGfx(o.glassFx) : k === 'barHide' ? o.barHide !== false : k === 'barRound' ? o.barRound !== false : k === 'pages' ? (o.pages || []) : (o[k] === undefined ? null : o[k]); });
     return JSON.stringify(r);
   }
   function dirty() { return !!draft && pick(draft) !== pick(S); }
@@ -499,6 +499,7 @@
     return '<h3>Navigation Style</h3><p>For every page.</p>' +
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
       '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
+      '<label class="ix-tg"><span>Rounded Bar<small>The top bar floats with rounded corners. Off makes it a flat bar across the top edge.</small></span><input type="checkbox" id="ix-br"' + (draft.barRound !== false ? ' checked' : '') + '></label>' +
       '<label class="ix-tg"><span>Hide the Bar While Scrolling<small>The top bar slides away as you scroll down and comes back as you scroll up; the dock shrinks a little. Off keeps the bar in place.</small></span><input type="checkbox" id="ix-bh"' + (draft.barHide !== false ? ' checked' : '') + '></label>' +
       '<p class="ix-note">Glass for the bar: the Glass tab.</p>';
   }
@@ -506,6 +507,7 @@
     p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
       draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
     p.querySelector('#ix-hb').onchange = function (e) { draft.homeBar = e.target.checked; preview(); };
+    p.querySelector('#ix-br').onchange = function (e) { draft.barRound = e.target.checked; preview(); };
     p.querySelector('#ix-bh').onchange = function (e) { draft.barHide = e.target.checked; preview(); };
   }
   /* Accent Color (on the Colors tab since 1.70.0). (1.65.3) The picker is adapted from Uiverse.io by Cobp, "horrible-quail-18" (MIT; see web/hub/docs/THIRD-PARTY.md):
@@ -1738,7 +1740,7 @@
   function saveSettings() {
     var b = $('#ix-save'); if (b.disabled) return; b.disabled = true; b.textContent = 'Saving…';
     var fail = function (msg) { b.disabled = false; b.textContent = 'Save Settings'; $('#ix-sferr').textContent = msg; };
-    var send = { siteName: draft.siteName, nav: draft.nav, theme: draft.theme, accent: draft.accent, accentPg: canonAccents(draft.accentPg), look: draft.look, homeBar: draft.homeBar, glass: draft.glass === true, glassFx: canonGfx(draft.glassFx), barHide: draft.barHide !== false, font: draft.font, fontCustom: draft.fontCustom, colors: draft.colors, tools: draft.tools, backupEvery: draft.backupEvery, pages: draft.pages || [], tz: draft.tz || 'Asia/Kolkata' };
+    var send = { siteName: draft.siteName, nav: draft.nav, theme: draft.theme, accent: draft.accent, accentPg: canonAccents(draft.accentPg), look: draft.look, homeBar: draft.homeBar, glass: draft.glass === true, glassFx: canonGfx(draft.glassFx), barHide: draft.barHide !== false, barRound: draft.barRound !== false, font: draft.font, fontCustom: draft.fontCustom, colors: draft.colors, tools: draft.tools, backupEvery: draft.backupEvery, pages: draft.pages || [], tz: draft.tz || 'Asia/Kolkata' };
     api('settings', { settings: send }).then(function (j) {
       if (!j.ok || !j.state) {
         return fail(j._status === 401 ? 'You were logged out. Log in again, then save.' : j._status === 403 ? 'Security check failed. Reload the page, then save again.' : (j.error || 'Could not save (server answered ' + (j._status || 'nothing') + ').'));
@@ -3108,7 +3110,7 @@
     encryption: ['Encryption', '', '✓', 1], activity_cleared: ['Activity Cleared', 'warn', '!', 1], settings: ['Settings Saved', '', '✓'], logo: ['Logo', '', '✓'], backup: ['Backup', '', '✓'], version_restore: ['Earlier Version Restored', 'warn', '!'],
     update: ['Site Updated', '', '✓'], features: ['Features', '', '✓'], cleanup: ['Cleanup', '', '✓'], update_back: ['Went Back to the Saved Version', 'warn', '!'], files_delete: ['Files Deleted', 'warn', '!'], reset: ['Site Erased', 'warn', '!'], telegram: ['Telegram', '', '✓'] };
   var LOGSEC = {}; Object.keys(LOGEV).forEach(function (k) { if (LOGEV[k][3]) LOGSEC[k] = 1; });
-  var LOGKEY = { siteName: 'site name', nav: 'navigation', theme: 'theme', accent: 'accent color', accentPg: 'page accents', look: 'look', homeBar: 'bar on Home', glass: 'glass', glassFx: 'glass settings', barHide: 'hide bar', font: 'font', fontCustom: 'font', colors: 'colors', pages: 'tabs', tz: 'time zone', sizes: 'text sizes' };
+  var LOGKEY = { siteName: 'site name', nav: 'navigation', theme: 'theme', accent: 'accent color', accentPg: 'page accents', look: 'look', homeBar: 'bar on Home', glass: 'glass', glassFx: 'glass settings', barRound: 'bar corners', barHide: 'hide bar', font: 'font', fontCustom: 'font', colors: 'colors', pages: 'tabs', tz: 'time zone', sizes: 'text sizes' };
   /* one line of the activity list: what happened (with what it was about), then who, from where and when */
   function actRow(e) {
     var m = LOGEV[e.ev] || [e.ev, '', '•'], x = String(e.x || ''), label = m[0];

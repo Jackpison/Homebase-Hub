@@ -222,7 +222,6 @@ function openDialog(title, body, buttons, o) {   // buttons: [{text, pri, danger
     dlg.onclose = () => resolve(null);
     dform.onsubmit = ev => { ev.preventDefault(); const p = buttons.find(b => b.pri); if (p) dform.querySelector(".act .pri").click(); };
     if (o.rows && window.HUB && HUB.settingsRows) HUB.settingsRows(dform.querySelector(".ix-sb"), "h3");   // (1.61.6) the same cards and tiles as every Settings window
-    if (framed && window.HUB && HUB.watchSave) HUB.watchSave(dlg);
     dlg.showModal();
     const f = o.frame ? dform.querySelector(".ix-sb input:not([type=checkbox]):not([type=hidden]),.ix-sb select") : dform.querySelector("[autofocus],input,select"); if (f) { f.focus(); if (f.select) f.select(); }   // (1.64.1) a frame window: its first field, never the close X
   });
@@ -812,8 +811,8 @@ async function settingsBox() {
     h("h3", { text: "Privacy" }),
     row("donly", "Hide From Visitors", "Always on: visitors must log in to see Files.", only),
     h("h3", { text: "Storage" }),
-    h("div", { class: "ix-srow lim" }, h("span", {}, "Storage Limit", h("small", { text: "Type a size. Leave it empty for no limit." }))),
-    h("div", { class: "limx" }, lc.el, lc.note),
+    row("dlimv", "Storage Limit", "Type a size. Leave it empty for no limit.", lc.el),   // (1.79.10) the number and GB/TB sit at the right of the name, like every other row
+    h("div", { class: "limx" }, lc.note),
     h("h3", { text: "Sharing" }),
     row("dsh", "Share Links", "Off ends every link.", sh),
     h("h3", { text: "Trash" }),

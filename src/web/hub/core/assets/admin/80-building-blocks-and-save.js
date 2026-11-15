@@ -1,7 +1,7 @@
   function saveSettings() {
     var b = $('#ix-save'); if (b.disabled) return; b.disabled = true; b.textContent = 'Saving…';
     var fail = function (msg) { b.disabled = false; b.textContent = 'Save Settings'; $('#ix-sferr').textContent = msg; };
-    var send = { siteName: draft.siteName, nav: draft.nav, theme: draft.theme, accent: draft.accent, accentPg: canonAccents(draft.accentPg), look: draft.look, homeBar: draft.homeBar, glass: draft.glass === true, glassFx: canonGfx(draft.glassFx), barHide: draft.barHide !== false, font: draft.font, fontCustom: draft.fontCustom, colors: draft.colors, tools: draft.tools, backupEvery: draft.backupEvery, pages: draft.pages || [], tz: draft.tz || 'Asia/Kolkata' };
+    var send = { siteName: draft.siteName, nav: draft.nav, theme: draft.theme, accent: draft.accent, accentPg: canonAccents(draft.accentPg), look: draft.look, homeBar: draft.homeBar, glass: draft.glass === true, glassFx: canonGfx(draft.glassFx), barHide: draft.barHide !== false, barRound: draft.barRound !== false, font: draft.font, fontCustom: draft.fontCustom, colors: draft.colors, tools: draft.tools, backupEvery: draft.backupEvery, pages: draft.pages || [], tz: draft.tz || 'Asia/Kolkata' };
     api('settings', { settings: send }).then(function (j) {
       if (!j.ok || !j.state) {
         return fail(j._status === 401 ? 'You were logged out. Log in again, then save.' : j._status === 403 ? 'Security check failed. Reload the page, then save again.' : (j.error || 'Could not save (server answered ' + (j._status || 'nothing') + ').'));

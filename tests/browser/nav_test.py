@@ -171,7 +171,7 @@ try:
                     check('%s: hiding the bar does not change a setting of the whole page (1.71.0: no page-wide restyle; --ix-top-now stays the bar\'s height)' % L, tv[0] != '' and tv[0] == tv[1], tv)
                     pg.evaluate("window.scrollTo(0, 700)"); until(lambda: not pg.evaluate("document.documentElement.classList.contains('ix-hide')"), 3000); settle(pg)
                     r = rect(pg, '#ix-bar')
-                    check('%s: scrolling up brings it back' % L, not pg.evaluate("document.documentElement.classList.contains('ix-hide')") and abs(r['y']) < 1, r)
+                    check('%s: scrolling up brings it back' % L, not pg.evaluate("document.documentElement.classList.contains('ix-hide')") and 0 <= r['y'] <= 9, r)
                     if not phone:
                         pg.evaluate("window.scrollTo(0, 1500)"); until(lambda: pg.evaluate("document.documentElement.classList.contains('ix-hide')"), 3000); settle(pg)
                         pg.keyboard.press('/'); until(lambda: not pg.evaluate("document.documentElement.classList.contains('ix-hide')") and pg.evaluate("document.activeElement && document.activeElement.id === 'ix-q'"), 3000); settle(pg)

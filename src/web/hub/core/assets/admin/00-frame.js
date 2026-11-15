@@ -98,7 +98,7 @@
   var TABSEL = {};                       // the tab chosen in each tabbed section (kept while it redraws)
   var TABMERGE = { security: [['Sign-In', ['password', 'passkeys', 'two-step-login', 'telegram-login-approval', 'login-approval']], ['Data Protection', ['encryption']], ['Devices', ['devices', 'trusted-browsers']]] };   // (1.74.2) Security: eight tabs become four
   var TABBED = { security: 'Overview', telegram: 'Status', backup: 'Back Up' };   // sections whose accordions become tabs, and the name of their first tab
-  var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
+  var SAVED_KEYS = ['siteName', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'barRound', 'font', 'fontCustom', 'colors', 'pages', 'tz'];
   var draft;
   /* what Save Settings would send, written the same way every time (empty color sets and their order don't count) */
   function canonColors(c) {
@@ -134,7 +134,7 @@
   function canonAccents(a) { var out = {}; Object.keys(a || {}).sort().forEach(function (k) { if (a[k]) out[k] = a[k]; }); return out; }
   function pick(o) {
     var r = {};
-    SAVED_KEYS.forEach(function (k) { r[k] = k === 'colors' ? canonColors(o.colors) : k === 'accentPg' ? canonAccents(o.accentPg) : k === 'glassFx' ? canonGfx(o.glassFx) : k === 'barHide' ? o.barHide !== false : k === 'pages' ? (o.pages || []) : (o[k] === undefined ? null : o[k]); });
+    SAVED_KEYS.forEach(function (k) { r[k] = k === 'colors' ? canonColors(o.colors) : k === 'accentPg' ? canonAccents(o.accentPg) : k === 'glassFx' ? canonGfx(o.glassFx) : k === 'barHide' ? o.barHide !== false : k === 'barRound' ? o.barRound !== false : k === 'pages' ? (o.pages || []) : (o[k] === undefined ? null : o[k]); });
     return JSON.stringify(r);
   }
   function dirty() { return !!draft && pick(draft) !== pick(S); }

@@ -18,6 +18,7 @@
     return '<h3>Navigation Style</h3><p>For every page.</p>' +
       '<div class="ix-navpick">' + [['top', 't', 'Top Bar'], ['side', 's', 'Sidebar'], ['dock', 'd', 'Bottom Dock']].map(function (o) { return '<button type="button" class="' + o[1] + '" data-n="' + o[0] + '" aria-pressed="' + (draft.nav === o[0]) + '"><i></i>' + o[2] + '</button>'; }).join('') + '</div>' +
       '<label class="ix-tg"><span>Show the Bar on the Home Page<small>Off keeps the home page clean; a corner button opens the menu.</small></span><input type="checkbox" id="ix-hb"' + (draft.homeBar ? ' checked' : '') + '></label>' +
+      '<label class="ix-tg"><span>Rounded Bar<small>The top bar floats with rounded corners. Off makes it a flat bar across the top edge.</small></span><input type="checkbox" id="ix-br"' + (draft.barRound !== false ? ' checked' : '') + '></label>' +
       '<label class="ix-tg"><span>Hide the Bar While Scrolling<small>The top bar slides away as you scroll down and comes back as you scroll up; the dock shrinks a little. Off keeps the bar in place.</small></span><input type="checkbox" id="ix-bh"' + (draft.barHide !== false ? ' checked' : '') + '></label>' +
       '<p class="ix-note">Glass for the bar: the Glass tab.</p>';
   }
@@ -25,6 +26,7 @@
     p.querySelectorAll('[data-n]').forEach(function (b) { b.onclick = function () {
       draft.nav = b.dataset.n; p.querySelectorAll('[data-n]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); preview(); }; });
     p.querySelector('#ix-hb').onchange = function (e) { draft.homeBar = e.target.checked; preview(); };
+    p.querySelector('#ix-br').onchange = function (e) { draft.barRound = e.target.checked; preview(); };
     p.querySelector('#ix-bh').onchange = function (e) { draft.barHide = e.target.checked; preview(); };
   }
   /* Accent Color (on the Colors tab since 1.70.0). (1.65.3) The picker is adapted from Uiverse.io by Cobp, "horrible-quail-18" (MIT; see web/hub/docs/THIRD-PARTY.md):

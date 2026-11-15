@@ -141,7 +141,10 @@ try:
         lg = pg.evaluate("(() => { const r = document.querySelector('#ix-page .ix-lgr'), k = r && r.querySelector('.ix-lgk'); return [r ? r.style.getPropertyValue('--pc') : '', k ? getComputedStyle(k).color : '', getComputedStyle(document.querySelector('#ix-page')).color]; })()")
         check('L16g (1.79.9) Logs rows wear their page colour and the little labels are plain text colour, not yellow', lg[0].startswith('#') and (not lg[1] or lg[1] == lg[2]), lg)
         th = pg.evaluate("(() => { const t = document.querySelector('#ix-bar [data-ix=\"theme\"] .ix-tt'); return t ? [getComputedStyle(t).backgroundColor, getComputedStyle(t.querySelector('svg')).stroke] : null; })()")
-        check('L16h (1.79.9) the theme button tile is plain (white on dark) with a yellow icon', th is None or (th[0] != 'rgb(245, 165, 36)' and '245' in th[1]), th)
+        check('L16h (1.79.10) the theme button is only its icon: no tile, no colour behind it', th is None or th[0] == 'rgba(0, 0, 0, 0)', th)
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!document.getElementById('ix-bar')", 15000)
+        rr = pg.evaluate("(() => { const bar = document.getElementById('ix-bar'), f = () => bar.getBoundingClientRect().top; const a = [f(), parseFloat(getComputedStyle(bar).borderTopLeftRadius)]; document.documentElement.setAttribute('data-ix-flat', ''); const b = [f(), parseFloat(getComputedStyle(bar).borderTopLeftRadius)]; document.documentElement.removeAttribute('data-ix-flat'); return [a, b]; })()")
+        check('L16i (1.79.10) the top bar floats with rounded corners, and Rounded Bar off makes it flat across the top', rr[0][0] > 4 and rr[0][1] >= 16 and rr[1][0] == 0 and rr[1][1] == 0, rr)
         check('L17 no backup reminder pops up on the Settings page', 'Backup reminder' not in (pg.evaluate("(document.getElementById('ix-toast') || {}).textContent || ''") or ''))
 
         pg.goto(s.base + '/web/settings/#health'); until(lambda: pg.evaluate("document.querySelectorAll('.ix-hcards.six .ix-hc').length") == 6, 20000)

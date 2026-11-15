@@ -42,25 +42,8 @@
       if (f && f.offsetParent) f.focus(); else { d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); }
     }).observe(d, { attributes: true, attributeFilter: ['open'] });
   }
-  /* (1.64.3) "Save Settings" looks dim until something in the window changes. Only how it looks: the button always works (a change made by a page's own code is not seen here, so it is never switched off). */
-  function sdlgWatch(d, getBtn) {
-    if (d._ixW) return; d._ixW = true;
-    var base = '', touched = false, btn = null, timer = 0;
-    function snap() { return [].map.call(d.querySelectorAll('input,select,textarea'), function (e) { return e.type === 'checkbox' || e.type === 'radio' ? (e.checked ? 1 : 0) : e.value; }).join('\u0001'); }
-    function sync() { if (btn) btn.classList.toggle('ix-clean', !touched && snap() === base); }
-    function arm() {
-      btn = getBtn(); if (!btn || !/^save settings$/i.test(btn.textContent.trim())) { btn = null; return; }
-      touched = false; base = snap(); sync(); clearTimeout(timer);
-      timer = setTimeout(function () { if (!touched) { base = snap(); sync(); } }, 600);   // a window filled in just after it opened
-    }
-    new MutationObserver(function () { if (d.open) arm(); else clearTimeout(timer); }).observe(d, { attributes: true, attributeFilter: ['open'] });
-    ['input', 'change'].forEach(function (ev) { d.addEventListener(ev, function () { touched = true; sync(); }); });
-    d.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.ix-sgc button')) setTimeout(function () { touched = true; sync(); }, 0); });
-    if (d.open) arm();
-  }
   function sdlgBuild(d) {
     if (d._ixS) return; d._ixS = true;
-    sdlgWatch(d, function () { return d.querySelector('.ix-sf [type=submit],.ix-sf .pri,.ix-sf .primary,.df .pri,.df .primary,.act .pri,.actions .primary'); });
     var plain = d.classList.contains('ix-plain');   // (1.61.9) a page's own window (Add Link, Edit Card...): the frame only, its fields keep their own layout
     if (d.querySelector('.dh,.ix-sh')) { var db = d.querySelector('.db'); if (db) db.classList.add('ix-sb'); /* (1.64.1) the same body as every window: its fields take the shared look */ if (!plain) sdlgDecorate(db, '.sh3'); sdlgFocus(d, d.querySelector('.db,.ix-sb') || d, d.querySelector('.dh [data-close],.dh .ib,.ix-sx')); return; }
     var c = d.querySelector(':scope>form') || (d.children.length === 1 && d.firstElementChild.tagName === 'DIV' ? d.firstElementChild : d), kids = [].slice.call(c.children);   // a form, a single wrapper (Info's Export) or the dialog itself
@@ -137,7 +120,6 @@
     [].forEach.call(b.querySelectorAll('.g-row'), function (r) { var lab = r.querySelector('.g-label'); if (lab && !r.querySelector('.ix-rt')) r.insertBefore(rowTile(r.getAttribute('data-rt') || (lab.firstChild ? lab.firstChild.textContent : '')), r.firstChild); });
     var d = b.closest('dialog'); if (!d) return;
     sdlgFocus(d, b, d.querySelector('.sh .x'));
-    sdlgWatch(d, function () { return d.querySelector('.sf .primary'); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sdlgAll); else sdlgAll();   // the dialogs are further down the page than the body
 

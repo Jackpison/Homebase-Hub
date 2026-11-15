@@ -43,7 +43,7 @@ AUDIT = """(id => {
     if (lr && lr.width < 120 && cr.top < lr.bottom - 4) bad.push('a squeezed row: ' + l.textContent.trim().slice(0, 20) + ' (' + Math.round(lr.width) + ' px wide)');
   }
   const sv = [...d.querySelectorAll('.ix-sf button,.sf button,.df button,.act button')].find(b => /^save settings$/i.test(b.textContent.trim()));
-  if (sv && !sv.classList.contains('ix-clean')) bad.push('Save Settings is not dim on a window nothing changed in');
+  if (sv && getComputedStyle(sv).filter !== 'none') bad.push('Save Settings is dimmed: it looks the same everywhere (1.79.10)');
   for (const b of d.querySelectorAll('.ix-sf button, .df button, .act button, .actions button')) if (vis(b) && getComputedStyle(b).borderRadius !== '12px') bad.push('button radius ' + getComputedStyle(b).borderRadius + ': ' + b.textContent.trim().slice(0, 18));
   if (document.activeElement && document.activeElement.closest('.ix-sx, .dh')) bad.push('the close X has the focus');
   return bad;

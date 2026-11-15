@@ -41,6 +41,7 @@ t('no Glass values (or not a list) means the built-in look', hub_clean_settings(
 t('Hide the Bar While Scrolling is on unless switched off', hub_clean_settings([])['barHide'] === true && hub_clean_settings(['barHide' => false])['barHide'] === false && hub_clean_settings(['barHide' => 0])['barHide'] === true);
 $ps = hub_public_state();
 t('the public state carries the Glass values and Hide the Bar', array_key_exists('glassFx', $ps) && array_key_exists('barHide', $ps));
+t('Rounded Bar is on unless switched off, and the public state carries it (1.79.10)', hub_clean_settings([])['barRound'] === true && hub_clean_settings(['barRound' => false])['barRound'] === false && hub_clean_settings(['barRound' => 'x'])['barRound'] === true && array_key_exists('barRound', $ps));
 
 // (1.68.4) one glass: Home's own glass look moves into it once
 t('Home\'s built-in glass (light, 40%, 22 px) moves nothing: the site takes the shared default', hub_glass_from_panel(['tint' => 'light', 'opacity' => 0.4, 'blur' => 22]) === []);

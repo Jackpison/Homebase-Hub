@@ -20,7 +20,7 @@
   --ix-font:"Trebuchet MS","Lucida Grande","Lucida Sans Unicode",Tahoma,system-ui,sans-serif;
   --ix-field:#1c1c1c;   /* search box: a little lighter than the page surfaces */
   --ix-safe-top:env(safe-area-inset-top,0px);   /* an iPhone's status bar and notch, when the site runs as an app (1.59.1) */
-  --ix-top:calc(52px + var(--ix-safe-top)); --ix-side:80px; --ix-dock:58px;
+  --ix-top:calc(60px + var(--ix-safe-top)); --ix-side:80px; --ix-dock:58px;
 }
 html[data-theme="light"]{
   --ix-accent-tx:color-mix(in srgb,var(--ix-accent) 45%,#000);
@@ -85,11 +85,11 @@ html.ix-vt #ix-bar .ix-links a{view-transition-name:none}
 #ix-bar .ix-fbtn svg,#ix-spot .ix-fbtn svg{width:16px;height:16px}
 #ix-bar :focus-visible,#ix-dlg :focus-visible,#ix-pop :focus-visible,#ix-drawer :focus-visible,#ix-sheet :focus-visible{outline:2px solid var(--ix-accent);outline-offset:2px}
 /* ---------- Top Bar: slides away while you scroll down ---------- */
-html[data-ix-nav="top"] #ix-bar{top:0;left:0;right:0;height:var(--ix-top);box-sizing:border-box;display:flex;align-items:center;gap:16px;
+html[data-ix-nav="top"] #ix-bar{top:8px;left:10px;right:10px;height:calc(var(--ix-top) - 8px);border-radius:20px;box-sizing:border-box;display:flex;align-items:center;gap:16px;
   padding:var(--ix-safe-top) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));   /* the bar's own colour fills the status bar area; its buttons sit below it */
-  background:color-mix(in srgb,var(--ix-barbg,var(--ix-bg)) 90%,transparent);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--ix-line);
+  background:color-mix(in srgb,var(--ix-barbg,var(--ix-bg)) 90%,transparent);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid var(--ix-line);box-shadow:0 8px 24px -12px rgba(0,0,0,.5);
   transition:transform .26s cubic-bezier(.2,.8,.2,1),box-shadow .26s}
-html.ix-hide[data-ix-nav="top"] #ix-bar{transform:translateY(calc(-100% - 2px))}
+html.ix-hide[data-ix-nav="top"] #ix-bar{transform:translateY(calc(-100% - 14px))}
 /* On an iPhone app (status bar over the page) a strip in the bar's colour stays behind the clock, also while the bar is slid away,
    so the page never scrolls under the clock. It is 0 px tall everywhere else. */
 html[data-ix-bar][data-ix-nav="top"]:not([data-ix-app="home"])::before{content:"";position:fixed;z-index:2147482999;top:0;left:0;right:0;height:var(--ix-safe-top);background:var(--ix-barbg,var(--ix-bg));pointer-events:none}
@@ -670,8 +670,6 @@ label.ix-srow{cursor:pointer}
 .ix-sdlg .ix-sb .ix-srow:has(>.ix-sgc)>.ix-rt+*{flex:100 1 190px}
 .ix-sdlg .ix-sb .ix-srow>.ix-sgc{flex:1 1 auto;max-width:100%}
 .ix-sdlg .ix-sb .ix-srow>.ix-sgc>button{flex:1}
-/* "Save Settings" looks dim until something changes (it still works) */
-.ix-clean{filter:saturate(.3) brightness(.82)}   /* dim by colour, not by see-through: the text keeps its contrast */
 /* a small badge after a row's name ("1 waiting", "All encrypted") */
 .ix-srow>button:disabled{opacity:.45;cursor:default}
 /* a row that folds open (Add Link's Icon and Extra Links): a tile, a name with its hint, a chevron */
@@ -1060,10 +1058,13 @@ html[data-ix-nav="dock"] #ix-keysf{bottom:calc(var(--ix-dock) + 34px + 56px + en
 .ix-nc[style*="--pc"]{border-left:3px solid var(--pc)}
 .ix-nc[style*="--pc"] .ix-nt:not(.bad){background:linear-gradient(145deg,color-mix(in srgb,var(--pc) 65%,#fff),var(--pc));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -6px var(--pc)}
 .ix-nc[style*="--pc"] .ix-nb small{color:color-mix(in srgb,var(--pc) 70%,#fff)}
-/* (1.79.9) the theme button: a white tile on dark, a black one on light, with only the icon yellow */
-#ix-bar [data-ix="theme"] .ix-tt{background:var(--ix-tx);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.3)}
-#ix-bar [data-ix="theme"] .ix-tt svg{stroke:#f5a524;filter:none}
-/* (1.79.9) the top bar has rounded bottom corners */
-html[data-ix-nav="top"] #ix-bar{border-radius:0 0 22px 22px}
+/* (1.79.10) the theme button is only its icon: white on dark, black on light, no tile */
+#ix-bar .ix-ib[data-ix="theme"] .ix-tt,#ix-bar .ix-ib[data-ix="theme"]:hover .ix-tt{background:none;box-shadow:none}
+#ix-bar .ix-ib[data-ix="theme"] .ix-tt svg{stroke:var(--ix-tx);filter:none}
 /* (1.79.9) a disabled main button is a clean neutral, not the accent faded into a muddy grey-yellow */
 html .ix-btn.pri:disabled,html .btn.pri:disabled,html .btn.primary:disabled,#ix-page .ix-btn.pri:disabled,#ix-dlg .ix-btn.pri:disabled{opacity:1;background:var(--ix-soft,rgba(255,255,255,.08));border-color:var(--ix-line2,rgba(255,255,255,.14));color:var(--ix-mu,#8a8a93);box-shadow:none}
+/* (1.79.10) Appearance > Rounded Bar off: the flat bar across the top edge */
+html[data-ix-flat][data-ix-nav="top"]{--ix-top:calc(52px + var(--ix-safe-top))}
+html[data-ix-flat][data-ix-nav="top"] #ix-bar{top:0;left:0;right:0;height:var(--ix-top);border-radius:0;border:0;border-bottom:1px solid var(--ix-line);box-shadow:none}
+html.ix-hide[data-ix-flat][data-ix-nav="top"] #ix-bar{transform:translateY(calc(-100% - 2px))}
+#dlg select option,#ix-page select option,.ix-sdlg select option{background:var(--ix-s1,#1b1b1f);color:var(--ix-tx,#fff)}

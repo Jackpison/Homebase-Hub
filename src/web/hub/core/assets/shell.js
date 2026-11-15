@@ -196,6 +196,7 @@
     glassVars();
     // (1.68.2) Settings > Appearance > Hide the Bar While Scrolling (on unless switched off)
     if (S.barHide === false) { H.setAttribute('data-ix-nohide', ''); H.classList.remove('ix-hide', 'ix-scrolling'); } else H.removeAttribute('data-ix-nohide');
+    if (S.barRound === false) H.setAttribute('data-ix-flat', ''); else H.removeAttribute('data-ix-flat');   // (1.79.10) Appearance > Rounded Bar
     var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Appearance > Colors)
     H.style.setProperty('--ix-accent', acc);
     H.style.setProperty('--ix-ink', inkFor(acc));
@@ -483,7 +484,7 @@
     arm(bad ? 7000 : act ? 8000 : 4500);
   }
   function remember(st) {
-    var keep = {}; ['siteName', 'logo', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'editBar', 'colors', 'font', 'fontCustom', 'sizes', 'pages', 'backupEvery', 'backupLast', 'tz'].forEach(function (k) { if (k in st) keep[k] = st[k]; });
+    var keep = {}; ['siteName', 'logo', 'nav', 'theme', 'accent', 'accentPg', 'look', 'homeBar', 'glass', 'glassFx', 'barHide', 'barRound', 'editBar', 'colors', 'font', 'fontCustom', 'sizes', 'pages', 'backupEvery', 'backupLast', 'tz'].forEach(function (k) { if (k in st) keep[k] = st[k]; });
     keep.adm = !!st.admin;   // only a hint so the bar draws the right icons straight away; the server decides what is allowed
     ls.set('hub-state', JSON.stringify(keep));
   }
@@ -688,25 +689,8 @@
       if (f && f.offsetParent) f.focus(); else { d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); }
     }).observe(d, { attributes: true, attributeFilter: ['open'] });
   }
-  /* (1.64.3) "Save Settings" looks dim until something in the window changes. Only how it looks: the button always works (a change made by a page's own code is not seen here, so it is never switched off). */
-  function sdlgWatch(d, getBtn) {
-    if (d._ixW) return; d._ixW = true;
-    var base = '', touched = false, btn = null, timer = 0;
-    function snap() { return [].map.call(d.querySelectorAll('input,select,textarea'), function (e) { return e.type === 'checkbox' || e.type === 'radio' ? (e.checked ? 1 : 0) : e.value; }).join('\u0001'); }
-    function sync() { if (btn) btn.classList.toggle('ix-clean', !touched && snap() === base); }
-    function arm() {
-      btn = getBtn(); if (!btn || !/^save settings$/i.test(btn.textContent.trim())) { btn = null; return; }
-      touched = false; base = snap(); sync(); clearTimeout(timer);
-      timer = setTimeout(function () { if (!touched) { base = snap(); sync(); } }, 600);   // a window filled in just after it opened
-    }
-    new MutationObserver(function () { if (d.open) arm(); else clearTimeout(timer); }).observe(d, { attributes: true, attributeFilter: ['open'] });
-    ['input', 'change'].forEach(function (ev) { d.addEventListener(ev, function () { touched = true; sync(); }); });
-    d.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.ix-sgc button')) setTimeout(function () { touched = true; sync(); }, 0); });
-    if (d.open) arm();
-  }
   function sdlgBuild(d) {
     if (d._ixS) return; d._ixS = true;
-    sdlgWatch(d, function () { return d.querySelector('.ix-sf [type=submit],.ix-sf .pri,.ix-sf .primary,.df .pri,.df .primary,.act .pri,.actions .primary'); });
     var plain = d.classList.contains('ix-plain');   // (1.61.9) a page's own window (Add Link, Edit Card...): the frame only, its fields keep their own layout
     if (d.querySelector('.dh,.ix-sh')) { var db = d.querySelector('.db'); if (db) db.classList.add('ix-sb'); /* (1.64.1) the same body as every window: its fields take the shared look */ if (!plain) sdlgDecorate(db, '.sh3'); sdlgFocus(d, d.querySelector('.db,.ix-sb') || d, d.querySelector('.dh [data-close],.dh .ib,.ix-sx')); return; }
     var c = d.querySelector(':scope>form') || (d.children.length === 1 && d.firstElementChild.tagName === 'DIV' ? d.firstElementChild : d), kids = [].slice.call(c.children);   // a form, a single wrapper (Info's Export) or the dialog itself
@@ -783,7 +767,6 @@
     [].forEach.call(b.querySelectorAll('.g-row'), function (r) { var lab = r.querySelector('.g-label'); if (lab && !r.querySelector('.ix-rt')) r.insertBefore(rowTile(r.getAttribute('data-rt') || (lab.firstChild ? lab.firstChild.textContent : '')), r.firstChild); });
     var d = b.closest('dialog'); if (!d) return;
     sdlgFocus(d, b, d.querySelector('.sh .x'));
-    sdlgWatch(d, function () { return d.querySelector('.sf .primary'); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sdlgAll); else sdlgAll();   // the dialogs are further down the page than the body
 
@@ -1922,7 +1905,7 @@
   function refreshNow() {
     return api('state').then(function (st) {
       if (!st || !('admin' in st)) return;
-      var changed = st.nav !== S.nav || st.look !== S.look || st.accent !== S.accent || st.homeBar !== S.homeBar || st.glass !== S.glass || st.barHide !== S.barHide || JSON.stringify(st.glassFx) !== JSON.stringify(S.glassFx) || st.font !== S.font || st.fontCustom !== S.fontCustom || JSON.stringify(st.colors) !== JSON.stringify(S.colors);
+      var changed = st.nav !== S.nav || st.look !== S.look || st.accent !== S.accent || st.homeBar !== S.homeBar || st.glass !== S.glass || st.barHide !== S.barHide || st.barRound !== S.barRound || JSON.stringify(st.glassFx) !== JSON.stringify(S.glassFx) || st.font !== S.font || st.fontCustom !== S.fontCustom || JSON.stringify(st.colors) !== JSON.stringify(S.colors);
       // the site theme was changed in Settings (on any device) since this browser last looked: follow it
       var seen = ls.get('hub-theme-site');
       if (st.theme && seen !== st.theme) { if (seen) applyTheme(resolveTheme(st.theme)); ls.set('hub-theme-site', st.theme); }
@@ -2279,7 +2262,6 @@
         })(t0);
       });
     },
-    watchSave: function (d) { sdlgWatch(d, function () { return d.querySelector('.ix-sf .pri,.act .pri'); }); },   // (1.64.3) Files draws its Settings window itself, each time it opens
     settingsRows: function (body, heads) { sdlgDecorate(body, heads || 'h3,h4'); }   // (1.61.6) cards and tiles for a body a page draws itself (Files Settings)   // (1.61.6) a Settings window made later by a page (Import and Export, Files Settings) gets the same look
   };
 })();

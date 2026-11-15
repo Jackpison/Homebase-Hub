@@ -36,6 +36,7 @@
     glassVars();
     // (1.68.2) Settings > Appearance > Hide the Bar While Scrolling (on unless switched off)
     if (S.barHide === false) { H.setAttribute('data-ix-nohide', ''); H.classList.remove('ix-hide', 'ix-scrolling'); } else H.removeAttribute('data-ix-nohide');
+    if (S.barRound === false) H.setAttribute('data-ix-flat', ''); else H.removeAttribute('data-ix-flat');   // (1.79.10) Appearance > Rounded Bar
     var acc = (S.accentPg && S.accentPg[APP]) || S.accent || '#ffc21a';   // a page can have an accent of its own (Settings > Appearance > Colors)
     H.style.setProperty('--ix-accent', acc);
     H.style.setProperty('--ix-ink', inkFor(acc));

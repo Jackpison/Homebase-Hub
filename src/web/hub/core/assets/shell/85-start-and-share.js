@@ -26,7 +26,7 @@
   function refreshNow() {
     return api('state').then(function (st) {
       if (!st || !('admin' in st)) return;
-      var changed = st.nav !== S.nav || st.look !== S.look || st.accent !== S.accent || st.homeBar !== S.homeBar || st.glass !== S.glass || st.barHide !== S.barHide || JSON.stringify(st.glassFx) !== JSON.stringify(S.glassFx) || st.font !== S.font || st.fontCustom !== S.fontCustom || JSON.stringify(st.colors) !== JSON.stringify(S.colors);
+      var changed = st.nav !== S.nav || st.look !== S.look || st.accent !== S.accent || st.homeBar !== S.homeBar || st.glass !== S.glass || st.barHide !== S.barHide || st.barRound !== S.barRound || JSON.stringify(st.glassFx) !== JSON.stringify(S.glassFx) || st.font !== S.font || st.fontCustom !== S.fontCustom || JSON.stringify(st.colors) !== JSON.stringify(S.colors);
       // the site theme was changed in Settings (on any device) since this browser last looked: follow it
       var seen = ls.get('hub-theme-site');
       if (st.theme && seen !== st.theme) { if (seen) applyTheme(resolveTheme(st.theme)); ls.set('hub-theme-site', st.theme); }

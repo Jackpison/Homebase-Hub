@@ -126,7 +126,6 @@
         })(t0);
       });
     },
-    watchSave: function (d) { sdlgWatch(d, function () { return d.querySelector('.ix-sf .pri,.act .pri'); }); },   // (1.64.3) Files draws its Settings window itself, each time it opens
     settingsRows: function (body, heads) { sdlgDecorate(body, heads || 'h3,h4'); }   // (1.61.6) cards and tiles for a body a page draws itself (Files Settings)   // (1.61.6) a Settings window made later by a page (Import and Export, Files Settings) gets the same look
   };
 })();

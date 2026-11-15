@@ -293,6 +293,6 @@ html[data-ix-nav="side"] .fdet{top:16px}
 .row.dropto,#crumbs button.dropto,#tabs button.dropto{outline:2px dashed var(--acc);outline-offset:-2px;background:color-mix(in srgb,var(--acc) 14%,transparent)}
 
 /* (1.79.9) the storage limit: a number and a GB or TB choice */
-#dlg .limin{display:flex;gap:8px;align-items:center;margin:0 0 8px}
-#dlg .limin input{width:150px}
+#dlg .limin{display:flex;gap:8px;align-items:center;margin:0}
+#dlg .limin input{width:110px}
 #dlg .limin select{width:auto}
