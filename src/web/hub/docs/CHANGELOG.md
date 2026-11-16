@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.8 | Site at a Glance in General, one-click fixes in Health, Logs with search, Export and pages, the flat two-tone folder, a Telegram security summary |
 | 1.80.7 | Small animated icons (bell, copy, eye, backup, star), light-mode fixes for Tools tiles and Cards dots, tighter tabs |
 | 1.80.6 | One button hover everywhere, the Alerts dot works, Info says what it did, Logs keep 30 days in pages of 100 |
 | 1.80.5 | A dot on the alerts bell as soon as anything happens, the new button hover on buttons that had their own hover (Cancel, Check for Update and the like), and Tools icons as solid gradient tiles |
@@ -175,6 +176,33 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.8
+
+### General
+
+- New Site at a Glance card under Time Zone: last backup, last login, security, version, what needs you, and the latest activity.
+
+### Health
+- Health starts with Needs a Look. Each warning says what its button will do. Clear Logs needs a hold; the others open the right page.
+
+### Logs
+- Activity and Notifications have search, a time range (24 hours, 7 or 30 days), and Export to a .csv file. Activity also filters by Logins, Backups, Updates or Settings.
+- Notifications: Clear Older Than (1, 7 or 14 days), and each day's heading shows how many messages it holds.
+- The pager has First, Previous, a page number box, Next and Last. Both lists keep 30 days, 100 lines to a page.
+- PHP Errors: the same error repeated many times shows as one line ("seen 12 times").
+
+### Telegram
+- New Daily Security Summary switch (off by default): once a day, only after a day with wrong passwords, it lists how many and from which addresses.
+
+### Files
+- Folders are the flat two-tone folder. A colour label repaints both tones.
+
+### Look
+- Tab names in Links and Info sit 20 px apart.
+- The Copy label in the Telegram commands sits in line with the command.
 
 ---
 
