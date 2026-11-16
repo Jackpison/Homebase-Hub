@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.10 | Logs and Activity use two lines (search and filters, then the count with Export and Clear), the bar bell is the exact flat yellow bell with even spacing around it |
 | 1.80.9 | Overview now leads General, Logs and Activity share one search bar with a ⋯ menu, GitHub icons turn white on dark and are fetched from GitHub's own icon file, and the Extra Links box matches the other fields |
 | 1.80.8 | Site at a Glance in General, one-click fixes in Health, Logs with search, Export and pages, the flat two-tone folder, a Telegram security summary |
 | 1.80.7 | Small animated icons (bell, copy, eye, backup, star), light-mode fixes for Tools tiles and Cards dots, tighter tabs |
@@ -177,6 +178,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.10
+
+### Logs
+
+- Notifications and Activity have two lines. The first holds All and Problems (Notifications), Search, time and kind (Activity). The second shows the count and the 30-day note on the left, and Export, Clear Older Than (Notifications) and Clear on the right. The ⋯ menu from 1.80.9 is gone.
+
+### Look
+
+- The bell in the bar is the flat yellow bell picture, and its button is as wide as the others so the spacing is even.
 
 ---
 
