@@ -31,7 +31,7 @@
       if (msg) toast(msg);   // the message is also shown on the Status tab, but you may be on another tab when it arrives
       if (!ready && !TABSEL.telegram) TABSEL.telegram = 'setup';   // nothing works until the bot is connected, so start there
       var acc = function (k, title, sum, body) { return '<details class="ix-acc" data-tg="' + k + '"><summary><span>' + title + '</span><small>' + sum + '</small></summary><div class="ix-accb">' + body + '</div></details>'; };
-      var sent = [n.tasks && 'digest', n.timed && 'due now', n.backup && 'backup reminder', n.login && 'login alerts'].filter(Boolean);
+      var sent = [n.tasks && 'digest', n.timed && 'due now', n.backup && 'backup reminder', n.login && 'login alerts', n.secsum && 'security summary'].filter(Boolean);
       var bkTxt = BK_TXT[n.bkEvery] || 'Off';
       var now = n.now || Math.floor(Date.now() / 1000), running = n.cronLast && now - n.cronLast < 1800;
       var toggle = function (k, title, hint, on, dis) { return '<label class="ix-tg"><span>' + title + '<small>' + hint + '</small></span><input type="checkbox" data-k="' + k + '"' + (on ? ' checked' : '') + (dis ? ' disabled' : '') + '></label>'; };
@@ -85,7 +85,8 @@
             toggle('timed', 'Due Now', 'Tasks with a time get a message when that time passes.', n.timed)) +
           ecCard('', ICON.shield, 'Site Alerts', 'News about the site itself.',
             toggle('backup', 'Backup Reminder', 'Once a day while a backup is due.', n.backup) +
-            toggle('login', 'Login Alerts', 'Straight away: logins, paused logins, password and two-step changes, restores.', n.login)) +
+            toggle('login', 'Login Alerts', 'Straight away: logins, paused logins, password and two-step changes, restores.', n.login) +
+            toggle('secsum', 'Daily Security Summary', 'Once a day, only after a day with wrong passwords: how many, and from which addresses.', n.secsum)) +
           ecCard('ix-row1', ICON.clock, 'Delivery Time', 'When the daily message goes out, in ' + esc(String(n.tz).replace(/_/g, ' ')) + ' time.<span class="ix-sub">Last checked: ' + (n.lastRun ? when(n.lastRun) : 'never') + '. Last message: ' + (n.lastSent ? when(n.lastSent) : 'none yet') + '.' + (n.lastError ? ' <span class="ix-err">Last problem: ' + esc(n.lastError) + '</span>' : '') + '</span>',
             '<select id="nt-hour" class="ix-sel">' + Array.apply(null, Array(24)).map(function (x, h) { return '<option value="' + h + '"' + (n.hour === h ? ' selected' : '') + '>' + hourLabel(h) + '</option>'; }).join('') + '</select>' +
             '<button type="button" class="ix-btn" id="nt-now"' + (ready ? '' : ' disabled') + '>Send Now</button>') +

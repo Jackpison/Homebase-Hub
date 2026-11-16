@@ -27,7 +27,7 @@ function nt_file(): string { return hub_dir('core') . '/notify.json'; }   // sto
 function nt_load(): array {
     $d = hub_jread(nt_file()) ?? [];
     $d += ['on' => false, 'token' => '', 'chat' => '', 'chatName' => '', 'hour' => 9, 'tasks' => true, 'timed' => true, 'backup' => true,
-           'login' => true, 'bkEvery' => 0, 'bkLast' => 0, 'bkError' => '', 'bkEnc' => true,
+           'login' => true, 'secsum' => false, 'bkEvery' => 0, 'bkLast' => 0, 'bkError' => '', 'bkEnc' => true,
            'hook' => false, 'hookKey' => '', 'hookPath' => '', 'offset' => 0, 'lastPoll' => 0,
            'key' => '', 'url' => '', 'sent' => [], 'snooze' => [], 'lastRun' => 0, 'lastError' => '', 'lastSent' => 0];
     if (!preg_match('/^[a-f0-9]{32}$/', (string)$d['key'])) { $d['key'] = bin2hex(random_bytes(16)); nt_save($d); }
@@ -47,7 +47,7 @@ function nt_update(callable $fn): array {
     return hub_with_lock(hub_dir('core') . '/notify-data.lock', function () use ($fn): array { $d = nt_load(); $fn($d); nt_save($d); return $d; });
 }
 /** What Settings > Telegram changes (everything else is kept by the jobs themselves). */
-const NT_USER_KEYS = ['on', 'token', 'chat', 'chatName', 'hour', 'tasks', 'timed', 'backup', 'login', 'bkEvery', 'bkEnc', 'hook', 'hookKey', 'hookPath', 'url'];
+const NT_USER_KEYS = ['on', 'token', 'chat', 'chatName', 'hour', 'tasks', 'timed', 'backup', 'login', 'secsum', 'bkEvery', 'bkEnc', 'hook', 'hookKey', 'hookPath', 'url'];
 /** Saves only these fields of $d into the file as it is now. */
 function nt_save_keys(array $d, array $keys): array {
     return nt_update(function (&$cur) use ($d, $keys) { foreach ($keys as $k) if (array_key_exists($k, $d)) $cur[$k] = $d[$k]; });
@@ -219,6 +219,22 @@ function nt_digest(array $d, bool $force): ?string {
  * Sends whatever is due now. $force: "Send now" in Settings (digest even before the hour, even when nothing is due).
  * Returns ['ok', 'note'].
  */
+/** (1.80.8) The daily security summary: the wrong passwords of the last 24 hours (how many, from which addresses) and how many logins worked.
+ *  Returns null on a quiet day (no wrong password), so nothing is sent. */
+function nt_secsum(array $d, ?int $now = null): ?string {
+    require_once __DIR__ . '/activity.php';
+    $since = ($now ?? time()) - 86400; $bad = []; $ok = 0;
+    foreach (hub_jread(act_file()) ?? [] as $e) {
+        if (!is_array($e) || (int)($e['t'] ?? 0) < $since) continue;
+        if (($e['ev'] ?? '') === 'failed' || ($e['ev'] ?? '') === 'locked') $bad[(string)($e['ip'] ?? '')] = ($bad[(string)($e['ip'] ?? '')] ?? 0) + 1;
+        elseif (($e['ev'] ?? '') === 'login') $ok++;
+    }
+    if (!$bad) return null;
+    arsort($bad); $n = array_sum($bad); $top = array_slice($bad, 0, 3, true); $lines = [];
+    foreach ($top as $ip => $c) $lines[] = '• ' . nt_h($ip === '' ? 'unknown address' : $ip) . ': ' . $c;
+    return '🔐 <b>Security Summary</b>' . "\n\n" . '<b>' . $n . '</b> wrong password' . ($n === 1 ? '' : 's') . ' or paused login' . ($n === 1 ? '' : 's') . ' in the last 24 hours, <b>' . $ok . '</b> login' . ($ok === 1 ? '' : 's') . ' that worked.' . "\n" . implode("\n", $lines) .
+        ($d['url'] !== '' ? "\n\n" . '👉 <a href="' . nt_h($d['url']) . '">Open the site</a>' : '');
+}
 function nt_run(bool $force = false): array {
     $lk = @fopen(hub_dir('core') . '/notify.lock', 'c');
     if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['ok' => true, 'note' => 'Already running.'];
@@ -259,6 +275,11 @@ function nt_run(bool $force = false): array {
                 if ($again) { $tid = $t['id']; nt_update(function (&$x) use ($tid) { unset($x['snooze'][$tid]); }); unset($d['snooze'][$tid]); }
             } else $errs[] = (string)($r['description'] ?? 'Telegram refused the message.');
         }
+    }
+    // 2b. (1.80.8) the security summary, once a day at the daily hour, and only after a day with wrong passwords
+    if ($d['secsum'] && !$force && $hourReached && ($d['sent']['secsum'] ?? '') !== $today) {
+        $m = nt_secsum($d);
+        if ($m === null || $try($m)) $d['sent']['secsum'] = $today;
     }
     // 3. backup reminder, once a day while a backup is due
     $s = hub_settings();
@@ -371,7 +392,7 @@ function nt_view(array $d): array {
     return ['ok' => true, 'on' => (bool)$d['on'], 'hasToken' => $d['token'] !== '', 'tokenHint' => nt_token_hint((string)$d['token']), 'chat' => (string)$d['chat'],
             'chatName' => (string)$d['chatName'], 'hour' => (int)$d['hour'], 'tasks' => (bool)$d['tasks'], 'timed' => (bool)$d['timed'], 'backup' => (bool)$d['backup'],
             'lastRun' => (int)$d['lastRun'], 'lastSent' => (int)$d['lastSent'], 'cronLast' => (int)@file_get_contents(hub_dir('core') . '/cron-last.txt'), 'now' => time(), 'lastError' => (string)$d['lastError'], 'tz' => hub_tz(),
-            'login' => (bool)$d['login'], 'bkEvery' => (int)$d['bkEvery'], 'bkLast' => (int)$d['bkLast'], 'bkError' => (string)$d['bkError'],
+            'login' => (bool)$d['login'], 'secsum' => (bool)$d['secsum'], 'bkEvery' => (int)$d['bkEvery'], 'bkLast' => (int)$d['bkLast'], 'bkError' => (string)$d['bkError'],
             'bkEnc' => (bool)$d['bkEnc'], 'encReady' => (function () { require_once __DIR__ . '/backup.php'; return (bool)bk_key(); })(),
             'encMode' => (function () { require_once __DIR__ . '/backup.php'; return bk_key_mode(); })(),
             'hook' => (bool)$d['hook'], 'hookInfo' => $d['hook'] ? nt_hook_info($d) : null,

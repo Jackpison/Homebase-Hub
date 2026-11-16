@@ -94,7 +94,7 @@ function health_logs(): array {
         $inSite = strpos($r, realpath(HUB_PUBLIC) . DIRECTORY_SEPARATOR) === 0;
         $rel = $inSite ? substr($r, strlen(realpath(HUB_PUBLIC)) + 1) : $r;
         $out[] = ['file' => $rel, 'size' => $size, 'at' => (int)@filemtime($r),
-                  'lines' => array_slice($lines, -40), 'clear' => $inSite && basename($r) === 'error_log',
+                  'lines' => array_slice($lines, -400), 'clear' => $inSite && basename($r) === 'error_log',
                   'public' => $inSite && basename($r) === 'error_log' ? health_is_public($rel) : null];
     }
     usort($out, function ($a, $b) { return $b['at'] <=> $a['at']; });

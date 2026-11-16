@@ -123,12 +123,22 @@
       show();
     }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
   }
+  /* (1.80.8) the same error again and again becomes one line that says how many times ("seen 40 times"), with the time of the latest */
+  function lgGroup(lines) {
+    var by = {}, order = [];
+    lines.forEach(function (ln) {
+      var m = /^(\[[^\]]*\]\s*)?(.*)$/.exec(ln), key = m[2];
+      if (!by[key]) { by[key] = { n: 0, last: '' }; order.push(key); }
+      by[key].n++; by[key].last = m[1] || '';
+    });
+    return order.slice(-40).map(function (k) { var g = by[k]; return g.last + k + (g.n > 1 ? '   (seen ' + g.n + ' times)' : ''); });
+  }
   function pLogErr(p) {
     p.innerHTML = spinRow('Looking for PHP error logs…');
     api('health').then(function (h) {
       if (!h || !h.ok) { p.innerHTML = '<p class="ix-err">' + esc((h && h.error) || 'Could not load.') + '</p>'; return; }
       p.innerHTML = tabHead(ICON.warn, 'PHP Errors', 'From your host\'s error_log files, newest last. Clearing them is under Health.') +
-        (h.logs.length ? h.logs.map(function (l) { return '<div class="ix-log"><b>' + esc(l.file) + '</b><pre>' + esc(l.lines.slice(-40).join('\n')) + '</pre></div>'; }).join('')
+        (h.logs.length ? h.logs.map(function (l) { return '<div class="ix-log"><b>' + esc(l.file) + '</b><pre>' + esc(lgGroup(l.lines).join('\n')) + '</pre></div>'; }).join('')
           : '<div class="ix-empty"><b>No Errors Logged</b><p>Nothing has gone wrong that your server wrote down.</p></div>');
     }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
   }

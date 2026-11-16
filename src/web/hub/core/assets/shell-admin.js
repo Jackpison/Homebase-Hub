@@ -1149,7 +1149,7 @@
       if (msg) toast(msg);   // the message is also shown on the Status tab, but you may be on another tab when it arrives
       if (!ready && !TABSEL.telegram) TABSEL.telegram = 'setup';   // nothing works until the bot is connected, so start there
       var acc = function (k, title, sum, body) { return '<details class="ix-acc" data-tg="' + k + '"><summary><span>' + title + '</span><small>' + sum + '</small></summary><div class="ix-accb">' + body + '</div></details>'; };
-      var sent = [n.tasks && 'digest', n.timed && 'due now', n.backup && 'backup reminder', n.login && 'login alerts'].filter(Boolean);
+      var sent = [n.tasks && 'digest', n.timed && 'due now', n.backup && 'backup reminder', n.login && 'login alerts', n.secsum && 'security summary'].filter(Boolean);
       var bkTxt = BK_TXT[n.bkEvery] || 'Off';
       var now = n.now || Math.floor(Date.now() / 1000), running = n.cronLast && now - n.cronLast < 1800;
       var toggle = function (k, title, hint, on, dis) { return '<label class="ix-tg"><span>' + title + '<small>' + hint + '</small></span><input type="checkbox" data-k="' + k + '"' + (on ? ' checked' : '') + (dis ? ' disabled' : '') + '></label>'; };
@@ -1203,7 +1203,8 @@
             toggle('timed', 'Due Now', 'Tasks with a time get a message when that time passes.', n.timed)) +
           ecCard('', ICON.shield, 'Site Alerts', 'News about the site itself.',
             toggle('backup', 'Backup Reminder', 'Once a day while a backup is due.', n.backup) +
-            toggle('login', 'Login Alerts', 'Straight away: logins, paused logins, password and two-step changes, restores.', n.login)) +
+            toggle('login', 'Login Alerts', 'Straight away: logins, paused logins, password and two-step changes, restores.', n.login) +
+            toggle('secsum', 'Daily Security Summary', 'Once a day, only after a day with wrong passwords: how many, and from which addresses.', n.secsum)) +
           ecCard('ix-row1', ICON.clock, 'Delivery Time', 'When the daily message goes out, in ' + esc(String(n.tz).replace(/_/g, ' ')) + ' time.<span class="ix-sub">Last checked: ' + (n.lastRun ? when(n.lastRun) : 'never') + '. Last message: ' + (n.lastSent ? when(n.lastSent) : 'none yet') + '.' + (n.lastError ? ' <span class="ix-err">Last problem: ' + esc(n.lastError) + '</span>' : '') + '</span>',
             '<select id="nt-hour" class="ix-sel">' + Array.apply(null, Array(24)).map(function (x, h) { return '<option value="' + h + '"' + (n.hour === h ? ' selected' : '') + '>' + hourLabel(h) + '</option>'; }).join('') + '</select>' +
             '<button type="button" class="ix-btn" id="nt-now"' + (ready ? '' : ' disabled') + '>Send Now</button>') +
@@ -3083,7 +3084,7 @@
         '<details class="ix-acc"' + (errLines || openLogs.length ? ' open' : '') + '><summary><span>PHP Errors</span><small>' + (openLogs.length ? 'A log is publicly readable' : errLines ? 'From your host\'s error_log files, newest last' : 'No Errors Logged') + '</small></summary><div class="ix-accb">' +
           (h.logs.length ? h.logs.map(function (l) {
             return (l.public === true ? '<div class="ix-status"><span>!</span><span><b>' + esc(l.file) + ' can be opened by anyone on the internet.</b> Error logs can show file paths. Add this to the <code>.htaccess</code> in your site\'s main folder: <code>&lt;FilesMatch "^error_log(\\.[0-9]+)?$"&gt; Require all denied &lt;/FilesMatch&gt;</code></span></div>' : '') + '<div class="ix-log"><div class="ix-row" style="justify-content:space-between"><b>' + esc(l.file) + '</b><span class="ix-note" style="margin:0">' + esc(size(l.size)) + ', changed ' + esc(ago(l.at)) + '</span>' +
-              (l.clear && l.size ? '<button type="button" data-hold class="ix-btn" data-clr="' + esc(l.file) + '">Clear</button>' : '') + '</div><pre>' + (l.lines.length ? esc(l.lines.join('\n')) : '(empty)') + '</pre></div>'; }).join('')
+              (l.clear && l.size ? '<button type="button" data-hold class="ix-btn" data-clr="' + esc(l.file) + '">Clear</button>' : '') + '</div><pre>' + (l.lines.length ? esc(l.lines.slice(-40).join('\n')) : '(empty)') + '</pre></div>'; }).join('')
             : '<p>No error_log files were found. That is good news.</p>') + '</div></details>' +
         '<p class="ix-note">PHP version, limits and extensions, and whether your hosting can reach other websites: <button type="button" class="ix-linkbtn" style="padding:0" data-go="check">Server Check</button>.</p>';
       if (window.HUB && HUB.countUp) HUB.countUp([].filter.call(p.querySelectorAll('.ix-hcards .ix-hc b'), function (b) { return /^(Disk Used|PHP Errors)$/.test(b.parentNode.querySelector('small').textContent); }));   // (1.65.0) these numbers roll up; the version never does
@@ -3217,7 +3218,7 @@
         (list.length ? '<div class="ix-lg">' + list.map(function (n) {
           var d = LOGDAY(n.ts), head = d !== day ? '<div class="ix-sect">' + esc(d) + ' · ' + perDay[d] + '</div>' : ''; day = d;
           return head + '<div class="ix-lgr" style="--pc:' + K.noteColor(n) + '">' + K.noteTile(n.k && ICON && K.noteKind ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-lgt"><b></b><i class="ix-lgd"></i></div><div class="ix-lgm"><small>' + esc(n.p || n.s || '') + (n.w ? ' · ' + esc(n.w) : '') + (n.dev ? ' · ' + esc(n.dev) : '')
-          + '</small><small>' + esc(new Date(n.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '</small></div></div>'; }).join('') + '</div>'
+          + '</small><small>' + esc(new Date(n.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '</small></div><span class="ix-lgk' + (n.b ? ' bad' : '') + '">' + esc(K.noteLabel(n.k || (n.b ? 'bad' : 'ok'))) + '</span></div>'; }).join('') + '</div>'
           : '<div class="ix-empty"><b>' + (only ? 'No Problems' : all.length ? 'No Matches' : 'Nothing Yet') + '</b><p>' + (only ? 'Nothing has gone wrong on this device.' : all.length ? 'Try a different search or time.' : 'Messages appear here as the site shows them.') + '</p></div>') + lgPager(full.length, f.pg);
       [].forEach.call(p.querySelectorAll('.ix-lgr .ix-lgt b'), function (b, i) { b.textContent = list[i].m; });
       [].forEach.call(p.querySelectorAll('.ix-lgr .ix-lgd'), function (d, i) { if (list[i].d) d.textContent = list[i].d; else d.remove(); });
@@ -3265,12 +3266,22 @@
       show();
     }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
   }
+  /* (1.80.8) the same error again and again becomes one line that says how many times ("seen 40 times"), with the time of the latest */
+  function lgGroup(lines) {
+    var by = {}, order = [];
+    lines.forEach(function (ln) {
+      var m = /^(\[[^\]]*\]\s*)?(.*)$/.exec(ln), key = m[2];
+      if (!by[key]) { by[key] = { n: 0, last: '' }; order.push(key); }
+      by[key].n++; by[key].last = m[1] || '';
+    });
+    return order.slice(-40).map(function (k) { var g = by[k]; return g.last + k + (g.n > 1 ? '   (seen ' + g.n + ' times)' : ''); });
+  }
   function pLogErr(p) {
     p.innerHTML = spinRow('Looking for PHP error logs…');
     api('health').then(function (h) {
       if (!h || !h.ok) { p.innerHTML = '<p class="ix-err">' + esc((h && h.error) || 'Could not load.') + '</p>'; return; }
       p.innerHTML = tabHead(ICON.warn, 'PHP Errors', 'From your host\'s error_log files, newest last. Clearing them is under Health.') +
-        (h.logs.length ? h.logs.map(function (l) { return '<div class="ix-log"><b>' + esc(l.file) + '</b><pre>' + esc(l.lines.slice(-40).join('\n')) + '</pre></div>'; }).join('')
+        (h.logs.length ? h.logs.map(function (l) { return '<div class="ix-log"><b>' + esc(l.file) + '</b><pre>' + esc(lgGroup(l.lines).join('\n')) + '</pre></div>'; }).join('')
           : '<div class="ix-empty"><b>No Errors Logged</b><p>Nothing has gone wrong that your server wrote down.</p></div>');
     }, function () { p.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
   }

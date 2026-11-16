@@ -142,7 +142,7 @@ case 'notify_today':
     if ($action === 'notify_save') {
         if (!empty($b['clearToken'])) { $d['token'] = ''; $d['chat'] = ''; $d['chatName'] = ''; $d['on'] = false; }
         if (isset($b['chat'])) { $c = trim((string)$b['chat']); if ($c !== '' && !preg_match('/^-?\d{3,20}$/', $c)) hub_json(400, ['ok' => false, 'error' => 'The chat ID is a number, like 123456789.']); if ($c !== $d['chat']) $d['chatName'] = ''; $d['chat'] = $c; }
-        foreach (['on', 'tasks', 'timed', 'backup', 'login', 'bkEnc'] as $k) if (isset($b[$k])) $d[$k] = !empty($b[$k]);
+        foreach (['on', 'tasks', 'timed', 'backup', 'login', 'secsum', 'bkEnc'] as $k) if (isset($b[$k])) $d[$k] = !empty($b[$k]);
         if (isset($b['bkEvery'])) $d['bkEvery'] = in_array((int)$b['bkEvery'], [0, 1, 3, 7, 14, 30], true) ? (int)$b['bkEvery'] : 0;
         if (isset($b['hour'])) $d['hour'] = max(0, min(23, (int)$b['hour']));
         if ($d['on'] && ($d['token'] === '' || $d['chat'] === '')) $d['on'] = false;

@@ -116,3 +116,19 @@ $dg = nt_digest(nt_load(), true);
 t('Send Today\'s Tasks: the forced daily list is a message even when nothing is due, and Telegram accepts its markup', is_string($dg) && $dg !== '' && html_ok($dg), (string)$dg);
 $apiSrc = (string)file_get_contents($site . '/web/hub/core/api.php');
 t('the Send Today\'s Tasks action is a logged-in POST like the other Telegram buttons', preg_match("/case 'notify_today':\\s*need_post\\(\\); need_admin\\(\\);/", str_replace("case 'notify_backup':\n", '', $apiSrc)) === 1);
+
+// ---- 1.80.8: the Daily Security Summary ----
+require_once $site . '/web/hub/core/lib/activity.php';
+@unlink(hub_jpath(act_file()));
+$dq = nt_load();
+t('SS1 the summary is off until it is switched on', $dq['secsum'] === false && nt_view($dq)['secsum'] === false);
+t('SS2 a day with no wrong password sends nothing', nt_secsum($dq) === null);
+$nowT = time();
+hub_jput(act_file(), json_encode([
+    ['t' => $nowT - 100, 'ev' => 'failed', 'ip' => '203.0.113.7', 'x' => ''], ['t' => $nowT - 200, 'ev' => 'failed', 'ip' => '203.0.113.7', 'x' => ''],
+    ['t' => $nowT - 300, 'ev' => 'locked', 'ip' => '198.51.100.2', 'x' => ''], ['t' => $nowT - 400, 'ev' => 'login', 'ip' => '192.0.2.1', 'x' => ''],
+    ['t' => $nowT - 3 * 86400, 'ev' => 'failed', 'ip' => '10.9.9.9', 'x' => ''],
+]));
+$sm = nt_secsum($dq);
+t('SS3 it counts the wrong passwords and paused logins of the last 24 hours, the logins that worked, and the busiest addresses', is_string($sm) && strpos($sm, '<b>3</b> wrong passwords or paused logins') !== false && strpos($sm, '<b>1</b> login that worked') !== false && strpos($sm, '203.0.113.7: 2') !== false && strpos($sm, '198.51.100.2: 1') !== false, (string)$sm);
+t('SS4 an older wrong password (3 days) is not counted, and Telegram accepts the markup', strpos((string)$sm, '10.9.9.9') === false && html_ok((string)$sm));
