@@ -647,7 +647,8 @@ case 'notelog_add':   // a logged-in browser sends the messages it showed ({item
 case 'notelog_clear':   // Logs > Notifications > Clear for every device
     need_post(); need_admin();
     require_once __DIR__ . '/lib/notelog.php';
-    hub_json(200, ['ok' => true, 'cleared' => nl_clear()]);
+    $before = (int)(body()['before'] ?? 0);   // (1.80.8) with a time (ms): only the lines older than it go
+    hub_json(200, ['ok' => true, 'cleared' => $before > 0 ? nl_prune($before) : nl_clear()]);
 
 case 'session_revoke':   // log out one device from the list ({id}); the one you are using is "Log Out Here"
     need_post(); need_admin();

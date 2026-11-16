@@ -428,9 +428,12 @@
     }, function () { return noteLogGet(); });
   }
   /** Clear: the list on this device and, when logged in, on the site (so every device). */
-  function noteLogClear() {
-    try { ls.set('hub-notelog', '[]'); ls.set('hub-notepend', '[]'); } catch (x) {}
-    return isAdmin() ? api('notelog_clear', {}).then(function () {}, function () {}) : Promise.resolve();
+  function noteLogClear(before) {   // (1.80.8) before: only the lines older than this time (ms) go
+    try {
+      if (before) { noteLogPut(noteLogGet().filter(function (n) { return (n.ts || 0) >= before; })); }
+      else { ls.set('hub-notelog', '[]'); ls.set('hub-notepend', '[]'); }
+    } catch (x) {}
+    return isAdmin() ? api('notelog_clear', before ? { before: before } : {}).then(function () {}, function () {}) : Promise.resolve();
   }
   function noteSave() { try { sessionStorage.setItem('ix-notes', JSON.stringify(noteHist.slice(-NOTE_KEEP))); sessionStorage.setItem('ix-notes-seen', String(noteSeen)); sessionStorage.setItem('ix-notes-new', String(noteNew)); } catch (e) {} }
   function noteAgo(ts) { var s = Math.max(0, Math.round((Date.now() - ts) / 1000)); return s < 45 ? 'now' : s < 3600 ? Math.round(s / 60) + 'm ago' : Math.round(s / 3600) + 'h ago'; }

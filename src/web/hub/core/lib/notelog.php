@@ -61,6 +61,17 @@ function nl_add(array $items): int {
 }
 /** The kept lines, oldest first. */
 function nl_list(): array { return array_values(hub_jread(nl_file()) ?? []); }
+/** (1.80.8) Removes the lines older than a time (milliseconds). Returns how many went. */
+function nl_prune(int $beforeMs): int {
+    $n = 0;
+    hub_with_lock(hub_dir('core') . '/notelog.lock', function () use ($beforeMs, &$n): void {
+        $d = hub_jread(nl_file()) ?? [];
+        $keep = array_values(array_filter($d, static fn(array $e): bool => (int)$e['ts'] >= $beforeMs));
+        $n = count($d) - count($keep);
+        if ($n > 0) hub_jput(nl_file(), json_encode($keep, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+    });
+    return $n;
+}
 /** Empties the list. Returns how many lines went. */
 function nl_clear(): int {
     $n = 0;

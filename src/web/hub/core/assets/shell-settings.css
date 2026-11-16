@@ -1033,3 +1033,10 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 
 /* (1.80.6) Logs: Previous, "Page 2 of 5", Next under 100 lines */
 #ix-page .ix-lgpg{justify-content:space-between;margin-top:14px}
+
+/* (1.80.8) Logs: search row, and a pager with First, Previous, a page box, Next, Last */
+#ix-page .ix-lgf{flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+#ix-page .ix-lgf input[type=search]{flex:1 1 200px;min-width:0}
+#ix-page .ix-lgpb{display:inline-flex;gap:6px}
+#ix-page .ix-lgpn input{width:64px;height:34px;text-align:center;margin:0 4px;padding:0 6px}
+#ix-page #ix-lgage{width:auto;flex:none;height:38px;font-size:14px}
