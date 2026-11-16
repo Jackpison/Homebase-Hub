@@ -28,3 +28,11 @@ t('N8 clearing empties the list and says how many went', nl_clear() === $cnt && 
 nl_add([['id' => 'old0001', 'm' => 'Old line', 'ts' => (time() - 40 * 86400) * 1000], ['id' => 'new0001', 'm' => 'New line', 'ts' => $now]]);
 nl_add([['id' => 'new0002', 'm' => 'Newer line', 'ts' => $now + 1]]);
 t('N9 (1.80.6) a line older than 30 days is dropped when the list is next saved', array_column(nl_list(), 'm') === ['New line', 'Newer line'], json_encode(array_column(nl_list(), 'm')));
+
+// ---- 1.80.8: Clear Older Than ----
+nl_clear();
+nl_add([['id' => 'pr00001', 'm' => 'Two days old', 'ts' => $now - 2 * 86400 * 1000], ['id' => 'pr00002', 'm' => 'Ten days old', 'ts' => $now - 10 * 86400 * 1000], ['id' => 'pr00003', 'm' => 'Just now', 'ts' => $now]]);
+t('N10 three lines of different ages are kept', count(nl_list()) === 3);
+t('N11 nl_prune removes only the lines older than the time and says how many', nl_prune($now - 5 * 86400 * 1000) === 1 && array_column(nl_list(), 'm') === ['Two days old', 'Just now'], json_encode(array_column(nl_list(), 'm')));
+t('N12 nl_prune with nothing that old removes nothing', nl_prune($now - 30 * 86400 * 1000) === 0 && count(nl_list()) === 2);
+

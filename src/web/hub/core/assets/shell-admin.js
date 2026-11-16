@@ -305,7 +305,7 @@
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
   var CARDIFY = { general: 1, look: 1, glass: 1 };
   var OFFL = function () { return K.offline(); };
-  var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'site address': ICON.site, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
+  var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site at a glance': ICON.pulse, 'site logo': ICON.image, 'time zone': ICON.clock, 'site address': ICON.site, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages, 'glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear, 'liquid': ICON.sparkle, 'where': ICON.grid };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;
@@ -453,6 +453,27 @@
     };
     cardify(p);
   }
+  /* (1.80.8) Site at a Glance: read from the overview and the activity list that are already kept (no slow checks) */
+  function glance(box) {
+    if (!box) return;
+    Promise.all([ovGet(), api('activity').catch(function () { return null; })]).then(function (r) {
+      var ov = r[0], ac = r[1];
+      if (!box.isConnected) return;
+      if (!ov || !ov.ok) { box.innerHTML = '<p class="ix-err">Could not load.</p>'; return; }
+      var login = ac && ac.ok ? (ac.events.filter(function (e) { return e.ev === 'login'; })[0] || null) : null, due = ov.backup.last && ov.backup.every && (Date.now() / 1000 - ov.backup.last) / 86400 >= ov.backup.every;
+      var next = ov.protect.next, left = ov.protect.total - ov.protect.on;
+      var cards = hCard('Last Backup', ov.backup.last ? esc(ago(ov.backup.last)) : 'Never', ov.backup.enc ? 'Encrypted' : 'Not encrypted', !ov.backup.last || due ? 'warn' : 'good', 'backup') +
+        hCard('Last Login', login ? esc(ago(login.t)) : 'None Yet', login ? esc(login.who || '') + (login.ip ? ' · ' + esc(login.ip) : '') : 'Logins appear after you log in again', login ? 'good' : '', 'logsign') +
+        hCard('Security', ov.protect.on + ' of ' + ov.protect.total, left ? esc(next ? next.title + ' is off' : left + ' to turn on') : 'Everything is on', left ? 'warn' : 'good', 'security') +
+        hCard('Version', esc(ov.version), ov.update.newer ? esc(ov.update.newer) + ' is available' : 'Up to date', ov.update.newer ? 'warn' : 'good', 'updates');
+      var need = ov.alerts.slice(0, 4).map(function (a) { return '<div class="ix-fix"><span class="ix-fixm ' + (a.level === 'warn' ? 'warn' : 'info') + '" aria-hidden="true">!</span><div class="ix-fixt"><span>' + esc(a.text) + '</span></div><button type="button" class="ix-btn" data-gl="' + esc(a.go) + '">Open</button></div>'; }).join('');
+      var recent = ac && ac.ok ? ac.events.slice(0, 3).map(actRow).join('') : '';
+      box.innerHTML = '<div class="ix-hcards">' + cards + '</div>' +
+        '<div class="ix-sect">Needs You</div>' + (need || '<div class="ix-fix good"><span class="ix-fixm good" aria-hidden="true">✓</span><div class="ix-fixt"><span>Nothing needs you right now.</span></div></div>') +
+        (recent ? '<div class="ix-sect">Recent Activity</div><div class="ix-checks">' + recent + '</div><div class="ix-row"><button type="button" class="ix-btn" data-gl="logsign">Open Logs</button></div>' : '');
+      [].forEach.call(box.querySelectorAll('[data-go],[data-gl]'), function (b) { b.onclick = function () { go(b.dataset.go || b.dataset.gl); }; });
+    }, function () { if (box.isConnected) box.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
+  }
   function pGeneral(p) {
     p.innerHTML = '<h3>Site Name</h3><p>Shown in the bar, Telegram messages and backup names.</p><input type="text" id="ix-name" maxlength="30" value="' + esc(draft.siteName) + '" aria-label="Site Name">' +
       '<h3>Site Logo</h3><p>Shown in the bar and the browser tab. PNG, JPG, WebP or GIF.</p>' +
@@ -460,7 +481,9 @@
       '<button type="button" class="ix-btn" id="ix-lu">' + svg(ICON.image) + 'Change Logo</button><button type="button" class="ix-btn" id="ix-lx"' + (S.logo ? '' : ' hidden') + '>Remove</button>' +
       '<input type="file" id="ix-lf2" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>' +
       '<h3>Time Zone</h3><p>Today, due times, backups and Telegram all follow it.</p>' +
-      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>';   // (1.80.6) no Site Address card: the address is the one in the browser, and the version is in the footer
+      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>' +
+      '<h3>Site at a Glance</h3><p>How your site is doing right now: last backup, last login, security and what needs you.</p><div id="ix-gl">' + spinRow('Looking…') + '</div>';   // (1.80.6) no Site Address card: the address is the one in the browser, and the version is in the footer
+    glance(p.querySelector('#ix-gl'));
     p.querySelector('#ix-tz').onchange = function (e) { draft.tz = e.target.value; };
     p.querySelector('#ix-name').oninput = function (e) { draft.siteName = e.target.value; };
     p.querySelector('#ix-lu').onclick = function () { p.querySelector('#ix-lf2').click(); };
@@ -3004,7 +3027,7 @@
 
   /* ---------- Health (Settings > Health): Overview, Server Check ---------- */
   /* (1.77.1) the six boxes (the Domains one became PHP in 1.78.0): a coloured tile with an icon, a status dot, the number big, and a line under it */
-  var HC_ICON = { 'Version': [ICON.upload, '#14b8a6'], 'Schedule': [ICON.clock, '#3b82f6'], 'Last Backup': [ICON.box, '#f97316'], 'PHP': [ICON.server, '#a855f7'], 'Disk Used': [ICON.grid, '#0ea5e9'], 'PHP Errors': [ICON.warn, '#f43f5e'] };
+  var HC_ICON = { 'Last Login': [ICON.out, '#3b82f6'], 'Security': [ICON.shield || ICON.lock, '#22c55e'], 'Version': [ICON.upload, '#14b8a6'], 'Schedule': [ICON.clock, '#3b82f6'], 'Last Backup': [ICON.box, '#f97316'], 'PHP': [ICON.server, '#a855f7'], 'Disk Used': [ICON.grid, '#0ea5e9'], 'PHP Errors': [ICON.warn, '#f43f5e'] };
   function hCard(label, val, sub, cls, go) {
     var ic = HC_ICON[label] || [ICON.pulse, '#888'];
     return '<' + (go ? 'button type="button" data-go="' + go + '"' : 'div') + ' class="ix-hc ' + (cls || '') + '"><span class="ix-hc-i" style="background:' + ic[1] + '">' + svg(ic[0]) + '</span>' +
@@ -3022,7 +3045,15 @@
       var up = h.update || {};
       var slowRows = ((h.speed || {}).rows || []).filter(function (x) { return x.ms > 150 || x.bytes > 1500000; });
       var openLogs = h.logs.filter(function (l) { return l.public === true; });
-      p.innerHTML = '<div class="ix-hcards six">' +
+      /* (1.80.8) "Needs a Look": each warning says what the button will do; nothing changes until it is pressed (Clear Logs asks for a hold) */
+      var clearable = h.logs.filter(function (l) { return l.clear && l.size; });
+      var fixes = [];
+      if (errLines || openLogs.length) fixes.push(['warn', errLines + ' PHP error line' + (errLines === 1 ? '' : 's') + (openLogs.length ? ', and a log can be read by anyone' : ''), clearable.length ? 'Clears ' + clearable.length + ' error log file' + (clearable.length > 1 ? 's' : '') + ' (hold the button).' : 'Open the lists below to read them.', clearable.length ? '<button type="button" data-hold class="ix-btn pri" data-fixlogs="1">Clear Logs</button>' : '']);
+      if (!h.backup.last || (h.backup.every && (Date.now() / 1000 - h.backup.last) / 86400 >= h.backup.every)) fixes.push(['warn', h.backup.last ? 'A backup is due' : 'No backup yet', 'Opens Backup & Restore so you can download one.', '<button type="button" class="ix-btn pri" data-go="backup">Back Up Now</button>']);
+      if (h.cron && !cronOk) fixes.push(['warn', 'The schedule stopped', 'Opens Telegram, where the cron job is set up. Nothing changes yet.', '<button type="button" class="ix-btn pri" data-go="telegram">Open Telegram</button>']);
+      if (h.leftovers.length) fixes.push(['warn', h.leftovers.length + ' leftover' + (h.leftovers.length > 1 ? 's' : '') + ' from an earlier update', 'Opens Cleanup, which lists what can go.', '<button type="button" class="ix-btn pri" data-go="cleanup">Open Cleanup</button>']);
+      var fixHtml = '<div class="ix-sect">Needs a Look · ' + fixes.length + '</div>' + (fixes.length ? fixes.map(function (x) { return '<div class="ix-fix"><span class="ix-fixm ' + x[0] + '" aria-hidden="true">!</span><div class="ix-fixt"><b>' + esc(x[1]) + '</b><span>' + esc(x[2]) + '</span></div>' + x[3] + '</div>'; }).join('') : '<div class="ix-fix good"><span class="ix-fixm good" aria-hidden="true">✓</span><div class="ix-fixt"><b>Nothing needs a look</b><span>Backups, schedule, errors and updates are all fine.</span></div></div>');
+      p.innerHTML = fixHtml + '<div class="ix-hcards six">' +
           hCard('Version', esc(h.version), up.newer ? '<a href="' + esc(up.link || '#') + '" target="_blank" rel="noopener">' + esc(up.version) + ' is available</a>' : (h.leftovers.length ? h.leftovers.length + ' update problem' + (h.leftovers.length > 1 ? 's' : '') : 'Files match'), up.newer || h.leftovers.length ? 'warn' : 'good') +
           hCard('Schedule', cronOk ? 'Running' : h.cron ? 'Stopped' : 'Not Set Up', h.cron ? 'Last run ' + esc(ago(h.cron)) : 'Add the cron job (Settings › Telegram)', cronOk ? 'good' : 'warn', 'telegram') +
           hCard('Last Backup', h.backup.last ? esc(ago(h.backup.last)) : 'Never', (h.backup.encrypted ? '🔒 Encrypted' : 'Not Encrypted') + (h.backup.tgEvery ? ', Telegram on' : ''), !h.backup.last || (h.backup.every && (Date.now() / 1000 - h.backup.last) / 86400 >= h.backup.every) ? 'warn' : 'good', 'backup') +
@@ -3056,6 +3087,10 @@
             : '<p>No error_log files were found. That is good news.</p>') + '</div></details>' +
         '<p class="ix-note">PHP version, limits and extensions, and whether your hosting can reach other websites: <button type="button" class="ix-linkbtn" style="padding:0" data-go="check">Server Check</button>.</p>';
       if (window.HUB && HUB.countUp) HUB.countUp([].filter.call(p.querySelectorAll('.ix-hcards .ix-hc b'), function (b) { return /^(Disk Used|PHP Errors)$/.test(b.parentNode.querySelector('small').textContent); }));   // (1.65.0) these numbers roll up; the version never does
+      var fl = p.querySelector('[data-fixlogs]'); if (fl) fl.onclick = function () {
+        fl.disabled = true;
+        clearable.reduce(function (pr, l) { return pr.then(function () { return api('health_log_clear', { file: l.file }); }); }, Promise.resolve()).then(function () { toast('Error logs cleared.'); pHealth(p); }, function () { fl.disabled = false; toast("Can't reach the server.", true); });
+      };
       p.querySelectorAll('[data-clr]').forEach(function (b) { b.onclick = function () {
         api('health_log_clear', { file: b.dataset.clr }).then(function (j) { if (j.ok) { toast('Log cleared.'); pHealth(p); } else toast(j.error); });
       }; });

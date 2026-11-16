@@ -1040,3 +1040,11 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-lgpb{display:inline-flex;gap:6px}
 #ix-page .ix-lgpn input{width:64px;height:34px;text-align:center;margin:0 4px;padding:0 6px}
 #ix-page #ix-lgage{width:auto;flex:none;height:38px;font-size:14px}
+
+/* (1.80.8) Settings: a line that says what is wrong (or fine), what its button does, and the button */
+#ix-page .ix-fix{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:6px 0;border-radius:14px;border:1px solid var(--ix-line);background:var(--ix-s2);flex-wrap:wrap}
+#ix-page .ix-fixm{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none;font-weight:800;color:#fff;background:var(--ix-mu2)}
+#ix-page .ix-fixm.warn{background:#ea7a1a}#ix-page .ix-fixm.good{background:#22a559}#ix-page .ix-fixm.info{background:#3b82f6}
+#ix-page .ix-fixt{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}
+#ix-page .ix-fixt span{color:var(--ix-mu);font-size:13.5px}
+#ix-page .ix-fix .ix-btn{flex:none}

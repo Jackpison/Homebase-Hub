@@ -44,6 +44,27 @@
     };
     cardify(p);
   }
+  /* (1.80.8) Site at a Glance: read from the overview and the activity list that are already kept (no slow checks) */
+  function glance(box) {
+    if (!box) return;
+    Promise.all([ovGet(), api('activity').catch(function () { return null; })]).then(function (r) {
+      var ov = r[0], ac = r[1];
+      if (!box.isConnected) return;
+      if (!ov || !ov.ok) { box.innerHTML = '<p class="ix-err">Could not load.</p>'; return; }
+      var login = ac && ac.ok ? (ac.events.filter(function (e) { return e.ev === 'login'; })[0] || null) : null, due = ov.backup.last && ov.backup.every && (Date.now() / 1000 - ov.backup.last) / 86400 >= ov.backup.every;
+      var next = ov.protect.next, left = ov.protect.total - ov.protect.on;
+      var cards = hCard('Last Backup', ov.backup.last ? esc(ago(ov.backup.last)) : 'Never', ov.backup.enc ? 'Encrypted' : 'Not encrypted', !ov.backup.last || due ? 'warn' : 'good', 'backup') +
+        hCard('Last Login', login ? esc(ago(login.t)) : 'None Yet', login ? esc(login.who || '') + (login.ip ? ' · ' + esc(login.ip) : '') : 'Logins appear after you log in again', login ? 'good' : '', 'logsign') +
+        hCard('Security', ov.protect.on + ' of ' + ov.protect.total, left ? esc(next ? next.title + ' is off' : left + ' to turn on') : 'Everything is on', left ? 'warn' : 'good', 'security') +
+        hCard('Version', esc(ov.version), ov.update.newer ? esc(ov.update.newer) + ' is available' : 'Up to date', ov.update.newer ? 'warn' : 'good', 'updates');
+      var need = ov.alerts.slice(0, 4).map(function (a) { return '<div class="ix-fix"><span class="ix-fixm ' + (a.level === 'warn' ? 'warn' : 'info') + '" aria-hidden="true">!</span><div class="ix-fixt"><span>' + esc(a.text) + '</span></div><button type="button" class="ix-btn" data-gl="' + esc(a.go) + '">Open</button></div>'; }).join('');
+      var recent = ac && ac.ok ? ac.events.slice(0, 3).map(actRow).join('') : '';
+      box.innerHTML = '<div class="ix-hcards">' + cards + '</div>' +
+        '<div class="ix-sect">Needs You</div>' + (need || '<div class="ix-fix good"><span class="ix-fixm good" aria-hidden="true">✓</span><div class="ix-fixt"><span>Nothing needs you right now.</span></div></div>') +
+        (recent ? '<div class="ix-sect">Recent Activity</div><div class="ix-checks">' + recent + '</div><div class="ix-row"><button type="button" class="ix-btn" data-gl="logsign">Open Logs</button></div>' : '');
+      [].forEach.call(box.querySelectorAll('[data-go],[data-gl]'), function (b) { b.onclick = function () { go(b.dataset.go || b.dataset.gl); }; });
+    }, function () { if (box.isConnected) box.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
+  }
   function pGeneral(p) {
     p.innerHTML = '<h3>Site Name</h3><p>Shown in the bar, Telegram messages and backup names.</p><input type="text" id="ix-name" maxlength="30" value="' + esc(draft.siteName) + '" aria-label="Site Name">' +
       '<h3>Site Logo</h3><p>Shown in the bar and the browser tab. PNG, JPG, WebP or GIF.</p>' +
@@ -51,7 +72,9 @@
       '<button type="button" class="ix-btn" id="ix-lu">' + svg(ICON.image) + 'Change Logo</button><button type="button" class="ix-btn" id="ix-lx"' + (S.logo ? '' : ' hidden') + '>Remove</button>' +
       '<input type="file" id="ix-lf2" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>' +
       '<h3>Time Zone</h3><p>Today, due times, backups and Telegram all follow it.</p>' +
-      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>';   // (1.80.6) no Site Address card: the address is the one in the browser, and the version is in the footer
+      '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>' +
+      '<h3>Site at a Glance</h3><p>How your site is doing right now: last backup, last login, security and what needs you.</p><div id="ix-gl">' + spinRow('Looking…') + '</div>';   // (1.80.6) no Site Address card: the address is the one in the browser, and the version is in the footer
+    glance(p.querySelector('#ix-gl'));
     p.querySelector('#ix-tz').onchange = function (e) { draft.tz = e.target.value; };
     p.querySelector('#ix-name').oninput = function (e) { draft.siteName = e.target.value; };
     p.querySelector('#ix-lu').onclick = function () { p.querySelector('#ix-lf2').click(); };

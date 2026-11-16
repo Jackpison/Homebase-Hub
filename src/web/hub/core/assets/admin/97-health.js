@@ -1,6 +1,6 @@
   /* ---------- Health (Settings > Health): Overview, Server Check ---------- */
   /* (1.77.1) the six boxes (the Domains one became PHP in 1.78.0): a coloured tile with an icon, a status dot, the number big, and a line under it */
-  var HC_ICON = { 'Version': [ICON.upload, '#14b8a6'], 'Schedule': [ICON.clock, '#3b82f6'], 'Last Backup': [ICON.box, '#f97316'], 'PHP': [ICON.server, '#a855f7'], 'Disk Used': [ICON.grid, '#0ea5e9'], 'PHP Errors': [ICON.warn, '#f43f5e'] };
+  var HC_ICON = { 'Last Login': [ICON.out, '#3b82f6'], 'Security': [ICON.shield || ICON.lock, '#22c55e'], 'Version': [ICON.upload, '#14b8a6'], 'Schedule': [ICON.clock, '#3b82f6'], 'Last Backup': [ICON.box, '#f97316'], 'PHP': [ICON.server, '#a855f7'], 'Disk Used': [ICON.grid, '#0ea5e9'], 'PHP Errors': [ICON.warn, '#f43f5e'] };
   function hCard(label, val, sub, cls, go) {
     var ic = HC_ICON[label] || [ICON.pulse, '#888'];
     return '<' + (go ? 'button type="button" data-go="' + go + '"' : 'div') + ' class="ix-hc ' + (cls || '') + '"><span class="ix-hc-i" style="background:' + ic[1] + '">' + svg(ic[0]) + '</span>' +
@@ -18,7 +18,15 @@
       var up = h.update || {};
       var slowRows = ((h.speed || {}).rows || []).filter(function (x) { return x.ms > 150 || x.bytes > 1500000; });
       var openLogs = h.logs.filter(function (l) { return l.public === true; });
-      p.innerHTML = '<div class="ix-hcards six">' +
+      /* (1.80.8) "Needs a Look": each warning says what the button will do; nothing changes until it is pressed (Clear Logs asks for a hold) */
+      var clearable = h.logs.filter(function (l) { return l.clear && l.size; });
+      var fixes = [];
+      if (errLines || openLogs.length) fixes.push(['warn', errLines + ' PHP error line' + (errLines === 1 ? '' : 's') + (openLogs.length ? ', and a log can be read by anyone' : ''), clearable.length ? 'Clears ' + clearable.length + ' error log file' + (clearable.length > 1 ? 's' : '') + ' (hold the button).' : 'Open the lists below to read them.', clearable.length ? '<button type="button" data-hold class="ix-btn pri" data-fixlogs="1">Clear Logs</button>' : '']);
+      if (!h.backup.last || (h.backup.every && (Date.now() / 1000 - h.backup.last) / 86400 >= h.backup.every)) fixes.push(['warn', h.backup.last ? 'A backup is due' : 'No backup yet', 'Opens Backup & Restore so you can download one.', '<button type="button" class="ix-btn pri" data-go="backup">Back Up Now</button>']);
+      if (h.cron && !cronOk) fixes.push(['warn', 'The schedule stopped', 'Opens Telegram, where the cron job is set up. Nothing changes yet.', '<button type="button" class="ix-btn pri" data-go="telegram">Open Telegram</button>']);
+      if (h.leftovers.length) fixes.push(['warn', h.leftovers.length + ' leftover' + (h.leftovers.length > 1 ? 's' : '') + ' from an earlier update', 'Opens Cleanup, which lists what can go.', '<button type="button" class="ix-btn pri" data-go="cleanup">Open Cleanup</button>']);
+      var fixHtml = '<div class="ix-sect">Needs a Look · ' + fixes.length + '</div>' + (fixes.length ? fixes.map(function (x) { return '<div class="ix-fix"><span class="ix-fixm ' + x[0] + '" aria-hidden="true">!</span><div class="ix-fixt"><b>' + esc(x[1]) + '</b><span>' + esc(x[2]) + '</span></div>' + x[3] + '</div>'; }).join('') : '<div class="ix-fix good"><span class="ix-fixm good" aria-hidden="true">✓</span><div class="ix-fixt"><b>Nothing needs a look</b><span>Backups, schedule, errors and updates are all fine.</span></div></div>');
+      p.innerHTML = fixHtml + '<div class="ix-hcards six">' +
           hCard('Version', esc(h.version), up.newer ? '<a href="' + esc(up.link || '#') + '" target="_blank" rel="noopener">' + esc(up.version) + ' is available</a>' : (h.leftovers.length ? h.leftovers.length + ' update problem' + (h.leftovers.length > 1 ? 's' : '') : 'Files match'), up.newer || h.leftovers.length ? 'warn' : 'good') +
           hCard('Schedule', cronOk ? 'Running' : h.cron ? 'Stopped' : 'Not Set Up', h.cron ? 'Last run ' + esc(ago(h.cron)) : 'Add the cron job (Settings › Telegram)', cronOk ? 'good' : 'warn', 'telegram') +
           hCard('Last Backup', h.backup.last ? esc(ago(h.backup.last)) : 'Never', (h.backup.encrypted ? '🔒 Encrypted' : 'Not Encrypted') + (h.backup.tgEvery ? ', Telegram on' : ''), !h.backup.last || (h.backup.every && (Date.now() / 1000 - h.backup.last) / 86400 >= h.backup.every) ? 'warn' : 'good', 'backup') +
@@ -52,6 +60,10 @@
             : '<p>No error_log files were found. That is good news.</p>') + '</div></details>' +
         '<p class="ix-note">PHP version, limits and extensions, and whether your hosting can reach other websites: <button type="button" class="ix-linkbtn" style="padding:0" data-go="check">Server Check</button>.</p>';
       if (window.HUB && HUB.countUp) HUB.countUp([].filter.call(p.querySelectorAll('.ix-hcards .ix-hc b'), function (b) { return /^(Disk Used|PHP Errors)$/.test(b.parentNode.querySelector('small').textContent); }));   // (1.65.0) these numbers roll up; the version never does
+      var fl = p.querySelector('[data-fixlogs]'); if (fl) fl.onclick = function () {
+        fl.disabled = true;
+        clearable.reduce(function (pr, l) { return pr.then(function () { return api('health_log_clear', { file: l.file }); }); }, Promise.resolve()).then(function () { toast('Error logs cleared.'); pHealth(p); }, function () { fl.disabled = false; toast("Can't reach the server.", true); });
+      };
       p.querySelectorAll('[data-clr]').forEach(function (b) { b.onclick = function () {
         api('health_log_clear', { file: b.dataset.clr }).then(function (j) { if (j.ok) { toast('Log cleared.'); pHealth(p); } else toast(j.error); });
       }; });

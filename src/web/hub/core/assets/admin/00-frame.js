@@ -305,7 +305,7 @@
      becomes a card, so they look like Security and Telegram. The controls are only moved, so everything keeps working. */
   var CARDIFY = { general: 1, look: 1, glass: 1 };
   var OFFL = function () { return K.offline(); };
-  var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site logo': ICON.image, 'time zone': ICON.clock, 'site address': ICON.site, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
+  var CARD_ICON = { 'offline reading': ICON.down, 'install on your phone': ICON.down, 'keyboard shortcuts': ICON.keyboard, 'text sizes': ICON.type, 'site name': ICON.edit, 'site at a glance': ICON.pulse, 'site logo': ICON.image, 'time zone': ICON.clock, 'site address': ICON.site, 'font': ICON.type, 'theme': ICON.palette, 'accent color': ICON.palette,
     'navigation style': ICON.menu, 'tabs': ICON.pages, 'glass': ICON.sparkle, 'quick picks': ICON.palette, 'fine-tune': ICON.gear, 'liquid': ICON.sparkle, 'where': ICON.grid };
   function cardify(pc) {
     if (!pc || !pc.querySelector(':scope > h3')) return;

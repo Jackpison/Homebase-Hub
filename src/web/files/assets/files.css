@@ -385,8 +385,6 @@ dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);bo
 }
 
 /* (1.80.1) a colour label paints a folder */
-.ico.d[class*="lb-"],.pv.d[class*="lb-"]{--c:var(--lbc)}
-.ico.d[class*="lb-"] svg,.pv.d[class*="lb-"] svg{color:var(--lbc)}
 .lbb.none{position:relative}
 .lbb.none::after{content:"";position:absolute;left:5px;right:5px;top:50%;border-top:2px solid var(--mute);transform:rotate(-45deg)}
 
@@ -431,11 +429,14 @@ dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);bo
 .row .cell.dt,.row .cell.vis,.row .cell.sz{font-size:15px;color:color-mix(in srgb,var(--fg) 78%,transparent)}
 .row .cell.vis.on{color:var(--acc)}
 .row .qa{right:calc(12px + var(--cMore) + var(--cAcc) + var(--cMod) + var(--cStar) + var(--cSize) + 40px);padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
-/* folders: a solid tile like the app icons in the bar */
-.ico.d{background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 58%,#000));box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),0 2px 8px color-mix(in srgb,var(--c) 30%,transparent)}
-.ico.d svg,.ico.d[class*="lb-"] svg{color:#fff;stroke:#fff}
-.pv.d{background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 58%,#000))}
-.pv.d svg{color:#fff;stroke:#fff}
+/* (1.80.7) folders: the flat two-tone folder, no tile. A colour label (lb-red, lb-blue...) repaints the front and a darker back. */
+.ico.d,.pv.d{--ff:#fcd053;--fb:#feae26;background:none;box-shadow:none}
+.ico.d[class*="lb-"],.pv.d[class*="lb-"]{--ff:var(--lbc);--fb:color-mix(in srgb,var(--lbc) 74%,#000)}
+.fold{display:block}.fold .ff{fill:var(--ff)}.fold .fb{fill:var(--fb)}
+.ico.d .fold{width:30px;height:30px}
+.list.grid .ico.d .fold{width:64px;height:64px}
+.pv.d .fold{width:104px;height:104px}
+.fdet .pv.d,.pv.d{background:none}
 
 /* (1.80.4) Share window: framed, a file header, Your Links, and New Link with two choices side by side */
 .shintro{margin:0 0 4px;color:var(--mute);font-size:14px;line-height:1.5}

@@ -335,7 +335,15 @@ const bytesOf = i => i.t === "d" ? folderBytes(i.id) : (sizeOf(i) || 0);
 const icoOf = i => i.t === "d" ? "d" : kindOf(nameOf(i));
 /** (1.66.0) a file's type card (filecard.js); folders keep the folder icon */
 const FC = /** @type {any} */ (window).FileCard;
-const icoBody = (i, size) => i.t === "d" || !FC ? svg(icoName(i)) : FC.make(nameOf(i), size);
+/** (1.80.7) a folder is a flat two-tone shape (a darker back and a lighter front); a colour label repaints both tones */
+const folderIcon = () => {
+  const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", "0 0 512 512"); s.setAttribute("aria-hidden", "true"); s.setAttribute("class", "fold");
+  for (const [c, d] of [["fb", "M196 80H472a40 40 0 0 1 40 40V320H196z"], ["ff", "M0 96a40 40 0 0 1 40-40H152c18 0 36 8 48 22l36 46c4 5 10 8 17 8H472a40 40 0 0 1 40 40V416a40 40 0 0 1-40 40H40A40 40 0 0 1 0 416z"]]) {
+    const p = document.createElementNS(NS, "path"); p.setAttribute("class", c); p.setAttribute("d", d); s.appendChild(p);
+  }
+  return s;
+};
+const icoBody = (i, size) => i.t === "d" ? folderIcon() : !FC ? svg(icoName(i)) : FC.make(nameOf(i), size);
 const icoName = i => i.t === "d" ? "folder" : ({ image: "image", video: "video", audio: "audio", pdf: "pdf", text: "text", zip: "zip" }[kindOf(nameOf(i))] || "file");
 
 function render() {

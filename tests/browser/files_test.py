@@ -489,6 +489,8 @@ try:
         sh = pg.evaluate("[document.querySelector('#dform h3') && [...document.querySelectorAll('#dform h3')].map(x => x.textContent), !!document.querySelector('#dform .ix-sx')]")
         check('B122 the Share window is framed, with Your Links and New Link parts', sh[0] == ['Your Links', 'New Link'] and sh[1], sh)
         pg.click('#dlg .ix-sx')
+        fd = pg.evaluate("(() => { const d = document.querySelector('#list .row .ico.d'); if (!d) return null; const s = d.querySelector('svg.fold'); return [!!s, s ? s.querySelectorAll('path').length : 0, getComputedStyle(s.querySelector('.ff')).fill, getComputedStyle(d).backgroundImage]; })()")
+        check('B123 (1.80.7) a folder is the flat two-tone folder (yellow front #fcd053, no tile behind it)', fd is not None and fd[0] and fd[1] == 2 and fd[2] == 'rgb(252, 208, 83)' and fd[3] == 'none', fd)
 
         # ---- (1.80.4) button hover: main buttons sweep a lighter fill, other buttons tint ----
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)

@@ -75,7 +75,7 @@
         (list.length ? '<div class="ix-lg">' + list.map(function (n) {
           var d = LOGDAY(n.ts), head = d !== day ? '<div class="ix-sect">' + esc(d) + ' · ' + perDay[d] + '</div>' : ''; day = d;
           return head + '<div class="ix-lgr" style="--pc:' + K.noteColor(n) + '">' + K.noteTile(n.k && ICON && K.noteKind ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-lgt"><b></b><i class="ix-lgd"></i></div><div class="ix-lgm"><small>' + esc(n.p || n.s || '') + (n.w ? ' · ' + esc(n.w) : '') + (n.dev ? ' · ' + esc(n.dev) : '')
-          + '</small><small>' + esc(new Date(n.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '</small></div></div>'; }).join('') + '</div>'
+          + '</small><small>' + esc(new Date(n.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })) + '</small></div><span class="ix-lgk' + (n.b ? ' bad' : '') + '">' + esc(K.noteLabel(n.k || (n.b ? 'bad' : 'ok'))) + '</span></div>'; }).join('') + '</div>'
           : '<div class="ix-empty"><b>' + (only ? 'No Problems' : all.length ? 'No Matches' : 'Nothing Yet') + '</b><p>' + (only ? 'Nothing has gone wrong on this device.' : all.length ? 'Try a different search or time.' : 'Messages appear here as the site shows them.') + '</p></div>') + lgPager(full.length, f.pg);
       [].forEach.call(p.querySelectorAll('.ix-lgr .ix-lgt b'), function (b, i) { b.textContent = list[i].m; });
       [].forEach.call(p.querySelectorAll('.ix-lgr .ix-lgd'), function (d, i) { if (list[i].d) d.textContent = list[i].d; else d.remove(); });
