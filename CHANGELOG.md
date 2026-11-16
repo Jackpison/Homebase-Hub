@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.9 | Overview now leads General, Logs and Activity share one search bar with a ⋯ menu, GitHub icons turn white on dark and are fetched from GitHub's own icon file, and the Extra Links box matches the other fields |
 | 1.80.8 | Site at a Glance in General, one-click fixes in Health, Logs with search, Export and pages, the flat two-tone folder, a Telegram security summary |
 | 1.80.7 | Small animated icons (bell, copy, eye, backup, star), light-mode fixes for Tools tiles and Cards dots, tighter tabs |
 | 1.80.6 | One button hover everywhere, the Alerts dot works, Info says what it did, Logs keep 30 days in pages of 100 |
@@ -176,6 +177,29 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.9
+
+### General
+
+- The Site at a Glance card is now called Overview and sits first, above Site Name. Open Logs has room under the list.
+
+### Logs
+
+- Notifications and Activity have one bar: All and Problems (Notifications), Search, time, kind (Activity) and a ⋯ menu with Export CSV and the Clear buttons. The count and the 30-day note sit under it.
+
+### Look
+
+- The bell in the bar is the flat yellow bell, and its new-alert dot is smaller.
+- Tab names in Links and Info sit 24 px apart.
+
+### Links
+
+- GitHub icons turn white on the dark theme.
+- If GitHub's page cannot be read, its own icon file is used.
+- The Extra Links box looks like the other fields and shows two example lines.
 
 ---
 

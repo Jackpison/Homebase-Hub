@@ -143,7 +143,7 @@
     }
     if (tools) { if (b.parentNode !== tools) { var th = tools.querySelector('[data-ix="theme"]'); tools.insertBefore(b, th ? th.nextSibling : tools.firstChild); } /* (1.80.6) order: theme, alerts, backup, settings */ b.classList.add('ix-bb'); }
     else { if (b.parentNode !== document.body) document.body.appendChild(b); b.classList.remove('ix-bb'); }
-    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' + (n > 0 ? '<b aria-hidden="true"></b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.setAttribute('aria-label', n > 0 ? 'Alerts: ' + n + ' new' : 'Alerts you may have missed'); b.hidden = false;
+    b.innerHTML = '<svg viewBox="0 0 512 512" class="ix-bell3" aria-hidden="true"><circle cx="256" cy="62" r="56" fill="#f57c00" stroke="none"/><circle cx="256" cy="436" r="76" fill="#ff9800" stroke="none"/><path fill="#ffc107" stroke="none" d="M256 44C170 44 118 110 118 196c0 62-24 118-50 160-22 30-16 92 28 92h320c44 0 50-62 28-92-26-42-50-98-50-160 0-86-52-152-138-152z"/><path fill="none" stroke="#ffd95a" stroke-width="22" d="M258 96c-60 0-98 44-98 110 0 60-20 118-50 180"/></svg>' + (n > 0 ? '<b aria-hidden="true"></b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.setAttribute('aria-label', n > 0 ? 'Alerts: ' + n + ' new' : 'Alerts you may have missed'); b.hidden = false;
   }
   /* (1.80.7) the bell rings once when a new message arrives (not when it is only redrawn) */
   function noteRing() { var b = document.getElementById('ix-bell'); if (!b) return; b.classList.remove('ix-ring'); void b.offsetWidth; b.classList.add('ix-ring'); clearTimeout(b.__r); b.__r = setTimeout(function () { b.classList.remove('ix-ring'); }, 900); }

@@ -1111,3 +1111,9 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 .ix-sdlg .ix-sb .ix-ob textarea::placeholder{color:color-mix(in srgb,currentColor 45%,transparent)}
 .ix-sdlg .ix-sb .ix-ob textarea:focus{outline:none;border-color:color-mix(in srgb,currentColor 55%,transparent)}
 .ix-sdlg .ix-sb .ix-ob .hint{margin:8px 2px 0;font-size:13px;line-height:1.45}
+/* (1.80.9) the bar's bell is the flat yellow one: its own colours, a little larger than the outline it replaces */
+#ix-bell svg.ix-bell3{width:22px;height:22px;stroke-width:22;stroke-linecap:round}
+#ix-bell.ix-quiet svg.ix-bell3{opacity:.85}
+/* (1.80.9) a smaller alerts dot */
+#ix-bell b{width:7px;height:7px;box-shadow:0 0 0 1.5px var(--ix-s1)}
+#ix-bar #ix-bell.ix-bb b{top:2px;right:2px}

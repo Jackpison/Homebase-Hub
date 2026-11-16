@@ -157,7 +157,7 @@ body.editing .wrap{padding-bottom:110px}
 .tab:not(.add){border-color:color-mix(in srgb,var(--tc) 45%,var(--line))}
 .tab[aria-selected="true"]{background:var(--tc);color:var(--tf);border-color:var(--tc)}
 /* tabs drawn like the Links tabs: a document icon in the tab's colour,plain upper-case name */
-.tabs{gap:6px 20px;align-items:center;margin-bottom:14px}
+.tabs{gap:6px 24px;align-items:center;margin-bottom:14px}
 .tab:not(.add){display:flex;align-items:center;gap:9px;background:none;border:0;border-radius:0;padding:4px 0;font-size:var(--ix-s-tab,20px);letter-spacing:.02em;text-transform:uppercase;color:color-mix(in srgb,var(--fg) 70%,var(--bg));transition:color .15s}
 .tab:not(.add):hover{color:var(--fg)}
 .tab svg.ti{flex:none;width:20px;height:23px;color:color-mix(in srgb,var(--tc) 72%,var(--bg))}

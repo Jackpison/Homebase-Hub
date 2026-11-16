@@ -39,7 +39,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 
 /* Header + ribbon tabs */
 header{display:flex;align-items:center;gap:20px 28px;flex-wrap:wrap;max-width:1500px;margin:0 auto;padding:26px 32px 18px}
-.tabs{display:flex;align-items:center;gap:6px 20px;flex-wrap:wrap;min-width:0}
+.tabs{display:flex;align-items:center;gap:6px 24px;flex-wrap:wrap;min-width:0}
 .tab{display:flex;align-items:center;gap:9px;font-weight:700;font-size:var(--fs-tab);letter-spacing:.02em;color:color-mix(in srgb,var(--text) 68%,var(--bg));
   background:none;border:0;padding:4px 0;cursor:pointer;white-space:nowrap;transition:color .15s}
 .tab svg{width:17px;height:19px;flex:none;color:color-mix(in srgb,var(--tab-ribbon,var(--ribbon)) 72%,var(--bg))}
