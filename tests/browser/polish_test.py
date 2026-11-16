@@ -519,6 +519,17 @@ try:
         saved = until(lambda: [l.get('url') for t in s.req(s.base + '/web/links/api.php?action=get').get('data', {}).get('tabs', []) for c in t.get('categories', []) for l in c.get('links', []) if l.get('title') == 'Plain'], 10000)
         check('P73 Links > Edit Link: the Address field has https:// in front (a tap gives http://), a typed http:// moves into it, another scheme hides it, Copy gives the whole address, and Save keeps the whole address (1.69.1)',
               lk[0][0] == 'https://' and lk[0][1] and not lk[0][1].startswith('http') and lk[1] == ['http://', 'Plain.example.com/a'] and lk[2] == ['https://', 'https://Plain.example.com/a', 'COPIED'] and lk[3] == 'none' and saved == ['https://Plain.example.com/a'], (lk, saved))
+        sp.evaluate("document.querySelector('.cat .ctrl .ib[aria-label=\\'Edit link\\']').click()"); sp.wait_for_selector('#linkDlg[open]')
+        sp.evaluate("document.getElementById('lOptExtra').open = true")
+        xs = sp.evaluate("(() => { const t = document.getElementById('lExtra'), c = getComputedStyle(t); return [c.borderRadius, c.paddingLeft, parseFloat(c.minHeight) >= 90, t.getAttribute('placeholder').split('\\n').length, document.querySelector('#lOptExtra .hint').textContent.includes('label | URL')]; })()")
+        check('P74 (1.80.9) the Extra Links box looks like the other fields (rounded, padded, taller) and shows two example lines', xs[0] == '12px' and xs[1] == '13px' and xs[2] and xs[3] == 2 and xs[4], xs)
+        sp.route('**/icons/t.png', lambda r: r.fulfill(status=200, content_type='image/png', body=__import__('base64').b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==')))
+        sp.evaluate("document.getElementById('lOptIcon').open = true"); sp.fill('#lUrl', 'https://github.com/a/b'); sp.fill('#lIcon', 'icons/t.png'); sp.dispatch_event('#lIcon', 'change')
+        gi = sp.evaluate("(() => { const a = document.querySelector('#lIconPrev img'); document.documentElement.setAttribute('data-theme', 'dark'); return a ? [a.className, getComputedStyle(a).filter] : null; })()")
+        sp.fill('#lUrl', 'https://example.com/'); sp.dispatch_event('#lIcon', 'change'); sp.wait_for_timeout(150)
+        gn = sp.evaluate("(() => { const a = document.querySelector('#lIconPrev img'); return a ? a.className : null; })()")
+        check('P75 (1.80.9) a GitHub link icon turns white on the dark theme and other icons are left alone', bool(gi) and gi[0] == 'inv' and 'invert' in gi[1] and gn == '', [gi, gn])
+        sp.keyboard.press('Escape')
         # ---- (1.72.0) phone details: a read-only key wraps instead of being cut off; copying without the clipboard API; the two-step key ----
         sp.set_viewport_size({'width': 320, 'height': 760})
         sp.goto(s.base + '/web/settings/#security/encryption'); wait_js(sp, "!!(window.HUB && HUB.linkField)", 20000)

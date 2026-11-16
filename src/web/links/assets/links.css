@@ -106,6 +106,7 @@ body.editing:not(.searching) .row a.main{cursor:grab}
 .ico{width:16px;height:16px;flex:none;border-radius:3px;display:grid;place-items:center;font-size:10px;font-weight:600;background:var(--line);color:var(--muted);overflow:hidden}
 .ico.has{background:none}
 .ico img{width:16px;height:16px;display:block;object-fit:contain}
+:root[data-theme="dark"] img.inv{filter:brightness(0) invert(1)}
 .extra{flex:none;font-size:.78em;font-weight:700;letter-spacing:.03em;line-height:1.5;color:var(--text);background:var(--line2);padding:1px 8px;border-radius:5px}
 .extra:hover{background:var(--cat,var(--accent));color:var(--bg)}
 .divider{height:1px;margin:9px 8px;background:var(--line)}

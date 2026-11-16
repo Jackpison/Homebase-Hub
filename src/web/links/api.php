@@ -690,6 +690,7 @@ case 'icon':
         if ($cands) break;
     }
     $cands[] = $origin . '/favicon.ico';
+    if (preg_match('~(^|\.)github\.com$~', $host)) $cands[] = 'https://github.githubassets.com/favicons/favicon.svg';   // GitHub shows pages to bots only sometimes; its own icon file is always there
     $cands[] = 'https://www.google.com/s2/favicons?domain=' . rawurlencode($host) . '&sz=64';
     $cands[] = 'https://icons.duckduckgo.com/ip3/' . rawurlencode($host) . '.ico';
     need_dir($iconDir);

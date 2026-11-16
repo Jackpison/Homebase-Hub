@@ -514,12 +514,14 @@ function iconSrc(l, noWeb) {
   const d = isWeb(l.url) ? host(l.url) : '';
   return d ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=64` : '';
 }
+// (1.80.9) GitHub's own icon is black: on the dark theme it turns white (class "inv", see links.css)
+const blackIcon = u => /^(https?:\/\/)?([a-z0-9-]+\.)*github\.com(\/|:|$)/i.test(String(u || '').trim());
 function linkIcon(l, noWeb) {
   const src = iconSrc(l, noWeb);
   const fb = (l.title || '?').trim().charAt(0).toUpperCase();
   const box = h('span', { class: 'ico' + (src ? ' has' : ''), 'aria-hidden': 'true' });
   if (src) {
-    const img = h('img', { src, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' });
+    const img = h('img', { src, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', class: blackIcon(l.url) ? 'inv' : '' });
     img.onerror = () => { img.remove(); box.classList.remove('has'); box.textContent = fb; };
     box.append(img);
   } else box.textContent = fb;
@@ -1108,7 +1110,7 @@ $('#iconsBtn').onclick = openIconDlg;
 let linkCtx = null;
 function showIconPreview() {
   const v = $('#lIcon').value.trim(), p = $('#lIconPrev'); p.innerHTML = '';
-  if (v) { const img = h('img', { src: mediaUrl(safeUrl(v)), alt: '' }); img.onerror = () => img.remove(); p.append(img); }
+  if (v) { const img = h('img', { src: mediaUrl(safeUrl(v)), alt: '', class: blackIcon(urlNow()) ? 'inv' : '' }); img.onerror = () => img.remove(); p.append(img); }
 }
 // (1.69.1) the Address field keeps https:// (or http://) in front of the box: these give and take the whole address
 const urlNow = () => window.HUB && HUB.linkValue ? HUB.linkValue($('#lUrl')) : $('#lUrl').value.trim();

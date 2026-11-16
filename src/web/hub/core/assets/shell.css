@@ -1105,3 +1105,9 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 .ix-eye.ix-blink svg{animation:ix-blink .3s ease-out}
 .ix-ib.ix-bk:hover svg,.ix-ib.ix-bk:focus-visible svg{animation:ix-drop .45s ease-out}
 @media (prefers-reduced-motion:reduce){.ix-draw path{animation:none;stroke-dashoffset:0}#ix-bell.ix-ring svg,.ix-eye.ix-blink svg,.ix-ib.ix-bk:hover svg{animation:none}}
+
+/* (1.80.9) a multi-line box in a Settings-style window (Links > Edit Link > Extra Links): the same look as the one-line fields */
+.ix-sdlg .ix-sb .ix-ob textarea{display:block;width:100%;min-height:92px;resize:vertical;font:inherit;font-size:15px;line-height:1.5;color:inherit;border-radius:12px;padding:11px 13px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
+.ix-sdlg .ix-sb .ix-ob textarea::placeholder{color:color-mix(in srgb,currentColor 45%,transparent)}
+.ix-sdlg .ix-sb .ix-ob textarea:focus{outline:none;border-color:color-mix(in srgb,currentColor 55%,transparent)}
+.ix-sdlg .ix-sb .ix-ob .hint{margin:8px 2px 0;font-size:13px;line-height:1.45}

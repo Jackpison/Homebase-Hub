@@ -43,7 +43,7 @@ $('#iconsBtn').onclick = openIconDlg;
 let linkCtx = null;
 function showIconPreview() {
   const v = $('#lIcon').value.trim(), p = $('#lIconPrev'); p.innerHTML = '';
-  if (v) { const img = h('img', { src: mediaUrl(safeUrl(v)), alt: '' }); img.onerror = () => img.remove(); p.append(img); }
+  if (v) { const img = h('img', { src: mediaUrl(safeUrl(v)), alt: '', class: blackIcon(urlNow()) ? 'inv' : '' }); img.onerror = () => img.remove(); p.append(img); }
 }
 // (1.69.1) the Address field keeps https:// (or http://) in front of the box: these give and take the whole address
 const urlNow = () => window.HUB && HUB.linkValue ? HUB.linkValue($('#lUrl')) : $('#lUrl').value.trim();
