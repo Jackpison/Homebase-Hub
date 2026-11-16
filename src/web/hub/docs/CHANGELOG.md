@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.7 | Small animated icons (bell, copy, eye, backup, star), light-mode fixes for Tools tiles and Cards dots, tighter tabs |
 | 1.80.6 | One button hover everywhere, the Alerts dot works, Info says what it did, Logs keep 30 days in pages of 100 |
 | 1.80.5 | A dot on the alerts bell as soon as anything happens, the new button hover on buttons that had their own hover (Cancel, Check for Update and the like), and Tools icons as solid gradient tiles |
 | 1.80.4 | A new button hover (main buttons sweep a lighter fill, others tint), Files columns with Last Modified time and Access, hover actions before Size, solid folder tiles, and a framed Share window with clearer text |
@@ -174,6 +175,26 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.7
+
+### Animated Icons
+
+- The bell rings when a new alert arrives.
+- After Copy, the copy icon turns into a check that draws itself.
+- The Show Password eye blinks when it switches.
+- The arrow on the Backup button drops in when you point at it.
+- The Star in Files pops once when you set it.
+- All of them stop when your device asks for less motion.
+
+### Light Mode
+- The Tools tiles use bright colours again (they went muddy).
+- The holder dots in Cards are as bright as in dark mode.
+
+### Tabs
+- The tab names in Links and Info sit closer together.
 
 ---
 
