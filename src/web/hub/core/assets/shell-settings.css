@@ -859,12 +859,12 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-cmdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 #ix-page .ix-cmdc{position:relative;display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;border:1px solid var(--ix-line);background:var(--ix-s2);text-align:left;cursor:pointer;font:inherit;color:inherit}
 #ix-page .ix-cmdc:hover,#ix-page .ix-cmdc:focus-visible{border-color:var(--ix-accent)}
-#ix-page .ix-cmdc em{position:absolute;top:10px;right:12px;font-style:normal;font-size:11.5px;font-weight:700;color:var(--ix-mu2);opacity:0;transition:opacity .15s}
+#ix-page .ix-cmdc em{position:absolute;top:25px;right:26px;transform:translateY(-50%);font-style:normal;font-size:11.5px;font-weight:700;color:var(--ix-mu2);opacity:0;transition:opacity .15s}
 #ix-page .ix-cmdc:hover em,#ix-page .ix-cmdc:focus-visible em,#ix-page .ix-cmdc.ok em{opacity:1}
 #ix-page .ix-cmdc.ok{border-color:var(--ix-ok)}
 #ix-page .ix-cmdc.ok em{color:var(--ix-ok)}
 @media (hover:none){#ix-page .ix-cmdc em{opacity:1}}
-#ix-page .ix-cmdc code{color:var(--ix-tx);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ix-page .ix-cmdc code{color:var(--ix-tx);font-size:13px;padding-right:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ix-page .ix-cmdc span{color:var(--ix-mu);font-size:12.5px}
 
 /* (1.77.1) a field in a card is as wide as a field needs to be, not the whole page (Start Over, passwords, tokens) */
