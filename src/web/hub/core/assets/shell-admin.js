@@ -475,14 +475,15 @@
     }, function () { if (box.isConnected) box.innerHTML = '<p class="ix-err">Can\'t reach the server.</p>'; });
   }
   function pGeneral(p) {
-    p.innerHTML = '<h3>Site Name</h3><p>Shown in the bar, Telegram messages and backup names.</p><input type="text" id="ix-name" maxlength="30" value="' + esc(draft.siteName) + '" aria-label="Site Name">' +
+    p.innerHTML = '<h3>Overview</h3><p>How your site is doing right now: last backup, last login, security and what needs you.</p><div id="ix-gl">' + spinRow('Looking…') + '</div>' +
+      '<h3>Site Name</h3><p>Shown in the bar, Telegram messages and backup names.</p><input type="text" id="ix-name" maxlength="30" value="' + esc(draft.siteName) + '" aria-label="Site Name">' +
       '<h3>Site Logo</h3><p>Shown in the bar and the browser tab. PNG, JPG, WebP or GIF.</p>' +
       '<div class="ix-row"><span class="ix-logoprev" id="ix-lp">' + (S.logo ? '<img src="' + esc(ROOT + S.logo) + '" alt="">' : '<span>' + esc((S.siteName || 'M').charAt(0).toUpperCase()) + '</span>') + '</span>' +
       '<button type="button" class="ix-btn" id="ix-lu">' + svg(ICON.image) + 'Change Logo</button><button type="button" class="ix-btn" id="ix-lx"' + (S.logo ? '' : ' hidden') + '>Remove</button>' +
       '<input type="file" id="ix-lf2" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>' +
       '<h3>Time Zone</h3><p>Today, due times, backups and Telegram all follow it.</p>' +
       '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>' +
-      '<h3>Site at a Glance</h3><p>How your site is doing right now: last backup, last login, security and what needs you.</p><div id="ix-gl">' + spinRow('Looking…') + '</div>';   // (1.80.6) no Site Address card: the address is the one in the browser, and the version is in the footer
+      '';   // (1.80.6) no Site Address card: the address is the one in the browser, and the version is in the footer
     glance(p.querySelector('#ix-gl'));
     p.querySelector('#ix-tz').onchange = function (e) { draft.tz = e.target.value; };
     p.querySelector('#ix-name').oninput = function (e) { draft.siteName = e.target.value; };

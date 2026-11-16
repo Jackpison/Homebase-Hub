@@ -1048,3 +1048,6 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 #ix-page .ix-fixt{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}
 #ix-page .ix-fixt span{color:var(--ix-mu);font-size:13.5px}
 #ix-page .ix-fix .ix-btn{flex:none}
+
+/* (1.80.9) Overview: Open Logs sits below the list with room, not stuck to its edge */
+#ix-gl .ix-row{margin-top:14px}
