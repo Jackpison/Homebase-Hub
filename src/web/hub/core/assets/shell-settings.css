@@ -1051,3 +1051,17 @@ html[data-ix-gsolid] #ix-page .ix-gpv :is(.ix-gpvb,.ix-gpvw,.ix-gpvd){background
 
 /* (1.80.9) Overview: Open Logs sits below the list with room, not stuck to its edge */
 #ix-gl .ix-row{margin-top:14px}
+/* (1.80.9) Logs and Activity: one bar (search, time, kind, "..." menu) and a line of chips under it */
+#ix-page .ix-lgbar.ix-lgf{flex-wrap:wrap;justify-content:flex-start;gap:8px;margin:6px 0 4px}
+#ix-page .ix-lgbar.ix-lgf input[type=search]{flex:1 1 200px;min-width:0}
+#ix-page .ix-lgbar.ix-lgf select{width:auto;flex:none;height:38px;font-size:14px}
+#ix-page .ix-lgmore{position:relative;flex:none}
+#ix-page .ix-lgmore>.ix-btn{width:38px;height:38px;padding:0;font-size:18px;line-height:1}
+#ix-page .ix-lgmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:5;min-width:210px;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:14px;background:var(--ix-bg2,var(--ix-bg));border:1px solid var(--ix-line);box-shadow:0 12px 32px rgba(0,0,0,.35)}
+#ix-page .ix-lgmenu[hidden]{display:none}
+#ix-page .ix-lgmenu .ix-mi{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:10px;border:0;background:transparent;color:inherit;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+#ix-page .ix-lgmenu .ix-mi:hover:not(:disabled){background:color-mix(in srgb,currentColor 9%,transparent)}
+#ix-page .ix-lgmenu .ix-mi:disabled{opacity:.45;cursor:default}
+#ix-page .ix-lgmenu select{width:100%;height:38px}
+#ix-page .ix-lgchips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+#ix-page .ix-lgchips i{font-style:normal;font-size:12.5px;padding:3px 11px;border-radius:999px;color:var(--ix-mu);background:color-mix(in srgb,currentColor 8%,transparent)}
