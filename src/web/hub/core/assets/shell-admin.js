@@ -3178,29 +3178,20 @@
   /* (1.80.8) search, time range and kind, kept while the list is drawn again; and Export for what is shown */
   var LGKINDS = { logins: ['login', 'failed', 'locked', 'password', 'logoutall', 'twostep_on', 'twostep_off', 'recovery', 'passkey', 'session_revoke', 'approval'], backups: ['backup', 'restore', 'version_restore'], updates: ['update', 'update_back'], settings: ['settings', 'logo', 'features', 'cleanup', 'encryption', 'telegram', 'files', 'files_delete', 'reset', 'activity_cleared'] };
   var LGRANGE = [['0', 'Any Time'], ['1', 'Last 24 Hours'], ['7', 'Last 7 Days'], ['30', 'Last 30 Days']];
-  /* (1.80.9) one bar: [lead] Search, When, Kind and a "..." menu that holds Export CSV and the Clear buttons; the count and the 30-day note sit under it */
-  function lgBar(f, withKind, lead, menu, chips) {
+  /* (1.80.10) two lines: search, time and kind on the first; the count and 30-day note on the left of the second, Export and the Clear buttons on its right (no menu) */
+  function lgBar(f, withKind, lead, actions, chips) {
     var sel = function (id, label, opts, cur) { return '<select id="' + id + '" aria-label="' + label + '">' + opts.map(function (o) { return '<option value="' + o[0] + '"' + (String(cur) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>'; };
     return '<div class="ix-row ix-lgbar ix-lgf">' + lead + '<input type="search" id="ix-lgq" placeholder="Search" aria-label="Search" autocomplete="off" value="' + esc(f.q) + '">' + sel('ix-lgd', 'When', LGRANGE, f.days) +
-      (withKind ? sel('ix-lgk', 'Kind', [['all', 'All Kinds'], ['logins', 'Logins'], ['backups', 'Backups'], ['updates', 'Updates'], ['settings', 'Settings']], f.kind) : '') +
-      '<div class="ix-lgmore"><button type="button" class="ix-btn" id="ix-lgmb" aria-label="More" aria-haspopup="true" aria-expanded="false">\u22EF</button><div class="ix-lgmenu" id="ix-lgmenu" hidden>' + menu + '</div></div></div>' +
-      '<div class="ix-lgchips">' + chips.map(function (c) { return '<i>' + c + '</i>'; }).join('') + '<i>Last 30 days kept</i></div>';
+      (withKind ? sel('ix-lgk', 'Kind', [['all', 'All Kinds'], ['logins', 'Logins'], ['backups', 'Backups'], ['updates', 'Updates'], ['settings', 'Settings']], f.kind) : '') + '</div>' +
+      '<div class="ix-row ix-lgact"><div class="ix-lgchips">' + chips.map(function (c) { return '<i>' + c + '</i>'; }).join('') + '<i>Last 30 days kept</i></div><div class="ix-lgbtns">' + actions + '</div></div>';
   }
   function lgBind(p, f, redraw, doExport) {
-    var q = p.querySelector('#ix-lgq'), d = p.querySelector('#ix-lgd'), k = p.querySelector('#ix-lgk'), x = p.querySelector('#ix-lgex'), mb = p.querySelector('#ix-lgmb'), mn = p.querySelector('#ix-lgmenu');
+    var q = p.querySelector('#ix-lgq'), d = p.querySelector('#ix-lgd'), k = p.querySelector('#ix-lgk'), x = p.querySelector('#ix-lgex');
     if (f.fq && q) { f.fq = 0; q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
     if (q) q.oninput = function () { f.q = q.value; f.pg = 0; f.fq = 1; redraw(); };
     if (d) d.onchange = function () { f.days = d.value; f.pg = 0; redraw(); };
     if (k) k.onchange = function () { f.kind = k.value; f.pg = 0; redraw(); };
     if (x) x.onclick = doExport;
-    if (mb && mn) {
-      var shut = function () { mn.hidden = true; mb.setAttribute('aria-expanded', 'false'); };
-      mb.onclick = function (e) { e.stopPropagation(); mn.hidden = !mn.hidden; mb.setAttribute('aria-expanded', String(!mn.hidden)); };
-      mn.onclick = function (e) { e.stopPropagation(); if (e.target.tagName === 'BUTTON') setTimeout(shut, 0); };
-      var away = function (e) { if (!p.isConnected || !mn.isConnected) { document.removeEventListener('click', away); document.removeEventListener('keydown', esc2); return; } shut(); };
-      var esc2 = function (e) { if (e.key === 'Escape' && !mn.hidden) { shut(); mb.focus(); } };
-      document.addEventListener('click', away); document.addEventListener('keydown', esc2);
-    }
   }
   function lgCsv(name, head, rows) {
     var cell = function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
@@ -3224,9 +3215,9 @@
       var list = full.slice(f.pg * LOGPAGE, (f.pg + 1) * LOGPAGE);
       p.innerHTML = tabHead(ICON.bell, 'Notifications', 'Every message the site showed you, from every device you log in from, newest first. The last 30 days are kept.') +
         lgBar(f, false, '<div class="ix-seg" role="tablist" aria-label="Show"><button type="button" role="tab" data-f="all" aria-selected="' + !only + '">All</button><button type="button" role="tab" data-f="bad" aria-selected="' + only + '">Problems</button></div>',
-          '<button type="button" class="ix-mi" id="ix-lgex">Export CSV</button>' +
+          '<button type="button" class="ix-btn" id="ix-lgex">Export</button>' +
           '<select id="ix-lgage" aria-label="Clear older messages"' + (all.length ? '' : ' disabled') + '><option value="">Clear Older Than\u2026</option><option value="1">1 Day</option><option value="7">7 Days</option><option value="14">14 Days</option></select>' +
-          '<button type="button" class="ix-mi" id="ix-lgclr"' + (all.length ? '' : ' disabled') + '>Clear</button>', [full.length + (full.length === 1 ? ' message' : ' messages')]) +
+          '<button type="button" class="ix-btn" id="ix-lgclr"' + (all.length ? '' : ' disabled') + '>Clear</button>', [full.length + (full.length === 1 ? ' message' : ' messages')]) +
         (list.length ? '<div class="ix-lg">' + list.map(function (n) {
           var d = LOGDAY(n.ts), head = d !== day ? '<div class="ix-sect">' + esc(d) + ' · ' + perDay[d] + '</div>' : ''; day = d;
           return head + '<div class="ix-lgr" style="--pc:' + K.noteColor(n) + '">' + K.noteTile(n.k && ICON && K.noteKind ? n.k : n.b ? 'bad' : 'ok') + '<div class="ix-lgt"><b></b><i class="ix-lgd"></i></div><div class="ix-lgm"><small>' + esc(n.p || n.s || '') + (n.w ? ' · ' + esc(n.w) : '') + (n.dev ? ' · ' + esc(n.dev) : '')
@@ -3258,7 +3249,7 @@
       var full = shown(); f.pg = Math.min(f.pg, lgPages(full.length) - 1);
       var rows = full.slice(f.pg * LOGPAGE, (f.pg + 1) * LOGPAGE).map(actRow);
       p.innerHTML = tabHead(ICON.out, 'Activity', 'What was done on your site and who logged in: backups, updates, restores, settings saved, passkeys, encryption and every login. The last 30 days are kept, 100 lines to a page. Who is logged in right now is under Security › Devices.') +
-        lgBar(f, true, '', '<button type="button" class="ix-mi" id="ix-lgex">Export CSV</button><button type="button" class="ix-mi" id="ix-actgo"' + (j.events.length ? '' : ' disabled') + '>Clear</button>', [full.length + (full.length === 1 ? ' line' : ' lines'), '100 per page']) +
+        lgBar(f, true, '', '<button type="button" class="ix-btn" id="ix-lgex">Export</button><button type="button" class="ix-btn" id="ix-actgo"' + (j.events.length ? '' : ' disabled') + '>Clear</button>', [full.length + (full.length === 1 ? ' line' : ' lines'), '100 per page']) +
         '<form class="ix-row" id="ix-actclr" autocomplete="off"><input type="password" id="ix-actpw" placeholder="Website Password" autocomplete="current-password" aria-label="Website Password" hidden style="max-width:240px"></form><p class="ix-err" id="ix-acterr"></p>' +
         (rows.length ? '<div class="ix-checks">' + rows.join('') + '</div>' : '<div class="ix-empty"><b>' + (j.events.length ? 'No Matches' : 'No Activity Yet') + '</b><p>' + (j.events.length ? 'Try a different search, kind or time.' : 'Logins, backups, updates and changes to settings appear here.') + '</p></div>') + lgPager(full.length, f.pg);
       var pw = p.querySelector('#ix-actpw'), go = p.querySelector('#ix-actgo'), er = p.querySelector('#ix-acterr');

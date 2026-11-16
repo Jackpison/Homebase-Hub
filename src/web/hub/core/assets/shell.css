@@ -1101,10 +1101,10 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 @keyframes ix-blink{0%{transform:scaleY(.15)}60%{transform:scaleY(1.12)}100%{transform:none}}
 @keyframes ix-drop{0%{transform:translateY(-4px);opacity:.3}55%{transform:translateY(2px);opacity:1}100%{transform:none}}
 .ix-draw path{stroke-dasharray:26;stroke-dashoffset:26;animation:ix-draw .35s .04s ease-out forwards}
-#ix-bell.ix-ring svg{animation:ix-ring .7s ease-in-out;transform-origin:50% 14%}
+#ix-bell.ix-ring svg,#ix-bell.ix-ring img{animation:ix-ring .7s ease-in-out;transform-origin:50% 14%}
 .ix-eye.ix-blink svg{animation:ix-blink .3s ease-out}
 .ix-ib.ix-bk:hover svg,.ix-ib.ix-bk:focus-visible svg{animation:ix-drop .45s ease-out}
-@media (prefers-reduced-motion:reduce){.ix-draw path{animation:none;stroke-dashoffset:0}#ix-bell.ix-ring svg,.ix-eye.ix-blink svg,.ix-ib.ix-bk:hover svg{animation:none}}
+@media (prefers-reduced-motion:reduce){.ix-draw path{animation:none;stroke-dashoffset:0}#ix-bell.ix-ring svg,#ix-bell.ix-ring img,.ix-eye.ix-blink svg,.ix-ib.ix-bk:hover svg{animation:none}}
 
 /* (1.80.9) a multi-line box in a Settings-style window (Links > Edit Link > Extra Links): the same look as the one-line fields */
 .ix-sdlg .ix-sb .ix-ob textarea{display:block;width:100%;min-height:92px;resize:vertical;font:inherit;font-size:15px;line-height:1.5;color:inherit;border-radius:12px;padding:11px 13px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
@@ -1112,8 +1112,11 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 .ix-sdlg .ix-sb .ix-ob textarea:focus{outline:none;border-color:color-mix(in srgb,currentColor 55%,transparent)}
 .ix-sdlg .ix-sb .ix-ob .hint{margin:8px 2px 0;font-size:13px;line-height:1.45}
 /* (1.80.9) the bar's bell is the flat yellow one: its own colours, a little larger than the outline it replaces */
-#ix-bell svg.ix-bell3{width:22px;height:22px;stroke-width:22;stroke-linecap:round}
-#ix-bell.ix-quiet svg.ix-bell3{opacity:.85}
+#ix-bell img.ix-bell3{width:22px;height:22px;display:block;pointer-events:none}
+#ix-bell.ix-quiet img.ix-bell3{opacity:.85}
 /* (1.80.9) a smaller alerts dot */
 #ix-bell b{width:7px;height:7px;box-shadow:0 0 0 1.5px var(--ix-s1)}
 #ix-bar #ix-bell.ix-bb b{top:2px;right:2px}
+/* (1.80.10) the bell button is as wide as the other bar buttons, so the spacing around it is even */
+#ix-bar #ix-bell.ix-bb{width:38px;height:38px;border-radius:999px}
+#ix-bell img.ix-bell3{width:24px;height:24px}
