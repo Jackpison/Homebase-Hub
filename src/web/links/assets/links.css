@@ -39,7 +39,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 
 /* Header + ribbon tabs */
 header{display:flex;align-items:center;gap:20px 28px;flex-wrap:wrap;max-width:1500px;margin:0 auto;padding:26px 32px 18px}
-.tabs{display:flex;align-items:center;gap:6px 26px;flex-wrap:wrap;min-width:0}
+.tabs{display:flex;align-items:center;gap:6px 16px;flex-wrap:wrap;min-width:0}
 .tab{display:flex;align-items:center;gap:9px;font-weight:700;font-size:var(--fs-tab);letter-spacing:.02em;color:color-mix(in srgb,var(--text) 68%,var(--bg));
   background:none;border:0;padding:4px 0;cursor:pointer;white-space:nowrap;transition:color .15s}
 .tab svg{width:17px;height:19px;flex:none;color:color-mix(in srgb,var(--tab-ribbon,var(--ribbon)) 72%,var(--bg))}
@@ -214,7 +214,7 @@ body.is-locked .search{display:none}
 
 @media (max-width:700px){
   header{padding:18px 16px 10px;gap:12px}
-  .tabs{flex-wrap:nowrap;overflow-x:auto;width:100%;gap:22px;padding-bottom:4px;scrollbar-width:none}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;width:100%;gap:14px;padding-bottom:4px;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
   .tab{font-size:calc(var(--fs-tab) * .85)}
   .tools{margin-left:0;width:100%}
@@ -252,4 +252,4 @@ body.is-locked .search{display:none}
 .tab.add:hover{background:color-mix(in srgb,var(--text) 8%,transparent)}
 /* (1.79.2) a small grey divider between one tab and the next */
 .tabs>.tabi+.tabi{position:relative}
-.tabs>.tabi+.tabi::before{content:"";position:absolute;left:-14px;top:50%;width:1px;height:20px;transform:translateY(-50%);background:color-mix(in srgb,var(--text) 22%,transparent)}
+.tabs>.tabi+.tabi::before{content:"";position:absolute;left:-8px;top:50%;width:1px;height:20px;transform:translateY(-50%);background:color-mix(in srgb,var(--text) 22%,transparent)}

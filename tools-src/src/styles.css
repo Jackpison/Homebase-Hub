@@ -3,7 +3,7 @@
 :root{--bg:#0a0a0a;--sidebar:#0f0f10;--card:#151517;--card-2:#1c1c1f;--line:#27272b;--line-2:#34343a;--text:#f4f2ec;--muted:#a8a59e;--accent:#ffc21a;--accent-t:#ffc21a;--on-accent:#1a1300;--bad:#ff8a7a;--good:#5fd39a;
   --c-images:#2dd4bf;--c-photos:#7b97ff;--c-pdf:#ff7070;--c-utilities:#b79cff;--c-calculators:#ffa94d;--c-documents:#38bdf8;--c-gold:#ffc21a;--on-c:#06100d;--r:14px;color-scheme:dark}
 [data-theme=light]{--bg:#f6f5f1;--sidebar:#efede7;--card:#fff;--card-2:#f3f1ec;--line:#e1ded6;--line-2:#cfcbc1;--text:#1a1917;--muted:#5d5a53;--accent-t:#8a5a00;--bad:#b42318;--good:#137a48;
-  --c-images:#0b5f58;--c-photos:#3451c4;--c-pdf:#b91c1c;--c-utilities:#6d28d9;--c-calculators:#a14400;--c-documents:#0b5c8a;--c-gold:#8a5a00;--on-c:#fff;color-scheme:light}
+  --c-images:#0b5f58;--c-photos:#3451c4;--c-pdf:#b91c1c;--c-utilities:#6d28d9;--c-calculators:#a14400;--c-documents:#0b5c8a;--c-gold:#8a5a00;--t-images:#12a594;--t-photos:#5b78f0;--t-pdf:#ef5350;--t-utilities:#8b5cf6;--t-calculators:#f08a1c;--t-documents:#1aa0e0;--t-gold:#f5a300;--on-c:#fff;color-scheme:light}
 body{background:var(--bg);color:var(--text);margin:0}
 #root{font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text)}
 #root *{box-sizing:border-box}
@@ -169,3 +169,7 @@ ins.dw{text-decoration:none;background:color-mix(in srgb,var(--good) 26%,transpa
 
 /* (1.80.5) icon tiles like the bar's app icons: a solid gradient of the section colour with a white glyph */
 .nt,.sdot,.tci{box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 2px 8px color-mix(in srgb,var(--cc,var(--accent)) 28%,transparent)}
+
+/* (1.80.7) Light mode: the tool tiles use bright hues (the text colours are too dark for a tile and went muddy); white icon on a soft gradient */
+[data-theme=light] .c-images{--ct:var(--t-images)}[data-theme=light] .c-photos{--ct:var(--t-photos)}[data-theme=light] .c-pdf{--ct:var(--t-pdf)}[data-theme=light] .c-utilities{--ct:var(--t-utilities)}[data-theme=light] .c-calculators{--ct:var(--t-calculators)}[data-theme=light] .c-documents{--ct:var(--t-documents)}[data-theme=light] .c-gold{--ct:var(--t-gold)}
+[data-theme=light] .nt,[data-theme=light] .sdot,[data-theme=light] .tci{background:linear-gradient(145deg,color-mix(in srgb,var(--ct,var(--cc,var(--accent))) 82%,#fff),var(--ct,var(--cc,var(--accent))));box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 2px 8px color-mix(in srgb,var(--ct,var(--cc,var(--accent))) 35%,transparent)}
