@@ -206,3 +206,6 @@ dialog p{color:var(--mute);margin:0 0 6px}
 .lockedbox p{color:var(--mute);max-width:460px;margin:0 auto 16px}
 
 .empty b{display:block;color:var(--fg);font-size:17px;margin-bottom:4px}.empty span{display:block;margin-bottom:12px}
+
+/* (1.80.7) light mode: the holder dots are bright like in dark mode (--tl:26% is for text, which needs the dark shade; a dot does not) */
+:root[data-theme="light"] .dot{--tl:52%}
