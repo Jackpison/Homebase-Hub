@@ -454,6 +454,14 @@ try:
         pg.goto(s.base + '/web/cards/'); wait_js(pg, "!!document.getElementById('fav')", 20000)
         dl = pg.evaluate("(() => { document.documentElement.setAttribute('data-theme', 'light'); const d = document.createElement('i'); d.className = 'dot'; document.body.appendChild(d); const a = getComputedStyle(d).getPropertyValue('--tl').trim(); document.documentElement.setAttribute('data-theme', 'dark'); const b = getComputedStyle(d).getPropertyValue('--tl').trim(); d.remove(); return [a, b]; })()")
         check('P71g (1.80.7) in light mode the Cards holder dots are as bright as in dark mode (52% light, not the 26% text shade)', dl[0] == '52%' and dl[1] != '52%', dl)
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!document.querySelector('#tabs .tab') && !!document.getElementById('ix-bell')", 20000)
+        pg.evaluate("HUB.toast('Ring check')")
+        ring = until(lambda: pg.evaluate("getComputedStyle(document.querySelector('#ix-bell svg')).animationName") == 'ix-ring', 3000)
+        check('P72b (1.80.7) the bell rings when a new message arrives', ring)
+        bk = pg.evaluate("(() => { const b = document.querySelector('.ix-ib.ix-bk'); return !!b; })()")
+        if bk:
+            pg.hover('.ix-ib.ix-bk'); drop = until(lambda: pg.evaluate("getComputedStyle(document.querySelector('.ix-ib.ix-bk svg')).animationName") == 'ix-drop', 3000)
+            check('P72c (1.80.7) the arrow on the Backup button drops in when pointed at', drop)
         pg.evaluate("HUB.toast('Dot check')"); pg.wait_for_selector('#ix-bell b', timeout=3000)
         pg.evaluate("document.querySelector('#ix-toast .ix-nx').click()"); wait_js(pg, "!document.querySelector('#ix-toast .ix-nc')", 5000)
         check('P71a (1.80.5) a new message puts a dot on the bell at once, and closing the message does not take the dot away', pg.evaluate("!!document.querySelector('#ix-bell b') && !document.querySelector('#ix-bell').classList.contains('ix-quiet')"))
@@ -491,6 +499,8 @@ try:
         sp.locator('#nt-url').locator('xpath=..').locator('.ix-uf-cp').click(); sp.wait_for_timeout(150); cp = sp.evaluate('window.__cp') or ''
         check('P71 Telegram > Setup: the two cron lines are link fields ("Cron", "curl"); the key in the address shows as dots, and Copy gives the whole curl line with the real key (1.69.1)',
               tg[0][0] == 'Cron' and 'cron.php' in tg[0][1] and tg[1][0] == 'curl' and 'key=•••••' in tg[1][1] and cp.startswith('curl -s "http') and 'key=' in cp and '•' not in cp and cp.endswith('"'), (tg, len(cp)))
+        draw = sp.evaluate("(() => { const b = document.querySelector('#nt-url').parentElement.querySelector('.ix-uf-cp'); const s = b.querySelector('svg'); return [b.classList.contains('done'), s.classList.contains('ix-draw'), getComputedStyle(s.querySelector('path')).animationName]; })()")
+        check('P72a (1.80.7) after Copy the icon becomes a check that draws itself (and goes back to the copy icon later)', draw[0] and draw[1] and draw[2] == 'ix-draw', draw)
         sp.goto(s.base + '/web/settings/#telegram/instant-replies'); wait_js(sp, "document.querySelectorAll('.ix-cmdc').length > 0", 20000); sp.evaluate(CLIP)
         sp.click('.ix-cmdc >> nth=3'); wait_js(sp, "window.__cp !== null && !!document.querySelector('.ix-cmdc.ok')", 5000)
         cm = sp.evaluate("[window.__cp, (document.querySelector('.ix-cmdc.ok em') || {}).textContent, document.querySelectorAll('button.ix-cmdc').length]")

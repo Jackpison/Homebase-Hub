@@ -26,6 +26,7 @@
            readonly, mono, open (an arrow that opens the link), copy (default on), copyText (what Copy puts on the clipboard, if not the field),
            show (what a read-only field shows, if not the value), copyId, placeholder, label (for screen readers), required, cls }.
      Returns HTML. HUB.linkValue(input) gives the whole address back, HUB.linkSet(input, url) fills it. */
+  var UF_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true" class="ix-draw"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';   // (1.80.7) the copy icon turns into a check that draws itself
   var UF_COPY = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
   function linkField(o) {
     var a = function (k, v) { return v == null || v === false ? '' : ' ' + k + (v === true ? '' : '="' + esc(v) + '"'); };
@@ -65,7 +66,7 @@
   }
   function ufCopied(b, ok) {
     var tip = b.querySelector('.ix-uf-tip');
-    clearTimeout(b.__t); b.classList.toggle('done', ok); if (tip) tip.textContent = ok ? 'COPIED' : 'COPY';
+    clearTimeout(b.__t); var was = b.classList.contains('done'); b.classList.toggle('done', ok); if (was !== ok) { var sv = b.querySelector('svg'); if (sv) sv.outerHTML = ok ? UF_CHECK : UF_COPY; } if (tip) tip.textContent = ok ? 'COPIED' : 'COPY';
     b.setAttribute('aria-label', ok ? 'Copied' : 'Copy'); if (ok) announce('Copied');
     if (ok) b.__t = setTimeout(function () { ufCopied(b, false); }, 1600);
   }

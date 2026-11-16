@@ -539,7 +539,7 @@ function row(i) {
     h("button", { type: "button", class: "ib qb", "aria-label": "Move " + name + " to Trash", title: "Move to Trash", onclick: e => { e.stopPropagation(); trash([i.id]); } }, svg("trash")));
   const el = h("div", { class: "row" + (sel.has(i.id) ? " sel" : "") + (cur === i.id ? " cur" : ""), "data-id": i.id, draggable: tab === "trash" ? null : "true", ondblclick: () => { if (i.t === "f") openItem(i); }, oncontextmenu: e => { e.preventDefault(); e.stopPropagation(); cur = i.id; if (!sel.has(i.id)) { sel.clear(); sel.add(i.id); row.sync(); } menu(more, i, { x: e.clientX, y: e.clientY }); } },
     ck, open, h("span", { class: "cell sz num", text: fmt(isD ? bytesOf(i) : sz) }),
-    h("span", { class: "cell starc" }, i.t === "f" && tab !== "trash" ? h("button", { type: "button", class: "ib", "aria-label": ((meta(i) || {}).st ? "Unstar " : "Star ") + name, title: "Star", "aria-pressed": String(!!(meta(i) || {}).st), onclick: e => { e.stopPropagation(); star(i); } }, svg("star")) : null),
+    h("span", { class: "cell starc" }, i.t === "f" && tab !== "trash" ? h("button", { type: "button", class: "ib" + (popId === i.id ? " pop" : ""), "aria-label": ((meta(i) || {}).st ? "Unstar " : "Star ") + name, title: "Star", "aria-pressed": String(!!(meta(i) || {}).st), onclick: e => { e.stopPropagation(); star(i); } }, svg("star")) : null),
     h("span", { class: "cell dt", text: tab === "trash" ? left + (left === 1 ? " day left" : " days left") : stamp(at) }),
     h("span", { class: "cell vis" + (shared ? " on" : ""), text: tab === "trash" ? "" : shared ? "Anyone with the link" + shareFlags(i) : "Only you" }), quick, more, h("span", { class: "cell meta", text: sub }));
   if (D.settings.view === "grid") { const ic = open.querySelector(".ico"); if (ic) queueMicrotask(() => thumbWatch(ic, i)); }
@@ -600,9 +600,11 @@ function selbtn() {
   const vis = shown(), all = !!vis.length && sel.size === vis.length, ck = /** @type {HTMLInputElement | null} */ ($("lhck"));
   if (ck) { ck.checked = all; ck.indeterminate = !all && sel.size > 0; }   // (1.79.1) Select All is the box at the top of the list
   const b = $("sela"); if (!b) return; b.hidden = !vis.length || (D.settings.view !== "grid" && !matchMedia("(max-width:760px)").matches); b.textContent = sel.size && sel.size === vis.length ? "Clear Selection" : "Select All"; }
+let popId = "";   // (1.80.7) the star just set pops once
 async function star(i) {
   if (!await ensureKey()) return;
   const old = meta(i) || {}, m = await SITE.sealJson(Object.assign({}, old, { st: old.st ? 0 : 1 }));
+  popId = old.st ? "" : i.id; setTimeout(() => { popId = ""; }, 1200);
   await run(post("rename", { id: i.id, m }), (old.st ? "Star removed: " : "Starred: ") + nameOf(i));
 }
 function newMenu() {

@@ -142,6 +142,8 @@
     else { if (b.parentNode !== document.body) document.body.appendChild(b); b.classList.remove('ix-bb'); }
     b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' + (n > 0 ? '<b aria-hidden="true"></b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.setAttribute('aria-label', n > 0 ? 'Alerts: ' + n + ' new' : 'Alerts you may have missed'); b.hidden = false;
   }
+  /* (1.80.7) the bell rings once when a new message arrives (not when it is only redrawn) */
+  function noteRing() { var b = document.getElementById('ix-bell'); if (!b) return; b.classList.remove('ix-ring'); void b.offsetWidth; b.classList.add('ix-ring'); clearTimeout(b.__r); b.__r = setTimeout(function () { b.classList.remove('ix-ring'); }, 900); }
   noteFlushSoon(4000);   // lines that were not sent yet (this browser was logged out, or offline) go once the page is up
   whenBody(noteBell);   // the bell is there from the first moment on every page
   /* the list behind the bell: the last messages of this tab, newest first */
@@ -190,7 +192,7 @@
     if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
     else {
       var wh = noteWhere(), e = { id: noteNewId(), m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', a: APP, ts: Date.now(), p: wh.p, w: wh.w, d: detail ? String(detail).slice(0, 200) : '' };
-      noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteNew++; noteSave(); noteBell();   // (1.80.5) the bell shows its dot at once, even while the message is still on screen
+      noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteNew++; noteSave(); noteBell(); noteRing();   // (1.80.5) the bell shows its dot at once, even while the message is still on screen
       if (!NOTE_HINT.test(msg)) noteLogAdd(e);   // (1.78.0) a hint ("Hold the button down to confirm.") is shown, but it is not something that got done: it stays out of Settings > Logs
     }
     var c = document.createElement('div'), kind = noteKind(msg, bad, act);

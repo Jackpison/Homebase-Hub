@@ -449,6 +449,8 @@
     else { if (b.parentNode !== document.body) document.body.appendChild(b); b.classList.remove('ix-bb'); }
     b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' + (n > 0 ? '<b aria-hidden="true"></b>' : ''); b.classList.toggle('ix-quiet', n <= 0); b.setAttribute('aria-label', n > 0 ? 'Alerts: ' + n + ' new' : 'Alerts you may have missed'); b.hidden = false;
   }
+  /* (1.80.7) the bell rings once when a new message arrives (not when it is only redrawn) */
+  function noteRing() { var b = document.getElementById('ix-bell'); if (!b) return; b.classList.remove('ix-ring'); void b.offsetWidth; b.classList.add('ix-ring'); clearTimeout(b.__r); b.__r = setTimeout(function () { b.classList.remove('ix-ring'); }, 900); }
   noteFlushSoon(4000);   // lines that were not sent yet (this browser was logged out, or offline) go once the page is up
   whenBody(noteBell);   // the bell is there from the first moment on every page
   /* the list behind the bell: the last messages of this tab, newest first */
@@ -497,7 +499,7 @@
     if (same) { clearTimeout(+same.dataset.tm); same.remove(); }
     else {
       var wh = noteWhere(), e = { id: noteNewId(), m: msg, b: !!bad, k: noteKind(msg, bad, act), s: NOTE_SRC[APP] || 'Homebase Hub', a: APP, ts: Date.now(), p: wh.p, w: wh.w, d: detail ? String(detail).slice(0, 200) : '' };
-      noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteNew++; noteSave(); noteBell();   // (1.80.5) the bell shows its dot at once, even while the message is still on screen
+      noteHist.push(e); noteHist = noteHist.slice(-NOTE_KEEP); noteNew++; noteSave(); noteBell(); noteRing();   // (1.80.5) the bell shows its dot at once, even while the message is still on screen
       if (!NOTE_HINT.test(msg)) noteLogAdd(e);   // (1.78.0) a hint ("Hold the button down to confirm.") is shown, but it is not something that got done: it stays out of Settings > Logs
     }
     var c = document.createElement('div'), kind = noteKind(msg, bad, act);
@@ -1574,7 +1576,7 @@
       dlg.querySelector('.ix-box').classList.add('ix-login');
       $('#ix-eye').onclick = function () {
         var on = $('#ix-pw').type === 'password';
-        $('#ix-pw').type = on ? 'text' : 'password'; this.innerHTML = svg(on ? ICON.eyeoff : ICON.eye);
+        $('#ix-pw').type = on ? 'text' : 'password'; this.innerHTML = svg(on ? ICON.eyeoff : ICON.eye); this.classList.remove('ix-blink'); void this.offsetWidth; this.classList.add('ix-blink');
         this.setAttribute('aria-pressed', String(on)); this.setAttribute('aria-label', on ? 'Hide Password' : 'Show Password'); this.title = this.getAttribute('aria-label');
         $('#ix-pw').focus();
       };
@@ -2113,6 +2115,7 @@
            readonly, mono, open (an arrow that opens the link), copy (default on), copyText (what Copy puts on the clipboard, if not the field),
            show (what a read-only field shows, if not the value), copyId, placeholder, label (for screen readers), required, cls }.
      Returns HTML. HUB.linkValue(input) gives the whole address back, HUB.linkSet(input, url) fills it. */
+  var UF_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true" class="ix-draw"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';   // (1.80.7) the copy icon turns into a check that draws itself
   var UF_COPY = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
   function linkField(o) {
     var a = function (k, v) { return v == null || v === false ? '' : ' ' + k + (v === true ? '' : '="' + esc(v) + '"'); };
@@ -2152,7 +2155,7 @@
   }
   function ufCopied(b, ok) {
     var tip = b.querySelector('.ix-uf-tip');
-    clearTimeout(b.__t); b.classList.toggle('done', ok); if (tip) tip.textContent = ok ? 'COPIED' : 'COPY';
+    clearTimeout(b.__t); var was = b.classList.contains('done'); b.classList.toggle('done', ok); if (was !== ok) { var sv = b.querySelector('svg'); if (sv) sv.outerHTML = ok ? UF_CHECK : UF_COPY; } if (tip) tip.textContent = ok ? 'COPIED' : 'COPY';
     b.setAttribute('aria-label', ok ? 'Copied' : 'Copy'); if (ok) announce('Copied');
     if (ok) b.__t = setTimeout(function () { ufCopied(b, false); }, 1600);
   }

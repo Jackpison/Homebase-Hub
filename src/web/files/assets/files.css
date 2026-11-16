@@ -452,3 +452,8 @@ dialog textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);bo
 .fa.hasdet .list{--cAcc:-8px}
 .fa.hasdet .lh,.fa.hasdet .row{grid-template-columns:34px minmax(0,1fr) var(--cSize) var(--cStar) var(--cMod) var(--cMore)}
 .fa.hasdet .row .cell.vis,.fa.hasdet .lh>span:nth-child(6),.fa.hasdet .row .qa{display:none}
+
+/* (1.80.7) the star pops once when it is set */
+@keyframes starpop{0%{transform:scale(1)}40%{transform:scale(1.35) rotate(-10deg)}100%{transform:scale(1)}}
+.ib.pop[aria-pressed=true] svg{animation:starpop .45s ease-out}
+@media (prefers-reduced-motion:reduce){.ib.pop[aria-pressed=true] svg{animation:none}}

@@ -1094,3 +1094,14 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
   :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn,dialog .act button,dialog .df .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold]):not(.ix-erase):not(.square):is(.danger):not(:is(dialog *,.ix-sdlg *,#ix-dlg *,.sheet *,.pri,.primary,.ix-srow>button)):not(:disabled):hover{background-color:color-mix(in srgb,#ff6b6b 14%,transparent)!important;border-color:#ff6b6b!important}
   :where(html .btn,html .ix-btn,html .ix-sdlg .ix-sf button,html .ix-sdlg .act button,html .ix-sdlg .actions button,html .ix-sdlg .df button,html .ix-srow>button,html .sheet .sf .btn,dialog .act button,dialog .df .btn):not(.ib):not(.ix-ib):not([role=radio]):not(.busy):not([data-hold]):not(.ix-erase):not(.square):not(:disabled):active{transform:scale(.97)}
 }
+
+/* (1.80.7) small state effects (plain SVG and CSS; every one stops when the device asks for less motion) */
+@keyframes ix-draw{from{stroke-dashoffset:26}to{stroke-dashoffset:0}}
+@keyframes ix-ring{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(9deg)}60%{transform:rotate(-6deg)}78%{transform:rotate(3deg)}}
+@keyframes ix-blink{0%{transform:scaleY(.15)}60%{transform:scaleY(1.12)}100%{transform:none}}
+@keyframes ix-drop{0%{transform:translateY(-4px);opacity:.3}55%{transform:translateY(2px);opacity:1}100%{transform:none}}
+.ix-draw path{stroke-dasharray:26;stroke-dashoffset:26;animation:ix-draw .35s .04s ease-out forwards}
+#ix-bell.ix-ring svg{animation:ix-ring .7s ease-in-out;transform-origin:50% 14%}
+.ix-eye.ix-blink svg{animation:ix-blink .3s ease-out}
+.ix-ib.ix-bk:hover svg,.ix-ib.ix-bk:focus-visible svg{animation:ix-drop .45s ease-out}
+@media (prefers-reduced-motion:reduce){.ix-draw path{animation:none;stroke-dashoffset:0}#ix-bell.ix-ring svg,.ix-eye.ix-blink svg,.ix-ib.ix-bk:hover svg{animation:none}}

@@ -52,7 +52,7 @@
       dlg.querySelector('.ix-box').classList.add('ix-login');
       $('#ix-eye').onclick = function () {
         var on = $('#ix-pw').type === 'password';
-        $('#ix-pw').type = on ? 'text' : 'password'; this.innerHTML = svg(on ? ICON.eyeoff : ICON.eye);
+        $('#ix-pw').type = on ? 'text' : 'password'; this.innerHTML = svg(on ? ICON.eyeoff : ICON.eye); this.classList.remove('ix-blink'); void this.offsetWidth; this.classList.add('ix-blink');
         this.setAttribute('aria-pressed', String(on)); this.setAttribute('aria-label', on ? 'Hide Password' : 'Show Password'); this.title = this.getAttribute('aria-label');
         $('#ix-pw').focus();
       };
