@@ -7,7 +7,7 @@ wider than a 390 px phone on Files, on every Settings section and on Home, Links
     python3 tests/browser/settings_look_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8985)"""
 import os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import SEED, Site, Checks, stop_all, browser_login, browser_set_passphrase, browser_unlock, wait_js, browser_name, launch, until, CSP_REPORTER, hold, page_errors
+from helpers import SEED, Site, Checks, stop_all, browser_login, browser_set_passphrase, browser_unlock, wait_js, browser_name, launch, until, CSP_REPORTER, hold, page_errors, toasts_gone
 from playwright.sync_api import sync_playwright
 
 if len(sys.argv) < 2: sys.exit(__doc__)
@@ -232,13 +232,10 @@ try:
         def press_hold(ms):   # a held press is a duration on purpose: mouse down, keep it for ms inside the page, mouse up
             pg.locator('#ix-clclear').scroll_into_view_if_needed(); bb = pg.locator('#ix-clclear').bounding_box()
             pg.mouse.move(bb['x'] + bb['width'] / 2, bb['y'] + bb['height'] / 2); pg.mouse.down(); pg.evaluate('(ms) => new Promise(r => setTimeout(r, ms))', ms); pg.mouse.up()
-        press_hold(300); pg.evaluate('() => new Promise(r => setTimeout(r, 700))')
+        toasts_gone(pg); press_hold(300); pg.evaluate('() => new Promise(r => setTimeout(r, 700))')
         check('L30n pressing it for a moment does nothing: the connection is still there', pg.evaluate("!!document.querySelector('#ix-cloud .ix-clsum')"))
-        press_hold(1400)
-        try: wait_js(pg, "!document.querySelector('#ix-cloud .ix-clsum') && !document.getElementById('ix-clform').hidden", 15000)
-        except Exception:   # CI-only failure (1.80.10): say what was under the pointer, so the log shows why the hold did not finish
-            print('DIAG hold:', pg.evaluate("(() => { const b = document.getElementById('ix-clclear'); if (!b) return 'no button'; const r = b.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2, e = document.elementFromPoint(x, y); return {rect: [r.x, r.y, r.width, r.height], view: [innerWidth, innerHeight], hit: e ? e.tagName + '#' + e.id + '.' + e.className : null, holding: b.className, summary: !!document.querySelector('#ix-cloud .ix-clsum'), formHidden: document.getElementById('ix-clform').hidden, card: (document.getElementById('ix-cloud').innerText || '').slice(0, 220), said: ['Hold the button', 'Disconnected', 'Could not'].filter(w => document.body.innerText.includes(w)), toasts: [...document.querySelectorAll('[class*=toast],[id*=toast]')].map(t => t.className + ':' + (t.innerText || '').slice(0, 60))}; })()"))
-            raise
+        toasts_gone(pg); press_hold(1400)   # the 'Hold the button' message of the short press sits over the button until it fades
+        wait_js(pg, "!document.querySelector('#ix-cloud .ix-clsum') && !document.getElementById('ix-clform').hidden", 15000)
         gone = pg.evaluate("[document.getElementById('ix-clbucket').value, document.getElementById('ix-clak').value, document.getElementById('ix-clsk').placeholder, !!document.getElementById('ix-clclear')]")
         check('L30o holding it disconnects: the summary is gone, the form is open and empty (no saved secret), and the button is gone', gone == ['', '', '', False], gone)
 

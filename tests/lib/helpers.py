@@ -344,6 +344,14 @@ def wait_js(pg, expr, timeout=15000, step=200, fresh=True):
         pg.wait_for_timeout(step)
 
 
+def toasts_gone(pg, timeout=20000):
+    """(1.80.11) Waits until no message is showing in the corner. A message sits over the bottom right (where Files' Transfers box and the Settings
+    buttons can be), takes the click that was meant for the button below it, and stops fading while the pointer is on it. So the pointer
+    is moved off first, and the test goes on only once the corner is empty."""
+    pg.mouse.move(2, 2)
+    wait_js(pg, "!document.querySelector('#ix-toast .ix-nc')", timeout)
+
+
 def hold(pg, selector, ms=1150, hover=None):
     """(1.65.0) Holds a Hold-to-Delete button down with the mouse for a little over the 0.9 s it needs (hover: something to point at first,
     for buttons that only show on hover). Falls back to the keyboard (focus, hold Enter) when the button has no box on the screen."""

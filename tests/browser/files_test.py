@@ -5,7 +5,7 @@ and what the server is left holding (nothing readable).
     python3 tests/browser/files_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8976)"""
 import glob, os, re, sys, tempfile, zipfile
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-from helpers import FIX, hold, page_errors
+from helpers import FIX, hold, page_errors, toasts_gone
 from helpers import Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, browser_unlock, CSP_REPORTER
 from playwright.sync_api import sync_playwright
 
@@ -71,7 +71,7 @@ try:
         upload(pg, 'retry.txt', b'try me again')
         until(lambda: pg.evaluate("!!document.querySelector('#ups .uc.bad .re:not([hidden])')"), 20000)
         bad = pg.evaluate("(() => { const c = document.querySelector('#ups .uc.bad'); return c ? [c.querySelector('b').textContent, c.querySelector('small').textContent, c.querySelector('.re').getAttribute('aria-label')] : null; })()")
-        fails['on'] = False; pg.click('#ups .uc.bad .re'); ok = wait_names(pg, ['retry.txt'], 20000)
+        fails['on'] = False; toasts_gone(pg); pg.click('#ups .uc.bad .re'); ok = wait_names(pg, ['retry.txt'], 20000)
         pg.unroute('**/api.php?action=put_chunk*')
         check('B8b a failed upload shows a red card with its reason and a try-again button; pressing it uploads the file', bad is not None and bad[0] == 'retry.txt' and 'did not arrive' in bad[1] and bad[2] == 'Try retry.txt again' and ok, (bad, ok))
         with pg.expect_download(timeout=60000) as d:
@@ -223,12 +223,13 @@ try:
         check('B40 one click on a file only picks it: nothing downloads, and the details panel shows it', got == [] and pg.is_visible('#det') and 'pack.zip' in pg.inner_text('#det h3') and 'Locked in your browser' in pg.inner_text('#det'), (got, pg.inner_text('#det')[:80]))
         row(pg, 'pack.zip').locator('.nm').dblclick(); pg.wait_for_timeout(800)
         check('B41 opening a file that has no preview does not download it either (it says so)', got == [])
+        once = pg.evaluate("(() => { const b = [...document.querySelectorAll('#list .row')].find(r => r.textContent.includes('pack.zip')).querySelector('.nm'); b.click(); return !document.getElementById('det').hidden; })()")
+        until(lambda: pg.evaluate("document.getElementById('det').hidden"), 5000)
+        check('B41b a click on the file that is already picked lets go of it, but the details panel closes a moment later, so the list does not move under the second click of a double-click (1.80.11)', once)
+        row(pg, 'pack.zip').locator('.nm').click(); until(lambda: pg.evaluate("!document.getElementById('det').hidden"), 5000)
         check('B42 the sidebar lists My Files, Recent, Shared Links, Starred and Trash, and the usage has no server figure',
               pg.evaluate("[...document.querySelectorAll('#tabs button')].map(b => b.textContent.trim().replace(/[0-9 ]+$/, ''))") == ['My Files', 'Recent', 'Shared Links', 'Starred', 'Trash'] and 'free' not in pg.inner_text('#usage'), pg.inner_text('#usage'))
-        try: pg.click('#det button.star', timeout=8000)
-        except Exception:   # CI-only failure (1.80.10): say which preview is open and what the page holds, so the log shows what opened it
-            print('DIAG star:', pg.evaluate("({open: document.getElementById('pdlg').open, pbox: document.getElementById('pbox').innerHTML.slice(0, 300), pv: (document.getElementById('pv') || {}).innerText, names: [...document.querySelectorAll('#list .row .nm')].map(x => x.textContent), toasts: [...document.querySelectorAll('[class*=toast],[id*=toast]')].map(t => (t.innerText || '').slice(0, 80)), det: document.getElementById('det').innerText.slice(0, 80)})"))
-            raise
+        pg.click('#det button.star')
         until(lambda: pg.evaluate("document.querySelector('#det button.star').getAttribute('aria-pressed')") == 'true', 10000)
         pg.click('#tabs button[data-t=starred]'); wait_names(pg, ['pack.zip'])
         check('B43 Star puts it under Starred (and only it)', names(pg) == ['pack.zip'], names(pg))

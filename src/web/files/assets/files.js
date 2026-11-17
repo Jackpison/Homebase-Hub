@@ -560,7 +560,9 @@ function range(id) {
   sel.clear(); for (const x of ids.slice(Math.min(a, b), Math.max(a, b) + 1)) sel.add(x); row.sync();
 }
 /* one click on a file picks it and shows it in the panel on the right: it never downloads */
-function pick1(id) { if (sel.size === 1 && sel.has(id)) sel.clear(); else { sel.clear(); sel.add(id); } row.sync(); }
+/* (1.80.11) a click on the file that is already the only pick lets go of it; the panel then closes a moment later, not at once: closing it re-lays out the list, and the second click of a double-click would land on another file */
+let keepDet = false;
+function pick1(id) { if (sel.size === 1 && sel.has(id)) { sel.clear(); keepDet = true; } else { sel.clear(); sel.add(id); } row.sync(); }
 
 function usage() {
   const u = $("usage"), max = D.max;
@@ -577,9 +579,10 @@ function details(now) {
   const det = $("det"), fa = $("fa"), ids = [...sel];
   selbtn();
   const i = ids.length === 1 ? byId.get(ids[0]) : null;
-  if (!i) { clearTimeout(detWait); detWait = 0; }
+  if (!i) { clearTimeout(detWait); detWait = 0; if (keepDet && !det.hidden && !now) { keepDet = false; detWait = setTimeout(() => { detWait = 0; details(true); }, 300); return; } keepDet = false; }
   // (1.80.3) the panel opens a moment after a pick, so a double-click (open) is not thrown off by the list narrowing under the pointer
   else if (det.hidden && !now) { if (!detWait) detWait = setTimeout(() => { detWait = 0; details(true); }, 300); return; }
+  else { clearTimeout(detWait); detWait = 0; }
   /* (1.80.3) closed until you pick one file or folder (it used to open with a summary of the folder) */
   if (!i) { det.hidden = true; fa.classList.remove("hasdet"); selbtn(); return; }
   if (tab === "trash") { det.hidden = true; fa.classList.remove("hasdet"); return; }
