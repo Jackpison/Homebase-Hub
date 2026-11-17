@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.80.11 | Files no longer opens the wrong file when you double-click one that is already picked |
 | 1.80.10 | Logs and Activity use two lines (search and filters, then the count with Export and Clear), the bar bell is the exact flat yellow bell with even spacing around it |
 | 1.80.9 | Overview now leads General, Logs and Activity share one search bar with a ⋯ menu, GitHub icons turn white on dark and are fetched from GitHub's own icon file, and the Extra Links box matches the other fields |
 | 1.80.8 | Site at a Glance in General, one-click fixes in Health, Logs with search, Export and pages, the flat two-tone folder, a Telegram security summary |
@@ -178,6 +179,14 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.80.11
+
+### Files
+
+- Double-clicking a file that was already picked could open a different file. The first click let go of the pick and the Details panel closed at once, which moved the list under the second click. The panel now stays for a moment, so the second click lands on the same file.
 
 ---
 
