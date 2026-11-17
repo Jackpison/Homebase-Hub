@@ -453,10 +453,10 @@ try:
         pg.reload(wait_until='domcontentloaded'); wait_names(pg, ['photo.png'])
         menu(pg, 'photo.png', 'Keep on This Device'); pg.wait_for_selector('#list .row:has(.nm[title="photo.png"]) .offm', timeout=30000)
         check('B111 Keep on This Device marks the file and the menu now offers Remove from This Device', row(pg, 'photo.png').locator('.offm').count() == 1)
-        ctx.set_offline(True)
+        ctx.route('**/api.php*', lambda r: r.abort('internetdisconnected'))   # no connection to the server (set_offline would also stop WebKit drawing the picture from its own blob)
         row(pg, 'photo.png').locator('.nm').dblclick(); pg.wait_for_selector('#pbox img', timeout=20000)
         check('B112 with no connection the kept picture still opens in the preview', pg.evaluate("(() => { const i = document.querySelector('#pbox img'); return !!i && i.complete && i.naturalWidth > 0; })()"))
-        pg.keyboard.press('Escape'); ctx.set_offline(False)
+        pg.keyboard.press('Escape'); ctx.unroute('**/api.php*')
         menu(pg, 'photo.png', 'Remove from This Device'); pg.wait_for_selector('#list .row:has(.nm[title="photo.png"]):not(:has(.offm))', timeout=15000)
         check('B113 Remove from This Device takes the mark away', row(pg, 'photo.png').locator('.offm').count() == 0)
 

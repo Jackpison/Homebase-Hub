@@ -118,7 +118,7 @@ try:
         nv = ctx.new_page(); nv.goto(s.base + '/web/home/', wait_until='commit', timeout=90000)
         wait_js(nv, "!!document.querySelector('#bg > .design canvas') && !!document.querySelector('[data-ix=corner]')", 60000)
         nv.click('[data-ix=corner]', timeout=60000); nv.wait_for_selector('#ix-pop', timeout=30000)
-        nv.click('#ix-pop >> text=Links', timeout=60000)
+        nv.click('#ix-pop >> text=Links', timeout=60000, no_wait_after=True)   # the next line waits for the address; the click itself must not wait for the whole Links page to load behind a running design
         try: nv.wait_for_url('**/web/links/**', timeout=90000, wait_until='commit'); moved = True
         except Exception: moved = False
         check('H10 with a design on screen the corner menu stays open when pressed and takes you to another page', moved, nv.url)
