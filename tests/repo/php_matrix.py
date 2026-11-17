@@ -12,7 +12,7 @@ For each version it runs the PHP lint on every file in src/ and the unit tests (
     python3 tests/repo/php_matrix.py            check the versions that are installed here and say which are missing
     python3 tests/repo/php_matrix.py --install  first install the missing ones (Ubuntu, the ondrej/php packages that setup-php also uses; needs sudo)
     python3 tests/repo/php_matrix.py --list     only print the versions that would be checked"""
-import json, os, re, shutil, subprocess, sys, urllib.request
+import json, os, re, shutil, subprocess, sys, time, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BOOT = os.path.join(ROOT, 'src', 'web', 'hub', 'core', 'lib', 'boot.php')
@@ -63,6 +63,7 @@ def binary(v): return shutil.which('php' + v) or (shutil.which('php') if re.matc
 
 
 _apt = {'ready': False}
+RETRY = ['-o', 'Acquire::Retries=3']
 
 
 def sh(cmd):
@@ -75,9 +76,14 @@ def install(v):
         _apt['ready'] = True
         sh(['apt-get', 'install', '-y', '-qq', 'software-properties-common'])
         sh(['add-apt-repository', '-y', 'ppa:ondrej/php'])
-        r = sh(['apt-get', 'update', '-qq'])
+        r = sh(['apt-get', 'update', '-qq'] + RETRY)
         if r.returncode != 0: print('apt update: ' + (r.stderr or r.stdout).strip()[-300:])
-    r = sh(['apt-get', 'install', '-y', '-qq'] + ['php%s-%s' % (v, e) for e in EXT])
+    # (1.80.11) the package server answers 503 now and then (it did on 2026-11-17): try again a few times before calling it a failure
+    for tries in range(4):
+        r = sh(['apt-get', 'install', '-y', '-qq'] + RETRY + ['php%s-%s' % (v, e) for e in EXT])
+        if r.returncode == 0: break
+        print('PHP %s: try %d failed: %s' % (v, tries + 1, (r.stderr or r.stdout).strip().replace('\n', ' | ')[-200:]))
+        if tries < 3: time.sleep(15 * (tries + 1)); sh(['apt-get', 'update', '-qq'] + RETRY)
     if r.returncode != 0: print('could not install PHP %s: %s' % (v, (r.stderr or r.stdout).strip().replace('\n', ' | ')[-400:]))
     return r.returncode == 0
 
