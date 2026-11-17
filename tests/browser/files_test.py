@@ -494,9 +494,13 @@ try:
 
         # ---- (1.80.4) button hover: main buttons sweep a lighter fill, other buttons tint ----
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000)
-        menu(pg, 'photo.png', 'Share Link'); pg.wait_for_selector('#dform .act .pri'); pg.mouse.move(2, 2); pg.hover('#dform .act .pri')
-        swept = until(lambda: pg.evaluate("(() => { const m = /matrix\\(1, 0, 0, 1, (-?[0-9.]+), 0\\)/.exec(getComputedStyle(document.querySelector('#dform .act .pri'), '::before').transform); return !!m && +m[1] > -2; })()"), 10000)
-        check('B120 a main button sweeps a lighter fill in on hover', swept)
+        menu(pg, 'photo.png', 'Share Link'); pg.wait_for_selector('#dform .act .pri'); pg.mouse.move(2, 2)
+        # the fill rests off to the left (a matrix with a negative x); once the hover is done the transform is "none" (not a matrix), so that counts as swept in
+        SWEEP = "(() => { const b = getComputedStyle(document.querySelector('#dform .act .pri'), '::before'); const m = /matrix\\(1, 0, 0, 1, (-?[0-9.]+), 0\\)/.exec(b.transform); return [b.content, b.transform === 'none' ? 0 : (m ? +m[1] : null)]; })()"
+        rest = until(lambda: (lambda r: r[1] is not None and r[1] < -2 and r)(pg.evaluate(SWEEP)), 10000)
+        pg.hover('#dform .act .pri')
+        swept = until(lambda: (lambda r: r[1] is not None and r[1] > -2)(pg.evaluate(SWEEP)), 10000)
+        check('B120 a main button sweeps a lighter fill in on hover (it rests off to the left, and is fully in once hovered)', bool(rest) and swept, (rest, pg.evaluate(SWEEP)))
         pg.hover('#dform .act button:not(.pri)')
         bg = pg.evaluate("getComputedStyle(document.querySelector('#dform .act button:not(.pri)')).backgroundColor")
         check('B120b another button tints on hover', bg not in ('rgba(0, 0, 0, 0)', 'transparent'), bg)

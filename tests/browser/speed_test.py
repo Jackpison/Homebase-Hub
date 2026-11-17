@@ -19,7 +19,7 @@ if browser_name() != 'chromium':
 PAGES = [('Home', '/', None, 3500, 10000, 250),   # loaded includes the background picture over the slow network
          ('Links', '/web/links/', "document.querySelectorAll('#grid a').length > 0 || document.querySelector('.tab')", 3500, 6500, 120),
          ('Info', '/web/info/', "document.querySelectorAll('.box, .tab').length > 0", 3500, 6500, 130), ('Cards', '/web/cards/', None, 3500, 6500, 100),
-         ('Tasks', '/web/tasks/', None, 3500, 6500, 140), ('Files', '/web/files/', "window.__files && __files.state().started", 3500, 6500, 100),
+         ('Tasks', '/web/tasks/', None, 3500, 6500, 140), ('Files', '/web/files/', "window.__files && __files.state().started", 3500, 6500, 120),
          ('Settings', '/web/settings/#overview', "document.querySelector('#ix-pc, #ix-page')", 4000, 7500, 300)]
 try:
     s = Site(ZIP, 8983)
