@@ -215,6 +215,9 @@ try:
         # ---- 1.61.5: the Drive-style layout ----
         pg.click('#tabs button[data-t=files]'); pg.locator('.crumbs button').first.click()
         upload(pg, 'pack.zip', b'PK\x03\x04 not really a zip', 'application/zip'); wait_names(pg, ['pack.zip'])
+        # the new file first shows at the end, then the refresh after the upload moves it into its place by name; a double-click that spans that move opens the row that slid under the pointer (CI, 1.80.10), so wait for the final order
+        until(lambda: (lambda n: n == sorted(n, key=lambda x: (x != 'Docs', x.lower())))(names(pg)), 15000)
+        if pg.is_visible('.uph .ubtn'): pg.click('.uph .ubtn')
         got = []; pg.on('download', lambda d: got.append(d.suggested_filename))
         row(pg, 'pack.zip').locator('.nm').click(); pg.wait_for_timeout(1200)
         check('B40 one click on a file only picks it: nothing downloads, and the details panel shows it', got == [] and pg.is_visible('#det') and 'pack.zip' in pg.inner_text('#det h3') and 'Locked in your browser' in pg.inner_text('#det'), (got, pg.inner_text('#det')[:80]))
