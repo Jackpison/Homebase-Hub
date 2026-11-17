@@ -322,7 +322,7 @@ try:
         row(pg, 'pack.zip').drag_to(row(pg, 'Docs')); until(lambda: 'pack.zip' not in names(pg), 10000)
         pg.wait_for_selector('#ix-toast.on .ix-tact', timeout=5000); pg.click('#ix-toast .ix-tact')
         check('B75 Move can be undone', wait_names(pg, ['pack.zip']), names(pg))
-        pg.evaluate("""(() => { const f = new File([new Uint8Array([137,80,78,71,13,10,26,10])], 'image.png', {type: 'image/png'}); const dt = new DataTransfer(); dt.items.add(f); document.dispatchEvent(new ClipboardEvent('paste', {clipboardData: dt, bubbles: true, cancelable: true})); })()""")
+        pg.evaluate("""(() => { const f = new File([new Uint8Array([137,80,78,71,13,10,26,10])], 'image.png', {type: 'image/png'}); const dt = new DataTransfer(); dt.items.add(f); const ev = new Event('paste', {bubbles: true, cancelable: true}); Object.defineProperty(ev, 'clipboardData', {value: dt}); document.dispatchEvent(ev); })()""")
         check('B76 pasting a picture uploads it with a dated name', until(lambda: any(n.startswith('Pasted ') and n.endswith('.png') for n in names(pg)), 20000), names(pg))
         pg.evaluate("""(() => { const dt = new DataTransfer(); for (const [p, t] of [['trip/a.txt', 'one'], ['trip/sub/b.txt', 'two']]) { const f = new File([t], p.split('/').pop()); Object.defineProperty(f, 'webkitRelativePath', {value: p}); dt.items.add(f); } const el = document.getElementById('pickdir'); el.files = dt.files; el.dispatchEvent(new Event('change')); })()""")
         check('B77 Upload Folder keeps the folders inside (trip, then sub)', wait_names(pg, ['trip'], 30000), names(pg))
@@ -397,13 +397,13 @@ try:
         pg.goto(s.base + '/web/files/'); wait_js(pg, "window.__files && __files.state().started", 20000); wait_names(pg, ['pack.zip'])
         # phone: swipe a row left to Trash, right to Star, pull down to reload (touch events)
         SW = """async ([name, dx]) => { const r = [...document.querySelectorAll('#list .row')].find(x => x.querySelector('.nm').title === name); const b = r.getBoundingClientRect(); const x0 = b.left + 120, y0 = b.top + 20;
-          const mk = (x, y) => new Touch({identifier: 1, target: r, clientX: x, clientY: y}); const fire = (t, x, y) => r.dispatchEvent(new TouchEvent(t, {bubbles: true, cancelable: true, touches: t === 'touchend' ? [] : [mk(x, y)], changedTouches: [mk(x, y)]}));
+          /* a plain event that carries the touch points: Firefox and WebKit on a computer have no Touch or TouchEvent to construct */ const mk = (x, y) => ({identifier: 1, target: r, clientX: x, clientY: y, pageX: x, pageY: y, screenX: x, screenY: y}); const fire = (t, x, y) => { const e = new Event(t, {bubbles: true, cancelable: true}); Object.defineProperty(e, 'touches', {value: t === 'touchend' ? [] : [mk(x, y)]}); Object.defineProperty(e, 'changedTouches', {value: [mk(x, y)]}); r.dispatchEvent(e); };
           fire('touchstart', x0, y0); for (let k = 1; k <= 6; k++) fire('touchmove', x0 + dx * k / 6, y0 + 1); fire('touchend', x0 + dx, y0 + 1); }"""
         pg.evaluate(SW, ['pack.zip', 130]); until(lambda: pg.evaluate("!!document.querySelector('#list .row .stm')"), 10000)
         check('B99 swiping a row right stars it', pg.evaluate("[...document.querySelectorAll('#list .row')].some(r => r.querySelector('.nm').title === 'pack.zip' && !!r.querySelector('.stm'))"))
         pg.evaluate(SW, ['pack.zip', -130]); until(lambda: 'pack.zip' not in names(pg), 10000)
         check('B100 swiping a row left moves it to the Trash', 'pack.zip' not in names(pg), names(pg)); pg.wait_for_selector('#ix-toast.on .ix-tact', timeout=5000); pg.click('#ix-toast .ix-tact'); wait_names(pg, ['pack.zip'])
-        pg.evaluate("""(() => { window.__pull = 0; const el = document.body; const mk = (y) => new Touch({identifier: 2, target: el, clientX: 200, clientY: y}); const fire = (t, y) => el.dispatchEvent(new TouchEvent(t, {bubbles: true, cancelable: true, touches: t === 'touchend' ? [] : [mk(y)], changedTouches: [mk(y)]}));
+        pg.evaluate("""(() => { window.__pull = 0; const el = document.body; const mk = (y) => ({identifier: 2, target: el, clientX: 200, clientY: y, pageX: 200, pageY: y, screenX: 200, screenY: y}); const fire = (t, y) => { const e = new Event(t, {bubbles: true, cancelable: true}); Object.defineProperty(e, 'touches', {value: t === 'touchend' ? [] : [mk(y)]}); Object.defineProperty(e, 'changedTouches', {value: [mk(y)]}); el.dispatchEvent(e); };
           fire('touchstart', 200); for (let k = 1; k <= 6; k++) fire('touchmove', 200 + k * 25); fire('touchend', 350); })()""")
         check('B101 pulling the page down reloads the list ("Up to date.")', until(lambda: 'Up to date' in pg.inner_text('#ix-toast'), 10000), pg.inner_text('#ix-toast'))
         pg.set_viewport_size({'width': 420, 'height': 800}); row(pg, 'pack.zip').locator('.ck').check(); row(pg, 'Docs').locator('.ck').check()
