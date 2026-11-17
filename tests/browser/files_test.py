@@ -222,7 +222,11 @@ try:
         check('B41 opening a file that has no preview does not download it either (it says so)', got == [])
         check('B42 the sidebar lists My Files, Recent, Shared Links, Starred and Trash, and the usage has no server figure',
               pg.evaluate("[...document.querySelectorAll('#tabs button')].map(b => b.textContent.trim().replace(/[0-9 ]+$/, ''))") == ['My Files', 'Recent', 'Shared Links', 'Starred', 'Trash'] and 'free' not in pg.inner_text('#usage'), pg.inner_text('#usage'))
-        pg.click('#det button.star'); until(lambda: pg.evaluate("document.querySelector('#det button.star').getAttribute('aria-pressed')") == 'true', 10000)
+        try: pg.click('#det button.star', timeout=8000)
+        except Exception:   # CI-only failure (1.80.10): say which preview is open and what the page holds, so the log shows what opened it
+            print('DIAG star:', pg.evaluate("({open: document.getElementById('pdlg').open, pbox: document.getElementById('pbox').innerHTML.slice(0, 300), pv: (document.getElementById('pv') || {}).innerText, names: [...document.querySelectorAll('#list .row .nm')].map(x => x.textContent), toasts: [...document.querySelectorAll('[class*=toast],[id*=toast]')].map(t => (t.innerText || '').slice(0, 80)), det: document.getElementById('det').innerText.slice(0, 80)})"))
+            raise
+        until(lambda: pg.evaluate("document.querySelector('#det button.star').getAttribute('aria-pressed')") == 'true', 10000)
         pg.click('#tabs button[data-t=starred]'); wait_names(pg, ['pack.zip'])
         check('B43 Star puts it under Starred (and only it)', names(pg) == ['pack.zip'], names(pg))
         stored = open(s.dir + '/site-data/files/files.php').read()

@@ -235,7 +235,10 @@ try:
         press_hold(300); pg.evaluate('() => new Promise(r => setTimeout(r, 700))')
         check('L30n pressing it for a moment does nothing: the connection is still there', pg.evaluate("!!document.querySelector('#ix-cloud .ix-clsum')"))
         press_hold(1400)
-        wait_js(pg, "!document.querySelector('#ix-cloud .ix-clsum') && !document.getElementById('ix-clform').hidden", 15000)
+        try: wait_js(pg, "!document.querySelector('#ix-cloud .ix-clsum') && !document.getElementById('ix-clform').hidden", 15000)
+        except Exception:   # CI-only failure (1.80.10): say what was under the pointer, so the log shows why the hold did not finish
+            print('DIAG hold:', pg.evaluate("(() => { const b = document.getElementById('ix-clclear'); if (!b) return 'no button'; const r = b.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2, e = document.elementFromPoint(x, y); return {rect: [r.x, r.y, r.width, r.height], view: [innerWidth, innerHeight], hit: e ? e.tagName + '#' + e.id + '.' + e.className : null, holding: b.className, toasts: [...document.querySelectorAll('[class*=toast],[id*=toast]')].map(t => t.className + ':' + (t.innerText || '').slice(0, 60))}; })()"))
+            raise
         gone = pg.evaluate("[document.getElementById('ix-clbucket').value, document.getElementById('ix-clak').value, document.getElementById('ix-clsk').placeholder, !!document.getElementById('ix-clclear')]")
         check('L30o holding it disconnects: the summary is gone, the form is open and empty (no saved secret), and the button is gone', gone == ['', '', '', False], gone)
 
