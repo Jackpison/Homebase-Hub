@@ -212,10 +212,52 @@ def chat_html(first_note=True):
     return chat, buttons
 
 
+# ---------------------------------------------------------------- the Home page: the hero stage and the scroll tour
+# Pictures: (page id, file, light copy or None, accent class, name, heading, text). They are real screenshots of the app.
+LP = [('home', 'home-2', None, 'a-home', 'Home', 'Your start page', 'A clock, a photo or animated background, and small widgets: the tasks due today, a countdown, the weather and the time in other cities.'),
+      ('links', 'links', 'links-light', 'a-links', 'Links', 'Every bookmark, in tabs', 'Group links into tabs. Make a tab private, or lock it so the server cannot read it. Bring your bookmarks in from any browser.'),
+      ('info', 'info', 'info-light', 'a-info', 'Info', 'Notes in boxes', 'Keep Wi-Fi details, snippets and the things you look up again. Each tab can be private or locked.'),
+      ('cards', 'cards', 'cards-light', 'a-cards', 'Cards', 'Your cards, kept private', 'A tidy place for card details with the same lock as the rest of the site.'),
+      ('tasks', 'tasks', 'tasks-light', 'a-tasks', 'Tasks', 'Tasks that repeat and remind', 'Lists, a calendar, repeats, and a calendar link for Google, Apple or Outlook. Telegram can send the day\'s list.'),
+      ('files', 'files', None, 'a-files', 'Files', 'Files locked in your browser', 'Upload, preview and share. Names and contents are locked here, so the server cannot read them.'),
+      ('tools', 'tools', 'tools-light', 'a-tools', 'Tools', '%d small tools' % NT, 'Merge a PDF, resize a picture, make a QR code or work out a loan. They run in your browser.')]
+LP_PHONE = [('home', 'Home', 'm-home', 'a-home'), ('links', 'Links', 'm-links', 'a-links'), ('info', 'Info', 'm-info', 'a-info'), ('tasks', 'Tasks', 'm-tasks', 'a-tasks'), ('tools', 'Tools', 'm-tools', 'a-tools'), ('set', 'Settings', 'm-settings', 'a-gold')]
+
+
+def lp_img(f, light, alt, w=1440, h=900, cls='', first=False):
+    return '<img %ssrc="img/%s.webp"%s alt="%s" width="%d" height="%d" %s>' % (
+        'class="%s" ' % cls if cls else '', f, ' data-light="img/%s.webp"' % light if light else '', e(alt), w, h, 'fetchpriority="high" decoding="async"' if first else 'loading="lazy" decoding="async"')
+
+
+def lp_stage():
+    """The hero's picture: a browser that walks through the seven pages (and a phone that does the same), switched by Desktop and Phone."""
+    tabs = ''.join('<button class="lp-tab %s" type="button" role="tab" aria-selected="%s">%s</button>' % (ac, 'true' if i == 0 else 'false', n) for i, (_, _, _, ac, n, _, _) in enumerate(LP))
+    shots = ''.join(lp_img(f, l, 'The %s page of Homebase Hub on a computer' % n, 1440, 900, 'on' if i == 0 else '', i == 0) for i, (_, f, l, _, n, _, _) in enumerate(LP))
+    ptabs = ''.join('<button class="lp-tab lp-ptab %s" type="button" role="tab" aria-selected="%s">%s</button>' % (ac, 'true' if i == 0 else 'false', n) for i, (_, n, _, ac) in enumerate(LP_PHONE))
+    pshots = ''.join(lp_img(f, None, 'The %s page of Homebase Hub on a phone' % n, 390, 844, 'on' if i == 0 else '') for i, (_, n, f, _) in enumerate(LP_PHONE))
+    return ('<div class="lp-stage" data-view="d"><div class="lp-vsw" role="group" aria-label="Show the site on"><button type="button" aria-pressed="true" data-v="d">Desktop</button><button type="button" aria-pressed="false" data-v="p">Phone</button></div>'
+            '<div class="lp-frame"><div class="lp-tabs" role="tablist" aria-label="Pages of Homebase Hub">%s</div><div class="lp-shots">%s</div></div>'
+            '<div class="lp-phone">%s</div>'
+            '<div class="lp-pbig"><div class="lp-ptabs" role="tablist" aria-label="Pages on a phone">%s</div><div class="lp-dev">%s</div></div></div>'
+            % (tabs, shots, lp_img('m-home', None, 'Homebase Hub on a phone', 390, 844), ptabs, pshots))
+
+
+def lp_tour():
+    """The tour: the picture stays while the text beside it changes (script on, wide screens); otherwise every page has its own picture and text."""
+    pics = ''.join(lp_img(f, l, 'The %s page' % n, 1440, 900, 'on' if i == 0 else '') for i, (_, f, l, _, n, _, _) in enumerate(LP))
+    steps = ''.join('<div class="lp-step %s%s" id="p-%s"><span class="lp-tag">%s</span><h3>%s</h3><p>%s</p><div class="lp-pic">%s</div><a class="btn ac" href="features/%s/">Explore %s%s</a></div>' % (
+        ac, ' on' if i == 0 else '', k, n, e(h), e(t), lp_img(f, l, 'The %s page' % n, 1440, 900), k, n, I('arrow')) for i, (k, f, l, ac, n, h, t) in enumerate(LP))
+    return '<div class="lp-story" id="screenshots"><div class="lp-pin"><div class="lp-stick"><div class="lp-win"><div class="lp-bar" aria-hidden="true"><i></i><i></i><i></i></div><div class="lp-shots">%s</div></div></div><div class="lp-steps">%s</div></div></div>' % (pics, steps)
+
+
+def lp_marquee():
+    cats, tools = load_tools()
+    names = ''.join('<span>%s</span>' % e(t['name']) for t in tools[:14])
+    return '<div class="lp-marq" aria-label="Some of the built-in tools"><div>%s%s</div></div>' % (names, names.replace('<span>', '<span aria-hidden="true">'))
+
+
 # ---------------------------------------------------------------- the pages
 def home():
-    tabs = ''.join(tour_tab(f, i == 4) for i, f in enumerate(FEATURES))   # Tasks is shown first
-    panels = ''.join(tour_panel(f) for f in FEATURES)
     problems = problem_cards([(f['ac'], f['everyday'][0], f['everyday'][1], f['icon'], f['name'].upper()) for f in FEATURES])
     chat, buttons = chat_html()
     cats, tools = load_tools()
@@ -239,23 +281,28 @@ def home():
         ('a-home', '07:30', 'Open your start page', 'A fresh photo, every page one click away in the bar, and search on / for Links, Info, Tasks and Tools.', 'Home'),
         ('a-tools', '12:10', 'Sort out a PDF', 'Merge, compress or sign it in your browser with the PDF tools.', 'Tools'),
         ('a-tasks', '21:00', 'The bill is due', 'A Telegram message arrives with Done, Skip and Snooze. One tap and it is handled.', 'Tasks and Telegram')])
-    stats = ''.join('<div class="stat %s"><b>%s</b><span>%s</span></div>' % (ac, n, e(t)) for ac, n, t in [
+    stats = ''.join('<div class="stat %s"><b data-n="%s">%s</b><span>%s</span></div>' % (ac, n, n, e(t)) for ac, n, t in [
         ('a-home', '7', 'pages, one login'), ('a-tools', str(NT), 'tools in your browser'), ('a-links', '141', 'ready-made looks'), ('a-cards', '0', 'databases to run'), ('a-tasks', '3', 'browser engines tested')])
     more = ''.join('<a class="card hv %s" href="%s"><h3>%s</h3><p>%s</p><span class="more">Open%s</span></a>' % (ac, href, e(t), e(p), I('arrow')) for ac, href, t, p in [
         ('a-home', 'guide.html', 'The guide', 'Every page and every setting, step by step (PDF).'), ('a-info', 'faq/', 'Questions and answers', 'Hosting, updates, privacy and more.'),
         ('a-tasks', 'changelog.html', 'Changelog', 'What changed in every version.'), ('a-links', REPO, 'Source code', 'Read it, build it, report an issue.')])
-    body = f'''<section class="hero">{SHAPES}
+    body = f'''<div class="lp-prog" aria-hidden="true"></div>
+<section class="hero">{SHAPES}
 <div class="in hgrid"><div class="hcopy"><span class="pill"><i class="dot"></i>Free and open source. No database.</span>
-<h1>Your whole day, in one <span class="grad">private place.</span></h1>
-<p class="lead">Start page, bookmarks, notes, cards, tasks and {NT} tools that run in your browser. One login, one look, on your own hosting.</p>
+<h1 aria-label="Your links, notes, tasks and files on one site you own."><span class="lp-w">Your</span> <span class="lp-w i1">links,</span> <span class="lp-w i2">notes,</span> <span class="lp-w i3">tasks</span> <span class="lp-w i4">and</span> <span class="lp-w i5">files</span> <span class="lp-w i6">on</span> <span class="lp-w i7 grad">one site you own.</span></h1>
+<p class="lead">Homebase Hub is one PHP site with seven pages and one Settings page. Run it on any PHP host, Docker or a small server. Your data stays in a folder you control.</p>
 <div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Download {{{{VER}}}}</a><a class="btn lg" href="#features">Take the tour{I('arrow')}</a></div>
 <ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Accessibility-checked</li></ul>{looks_row()}</div>
-<div class="hart">{frame('shot-links.webp', 1440, 709, 'Links page with bookmarks in tabs and categories', 'yourdomain.com/web/links', True)}
-{chip('c1', 'a-links', 'link', 'Import bookmarks', 'Preview first, undo anytime')}{chip('c2', 'a-cards', 'image', '141 looks', 'Pick yours')}{chip('c3', 'a-info', 'lock', 'Encrypted tabs', 'Keys made in your browser')}</div></div></section>
+<div class="hart">{lp_stage()}</div></div></section>
 <section class="stats" aria-label="Homebase Hub at a glance"><div class="in">{stats}</div></section>
+{lp_marquee()}
 <section class="s" id="features"><div class="in"><span class="eyebrow">The tour</span><h2>Seven pages. One home.</h2>
-<p class="intro">Each page has its own colour and its own job. They share one bar, one login and one Settings page, so it feels like one app.</p>
-<div id="screenshots"><div class="tabs" role="tablist" aria-label="The seven pages">{tabs}</div>{panels}</div></div></section>
+<p class="intro">Each page has its own colour and its own job. They share one bar, one login and one Settings page, so it feels like one app. These are real screenshots of the app.</p>
+{lp_tour()}
+<div class="btns"><a class="btn" href="features/">All the features{I('arrow')}</a></div></div></section>
+<section class="s" id="why"><div class="in lp-why"><span class="eyebrow">Why it exists</span>
+<p class="lp-scrub" id="lp-scrub">Bookmarks live in one browser, notes in another app, files in a cloud you do not run. Homebase Hub puts them in one place, on a server you choose, behind one login.</p>
+<p class="intro">There is no database to set up and no account on someone else's server. Copy the folder, open the site and set a password. It does not call other servers on its own: a feature that needs to, such as Telegram reminders or the weather widget, stays off until you turn it on.</p></div></section>
 <section class="s" id="pages"><div class="in"><span class="eyebrow">Around the pages</span><h2>More than seven pages.</h2><div class="cards c4">{around}</div></div></section>
 <section class="s" id="everyday"><div class="in"><span class="eyebrow">Everyday life, improved</span><h2>The small annoyances, gone.</h2><p class="intro">What changes the day you install it.</p>{problems}</div></section>
 <section class="s" id="day"><div class="in"><span class="eyebrow">A day with Homebase Hub</span><h2>One ordinary day, made calmer.</h2><div class="cards">{moments}</div></div></section>

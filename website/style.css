@@ -107,3 +107,78 @@ figure{margin:24px 0}figure img{border-radius:18px;border:1px solid var(--line);
 @media (max-width:1100px){.shapes{display:none}}
 /* the second button in a top section is a thin outline */
 .hero :is(.btns, .cta) .btn:not(.pri){background:transparent;border:1.5px solid var(--text)}
+
+/* Home: the hero stage, the tour that stays while the text changes, the tool marquee and the scroll effects (the script is in site.js) */
+.lp-prog{position:fixed;inset:0 0 auto 0;height:3px;z-index:60;transform-origin:0 50%;transform:scaleX(var(--p,0));background:linear-gradient(90deg,#f5a524,#3b82f6,#a855f7,#22c55e,#f43f5e,#0ea5e9,#f97316);pointer-events:none}
+.lp-w{display:inline-block;animation:lp-rise .9s cubic-bezier(.2,.7,.2,1) both}
+.lp-w.i1{animation-delay:70ms}.lp-w.i2{animation-delay:140ms}.lp-w.i3{animation-delay:210ms}.lp-w.i4{animation-delay:280ms}.lp-w.i5{animation-delay:350ms}.lp-w.i6{animation-delay:420ms}.lp-w.i7{animation-delay:490ms}
+.lp-w.grad{padding-bottom:.08em}
+@keyframes lp-rise{from{opacity:0;transform:translateY(38px)}to{opacity:1;transform:none}}
+.lp-stage{position:relative;perspective:1400px;--lpf:light-dark(#fff,#0c0e15);--lpt:light-dark(#e7eaf3,#14171f);--lpx:light-dark(#5a6078,#9aa0b4);--lps:light-dark(#14172a,#fff)}
+.lp-vsw{display:none;gap:4px;padding:4px;border-radius:999px;background:var(--glass);border:1px solid var(--line);margin-bottom:16px}
+.js .lp-vsw{display:inline-flex}
+.lp-vsw button{border:0;background:transparent;color:var(--mute);font:inherit;font-weight:800;font-size:13px;padding:9px 16px;border-radius:999px;cursor:pointer}
+.lp-vsw button[aria-pressed=true]{background:var(--brand);color:var(--onb)}
+.lp-frame{background:var(--lpf);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 44px 90px -30px rgba(0,0,0,.55);transform:rotateY(var(--ry,0deg)) rotateX(var(--rx,0deg));transition:transform .25s ease-out}
+.lp-tabs{display:none;gap:2px;padding:10px 10px 0;background:var(--lpt);overflow-x:auto;scrollbar-width:none}
+.js .lp-tabs{display:flex}
+.lp-tabs::-webkit-scrollbar{display:none}
+.lp-tab{position:relative;flex:0 0 auto;border:0;background:transparent;color:var(--lpx);font:inherit;font-weight:800;font-size:13px;padding:10px 14px 12px;border-radius:10px 10px 0 0;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+.lp-tab::before{content:"";width:9px;height:9px;border-radius:3px;background:var(--ac)}
+.lp-tab[aria-selected=true]{background:var(--lpf);color:var(--lps)}
+.lp-tab[aria-selected=true]::after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:3px;border-radius:3px;background:var(--ac);transform-origin:0 50%;animation:lp-fill var(--cycle,4.4s) linear both}
+.lp-paused .lp-tab[aria-selected=true]::after{animation:none}
+@keyframes lp-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.lp-shots{position:relative;aspect-ratio:16/10;background:var(--lpf)}
+.lp-shots img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transform:scale(1.03);transition:opacity .6s,transform .9s}
+.lp-shots img.on,.lp-shots img:first-child{opacity:1;transform:none}
+.js .lp-shots img:first-child:not(.on){opacity:0;transform:scale(1.03)}
+.lp-phone{position:absolute;right:-14px;bottom:-34px;width:27%;min-width:96px;border-radius:24px;border:5px solid #1b1e29;background:#000;overflow:hidden;box-shadow:0 30px 60px -20px rgba(0,0,0,.6);animation:lp-float 6s ease-in-out infinite}
+.lp-phone img{display:block;width:100%;height:auto;transition:opacity .4s}
+@keyframes lp-float{50%{transform:translateY(-10px)}}
+.lp-pbig{display:none}
+.lp-stage[data-view=p] .lp-frame,.lp-stage[data-view=p] .lp-phone{display:none}
+.lp-stage[data-view=p] .lp-pbig{display:flex;flex-direction:column;align-items:center;gap:18px}
+.lp-ptabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.lp-ptabs .lp-tab{border-radius:999px;background:var(--glass);border:1px solid var(--line);color:var(--mute);padding:8px 14px}
+.lp-ptabs .lp-tab::before,.lp-ptabs .lp-tab::after{display:none}
+.lp-ptabs .lp-tab[aria-selected=true]{background:var(--card);color:var(--text);border-color:var(--ac)}
+.lp-dev{position:relative;width:min(300px,74vw);aspect-ratio:390/844;border-radius:40px;border:8px solid #1b1e29;background:#000;overflow:hidden;box-shadow:0 30px 70px -26px rgba(0,0,0,.6)}
+.lp-dev img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s}
+.lp-dev img.on{opacity:1}
+.lp-marq{overflow:hidden;border-block:1px solid var(--line);padding-block:16px;margin-top:70px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.lp-marq div{display:flex;gap:12px;width:max-content;animation:lp-slide 46s linear infinite}
+.lp-marq:hover div{animation-play-state:paused}
+.lp-marq span{font-weight:700;font-size:14px;padding:8px 16px;border:1px solid var(--line);border-radius:999px;color:var(--mute);white-space:nowrap}
+@keyframes lp-slide{to{transform:translateX(-50%)}}
+/* the tour: with the script on and room to spare, the picture stays and the text beside it changes as you scroll; otherwise every page has its own picture */
+.lp-story{margin-top:40px}
+.lp-stick{display:none}
+.lp-steps{display:flex;flex-direction:column;gap:34px}
+.lp-step{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.lp-tag{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--act);display:flex;gap:10px;align-items:center}
+.lp-tag::before{content:"";width:28px;height:3px;border-radius:3px;background:var(--ac)}
+.lp-step h3{font-size:clamp(24px,3vw,34px);line-height:1.1;letter-spacing:-.025em;margin:0}
+.lp-step p{color:var(--mute);margin:0;max-width:30em}
+.lp-pic{width:100%;border-radius:14px;border:1px solid var(--line);overflow:hidden;aspect-ratio:16/10;background:var(--card)}
+.lp-pic img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+@media (min-width:961px){
+  .js .lp-story{height:calc(var(--n,7)*55vh + 100vh)}
+  .js .lp-pin{position:sticky;top:0;height:100vh;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:clamp(24px,5vw,70px);align-items:center;padding-top:50px}
+  .js .lp-stick{display:block}
+  .js .lp-steps{display:grid;gap:0}
+  .js .lp-step{grid-area:1/1;opacity:0;transform:translateY(18px);transition:opacity .45s,transform .45s;pointer-events:none}
+  .js .lp-step.on{opacity:1;transform:none;pointer-events:auto}
+  .js .lp-pic{display:none}
+}
+.lp-win{background:var(--lpf,#fff);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 40px 80px -34px rgba(0,0,0,.5);--lpf:light-dark(#fff,#0c0e15);--lpt:light-dark(#e7eaf3,#14171f)}
+.lp-bar{display:flex;gap:6px;padding:11px 14px;background:var(--lpt)}
+.lp-bar i{width:10px;height:10px;border-radius:50%;background:light-dark(#c9cddb,#3a3f52)}
+.lp-why{display:grid;gap:26px}
+.lp-scrub{font-size:clamp(26px,4.2vw,48px);line-height:1.22;font-weight:800;letter-spacing:-.025em;max-width:24em;margin:0;text-wrap:pretty}
+.js .lp-scrub span{opacity:.18;transition:opacity .25s}
+.js .lp-scrub span.on{opacity:1}
+.js .lp-rv{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.js .lp-rv.in{opacity:1;transform:none}
+@media (max-width:640px){.lp-phone{right:-6px;bottom:-26px}.lp-marq{margin-top:50px}}
+@media (prefers-reduced-motion:reduce){.lp-w{animation:none}.js .lp-rv,.js .lp-scrub span{opacity:1;transform:none}.lp-marq div{animation:none}}
