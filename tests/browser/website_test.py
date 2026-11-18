@@ -3,7 +3,7 @@
   * every link, image and in-page anchor resolves, in every page and in the README's links to the website; the sitemap lists real pages;
   * the site's security policy is respected: no inline style or script, no event handler attributes, nothing from other sites;
   * page basics: a title, a description, one h1, alt text on every image, a canonical address;
-  * in a real browser: the tour tabs (mouse, keyboard, #p-... links, and with scripts off), the look picker, light and dark following
+  * in a real browser: the tour tabs (mouse, keyboard, #p-... links, and with scripts off), light and dark following
     the device with the toggle on top, the example Telegram chat, the tool finder, the question search and the phone menu;
   * no sideways scrolling at 390 and 1280 pixels, and no console error or policy violation;
   * moving between pages: the fade (where the browser has it) and the header that hides while scrolling down;
@@ -168,7 +168,7 @@ try:
         pg.click('.lp-frame .lp-tab >> nth=1'); until(lambda: hero_on() == 1, 3000)
         check('W16 clicking a hero tab shows that page and marks the tab', hero_on() == 1 and pg.get_attribute('.lp-frame .lp-tab >> nth=1', 'aria-selected') == 'true' and pg.get_attribute('.lp-frame .lp-tab >> nth=0', 'aria-selected') == 'false', hero_on())
         pg.click('.lp-vsw button[data-v=p]'); until(lambda: pg.is_visible('.lp-dev'), 3000)
-        check('W17 Phone swaps the browser for a phone with its own tabs, and Desktop swaps back', pg.is_visible('.lp-dev') and not pg.is_visible('.lp-frame') and pg.locator('.lp-ptabs .lp-tab').count() == 6, pg.is_visible('.lp-frame'))
+        check('W17 Phone swaps the browser for a phone with its own tabs, and Desktop swaps back', pg.is_visible('.lp-dev') and not pg.is_visible('.lp-frame') and pg.locator('.lp-ptabs .lp-tab').count() == 8, pg.is_visible('.lp-frame'))
         pg.click('.lp-vsw button[data-v=d]'); until(lambda: pg.is_visible('.lp-frame'), 3000)
         steps = lambda: pg.evaluate("[...document.querySelectorAll('.lp-step')].filter(s => s.classList.contains('on')).map(s => s.id)")
         pic = lambda: pg.evaluate("[...document.querySelectorAll('.lp-stick .lp-shots img')].filter(i => i.classList.contains('on')).map(i => i.getAttribute('src'))")
@@ -185,14 +185,18 @@ try:
         pg = ctx().new_page(); pg.goto(B + '/features/links/'); settle(pg); n = pg.evaluate("document.querySelectorAll('.hot').length")
         check('W20 the numbered dots are on the pictures of a feature page (%d)' % n, n >= 3, n); pg.context.close()
 
-        # the look picker
-        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
-        btn = lambda: pg.evaluate("getComputedStyle(document.querySelector('.hero .btn.pri')).backgroundColor")
-        a = btn(); pg.click('.looks .look[data-look=pink]'); until(lambda: btn() == 'rgb(255, 95, 162)', 3000)
-        check('W22 picking the pink look re-colours the buttons and marks the choice', a != btn() and btn() == 'rgb(255, 95, 162)' and pg.get_attribute('.looks .look[data-look=pink]', 'aria-pressed') == 'true', (a, btn()))
-        pg.goto(B + '/faq/'); settle(pg)
-        check('W23 the look is remembered on other pages', pg.evaluate("document.documentElement.dataset.look") == 'pink')
-        pg.click('.foot .look[data-look=gold]'); check('W24 gold puts it back', pg.evaluate("document.documentElement.dataset.look") is None); c2.close()
+        # the little phone beside the browser follows the page that is showing, for all seven pages (Cards and Files had no phone picture)
+        c4 = ctx(); pg = c4.new_page(); pg.goto(B + '/'); settle(pg)
+        want = ['m-home', 'm-links', 'm-info', 'm-cards', 'm-tasks', 'm-files', 'm-tools']; got = []
+        for n, k in enumerate(want):
+            pg.click('.lp-frame .lp-tab >> nth=%d' % n)
+            got.append(until(lambda: k in (pg.get_attribute('.lp-phone img', 'src') or ''), 3000))
+        check('W56 the little phone shows the same page as the browser, for all seven pages', all(got), got); c4.close()
+        # the theme switch grows as a circle from the button, then settles: the theme changes and the helper class is gone afterwards
+        c5 = ctx(); pg = c5.new_page(); pg.goto(B + '/'); settle(pg)
+        t0 = pg.evaluate("document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')"); t1 = 'dark' if t0 == 'light' else 'light'
+        pg.click('.mode'); ch = until(lambda: pg.evaluate("document.documentElement.dataset.theme") == t1, 3000); gone = until(lambda: not pg.evaluate("document.documentElement.classList.contains('vt-circ')"), 3000)
+        check('W57 the theme switch changes the theme and leaves nothing behind (the circle effect cleans up)', ch and gone, (t0, t1, ch, gone)); c5.close()
         # a section that has scrolled into view must keep its layout (the reveal once reused the page container's class and indented the heading)
         c3 = ctx(); pg = c3.new_page(); pg.goto(B + '/'); settle(pg)
         pg.evaluate("document.documentElement.style.scrollBehavior='auto'; window.scrollTo(0, document.getElementById('install').getBoundingClientRect().top + scrollY - 60)")
@@ -273,7 +277,7 @@ try:
         # the text itself (each line of it) and the buttons, outside the app picture on the right
         TXT = ("(() => { const out = [], w = document.createTreeWalker(document.querySelector('.hero .in'), NodeFilter.SHOW_TEXT); let n;"
                " while ((n = w.nextNode())) { if (!n.textContent.trim() || n.parentElement.closest('.hart')) continue; const r = document.createRange(); r.selectNodeContents(n); out.push(...r.getClientRects()); }"
-               " document.querySelectorAll('.hero .in :is(.btn, .look, .chipbtn)').forEach(e => { if (!e.closest('.hart')) out.push(e.getBoundingClientRect()); }); return out.filter(r => r.width && r.height); })()")
+               " document.querySelectorAll('.hero .in :is(.btn, .chipbtn)').forEach(e => { if (!e.closest('.hart')) out.push(e.getBoundingClientRect()); }); return out.filter(r => r.width && r.height); })()")
         SH = "[...document.querySelectorAll('.hero .sh')].map(e => e.getBoundingClientRect()).filter(r => r.width && getComputedStyle(document.querySelector('.shapes')).display != 'none')"
         cover = []
         for width in (1280, 1600):

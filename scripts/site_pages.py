@@ -44,12 +44,6 @@ def chip(cls, ac, icon, title, sub):
     return '<div class="chip %s %s"><span class="ci">%s</span><span>%s<small>%s</small></span></div>' % (cls, ac, I(icon), e(title), e(sub))
 
 
-LOOKS = [('gold', 'Gold'), ('sky', 'Sky'), ('mint', 'Mint'), ('pink', 'Pink'), ('violet', 'Violet'), ('orange', 'Orange')]
-def looks_row():
-    return ('<div class="looks" role="group" aria-label="Pick a look for this website"><span>Try a look</span>' +
-            ''.join('<button class="look l-%s" type="button" data-look="%s" aria-label="%s look" aria-pressed="%s"></button>' % (k, k, n, 'true' if k == 'gold' else 'false') for k, n in LOOKS) + '</div>')
-
-
 # ---------------------------------------------------------------- the seven app pages
 # Each: what it is, the facts worth a glance, the everyday problems it solves, the details we are proud of, and the
 # numbered points on its screenshot (tour = text, hot = where on the picture, in percent).
@@ -221,7 +215,7 @@ LP = [('home', 'home-2', None, 'a-home', 'Home', 'Your start page', 'A clock, a 
       ('tasks', 'tasks', 'tasks-light', 'a-tasks', 'Tasks', 'Tasks that repeat and remind', 'Lists, a calendar, repeats, and a calendar link for Google, Apple or Outlook. Telegram can send the day\'s list.'),
       ('files', 'files', None, 'a-files', 'Files', 'Files locked in your browser', 'Upload, preview and share. Names and contents are locked here, so the server cannot read them.'),
       ('tools', 'tools', 'tools-light', 'a-tools', 'Tools', '%d small tools' % NT, 'Merge a PDF, resize a picture, make a QR code or work out a loan. They run in your browser.')]
-LP_PHONE = [('home', 'Home', 'm-home', 'a-home'), ('links', 'Links', 'm-links', 'a-links'), ('info', 'Info', 'm-info', 'a-info'), ('tasks', 'Tasks', 'm-tasks', 'a-tasks'), ('tools', 'Tools', 'm-tools', 'a-tools'), ('set', 'Settings', 'm-settings', 'a-gold')]
+LP_PHONE = [('home', 'Home', 'm-home', 'a-home'), ('links', 'Links', 'm-links', 'a-links'), ('info', 'Info', 'm-info', 'a-info'), ('cards', 'Cards', 'm-cards', 'a-cards'), ('tasks', 'Tasks', 'm-tasks', 'a-tasks'), ('files', 'Files', 'm-files', 'a-files'), ('tools', 'Tools', 'm-tools', 'a-tools'), ('set', 'Settings', 'm-settings', 'a-gold')]
 
 
 def lp_img(f, light, alt, w=1440, h=900, cls='', first=False):
@@ -298,7 +292,7 @@ def home():
 <div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Download {{{{VER}}}}</a><a class="btn lg" href="#pages">Take the tour{I('arrow')}</a></div>
 <ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Docker ready</li></ul></div>
 <div class="hart">{lp_stage()}</div></div></section>
-<section class="stats" aria-label="Homebase Hub at a glance"><div class="in">{stats}</div></section>
+<section class="stats n4" aria-label="Homebase Hub at a glance"><div class="in">{stats}</div></section>
 {lp_marquee()}
 <section class="s" id="pages"><div class="in"><span class="eyebrow">Seven pages</span><h2>Scroll through what you get.</h2>
 <p class="intro">These are real screenshots of the app. Each page has its own colour and its own job, and they share one bar, one login and one Settings page.</p>

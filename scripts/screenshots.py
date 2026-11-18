@@ -131,7 +131,7 @@ with sync_playwright() as p:
     home_seed('dock')
     m=ctx(390,844,'dark').new_page()
     m.context.add_init_script("try{sessionStorage.setItem('hl-welcomed','1')}catch(e){}"); evening(m.context)
-    for n,u in [('m-home','/web/home/'),('m-links','/web/links/'),('m-tasks','/web/tasks/'),('m-info','/web/info/'),('m-settings','/web/settings/#general'),('m-tools','/web/tools/')]: snap(m,n,u)
+    for n,u in [('m-home','/web/home/'),('m-links','/web/links/'),('m-tasks','/web/tasks/'),('m-info','/web/info/'),('m-cards','/web/cards/'),('m-files','/web/files/'),('m-settings','/web/settings/#general'),('m-tools','/web/tools/')]: snap(m,n,u)
     # ---- 1.60: the settings of every page, edit mode, the login window, new tools (dark) ----
     def item(pg, label):   # presses a page's menu item (the pencil menu or the edit bar both use these buttons)
         pg.evaluate("(l) => document.querySelector('[data-hub=\"item\"][data-hub-label=\"' + l + '\"]').click()", label); pg.wait_for_timeout(1200)

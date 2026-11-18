@@ -1,4 +1,4 @@
-/* Homebase Hub website: small interactions. Every page works without this file; it only adds the tabs, the look picker,
+/* Homebase Hub website: small interactions. Every page works without this file; it only adds the tabs,
    the example Telegram chat, the tool finder and the question search. No requests, no trackers. */
 (function () {
   'use strict';
@@ -33,15 +33,6 @@
     else { var el = d.getElementById(location.hash.slice(1)); if (el) setTimeout(function () { el.scrollIntoView(); }, 60); }
     window.addEventListener('hashchange', fromHash);
   });
-
-  /* Look picker: changes the colour of the buttons and highlights across the whole site, and remembers it. */
-  var looks = all('.look');
-  function setLook(n) {
-    if (n === 'gold') delete root.dataset.look; else root.dataset.look = n;
-    looks.forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.look === (root.dataset.look || 'gold') ? 'true' : 'false'); });
-  }
-  looks.forEach(function (b) { b.addEventListener('click', function () { setLook(b.dataset.look); try { localStorage.setItem('hh-look', b.dataset.look); } catch (e) {} }); });
-  if (looks.length) setLook(root.dataset.look || 'gold');
 
   /* Example Telegram chat: tap a command, see a made-up reply. */
   var chat = d.getElementById('chat');
@@ -176,7 +167,7 @@
     function mark(list, pics, n) { list.forEach(function (b, i) { b.setAttribute('aria-selected', i === n ? 'true' : 'false'); b.tabIndex = i === n ? 0 : -1; }); pics.forEach(function (im, i) { im.classList.toggle('on', i === n); }); }
     function showD(n) {
       cd = n; mark(tabs, shots, n);
-      var k = ['m-home', 'm-links', 'm-info', null, 'm-tasks', null, 'm-tools'][n];
+      var k = ['m-home', 'm-links', 'm-info', 'm-cards', 'm-tasks', 'm-files', 'm-tools'][n];
       if (k && small.getAttribute('src').indexOf(k) < 0) { small.style.opacity = 0; setTimeout(function () { small.setAttribute('src', 'img/' + k + '.webp'); small.style.opacity = 1; }, 220); }
     }
     function showP(n) { cp = n; mark(ptabs, dev, n); }
