@@ -190,6 +190,15 @@ def problem_cards(items, cols=''):
     return '<div class="cards %s">%s</div>' % (cols, out)
 
 
+def tour_video():
+    """The two-minute tour: a poster first, and nothing is downloaded until someone presses play (preload none)."""
+    return ('<figure class="lp-video"><video controls preload="none" playsinline poster="video/tour-poster.webp" width="1920" height="1080" '
+            'aria-label="Homebase Hub in two minutes: a captioned tour of every page and the Settings">'
+            '<source src="video/tour.webm" type="video/webm"><source src="video/tour.mp4" type="video/mp4">Your browser cannot play this video. <a href="video/tour.mp4">Download it</a> instead.</video>'
+            '<figcaption>A tour of the real app with example data. The captions are in the picture.</figcaption>'
+            '<details class="lp-vd"><summary>What the video shows</summary><p>Home with its clock and widgets; Links with tabs, search and import; Info notes and documents; Cards; Tasks with a list, a calendar and analytics; Files; the 47 Tools; eight parts of Settings; switching between light and dark; and the same site on a phone.</p></details></figure>')
+
+
 def band():
     return ('<section class="s" id="start"><div class="band"><div><h2>Up and running in three steps.</h2><p>No database and no command line. A file manager is enough.</p>'
             '<div class="btns"><a class="btn dark lg" href="%s">%sDownload {{VER}}</a></div></div>'
@@ -290,10 +299,11 @@ def home():
 <h1 aria-label="Your links, notes, tasks and files on one site you own."><span class="lp-w">Your</span> <span class="lp-w i1">links,</span> <span class="lp-w i2">notes,</span> <span class="lp-w i3">tasks</span> <span class="lp-w i4">and</span> <span class="lp-w i5">files</span> <span class="lp-w i6">on</span> <span class="lp-w i7 grad">one site you own.</span></h1>
 <p class="lead">Homebase Hub is one PHP site with seven pages and one Settings page. Run it on any PHP host, Docker or a small server. Your data stays in a folder you control.</p>
 <div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Download {{{{VER}}}}</a><a class="btn lg" href="#pages">Take the tour{I('arrow')}</a></div>
-<ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Docker ready</li></ul></div>
+<ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Docker ready</li><li class="tv"><a href="#video">Watch the 2-minute video</a></li></ul></div>
 <div class="hart">{lp_stage()}</div></div></section>
 <section class="stats n4" aria-label="Homebase Hub at a glance"><div class="in">{stats}</div></section>
 {lp_marquee()}
+<section class="s" id="video"><div class="in"><span class="eyebrow">Watch</span><h2>The whole thing in under two minutes.</h2><p class="intro">A tour of every page and setting, with captions, using example data. Nothing is downloaded until you press play.</p>{tour_video()}</div></section>
 <section class="s" id="pages"><div class="in"><span class="eyebrow">Seven pages</span><h2>Scroll through what you get.</h2>
 <p class="intro">These are real screenshots of the app. Each page has its own colour and its own job, and they share one bar, one login and one Settings page.</p>
 {lp_tour()}
@@ -540,6 +550,7 @@ def screenshots():
             '<h1>Every page, <span class="grad">and its settings.</span></h1><p class="lead">The real site with example data: the highlights of each page, then the windows where you change it. Click a picture to see it full size.</p>'
             '<div class="gtheme" role="group" aria-label="Show the pictures in"><button type="button" class="chipbtn" data-theme-shots="dark" aria-pressed="true">Dark</button>'
             '<button type="button" class="chipbtn" data-theme-shots="light" aria-pressed="false">Light</button><small>Light switches the pictures marked Light too.</small></div></div></section>'
+            '<section class="in lp-vsec"><h2 class="gh">Watch the Tour</h2>' + tour_video() + '</section>'
             '<section class="in shots-page"><div class="tabs" role="tablist" aria-label="Pages">%s</div>%s</section>'
             '<dialog id="lb" class="lb" aria-label="Picture"><button type="button" class="lbx" aria-label="Close">%s</button><img alt=""><p></p>'
             '<button type="button" class="lbp" aria-label="Previous picture">%s</button><button type="button" class="lbn" aria-label="Next picture">%s</button></dialog>%s'

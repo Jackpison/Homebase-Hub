@@ -62,7 +62,7 @@ def relink(doc, root):
         m3 = re.match(r'^index\.html(#.*)?$', u)
         if m3: return '%s="%s%s"' % (attr, root, m3.group(1) or '')
         return '%s="%s%s"' % (attr, root, u)
-    return re.sub(r'\b(href|src|data-light)="([^"]*)"', f, doc)
+    return re.sub(r'\b(href|src|data-light|poster)="([^"]*)"', f, doc)
 
 
 VER = re.search(r"define\('HUB',\s*'([^']+)'\)", open(os.path.join(ROOT, 'src/web/hub/core/lib/boot.php'), encoding='utf-8').read()).group(1)
@@ -86,7 +86,7 @@ def page(slug, title, body, wide=False, desc=None, cls=''):
     foot_links = lambda items: ''.join('<li><a href="%s">%s</a></li>' % (h, n) for h, n in items)
     doc = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light">'
            '<title>%s</title><meta name="description" content="%s">'
-           '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\'; style-src \'self\'; img-src \'self\'; font-src \'self\'; base-uri \'self\'; form-action \'none\'">'
+           '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\'; style-src \'self\'; img-src \'self\'; media-src \'self\'; font-src \'self\'; base-uri \'self\'; form-action \'none\'">'
            '<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a10"><meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbf6ec">'
            '<link rel="icon" type="image/png" href="brand/favicon-32.png"><link rel="apple-touch-icon" href="brand/apple-touch-icon.png">%s'
            '<meta property="og:type" content="website"><meta property="og:title" content="%s"><meta property="og:description" content="%s"><meta property="og:image" content="%sbrand/social-preview.png"><meta name="twitter:card" content="summary_large_image">'
@@ -196,7 +196,7 @@ def write(slug, doc):
 def main():
     shutil.rmtree(OUT, ignore_errors=True); os.makedirs(OUT)
     for f in ('style.css', 'theme.js', 'site.js'): shutil.copy(os.path.join(W, f), OUT)
-    shutil.copytree(os.path.join(W, 'img'), os.path.join(OUT, 'img')); shutil.copytree(os.path.join(W, 'fonts'), os.path.join(OUT, 'fonts'))
+    shutil.copytree(os.path.join(W, 'img'), os.path.join(OUT, 'img')); shutil.copytree(os.path.join(W, 'fonts'), os.path.join(OUT, 'fonts')); shutil.copytree(os.path.join(W, 'video'), os.path.join(OUT, 'video'))
     os.makedirs(os.path.join(OUT, 'brand'))
     for f in ('logo-192.png', 'logo-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'social-preview.png'):
         if os.path.isfile(os.path.join(W, 'brand', f)): shutil.copy(os.path.join(W, 'brand', f), os.path.join(OUT, 'brand', f))

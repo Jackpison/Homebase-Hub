@@ -185,6 +185,16 @@ try:
         pg = ctx().new_page(); pg.goto(B + '/features/links/'); settle(pg); n = pg.evaluate("document.querySelectorAll('.hot').length")
         check('W20 the numbered dots are on the pictures of a feature page (%d)' % n, n >= 3, n); pg.context.close()
 
+        # the two-minute video: on Home and on Screenshots, with a poster and nothing downloaded until it is played
+        for path, tag in (('/', 'Home'), ('/screenshots/', 'Screenshots')):
+            c6 = ctx(); pg = c6.new_page(); asked = []
+            pg.on('request', lambda rq: asked.append(rq.url) if '/video/tour.' in rq.url else None)
+            pg.goto(B + path); settle(pg)
+            v = pg.evaluate("(() => { const v = document.querySelector('video'); return v && {pre: v.preload, poster: !!v.poster, name: !!v.getAttribute('aria-label'), src: [...v.querySelectorAll('source')].map(s => s.getAttribute('type'))}; })()")
+            quiet = not asked
+            pg.evaluate("document.querySelector('video').play().catch(() => {})")
+            played = until(lambda: any('/video/tour.' in u for u in asked), 5000)
+            check('W58 %s: the video has a poster, a name and two formats, and nothing is downloaded until it is played' % tag, bool(v) and v['pre'] == 'none' and v['poster'] and v['name'] and v['src'] == ['video/webm', 'video/mp4'] and quiet and played, (v, quiet, played)); c6.close()
         # the little phone beside the browser follows the page that is showing, for all seven pages (Cards and Files had no phone picture)
         c4 = ctx(); pg = c4.new_page(); pg.goto(B + '/'); settle(pg)
         want = ['m-home', 'm-links', 'm-info', 'm-cards', 'm-tasks', 'm-files', 'm-tools']; got = []
