@@ -93,7 +93,7 @@ def page(slug, title, body, wide=False, desc=None, cls=''):
            '<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="hot.css">'
            '<script src="theme.js"></script><script src="site.js" defer></script></head><body>'
            '<a class="skip" href="#main">Skip to the content</a>'
-           '%s<div class="ann"><div class="in"><b>v{{VER}}</b><span>is out. Free, self-hosted, GPL-3.0.</span><a href="install/">Get it</a></div></div>'
+           '%s'
            '<header class="top"><div class="in bar"><a class="brand" href="index.html"><img src="brand/logo-192.png" alt="" width="36" height="36">Homebase Hub</a>'
            '<nav class="menu" aria-label="Main">%s</nav>'
            '<div class="acts"><button class="mode" type="button" aria-label="Switch between dark and light"><span class="m-sun">{{i:sun}}</span><span class="m-moon">{{i:moon}}</span></button>'

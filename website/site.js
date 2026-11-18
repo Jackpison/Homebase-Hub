@@ -174,10 +174,11 @@
     function restart() {
       clearInterval(timer); stage.classList.toggle('lp-paused', reduce); if (reduce) return;
       var a = tabs[cd]; if (a) { a.style.animation = 'none'; void a.offsetWidth; a.style.animation = ''; }
-      timer = setInterval(function () { if (view === 'd') showD((cd + 1) % tabs.length); else showP((cp + 1) % ptabs.length); }, 4400);
+      timer = setInterval(function () { if (view === 'v') return; if (view === 'd') showD((cd + 1) % tabs.length); else showP((cp + 1) % ptabs.length); }, 4400);
     }
     function setView(v) {
       view = v; stage.dataset.view = v;
+      if (v !== 'v') { var vid = stage.querySelector('.lp-vbox video'); if (vid && !vid.paused) vid.pause(); }
       all('.lp-vsw button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false'); });
       restart();
     }

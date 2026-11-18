@@ -168,7 +168,7 @@ figure{margin:24px 0}figure img{border-radius:18px;border:1px solid var(--line);
   .js .lp-steps{display:grid;gap:0}
   .js .lp-step{grid-area:1/1;opacity:0;transform:translateY(18px);transition:opacity .45s,transform .45s;pointer-events:none}
   .js .lp-step.on{opacity:1;transform:none;pointer-events:auto}
-  .js .lp-pic{display:none}
+  .js .lp-step .lp-pic{display:none}
 }
 .lp-win{background:var(--lpf,#fff);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 40px 80px -34px rgba(0,0,0,.5);--lpf:light-dark(#fff,#0c0e15);--lpt:light-dark(#e7eaf3,#14171f)}
 .lp-bar{display:flex;gap:6px;padding:11px 14px;background:var(--lpt)}
@@ -186,12 +186,8 @@ figure{margin:24px 0}figure img{border-radius:18px;border:1px solid var(--line);
 @font-face{font-family:"Bricolage Grotesque";src:url(fonts/bricolage-grotesque.woff2) format("woff2");font-weight:600 800;font-display:swap}
 @font-face{font-family:"JetBrains Mono";src:url(fonts/jetbrains-mono.woff2) format("woff2");font-weight:400 500;font-display:swap}
 h1,h2,h3,.brand,.stat b,.lp-scrub{font-family:"Bricolage Grotesque",Manrope,system-ui,sans-serif}
-.eyebrow,.lp-tag,.ann b,.foot h4,.crumb{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+.eyebrow,.lp-tag,.foot h4,.crumb{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
 .eyebrow{font-weight:500;font-size:12px;letter-spacing:.16em;color:var(--mute)}
-.ann{background:linear-gradient(90deg,light-dark(rgba(255,194,26,.22),rgba(255,194,26,.12)),light-dark(rgba(139,123,255,.16),rgba(139,123,255,.12)));border-bottom:1px solid var(--line);font-size:14px;text-align:center}
-.ann .in{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;align-items:center;padding-block:9px}
-.ann b{font-weight:500;font-size:13px;background:var(--brand);color:var(--onb);padding:2px 10px;border-radius:999px}
-.ann a{text-decoration:underline;text-underline-offset:3px;font-weight:700}
 .menu{border:0;background:transparent;padding:0;gap:24px}
 .menu a{padding:8px 2px;border-radius:0;font-weight:600;font-size:15px}
 .menu a[aria-current]{background:none;color:var(--text);box-shadow:inset 0 -2px 0 var(--brand)}
@@ -281,4 +277,22 @@ html.vt-circ::view-transition-new(root){z-index:2}
 .lp-video figcaption{margin-top:12px;font-size:14px;color:var(--mute);text-align:center}
 .lp-vd{margin:10px auto 0;max-width:760px;color:var(--mute);font-size:14.5px}.lp-vd summary{cursor:pointer;font-weight:800;color:var(--text);text-align:center}.lp-vd p{margin-top:8px}
 
-.trust .tv a{font-weight:800;color:var(--bt);text-decoration:underline;text-underline-offset:3px}
+/* Doc pages (Install, Guide, Security): the launch-page look */
+.page{max-width:880px}.page .crumb{margin:0 0 14px;text-transform:uppercase;letter-spacing:.12em;font-size:12px}
+.page h1{font-size:clamp(38px,5vw,60px);letter-spacing:-.03em}
+.page .lead{font-size:19px}
+.page .lead a,.page p a,.page li a{color:var(--text);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--text) 40%,transparent);text-underline-offset:4px}
+.page .lead a:hover,.page p a:hover,.page li a:hover{text-decoration-color:var(--brand)}
+.page .dsec{margin:18px 0;padding:6px 26px 14px;border-radius:22px;background:var(--card);border:1px solid var(--line)}
+.page .dsec h2{margin:18px 0 8px;font-size:24px}
+.page .dsec ul{list-style:none;padding:0}
+.page .dsec ul li{position:relative;padding-left:26px}
+.page .dsec ul li::before{content:"";position:absolute;left:4px;top:.6em;width:9px;height:9px;border-radius:50%;background:var(--brand)}
+.page .dsec ol.num li{background:var(--card2)}
+.page table{border:1px solid var(--line);border-radius:18px;background:var(--card)}
+.page h2{display:flex;align-items:center;gap:10px}
+@media (max-width:640px){.page .dsec{padding:4px 18px 12px}}
+.lp-vbox{display:none}
+.lp-stage[data-view=v] .lp-frame,.lp-stage[data-view=v] .lp-phone,.lp-stage[data-view=v] .lp-pbig{display:none}
+.lp-stage[data-view=v] .lp-vbox{display:block}
+.lp-vbox video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000;border-radius:18px;border:1px solid var(--line);box-shadow:0 44px 90px -40px rgba(0,0,0,.6)}

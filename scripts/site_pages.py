@@ -238,9 +238,10 @@ def lp_stage():
     shots = ''.join(lp_img(f, l, 'The %s page of Homebase Hub on a computer' % n, 1440, 900, 'on' if i == 0 else '', i == 0) for i, (_, f, l, _, n, _, _) in enumerate(LP))
     ptabs = ''.join('<button class="lp-tab lp-ptab %s" type="button" role="tab" aria-selected="%s">%s</button>' % (ac, 'true' if i == 0 else 'false', n) for i, (_, n, _, ac) in enumerate(LP_PHONE))
     pshots = ''.join(lp_img(f, None, 'The %s page of Homebase Hub on a phone' % n, 390, 844, 'on' if i == 0 else '') for i, (_, n, f, _) in enumerate(LP_PHONE))
-    return ('<div class="lp-stage" data-view="d"><div class="lp-vsw" role="group" aria-label="Show the site on"><button type="button" aria-pressed="true" data-v="d">Desktop</button><button type="button" aria-pressed="false" data-v="p">Phone</button></div>'
+    return ('<div class="lp-stage" data-view="d"><div class="lp-vsw" role="group" aria-label="Show the site on"><button type="button" aria-pressed="true" data-v="d">Desktop</button><button type="button" aria-pressed="false" data-v="p">Phone</button><button type="button" aria-pressed="false" data-v="v">Video</button></div>'
             '<div class="lp-frame"><div class="lp-tabs" role="tablist" aria-label="Pages of Homebase Hub">%s</div><div class="lp-shots">%s</div></div>'
             '<div class="lp-phone">%s</div>'
+            '<div class="lp-vbox"><video controls preload="none" playsinline poster="video/tour-poster.webp" width="1920" height="1080" aria-label="Homebase Hub in two minutes: a captioned tour of every page and the Settings"><source src="video/tour.webm" type="video/webm"><source src="video/tour.mp4" type="video/mp4">Your browser cannot play this video. <a href="video/tour.mp4">Download it</a> instead.</video></div>'
             '<div class="lp-pbig"><div class="lp-ptabs" role="tablist" aria-label="Pages on a phone">%s</div><div class="lp-dev">%s</div></div></div>'
             % (tabs, shots, lp_img('m-home', None, 'Homebase Hub on a phone', 390, 844), ptabs, pshots))
 
@@ -299,11 +300,10 @@ def home():
 <h1 aria-label="Your links, notes, tasks and files on one site you own."><span class="lp-w">Your</span> <span class="lp-w i1">links,</span> <span class="lp-w i2">notes,</span> <span class="lp-w i3">tasks</span> <span class="lp-w i4">and</span> <span class="lp-w i5">files</span> <span class="lp-w i6">on</span> <span class="lp-w i7 grad">one site you own.</span></h1>
 <p class="lead">Homebase Hub is one PHP site with seven pages and one Settings page. Run it on any PHP host, Docker or a small server. Your data stays in a folder you control.</p>
 <div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Download {{{{VER}}}}</a><a class="btn lg" href="#pages">Take the tour{I('arrow')}</a></div>
-<ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Docker ready</li><li class="tv"><a href="#video">Watch the 2-minute video</a></li></ul></div>
+<ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Docker ready</li></ul></div>
 <div class="hart">{lp_stage()}</div></div></section>
 <section class="stats n4" aria-label="Homebase Hub at a glance"><div class="in">{stats}</div></section>
 {lp_marquee()}
-<section class="s" id="video"><div class="in"><span class="eyebrow">Watch</span><h2>The whole thing in under two minutes.</h2><p class="intro">A tour of every page and setting, with captions, using example data. Nothing is downloaded until you press play.</p>{tour_video()}</div></section>
 <section class="s" id="pages"><div class="in"><span class="eyebrow">Seven pages</span><h2>Scroll through what you get.</h2>
 <p class="intro">These are real screenshots of the app. Each page has its own colour and its own job, and they share one bar, one login and one Settings page.</p>
 {lp_tour()}

@@ -185,11 +185,14 @@ try:
         pg = ctx().new_page(); pg.goto(B + '/features/links/'); settle(pg); n = pg.evaluate("document.querySelectorAll('.hot').length")
         check('W20 the numbered dots are on the pictures of a feature page (%d)' % n, n >= 3, n); pg.context.close()
 
-        # the two-minute video: on Home and on Screenshots, with a poster and nothing downloaded until it is played
+        # the two-minute video: the third choice beside Desktop and Phone on Home, and on Screenshots, with a poster and nothing downloaded until it is played
         for path, tag in (('/', 'Home'), ('/screenshots/', 'Screenshots')):
             c6 = ctx(); pg = c6.new_page(); asked = []
             pg.on('request', lambda rq: asked.append(rq.url) if '/video/tour.' in rq.url else None)
             pg.goto(B + path); settle(pg)
+            if path == '/':
+                pg.click('.lp-vsw [data-v=v]'); shown = pg.evaluate("(() => { const r = document.querySelector('.lp-vbox video').getBoundingClientRect(); return r.width > 300 && !document.querySelector('.lp-frame').offsetParent })()")
+                check('W61 the Video choice replaces the browser picture with the video', shown, shown)
             v = pg.evaluate("(() => { const v = document.querySelector('video'); return v && {pre: v.preload, poster: !!v.poster, name: !!v.getAttribute('aria-label'), src: [...v.querySelectorAll('source')].map(s => s.getAttribute('type'))}; })()")
             quiet = not asked
             pg.evaluate("document.querySelector('video').play().catch(() => {})")
@@ -202,6 +205,14 @@ try:
             pg.click('.lp-frame .lp-tab >> nth=%d' % n)
             got.append(until(lambda: k in (pg.get_attribute('.lp-phone img', 'src') or ''), 3000))
         check('W56 the little phone shows the same page as the browser, for all seven pages', all(got), got); c4.close()
+        # the four "What changes" cards on Home each show their screenshot (a rule once hid every picture), and the doc pages open with a breadcrumb
+        c7 = ctx(); pg = c7.new_page(); pg.goto(B + '/'); settle(pg)
+        pics = pg.evaluate("[...document.querySelectorAll('#changes .lp-bx .lp-pic img')].map(i => { const r = i.getBoundingClientRect(); return r.width > 100 && r.height > 40 })")
+        check('W59 every "What changes" card shows its picture', len(pics) == 4 and all(pics), pics)
+        crumbs = []
+        for n in ('install', 'guide', 'security'):
+            pg.goto(B + '/%s.html' % n); settle(pg); crumbs.append(pg.evaluate("(document.querySelector('.page > .crumb') || {}).textContent"))
+        check('W60 Install, Guide and Security open with a Home / page breadcrumb', crumbs == ['Home / Install', 'Home / Guide', 'Home / Security'], crumbs); c7.close()
         # the theme switch grows as a circle from the button, then settles: the theme changes and the helper class is gone afterwards
         c5 = ctx(); pg = c5.new_page(); pg.goto(B + '/'); settle(pg)
         t0 = pg.evaluate("document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')"); t1 = 'dark' if t0 == 'light' else 'light'
