@@ -190,8 +190,11 @@
     }
     window.addEventListener('scroll', function () { if (!ttick) ttick = requestAnimationFrame(place); }, { passive: true });
     window.addEventListener('resize', place);
-    var hs = location.hash.match(/^#p-([a-z]+)$/), hi = hs ? steps.map(function (s) { return s.id; }).indexOf('p-' + hs[1]) : -1;
-    if (hi > 0 && window.innerWidth > 960) { tour(hi); setTimeout(function () { window.scrollTo({ top: story.getBoundingClientRect().top + window.scrollY + hi * window.innerHeight * .55 + 4, behavior: 'instant' }); }, 60); } else place();
+    function openHash() {   /* a link like #p-info opens the tour at that page */
+      var hs = location.hash.match(/^#p-([a-z]+)$/), hi = hs ? steps.map(function (s) { return s.id; }).indexOf('p-' + hs[1]) : -1;
+      if (hi >= 0 && window.innerWidth > 960) { tour(hi); setTimeout(function () { window.scrollTo({ top: story.getBoundingClientRect().top + window.scrollY + hi * window.innerHeight * .55 + 4, behavior: 'instant' }); }, 60); } else place();
+    }
+    window.addEventListener('hashchange', openHash); openHash();
 
     /* things appear as they scroll into view; the numbers count up; the paragraph fills in; a bar shows how far down you are */
     var prog = d.querySelector('.lp-prog'), sc = d.getElementById('lp-scrub'), words = [];
