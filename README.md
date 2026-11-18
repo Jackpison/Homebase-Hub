@@ -22,6 +22,8 @@ Start page, bookmarks, notes, cards, tasks, files and browser tools. One login, 
 <a href="https://jackpison.github.io/Homebase-Hub/"><img src="https://img.shields.io/badge/Website-Take%20a%20Look-ffc21a?style=for-the-badge&labelColor=1a1a1a" alt="Website"></a>
 &nbsp;
 <a href="https://jackpison.github.io/Homebase-Hub/Homebase-Hub-Guide.pdf"><img src="https://img.shields.io/badge/User%20Guide-PDF-ffc21a?style=for-the-badge&labelColor=1a1a1a" alt="User guide (PDF)"></a>
+&nbsp;
+<a href="https://github.com/sponsors/Jackpison"><img src="https://img.shields.io/badge/Support-Sponsor-ffc21a?style=for-the-badge&labelColor=1a1a1a&logo=githubsponsors&logoColor=white" alt="Support the project on GitHub Sponsors"></a>
 </p>
 
 <p align="center">
@@ -335,6 +337,10 @@ On Telegram: <a href="https://t.me/Jackpison">@Jackpison</a>. For bugs, use <a h
 ## Contributing
 
 Bug reports and ideas are welcome. Found a bug? [Open an issue](https://github.com/Jackpison/Homebase-Hub/issues/new/choose) with your version (Settings > Changelog), what you did, what you expected and what happened. An idea or a question? Message [@Jackpison](https://t.me/Jackpison) on Telegram. [AGENTS.md](AGENTS.md) lists the rules and every check to run before a change.
+
+### Support the project
+
+Homebase Hub is free and has no ads or trackers. If it saves you time, you can [sponsor it on GitHub](https://github.com/sponsors/Jackpison). Telling a friend or starring the repository helps too.
 
 ### Building and testing
 

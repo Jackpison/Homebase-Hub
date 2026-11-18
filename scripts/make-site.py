@@ -109,7 +109,7 @@ def page(slug, title, body, wide=False, desc=None, cls=''):
         ''.join('<li class="%s"><a href="features/%s/">%s</a></li>' % (ACC.get(f['id'], 'a-gold'), f['id'], f['name']) for f in SP.FEATURES),
         foot_links([('install.html', 'Install'), ('guide.html', 'Guide'), ('screenshots/', 'Screenshots'), ('phone/', 'On Your Phone'), ('telegram/', 'Telegram Setup')]),
         foot_links([('faq/', 'Questions'), ('tools/', 'Tool Finder'), ('changelog.html', 'Changelog'), ('security.html', 'Security'), ('about.html', 'Licence')]),
-        foot_links([('https://github.com/Jackpison/Homebase-Hub', 'GitHub'), ('https://github.com/Jackpison/Homebase-Hub/issues/new/choose', 'Report a Problem'), ('https://t.me/Jackpison', 'Telegram: @Jackpison'), ('https://x.com/Jackpison', 'X: @Jackpison')]))
+        foot_links([('https://github.com/Jackpison/Homebase-Hub', 'GitHub'), ('https://github.com/sponsors/Jackpison', 'Support the Project'), ('https://github.com/Jackpison/Homebase-Hub/issues/new/choose', 'Report a Problem'), ('https://t.me/Jackpison', 'Telegram: @Jackpison'), ('https://x.com/Jackpison', 'X: @Jackpison')]))
     return relink(doc, '' if slug in ('index', '404') else '../' * (slug.count('/') + 1))
 
 
