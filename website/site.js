@@ -223,9 +223,9 @@
     var rv = all('.s .card, .s .moment, .s .stat, .s .intro, .s h2, .s .tg > *, .band > *').filter(function (n) { return !n.closest('.lp-story'); });
     if ('IntersectionObserver' in window && !reduce) {
       rv.forEach(function (n) { n.classList.add('lp-rv'); });
-      var ro = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); ro.unobserve(e.target); } }); }, { threshold: .12 });
+      var ro = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('lp-on'); ro.unobserve(e.target); } }); }, { threshold: .12 });
       rv.forEach(function (n) { ro.observe(n); });
-      setTimeout(function () { rv.forEach(function (n) { n.classList.add('in'); }); }, 6000);
+      setTimeout(function () { rv.forEach(function (n) { n.classList.add('lp-on'); }); }, 6000);
     }
     all('.stat b[data-n]').forEach(function (el) {
       var to = +el.dataset.n; if (reduce || !to || !('IntersectionObserver' in window)) return;

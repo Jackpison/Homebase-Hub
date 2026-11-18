@@ -193,6 +193,12 @@ try:
         pg.goto(B + '/faq/'); settle(pg)
         check('W23 the look is remembered on other pages', pg.evaluate("document.documentElement.dataset.look") == 'pink')
         pg.click('.foot .look[data-look=gold]'); check('W24 gold puts it back', pg.evaluate("document.documentElement.dataset.look") is None); c2.close()
+        # a section that has scrolled into view must keep its layout (the reveal once reused the page container's class and indented the heading)
+        c3 = ctx(); pg = c3.new_page(); pg.goto(B + '/'); settle(pg)
+        pg.evaluate("document.documentElement.style.scrollBehavior='auto'; window.scrollTo(0, document.getElementById('install').getBoundingClientRect().top + scrollY - 60)")
+        until(lambda: pg.evaluate("document.querySelector('#install .card:nth-child(3)').classList.contains('lp-on')"), 4000)
+        lay = pg.evaluate("(() => { const L = s => document.querySelector(s).getBoundingClientRect(); return {h2: L('#install h2').left - L('#install .eyebrow').left, pad: getComputedStyle(document.querySelector('#install h2')).paddingLeft, c: [1, 2, 3].map(n => Math.round(L('#install .card:nth-child(' + n + ')').width))}; })()")
+        check('W55 a revealed section keeps its layout: the heading lines up with its label and the three cards are one width', lay['h2'] == 0 and lay['pad'] == '0px' and len(set(lay['c'])) == 1, lay); c3.close()
 
         # the example Telegram chat
         c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/telegram/'); settle(pg)

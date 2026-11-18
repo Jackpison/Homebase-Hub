@@ -97,14 +97,14 @@ def page(slug, title, body, wide=False, desc=None, cls=''):
            '<a class="btn pri sm" href="%s">{{i:download}}Download</a>'
            '<details class="mm"><summary aria-label="Menu">{{i:menu}}</summary><nav aria-label="Menu">%s</nav></details></div></div></header>'
            '<main id="main" class="%s">%s</main>'
-           '<footer class="foot"><div class="in"><div class="fgrid"><div><a class="brand" href="index.html"><img src="brand/logo-192.png" alt="" width="36" height="36">Homebase Hub</a>'
-           '<p>Your start page, bookmarks, notes and tasks, on your own server.</p>%s</div>'
-           '<div><h4>The pages</h4><ul>%s</ul></div><div><h4>Learn</h4><ul>%s</ul></div><div><h4>Project</h4><ul>%s</ul></div></div>'
-           '<div class="copy"><span>Homebase Hub is free software under the GPL-3.0 licence.</span><span>No trackers, and nothing is loaded from other sites.</span></div></div></footer></body></html>') % (
+           '<footer class="foot"><div class="in"><div class="fmini"><div><a class="brand" href="index.html"><img src="brand/logo-192.png" alt="" width="36" height="36">Homebase Hub</a><p>Your start page, bookmarks, notes and tasks, on your own server.</p>%s</div>'
+           '<p class="fme">Find me on <a href="https://x.com/Jackpison">X</a> and <a href="https://t.me/Jackpison">Telegram</a>.</p>'
+           '<p class="fnote">Free software under the GPL-3.0 licence. No trackers, and nothing is loaded from other sites.</p></div>'
+           '<nav class="flinks" aria-label="More"><ul>%s%s%s</ul></nav></div></footer></body></html>') % (
         html.escape(title), html.escape(desc, quote=True), canon, html.escape(title, quote=True), html.escape(desc, quote=True), BASE, BGFX, nav, SP.LATEST, mnav, cls, main, SP.looks_row(),
         foot_links([('features/%s/' % f['id'], f['name']) for f in SP.FEATURES]),
         foot_links([('install.html', 'Install'), ('guide.html', 'Guide'), ('screenshots/', 'Screenshots'), ('faq/', 'Questions'), ('phone/', 'On your phone'), ('telegram/', 'Telegram'), ('tools/', 'Tool finder'), ('changelog.html', 'Changelog')]),
-        foot_links([('https://github.com/Jackpison/Homebase-Hub', 'GitHub'), ('https://github.com/Jackpison/Homebase-Hub/issues/new/choose', 'Report a problem'), ('https://t.me/Jackpison', 'Telegram: @Jackpison'), ('https://x.com/Jackpison', 'X: @Jackpison'), ('security.html', 'Security'), ('about.html', 'Licence')]))
+        foot_links([('https://github.com/Jackpison/Homebase-Hub', 'GitHub'), ('https://github.com/Jackpison/Homebase-Hub/issues/new/choose', 'Report a problem'), ('security.html', 'Security'), ('about.html', 'Licence')]))
     return relink(doc, '' if slug in ('index', '404') else '../' * (slug.count('/') + 1))
 
 
