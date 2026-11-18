@@ -150,7 +150,7 @@
     swapAll(); new MutationObserver(swapAll).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
     if (window.matchMedia) matchMedia('(prefers-color-scheme: light)').addEventListener('change', swapAll);
 
-    var frame = stage.querySelector('.lp-frame'), tabs = all('.lp-frame .lp-tab'), shots = all('.lp-frame .lp-shots img'), ptabs = all('.lp-ptabs .lp-tab'), dev = all('.lp-dev img'), small = stage.querySelector('.lp-phone img');
+    var lframe = stage.querySelector('.lp-frame'), tabs = all('.lp-frame .lp-tab'), shots = all('.lp-frame .lp-shots img'), ptabs = all('.lp-ptabs .lp-tab'), dev = all('.lp-dev img'), small = stage.querySelector('.lp-phone img');
     var view = 'd', cd = 0, cp = 0, timer = 0;
     function mark(list, pics, n) { list.forEach(function (b, i) { b.setAttribute('aria-selected', i === n ? 'true' : 'false'); b.tabIndex = i === n ? 0 : -1; }); pics.forEach(function (im, i) { im.classList.toggle('on', i === n); }); }
     function showD(n) {
@@ -175,8 +175,8 @@
     showD(0); showP(0); setView(window.matchMedia && matchMedia('(max-width: 700px)').matches ? 'p' : 'd');
     d.addEventListener('visibilitychange', function () { if (d.hidden) clearInterval(timer); else restart(); });
     if (!reduce && window.matchMedia && matchMedia('(hover: hover)').matches) {
-      stage.addEventListener('pointermove', function (e) { if (view !== 'd') return; var r = stage.getBoundingClientRect(); frame.style.setProperty('--ry', ((e.clientX - r.left) / r.width - .5) * 7 + 'deg'); frame.style.setProperty('--rx', ((e.clientY - r.top) / r.height - .5) * -6 + 'deg'); });
-      stage.addEventListener('pointerleave', function () { frame.style.setProperty('--ry', '0deg'); frame.style.setProperty('--rx', '0deg'); });
+      stage.addEventListener('pointermove', function (e) { if (view !== 'd') return; var r = stage.getBoundingClientRect(); lframe.style.setProperty('--ry', ((e.clientX - r.left) / r.width - .5) * 7 + 'deg'); lframe.style.setProperty('--rx', ((e.clientY - r.top) / r.height - .5) * -6 + 'deg'); });
+      stage.addEventListener('pointerleave', function () { lframe.style.setProperty('--ry', '0deg'); lframe.style.setProperty('--rx', '0deg'); });
     }
 
     /* the tour: the page in view follows the scroll, and the picture and the text change together */
@@ -191,7 +191,7 @@
     window.addEventListener('scroll', function () { if (!ttick) ttick = requestAnimationFrame(place); }, { passive: true });
     window.addEventListener('resize', place);
     var hs = location.hash.match(/^#p-([a-z]+)$/), hi = hs ? steps.map(function (s) { return s.id; }).indexOf('p-' + hs[1]) : -1;
-    if (hi > 0 && window.innerWidth > 960) { tour(hi); setTimeout(function () { window.scrollTo(0, story.getBoundingClientRect().top + window.scrollY + hi * window.innerHeight * .55 + 4); }, 60); } else place();
+    if (hi > 0 && window.innerWidth > 960) { tour(hi); setTimeout(function () { window.scrollTo({ top: story.getBoundingClientRect().top + window.scrollY + hi * window.innerHeight * .55 + 4, behavior: 'instant' }); }, 60); } else place();
 
     /* things appear as they scroll into view; the numbers count up; the paragraph fills in; a bar shows how far down you are */
     var prog = d.querySelector('.lp-prog'), sc = d.getElementById('lp-scrub'), words = [];

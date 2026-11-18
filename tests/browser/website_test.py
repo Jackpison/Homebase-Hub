@@ -162,7 +162,7 @@ try:
         check('W14b the theme button shows a sun in dark mode and a moon in light mode', dark_icons == [True, False] and light_icons == [False, True], (dark_icons, light_icons)); c2.close()
 
         # the hero stage and the tour on Home
-        c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
+        c2 = ctx(reduced_motion='reduce'); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)   # nothing turns by itself, so the first picture stays
         hero_on = lambda: pg.evaluate("[...document.querySelectorAll('.lp-frame .lp-shots img')].findIndex(i => i.classList.contains('on'))")
         check('W15 the hero shows the Home page first, with seven tabs and one picture on', hero_on() == 0 and pg.locator('.lp-frame .lp-tab').count() == 7 and pg.get_attribute('.lp-frame .lp-tab >> nth=0', 'aria-selected') == 'true', hero_on())
         pg.click('.lp-frame .lp-tab >> nth=1'); until(lambda: hero_on() == 1, 3000)

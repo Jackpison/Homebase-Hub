@@ -176,9 +176,9 @@ figure{margin:24px 0}figure img{border-radius:18px;border:1px solid var(--line);
 .lp-bar i{width:10px;height:10px;border-radius:50%;background:light-dark(#c9cddb,#3a3f52)}
 .lp-why{display:grid;gap:26px}
 .lp-scrub{font-size:clamp(26px,4.2vw,48px);line-height:1.22;font-weight:800;letter-spacing:-.025em;max-width:24em;margin:0;text-wrap:pretty}
-.js .lp-scrub span{opacity:.18;transition:opacity .25s}
-.js .lp-scrub span.on{opacity:1}
+.js .lp-scrub span{color:var(--mute);transition:color .25s}
+.js .lp-scrub span.on{color:var(--text)}
 .js .lp-rv{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
 .js .lp-rv.in{opacity:1;transform:none}
 @media (max-width:640px){.lp-phone{right:-6px;bottom:-26px}.lp-marq{margin-top:50px}}
-@media (prefers-reduced-motion:reduce){.lp-w{animation:none}.js .lp-rv,.js .lp-scrub span{opacity:1;transform:none}.lp-marq div{animation:none}}
+@media (prefers-reduced-motion:reduce){.lp-w{animation:none}.js .lp-rv{opacity:1;transform:none}.lp-marq div{animation:none}}
