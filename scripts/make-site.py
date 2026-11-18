@@ -12,7 +12,7 @@ W = os.path.join(ROOT, 'website')
 CONTENT = [('install', 'Install'), ('guide', 'Guide'), ('security', 'Security'), ('about', 'Licence')]   # written by hand in website/content
 OLD = [s for s, _ in CONTENT] + ['changelog']          # addresses that were published as name.html before: they forward to name/
 SLUGS = ['index'] + OLD
-NAV = [('features/', 'Features'), ('screenshots/', 'Screenshots'), ('tools/', 'Tools'), ('telegram/', 'Telegram'), ('security/', 'Security'), ('install/', 'Install'), ('guide/', 'Guide')]
+NAV = [('features/', 'Features'), ('screenshots/', 'Screenshots'), ('install/', 'Install'), ('guide/', 'Guide'), ('security/', 'Security')]
 BASE = 'https://jackpison.github.io/Homebase-Hub/'
 
 
@@ -65,11 +65,18 @@ def relink(doc, root):
     return re.sub(r'\b(href|src|data-light)="([^"]*)"', f, doc)
 
 
+VER = re.search(r"define\('HUB',\s*'([^']+)'\)", open(os.path.join(ROOT, 'src/web/hub/core/lib/boot.php'), encoding='utf-8').read()).group(1)
+
+
+# The soft lights, the grid and the twinkling dots behind every page (they follow the scroll in site.js; the colours live in style.css)
+BGFX = '<div class="bgfx" aria-hidden="true"><i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i><div class="dots"></div><div class="tw">' + '<i></i>' * 12 + '</div></div>'
+
+
 def page(slug, title, body, wide=False, desc=None, cls=''):
     desc = desc or 'Homebase Hub is a self-hosted start page with bookmarks, notes, cards, tasks and browser tools. One login, private, on your own server.'
     cur = lambda h: slug == h.rstrip('/') or slug.startswith(h)
     nav = ''.join('<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if cur(h) else '', n) for h, n in NAV)
-    more = [('index.html', 'Overview'), ('phone/', 'On your phone'), ('faq/', 'Questions'), ('changelog.html', 'Changelog')]
+    more = [('index.html', 'Overview'), ('tools/', 'Tools'), ('telegram/', 'Telegram'), ('phone/', 'On your phone'), ('faq/', 'Questions'), ('changelog.html', 'Changelog')]
     mnav = ''.join('<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if cur(h) else '', n) for h, n in [('index.html', 'Overview')] + NAV[:-0 or None] + more[1:])
     main = body if wide else '<div class="page">' + body + '</div>'
     canon = '' if slug == '404' else '<link rel="canonical" href="%s%s">' % (BASE, url(slug))
@@ -83,6 +90,7 @@ def page(slug, title, body, wide=False, desc=None, cls=''):
            '<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="hot.css">'
            '<script src="theme.js"></script><script src="site.js" defer></script></head><body>'
            '<a class="skip" href="#main">Skip to the content</a>'
+           '%s<div class="ann"><div class="in"><b>v{{VER}}</b><span>is out. Free, self-hosted, GPL-3.0.</span><a href="install/">Get it</a></div></div>'
            '<header class="top"><div class="in bar"><a class="brand" href="index.html"><img src="brand/logo-192.png" alt="" width="36" height="36">Homebase Hub</a>'
            '<nav class="menu" aria-label="Main">%s</nav>'
            '<div class="acts"><button class="mode" type="button" aria-label="Switch between dark and light"><span class="m-sun">{{i:sun}}</span><span class="m-moon">{{i:moon}}</span></button>'
@@ -93,10 +101,10 @@ def page(slug, title, body, wide=False, desc=None, cls=''):
            '<p>Your start page, bookmarks, notes and tasks, on your own server.</p>%s</div>'
            '<div><h4>The pages</h4><ul>%s</ul></div><div><h4>Learn</h4><ul>%s</ul></div><div><h4>Project</h4><ul>%s</ul></div></div>'
            '<div class="copy"><span>Homebase Hub is free software under the GPL-3.0 licence.</span><span>No trackers, and nothing is loaded from other sites.</span></div></div></footer></body></html>') % (
-        html.escape(title), html.escape(desc, quote=True), canon, html.escape(title, quote=True), html.escape(desc, quote=True), BASE, nav, SP.LATEST, mnav, cls, main, SP.looks_row(),
+        html.escape(title), html.escape(desc, quote=True), canon, html.escape(title, quote=True), html.escape(desc, quote=True), BASE, BGFX, nav, SP.LATEST, mnav, cls, main, SP.looks_row(),
         foot_links([('features/%s/' % f['id'], f['name']) for f in SP.FEATURES]),
-        foot_links([('install.html', 'Install'), ('guide.html', 'Guide'), ('faq/', 'Questions'), ('phone/', 'On your phone'), ('telegram/', 'Telegram'), ('tools/', 'Tool finder'), ('changelog.html', 'Changelog')]),
-        foot_links([('https://github.com/Jackpison/Homebase-Hub', 'GitHub'), ('https://github.com/Jackpison/Homebase-Hub/issues/new/choose', 'Report a problem'), ('https://t.me/Jackpison', 'Telegram: @Jackpison'), ('security.html', 'Security'), ('about.html', 'Licence')]))
+        foot_links([('install.html', 'Install'), ('guide.html', 'Guide'), ('screenshots/', 'Screenshots'), ('faq/', 'Questions'), ('phone/', 'On your phone'), ('telegram/', 'Telegram'), ('tools/', 'Tool finder'), ('changelog.html', 'Changelog')]),
+        foot_links([('https://github.com/Jackpison/Homebase-Hub', 'GitHub'), ('https://github.com/Jackpison/Homebase-Hub/issues/new/choose', 'Report a problem'), ('https://t.me/Jackpison', 'Telegram: @Jackpison'), ('https://x.com/Jackpison', 'X: @Jackpison'), ('security.html', 'Security'), ('about.html', 'Licence')]))
     return relink(doc, '' if slug in ('index', '404') else '../' * (slug.count('/') + 1))
 
 
@@ -175,7 +183,7 @@ def srcsets(doc):
 
 
 def write(slug, doc):
-    doc = srcsets(icons(doc))
+    doc = srcsets(icons(doc)).replace('{{VER}}', VER)
     d = OUT if slug == 'index' else os.path.join(OUT, slug); os.makedirs(d, exist_ok=True)
     open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(doc)
 
@@ -187,8 +195,7 @@ def main():
     os.makedirs(os.path.join(OUT, 'brand'))
     for f in ('logo-192.png', 'logo-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'social-preview.png'):
         if os.path.isfile(os.path.join(W, 'brand', f)): shutil.copy(os.path.join(W, 'brand', f), os.path.join(OUT, 'brand', f))
-    ver = re.search(r"define\('HUB',\s*'([^']+)'\)", open(os.path.join(ROOT, 'src/web/hub/core/lib/boot.php'), encoding='utf-8').read()).group(1)
-    fix = lambda s: s.replace('Download {{VER}}', 'Download v' + ver).replace('{{VER}}', ver)
+    fix = lambda s: s.replace('Download {{VER}}', 'Download v' + VER).replace('{{VER}}', VER)
     slugs = ['index']
     for p in SP.all_pages():     # home, features, Telegram, phone, tools, FAQ: built from data
         write(p['slug'], page(p['slug'], p['title'], fix(p['body']), p.get('wide', True), p['desc'], p['cls'])); slugs.append(p['slug'])

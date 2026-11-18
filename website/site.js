@@ -137,6 +137,27 @@
     }, { passive: true });
     top.addEventListener('focusin', function () { root.classList.remove('hh-hide'); });
   }
+  /* Copy buttons next to a command */
+  all('[data-copy]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var c = d.getElementById(b.dataset.copy); if (!c || !navigator.clipboard) return;
+      navigator.clipboard.writeText(c.textContent).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); }, function () {});
+    });
+  });
+
+  /* The soft lights behind every page drift as you scroll, and the grid moves a little slower. */
+  var orbs = d.querySelector('.bgfx');
+  if (orbs && !reduce) {
+    var otick = 0;
+    window.addEventListener('scroll', function () {
+      if (otick) return;
+      otick = requestAnimationFrame(function () {
+        otick = 0; var y = window.scrollY, set = function (k, v) { root.style.setProperty(k, v); };
+        set('--sy', y); set('--x1', Math.sin(y / 700) * 70 + 'px'); set('--y1', Math.sin(y / 520) * 90 + 'px'); set('--x2', Math.cos(y / 800) * -80 + 'px'); set('--y2', Math.cos(y / 610) * 110 + 'px'); set('--x3', Math.sin(y / 900 + 1) * 90 + 'px'); set('--y3', Math.sin(y / 700 + 2) * 70 + 'px');
+      });
+    }, { passive: true });
+  }
+
   /* Home: the hero stage (a browser and a phone that walk through the pages), the tour that stays while the text changes, the scroll effects. */
   var stage = d.querySelector('.lp-stage');
   if (stage) {

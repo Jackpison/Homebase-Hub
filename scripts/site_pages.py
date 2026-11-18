@@ -258,64 +258,69 @@ def lp_marquee():
 
 # ---------------------------------------------------------------- the pages
 def home():
-    problems = problem_cards([(f['ac'], f['everyday'][0], f['everyday'][1], f['icon'], f['name'].upper()) for f in FEATURES])
-    chat, buttons = chat_html()
-    cats, tools = load_tools()
-    count = {c['id']: sum(1 for t in tools if t['cat'] == c['id']) for c in cats}
-    cat_ac = {'images': 'a-cards', 'photos': 'a-home', 'pdf': 'a-tasks', 'utilities': 'a-tools', 'calculators': 'a-gold', 'documents': 'a-links'}
-    toolcards = ''.join('<a class="card hv %s" href="tools/"><div class="ico">%s</div><h3>%s</h3><p>%s</p><span class="more">%d tools%s</span></a>' % (
-        cat_ac[c['id']], I({'images': 'image', 'photos': 'image', 'pdf': 'note', 'utilities': 'tools', 'calculators': 'chart', 'documents': 'table'}[c['id']]), e(c['name']),
-        e(', '.join(t['name'] for t in tools if t['cat'] == c['id'])[:70].rsplit(',', 1)[0] + ' and more'), count[c['id']], I('arrow')) for c in cats)
-    around = ''.join('<a class="card hv %s" href="%s"><div class="ico">%s</div><h3>%s</h3><p>%s</p><span class="more">%s%s</span></a>' % (ac, href, I(ic), e(t), e(p), e(m), I('arrow')) for ac, href, ic, t, p, m in [
-        ('a-tg', 'telegram/', 'send', 'Telegram', 'A daily digest, Due Now messages with Done, Skip and Snooze, and backups sent to your chat.', 'See Telegram'),
-        ('a-links', 'screenshots/', 'image', 'Screenshots', 'Every page and the windows where you change it, in dark and light.', 'See them all'),
-        ('a-home', 'phone/', 'phone', 'On your phone', 'Add the site to your home screen and it opens like an app, with its own icon.', 'See how'),
-        ('a-info', 'guide.html', 'book', 'The guide', 'Every page and every setting, step by step, with screenshots of the real app (PDF).', 'Read the guide'),
-        ('a-cards', 'security.html', 'shield', 'Security', 'What protects your data, and what does not, in plain words.', 'Read Security')])
-    secure = ''.join('<div class="card %s"><div class="ico">%s</div><h3>%s</h3><p>%s</p></div>' % (ac, I(ic), e(t), e(p)) for ac, ic, t, p in [
-        ('a-info', 'key', 'One login, done properly', 'Two-step login, recovery codes, trusted browsers, a device list, and logins paused after five wrong tries.'),
-        ('a-links', 'lock', 'Encrypted where you choose', 'Encrypted tabs in Links and Info, and encrypted backup files. The keys are made in your browser.'),
-        ('a-home', 'shield', 'Data closed to browsers', 'Your data files answer 404 to a browser, even on a server that ignores .htaccess.'),
-        ('a-tasks', 'undo', 'Updates you can undo', 'Each update is checked first, needs your password, and Go Back restores the last version.')])
-    moments = ''.join('<div class="moment %s"><div class="time">%s</div><h3>%s</h3><p>%s</p><div class="fix">%s</div></div>' % (ac, t, e(h), e(p), e(f)) for ac, t, h, p, f in [
-        ('a-home', '07:30', 'Open your start page', 'A fresh photo, every page one click away in the bar, and search on / for Links, Info, Tasks and Tools.', 'Home'),
-        ('a-tools', '12:10', 'Sort out a PDF', 'Merge, compress or sign it in your browser with the PDF tools.', 'Tools'),
-        ('a-tasks', '21:00', 'The bill is due', 'A Telegram message arrives with Done, Skip and Snooze. One tap and it is handled.', 'Tasks and Telegram')])
     stats = ''.join('<div class="stat %s"><b data-n="%s">%s</b><span>%s</span></div>' % (ac, n, n, e(t)) for ac, n, t in [
-        ('a-home', '7', 'pages, one login'), ('a-tools', str(NT), 'tools in your browser'), ('a-links', '141', 'ready-made looks'), ('a-cards', '0', 'databases to run'), ('a-tasks', '3', 'browser engines tested')])
-    more = ''.join('<a class="card hv %s" href="%s"><h3>%s</h3><p>%s</p><span class="more">Open%s</span></a>' % (ac, href, e(t), e(p), I('arrow')) for ac, href, t, p in [
-        ('a-home', 'guide.html', 'The guide', 'Every page and every setting, step by step (PDF).'), ('a-info', 'faq/', 'Questions and answers', 'Hosting, updates, privacy and more.'),
-        ('a-tasks', 'changelog.html', 'Changelog', 'What changed in every version.'), ('a-links', REPO, 'Source code', 'Read it, build it, report an issue.')])
-    body = f'''<div class="lp-prog" aria-hidden="true"></div>
+        ('a-home', '7', 'pages, one site'), ('a-tools', str(NT), 'tools that run in your browser'), ('a-links', '1', 'login for everything'), ('a-cards', '0', 'databases to set up')])
+    # the four things that get simpler: (accent, tag, heading, before, after, picture, light copy or None, alt, wide)
+    changes = ''.join('<article class="card lp-bx %s%s"><span class="lp-tag">%s</span><h3>%s</h3><div class="lp-ba">%s<div class="y"><em>After</em>%s</div></div><div class="lp-pic">%s</div></article>' % (
+        ac, ' wide' if wide else '', e(tag), e(h), '<div class="x"><em>Before</em>%s</div>' % e(bf) if bf else '', e(af), lp_img(f, l, alt, 1440, 900)) for ac, tag, h, bf, af, f, l, alt, wide in [
+        ('a-files', 'Files', 'Files the server cannot read', 'Files sit in a cloud that can read their names.', 'Names and contents are locked in your browser. Share links can have a password and a download limit.', 'files', None, 'The Files page with a locked file selected', True),
+        ('a-tasks', 'Tasks', 'Reminders that find you', '', 'Repeating tasks, a calendar link for Google, Apple or Outlook, and a daily list on Telegram if you want it.', 'tasks-calendar-link', None, 'Tasks settings with the calendar link', False),
+        ('a-links', 'Links and Info', 'One tabbed home for links and notes', '', 'Tabs of links and boxes of notes. Make a tab private, or lock it.', 'links', 'links-light', 'The Links page with tabs', False),
+        ('a-tools', 'Updates', 'Updating without crossing your fingers', 'Copy files over a live site and hope.', 'The update is checked first, needs your password and takes a snapshot. Go Back undoes it.', 's-updates', None, 'Settings, Updates page with Upload the Zip, Check it, Review the Changes and Apply', True)])
+    promises = ''.join('<div class="card %s"><h3>%s</h3><p>%s</p></div>' % (ac, e(t), p) for ac, t, p in [
+        ('a-home', 'Your data stays yours', 'It lives in <code>site-data/</code> on your server. Updates never touch it.'),
+        ('a-links', 'No quiet calls out', 'The site asks no other server for anything unless you turn a feature on.'),
+        ('a-info', 'Keys stay in the browser', 'The server never sees a passphrase or a key for locked data.'),
+        ('a-tools', 'Safe updates', 'A zip is checked before anything changes, and a snapshot comes first.')])
+    feats = ''.join('<div class="card %s"><h3>%s</h3><p>%s</p></div>' % (ac, e(t), e(p)) for ac, t, p in [
+        ('a-home', 'Start page', 'A Home page with a clock, your photo or a design, and cards for the things you check every day.'),
+        ('a-links', 'Links', 'Bookmarks in tabs. Import them from any browser, look at the preview first, and undo it if you do not like it.'),
+        ('a-info', 'Info', 'Notes in boxes: Wi-Fi details, snippets, lists. Each tab can be private or locked.'),
+        ('a-cards', 'Cards', 'Things you keep safe, such as loyalty or membership cards, locked with your passphrase.'),
+        ('a-tasks', 'Tasks', 'To-dos that can repeat. Get a calendar link for Google, Apple or Outlook, and a daily list on Telegram.'),
+        ('a-files', 'Files', 'Upload files and share one with a link. Names and contents are locked in your browser, so your server holds only scrambled data.'),
+        ('a-tools', '%d tools' % NT, 'Merge or sign a PDF, resize an image, make a QR code and more. They run in your browser, so your files are not uploaded.'),
+        ('a-gold', '141 looks', 'Pick colours and backgrounds in Settings. It works in light and dark, and on a phone.'),
+        ('a-tg', 'Backup and Restore', 'Download an encrypted backup, or send one to a WebDAV folder or an S3 bucket. Restore it any time.')])
+    ways = (('a-home', 'Any PHP host', 'Download the zip from Releases, extract it over your site folder, open the site and set a password.', '<a class="btn" href="%s">Open Releases</a>' % LATEST),
+            ('a-links', 'Docker', 'The image is public and follows every release.', '<div class="lp-cmd"><code id="lp-c1">docker pull ghcr.io/jackpison/homebase-hub:latest</code><button type="button" data-copy="lp-c1">Copy</button></div>'),
+            ('a-info', 'A fresh Ubuntu or Debian server', 'One install script sets up the web server for you. Its steps are in the repo\'s <code>deploy/vps</code> folder.', '<a class="btn" href="%s/tree/main/deploy">See Deploy Files</a>' % REPO))
+    ways = ''.join('<div class="card %s"><h3>%s</h3><p>%s</p>%s</div>' % (ac, e(t), p, x) for ac, t, p, x in ways)
+    sec = ''.join('<div class="card %s"><h3>%s</h3><p>%s</p></div>' % (ac, e(t), e(p)) for ac, t, p in [
+        ('a-info', 'One login', 'Your password is stored as a hash, never as text. Add two-step login or a passkey if you want.'),
+        ('a-links', 'Locked in your browser', 'One passphrase locks Cards, Files, private tabs and backups. The server never gets it.'),
+        ('a-home', 'No quiet calls out', 'The site asks no other server for anything unless you turn a feature on.')])
+    body = f"""<div class="lp-prog" aria-hidden="true"></div>
 <section class="hero">{SHAPES}
-<div class="in hgrid"><div class="hcopy"><span class="pill"><i class="dot"></i>Free and open source. No database.</span>
+<div class="in hgrid"><div class="hcopy"><span class="pill"><i class="dot"></i>Self-hosted. No database. One login.</span>
 <h1 aria-label="Your links, notes, tasks and files on one site you own."><span class="lp-w">Your</span> <span class="lp-w i1">links,</span> <span class="lp-w i2">notes,</span> <span class="lp-w i3">tasks</span> <span class="lp-w i4">and</span> <span class="lp-w i5">files</span> <span class="lp-w i6">on</span> <span class="lp-w i7 grad">one site you own.</span></h1>
 <p class="lead">Homebase Hub is one PHP site with seven pages and one Settings page. Run it on any PHP host, Docker or a small server. Your data stays in a folder you control.</p>
-<div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Download {{{{VER}}}}</a><a class="btn lg" href="#features">Take the tour{I('arrow')}</a></div>
-<ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Accessibility-checked</li></ul>{looks_row()}</div>
+<div class="cta"><a class="btn pri lg" href="{LATEST}">{I('download')}Download {{{{VER}}}}</a><a class="btn lg" href="#pages">Take the tour{I('arrow')}</a></div>
+<ul class="trust"><li>PHP 8.3 or newer</li><li>GPL-3.0</li><li>Docker ready</li></ul></div>
 <div class="hart">{lp_stage()}</div></div></section>
 <section class="stats" aria-label="Homebase Hub at a glance"><div class="in">{stats}</div></section>
 {lp_marquee()}
-<section class="s" id="features"><div class="in"><span class="eyebrow">The tour</span><h2>Seven pages. One home.</h2>
-<p class="intro">Each page has its own colour and its own job. They share one bar, one login and one Settings page, so it feels like one app. These are real screenshots of the app.</p>
+<section class="s" id="pages"><div class="in"><span class="eyebrow">Seven pages</span><h2>Scroll through what you get.</h2>
+<p class="intro">These are real screenshots of the app. Each page has its own colour and its own job, and they share one bar, one login and one Settings page.</p>
 {lp_tour()}
 <div class="btns"><a class="btn" href="features/">All the features{I('arrow')}</a></div></div></section>
 <section class="s" id="why"><div class="in lp-why"><span class="eyebrow">Why it exists</span>
 <p class="lp-scrub" id="lp-scrub">Bookmarks live in one browser, notes in another app, files in a cloud you do not run. Homebase Hub puts them in one place, on a server you choose, behind one login.</p>
 <p class="intro">There is no database to set up and no account on someone else's server. Copy the folder, open the site and set a password. It does not call other servers on its own: a feature that needs to, such as Telegram reminders or the weather widget, stays off until you turn it on.</p></div></section>
-<section class="s" id="pages"><div class="in"><span class="eyebrow">Around the pages</span><h2>More than seven pages.</h2><div class="cards c4">{around}</div></div></section>
-<section class="s" id="everyday"><div class="in"><span class="eyebrow">Everyday life, improved</span><h2>The small annoyances, gone.</h2><p class="intro">What changes the day you install it.</p>{problems}</div></section>
-<section class="s" id="day"><div class="in"><span class="eyebrow">A day with Homebase Hub</span><h2>One ordinary day, made calmer.</h2><div class="cards">{moments}</div></div></section>
-<section class="s" id="telegram"><div class="in tg"><div class="a-tg"><span class="eyebrow">Telegram</span><h2>Reminders where you already are.</h2>
-<p class="intro">Connect your own Telegram bot and the site tells you what needs you. It only answers your own chat. Tap a command to see the kind of reply you get.</p><div class="cmds">{buttons}</div>
-<div class="btns"><a class="btn ac" href="telegram/">Everything Telegram does{I('arrow')}</a></div></div>{chat}</div></section>
-<section class="s" id="tools"><div class="in"><span class="eyebrow">Tools</span><h2>{NT} tools. Zero extra apps.</h2><p class="intro">Small tools that run in your browser: crop, resize and convert images, merge and sign PDFs, read text from photos, remove backgrounds, work out loans and savings, make invoices, scan QR codes and more.</p>
-<div class="cards c4">{toolcards}</div><div class="btns"><a class="btn ac a-tools" href="tools/">Find a tool{I('search')}</a></div></div></section>
-<section class="s" id="private"><div class="in"><span class="eyebrow">Security</span><h2>Private, and tested like it matters.</h2>
-<p class="intro">Your data lives in one folder on your own hosting, closed to browsers. Nothing is sent anywhere unless you set it up. Updates are tried against 65 checks with damaged and hostile files, and the site is checked in three browser engines.</p>
-<div class="cards c4">{secure}</div><div class="btns"><a class="btn" href="security.html">Read what protects your data, and what does not{I('arrow')}</a></div></div></section>
-{band()}
-<section class="s" id="more"><div class="in"><span class="eyebrow">Keep reading</span><h2>Learn more.</h2><div class="cards c4">{more}</div></div></section>'''
+<section class="s" id="changes"><div class="in"><span class="eyebrow">What changes</span><h2>Four things that get simpler.</h2><div class="lp-bento">{changes}</div></div></section>
+<section class="s"><div class="in"><span class="eyebrow">What the project promises</span><h2>Rules the code has to keep.</h2><div class="cards c4">{promises}</div></div></section>
+<section class="s"><div class="in"><div class="lp-offer"><div><h2>Free. No account. About five minutes.</h2><p>No launch price and no countdown. Pick the way that fits your server. If something goes wrong, open an issue on GitHub.</p></div>
+<div class="btns"><a class="btn dark" href="#install">Choose an Install</a><a class="btn ghost" href="{REPO}/issues">Open an Issue</a></div></div></div></section>
+<section class="s" id="features"><div class="in"><span class="eyebrow">Features</span><h2>What you get, in plain words.</h2><p class="intro">Everything is already inside the download. You do not add plugins or set up a database.</p>
+<div class="cards">{feats}</div><div class="btns"><a class="btn pri" href="features/">See All Features</a></div></div></section>
+<section class="s" id="install"><div class="in"><span class="eyebrow">Install</span><h2>Pick one way.</h2><p class="intro">New to this? The first way needs no command line: download a zip, upload it, open your site and set a password. It takes about five minutes.</p>
+<div class="cards">{ways}</div><div class="btns"><a class="btn pri" href="install.html">Full Install Steps</a></div></div></section>
+<section class="s" id="guide"><div class="in"><span class="eyebrow">Guide</span><h2>A step-by-step guide, with screenshots.</h2><p class="intro">It covers every page and every setting of the real app, from the first install to recovery when something goes wrong.</p>
+<div class="btns"><a class="btn pri" href="guide.html">Read the Guide</a></div></div></section>
+<section class="s" id="security"><div class="in"><span class="eyebrow">Security</span><h2>What protects your data, and what does not.</h2><p class="intro">In plain words. Nothing here needs you to be an expert.</p>
+<div class="cards">{sec}</div><div class="btns"><a class="btn pri" href="security.html">Read the Security Details</a></div></div></section>
+<section class="s lp-final"><div class="in"><h2>Own the one page you open every day.</h2><p class="intro">Version {{{{VER}}}} is the current release. The changelog lists every change since 1.0.0.</p>
+<div class="btns"><a class="btn pri lg" href="{LATEST}">{I('download')}Download Homebase Hub</a><a class="btn lg" href="{REPO}">Read the Code{I('arrow')}</a></div></div></section>"""
     return dict(slug='index', title='Homebase Hub: a self-hosted start page, bookmarks, notes and tasks', cls='',
                 desc='Homebase Hub is a self-hosted start page with bookmarks, notes, cards, tasks and %d browser tools. One login, private, on your own server. Free and open source.' % NT, body=body)
 

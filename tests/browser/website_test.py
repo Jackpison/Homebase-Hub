@@ -187,9 +187,9 @@ try:
 
         # the look picker
         c2 = ctx(); pg = c2.new_page(); pg.goto(B + '/'); settle(pg)
-        btn = lambda: pg.evaluate("getComputedStyle(document.querySelector('.hcopy .btn.pri')).backgroundColor")
-        a = btn(); pg.click('.hcopy .look[data-look=pink]'); until(lambda: btn() == 'rgb(255, 95, 162)', 3000)
-        check('W22 picking the pink look re-colours the buttons and marks the choice', a != btn() and btn() == 'rgb(255, 95, 162)' and pg.get_attribute('.hcopy .look[data-look=pink]', 'aria-pressed') == 'true', (a, btn()))
+        btn = lambda: pg.evaluate("getComputedStyle(document.querySelector('.hero .btn.pri')).backgroundColor")
+        a = btn(); pg.click('.looks .look[data-look=pink]'); until(lambda: btn() == 'rgb(255, 95, 162)', 3000)
+        check('W22 picking the pink look re-colours the buttons and marks the choice', a != btn() and btn() == 'rgb(255, 95, 162)' and pg.get_attribute('.looks .look[data-look=pink]', 'aria-pressed') == 'true', (a, btn()))
         pg.goto(B + '/faq/'); settle(pg)
         check('W23 the look is remembered on other pages', pg.evaluate("document.documentElement.dataset.look") == 'pink')
         pg.click('.foot .look[data-look=gold]'); check('W24 gold puts it back', pg.evaluate("document.documentElement.dataset.look") is None); c2.close()
