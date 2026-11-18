@@ -210,9 +210,12 @@ try:
         pics = pg.evaluate("[...document.querySelectorAll('#changes .lp-bx .lp-pic img')].map(i => { const r = i.getBoundingClientRect(); return r.width > 100 && r.height > 40 })")
         check('W59 every "What changes" card shows its picture', len(pics) == 4 and all(pics), pics)
         crumbs = []
-        for n in ('install', 'guide', 'security'):
-            pg.goto(B + '/%s.html' % n); settle(pg); crumbs.append(pg.evaluate("(document.querySelector('.page > .crumb') || {}).textContent"))
-        check('W60 Install, Guide and Security open with a Home / page breadcrumb', crumbs == ['Home / Install', 'Home / Guide', 'Home / Security'], crumbs); c7.close()
+        for n in ('install.html', 'guide.html', 'security.html', 'about.html', 'features/'):
+            pg.goto(B + '/' + n); settle(pg); crumbs.append(pg.evaluate("(document.querySelector('.crumb') || {}).textContent"))
+        check('W60 Install, Guide, Security, Licence and Features open with a Home / page breadcrumb', crumbs == ['Home / Install', 'Home / Guide', 'Home / Security', 'Home / Licence', 'Home / Features'], crumbs); pg.goto(B + '/features/'); settle(pg); bb = pg.locator('.card.hv').first.bounding_box(); pg.mouse.move(bb['x'] + 60, bb['y'] + 60); pg.mouse.move(bb['x'] + 90, bb['y'] + 80)
+        lit = until(lambda: pg.evaluate("(() => { const c = document.querySelector('.card.hv'); return c.classList.contains('sp-on') && c.style.getPropertyValue('--mx') !== '' })()"), 3000)
+        check('W62 a card lights up where the pointer is, and the light goes when it leaves', lit, lit); pg.mouse.move(2, 2)
+        check('W62 the light is gone after the pointer leaves', until(lambda: pg.evaluate("!document.querySelector('.sp-on')"), 3000), None); c7.close()
         # the theme switch grows as a circle from the button, then settles: the theme changes and the helper class is gone afterwards
         c5 = ctx(); pg = c5.new_page(); pg.goto(B + '/'); settle(pg)
         t0 = pg.evaluate("document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')"); t1 = 'dark' if t0 == 'light' else 'light'

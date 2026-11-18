@@ -336,7 +336,7 @@ def features_hub():
         ('a-links', 'screenshots/', 'image', 'Screenshots', 'Every page, and the settings of each.'), ('a-tools', 'tools/', 'search', 'Tool finder', 'Search all %d tools by name or by what they do.' % NT), ('a-tg', 'telegram/', 'send', 'Telegram', 'Digest, Due Now buttons, commands and backups.'),
         ('a-home', 'phone/', 'phone', 'On your phone', 'Install the site like an app, on iPhone, Android or a computer.'), ('a-info', 'security.html', 'shield', 'Security', 'What protects your data, and what does not.')])
     body = f'''<section class="hero">{SHAPES_Q}
-<div class="in"><div class="crumb"><b>Features</b></div><h1>Seven pages. <span class="grad">One home.</span></h1><p class="lead">Each page does one job and has its own colour. They share the same bar, login, backup and Settings. Pick one to see what it does.</p></div></section>
+<div class="in"><div class="crumb"><a href="index.html">Home</a> / <b>Features</b></div><h1>Seven pages. <span class="grad">One home.</span></h1><p class="lead">Each page does one job and has its own colour. They share the same bar, login, backup and Settings. Pick one to see what it does.</p></div></section>
 <section class="in"><div class="cards c2">{cards}</div></section>
 <section class="s"><div class="in"><span class="eyebrow">And around them</span><h2>Everything else.</h2><div class="cards c4">{extra}</div></div></section>{band()}'''
     return dict(slug='features', title='Features: Homebase Hub', cls='', desc='The seven pages of Homebase Hub: Home, Links, Info, Cards, Tasks, Files and Tools, and what each one does for your everyday life.', body=body)

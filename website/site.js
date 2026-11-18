@@ -232,4 +232,15 @@
     }
     window.addEventListener('scroll', function () { if (!stick) stick = requestAnimationFrame(onScroll); }, { passive: true }); onScroll();
   }
+  // The pointer light on cards: tracks the pointer inside the card under it (computers only)
+  if (window.matchMedia && matchMedia('(hover: hover)').matches && !reduce) {
+    var lit = null, SP = '.card, .dsec, .gfig, .stat, .pager a';
+    d.addEventListener('pointermove', function (e) {
+      var c = e.target.closest ? e.target.closest(SP) : null;
+      if (lit && lit !== c) { lit.classList.remove('sp-on'); lit = null; }
+      if (!c) return;
+      var r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px'); c.classList.add('sp-on'); lit = c;
+    }, { passive: true });
+    d.addEventListener('pointerleave', function () { if (lit) { lit.classList.remove('sp-on'); lit = null; } });
+  }
 })();

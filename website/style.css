@@ -296,3 +296,10 @@ html.vt-circ::view-transition-new(root){z-index:2}
 .lp-stage[data-view=v] .lp-frame,.lp-stage[data-view=v] .lp-phone,.lp-stage[data-view=v] .lp-pbig{display:none}
 .lp-stage[data-view=v] .lp-vbox{display:block}
 .lp-vbox video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000;border-radius:18px;border:1px solid var(--line);box-shadow:0 44px 90px -40px rgba(0,0,0,.6)}
+/* A soft light that follows the pointer over cards (set by site.js; hover devices only) */
+.card,.dsec,.gfig,.stat,.pager a{position:relative}
+.card::after,.dsec::after,.gfig::after,.stat::after,.pager a::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),color-mix(in srgb,var(--ac,var(--brand)) 20%,transparent),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
+.sp-on::after{opacity:1}
+.crumb{text-transform:uppercase;letter-spacing:.12em;font-size:12px;margin-bottom:14px}
+.hero.sm+section .cards,.hero+section.in .cards.c2{margin-top:-30px}
+.card .mini{list-style:none;padding:0}.card .mini li{position:relative;padding-left:20px}.card .mini li::before{content:"";position:absolute;left:3px;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--ac,var(--brand))}
