@@ -5,7 +5,7 @@
 <h1 align="center">Homebase Hub</h1>
 
 <p align="center"><b>Everything you open every day, in one private place on your own hosting.</b><br>
-Start page, bookmarks, notes, cards, tasks and browser tools. One login, one look, no database.</p>
+Start page, bookmarks, notes, cards, tasks, files and browser tools. One login, one look, no database.</p>
 
 <p align="center">
 <a href="https://github.com/Jackpison/Homebase-Hub/releases/latest"><img src="https://img.shields.io/github/v/release/Jackpison/Homebase-Hub?style=flat-square&label=release&color=ffc21a&labelColor=1a1a1a" alt="Latest release"></a>
@@ -36,7 +36,7 @@ Start page, bookmarks, notes, cards, tasks and browser tools. One login, one loo
 <a href="https://jackpison.github.io/Homebase-Hub/changelog/">Changelog</a>
 </p>
 
-<p align="center"><img src="website/brand/social-preview.png" alt="Homebase Hub: start page, bookmarks, notes, cards, tasks and tools, on your own server" width="860"></p>
+<p align="center"><img src="website/brand/social-preview.png" alt="Homebase Hub: start page, bookmarks, notes, cards, tasks, files and tools, on your own server" width="860"></p>
 
 ---
 
@@ -52,8 +52,8 @@ Start page, bookmarks, notes, cards, tasks and browser tools. One login, one loo
 
 <table align="center">
 <tr>
-<td align="center" width="130"><b>6</b><br>pages</td>
-<td align="center" width="130"><b>53</b><br>browser tools</td>
+<td align="center" width="130"><b>7</b><br>pages</td>
+<td align="center" width="130"><b>47</b><br>browser tools</td>
 <td align="center" width="130"><b>141</b><br>ready-made looks</td>
 <td align="center" width="130"><b>1</b><br>login</td>
 <td align="center" width="130"><b>0</b><br>databases</td>
@@ -103,16 +103,21 @@ Every picture is the running app. Dark is the default and light is one click awa
 </tr>
 <tr>
 <td valign="top"><img src="website/img/cards-crop.webp" alt="Cards page with a table of example cards" width="100%"><br><sub><b>Cards.</b> Your cards in one table, with yearly charges added up.</sub></td>
+<td valign="top"><img src="website/img/files.webp" alt="Files page with a list of files and a details panel" width="100%"><br><sub><b>Files.</b> Private storage on your server, locked in your browser before it is sent.</sub></td>
+</tr>
+<tr>
 <td valign="top"><img src="website/img/s-overview.webp" alt="Settings overview" width="100%"><br><sub><b>Settings.</b> Where things stand, and what to look at next.</sub></td>
+<td valign="top"><img src="website/img/files-settings.webp" alt="Files Settings window" width="100%"><br><sub><b>Files Settings.</b> Privacy, the size limit, share links and Trash.</sub></td>
 </tr>
 </table>
 
 <p align="center"><img src="website/img/m-links.webp" alt="Links on a phone" width="200">
 &nbsp;&nbsp;<img src="website/img/m-info.webp" alt="Info on a phone" width="200">
-&nbsp;&nbsp;<img src="website/img/m-tasks.webp" alt="Tasks on a phone" width="200"><br>
+&nbsp;&nbsp;<img src="website/img/m-tasks.webp" alt="Tasks on a phone" width="200">
+&nbsp;&nbsp;<img src="website/img/m-files.webp" alt="Files on a phone" width="200"><br>
 <sub><b>On a phone.</b> Every page works on a small screen.</sub></p>
 
-<p align="center"><a href="https://jackpison.github.io/Homebase-Hub/screenshots/"><b>See every page and its settings on the website →</b></a></p>
+<p align="center"><a href="https://jackpison.github.io/Homebase-Hub/screenshots/"><b>See every page and its settings on the website →</b></a> &nbsp;·&nbsp; <a href="https://jackpison.github.io/Homebase-Hub/"><b>Watch the 2-minute video →</b></a></p>
 
 <details>
 <summary><b>The settings of each page</b></summary>
