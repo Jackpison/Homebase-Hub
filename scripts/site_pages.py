@@ -80,7 +80,7 @@ FEATURES = [
                   ('settings', 'One bar while you edit', 'Press the gear, choose Edit This Page, and Colors, Fetch Icons, Import Bookmarks and Links Settings sit in one bar at the bottom.')],
          tour=[('Tabs and categories', 'Group links in categories, and the categories in tabs.'), ('Icons on your server', 'Fetch Icons saves each link\'s icon, so pages load without asking other sites.'),
                ('Private and encrypted tabs', 'Make a tab private, or encrypt it with your passphrase.')],
-         hot=[(12, 13), (9, 31), (56, 13)], everyday=('Bookmarks stuck in one browser', 'Import from any browser, preview first, undo anytime')),
+         hot=[(8, 15), (4, 29), (42, 15)], everyday=('Bookmarks stuck in one browser', 'Import from any browser, preview first, undo anytime')),
     dict(id='info', name='Info', ac='a-info', icon='note', url='yourdomain.com/web/info',
          h1='Notes you can *actually find*.',
          lead='Notes in tabs. Each tab holds 1 to 12 boxes, or is written as one document with an outline.',
