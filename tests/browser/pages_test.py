@@ -377,7 +377,10 @@ try:
         cb = pp.locator('#wFree .wcard[data-w=calendar]').bounding_box(); pp.mouse.move(cb['x'] + 30, cb['y'] + 20); pp.mouse.down(); pp.mouse.move(cb['x'] + 30, cb['y'] - 60, steps=6)
         guide = until(lambda: pp.evaluate("!!document.querySelector('#mvGrid .gl')"), 4000)
         pp.keyboard.press('Escape'); pp.mouse.up()
-        pp.keyboard.press('Escape'); pp.evaluate("document.getElementById('editBtn').click()"); pp.wait_for_selector('#ix-ebar:not([hidden])', timeout=15000)
+        pp.keyboard.press('Escape'); until(lambda: pp.evaluate("!!window.HUB && HUB.isAdmin() && !document.body.classList.contains('moving')"), 8000)
+        for _try in range(3):   # the click is repeated if the page was still busy with the drag
+            pp.evaluate("document.getElementById('editBtn').click()")
+            if until(lambda: pp.evaluate("!!document.querySelector('#ix-ebar:not([hidden])')"), 4000): break
         pp.wait_for_selector('#ix-ebar [data-tip="Widgets"]', timeout=15000); pp.click('#ix-ebar [data-tip="Widgets"]'); pp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
         pp.fill('#wLayName', 'Work'); pp.click('#wLaySave'); listed = pp.evaluate("document.getElementById('wLayList').textContent.includes('Work')")
         pp.click('#saveWidgets'); until(lambda: not pp.evaluate("document.getElementById('widgetsSheet').open"), 10000)
