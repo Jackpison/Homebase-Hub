@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.82.1 | Home: put the clock and every widget anywhere on an invisible page grid, resize them, choose a card look; first-use tips; the bell moves to the top-right buttons on Home |
 | 1.82.0 | Home: compact Glance cards that never reach the clock, the clock and the cards can sit left, center or right (drag them or choose in Widgets), and cleaner widget panels |
 | 1.81.1 | Links: a dark square logo (X, Swizzin) keeps its symbol on the dark theme instead of turning into a white square |
 | 1.81.0 | Links gets a new look (Page Style: Refined, Panels or Classic), the site address on hover, a Most Used strip, and all-black or all-white logos made visible |
@@ -182,6 +183,24 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.82.1
+
+### Home
+
+- Drag any widget card to a place of your own on an invisible page grid (24 by 16). The clock has a handle to do the same. Alt with an arrow key moves one step.
+- Drag the small corner of a card to make it smaller or bigger (0.7 to 2 times), and the clock too (0.5 to 2.5 times). Alt with Plus or Minus does it from the keyboard.
+- New Card Look in Widgets: Glass, Dark, Light or Solid, Round, Soft or Square corners, and an accent colour. Reset Layout puts everything back.
+- Cleaner panels and Dock, and many cards now fit in a column down the side.
+- The bell sits in the top-right buttons, between Different Background and Edit.
+- The E key now works with Caps Lock on.
+- Free places are used on screens 900 px wide or more; phones keep the usual layout.
+
+### Everywhere
+
+- First-use tips: one short note per visit, next to the thing it explains, for the person who runs the site. Got It remembers it on that device and Skip Tips turns them off. Settings, Features can show them all again, or one page's tips.
 
 ---
 
