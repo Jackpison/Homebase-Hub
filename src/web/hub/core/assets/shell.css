@@ -1124,3 +1124,14 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 /* (1.82.1) Home: the bell sits in the top-right buttons, as a round glass button like Different Background (its glass comes from Home's own stylesheet) */
 .corner #ix-bell.ix-bc{position:relative;right:auto;bottom:auto;z-index:auto;width:40px;height:40px;flex:none;color:#fff;opacity:1}
 .corner #ix-bell.ix-bc b{top:6px;right:7px}
+
+/* (1.82.1) first-use tips */
+#ix-ftip{position:fixed;z-index:2147483005;width:min(320px,calc(100vw - 16px));padding:14px 16px;border-radius:16px;background:var(--ix-s1);color:var(--ix-tx);border:1px solid var(--ix-line2);box-shadow:0 18px 44px -10px rgba(0,0,0,.55);font:14px/1.45 var(--ix-font);animation:ix-ftipin .25s ease-out}
+#ix-ftip b{display:block;font-size:15px;margin-bottom:4px}
+#ix-ftip p{margin:0 0 12px;color:var(--ix-mu)}
+#ix-ftip .ix-ftip-a{display:flex;gap:8px;flex-wrap:wrap}
+@keyframes ix-ftipin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#ix-ftip{animation:none}}
+#ix-ftip .ix-btn{font:600 13px var(--ix-font);padding:8px 14px;border-radius:10px;border:1px solid var(--ix-line2);background:var(--ix-s2,var(--ix-s1));color:var(--ix-tx);cursor:pointer}
+#ix-ftip .ix-btn.pri{background:var(--ix-accent);border-color:transparent;color:var(--ix-ink,#000)}
+#ix-ftip .ix-btn:hover{filter:brightness(1.1)}

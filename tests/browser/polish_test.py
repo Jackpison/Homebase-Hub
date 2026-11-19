@@ -393,6 +393,21 @@ try:
               tv[0] == '#f4f4f1' and tv[1] == '0.8' and json.loads(kept2) == {'tone': 1, 'rim': 80} and ('0.956' in tv[2] or tv[2].startswith('rgba(244')), (tv, kept2))
         s.php("hub_settings_update(function ($x) { $x['glassFx'] = []; $x['glass'] = false; $x['homeBar'] = false; return $x; });")
         op.context.close()
+        # ---- (1.82.1) first-use tips: one note per visit, remembered on the device, Skip Tips turns them off, Features brings them back ----
+        tc = b.new_context(viewport={'width': 1440, 'height': 900}); tc.add_init_script("Object.defineProperty(navigator, 'webdriver', { get: () => false })")
+        tpg = tc.new_page(); page_errors(tpg, errs); browser_login(tpg, s.base)
+        tpg.goto(s.base + '/web/links/'); wait_js(tpg, "document.querySelectorAll('.cat').length > 0", 20000)
+        tpg.evaluate("localStorage.removeItem('ix-tips')"); tpg.reload()
+        t1 = until(lambda: tpg.evaluate("(document.getElementById('ix-ftip') || {}).textContent || ''"), 9000)
+        tpg.evaluate("document.querySelector('#ix-ftip [data-ix-tip=ok]').click()")
+        gone = until(lambda: tpg.evaluate("!document.getElementById('ix-ftip')"), 3000); seen1 = tpg.evaluate("localStorage.getItem('ix-tips')")
+        tpg.reload(); t2 = until(lambda: tpg.evaluate("(document.getElementById('ix-ftip') || {}).textContent || ''"), 9000)
+        tpg.evaluate("document.querySelector('#ix-ftip [data-ix-tip=off]').click()"); off_s = tpg.evaluate("localStorage.getItem('ix-tips')")
+        tpg.reload(); tpg.wait_for_timeout(4000); none = tpg.evaluate("!document.getElementById('ix-ftip')")
+        tpg.evaluate("window.__ixShell.tips.reset()"); tpg.reload(); t3 = until(lambda: tpg.evaluate("(document.getElementById('ix-ftip') || {}).textContent || ''"), 9000)
+        tc.close()
+        check('P84 (1.82.1) a first-use tip shows once per visit, Got It remembers it (the next visit shows the next tip), Skip Tips stops them, and Show All Tips Again brings them back',
+              bool(t1) and gone and '"seen":["' in seen1 and bool(t2) and t2 != t1 and '"off":1' in off_s and none and t3 == t1, (t1, gone, seen1, t2, off_s, none, t3))
         # ---- (1.68.5) Where > Settings Windows: the page shows through a glass window (a light layer behind it, 55% of its own colour) ----
         s.php("hub_settings_update(function ($x) { $x['glassFx'] = ['wwin' => 1, 'frost' => 0, 'tint' => 10]; return $x; });")
         wp = b.new_context(viewport={'width': 1440, 'height': 900}).new_page(); page_errors(wp, errs); browser_login(wp, s.base)

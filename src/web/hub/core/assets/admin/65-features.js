@@ -101,6 +101,17 @@
     }).join('') + '</div>';
     p.querySelectorAll('[data-ft]').forEach(function (b) { b.onclick = function () { subPane('ft-' + b.dataset.ft); }; });
     bindOff(p);
+    // (1.82.1) the first-use tips: bring them all back, or turn them off
+    var tp = document.createElement('div'); tp.className = 'ix-rcl';
+    var tipRow = function () {
+      var off = K.tips.isOff();
+      tp.innerHTML = rowCard({ ic: ICON.info, title: 'First-Use Tips', desc: off ? 'Tips are off. Turn them on and they show again, one at a time, as you visit each page.' : 'A short note next to a feature the first time you see it, one per visit. Open a page below and press Show Tips to see its notes again.',
+        act: '<button type="button" class="ix-btn" id="ix-tipall">' + (off ? 'Turn Tips On' : 'Show All Tips Again') + '</button>' + (off ? '' : '<button type="button" class="ix-btn" id="ix-tipoff">Turn Tips Off</button>') });
+      var a = tp.querySelector('#ix-tipall'), o = tp.querySelector('#ix-tipoff');
+      a.onclick = function () { K.tips.reset(); toast(off ? 'Tips are on.' : 'The tips will show again, one at a time.'); tipRow(); };
+      if (o) o.onclick = function () { K.tips.setOff(true); toast('Tips are off.'); tipRow(); };
+    };
+    tipRow(); p.appendChild(tp);
     // (1.77.2) the notes that used to be a tab of What's New (how updating works and a few things worth knowing), as the same row cards
     var nb = document.createElement('div'); p.appendChild(nb);
     clLoad().then(function (cl) {
@@ -116,8 +127,9 @@
   }
   function pFeature(p, f) {
     p.innerHTML = '<div class="ix-fhero" style="--fc:' + f.c + '"><span class="ix-fhero-i" style="background:' + f.c + '">' + svg(f.ic) + '</span><div class="ix-fhero-t"><div class="ix-fhero-h">' + esc(f.name) + '</div><p>' + esc(f.lead) + '</p></div>' +
-      '<a class="ix-btn pri" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
+      (K.tips.has(f.id) ? '<button type="button" class="ix-btn" data-tips="' + f.id + '">Show Tips</button>' : '') + '<a class="ix-btn pri" href="' + K.ROOT + f.url + '">Open ' + esc(f.name) + '</a></div>' +
       '<div class="ix-fhl">' + f.hl.map(function (h, i) { return '<div class="ix-fhl-c" style="--fc:' + f.c + '"><span class="ix-fhl-n">' + (i + 1) + '</span><div><b>' + esc(h[0]) + (h[2] ? ' <span class="ix-cl-tag">New</span>' : '') + '</b><p>' + esc(h[1]) + '</p></div></div>'; }).join('') + '</div>';
+    var tb = p.querySelector('[data-tips]'); if (tb) tb.onclick = function () { K.tips.reset(f.id); location.href = K.ROOT + f.url; };   // (1.82.1) the page's tips show again when it opens
     if (f.rel.length) {
       var rb = document.createElement('div'); rb.className = 'ix-frel';
       rb.innerHTML = '<h3>Related Settings</h3><p>Where ' + esc(f.name) + ' keeps its settings.</p><div class="ix-row">' + f.rel.map(function (r) { return '<button type="button" class="ix-btn" data-rel="' + r[1] + '">' + esc(r[0]) + '</button>'; }).join('') + '</div>';
