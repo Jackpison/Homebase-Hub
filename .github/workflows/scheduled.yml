@@ -154,7 +154,7 @@ jobs:
           for i in 1 2 3; do
             sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
             echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
-            sudo killall -q apt-get dpkg || true; sleep 10
+            sudo killall -q apt-get dpkg || true; sleep 5; sudo DEBIAN_FRONTEND=noninteractive dpkg --configure -a || true   # a killed install leaves dpkg half done: finish it, or every retry fails
           done
           exit 1
       - name: The browser
@@ -226,7 +226,7 @@ jobs:
           for i in 1 2 3; do
             sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
             echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
-            sudo killall -q apt-get dpkg || true; sleep 10
+            sudo killall -q apt-get dpkg || true; sleep 5; sudo DEBIAN_FRONTEND=noninteractive dpkg --configure -a || true   # a killed install leaves dpkg half done: finish it, or every retry fails
           done
           exit 1
       - name: The browser
@@ -309,7 +309,7 @@ jobs:
           for i in 1 2 3; do
             sudo timeout -k 15 120 "$(command -v python)" -m playwright install-deps "$BROWSER" && exit 0
             echo "::warning::try $i to install the browser's system packages failed or took over 2 minutes"
-            sudo killall -q apt-get dpkg || true; sleep 10
+            sudo killall -q apt-get dpkg || true; sleep 5; sudo DEBIAN_FRONTEND=noninteractive dpkg --configure -a || true   # a killed install leaves dpkg half done: finish it, or every retry fails
           done
           exit 1
       - name: The browser
