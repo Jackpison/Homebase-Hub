@@ -31,18 +31,22 @@ function setThemeBtn() {
   tb.title = m === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
   tb.setAttribute('aria-label', tb.title);
 }
+// (1.81.0) the page style and its two switches are classes on the page: lk-classic, lk-panels, lk-nohost (set again by links-boot.js before anything paints)
+const LOOK_CLASSES = ['lk-classic', 'lk-panels', 'lk-nohost'];
+const lookClasses = s => { s = s || {}; const o = []; if (s.style === 'classic') o.push('lk-classic'); if (s.style === 'panels') o.push('lk-panels'); if (s.showHost === false) o.push('lk-nohost'); return o; };
 function applyLook(s = S.data.settings) {
   const m = mode(), c = colorsFor(m, s);
   const lv = lookVars(m, s);
   for (const [k] of COLOR_KEYS) { if (k in lv) root.style.setProperty('--' + k, lv[k]); else root.style.removeProperty('--' + k); }
   const z = sizesFor(s); for (const k in z) root.style.setProperty('--fs-' + k, z[k] + 'px');
   root.style.setProperty('--on-accent', lum(c.accent) > .4 ? '#1a1a1a' : '#ffffff');
+  const cls = lookClasses(s); for (const k of LOOK_CLASSES) root.classList.toggle(k, cls.includes(k));
   document.title = (s && s.title) || 'Bookmarks';
   // the tab icon is the site logo (set by the bar); Links does not change it
   setThemeBtn();
   try {
     localStorage.setItem('bm-look', JSON.stringify({ dark: lookVars('dark', s), light: lookVars('light', s),
-      title: (s && s.title) || '', sizes: sizesFor(s) }));
+      title: (s && s.title) || '', sizes: sizesFor(s), cls }));
   } catch {}
 }
 $('#themeBtn').onclick = () => {

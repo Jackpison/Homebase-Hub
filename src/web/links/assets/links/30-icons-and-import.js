@@ -13,6 +13,22 @@ function iconSrc(l, noWeb) {
 }
 // (1.80.9) GitHub's own icon is black: on the dark theme it turns white (class "inv", see links.css)
 const blackIcon = u => /^(https?:\/\/)?([a-z0-9-]+\.)*github\.com(\/|:|$)/i.test(String(u || '').trim());
+// (1.81.0) A logo that is almost all black vanishes on the dark theme (Ledger, X, Vercel, and many more), and an almost all white one on the light theme.
+// The icon is looked at once, small, on a canvas; it then gets the class "ainv" (turns white on dark) or "ainvl" (turns black on light); Links Settings > Make Dark Logos Visible turns that off. A picture from
+// another site cannot be read by the browser, so it is left alone (the saved icons are on your own server, so they can be read).
+function iconTone(img) {
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 24; const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0, 24, 24); const d = g.getImageData(0, 0, 24, 24).data; let all = 0, dark = 0, light = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const a = d[i + 3]; if (a < 40) continue; const r = d[i], gg = d[i + 1], b = d[i + 2]; all += a;
+      if (Math.max(r, gg, b) - Math.min(r, gg, b) > 48) continue;   // a coloured pixel keeps its colour
+      const y = .2126 * r + .7152 * gg + .0722 * b; if (y < 70) dark += a; else if (y > 215) light += a;
+    }
+    if (!all) return ''; return dark / all >= .8 ? 'ainv' : light / all >= .8 ? 'ainvl' : '';
+  } catch { return ''; }
+}
+function adaptIcon(img) { img.classList.remove('ainv', 'ainvl'); if (img.classList.contains('inv')) return; const t = iconTone(img); if (t) img.classList.add(t); }
 function linkIcon(l, noWeb) {
   const src = iconSrc(l, noWeb);
   const fb = (l.title || '?').trim().charAt(0).toUpperCase();
@@ -20,6 +36,7 @@ function linkIcon(l, noWeb) {
   if (src) {
     const img = h('img', { src, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', class: blackIcon(l.url) ? 'inv' : '' });
     img.onerror = () => { img.remove(); box.classList.remove('has'); box.textContent = fb; };
+    img.onload = () => adaptIcon(img);
     box.append(img);
   } else box.textContent = fb;
   return box;

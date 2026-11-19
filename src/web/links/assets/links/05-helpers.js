@@ -1,4 +1,5 @@
 /* ---------- helpers ---------- */
+const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };   // (1.81.0) shown beside a link on hover
 // (1.67.1) The icons (ICONS) are parsed once and copied after that: in edit mode every row has several, and parsing each one
 // again made turning edit mode on take about a quarter of a second with 600 links.
 let ICON_SET = null;

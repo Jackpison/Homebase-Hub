@@ -32,6 +32,7 @@ const $ = s => document.querySelector(s);
 const root = document.documentElement;
 
 /* ---------- helpers ---------- */
+const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };   // (1.81.0) shown beside a link on hover
 // (1.67.1) The icons (ICONS) are parsed once and copied after that: in edit mode every row has several, and parsing each one
 // again made turning edit mode on take about a quarter of a second with 600 links.
 let ICON_SET = null;
@@ -205,18 +206,22 @@ function setThemeBtn() {
   tb.title = m === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
   tb.setAttribute('aria-label', tb.title);
 }
+// (1.81.0) the page style and its two switches are classes on the page: lk-classic, lk-panels, lk-nohost (set again by links-boot.js before anything paints)
+const LOOK_CLASSES = ['lk-classic', 'lk-panels', 'lk-nohost'];
+const lookClasses = s => { s = s || {}; const o = []; if (s.style === 'classic') o.push('lk-classic'); if (s.style === 'panels') o.push('lk-panels'); if (s.showHost === false) o.push('lk-nohost'); return o; };
 function applyLook(s = S.data.settings) {
   const m = mode(), c = colorsFor(m, s);
   const lv = lookVars(m, s);
   for (const [k] of COLOR_KEYS) { if (k in lv) root.style.setProperty('--' + k, lv[k]); else root.style.removeProperty('--' + k); }
   const z = sizesFor(s); for (const k in z) root.style.setProperty('--fs-' + k, z[k] + 'px');
   root.style.setProperty('--on-accent', lum(c.accent) > .4 ? '#1a1a1a' : '#ffffff');
+  const cls = lookClasses(s); for (const k of LOOK_CLASSES) root.classList.toggle(k, cls.includes(k));
   document.title = (s && s.title) || 'Bookmarks';
   // the tab icon is the site logo (set by the bar); Links does not change it
   setThemeBtn();
   try {
     localStorage.setItem('bm-look', JSON.stringify({ dark: lookVars('dark', s), light: lookVars('light', s),
-      title: (s && s.title) || '', sizes: sizesFor(s) }));
+      title: (s && s.title) || '', sizes: sizesFor(s), cls }));
   } catch {}
 }
 $('#themeBtn').onclick = () => {
@@ -516,6 +521,22 @@ function iconSrc(l, noWeb) {
 }
 // (1.80.9) GitHub's own icon is black: on the dark theme it turns white (class "inv", see links.css)
 const blackIcon = u => /^(https?:\/\/)?([a-z0-9-]+\.)*github\.com(\/|:|$)/i.test(String(u || '').trim());
+// (1.81.0) A logo that is almost all black vanishes on the dark theme (Ledger, X, Vercel, and many more), and an almost all white one on the light theme.
+// The icon is looked at once, small, on a canvas; it then gets the class "ainv" (turns white on dark) or "ainvl" (turns black on light); Links Settings > Make Dark Logos Visible turns that off. A picture from
+// another site cannot be read by the browser, so it is left alone (the saved icons are on your own server, so they can be read).
+function iconTone(img) {
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 24; const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0, 24, 24); const d = g.getImageData(0, 0, 24, 24).data; let all = 0, dark = 0, light = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const a = d[i + 3]; if (a < 40) continue; const r = d[i], gg = d[i + 1], b = d[i + 2]; all += a;
+      if (Math.max(r, gg, b) - Math.min(r, gg, b) > 48) continue;   // a coloured pixel keeps its colour
+      const y = .2126 * r + .7152 * gg + .0722 * b; if (y < 70) dark += a; else if (y > 215) light += a;
+    }
+    if (!all) return ''; return dark / all >= .8 ? 'ainv' : light / all >= .8 ? 'ainvl' : '';
+  } catch { return ''; }
+}
+function adaptIcon(img) { img.classList.remove('ainv', 'ainvl'); if (img.classList.contains('inv')) return; const t = iconTone(img); if (t) img.classList.add(t); }
 function linkIcon(l, noWeb) {
   const src = iconSrc(l, noWeb);
   const fb = (l.title || '?').trim().charAt(0).toUpperCase();
@@ -523,6 +544,7 @@ function linkIcon(l, noWeb) {
   if (src) {
     const img = h('img', { src, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', class: blackIcon(l.url) ? 'inv' : '' });
     img.onerror = () => { img.remove(); box.classList.remove('has'); box.textContent = fb; };
+    img.onload = () => adaptIcon(img);
     box.append(img);
   } else box.textContent = fb;
   return box;
@@ -772,7 +794,7 @@ function renderCategory(t, cat, q, multi) {
       continue;
     }
     ul.append(li = h('li', { class: 'row', 'data-i': i }, dragHandle(),
-      h('a', { class: 'main', href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url, 'data-u': t.encrypted ? null : l.url },
+      h('a', { class: 'main', href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url, 'data-host': hostOf(l.url), 'data-u': t.encrypted ? null : l.url },
         linkIcon(l, t.encrypted), h('span', { class: 't' }, l.title)),
       (l.extra || []).map(x => h('a', { class: 'extra', href: safeUrl(x.url), target: '_blank', rel: 'noopener noreferrer', title: x.url, 'data-u': t.encrypted ? null : x.url }, x.title)),
       t.encrypted ? null : visitBadge(l.url),   // at the end of the row, so the numbers line up (1.53.8)
@@ -828,9 +850,22 @@ function rememberOpen(/** @type {any} */ a) {
     list.unshift({ u: url, n: title, t: Date.now() }); localStorage.setItem('hub-recent-links', JSON.stringify(list.slice(0, 12)));
   } catch { /* storage blocked: nothing to remember */ }
 }
-document.addEventListener('click', e => { const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u]'); if (a) { countVisit(a); rememberOpen(a); } });
-document.addEventListener('auxclick', e => { if (e.button !== 1) return; const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u]'); if (a) countVisit(a); });   // the middle button opens a new tab
+document.addEventListener('click', e => { const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u], .most a[data-u]'); if (a) { countVisit(a); rememberOpen(a); } });
+document.addEventListener('auxclick', e => { if (e.button !== 1) return; const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u], .most a[data-u]'); if (a) countVisit(a); });   // the middle button opens a new tab
 
+// (1.81.0) Most Used: up to six links you opened most (never from an encrypted tab), above the page. Needs visit counts; Links Settings > Show Most Used turns it off.
+function mostUsed() {
+  if (!showVisits() || S.q || S.editing || (S.data.settings || {}).showMost === false) return null;
+  const vis = S.visits || {}, seen = new Set(), all = [];
+  for (const t of S.data.tabs) if (!t.encrypted) for (const c of t.categories) for (const l of c.links) {
+    if (l.divider || !l.url || seen.has(l.url) || !(vis[l.url] | 0)) continue;
+    seen.add(l.url); all.push(l);
+  }
+  const top = all.sort((a, b) => (vis[b.url] | 0) - (vis[a.url] | 0)).slice(0, 6);
+  if (top.length < 2) return null;
+  return h('div', { class: 'most' }, h('span', { class: 'ml' }, 'Most Used'), top.map(l => h('a', { href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url, 'data-u': l.url },
+    linkIcon(l, false), h('span', { class: 't' }, l.title), visitBadge(l.url))));
+}
 function render() {
   if (drag && drag.started && !drag.allowRender) return; // redraw after the drop instead
   hideTip();
@@ -887,6 +922,7 @@ function render() {
     h('b', {}, S.editing ? 'This tab has no categories yet' : 'This tab is empty'),
     h('span', {}, S.editing ? 'Add one to any column below.' : 'Add a category, then your first links.'),
     S.auth && !S.editing ? h('button', { class: 'btn primary', type: 'button', onclick: () => { const t = /** @type {HTMLElement} */ (document.querySelector('[data-hub=toggle]')); if (t) t.click(); } }, 'Add Your First Links') : null));
+  const most = !q && !cur.encrypted ? mostUsed() : null; if (most) grid.append(most);
   grid.append(board);
 }
 let lastCols = visibleCols();
@@ -1207,7 +1243,7 @@ let draft = null, draftSaved = false;
 const openDraft = () => { draft = JSON.parse(JSON.stringify(S.data.settings || {})); draftSaved = false; };
 // (1.64.9) Saving Settings, Colors or Text Sizes redraws every link only when a setting changes what is drawn (icons from Google, visit counts,
 // Hide From Visitors). Colors, text sizes and the title are CSS variables and the browser tab's name: with 1,500 links the full redraw took about a second.
-const drawnBy = s => [!!(s && s.webIcons), !(s && s.visitCounts === false), !!(s && s.private)].join();
+const drawnBy = s => [!!(s && s.webIcons), (s && s.showMost) === false, !(s && s.visitCounts === false), !!(s && s.private)].join();
 function commitDraft(dlg, msg) { const redraw = drawnBy(S.data.settings) !== drawnBy(draft); const keepV = S.data.settings && S.data.settings.vault; S.data.settings = draft; if (keepV) S.data.settings.vault = keepV; else delete S.data.settings.vault; draftSaved = true; dlg.close(); applyLook(); persist(msg, redraw); }
 ['#setDlg', '#colorDlg', '#textDlg'].forEach(id => $(id).addEventListener('close', () => { if (!draftSaved) applyLook(); }));
 
@@ -1285,6 +1321,7 @@ function readSettingsForm() {
   draft.private = $('#sPrivate').checked;
   draft.webIcons = $('#sWebIcons').checked;
   draft.visitCounts = $('#sVisits').checked;
+  draft.style = $('#sStyle').value; draft.showHost = $('#sHost').checked; draft.showMost = $('#sMost').checked;
   applyLook(draft);
 }
 // Text Sizes lives inside Settings: close it, then open the sizes
@@ -1295,16 +1332,21 @@ $('#settingsBtn').onclick = () => {
   $('#sPrivate').checked = !!draft.private;
   $('#sWebIcons').checked = !!draft.webIcons;
   $('#sVisits').checked = draft.visitCounts !== false;
+  $('#sStyle').value = ['classic', 'panels'].includes(draft.style) ? draft.style : 'refined'; $('#sHost').checked = draft.showHost !== false; $('#sMost').checked = draft.showMost !== false;
   readSettingsForm(); $('#setErr').textContent = '';
   $('#setDlg').showModal();
 };
 $('#sTitle').addEventListener('input', readSettingsForm);
+['#sStyle', '#sHost'].forEach(id => $(id).addEventListener('change', readSettingsForm));   // (1.81.0) the page shows the choice at once
 $('#setSave').onclick = e => {
   e.preventDefault(); readSettingsForm();
   if (!draft.title) delete draft.title;
   delete draft.favicon;   // no separate Links icon any more: the site logo is used
   if (!draft.private) delete draft.private;
   if (!draft.webIcons) delete draft.webIcons;
+  if (draft.style === 'refined') delete draft.style;   // the usual look is not stored
+  if (draft.showHost !== false) delete draft.showHost;
+  if (draft.showMost !== false) delete draft.showMost;
   commitDraft($('#setDlg'), 'Settings saved');
 };
 
@@ -1387,5 +1429,16 @@ document.addEventListener('keydown', e => {
 document.addEventListener('hub:theme', () => applyLook());   // the bar's theme switch
 setThemeBtn();
 paintFromCache();
+/* (1.81.0) Page Style > Panels: a soft light in the category's colour follows the pointer inside a panel (computers only) */
+if (matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  let lit = null;
+  document.addEventListener('pointermove', e => {
+    if (!root.classList.contains('lk-panels')) { if (lit) { lit.classList.remove('lit'); lit = null; } return; }
+    const tg = /** @type {Element} */ (e.target), c = /** @type {HTMLElement | null} */ (tg.closest && tg.closest('.cat'));
+    if (lit && lit !== c) lit.classList.remove('lit');
+    if (!c) { lit = null; return; }
+    const r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px'); c.classList.add('lit'); lit = c;
+  }, { passive: true });
+}
 load();
 })();

@@ -23,5 +23,16 @@ document.addEventListener('keydown', e => {
 document.addEventListener('hub:theme', () => applyLook());   // the bar's theme switch
 setThemeBtn();
 paintFromCache();
+/* (1.81.0) Page Style > Panels: a soft light in the category's colour follows the pointer inside a panel (computers only) */
+if (matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  let lit = null;
+  document.addEventListener('pointermove', e => {
+    if (!root.classList.contains('lk-panels')) { if (lit) { lit.classList.remove('lit'); lit = null; } return; }
+    const tg = /** @type {Element} */ (e.target), c = /** @type {HTMLElement | null} */ (tg.closest && tg.closest('.cat'));
+    if (lit && lit !== c) lit.classList.remove('lit');
+    if (!c) { lit = null; return; }
+    const r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px'); c.classList.add('lit'); lit = c;
+  }, { passive: true });
+}
 load();
 })();

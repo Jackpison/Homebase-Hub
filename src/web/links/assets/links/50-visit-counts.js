@@ -33,9 +33,22 @@ function rememberOpen(/** @type {any} */ a) {
     list.unshift({ u: url, n: title, t: Date.now() }); localStorage.setItem('hub-recent-links', JSON.stringify(list.slice(0, 12)));
   } catch { /* storage blocked: nothing to remember */ }
 }
-document.addEventListener('click', e => { const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u]'); if (a) { countVisit(a); rememberOpen(a); } });
-document.addEventListener('auxclick', e => { if (e.button !== 1) return; const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u]'); if (a) countVisit(a); });   // the middle button opens a new tab
+document.addEventListener('click', e => { const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u], .most a[data-u]'); if (a) { countVisit(a); rememberOpen(a); } });
+document.addEventListener('auxclick', e => { if (e.button !== 1) return; const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u], .most a[data-u]'); if (a) countVisit(a); });   // the middle button opens a new tab
 
+// (1.81.0) Most Used: up to six links you opened most (never from an encrypted tab), above the page. Needs visit counts; Links Settings > Show Most Used turns it off.
+function mostUsed() {
+  if (!showVisits() || S.q || S.editing || (S.data.settings || {}).showMost === false) return null;
+  const vis = S.visits || {}, seen = new Set(), all = [];
+  for (const t of S.data.tabs) if (!t.encrypted) for (const c of t.categories) for (const l of c.links) {
+    if (l.divider || !l.url || seen.has(l.url) || !(vis[l.url] | 0)) continue;
+    seen.add(l.url); all.push(l);
+  }
+  const top = all.sort((a, b) => (vis[b.url] | 0) - (vis[a.url] | 0)).slice(0, 6);
+  if (top.length < 2) return null;
+  return h('div', { class: 'most' }, h('span', { class: 'ml' }, 'Most Used'), top.map(l => h('a', { href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url, 'data-u': l.url },
+    linkIcon(l, false), h('span', { class: 't' }, l.title), visitBadge(l.url))));
+}
 function render() {
   if (drag && drag.started && !drag.allowRender) return; // redraw after the drop instead
   hideTip();
@@ -92,6 +105,7 @@ function render() {
     h('b', {}, S.editing ? 'This tab has no categories yet' : 'This tab is empty'),
     h('span', {}, S.editing ? 'Add one to any column below.' : 'Add a category, then your first links.'),
     S.auth && !S.editing ? h('button', { class: 'btn primary', type: 'button', onclick: () => { const t = /** @type {HTMLElement} */ (document.querySelector('[data-hub=toggle]')); if (t) t.click(); } }, 'Add Your First Links') : null));
+  const most = !q && !cur.encrypted ? mostUsed() : null; if (most) grid.append(most);
   grid.append(board);
 }
 let lastCols = visibleCols();

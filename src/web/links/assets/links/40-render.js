@@ -143,7 +143,7 @@ function renderCategory(t, cat, q, multi) {
       continue;
     }
     ul.append(li = h('li', { class: 'row', 'data-i': i }, dragHandle(),
-      h('a', { class: 'main', href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url, 'data-u': t.encrypted ? null : l.url },
+      h('a', { class: 'main', href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url, 'data-host': hostOf(l.url), 'data-u': t.encrypted ? null : l.url },
         linkIcon(l, t.encrypted), h('span', { class: 't' }, l.title)),
       (l.extra || []).map(x => h('a', { class: 'extra', href: safeUrl(x.url), target: '_blank', rel: 'noopener noreferrer', title: x.url, 'data-u': t.encrypted ? null : x.url }, x.title)),
       t.encrypted ? null : visitBadge(l.url),   // at the end of the row, so the numbers line up (1.53.8)

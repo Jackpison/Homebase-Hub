@@ -3,7 +3,7 @@ let draft = null, draftSaved = false;
 const openDraft = () => { draft = JSON.parse(JSON.stringify(S.data.settings || {})); draftSaved = false; };
 // (1.64.9) Saving Settings, Colors or Text Sizes redraws every link only when a setting changes what is drawn (icons from Google, visit counts,
 // Hide From Visitors). Colors, text sizes and the title are CSS variables and the browser tab's name: with 1,500 links the full redraw took about a second.
-const drawnBy = s => [!!(s && s.webIcons), !(s && s.visitCounts === false), !!(s && s.private)].join();
+const drawnBy = s => [!!(s && s.webIcons), (s && s.showMost) === false, !(s && s.visitCounts === false), !!(s && s.private)].join();
 function commitDraft(dlg, msg) { const redraw = drawnBy(S.data.settings) !== drawnBy(draft); const keepV = S.data.settings && S.data.settings.vault; S.data.settings = draft; if (keepV) S.data.settings.vault = keepV; else delete S.data.settings.vault; draftSaved = true; dlg.close(); applyLook(); persist(msg, redraw); }
 ['#setDlg', '#colorDlg', '#textDlg'].forEach(id => $(id).addEventListener('close', () => { if (!draftSaved) applyLook(); }));
 
@@ -81,6 +81,7 @@ function readSettingsForm() {
   draft.private = $('#sPrivate').checked;
   draft.webIcons = $('#sWebIcons').checked;
   draft.visitCounts = $('#sVisits').checked;
+  draft.style = $('#sStyle').value; draft.showHost = $('#sHost').checked; draft.showMost = $('#sMost').checked;
   applyLook(draft);
 }
 // Text Sizes lives inside Settings: close it, then open the sizes
@@ -91,16 +92,21 @@ $('#settingsBtn').onclick = () => {
   $('#sPrivate').checked = !!draft.private;
   $('#sWebIcons').checked = !!draft.webIcons;
   $('#sVisits').checked = draft.visitCounts !== false;
+  $('#sStyle').value = ['classic', 'panels'].includes(draft.style) ? draft.style : 'refined'; $('#sHost').checked = draft.showHost !== false; $('#sMost').checked = draft.showMost !== false;
   readSettingsForm(); $('#setErr').textContent = '';
   $('#setDlg').showModal();
 };
 $('#sTitle').addEventListener('input', readSettingsForm);
+['#sStyle', '#sHost'].forEach(id => $(id).addEventListener('change', readSettingsForm));   // (1.81.0) the page shows the choice at once
 $('#setSave').onclick = e => {
   e.preventDefault(); readSettingsForm();
   if (!draft.title) delete draft.title;
   delete draft.favicon;   // no separate Links icon any more: the site logo is used
   if (!draft.private) delete draft.private;
   if (!draft.webIcons) delete draft.webIcons;
+  if (draft.style === 'refined') delete draft.style;   // the usual look is not stored
+  if (draft.showHost !== false) delete draft.showHost;
+  if (draft.showMost !== false) delete draft.showMost;
   commitDraft($('#setDlg'), 'Settings saved');
 };
 

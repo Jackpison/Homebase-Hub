@@ -107,6 +107,8 @@ body.editing:not(.searching) .row a.main{cursor:grab}
 .ico.has{background:none}
 .ico img{width:16px;height:16px;display:block;object-fit:contain}
 :root[data-theme="dark"] img.inv{filter:brightness(0) invert(1)}
+:root[data-theme="dark"] img.ainv{filter:brightness(0) invert(1)}
+:root[data-theme="light"] img.ainvl{filter:brightness(0)}
 .extra{flex:none;font-size:.78em;font-weight:700;letter-spacing:.03em;line-height:1.5;color:var(--text);background:var(--line2);padding:1px 8px;border-radius:5px}
 .extra:hover{background:var(--cat,var(--accent));color:var(--bg)}
 .divider{height:1px;margin:9px 8px;background:var(--line)}
@@ -254,3 +256,30 @@ body.is-locked .search{display:none}
 /* (1.79.2) a small grey divider between one tab and the next */
 .tabs>.tabi+.tabi{position:relative}
 .tabs>.tabi+.tabi::before{content:"";position:absolute;left:-10px;top:50%;width:1px;height:20px;transform:translateY(-50%);background:color-mix(in srgb,var(--text) 22%,transparent)}
+
+/* (1.81.0) Page Style: Refined (the usual look) adds heading bars, count pills and a hover address; Classic turns them off; Panels puts each category in a card */
+:root:not(.lk-classic) .cat-head h2{position:relative;padding-left:12px;letter-spacing:.06em}
+:root:not(.lk-classic) .cat-head h2::before{content:"";position:absolute;left:0;top:50%;width:4px;height:1.1em;margin-top:-.55em;border-radius:2px;background:var(--cat,var(--accent))}
+:root:not(.lk-classic) .cat-head .count{color:var(--muted);background:color-mix(in srgb,var(--text) 7%,transparent);border:1px solid var(--line);border-radius:999px;padding:0 9px;font-weight:700;line-height:1.5}
+:root:not(.lk-classic) .row:hover{box-shadow:inset 0 0 0 1px var(--line)}
+:root:not(.lk-classic) .row{border-radius:10px}
+:root:not(.lk-nohost) .row>a.main{position:relative}
+:root:not(.lk-nohost) .row>a.main::after{content:attr(data-host);position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:6px;pointer-events:none;font-size:.78em;font-weight:500;color:var(--muted);opacity:0;transition:opacity .15s;white-space:nowrap}
+:root:not(.lk-nohost) .row:hover>a.main::after,:root:not(.lk-nohost) .row>a.main:focus-visible::after{opacity:1}
+body.editing .row>a.main::after{display:none}
+.lk-panels .cat{position:relative;background:color-mix(in srgb,var(--text) 4%,transparent);border:1px solid var(--line);border-radius:20px;padding:16px 12px 8px;overflow:hidden}
+.lk-panels .cat::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--cat,var(--accent))}
+.lk-panels .cat::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(300px circle at var(--mx,50%) var(--my,0%),color-mix(in srgb,var(--cat,var(--accent)) 22%,transparent),transparent 65%)}
+.lk-panels .cat.lit::after{opacity:1}
+.lk-panels .col{gap:18px}
+@media (prefers-reduced-motion:reduce){:root:not(.lk-nohost) .row>a.main::after,.lk-panels .cat::after{transition:none}}
+
+/* (1.81.0) Most Used: the links opened most, above the page (Links Settings > Show Most Used) */
+.most{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 18px}
+.most .ml{font-size:.72em;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.most a{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:6px 12px 6px 8px;border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--text) 4%,transparent);color:var(--text);text-decoration:none;transition:border-color .15s,background .15s}
+.most a:hover,.most a:focus-visible{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.most a .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:16ch}
+.most a .vc{margin:0;flex:none;font-size:.7em;font-weight:600;line-height:1;padding:3px 6px;border-radius:999px;color:var(--muted);background:color-mix(in srgb,var(--muted) 16%,transparent)}
+body.editing .most,body.searching .most{display:none}
+@media (max-width:700px){.most{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.most::-webkit-scrollbar{display:none}.most a,.most .ml{flex:none}}

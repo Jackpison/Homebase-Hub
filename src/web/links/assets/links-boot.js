@@ -17,6 +17,7 @@
       for (var k in c) if (/^#[0-9a-f]{6}$/i.test(c[k])) r.style.setProperty('--' + k, c[k]);
       if (look.sizes) for (var z in look.sizes) r.style.setProperty('--fs-' + z, look.sizes[z] + 'px');
       if (look.title) document.title = look.title;
+      if (look.cls) for (var q = 0; q < look.cls.length; q++) if (/^lk-[a-z]+$/.test(look.cls[q])) r.classList.add(look.cls[q]);
     }
   } catch (e) {}
 })();
