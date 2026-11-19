@@ -228,6 +228,8 @@ const WIDGET_ON  = ['today' => true, 'countdown' => true, 'note' => true, 'tools
                     'quote' => true, 'worldclock' => false, 'weather' => false, 'bills' => false, 'recent' => false, 'files' => false, 'status' => false];
 const WORLD_CLOCKS = 3;                     // places in World Clock
 const WIDGET_STYLES = ['dock', 'glance'];
+const CARDS_POS = ['bottom', 'left', 'right'];   // (1.82.0) where the Glance cards sit
+const CLOCK_POS = ['center', 'left', 'right'];   // (1.82.0) where the clock sits
 const GLASS_TINTS = ['light', 'dark', 'solid'];   // Home Settings > Glass > Tint   // Glass Dock, or Glance and Expand
 const PAD_MAX = 20000;                      // characters kept in the Scratch Pad
 
@@ -259,6 +261,8 @@ function clean_widgets($in): array
         'style'     => in_array($in['style'] ?? '', WIDGET_STYLES, true) ? $in['style'] : 'dock',
         'show'      => (bool) ($in['show'] ?? true),   // Widgets > Show Widgets (1.51.1): off hides every widget; the clock has its own switch
         'clock'     => (bool) ($in['clock'] ?? true),
+        'cardsPos'  => in_array($in['cardsPos'] ?? '', CARDS_POS, true) ? $in['cardsPos'] : 'bottom',
+        'clockPos'  => in_array($in['clockPos'] ?? '', CLOCK_POS, true) ? $in['clockPos'] : 'center',
         'list'      => $list,
         'countdown' => ['name' => str_clip($cd['name'] ?? '', 40), 'date' => $okDate ? $date : '', 'time' => $okDate && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) ($cd['time'] ?? '')) ? (string) $cd['time'] : ''],   // (1.79.0) time: optional, for the live seconds
         'note'      => ['tab' => $idOk($nt['tab'] ?? ''), 'box' => $idOk($nt['box'] ?? '')],
@@ -521,6 +525,7 @@ function public_payload(): array
         'icon'    => '',   // no separate start page icon: the site logo is used
         'private' => !empty($s['private']),
         'panel'   => $s['panel'],
+        'clockPos' => $s['widgets']['clockPos'],   // where the clock sits is for everyone too
         'clock'   => $s['widgets']['clock'],   // the big clock and greeting are for everyone; the widgets themselves are not
         'bg'      => [
             'uploadChance' => $s['bg']['uploadChance'],

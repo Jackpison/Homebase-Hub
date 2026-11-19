@@ -434,3 +434,53 @@ a.wrow{text-decoration:none;color:inherit}
 .group .g-row>input[type=text]{flex:0 1 250px;min-width:0;width:250px;padding:11px 14px;border-radius:12px;border:1px solid var(--s-line)}
 .group .g-row>button.btn{flex:none;padding:9px 16px;border-radius:12px;border:1px solid var(--s-line);background:var(--s-bg3);font-weight:700}
 @media (max-width:480px){.group .g-row>input[type=text]{flex:1 1 100%;width:100%}.group .g-row:has(>input[type=text]){flex-wrap:wrap}}
+
+/* ================= (1.82.0) Compact cards, and where the clock and the cards sit ================= */
+/* Compact Glance cards: short tiles with a gold bar, so two rows never reach the clock */
+.wcards{gap:10px;bottom:max(76px,calc(env(safe-area-inset-bottom) + 56px))}
+.wcards > .wcard{flex:0 0 calc((100% - (var(--n,4) - 1) * 10px) / var(--n,4))}
+.wcard{min-height:76px;padding:10px 14px;border-radius:18px;gap:3px;overflow:hidden}
+.wc-h{font-size:12.5px}
+.wc-big{font-size:20px}
+.wc-s{font-size:12px;-webkit-line-clamp:1}
+.pgrip{display:none;position:absolute;z-index:3;width:26px;height:26px;border-radius:9px;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.45);color:#fff;font-size:14px;line-height:1;cursor:grab;place-items:center;touch-action:none;padding:0}
+body.can-move .pgrip{display:grid;opacity:0;transition:opacity .15s}   /* always there for the keyboard, seen on hover or focus */
+body.can-move .clock:hover .pgrip,body.can-move .wcards:hover .pgrip,.pgrip:focus-visible,body.moving .pgrip{opacity:1}
+body.moving .pgrip{cursor:grabbing}
+.clock{position:relative}
+.clock .pgrip{top:-8px;right:-34px}
+.wcards .pgrip{top:-30px;right:0}
+/* the clock: left, center (the usual) or right */
+body[data-clockpos="left"] .stage{align-items:flex-start;padding-left:clamp(24px,7vw,120px)}
+body[data-clockpos="right"] .stage{align-items:flex-end;padding-right:clamp(24px,7vw,120px)}
+body[data-clockpos="left"] .clock{align-items:flex-start;text-align:left}
+body[data-clockpos="right"] .clock{align-items:flex-end;text-align:right}
+body[data-clockpos="left"] .clock .pgrip{right:auto;left:-34px}
+/* the Glance cards: a column down the left or the right (wide screens), the usual row on a phone */
+@media (min-width:900px){
+  body[data-wstyle="glance"][data-cardspos="left"] .wcards,body[data-wstyle="glance"][data-cardspos="right"] .wcards{top:50%;bottom:auto;transform:translateY(-50%);width:236px;flex-direction:column;flex-wrap:nowrap;justify-content:flex-start;max-height:calc(100vh - 150px);overflow-y:auto;scrollbar-width:none;padding:2px}
+  body[data-wstyle="glance"][data-cardspos="left"] .wcards{left:clamp(16px,2.5vw,40px)}
+  body[data-wstyle="glance"][data-cardspos="right"] .wcards{left:auto;right:clamp(16px,2.5vw,40px)}
+  body[data-wstyle="glance"][data-cardspos="left"] .wcards > .wcard,body[data-wstyle="glance"][data-cardspos="right"] .wcards > .wcard{flex:none;width:100%}
+  body[data-wstyle="glance"][data-cardspos="left"] .wcards .pgrip,body[data-wstyle="glance"][data-cardspos="right"] .wcards .pgrip{position:sticky;top:0;align-self:flex-end;margin-bottom:-24px}
+  body[data-wstyle="glance"][data-cardspos="left"][data-clockpos="left"] .stage{padding-left:clamp(280px,22vw,340px)}
+  body[data-wstyle="glance"][data-cardspos="right"][data-clockpos="right"] .stage{padding-right:clamp(280px,22vw,340px)}
+  body[data-wstyle="glance"][data-cardspos="left"] .stage,body[data-wstyle="glance"][data-cardspos="right"] .stage{padding-bottom:clamp(60px,9vh,90px)}
+}
+/* the drop zones while you drag */
+#mvZones{position:fixed;inset:0;z-index:9;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr;gap:10px;padding:76px 10px 10px;pointer-events:none}
+#mvZones[hidden]{display:none}
+#mvZones i{display:grid;place-items:center;border:2px dashed rgba(255,255,255,.45);border-radius:22px;background:rgba(0,0,0,.18);color:#fff;font-style:normal;font-weight:700;font-size:15px}
+#mvZones i.on{border-color:#ffd76a;background:rgba(255,215,106,.16)}
+#mvZones.cards{grid-template-columns:1fr 2fr 1fr}
+body.moving{user-select:none;cursor:grabbing}
+
+/* (1.82.0) Widget panels, refined: a gold bar and a count beside the title, a line under the header, rows with a thin edge */
+.wph{justify-content:flex-start;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.18)}
+.wph h2{flex:0 1 auto}
+.wph .wx{margin-left:auto}
+.wpn{flex:none;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.2);color:#ffe9a8}
+.wpn[hidden]{display:none}
+.wrow{border:1px solid rgba(255,255,255,.10);transition:border-color .15s,background .15s}
+.wrow:hover{border-color:rgba(255,215,106,.55)}
+@media (prefers-reduced-motion:reduce){.wrow{transition:none}}

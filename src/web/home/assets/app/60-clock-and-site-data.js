@@ -52,6 +52,7 @@ function renderClock(){
   clearTimeout(clockT);
   const on = !!(WCFG ? WCFG.clock : PUB.clock);
   $('#clock').hidden = !on;
+  document.body.dataset.clockpos = (WCFG ? WCFG.clockPos : PUB.clockPos) || 'center';   // (1.82.0)
   if (!on) return;
   const now = new Date(), h = now.getHours();
   $('#greet').textContent = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night';

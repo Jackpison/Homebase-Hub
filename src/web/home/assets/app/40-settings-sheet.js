@@ -31,6 +31,7 @@ function openWidgets(){
   $('#wShow').checked = wShowNow();
   seg($('#wStyle'), w.style);
   $('#wClock').checked = w.clock;
+  seg($('#wClockPos'), w.clockPos || 'center'); seg($('#wCardsPos'), w.cardsPos || 'bottom');
   $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date; $('#wCdTime').value = w.countdown.time || '';
   drawWidgetList();
   fillNotePicker();
@@ -97,6 +98,7 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   w.zones = zones;
   w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
+  w.clockPos = $('#wClockPos [aria-checked="true"]')?.dataset.v || 'center'; w.cardsPos = $('#wCardsPos [aria-checked="true"]')?.dataset.v || 'bottom';
   w.countdown = { name:$('#wCdName').value.trim(), date:$('#wCdDate').value, time:$('#wCdTime').value };
   w.note = { tab:tab || '', box:box || '' };
   ADMIN.widgets = w;

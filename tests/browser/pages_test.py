@@ -310,6 +310,28 @@ try:
             pc.close(); return out
         g = placed('glance', 1280, 800, ['quote', 'weather', 'today']); d = placed('dock', 1280, 700, ['weather', 'today'])
         check('P41 an open widget sits above the cards or the dock (never on them), stays on screen, and the clock makes way when there is no room', g == [3, 3, 3] and d == [3, 3], (g, d))
+        # P41b (1.82.0): compact Glance cards never reach the clock; the cards and the clock can sit left, centre or right; both can be dragged
+        def place_pos(cards, clock):
+            subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = 'glance'; $s['widgets']['cardsPos'] = '%s'; $s['widgets']['clockPos'] = '%s'; write_json(SITE_FILE, clean_site($s));" % (D, cards, clock)], check=True)
+            pc = b.new_context(user_agent=UA, viewport={'width': 1440, 'height': 800}); pc.add_cookies(cookies); pc.route('**/*', handle); pc.add_init_script(TRACK_REQUESTS)
+            pc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('hl-wshow','1')}catch(e){}"); pp = pc.new_page(); pp.goto(B + '/web/home/', wait_until='domcontentloaded')
+            until(lambda: pp.evaluate("document.querySelectorAll('#wCards [data-w]').length") > 3, 10000); settle(pp); return pc, pp
+        pc, pp = place_pos('bottom', 'center')
+        bot = pp.evaluate("(() => { const k = [...document.querySelectorAll('#wCards .wcard')].map(e => e.getBoundingClientRect()), c = document.getElementById('date').getBoundingClientRect(); return [Math.max(...k.map(r => r.height)) <= 92, Math.min(...k.map(r => r.top)) > c.bottom + 4, getComputedStyle(document.querySelector('.wcard'), '::after').content === 'none']; })()")
+        pc.close()
+        pc, pp = place_pos('left', 'right')
+        side = pp.evaluate("(() => { const w = document.getElementById('wCards').getBoundingClientRect(), c = document.getElementById('clock').getBoundingClientRect(); return [w.left < 80 && w.width < 260 && w.height > 300, c.left > innerWidth * .55, document.body.dataset.cardspos, document.body.dataset.clockpos]; })()")
+        pc.close()
+        pc, pp = place_pos('bottom', 'center')
+        bb = pp.locator('#clock').bounding_box(); pp.mouse.move(bb['x'] + bb['width'] / 2, bb['y'] + 30); until(lambda: pp.evaluate("getComputedStyle(document.querySelector('#clock .pgrip')).opacity") == '1', 3000)
+        gb = pp.locator('#clock .pgrip').bounding_box(); pp.mouse.move(gb['x'] + 10, gb['y'] + 10); pp.mouse.down(); pp.mouse.move(1300, 300, steps=6)
+        zones = pp.evaluate("[...document.querySelectorAll('#mvZones i.on')].map(i => i.textContent)"); pp.mouse.up()
+        moved = until(lambda: pp.evaluate("document.body.dataset.clockpos") == 'right', 8000)
+        saved = subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; echo load_site()['widgets']['clockPos'];" % D], capture_output=True, text=True).stdout
+        pp.locator('#clock .pgrip').focus(); pp.keyboard.press('ArrowLeft'); keyed = until(lambda: pp.evaluate("document.body.dataset.clockpos") == 'center', 8000)
+        pc.close()
+        check('P41b (1.82.0) compact Glance cards (short, no side bar) stay below the clock; cards and clock can sit left or right; dragging the clock by its handle to the right zone saves it (and an arrow key moves it back)',
+              all(bot) and side[0] and side[1] and side[2:] == ['left', 'right'] and zones == ['Right'] and moved and saved.strip() == 'right' and keyed, (bot, side, zones, moved, saved, keyed))
         # P40: the glass. (1.68.4) one glass for the whole site, set in Settings > Appearance > Glass (Home Settings > Glass is only a link now).
         # The computer's "reduce transparency" (Windows: Transparency effects off) does not turn it into a dark block.
         def glass(fx=None, reduce=False):

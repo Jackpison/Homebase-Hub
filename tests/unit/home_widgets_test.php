@@ -138,3 +138,11 @@ t('...and restoring it brings the pad back', pad_read()['text'] === 'Spare key i
 $old = $bk['home']; unset($old['pad']); pad_write('kept');
 bk_import(['home' => $old], ['home' => true]);
 t('a backup from before 1.51 (no pad) leaves the pad as it is', pad_read()['text'] === 'kept');
+
+// (1.82.0) where the Glance cards and the clock sit
+$w = clean_widgets([]);
+t('cards sit at the bottom and the clock in the centre at first', $w['cardsPos'] === 'bottom' && $w['clockPos'] === 'center');
+$w = clean_widgets(['cardsPos' => 'left', 'clockPos' => 'right']);
+t('cards can sit left or right and the clock left or right', $w['cardsPos'] === 'left' && $w['clockPos'] === 'right');
+$w = clean_widgets(['cardsPos' => 'top', 'clockPos' => '<b>']);
+t('an unknown place falls back to the bottom and the centre', $w['cardsPos'] === 'bottom' && $w['clockPos'] === 'center');

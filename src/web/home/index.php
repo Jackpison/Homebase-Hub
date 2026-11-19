@@ -118,7 +118,7 @@ if (!empty($site['private']) && !hub_admin()) {
 <link rel="stylesheet" href="<?= $v('assets/app.css') ?>">
 <style>:root{--dim:<?= (float) $site['bg']['dim'] ?>}</style>
 </head>
-<body>
+<body data-clockpos="<?= htmlspecialchars($site['clockPos'] ?? 'center', ENT_QUOTES) ?>">
 
 <div id="bg" aria-hidden="true"></div>
 <div id="scrim"></div>
@@ -137,12 +137,13 @@ if (!empty($site['private']) && !hub_admin()) {
     <p class="greet" id="greet"></p>
     <p class="time" id="time"></p>
     <p class="date" id="date"></p>
+    <button type="button" class="pgrip" data-drag="clock" aria-label="Move the clock: drag it, or press the Left or Right arrow" title="Drag to move the clock">⠿</button>
   </div>
   <div class="chips" id="wChips" hidden></div>
 </main>
 
 <section class="lg wpanel" id="wPanel" aria-labelledby="wPanelTitle" hidden>
-  <header class="wph"><h2 id="wPanelTitle"></h2><button type="button" class="wx" id="wClose" aria-label="Close">✕</button></header>
+  <header class="wph"><h2 id="wPanelTitle"></h2><span class="wpn" id="wPanelCount" hidden></span><button type="button" class="wx" id="wClose" aria-label="Close">✕</button></header>
   <div class="wbody" id="wBody"></div>
 </section>
 <div class="lg wdock" id="wDock" role="toolbar" aria-label="Widgets" hidden></div>
@@ -219,6 +220,12 @@ if (!empty($site['private']) && !hub_admin()) {
         <div class="group">
           <label class="g-row"><span class="g-label">Show the Clock<small>The time, the date and a greeting. Visitors see it too.</small></span>
             <input type="checkbox" class="switch" id="wClock"></label>
+        </div>
+        <div class="group">
+          <div class="g-row stack"><span class="g-label">Clock Position<small>Left, center or right. You can also drag the clock by its handle.</small></span>
+            <div class="seg" id="wClockPos" role="radiogroup" aria-label="Clock Position"><button type="button" role="radio" data-v="left">Left</button><button type="button" role="radio" data-v="center">Center</button><button type="button" role="radio" data-v="right">Right</button></div></div>
+          <div class="g-row stack"><span class="g-label">Cards Position<small>For Glance and Expand: the cards along the bottom, or down the left or right side. Drag them by their handle too.</small></span>
+            <div class="seg" id="wCardsPos" role="radiogroup" aria-label="Cards Position"><button type="button" role="radio" data-v="bottom">Bottom</button><button type="button" role="radio" data-v="left">Left</button><button type="button" role="radio" data-v="right">Right</button></div></div>
         </div>
         <h3>Widgets, in This Order</h3>
         <div class="field">

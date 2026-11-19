@@ -464,6 +464,7 @@ function openWidgets(){
   $('#wShow').checked = wShowNow();
   seg($('#wStyle'), w.style);
   $('#wClock').checked = w.clock;
+  seg($('#wClockPos'), w.clockPos || 'center'); seg($('#wCardsPos'), w.cardsPos || 'bottom');
   $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date; $('#wCdTime').value = w.countdown.time || '';
   drawWidgetList();
   fillNotePicker();
@@ -530,6 +531,7 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   w.zones = zones;
   w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
+  w.clockPos = $('#wClockPos [aria-checked="true"]')?.dataset.v || 'center'; w.cardsPos = $('#wCardsPos [aria-checked="true"]')?.dataset.v || 'bottom';
   w.countdown = { name:$('#wCdName').value.trim(), date:$('#wCdDate').value, time:$('#wCdTime').value };
   w.note = { tab:tab || '', box:box || '' };
   ADMIN.widgets = w;
@@ -1131,6 +1133,7 @@ function renderClock(){
   clearTimeout(clockT);
   const on = !!(WCFG ? WCFG.clock : PUB.clock);
   $('#clock').hidden = !on;
+  document.body.dataset.clockpos = (WCFG ? WCFG.clockPos : PUB.clockPos) || 'center';   // (1.82.0)
   if (!on) return;
   const now = new Date(), h = now.getHours();
   $('#greet').textContent = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night';
@@ -1402,6 +1405,8 @@ function renderWidgets(quiet = false){
   document.body.classList.toggle('has-widgets', list.length > 0);
   document.body.classList.toggle('w-open', !!wOpen);
   document.body.dataset.wstyle = WCFG ? WCFG.style : '';
+  document.body.dataset.cardspos = WCFG && WCFG.cardsPos || 'bottom'; document.body.dataset.clockpos = WCFG ? WCFG.clockPos || 'center' : document.body.dataset.clockpos;   // (1.82.0)
+  document.body.classList.toggle('can-move', !!WCFG);   // the handles to drag the clock and the cards show for you only
 
   // Glass Dock: chips under the clock for Today and Countdown, and a dock with every widget
   const chips = dock ? ['today', 'countdown', 'weather'].filter(id => list.includes(id)).map(id => ({ id, s:summary(id) })).filter(c => c.s.chip) : [];
@@ -1418,7 +1423,7 @@ function renderWidgets(quiet = false){
     return `<button type="button" class="lg wcard" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}">
       <span class="wc-h"><span>${esc(s.title || W_META[id].name)}</span>${s.alert ? `<em>${esc(s.alert)}</em>` : ''}</span>
       ${s.big ? `<b class="wc-big">${esc(s.big)}</b>` : ''}<span class="wc-s">${esc(s.small || '')}</span></button>`;
-  }).join('') : '';
+  }).join('') + '<button type="button" class="pgrip" data-drag="cards" aria-label="Move the cards: drag them, or press the Left or Right arrow" title="Drag to move the cards">⠿</button>' : '';
   if (!quiet || wOpen === 'worldclock') renderPanel();   // each minute: only World Clock's open panel changes (never one you type in)
   if (keep) $(`#${keep[0]} [data-w="${keep[1]}"]`)?.focus();
 }
@@ -1447,6 +1452,8 @@ function renderPanel(){
   p.dataset.shown = wOpen;
   $('#wPanelTitle').textContent = wOpen === 'note' && WD.info && pinnedBox().box && !pinnedBox().tab.enc ? pinnedBox().box.title : W_META[wOpen].name;
   $('#wBody').innerHTML = panelHTML(wOpen);
+  const due = wOpen === 'today' ? $$('#wBody .wrow:not(.wev)').length : 0;   // (1.82.0) Today: how many are due, beside the title
+  $('#wPanelCount').hidden = !due; $('#wPanelCount').textContent = String(due);
   placePanel();
   if (keep && document.getElementById(keep)) document.getElementById(keep).focus();
 }
@@ -1658,6 +1665,59 @@ function setWidgets(cfg){
   loadWidgets();
 }
 
+/* ---------- (1.82.0) drag the clock or the Glance cards to the left, centre or right ----------
+   Only you see the handles (body.can-move). While you drag, three zones show; let go over one and it is saved like any Widgets setting.
+   The arrow keys on a handle do the same, and Widgets > Clock Position and Cards Position are the plain way. */
+const MOVE_PLACES = { clock: ['left', 'center', 'right'], cards: ['left', 'bottom', 'right'] };
+let moveDrag = null;
+async function movePlace(/** @type {string} */ what, /** @type {string} */ to){
+  const key = what === 'clock' ? 'clockPos' : 'cardsPos', wasEditing = editing;
+  try { if (!ADMIN) ADMIN = await api('admin_data'); } catch (err){ toast(err.message, true); return; }   // outside Edit the full settings are not loaded yet
+  if (!ADMIN.widgets || ADMIN.widgets[key] === to){ if (!wasEditing) ADMIN = null; return; }
+  const prev = ADMIN.widgets[key];
+  ADMIN.widgets[key] = to;
+  try { await saveAll('Moved'); setWidgets(ADMIN.widgets); } catch (err){ ADMIN.widgets[key] = prev; setWidgets(ADMIN.widgets); toast(err.message, true); }
+  if (!wasEditing) ADMIN = null;
+}
+function moveZone(/** @type {string} */ what, /** @type {number} */ x){
+  const f = x / innerWidth;
+  return what === 'clock' ? (f < .34 ? 'left' : f > .66 ? 'right' : 'center') : (f < .3 ? 'left' : f > .7 ? 'right' : 'bottom');
+}
+function moveZonesShow(/** @type {string} */ what, /** @type {string} */ on){
+  let z = document.getElementById('mvZones');
+  if (!z){ z = document.createElement('div'); z.id = 'mvZones'; z.setAttribute('aria-hidden', 'true'); document.body.append(z); }
+  z.hidden = !on; if (!on) return;
+  const names = MOVE_PLACES[what];
+  z.className = what; z.innerHTML = names.map(n => `<i data-z="${n}" class="${n === on ? 'on' : ''}">${n === 'bottom' ? 'Bottom' : n[0].toUpperCase() + n.slice(1)}</i>`).join('');
+}
+document.addEventListener('pointerdown', e => {
+  const g = /** @type {HTMLElement | null} */ ((/** @type {Element} */ (e.target)).closest && (/** @type {Element} */ (e.target)).closest('.pgrip'));
+  if (!g || !WCFG || e.button) return;
+  e.preventDefault();
+  moveDrag = { what: g.dataset.drag || 'clock', to: '' };
+  moveDrag.to = moveZone(moveDrag.what, e.clientX); document.body.classList.add('moving'); moveZonesShow(moveDrag.what, moveDrag.to);
+  try { g.setPointerCapture(e.pointerId); } catch { /* the page still follows the pointer */ }
+});
+document.addEventListener('pointermove', e => {
+  if (!moveDrag) return;
+  const to = moveZone(moveDrag.what, e.clientX); if (to !== moveDrag.to){ moveDrag.to = to; moveZonesShow(moveDrag.what, to); }
+});
+function moveEnd(/** @type {boolean} */ commit){
+  if (!moveDrag) return;
+  const d = moveDrag; moveDrag = null; document.body.classList.remove('moving'); moveZonesShow(d.what, '');
+  if (commit) movePlace(d.what, d.to);
+}
+document.addEventListener('pointerup', () => moveEnd(true));
+document.addEventListener('pointercancel', () => moveEnd(false));
+document.addEventListener('keydown', e => {
+  const g = /** @type {HTMLElement | null} */ ((/** @type {Element} */ (e.target)).closest && (/** @type {Element} */ (e.target)).closest('.pgrip'));
+  if (moveDrag && e.key === 'Escape'){ moveEnd(false); return; }
+  if (!g || !WCFG || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+  e.preventDefault();
+  const what = g.dataset.drag || 'clock', list = MOVE_PLACES[what], cur = (what === 'clock' ? WCFG.clockPos : WCFG.cardsPos) || list[what === 'clock' ? 1 : 1];
+  const i = Math.max(0, Math.min(list.length - 1, list.indexOf(cur) + (e.key === 'ArrowRight' ? 1 : -1)));
+  movePlace(what, list[i]).then(() => /** @type {HTMLElement | null} */ (document.querySelector(`.pgrip[data-drag="${what}"]`))?.focus());
+});
 /* ======================================================================
    HOME TOUR (1.69.0): four cards in the Stepper (shell.js), each lighting up a part of the page. It opens once, on the first visit
    after the site is set up (New Site Setup leaves "hl-tour-due"), and any time from Home Settings > Take the Tour.

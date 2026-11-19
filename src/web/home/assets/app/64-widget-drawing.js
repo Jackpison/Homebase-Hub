@@ -8,6 +8,8 @@ function renderWidgets(quiet = false){
   document.body.classList.toggle('has-widgets', list.length > 0);
   document.body.classList.toggle('w-open', !!wOpen);
   document.body.dataset.wstyle = WCFG ? WCFG.style : '';
+  document.body.dataset.cardspos = WCFG && WCFG.cardsPos || 'bottom'; document.body.dataset.clockpos = WCFG ? WCFG.clockPos || 'center' : document.body.dataset.clockpos;   // (1.82.0)
+  document.body.classList.toggle('can-move', !!WCFG);   // the handles to drag the clock and the cards show for you only
 
   // Glass Dock: chips under the clock for Today and Countdown, and a dock with every widget
   const chips = dock ? ['today', 'countdown', 'weather'].filter(id => list.includes(id)).map(id => ({ id, s:summary(id) })).filter(c => c.s.chip) : [];
@@ -24,7 +26,7 @@ function renderWidgets(quiet = false){
     return `<button type="button" class="lg wcard" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}">
       <span class="wc-h"><span>${esc(s.title || W_META[id].name)}</span>${s.alert ? `<em>${esc(s.alert)}</em>` : ''}</span>
       ${s.big ? `<b class="wc-big">${esc(s.big)}</b>` : ''}<span class="wc-s">${esc(s.small || '')}</span></button>`;
-  }).join('') : '';
+  }).join('') + '<button type="button" class="pgrip" data-drag="cards" aria-label="Move the cards: drag them, or press the Left or Right arrow" title="Drag to move the cards">⠿</button>' : '';
   if (!quiet || wOpen === 'worldclock') renderPanel();   // each minute: only World Clock's open panel changes (never one you type in)
   if (keep) $(`#${keep[0]} [data-w="${keep[1]}"]`)?.focus();
 }
@@ -53,6 +55,8 @@ function renderPanel(){
   p.dataset.shown = wOpen;
   $('#wPanelTitle').textContent = wOpen === 'note' && WD.info && pinnedBox().box && !pinnedBox().tab.enc ? pinnedBox().box.title : W_META[wOpen].name;
   $('#wBody').innerHTML = panelHTML(wOpen);
+  const due = wOpen === 'today' ? $$('#wBody .wrow:not(.wev)').length : 0;   // (1.82.0) Today: how many are due, beside the title
+  $('#wPanelCount').hidden = !due; $('#wPanelCount').textContent = String(due);
   placePanel();
   if (keep && document.getElementById(keep)) document.getElementById(keep).focus();
 }
