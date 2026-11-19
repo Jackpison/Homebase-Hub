@@ -343,7 +343,7 @@ try:
         card_min = until(lambda: pp.evaluate("getComputedStyle(document.querySelector('#wFree .wfc')).getPropertyValue('--ws')") in ('0.7', '0.7000000000000001'), 20000)
         pp.locator('#clock').hover(); cr = pp.locator('#clock .crs').bounding_box(); pp.mouse.move(cr['x'] + 8, cr['y'] + 8); pp.mouse.down(); pp.mouse.move(cr['x'] + 160, cr['y'] + 90, steps=5); pp.mouse.up()
         clock_s = until(lambda: float(json.loads(saved_pos())['clockScale']) > 1.2, 8000)
-        bell = pp.evaluate("(() => { const b = document.getElementById('ix-bell'); return !!b && !!b.closest('.corner') && b.nextElementSibling === document.getElementById('editBtn') && b.previousElementSibling === document.getElementById('nextBg'); })()")
+        bell = pp.evaluate("(() => { const b = document.getElementById('ix-bell'); return !!b && !!b.closest('.corner') && b.nextElementSibling === document.getElementById('editBtn') && b.previousElementSibling === document.getElementById('nextBg') && !!b.querySelector('svg') && !b.querySelector('img'); })()")
         final_pos = saved_pos(); pc.close()
         check('P41c (1.82.1) a free card and the clock resize by their handle and by Alt with Plus or Minus (the smallest card is 0.7), the size is saved, and the bell sits between Different Background and Edit',
               card_big and card_saved_s and card_min and clock_s and bell, (card_big, card_saved_s, final_pos, card_min, clock_s, bell))
