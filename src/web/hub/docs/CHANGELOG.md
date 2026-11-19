@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.82.4 | Home: the alerts bell in the top-right buttons is the same line bell as the gear and refresh |
 | 1.82.3 | Home: widgets never land on each other, Undo after a move, Move mode (M), Saved Layouts, a color for one card, guide lines; Links: Most Used shows with counts hidden; more first-use tips |
 | 1.82.2 | Home: dragging a widget or the clock is smoother, and the piece glides into its place |
 | 1.82.1 | Home: put the clock and every widget anywhere on an invisible page grid, resize them, choose a card look; first-use tips; the bell moves to the top-right buttons on Home |
@@ -185,6 +186,14 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.82.4
+
+### Home
+
+- The alerts bell in the top-right buttons is now a line bell that matches the refresh and settings buttons, with a small dot for new alerts. It is placed there whenever those buttons are on the page.
 
 ---
 
