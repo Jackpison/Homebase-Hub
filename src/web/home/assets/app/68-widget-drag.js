@@ -31,7 +31,7 @@ async function savePlace(/** @type {(w: any) => void} */ change, /** @type {bool
 }
 // (1.82.3) a piece dropped on another card or the clock goes to the nearest free cell instead
 function clearCell(/** @type {any} */ d){
-  const others = [...document.querySelectorAll('.wcard:not(.wdim), #clock:not(.wdim)')].map(e => e.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0);
+  const others = [...document.querySelectorAll('.wcard:not(.wdim):not(.wghost), #clock:not(.wdim):not(.wghost)')].map(e => e.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0);
   const at = (/** @type {{x:number,y:number}} */ c) => d.kind === 'card' ? { x:Math.min(c.x * innerWidth / GRID_COLS, innerWidth - 236 * d.s), y:Math.min(c.y * innerHeight / GRID_ROWS, innerHeight - 100 * d.s) } : { x:(c.x + .5) * innerWidth / GRID_COLS - d.w / 2, y:(c.y + .5) * innerHeight / GRID_ROWS - d.h / 2 };
   const fits = (/** @type {{x:number,y:number}} */ c) => { const p = at(c); return p.x >= 0 && p.y >= 0 && p.x + d.w <= innerWidth && p.y + d.h <= innerHeight && !others.some(r => p.x < r.right + 6 && p.x + d.w + 6 > r.left && p.y < r.bottom + 6 && p.y + d.h + 6 > r.top); };
   if (fits(d.cell)) return;
@@ -74,7 +74,7 @@ function moveStart(){
   g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); g.querySelectorAll('.pgrip, .crs').forEach(n => n.remove()); g.removeAttribute('id'); g.removeAttribute('data-w');
   g.classList.add('wghost'); g.style.cssText = `position:fixed;left:0;top:0;right:auto;bottom:auto;width:${mv.w / mv.s}px;margin:0;z-index:11;pointer-events:none;transform-origin:0 0;will-change:transform;transform:${lift(r.left, r.top, 1)}`;
   document.body.append(g); mv.ghost = g; mv.el.classList.add('wdim');
-  mv.others = [...document.querySelectorAll('.wcard:not(.wdim), #clock:not(.wdim)')].map(e => e.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0);
+  mv.others = [...document.querySelectorAll('.wcard:not(.wdim):not(.wghost), #clock:not(.wdim):not(.wghost)')].map(e => e.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0);
   requestAnimationFrame(() => { if (mv && mv.ghost === g) g.classList.add('wlift'); });
 }
 function movePoint(/** @type {number} */ x, /** @type {number} */ y){

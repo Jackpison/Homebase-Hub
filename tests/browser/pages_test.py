@@ -364,6 +364,13 @@ try:
         pc.close()
         check('P41d (1.82.3) a card dropped on another goes to the nearest free cell, the move offers Undo and Undo puts it back, and M starts Move mode (arrows move, Enter puts it down)',
               moved and no_overlap and undo_btn and undone and kb_moved and kb_off, (moved, no_overlap, undo_btn, undone, kb_moved, kb_off))
+        # (1.82.4) a card dropped in free space lands exactly on the cell the dashed box showed (the card in your hand is not an obstacle)
+        pc, pp = place_cfg({'pos': {'clock': {'x': 12, 'y': 3}, 'cards': {'today': {'x': 2, 'y': 3}, 'calendar': {'x': 12, 'y': 10}}}, 'clockScale': 1})
+        cb = pp.locator('#wFree .wcard[data-w=calendar]').bounding_box()
+        pp.mouse.move(cb['x'] + 30, cb['y'] + 20); pp.mouse.down(); pp.mouse.move(8 * 60 + 30, 6 * 50 + 20, steps=8); pp.mouse.up()
+        dropped = until(lambda: json.loads(saved_pos())['cards']['calendar'] == {'x': 8, 'y': 6}, 8000)
+        pc.close()
+        check('P41f (1.82.4) a card dropped in free space lands on the cell it was dropped on, not somewhere above it', dropped, dropped)
         # (1.82.3) saved layouts, a color for one card, guide lines while dragging
         pc, pp = place_cfg({'pos': {'clock': {'x': 12, 'y': 3}, 'cards': {'today': {'x': 2, 'y': 3}, 'calendar': {'x': 2, 'y': 10}}}, 'look': {'cardAccent': {'quote': '#ff0000'}}, 'layouts': []})
         acc = pp.evaluate("(document.querySelector('.wcard[data-w=quote]') || {style:{}}).style.cssText")

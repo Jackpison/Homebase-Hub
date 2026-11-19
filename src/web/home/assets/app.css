@@ -576,3 +576,5 @@ body.moving .wghost{background-color:color-mix(in srgb,var(--ix-gtc,#101114) 55%
 #mvGrid .gv{top:0;bottom:0;width:1px}
 #mvGrid .gh{left:0;right:0;height:1px}
 #wLayName{max-width:160px}
+#wLaySave,#wCardAccReset,#wLayList .btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+#wLaySave:disabled{opacity:.5;cursor:not-allowed}

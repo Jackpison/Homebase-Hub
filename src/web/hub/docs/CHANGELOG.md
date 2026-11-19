@@ -17,7 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
-| 1.82.4 | Home: the alerts bell in the top-right buttons is the same line bell as the gear and refresh |
+| 1.82.4 | A new line-style alerts bell on every page, a fix for cards dropping above where you let go, and tidier Saved Layouts settings |
 | 1.82.3 | Home: widgets never land on each other, Undo after a move, Move mode (M), Saved Layouts, a color for one card, guide lines; Links: Most Used shows with counts hidden; more first-use tips |
 | 1.82.2 | Home: dragging a widget or the clock is smoother, and the piece glides into its place |
 | 1.82.1 | Home: put the clock and every widget anywhere on an invisible page grid, resize them, choose a card look; first-use tips; the bell moves to the top-right buttons on Home |
@@ -193,7 +193,13 @@ Nothing to migrate by hand unless an entry says so.
 
 ### Home
 
-- The alerts bell in the top-right buttons is now a line bell that matches the refresh and settings buttons, with a small dot for new alerts. It is placed there whenever those buttons are on the page.
+- Fixed: a card dropped in free space could land one or two rows above where you let go, because the card in your hand counted as being in the way. It now lands on the cell the dashed box showed.
+- Fixed: Saved Layouts and Color for One Card in Widgets were squeezed into a narrow column. They now have the same layout as the rest.
+- The alerts bell in the top-right buttons is placed there whenever those buttons are on the page.
+
+### Everywhere
+
+- The alerts bell is now a line bell in the same style as the other icons, on every page and in the bar, with a small dot for new alerts. It replaces the yellow picture.
 
 ---
 

@@ -234,7 +234,7 @@ if (!empty($site['private']) && !hub_admin()) {
         </div>
         <h3>Saved Layouts</h3>
         <div class="group">
-          <div class="g-row"><span class="g-label">Save This Layout<small>Keeps the places, sizes and look as they are now. Up to six. Press Save Widgets to keep the list.</small></span>
+          <div class="g-row stack"><span class="g-label">Save This Layout<small>Keeps the places, sizes and look as they are now. Up to six. Press Save Widgets to keep the list.</small></span>
             <span class="inline"><input type="text" id="wLayName" maxlength="30" placeholder="Name, like Work" aria-label="Layout Name"><button type="button" class="btn" id="wLaySave">Save Layout</button></span></div>
           <div id="wLayList"></div>
         </div>
@@ -246,7 +246,7 @@ if (!empty($site['private']) && !hub_admin()) {
             <div class="seg" id="wCorner" role="radiogroup" aria-label="Corners"><button type="button" role="radio" data-v="round">Round</button><button type="button" role="radio" data-v="soft">Soft</button><button type="button" role="radio" data-v="square">Square</button></div></div>
           <div class="g-row"><span class="g-label">Accent Color<small>Counts, links and the open widget. Default is gold.</small></span>
             <span class="inline"><input type="color" id="wAccent" aria-label="Accent Color" value="#ffd45c"><button type="button" class="btn" id="wAccentReset">Default</button></span></div>
-          <div class="g-row"><span class="g-label">Color for One Card<small>Pick a widget, then a color just for it.</small></span>
+          <div class="g-row stack"><span class="g-label">Color for One Card<small>Pick a widget, then a color just for it.</small></span>
             <span class="inline"><select id="wCardSel" aria-label="Widget"></select><input type="color" id="wCardAcc" aria-label="Color for This Card" value="#ffd45c"><button type="button" class="btn" id="wCardAccReset">Default</button></span></div>
         </div>
         <h3>Widgets, in This Order</h3>

@@ -1112,14 +1112,11 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 .ix-sdlg .ix-sb .ix-ob textarea:focus{outline:none;border-color:color-mix(in srgb,currentColor 55%,transparent)}
 .ix-sdlg .ix-sb .ix-ob .hint{margin:8px 2px 0;font-size:13px;line-height:1.45}
 /* (1.80.9) the bar's bell is the flat yellow one: its own colours, a little larger than the outline it replaces */
-#ix-bell img.ix-bell3{width:22px;height:22px;display:block;pointer-events:none}
-#ix-bell.ix-quiet img.ix-bell3{opacity:.85}
 /* (1.80.9) a smaller alerts dot */
 #ix-bell b{width:7px;height:7px;box-shadow:0 0 0 1.5px var(--ix-s1)}
 #ix-bar #ix-bell.ix-bb b{top:2px;right:2px}
 /* (1.80.10) the bell button is as wide as the other bar buttons, so the spacing around it is even */
 #ix-bar #ix-bell.ix-bb{width:38px;height:38px;border-radius:999px}
-#ix-bell img.ix-bell3{width:24px;height:24px}
 
 /* (1.82.1) Home: the bell sits in the top-right buttons, as a round glass button like Different Background (its glass comes from Home's own stylesheet) */
 .corner #ix-bell.ix-bc{position:relative;right:auto;bottom:auto;z-index:auto;width:40px;height:40px;flex:none;color:#fff;opacity:1}
