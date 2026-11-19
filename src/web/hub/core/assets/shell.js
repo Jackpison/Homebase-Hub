@@ -457,6 +457,10 @@
   function noteRing() { var b = document.getElementById('ix-bell'); if (!b) return; b.classList.remove('ix-ring'); void b.offsetWidth; b.classList.add('ix-ring'); clearTimeout(b.__r); b.__r = setTimeout(function () { b.classList.remove('ix-ring'); }, 900); }
   noteFlushSoon(4000);   // lines that were not sent yet (this browser was logged out, or offline) go once the page is up
   whenBody(noteBell);   // the bell is there from the first moment on every page
+  /* (1.82.5) On Home this script runs before the corner buttons are in the page, so the bell is first made floating at the bottom right.
+     It moves to its place once the page is read (and again after everything loads), without waiting for the next alert. */
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', noteBell);
+  addEventListener('load', noteBell);
   /* the list behind the bell: the last messages of this tab, newest first */
   function noteList() {
     var old = document.getElementById('ix-nlist'); if (old) { old.remove(); return; }

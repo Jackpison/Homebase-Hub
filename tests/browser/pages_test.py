@@ -344,7 +344,13 @@ try:
         pp.locator('#clock').hover(); cr = pp.locator('#clock .crs').bounding_box(); pp.mouse.move(cr['x'] + 8, cr['y'] + 8); pp.mouse.down(); pp.mouse.move(cr['x'] + 160, cr['y'] + 90, steps=5); pp.mouse.up()
         clock_s = until(lambda: float(json.loads(saved_pos())['clockScale']) > 1.2, 8000)
         bell = pp.evaluate("(() => { const b = document.getElementById('ix-bell'); return !!b && !!b.closest('.corner') && b.nextElementSibling === document.getElementById('editBtn') && b.previousElementSibling === document.getElementById('nextBg') && !!b.querySelector('svg') && !b.querySelector('img'); })()")
+        # (1.82.5) the bell is first made floating (shell.js runs before the corner is in the page) and must move into the corner when the page has loaded, with no new alert
+        pp.evaluate("document.body.appendChild(document.getElementById('ix-bell')); document.getElementById('ix-bell').classList.remove('ix-bc')")
+        bell_float = pp.evaluate("document.getElementById('ix-bell').parentNode === document.body")
+        pp.evaluate("document.querySelectorAll('#ix-toast').forEach(e => e.remove()); dispatchEvent(new Event('load'))")   # (a toast on screen keeps the bell hidden, so none is left)
+        bell_back = until(lambda: pp.evaluate("!!document.getElementById('ix-bell').closest('.corner')"), 3000)
         final_pos = saved_pos(); pc.close()
+        check('P41g (1.82.5) a bell that starts floating at the bottom right moves into the top-right corner once the page has loaded', bell_float and bell_back, (bell_float, bell_back))
         check('P41c (1.82.1) a free card and the clock resize by their handle and by Alt with Plus or Minus (the smallest card is 0.7), the size is saved, and the bell sits between Different Background and Edit',
               card_big and card_saved_s and card_min and clock_s and bell, (card_big, card_saved_s, final_pos, card_min, clock_s, bell))
         # (1.82.3) a card dropped on another goes to the nearest free cell; a move offers Undo; M starts Move mode on the keyboard (arrows move, Enter puts down)
