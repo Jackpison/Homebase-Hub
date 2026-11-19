@@ -496,7 +496,13 @@ body.clock-free .clock .pgrip{right:-34px;left:auto}
 #mvGrid{position:fixed;inset:0;z-index:10;pointer-events:none;background-image:linear-gradient(to right,rgba(255,255,255,.16) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.16) 1px,transparent 1px);background-size:calc(100vw / 24) calc(100vh / 16)}
 #mvGrid[hidden]{display:none}
 #mvGrid i{position:absolute;border:2px dashed #fff;border-radius:18px;background:rgba(255,255,255,.14)}
-.wghost{opacity:.92;transform:rotate(-1deg);box-shadow:0 18px 50px rgba(0,0,0,.45)!important}
+.wghost{opacity:.94;box-shadow:0 10px 30px rgba(0,0,0,.3)!important}
+.wghost.wlift{box-shadow:0 22px 56px rgba(0,0,0,.5)!important;transition:box-shadow .18s ease}
+.wghost.wdrop{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease,opacity .18s ease}
+#mvGrid i{transition:left .12s ease-out,top .12s ease-out,width .12s,height .12s}
+.wcard.wdim,.clock.wdim{transition:opacity .15s}
+.clock.wdim{opacity:.2}
+@media (prefers-reduced-motion:reduce){.wghost.wdrop,#mvGrid i{transition:none}}
 .wcard.wdim{opacity:.25}
 body.moving .wcard{cursor:grabbing}
 .wcard{cursor:grab}
@@ -557,3 +563,6 @@ body[data-wtint="light"] .wpn{background:rgba(0,0,0,.1)}
   box-shadow:inset 0 1px 0 rgba(255,255,255,min(1,calc(var(--ix-grim,.35) * 1.6))),inset 0 -1px 0 rgba(255,255,255,.10),0 14px 40px rgba(0,8,20,var(--ix-gsh,.3))}
 .corner #ix-bell.ix-bc:hover{background-color:var(--g-hover)}
 html[data-ix-gsolid] .corner #ix-bell.ix-bc{backdrop-filter:none;-webkit-backdrop-filter:none}
+/* (1.82.1) while a piece is in your hand, the frosted blur is paused on it and on the other cards (it is the costly part of every frame) */
+body.moving :is(.wghost,.wcard,.wchip,.pgrip){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.moving .wghost{background-color:color-mix(in srgb,var(--ix-gtc,#101114) 55%,transparent)}

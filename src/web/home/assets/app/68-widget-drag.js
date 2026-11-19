@@ -28,32 +28,48 @@ function gridShow(/** @type {{x:number,y:number,w:number,h:number} | null} */ bo
 }
 function moveBegin(/** @type {PointerEvent} */ e, /** @type {HTMLElement} */ el, /** @type {string} */ kind, /** @type {string} */ id){
   const r = el.getBoundingClientRect();
-  mv = { s:Number(getComputedStyle(el).getPropertyValue('--ws')) || 1, kind, id, el, sx:e.clientX, sy:e.clientY, ox:e.clientX - r.left, oy:e.clientY - r.top, w:r.width, h:r.height, started:false, cell:null, ghost:null, pid:e.pointerId };
+  mv = { s:kind === 'clock' ? (document.body.classList.contains('clock-free') ? Number(getComputedStyle(document.body).getPropertyValue('--cs')) || 1 : 1) : Number(getComputedStyle(el).getPropertyValue('--ws')) || 1, kind, id, el, sx:e.clientX, sy:e.clientY, ox:e.clientX - r.left, oy:e.clientY - r.top, w:r.width, h:r.height, started:false, cell:null, ghost:null, pid:e.pointerId, raf:0, px:e.clientX, py:e.clientY };
 }
+// the piece in your hand follows the pointer by transform (no layout work), lifts a little, and glides into its cell when you let go
+const lift = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ k) => `translate3d(${x}px,${y}px,0) scale(${mv.s * k})`;
 function moveStart(){
   mv.started = true; document.body.classList.add('moving');
-  if (mv.kind === 'card'){
-    const g = /** @type {HTMLElement} */ (mv.el.cloneNode(true)); g.classList.add('wghost'); g.removeAttribute('data-w'); g.style.cssText = `position:fixed;left:${mv.el.getBoundingClientRect().left}px;top:${mv.el.getBoundingClientRect().top}px;width:${mv.w / mv.s}px;transform:scale(${mv.s});transform-origin:0 0;margin:0;z-index:11;pointer-events:none`;
-    document.body.append(g); mv.ghost = g; mv.el.classList.add('wdim');
-  }
+  const r = mv.el.getBoundingClientRect(), g = /** @type {HTMLElement} */ (mv.el.cloneNode(true));
+  g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); g.querySelectorAll('.pgrip, .crs').forEach(n => n.remove()); g.removeAttribute('id'); g.removeAttribute('data-w');
+  g.classList.add('wghost'); g.style.cssText = `position:fixed;left:0;top:0;right:auto;bottom:auto;width:${mv.w / mv.s}px;margin:0;z-index:11;pointer-events:none;transform-origin:0 0;will-change:transform;transform:${lift(r.left, r.top, 1)}`;
+  document.body.append(g); mv.ghost = g; mv.el.classList.add('wdim');
+  requestAnimationFrame(() => { if (mv && mv.ghost === g) g.classList.add('wlift'); });
 }
 function movePoint(/** @type {number} */ x, /** @type {number} */ y){
-  if (mv.kind === 'card'){
-    const left = clampN(x - mv.ox, 0, innerWidth - mv.w), top = clampN(y - mv.oy, 0, innerHeight - mv.h);
-    mv.ghost.style.left = left + 'px'; mv.ghost.style.top = top + 'px';
-    mv.cell = cellFromRect(left, top); gridShow({ x:mv.cell.x * innerWidth / GRID_COLS, y:mv.cell.y * innerHeight / GRID_ROWS, w:mv.w, h:mv.h });
+  mv.px = x; mv.py = y;
+  if (mv.raf) return;   // once a frame is enough
+  mv.raf = requestAnimationFrame(() => { if (mv){ mv.raf = 0; moveFrame(mv); } });
+}
+function moveFrame(/** @type {any} */ d){
+  const left = clampN(d.px - d.ox, 0, innerWidth - d.w), top = clampN(d.py - d.oy, 0, innerHeight - d.h);
+  if (d.ghost) d.ghost.style.transform = `translate3d(${left}px,${top}px,0) scale(${d.s * 1.03})`;
+  if (d.kind === 'card'){
+    d.cell = cellFromRect(left, top); gridShow({ x:d.cell.x * innerWidth / GRID_COLS, y:d.cell.y * innerHeight / GRID_ROWS, w:d.w, h:d.h });
   } else {
-    mv.cell = cellFromPoint(x, y);
-    gridShow({ x:(mv.cell.x + .5) * innerWidth / GRID_COLS - mv.w / 2, y:(mv.cell.y + .5) * innerHeight / GRID_ROWS - mv.h / 2, w:mv.w, h:mv.h });
+    d.cell = cellFromPoint(left + d.w / 2, top + d.h / 2);
+    gridShow({ x:(d.cell.x + .5) * innerWidth / GRID_COLS - d.w / 2, y:(d.cell.y + .5) * innerHeight / GRID_ROWS - d.h / 2, w:d.w, h:d.h });
   }
 }
 function moveEnd(/** @type {boolean} */ commit){
   if (!mv) return;
-  const d = mv; mv = null;
+  const d = mv; mv = null; cancelAnimationFrame(d.raf);
   if (!d.started) return;
-  d.ghost?.remove(); d.el.classList.remove('wdim'); document.body.classList.remove('moving'); gridShow(null);
+  if (commit) moveFrame(d);   // the last pointer position counts, even if no frame was drawn for it
+  document.body.classList.remove('moving'); gridShow(null);
   justDragged = true; setTimeout(() => { justDragged = false; }, 0);   // the click that ends a drag must not open the widget
-  if (commit && d.cell) savePlace(w => { if (d.kind === 'clock') w.pos.clock = d.cell; else w.pos.cards[d.id] = Object.assign({}, d.cell, d.s && d.s !== 1 ? { s:d.s } : {}); });
+  const done = () => { d.ghost?.remove(); d.el.classList.remove('wdim'); };
+  if (!commit || !d.cell){ done(); return; }
+  // glide the piece onto its cell, keep it there until the saved page is drawn, then hand over
+  const c = d.cell, g = d.ghost;
+  const tx = d.kind === 'card' ? Math.min(c.x * innerWidth / GRID_COLS, innerWidth - 236 * d.s) : (c.x + .5) * innerWidth / GRID_COLS - d.w / 2, ty = d.kind === 'card' ? Math.min(c.y * innerHeight / GRID_ROWS, innerHeight - 100 * d.s) : (c.y + .5) * innerHeight / GRID_ROWS - d.h / 2;
+  if (g){ g.classList.remove('wlift'); g.classList.add('wdrop'); g.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${d.s})`; }
+  const t0 = Date.now();
+  savePlace(w => { if (d.kind === 'clock') w.pos.clock = c; else w.pos.cards[d.id] = Object.assign({}, c, d.s && d.s !== 1 ? { s:d.s } : {}); }).then(() => { setTimeout(done, Math.max(0, 200 - (Date.now() - t0))); });
 }
 document.addEventListener('pointerdown', e => {
   const t = /** @type {Element} */ (e.target); if (!WCFG || e.button || editing || !freeOk() || !t.closest) return;

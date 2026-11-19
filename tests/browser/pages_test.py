@@ -330,7 +330,7 @@ try:
         gb = pp.locator('#clock .pgrip').bounding_box(); pp.mouse.move(gb['x'] + 10, gb['y'] + 10); pp.mouse.down(); pp.mouse.move(1150, 180, steps=6); pp.mouse.up()
         clock_free = until(lambda: pp.evaluate("document.body.classList.contains('clock-free')"), 8000)
         clock_saved = subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; echo json_encode(load_site()['widgets']['pos']['clock']);" % D], capture_output=True, text=True).stdout
-        pp.locator('#clock .pgrip').focus(); pp.keyboard.press('Alt+ArrowLeft'); stepped = until(lambda: pp.evaluate("document.body.style.getPropertyValue('--cx')") == '18', 8000)
+        pp.locator('#clock .pgrip').focus(); pp.keyboard.press('Alt+ArrowLeft'); stepped = until(lambda: pp.evaluate("document.body.style.getPropertyValue('--cx')") == str(json.loads(clock_saved)['x'] - 1), 8000)   # one cell left of where the drag put it
         pc.close()
         # (1.82.1) resize: a free card and the clock grow and shrink by their handle (within limits) and by Alt and Plus or Minus; the sizes are saved; the bell sits in the top-right buttons
         pc, pp = place_cfg({'pos': {'clock': {'x': 12, 'y': 6}, 'cards': {'today': {'x': 2, 'y': 3}}}, 'clockScale': 1})
