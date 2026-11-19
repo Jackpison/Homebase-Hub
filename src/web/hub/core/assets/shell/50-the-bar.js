@@ -42,23 +42,27 @@
      above one in the bottom half, and stays on the screen. Buttons whose name is already visible get none. The names stay for screen readers
      (aria-label); the browser's own title tooltip is moved into data-tip so two never show at once. */
   function tipTarget(n) {
-    var bt = n && n.closest && n.closest('#ix-ebar .ix-eb, #ix-bar [data-tip], #ix-drawer [data-tip], [data-tip].ix-tipme');
+    var bt = n && n.closest && n.closest('#ix-ebar .ix-eb, #ix-bar [data-tip], #ix-drawer [data-tip], [data-tip].ix-tipme, [data-hint]');
     if (!bt) return null;
+    if (bt.hasAttribute('data-hint')) return hintsOn() ? bt : null;   // (1.82.5) a longer hint on a row, a field or a button with its own name
     var vis = (bt.innerText || '').trim();   // a visible name: no tooltip needed
     return vis ? null : bt;
   }
   function tipShow(bt) {
     var t = document.getElementById('ix-ebtip');
     if (!bt) { if (t) t.remove(); return; }
-    if (!t) { t = document.createElement('div'); t.id = 'ix-ebtip'; t.setAttribute('aria-hidden', 'true'); document.body.appendChild(t); }
+    var host = bt.closest('dialog[open]') || document.body;   // (1.82.5) a dialog covers the page, so the hint is drawn inside it
+    if (!t) { t = document.createElement('div'); t.id = 'ix-ebtip'; t.setAttribute('aria-hidden', 'true'); }
+    if (t.parentNode !== host) host.appendChild(t);
     if (t._for === bt) return;
-    t._for = bt; t.textContent = bt.getAttribute('data-tip'); t.className = '';
+    var hint = bt.hasAttribute('data-hint');
+    t._for = bt; t.textContent = bt.getAttribute(hint ? 'data-hint' : 'data-tip'); t.className = hint ? 'hint' : ''; t.style.animationDelay = hint ? hintDelay() + 'ms' : '';
     var r = bt.getBoundingClientRect(), below = r.top + r.height / 2 < innerHeight / 2;
     var left = Math.max(8, Math.min(innerWidth - t.offsetWidth - 8, r.left + r.width / 2 - t.offsetWidth / 2));
     t.style.left = left + 'px';
     t.style.top = (below ? r.bottom + 10 : r.top - t.offsetHeight - 10) + 'px';
     t.style.setProperty('--ix-ax', Math.round(r.left + r.width / 2 - left) + 'px');
-    t.className = (below ? 'below' : '') + (bt.closest('#ix-ebar') ? ' eb' : '');
+    t.className = (below ? 'below' : '') + (bt.closest('#ix-ebar') ? ' eb' : '') + (hint ? ' hint' : '');
   }
   ['mouseover', 'focusin'].forEach(function (k) { document.addEventListener(k, function (e) { tipShow(tipTarget(e.target)); }, true); });
   ['mouseout', 'focusout'].forEach(function (k) { document.addEventListener(k, function (e) { var to = tipTarget(e.relatedTarget); if (!to || to !== tipTarget(e.target)) tipShow(to); }, true); });

@@ -1606,6 +1606,18 @@
       if (o) o.onclick = function () { K.tips.setOff(true); toast('Tips are off.'); tipRow(); };
     };
     tipRow(); p.appendChild(tp);
+    // (1.82.5) hover hints: a short sentence with a pointer when you point at a setting or a button; on or off, and how fast
+    var hp = document.createElement('div'); hp.className = 'ix-rcl';
+    var hintRow = function () {
+      var on = K.hints.isOn(), d = K.hints.delay();
+      hp.innerHTML = rowCard({ ic: ICON.info, title: 'Hover Hints', desc: on ? 'A short sentence appears when you point at a setting or a button and wait a moment. Computers only.' : 'Hints are off. Turn them on to see a short sentence when you point at a setting or a button.',
+        act: '<button type="button" class="ix-btn" id="ix-hintonoff">' + (on ? 'Turn Hints Off' : 'Turn Hints On') + '</button>' +
+          (on ? '<select class="ix-btn" id="ix-hintdelay" aria-label="How fast hints appear"><option value="fast">Fast</option><option value="normal">Normal</option><option value="slow">Slow</option></select>' : '') });
+      hp.querySelector('#ix-hintonoff').onclick = function () { K.hints.setOn(!on); toast(on ? 'Hints are off.' : 'Hints are on.'); hintRow(); };
+      var sel = hp.querySelector('#ix-hintdelay');
+      if (sel) { sel.value = d; sel.onchange = function () { K.hints.setDelay(sel.value); toast('Hints appear ' + sel.value.toLowerCase() + '.'); }; }
+    };
+    hintRow(); p.appendChild(hp);
     // (1.77.2) the notes that used to be a tab of What's New (how updating works and a few things worth knowing), as the same row cards
     var nb = document.createElement('div'); p.appendChild(nb);
     clLoad().then(function (cl) {

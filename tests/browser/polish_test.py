@@ -405,7 +405,19 @@ try:
         tpg.evaluate("document.querySelector('#ix-ftip [data-ix-tip=off]').click()"); off_s = tpg.evaluate("localStorage.getItem('ix-tips')")
         tpg.reload(); until(lambda: tpg.evaluate('performance.now()') > 4500, 8000, 250); none = tpg.evaluate("!document.getElementById('ix-ftip')")
         tpg.evaluate("window.__ixShell.tips.reset()"); tpg.reload(); t3 = until(lambda: tpg.evaluate("(document.getElementById('ix-ftip') || {}).textContent || ''"), 9000)
+        arrow = tpg.evaluate("(() => { const e = document.getElementById('ix-ftip'); return e ? [/below|above/.test(e.className), getComputedStyle(e, '::after').content, e.style.getPropertyValue('--ix-ax')] : null; })()")
+        # ---- (1.82.5) hover hints: a sentence in the tooltip bubble with a pointer, drawn inside an open dialog; Features turns them off ----
+        tpg.evaluate("localStorage.removeItem('ix-hints')"); tpg.reload(); wait_js(tpg, "document.querySelectorAll('.cat').length > 0", 20000)
+        tpg.evaluate("document.getElementById('settingsBtn').click()"); tpg.wait_for_selector('#setDlg[open]')
+        until(lambda: tpg.evaluate("!!document.querySelector('.ix-srow[data-hint]')"), 4000)
+        tpg.hover('.ix-srow:has(#sVisits) label')
+        hint = until(lambda: tpg.evaluate("(() => { const t = document.getElementById('ix-ebtip'); return t && t.className.includes('hint') && t.closest('dialog') ? [t.textContent, getComputedStyle(t, '::after').content, t.getBoundingClientRect().width <= 281] : null; })()"), 4000)
+        tpg.evaluate("localStorage.setItem('ix-hints', JSON.stringify({off: 1}))"); tpg.mouse.move(5, 5); tpg.hover('.ix-srow:has(#sHost) label')
+        until(lambda: tpg.evaluate('performance.now()') > 0, 500, 100)
+        gone_h = until(lambda: tpg.evaluate("!document.getElementById('ix-ebtip')"), 2000)
         tc.close()
+        check('P85 (1.82.5) a hover hint shows a sentence in a bubble with a pointer inside the open dialog, and Hover Hints off stops it; a first-use tip has a pointer too',
+              bool(hint) and 'counts' in hint[0].lower() and hint[1] != 'none' and hint[2] and gone_h and bool(arrow) and arrow[0] and arrow[1] != 'none', (hint, gone_h, arrow))
         check('P84 (1.82.1) a first-use tip shows once per visit, Got It remembers it (the next visit shows the next tip), Skip Tips stops them, and Show All Tips Again brings them back',
               bool(t1) and gone and '"seen":["' in seen1 and bool(t2) and t2 != t1 and '"off":1' in off_s and none and t3 == t1, (t1, gone, seen1, t2, off_s, none, t3))
         # ---- (1.68.5) Where > Settings Windows: the page shows through a glass window (a light layer behind it, 55% of its own colour) ----

@@ -869,23 +869,27 @@
      above one in the bottom half, and stays on the screen. Buttons whose name is already visible get none. The names stay for screen readers
      (aria-label); the browser's own title tooltip is moved into data-tip so two never show at once. */
   function tipTarget(n) {
-    var bt = n && n.closest && n.closest('#ix-ebar .ix-eb, #ix-bar [data-tip], #ix-drawer [data-tip], [data-tip].ix-tipme');
+    var bt = n && n.closest && n.closest('#ix-ebar .ix-eb, #ix-bar [data-tip], #ix-drawer [data-tip], [data-tip].ix-tipme, [data-hint]');
     if (!bt) return null;
+    if (bt.hasAttribute('data-hint')) return hintsOn() ? bt : null;   // (1.82.5) a longer hint on a row, a field or a button with its own name
     var vis = (bt.innerText || '').trim();   // a visible name: no tooltip needed
     return vis ? null : bt;
   }
   function tipShow(bt) {
     var t = document.getElementById('ix-ebtip');
     if (!bt) { if (t) t.remove(); return; }
-    if (!t) { t = document.createElement('div'); t.id = 'ix-ebtip'; t.setAttribute('aria-hidden', 'true'); document.body.appendChild(t); }
+    var host = bt.closest('dialog[open]') || document.body;   // (1.82.5) a dialog covers the page, so the hint is drawn inside it
+    if (!t) { t = document.createElement('div'); t.id = 'ix-ebtip'; t.setAttribute('aria-hidden', 'true'); }
+    if (t.parentNode !== host) host.appendChild(t);
     if (t._for === bt) return;
-    t._for = bt; t.textContent = bt.getAttribute('data-tip'); t.className = '';
+    var hint = bt.hasAttribute('data-hint');
+    t._for = bt; t.textContent = bt.getAttribute(hint ? 'data-hint' : 'data-tip'); t.className = hint ? 'hint' : ''; t.style.animationDelay = hint ? hintDelay() + 'ms' : '';
     var r = bt.getBoundingClientRect(), below = r.top + r.height / 2 < innerHeight / 2;
     var left = Math.max(8, Math.min(innerWidth - t.offsetWidth - 8, r.left + r.width / 2 - t.offsetWidth / 2));
     t.style.left = left + 'px';
     t.style.top = (below ? r.bottom + 10 : r.top - t.offsetHeight - 10) + 'px';
     t.style.setProperty('--ix-ax', Math.round(r.left + r.width / 2 - left) + 'px');
-    t.className = (below ? 'below' : '') + (bt.closest('#ix-ebar') ? ' eb' : '');
+    t.className = (below ? 'below' : '') + (bt.closest('#ix-ebar') ? ' eb' : '') + (hint ? ' hint' : '');
   }
   ['mouseover', 'focusin'].forEach(function (k) { document.addEventListener(k, function (e) { tipShow(tipTarget(e.target)); }, true); });
   ['mouseout', 'focusout'].forEach(function (k) { document.addEventListener(k, function (e) { var to = tipTarget(e.relatedTarget); if (!to || to !== tipTarget(e.target)) tipShow(to); }, true); });
@@ -1240,12 +1244,112 @@
     el.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('[data-ix-tip]') : null; if (!b) return; if (b.dataset.ixTip === 'off') tipsApi.setOff(true); firstTipHide(true); });
     document.body.appendChild(el);
     var r = target.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, below = r.bottom + 12 + h < innerHeight;
-    el.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+    var lx = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+    el.style.left = lx + 'px'; el.style.setProperty('--ix-ax', Math.round(Math.max(22, Math.min(w - 22, r.left + r.width / 2 - lx))) + 'px'); el.className = below ? 'below' : 'above';   // the pointer shows which thing it explains
     el.style.top = Math.max(8, below ? r.bottom + 12 : r.top - 12 - h) + 'px';
   }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.getElementById('ix-ftip')) firstTipHide(true); });
   setTimeout(firstTipShow, 2600);
   document.addEventListener('hub:login', function () { setTimeout(firstTipShow, 1500); });
+  /* ---------- (1.82.5) Hover hints: a short plain sentence on a setting, a field or a button, drawn in the tooltip bubble with a pointer to the thing.
+     Added by id after the page and its dialogs are built (a row gets the hint, so pointing anywhere on it works). Off, or slower or faster, in
+     Settings, Features, Hover Hints (kept on this device). Touch screens have no hover, so they get none. ---------- */
+  var HINTS = {
+    /* Home: Settings */
+    sTitle: 'The name in the browser tab and in the bookmark list.',
+    sPrivate: 'Visitors get a login screen instead of this page. You still see it after you log in.',
+    sHomeBar: 'Off keeps Home plain. A small corner button opens the same menu.',
+    sEditBar: 'Text shows the name of each tool. Icons Only is smaller and shows the name when you point at it.',
+    /* Home: Widgets */
+    wShow: 'Turns the cards and the dock on or off. Your cards and notes are kept.',
+    wStyle: 'How the cards look: a dock at the side, cards on the page, or both.',
+    wClock: 'The big clock with the greeting.',
+    wClockPos: 'Where the clock sits. On a computer you can also drag it, or press M and move it with the arrow keys.',
+    wCardsPos: 'Where the dock of cards sits. Drag a card on a computer to put it anywhere.',
+    wResetLayout: 'Puts the clock and the cards back where they started. Undo is offered.',
+    wLayName: 'Type a name, like Work, then press Save. Choose it later to switch the whole layout back.',
+    wLaySave: 'Keeps the clock, the card places, the sizes and the look under this name. You can keep six.',
+    wTint: 'How see-through the cards are, from clear glass to solid.',
+    wCorner: 'How round the corners of the cards are.',
+    wAccent: 'The colour of highlights, buttons and the lines on the cards.',
+    wCardSel: 'Pick one card, then give only that card its own colour.',
+    wCardAcc: 'The colour for the card you picked. Reset takes it back to the accent colour.',
+    wCdName: 'What you are counting down to, like Holiday.',
+    wCdDate: 'The day it happens. The card shows the days left.',
+    wNote: 'A note on the page. It is saved on the server like the rest of Home.',
+    wZones: 'Cities for the World Clock card, one per line, like Europe/London.',
+    /* Links: Settings */
+    sWebIcons: 'Off by default. Turn it on only if you accept that Google learns which sites you save.',
+    sVisits: 'Counts clicks on each link. Visitors are counted too, but only you see the numbers.',
+    sStyle: 'The look of the link rows. Refined is calm, the others are bolder.',
+    sHost: 'Shows the address next to a link when you point at it, so you can tell similar links apart.',
+    sMost: 'A strip of your most opened links above the page. It does not need the counts to be shown.',
+    sTextBtn: 'Adds a button in the edit bar for the text sizes.',
+    versionsBtn: 'Earlier saved copies of this page. Pick one to go back.',
+    exportBtn: 'Downloads your links as a file you can keep or open in another browser.',
+    importBtn: 'Adds links from a file you exported before. Nothing is lost: it is added to what you have.',
+    importBmBtn: 'Brings in bookmarks from your browser (a bookmarks file).',
+    iconsBtn: 'Fetches the missing icons. This asks the icon service only when you press it.',
+    colorsBtn: 'Choose the colours of the page, in dark and light.',
+    textBtn: 'Choose the text sizes of the page.',
+    /* Info */
+    gin: 'The name in the browser tab and in the bookmark list.',
+    spriv: 'Visitors get a login screen instead of this page.',
+    setsizes: 'Choose the text sizes for this page.',
+    /* Cards */
+    tcols: 'Which columns the Excel and PDF exports have, and in what order.',
+    tonlyme: 'Visitors must log in first. They see nothing of this page.',
+    fq: 'Type part of a name, a bank or a number. Press Esc to clear it.',
+    sortSel: 'Changes the order of the cards. It does not change the cards.',
+    lockBtn: 'Locks the cards with their own password. The password never leaves your browser.',
+    /* Tasks */
+    's-soon': 'How many days ahead a task counts as Due Soon. A task’s own Remind Me comes first.',
+    's-start': 'The page that opens first when you open Tasks.',
+    's-week': 'The day the calendar week starts on.',
+    's-calon': 'Makes a private link that shows your due dates in Google or Apple Calendar.',
+    's-calcopy': 'Copy the link and paste it into your calendar app. Anyone with the link can see your due dates.',
+    's-calnew': 'Makes a new link and stops the old one from working.',
+    's-onlyme': 'Visitors must log in first. They see nothing of this page.',
+    qadd: 'Type a task and press Enter. Words like tomorrow or friday set the date for you.',
+    xcsv: 'Downloads your tasks as a spreadsheet file.',
+    xics: 'Downloads your due dates as a calendar file.',
+    /* Files */
+    newb: 'Starts a new folder, a note or an upload, depending on the page.',
+    stbtn: 'How much space your files use on the server.',
+    sort: 'Changes the order of the list. It does not move files.',
+    up: 'Pick files from this device. You can also drag them onto the page.',
+    mk: 'Makes a new folder here.',
+    /* Everywhere */
+    themeBtn: 'Switches between Light and Dark.',
+    editBtn: 'Opens the tools to change this page. Press Done when you finish.',
+    settingsBtn: 'Settings for this page.',
+    logoutBtn: 'Logs you out on this device only.',
+    doneBtn: 'Saves your changes and closes the edit tools.'
+  };
+  var HINT_SLOW = { fast: 120, normal: 450, slow: 900 };
+  function hintPref() { try { return JSON.parse(localStorage.getItem('ix-hints') || '{}') || {}; } catch (e) { return {}; } }
+  function hintSave(o) { try { localStorage.setItem('ix-hints', JSON.stringify(o)); } catch (e) { /* private window */ } }
+  function hintsOn() { return !hintPref().off && !(window.matchMedia && matchMedia('(hover:none)').matches); }
+  function hintDelay() { return HINT_SLOW[hintPref().delay] || HINT_SLOW.normal; }
+  function hintApply() {
+    Object.keys(HINTS).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var row = el.closest('.ix-srow, .g-row') || el;
+      if (row.hasAttribute('data-hint') || (row.hasAttribute('data-tip') && row === el)) return;
+      row.setAttribute('data-hint', HINTS[id]);
+    });
+  }
+  var hintsApi = {
+    isOn: function () { return !hintPref().off; },
+    setOn: function (v) { var o = hintPref(); o.off = v ? 0 : 1; hintSave(o); tipShow(null); },
+    delay: function () { return hintPref().delay || 'normal'; },
+    setDelay: function (d) { var o = hintPref(); o.delay = HINT_SLOW[d] ? d : 'normal'; hintSave(o); }
+  };
+  var hintT = 0;
+  function hintLater() { clearTimeout(hintT); hintT = setTimeout(function () { hintApply(); }, 250); }
+  document.addEventListener('DOMContentLoaded', function () { hintApply(); try { new MutationObserver(hintLater).observe(document.body, { childList: true, subtree: true }); } catch (e) { /* no observer: hints stay as first applied */ } });
+  if (document.readyState !== 'loading') { hintApply(); hintLater(); }
   /* ---------- 7. one search for the whole site (Links, Info, Tools; Cards keeps its own) ----------
      Filters (scope, one tab, which fields, whole words) are remembered in this browser.
      Typing "links: text", "info: text" or "tools: text" is a shortcut for the scope. */
@@ -1885,7 +1989,7 @@
     applyColors: applyColors, applyAttrs: applyAttrs, PG_APPS: PG_APPS, CORE: CORE, ASSETS: ASSETS, COLOR_DEFAULT: COLOR_DEFAULT, setTheme: setTheme, pageList: pageList,
     applyFavicon: applyFavicon, SIZE_SPEC: SIZE_SPEC, PAGE_DEF: PAGE_DEF, FONTS: FONTS, COLOR_KEYS: COLOR_KEYS, when: when, previewWith: previewWith,
     previewTheme: previewTheme, restoreTheme: restoreTheme, storeTheme: storeTheme, resolveTheme: resolveTheme,
-    stepper: stepper, tips: tipsApi, linkField: linkField, offline: function () { return offline; }, pageColor: pageColor, noteColor: noteColor, pageTile: function (id) { var x = PAGE_TILE[id]; return x ? '<svg viewBox="0 0 24 24">' + x[1] + '</svg>' : ''; } };
+    stepper: stepper, tips: tipsApi, hints: hintsApi, linkField: linkField, offline: function () { return offline; }, pageColor: pageColor, noteColor: noteColor, pageTile: function (id) { var x = PAGE_TILE[id]; return x ? '<svg viewBox="0 0 24 24">' + x[1] + '</svg>' : ''; } };
 
   /* ---------- (1.69.0) Stepper: a flow of a few steps in one box. Ported to plain JavaScript from React Bits' Stepper (David Haz, MIT +
      Commons Clause; credited in THIRD-PARTY.md). The current step sits on a raised tile that slides along; a finished step turns into a tick

@@ -55,7 +55,8 @@
     el.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('[data-ix-tip]') : null; if (!b) return; if (b.dataset.ixTip === 'off') tipsApi.setOff(true); firstTipHide(true); });
     document.body.appendChild(el);
     var r = target.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, below = r.bottom + 12 + h < innerHeight;
-    el.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+    var lx = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+    el.style.left = lx + 'px'; el.style.setProperty('--ix-ax', Math.round(Math.max(22, Math.min(w - 22, r.left + r.width / 2 - lx))) + 'px'); el.className = below ? 'below' : 'above';   // the pointer shows which thing it explains
     el.style.top = Math.max(8, below ? r.bottom + 12 : r.top - 12 - h) + 'px';
   }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.getElementById('ix-ftip')) firstTipHide(true); });
