@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.81.0 | Links gets a new look (Page Style: Refined, Panels or Classic), the site address on hover, a Most Used strip, and all-black or all-white logos made visible |
 | 1.80.11 | Files no longer opens the wrong file when you double-click one that is already picked |
 | 1.80.10 | Logs and Activity use two lines (search and filters, then the count with Export and Clear), the bar bell is the exact flat yellow bell with even spacing around it |
 | 1.80.9 | Overview now leads General, Logs and Activity share one search bar with a ⋯ menu, GitHub icons turn white on dark and are fetched from GitHub's own icon file, and the Extra Links box matches the other fields |
@@ -179,6 +180,17 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.81.0
+
+### Links
+
+- New **Page Style** in Links Settings: **Refined** (heading bars and count pills, the new usual look), **Panels** (each category in its own card with a soft pointer light) or **Classic** (the old look). The page shows your choice at once while you change it.
+- **Show Site Address On Hover** shows a link's address beside it when you point at it. It no longer cuts long names short.
+- **Show Most Used** adds a strip above the page with the links you open most. It needs Show Visit Counts, and never shows links from encrypted tabs.
+- Logos that are all black now turn white on the dark theme, and all-white ones turn black on the light theme. This is always on. It works for icons kept on your site; icons loaded from another site cannot be checked by the browser.
 
 ---
 
