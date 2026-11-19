@@ -49,6 +49,19 @@ function gridShow(/** @type {{x:number,y:number,w:number,h:number} | null} */ bo
   const c = /** @type {HTMLElement} */ (g.firstElementChild);
   c.style.cssText = `left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px`;
 }
+// (1.82.3) guide lines: when the target lines up with the edge or middle of another piece, a thin line shows it
+function guideShow(/** @type {{x:number,y:number,w:number,h:number}} */ b, /** @type {DOMRect[]} */ others){
+  const g = document.getElementById('mvGrid'); if (!g) return;
+  g.querySelectorAll('.gl').forEach(n => n.remove());
+  const xs = [b.x, b.x + b.w / 2, b.x + b.w], ys = [b.y, b.y + b.h / 2, b.y + b.h];
+  let vx = null, hy = null;
+  for (const r of others){
+    for (const a of xs) for (const c of [r.left, r.left + r.width / 2, r.right]) if (vx === null && Math.abs(a - c) < 3) vx = c;
+    for (const a of ys) for (const c of [r.top, r.top + r.height / 2, r.bottom]) if (hy === null && Math.abs(a - c) < 3) hy = c;
+  }
+  if (vx !== null){ const l = document.createElement('i'); l.className = 'gl gv'; l.style.left = vx + 'px'; g.append(l); }
+  if (hy !== null){ const l = document.createElement('i'); l.className = 'gl gh'; l.style.top = hy + 'px'; g.append(l); }
+}
 function moveBegin(/** @type {PointerEvent} */ e, /** @type {HTMLElement} */ el, /** @type {string} */ kind, /** @type {string} */ id){
   const r = el.getBoundingClientRect();
   mv = { s:kind === 'clock' ? (document.body.classList.contains('clock-free') ? Number(getComputedStyle(document.body).getPropertyValue('--cs')) || 1 : 1) : Number(getComputedStyle(el).getPropertyValue('--ws')) || 1, kind, id, el, sx:e.clientX, sy:e.clientY, ox:e.clientX - r.left, oy:e.clientY - r.top, w:r.width, h:r.height, started:false, cell:null, ghost:null, pid:e.pointerId, raf:0, px:e.clientX, py:e.clientY };
@@ -61,6 +74,7 @@ function moveStart(){
   g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); g.querySelectorAll('.pgrip, .crs').forEach(n => n.remove()); g.removeAttribute('id'); g.removeAttribute('data-w');
   g.classList.add('wghost'); g.style.cssText = `position:fixed;left:0;top:0;right:auto;bottom:auto;width:${mv.w / mv.s}px;margin:0;z-index:11;pointer-events:none;transform-origin:0 0;will-change:transform;transform:${lift(r.left, r.top, 1)}`;
   document.body.append(g); mv.ghost = g; mv.el.classList.add('wdim');
+  mv.others = [...document.querySelectorAll('.wcard:not(.wdim), #clock:not(.wdim)')].map(e => e.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0);
   requestAnimationFrame(() => { if (mv && mv.ghost === g) g.classList.add('wlift'); });
 }
 function movePoint(/** @type {number} */ x, /** @type {number} */ y){
@@ -72,10 +86,10 @@ function moveFrame(/** @type {any} */ d){
   const left = clampN(d.px - d.ox, 0, innerWidth - d.w), top = clampN(d.py - d.oy, 0, innerHeight - d.h);
   if (d.ghost) d.ghost.style.transform = `translate3d(${left}px,${top}px,0) scale(${d.s * 1.03})`;
   if (d.kind === 'card'){
-    d.cell = cellFromRect(left, top); gridShow({ x:d.cell.x * innerWidth / GRID_COLS, y:d.cell.y * innerHeight / GRID_ROWS, w:d.w, h:d.h });
+    d.cell = cellFromRect(left, top); const bx = { x:d.cell.x * innerWidth / GRID_COLS, y:d.cell.y * innerHeight / GRID_ROWS, w:d.w, h:d.h }; gridShow(bx); guideShow(bx, d.others || []);
   } else {
     d.cell = cellFromPoint(left + d.w / 2, top + d.h / 2);
-    gridShow({ x:(d.cell.x + .5) * innerWidth / GRID_COLS - d.w / 2, y:(d.cell.y + .5) * innerHeight / GRID_ROWS - d.h / 2, w:d.w, h:d.h });
+    const bx = { x:(d.cell.x + .5) * innerWidth / GRID_COLS - d.w / 2, y:(d.cell.y + .5) * innerHeight / GRID_ROWS - d.h / 2, w:d.w, h:d.h }; gridShow(bx); guideShow(bx, d.others || []);
   }
 }
 function moveEnd(/** @type {boolean} */ commit){

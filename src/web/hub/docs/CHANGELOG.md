@@ -17,7 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
-| 1.82.3 | Home: a dropped widget never lands on another, Undo after a move, Move mode with the M key, and handles that stay in view on touch screens |
+| 1.82.3 | Home: widgets never land on each other, Undo after a move, Move mode (M), Saved Layouts, a color for one card, guide lines; Links: Most Used shows with counts hidden; more first-use tips |
 | 1.82.2 | Home: dragging a widget or the clock is smoother, and the piece glides into its place |
 | 1.82.1 | Home: put the clock and every widget anywhere on an invisible page grid, resize them, choose a card look; first-use tips; the bell moves to the top-right buttons on Home |
 | 1.82.0 | Home: compact Glance cards that never reach the clock, the clock and the cards can sit left, center or right (drag them or choose in Widgets), and cleaner widget panels |
@@ -197,6 +197,18 @@ Nothing to migrate by hand unless an entry says so.
 - Move mode from the keyboard: focus a widget or the clock handle and press M. The arrow keys move it, Plus and Minus resize it, Enter or Escape puts it down. A screen reader says when the mode starts and ends.
 - On touch screens the move and size handles stay in view (there is no hover).
 - Fixed: after a widget with its own place was focused, drawing the cards again could stop with an error.
+- Saved Layouts: keep the places, sizes and look under a name (up to six) in Widgets, and switch between them.
+- A color for one card: pick a widget in Widgets, Card Look, and give just that card its own color.
+- Guide lines show while you drag when a card lines up with the edge or middle of another.
+- The cards are redrawn only when what they show has changed, so there is no flicker each minute and the page does less work.
+
+### Links
+
+- Fixed: Most Used did not show when Show Visit Counts was off. It now shows (without numbers), once two different links have been opened.
+
+### Everywhere
+
+- More first-use tips: Backup and Import, Settings and Help, Search Options, and a note or two for each of Home, Links, Info, Cards, Tasks, Files and Tools.
 
 ---
 

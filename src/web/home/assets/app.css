@@ -570,3 +570,9 @@ body.moving .wghost{background-color:color-mix(in srgb,var(--ix-gtc,#101114) 55%
 /* (1.82.3) touch screens have no hover: the size and move handles stay in view */
 @media (hover:none){body.can-move .pgrip,.wrs,body.can-move .clock .crs{opacity:.85}}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* (1.82.3) guide lines while dragging, and the saved layouts list */
+#mvGrid .gl{position:absolute;background:rgba(255,212,92,.9);pointer-events:none;border:0;border-radius:0;box-shadow:0 0 6px rgba(255,212,92,.7)}
+#mvGrid .gv{top:0;bottom:0;width:1px}
+#mvGrid .gh{left:0;right:0;height:1px}
+#wLayName{max-width:160px}

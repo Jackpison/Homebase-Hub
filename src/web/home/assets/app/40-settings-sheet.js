@@ -34,6 +34,7 @@ function openWidgets(){
   seg($('#wClockPos'), w.clockPos || 'center'); seg($('#wCardsPos'), w.cardsPos || 'bottom');
   const lk = w.look || {}; seg($('#wTint'), lk.tint || 'glass'); seg($('#wCorner'), lk.corner || 'round'); $('#wAccent').value = lk.accent || '#ffd45c'; $('#wAccent').dataset.set = lk.accent ? '1' : '';
   widgetsOrig = { clockPos:w.clockPos || 'center', cardsPos:w.cardsPos || 'bottom' };
+  drawLayouts(); fillCardSel();
   $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date; $('#wCdTime').value = w.countdown.time || '';
   drawWidgetList();
   fillNotePicker();
@@ -100,7 +101,7 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   w.zones = zones;
   w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
-  w.look = { tint:$('#wTint [aria-checked="true"]')?.dataset.v || 'glass', corner:$('#wCorner [aria-checked="true"]')?.dataset.v || 'round', accent:$('#wAccent').dataset.set ? $('#wAccent').value : '' };
+  w.look = { tint:$('#wTint [aria-checked="true"]')?.dataset.v || 'glass', corner:$('#wCorner [aria-checked="true"]')?.dataset.v || 'round', accent:$('#wAccent').dataset.set ? $('#wAccent').value : '', cardAccent:(widgetsDraft.look && widgetsDraft.look.cardAccent) || {} };
   w.clockPos = $('#wClockPos [aria-checked="true"]')?.dataset.v || 'center'; w.cardsPos = $('#wCardsPos [aria-checked="true"]')?.dataset.v || 'bottom';
   if (w.clockPos !== widgetsOrig.clockPos && w.pos) w.pos.clock = null;   // choosing a place here replaces a place you dragged to
   if (w.cardsPos !== widgetsOrig.cardsPos && w.pos) w.pos.cards = {};
@@ -130,3 +131,40 @@ $('#wResetLayout').addEventListener('click', () => {
   toast('Layout reset. Press Save Widgets to keep it.');
 });
 $('#widgetsSheet').addEventListener('close', () => { if (WCFG) renderWidgets(true); });   // the page goes back to what is saved (after Save, to what was just saved)
+
+
+/* (1.82.3) Saved layouts (the places, sizes and look under a name, up to six) and a color for one card */
+const readLook = () => ({ tint:$('#wTint [aria-checked="true"]')?.dataset.v || 'glass', corner:$('#wCorner [aria-checked="true"]')?.dataset.v || 'round', accent:$('#wAccent').dataset.set ? $('#wAccent').value : '', cardAccent:{ ...((widgetsDraft.look && widgetsDraft.look.cardAccent) || {}) } });
+function drawLayouts(){
+  const L = widgetsDraft.layouts || [];
+  $('#wLayList').innerHTML = L.map((l, i) => `<div class="g-row"><span class="g-label">${esc(l.name)}</span><span class="inline"><button type="button" class="btn" data-lay-use="${i}">Use</button><button type="button" class="btn" data-lay-del="${i}" aria-label="Delete ${esc(l.name)}">Delete</button></span></div>`).join('');
+  $('#wLaySave').disabled = L.length >= 6;
+}
+$('#wLaySave').addEventListener('click', () => {
+  if (!widgetsDraft) return;
+  const name = $('#wLayName').value.trim().slice(0, 30); if (!name){ toast('Give the layout a name first.', true); $('#wLayName').focus(); return; }
+  const L = widgetsDraft.layouts = (widgetsDraft.layouts || []).filter(l => l.name !== name);
+  if (L.length >= 6){ toast('Six layouts are the most. Delete one first.', true); return; }
+  L.push({ name, clockPos:$('#wClockPos [aria-checked="true"]')?.dataset.v || 'center', cardsPos:$('#wCardsPos [aria-checked="true"]')?.dataset.v || 'bottom', pos:structuredClone(widgetsDraft.pos || { clock:null, cards:{} }), look:readLook() });
+  $('#wLayName').value = ''; drawLayouts(); toast(`“${name}” is saved. Press Save Widgets to keep it.`);
+});
+$('#wLayList').addEventListener('click', e => {
+  const t = /** @type {Element} */ (e.target), use = t.closest('[data-lay-use]'), del = t.closest('[data-lay-del]');
+  if (!widgetsDraft || !(use || del)) return;
+  const L = widgetsDraft.layouts || [];
+  if (del){ L.splice(Number(/** @type {HTMLElement} */ (del).dataset.layDel), 1); drawLayouts(); return; }
+  const l = L[Number(/** @type {HTMLElement} */ (use).dataset.layUse)]; if (!l) return;
+  widgetsDraft.pos = structuredClone(l.pos); widgetsDraft.look = structuredClone(l.look); widgetsOrig = { clockPos:l.clockPos, cardsPos:l.cardsPos };
+  seg($('#wClockPos'), l.clockPos); seg($('#wCardsPos'), l.cardsPos); seg($('#wTint'), l.look.tint); seg($('#wCorner'), l.look.corner);
+  $('#wAccent').value = l.look.accent || '#ffd45c'; $('#wAccent').dataset.set = l.look.accent ? '1' : ''; fillCardSel(); previewLook();
+  toast(`“${l.name}” is chosen. Press Save Widgets to keep it.`);
+});
+function fillCardSel(){
+  const sel = /** @type {HTMLSelectElement} */ ($('#wCardSel')), keep = sel.value;
+  sel.innerHTML = Object.keys(W_META).map(id => `<option value="${id}">${esc(W_META[id].name)}</option>`).join(''); if (keep) sel.value = keep;
+  cardAccShow();
+}
+function cardAccShow(){ const c = (widgetsDraft && widgetsDraft.look && widgetsDraft.look.cardAccent) || {}, id = /** @type {HTMLSelectElement} */ ($('#wCardSel')).value; $('#wCardAcc').value = c[id] || '#ffd45c'; }
+$('#wCardSel').addEventListener('change', cardAccShow);
+$('#wCardAcc').addEventListener('input', () => { if (!widgetsDraft) return; widgetsDraft.look = widgetsDraft.look || {}; (widgetsDraft.look.cardAccent = widgetsDraft.look.cardAccent || {})[/** @type {HTMLSelectElement} */ ($('#wCardSel')).value] = $('#wCardAcc').value; });
+$('#wCardAccReset').addEventListener('click', () => { if (!widgetsDraft || !widgetsDraft.look || !widgetsDraft.look.cardAccent) return; delete widgetsDraft.look.cardAccent[/** @type {HTMLSelectElement} */ ($('#wCardSel')).value]; cardAccShow(); });

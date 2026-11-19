@@ -1,4 +1,6 @@
 /* ---------- drawing ---------- */
+// (1.82.3) the cards are redrawn only when what they show has changed (each minute most of them have not): no flicker, focus and hover stay, less work
+function setHtml(/** @type {any} */ el, /** @type {string} */ html){ if (el.__h !== html){ el.innerHTML = html; el.__h = html; } }
 function renderWidgets(quiet = false){
   renderClock();
   const a = /** @type {HTMLElement} */ (document.activeElement), keep = a && a.dataset && a.dataset.w && !$('#wPanel').contains(a) ? [a.closest('.wfree') ? 'wFree' : /** @type {HTMLElement} */ (a.parentNode).id, a.dataset.w] : null;   // (1.82.3) a free card sits in a wrapper: its row is #wFree
@@ -15,16 +17,17 @@ function renderWidgets(quiet = false){
   // Glass Dock: chips under the clock for Today and Countdown, and a dock with every widget
   const chips = dock ? ['today', 'countdown', 'weather'].filter(id => list.includes(id)).map(id => ({ id, s:summary(id) })).filter(c => c.s.chip) : [];
   $('#wChips').hidden = !chips.length;
-  $('#wChips').innerHTML = chips.map(c => `<button type="button" class="lg wchip" data-w="${c.id}" aria-controls="wPanel" aria-expanded="${wOpen === c.id}">${c.s.hot ? '<i class="dot"></i>' : ''}${c.s.pic ? svgI(W_PIC[c.s.pic] || '') : ''}${esc(c.s.chip)}</button>`).join('');
+  setHtml($('#wChips'), chips.map(c => `<button type="button" class="lg wchip" data-w="${c.id}" aria-controls="wPanel" aria-expanded="${wOpen === c.id}">${c.s.hot ? '<i class="dot"></i>' : ''}${c.s.pic ? svgI(W_PIC[c.s.pic] || '') : ''}${esc(c.s.chip)}</button>`).join(''));
   $('#wDock').hidden = !dock || !list.length;
-  $('#wDock').innerHTML = dock ? list.map(id => `<button type="button" class="wdb" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}" aria-label="${esc(W_META[id].name)}">${svgI(W_META[id].icon)}<span>${esc(W_META[id].short)}</span></button>`).join('') : '';
+  setHtml($('#wDock'), dock ? list.map(id => `<button type="button" class="wdb" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}" aria-label="${esc(W_META[id].name)}">${svgI(W_META[id].icon)}<span>${esc(W_META[id].short)}</span></button>`).join('') : '');
 
   // Glance and Expand: one small glass card per widget
   // (1.82.1) a widget with a place of its own on the page grid is drawn there (#wFree); the others keep the usual layout (#wCards)
   const cells = freeOk() && WCFG && WCFG.pos ? WCFG.pos.cards || {} : {}, freeIds = dock ? [] : list.filter(id => cells[id]), autoIds = dock ? [] : list.filter(id => !cells[id]);
+  const cardAcc = (WCFG && WCFG.look && WCFG.look.cardAccent) || {};   // (1.82.3) a color for one card
   const card = id => {
     const s = summary(id);
-    return `<button type="button" class="lg wcard" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}">
+    return `<button type="button" class="lg wcard" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}"${cardAcc[id] ? ` style="--wacc:${cardAcc[id]}"` : ''}>
       <span class="wc-h"><span>${esc(s.title || W_META[id].name)}</span>${s.alert ? `<em>${esc(s.alert)}</em>` : ''}</span>
       ${s.big ? `<b class="wc-big">${esc(s.big)}</b>` : ''}<span class="wc-s">${esc(s.small || '')}</span></button>`;
   };
@@ -33,9 +36,9 @@ function renderWidgets(quiet = false){
   $('#wCards').hidden = dock || !autoIds.length;
   $('#wCards').classList.toggle('many', autoIds.length > 7);   // a column down the side holds two rows of cards when there are many
   $('#wCards').style.setProperty('--n', autoIds.length <= 6 ? autoIds.length : Math.ceil(autoIds.length / 2));   // one row, or two even rows
-  $('#wCards').innerHTML = autoIds.map(card).join('');
+  setHtml($('#wCards'), autoIds.map(card).join(''));
   $('#wFree').hidden = !freeIds.length;
-  $('#wFree').innerHTML = freeIds.map(freeCard).join('');
+  setHtml($('#wFree'), freeIds.map(freeCard).join(''));
   if (!quiet || wOpen === 'worldclock') renderPanel();   // each minute: only World Clock's open panel changes (never one you type in)
   if (keep) $(`#${keep[0]} [data-w="${keep[1]}"]`)?.focus();
 }

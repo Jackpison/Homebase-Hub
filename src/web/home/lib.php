@@ -255,6 +255,26 @@ function clean_scale($v, array $lim): float
     return is_numeric($v) ? round(max($lim[0], min($lim[1], (float) $v)) * 20) / 20 : 1.0;
 }
 
+const MAX_LAYOUTS = 6;
+/** (1.82.3) Where things sit and how they look: the part of the Widgets settings that a saved layout keeps. */
+function clean_layout($in): array
+{
+    $in = is_array($in) ? $in : [];
+    $pp = is_array($in['pos'] ?? null) ? $in['pos'] : [];
+    $cards = [];
+    foreach (is_array($pp['cards'] ?? null) ? $pp['cards'] : [] as $id => $c) { $c = in_array($id, WIDGET_IDS, true) ? clean_cell($c) : null; if ($c) $cards[$id] = $c; }
+    $lk = is_array($in['look'] ?? null) ? $in['look'] : [];
+    $hex = fn($v) => preg_match('/^#[0-9a-fA-F]{6}$/', (string) $v) ? strtolower((string) $v) : '';
+    $acc = [];
+    foreach (is_array($lk['cardAccent'] ?? null) ? $lk['cardAccent'] : [] as $id => $c) if (in_array($id, WIDGET_IDS, true) && $hex($c) !== '') $acc[$id] = $hex($c);   // (1.82.3) a colour for one card
+    return [
+        'cardsPos' => in_array($in['cardsPos'] ?? '', CARDS_POS, true) ? $in['cardsPos'] : 'bottom',
+        'clockPos' => in_array($in['clockPos'] ?? '', CLOCK_POS, true) ? $in['clockPos'] : 'center',
+        'pos'      => ['clock' => clean_cell($pp['clock'] ?? null), 'cards' => (object) $cards, 'clockScale' => clean_scale($pp['clockScale'] ?? 1, CLOCK_SCALE)],
+        'look'     => ['tint' => in_array($lk['tint'] ?? '', WIDGET_TINTS, true) ? $lk['tint'] : 'glass', 'corner' => in_array($lk['corner'] ?? '', WIDGET_CORNERS, true) ? $lk['corner'] : 'round', 'accent' => $hex($lk['accent'] ?? ''), 'cardAccent' => (object) $acc],
+    ];
+}
+
 /** Home's widget settings, cleaned: a style, the clock on or off, every known widget once (in your order, unknown ones dropped,
  *  missing ones added at the end), the countdown (a name and a date) and the pinned note (an Info tab and box). */
 function clean_widgets($in): array
@@ -279,19 +299,22 @@ function clean_widgets($in): array
             $zones[] = ['tz' => $tz, 'name' => str_clip($z['name'] ?? '', 30)];
     }
     $we = is_array($in['weather'] ?? null) ? $in['weather'] : [];
-    $pp = is_array($in['pos'] ?? null) ? $in['pos'] : [];
-    $cards = [];
-    foreach (is_array($pp['cards'] ?? null) ? $pp['cards'] : [] as $id => $c) { $c = in_array($id, WIDGET_IDS, true) ? clean_cell($c) : null; if ($c) $cards[$id] = $c; }
-    $lk = is_array($in['look'] ?? null) ? $in['look'] : [];
+    $lay = clean_layout($in);
+    $layouts = [];
+    foreach (is_array($in['layouts'] ?? null) ? $in['layouts'] : [] as $l) {   // (1.82.3) saved layouts: a name and the places, sizes and look
+        $nm = is_array($l) ? str_clip($l['name'] ?? '', 30) : '';
+        if ($nm !== '' && count($layouts) < MAX_LAYOUTS) $layouts[] = ['name' => $nm] + clean_layout($l);
+    }
     return [
         'style'     => in_array($in['style'] ?? '', WIDGET_STYLES, true) ? $in['style'] : 'dock',
         'show'      => (bool) ($in['show'] ?? true),   // Widgets > Show Widgets (1.51.1): off hides every widget; the clock has its own switch
         'clock'     => (bool) ($in['clock'] ?? true),
-        'cardsPos'  => in_array($in['cardsPos'] ?? '', CARDS_POS, true) ? $in['cardsPos'] : 'bottom',
-        'clockPos'  => in_array($in['clockPos'] ?? '', CLOCK_POS, true) ? $in['clockPos'] : 'center',
+        'cardsPos'  => $lay['cardsPos'],
+        'clockPos'  => $lay['clockPos'],
         'list'      => $list,
-        'pos'       => ['clock' => clean_cell($pp['clock'] ?? null), 'cards' => (object) $cards, 'clockScale' => clean_scale($pp['clockScale'] ?? 1, CLOCK_SCALE)],   // (1.82.1) free places on the page grid; none: the usual layout
-        'look'      => ['tint' => in_array($lk['tint'] ?? '', WIDGET_TINTS, true) ? $lk['tint'] : 'glass', 'corner' => in_array($lk['corner'] ?? '', WIDGET_CORNERS, true) ? $lk['corner'] : 'round', 'accent' => preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($lk['accent'] ?? '')) ? strtolower($lk['accent']) : ''],
+        'pos'       => $lay['pos'],   // (1.82.1) free places on the page grid; none: the usual layout
+        'look'      => $lay['look'],
+        'layouts'   => $layouts,
         'countdown' => ['name' => str_clip($cd['name'] ?? '', 40), 'date' => $okDate ? $date : '', 'time' => $okDate && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) ($cd['time'] ?? '')) ? (string) $cd['time'] : ''],   // (1.79.0) time: optional, for the live seconds
         'note'      => ['tab' => $idOk($nt['tab'] ?? ''), 'box' => $idOk($nt['box'] ?? '')],
         'zones'     => $zones,

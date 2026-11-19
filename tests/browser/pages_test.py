@@ -298,7 +298,7 @@ try:
         def placed(style, w, h, wid):
             subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = '%s'; write_json(SITE_FILE, clean_site($s));" % (D, style)], check=True)
             pc = b.new_context(user_agent=UA, viewport={'width': w, 'height': h}); pc.add_cookies(cookies); pc.route('**/*', handle); pc.add_init_script(TRACK_REQUESTS)
-            pc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('hl-wshow','1')}catch(e){}"); pp = pc.new_page(); pp.goto(B + '/web/home/', wait_until='domcontentloaded')
+            pc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('hl-wshow','1');localStorage.setItem('ix-seen-ver','%s')}catch(e){}" % ver); pp = pc.new_page(); pp.goto(B + '/web/home/', wait_until='domcontentloaded')
             sel = '#wCards' if style == 'glance' else '#wDock'
             until(lambda: pp.evaluate("document.querySelectorAll('%s [data-w]').length") == 9, 10000); settle(pp)
             out = []
@@ -364,6 +364,20 @@ try:
         pc.close()
         check('P41d (1.82.3) a card dropped on another goes to the nearest free cell, the move offers Undo and Undo puts it back, and M starts Move mode (arrows move, Enter puts it down)',
               moved and no_overlap and undo_btn and undone and kb_moved and kb_off, (moved, no_overlap, undo_btn, undone, kb_moved, kb_off))
+        # (1.82.3) saved layouts, a color for one card, guide lines while dragging
+        pc, pp = place_cfg({'pos': {'clock': {'x': 12, 'y': 3}, 'cards': {'today': {'x': 2, 'y': 3}, 'calendar': {'x': 2, 'y': 10}}}, 'look': {'cardAccent': {'quote': '#ff0000'}}, 'layouts': []})
+        acc = pp.evaluate("(document.querySelector('.wcard[data-w=quote]') || {style:{}}).style.cssText")
+        cb = pp.locator('#wFree .wcard[data-w=calendar]').bounding_box(); pp.mouse.move(cb['x'] + 30, cb['y'] + 20); pp.mouse.down(); pp.mouse.move(cb['x'] + 30, cb['y'] - 60, steps=6)
+        guide = until(lambda: pp.evaluate("!!document.querySelector('#mvGrid .gl')"), 4000)
+        pp.keyboard.press('Escape'); pp.mouse.up()
+        pp.keyboard.press('Escape'); pp.evaluate("document.getElementById('editBtn').click()"); pp.wait_for_selector('#ix-ebar:not([hidden])', timeout=15000)
+        pp.wait_for_selector('#ix-ebar [data-tip="Widgets"]', timeout=15000); pp.click('#ix-ebar [data-tip="Widgets"]'); pp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
+        pp.fill('#wLayName', 'Work'); pp.click('#wLaySave'); listed = pp.evaluate("document.getElementById('wLayList').textContent.includes('Work')")
+        pp.click('#saveWidgets'); until(lambda: not pp.evaluate("document.getElementById('widgetsSheet').open"), 10000)
+        lay = until(lambda: 'Work' in subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; echo json_encode(load_site()['widgets']['layouts']);" % D], capture_output=True, text=True).stdout, 8000)
+        pc.close()
+        check('P41e (1.82.3) a card can have its own color, guide lines show while dragging, and a layout is saved by name and listed',
+              '--wacc' in acc and '#ff0000' in acc and guide and listed and lay, (acc, guide, listed, lay))
         pc, pp = place_cfg({'pos': {'clock': None, 'cards': {}}, 'look': {'tint': 'solid', 'corner': 'square', 'accent': '#7cc7ff'}})
         lk = pp.evaluate("(() => { const c = getComputedStyle(document.querySelector('.wcard')); return [document.body.dataset.wtint, document.body.dataset.wcorner, c.borderTopLeftRadius, c.backdropFilter, getComputedStyle(document.body).getPropertyValue('--wacc').trim()]; })()")
         pc.close()

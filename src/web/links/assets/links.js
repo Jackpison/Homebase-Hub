@@ -855,9 +855,9 @@ function rememberOpen(/** @type {any} */ a) {
 document.addEventListener('click', e => { const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u], .most a[data-u]'); if (a) { countVisit(a); rememberOpen(a); } });
 document.addEventListener('auxclick', e => { if (e.button !== 1) return; const tg = /** @type {Element} */ (e.target), a = tg.closest && tg.closest('.links a[data-u], .most a[data-u]'); if (a) countVisit(a); });   // the middle button opens a new tab
 
-// (1.81.0) Most Used: up to six links you opened most (never from an encrypted tab), above the page. Needs visit counts; Links Settings > Show Most Used turns it off.
+// (1.81.0) Most Used: up to six links you opened most (never from an encrypted tab), above the page. Counted on the server even when Show Visit Counts hides the numbers; Links Settings > Show Most Used turns it off.
 function mostUsed() {
-  if (!showVisits() || S.q || S.editing || (S.data.settings || {}).showMost === false) return null;
+  if (!S.auth || S.q || S.editing || (S.data.settings || {}).showMost === false) return null;   // (1.82.3) it does not depend on Show Visit Counts: with the numbers hidden the strip still shows, without them
   const vis = S.visits || {}, seen = new Set(), all = [];
   for (const t of S.data.tabs) if (!t.encrypted) for (const c of t.categories) for (const l of c.links) {
     if (l.divider || !l.url || seen.has(l.url) || !(vis[l.url] | 0)) continue;
