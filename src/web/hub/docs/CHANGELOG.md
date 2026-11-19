@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.82.0 | Home: compact Glance cards that never reach the clock, the clock and the cards can sit left, center or right (drag them or choose in Widgets), and cleaner widget panels |
 | 1.81.1 | Links: a dark square logo (X, Swizzin) keeps its symbol on the dark theme instead of turning into a white square |
 | 1.81.0 | Links gets a new look (Page Style: Refined, Panels or Classic), the site address on hover, a Most Used strip, and all-black or all-white logos made visible |
 | 1.80.11 | Files no longer opens the wrong file when you double-click one that is already picked |
@@ -181,6 +182,17 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.82.0
+
+### Home
+
+- **Glance cards are compact.** Short cards in two slim rows no longer reach the clock, even with many widgets.
+- **Clock Position** and **Cards Position** in Widgets: put the clock on the left, center or right, and the cards along the bottom or down the left or right side.
+- Drag the clock or the cards by their small handle to move them. The Left and Right arrow keys on a handle do the same.
+- Widget panels have a clean header with a line under it. Today shows how many tasks are due beside its title.
 
 ---
 
