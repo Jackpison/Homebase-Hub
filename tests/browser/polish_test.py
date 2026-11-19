@@ -403,7 +403,7 @@ try:
         gone = until(lambda: tpg.evaluate("!document.getElementById('ix-ftip')"), 3000); seen1 = tpg.evaluate("localStorage.getItem('ix-tips')")
         tpg.reload(); t2 = until(lambda: tpg.evaluate("(document.getElementById('ix-ftip') || {}).textContent || ''"), 9000)
         tpg.evaluate("document.querySelector('#ix-ftip [data-ix-tip=off]').click()"); off_s = tpg.evaluate("localStorage.getItem('ix-tips')")
-        tpg.reload(); tpg.wait_for_timeout(4000); none = tpg.evaluate("!document.getElementById('ix-ftip')")
+        tpg.reload(); until(lambda: tpg.evaluate('performance.now()') > 4500, 8000, 250); none = tpg.evaluate("!document.getElementById('ix-ftip')")
         tpg.evaluate("window.__ixShell.tips.reset()"); tpg.reload(); t3 = until(lambda: tpg.evaluate("(document.getElementById('ix-ftip') || {}).textContent || ''"), 9000)
         tc.close()
         check('P84 (1.82.1) a first-use tip shows once per visit, Got It remembers it (the next visit shows the next tip), Skip Tips stops them, and Show All Tips Again brings them back',

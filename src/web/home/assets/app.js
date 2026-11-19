@@ -1818,9 +1818,10 @@ function resizeEnd(/** @type {boolean} */ commit){
   if (!commit || d.s === d.s0) { if (d.clock && !(WCFG && WCFG.pos && WCFG.pos.clock) && !PUB.clockCell) renderClock(); return; }
   scaleSave(d.clock, d.id, d.s);
 }
+let keySaveT = /** @type {any} */ (0);
 function scaleSave(/** @type {boolean} */ clock, /** @type {string} */ id, /** @type {number} */ s){
   const sv = s === 1 ? undefined : s;
-  savePlace(w => {
+  return savePlace(w => {
     if (clock){ if (!w.pos.clock){ const r = /** @type {HTMLElement} */ (document.getElementById('clock')).getBoundingClientRect(); w.pos.clock = cellFromPoint(r.left + r.width / 2, r.top + r.height / 2); } w.pos.clockScale = s; }
     else if (w.pos.cards[id]){ const c = Object.assign({}, w.pos.cards[id]); if (sv) c.s = sv; else delete c.s; w.pos.cards[id] = c; }
   });
@@ -1835,8 +1836,11 @@ document.addEventListener('keydown', e => {
   e.preventDefault();
   const cur = clock ? Number(getComputedStyle(document.body).getPropertyValue('--cs')) || 1 : Number(getComputedStyle(/** @type {HTMLElement} */ (card)).getPropertyValue('--ws')) || 1;
   const to = snap05(cur + (e.key === '-' || e.key === '_' ? -0.05 : 0.05), clock ? SCALE_LIM.clock : SCALE_LIM.card);
-  if (to !== cur){ if (clock) document.body.style.setProperty('--cs', String(to)); else /** @type {HTMLElement} */ (card).style.setProperty('--ws', String(to)); }   // seen at once; saved after
-  if (to !== cur) scaleSave(clock, card ? (card.querySelector('.wcard')?.getAttribute('data-w') || '') : '', to);
+  if (to === cur) return;
+  const id = card ? card.querySelector('.wcard')?.getAttribute('data-w') || '' : '';
+  if (clock) document.body.style.setProperty('--cs', String(to)); else /** @type {HTMLElement} */ (card).style.setProperty('--ws', String(to));   // seen at once
+  clearTimeout(keySaveT);   // saved once, a moment after the last key
+  keySaveT = setTimeout(() => { scaleSave(clock, id, to).then(() => { /** @type {HTMLElement | null} */ (document.querySelector(clock ? '.pgrip' : `.wcard[data-w="${id}"]`))?.focus(); }); }, 350);
 });
 /* ======================================================================
    HOME TOUR (1.69.0): four cards in the Stepper (shell.js), each lighting up a part of the page. It opens once, on the first visit
