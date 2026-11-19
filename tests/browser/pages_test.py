@@ -310,28 +310,52 @@ try:
             pc.close(); return out
         g = placed('glance', 1280, 800, ['quote', 'weather', 'today']); d = placed('dock', 1280, 700, ['weather', 'today'])
         check('P41 an open widget sits above the cards or the dock (never on them), stays on screen, and the clock makes way when there is no room', g == [3, 3, 3] and d == [3, 3], (g, d))
-        # P41b (1.82.0): compact Glance cards never reach the clock; the cards and the clock can sit left, centre or right; both can be dragged
-        def place_pos(cards, clock):
-            subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets']['style'] = 'glance'; $s['widgets']['cardsPos'] = '%s'; $s['widgets']['clockPos'] = '%s'; write_json(SITE_FILE, clean_site($s));" % (D, cards, clock)], check=True)
+        # P41b (1.82.1): the page grid. Compact Glance cards stay below the clock; any card can be dragged to a place of its own, and so can the clock; the
+        # look (card style, corners, accent) shows; Reset Layout and the arrow keys; the E key works with Caps Lock on
+        def place_cfg(patch):
+            php = "require '%s/web/home/lib.php'; $s = load_site(); $s['widgets'] = clean_widgets(array_replace_recursive($s['widgets'], json_decode('%s', true))); write_json(SITE_FILE, $s);" % (D, json.dumps(patch))
+            subprocess.run(['php', '-r', php], check=True)
             pc = b.new_context(user_agent=UA, viewport={'width': 1440, 'height': 800}); pc.add_cookies(cookies); pc.route('**/*', handle); pc.add_init_script(TRACK_REQUESTS)
             pc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('hl-wshow','1')}catch(e){}"); pp = pc.new_page(); pp.goto(B + '/web/home/', wait_until='domcontentloaded')
-            until(lambda: pp.evaluate("document.querySelectorAll('#wCards [data-w]').length") > 3, 10000); settle(pp); return pc, pp
-        pc, pp = place_pos('bottom', 'center')
-        bot = pp.evaluate("(() => { const k = [...document.querySelectorAll('#wCards .wcard')].map(e => e.getBoundingClientRect()), c = document.getElementById('date').getBoundingClientRect(); return [Math.max(...k.map(r => r.height)) <= 92, Math.min(...k.map(r => r.top)) > c.bottom + 4, getComputedStyle(document.querySelector('.wcard'), '::after').content === 'none']; })()")
+            until(lambda: pp.evaluate("document.querySelectorAll('.wcard').length") > 3, 10000); settle(pp); return pc, pp
+        base = {'style': 'glance', 'clockPos': 'center', 'cardsPos': 'bottom', 'pos': {'clock': None, 'cards': {}}, 'look': {'tint': 'glass', 'corner': 'round', 'accent': ''}}
+        pc, pp = place_cfg(base)
+        bot = pp.evaluate("(() => { const k = [...document.querySelectorAll('#wCards .wcard')].map(e => e.getBoundingClientRect()), c = document.getElementById('date').getBoundingClientRect(); return [Math.max(...k.map(r => r.height)) <= 92, Math.min(...k.map(r => r.top)) > c.bottom + 4]; })()")
+        cb = pp.locator('.wcard[data-w=today]').bounding_box(); pp.mouse.move(cb['x'] + 40, cb['y'] + 30); pp.mouse.down(); pp.mouse.move(300, 200, steps=6)
+        grid_on = pp.evaluate("!!document.getElementById('mvGrid') && !document.getElementById('mvGrid').hidden")
+        pp.mouse.up(); card_free = until(lambda: pp.evaluate("!!document.querySelector('#wFree .wcard[data-w=today]')"), 8000)
+        card_saved = subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; echo json_encode(load_site()['widgets']['pos']['cards']);" % D], capture_output=True, text=True).stdout
+        panel_closed = pp.evaluate("document.getElementById('wPanel').hidden")
+        pp.mouse.move(720, 380); until(lambda: pp.evaluate("getComputedStyle(document.querySelector('#clock .pgrip')).opacity") == '1', 3000)
+        gb = pp.locator('#clock .pgrip').bounding_box(); pp.mouse.move(gb['x'] + 10, gb['y'] + 10); pp.mouse.down(); pp.mouse.move(1150, 180, steps=6); pp.mouse.up()
+        clock_free = until(lambda: pp.evaluate("document.body.classList.contains('clock-free')"), 8000)
+        clock_saved = subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; echo json_encode(load_site()['widgets']['pos']['clock']);" % D], capture_output=True, text=True).stdout
+        pp.locator('#clock .pgrip').focus(); pp.keyboard.press('Alt+ArrowLeft'); stepped = until(lambda: pp.evaluate("document.body.style.getPropertyValue('--cx')") == '18', 8000)
         pc.close()
-        pc, pp = place_pos('left', 'right')
-        side = pp.evaluate("(() => { const w = document.getElementById('wCards').getBoundingClientRect(), c = document.getElementById('clock').getBoundingClientRect(); return [w.left < 80 && w.width < 260 && w.height > 300, c.left > innerWidth * .55, document.body.dataset.cardspos, document.body.dataset.clockpos]; })()")
+        # (1.82.1) resize: a free card and the clock grow and shrink by their handle (within limits) and by Alt and Plus or Minus; the sizes are saved; the bell sits in the top-right buttons
+        pc, pp = place_cfg({'pos': {'clock': {'x': 12, 'y': 6}, 'cards': {'today': {'x': 2, 'y': 3}}}, 'clockScale': 1})
+        w0 = pp.locator('#wFree .wfc').bounding_box()['width']
+        pp.locator('#wFree .wfc').hover(); hb = pp.locator('#wFree .wrs').bounding_box(); pp.mouse.move(hb['x'] + 8, hb['y'] + 8); pp.mouse.down(); pp.mouse.move(hb['x'] + 150, hb['y'] + 60, steps=5); pp.mouse.up()
+        card_big = until(lambda: pp.evaluate("document.querySelector('#wFree .wfc').getBoundingClientRect().width") > w0 + 40, 8000)
+        saved_pos = lambda: (pp.evaluate('0'), subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; echo json_encode(load_site()['widgets']['pos']);" % D], capture_output=True, text=True).stdout)[1]   # (the evaluate lets the page's own requests through)
+        card_saved_s = until(lambda: '"s":1.' in saved_pos() or '"s":2' in saved_pos(), 8000)
+        pp.locator('#wFree .wcard').focus(); [pp.keyboard.press('Alt+-') for _ in range(22)]
+        card_min = until(lambda: pp.evaluate("getComputedStyle(document.querySelector('#wFree .wfc')).getPropertyValue('--ws')") in ('0.7', '0.7000000000000001'), 20000)
+        pp.locator('#clock').hover(); cr = pp.locator('#clock .crs').bounding_box(); pp.mouse.move(cr['x'] + 8, cr['y'] + 8); pp.mouse.down(); pp.mouse.move(cr['x'] + 160, cr['y'] + 90, steps=5); pp.mouse.up()
+        clock_s = until(lambda: float(json.loads(saved_pos())['clockScale']) > 1.2, 8000)
+        bell = pp.evaluate("(() => { const b = document.getElementById('ix-bell'); return !!b && !!b.closest('.corner') && b.nextElementSibling === document.getElementById('editBtn') && b.previousElementSibling === document.getElementById('nextBg'); })()")
+        final_pos = saved_pos(); pc.close()
+        check('P41c (1.82.1) a free card and the clock resize by their handle and by Alt with Plus or Minus (the smallest card is 0.7), the size is saved, and the bell sits between Different Background and Edit',
+              card_big and card_saved_s and card_min and clock_s and bell, (card_big, card_saved_s, final_pos, card_min, clock_s, bell))
+        pc, pp = place_cfg({'pos': {'clock': None, 'cards': {}}, 'look': {'tint': 'solid', 'corner': 'square', 'accent': '#7cc7ff'}})
+        lk = pp.evaluate("(() => { const c = getComputedStyle(document.querySelector('.wcard')); return [document.body.dataset.wtint, document.body.dataset.wcorner, c.borderTopLeftRadius, c.backdropFilter, getComputedStyle(document.body).getPropertyValue('--wacc').trim()]; })()")
         pc.close()
-        pc, pp = place_pos('bottom', 'center')
-        bb = pp.locator('#clock').bounding_box(); pp.mouse.move(bb['x'] + bb['width'] / 2, bb['y'] + 30); until(lambda: pp.evaluate("getComputedStyle(document.querySelector('#clock .pgrip')).opacity") == '1', 3000)
-        gb = pp.locator('#clock .pgrip').bounding_box(); pp.mouse.move(gb['x'] + 10, gb['y'] + 10); pp.mouse.down(); pp.mouse.move(1300, 300, steps=6)
-        zones = pp.evaluate("[...document.querySelectorAll('#mvZones i.on')].map(i => i.textContent)"); pp.mouse.up()
-        moved = until(lambda: pp.evaluate("document.body.dataset.clockpos") == 'right', 8000)
-        saved = subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; echo load_site()['widgets']['clockPos'];" % D], capture_output=True, text=True).stdout
-        pp.locator('#clock .pgrip').focus(); pp.keyboard.press('ArrowLeft'); keyed = until(lambda: pp.evaluate("document.body.dataset.clockpos") == 'center', 8000)
+        pc, pp = place_cfg(base)
+        pp.keyboard.press('Shift+E'); capped = until(lambda: pp.evaluate("document.body.classList.contains('editing')"), 8000)
         pc.close()
-        check('P41b (1.82.0) compact Glance cards (short, no side bar) stay below the clock; cards and clock can sit left or right; dragging the clock by its handle to the right zone saves it (and an arrow key moves it back)',
-              all(bot) and side[0] and side[1] and side[2:] == ['left', 'right'] and zones == ['Right'] and moved and saved.strip() == 'right' and keyed, (bot, side, zones, moved, saved, keyed))
+        check('P41b (1.82.1) compact Glance cards stay below the clock; any card and the clock can be dragged onto the page grid (the grid shows) and the place is saved; Alt and an arrow key step it; Card Style, Corners and Accent show; the E key works with Caps Lock on',
+              all(bot) and grid_on and card_free and '"today"' in card_saved and panel_closed and clock_free and clock_saved.strip() != 'null' and stepped
+              and lk[:3] == ['solid', 'square', '5px'] and lk[3] == 'none' and lk[4] == '#7cc7ff' and capped, (bot, grid_on, card_free, card_saved, panel_closed, clock_free, clock_saved, stepped, lk, capped))
         # P40: the glass. (1.68.4) one glass for the whole site, set in Settings > Appearance > Glass (Home Settings > Glass is only a link now).
         # The computer's "reduce transparency" (Windows: Transparency effects off) does not turn it into a dark block.
         def glass(fx=None, reduce=False):

@@ -9,6 +9,7 @@ function renderWidgets(quiet = false){
   document.body.classList.toggle('w-open', !!wOpen);
   document.body.dataset.wstyle = WCFG ? WCFG.style : '';
   document.body.dataset.cardspos = WCFG && WCFG.cardsPos || 'bottom'; document.body.dataset.clockpos = WCFG ? WCFG.clockPos || 'center' : document.body.dataset.clockpos;   // (1.82.0)
+  { const lk = WCFG && WCFG.look || {}; document.body.dataset.wtint = lk.tint || 'glass'; document.body.dataset.wcorner = lk.corner || 'round'; if (lk.accent) document.body.style.setProperty('--wacc', lk.accent); else document.body.style.removeProperty('--wacc'); }   // (1.82.1) Widgets > Look
   document.body.classList.toggle('can-move', !!WCFG);   // the handles to drag the clock and the cards show for you only
 
   // Glass Dock: chips under the clock for Today and Countdown, and a dock with every widget
@@ -19,14 +20,22 @@ function renderWidgets(quiet = false){
   $('#wDock').innerHTML = dock ? list.map(id => `<button type="button" class="wdb" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}" aria-label="${esc(W_META[id].name)}">${svgI(W_META[id].icon)}<span>${esc(W_META[id].short)}</span></button>`).join('') : '';
 
   // Glance and Expand: one small glass card per widget
-  $('#wCards').hidden = dock || !list.length;
-  $('#wCards').style.setProperty('--n', list.length <= 6 ? list.length : Math.ceil(list.length / 2));   // one row, or two even rows
-  $('#wCards').innerHTML = !dock ? list.map(id => {
+  // (1.82.1) a widget with a place of its own on the page grid is drawn there (#wFree); the others keep the usual layout (#wCards)
+  const cells = freeOk() && WCFG && WCFG.pos ? WCFG.pos.cards || {} : {}, freeIds = dock ? [] : list.filter(id => cells[id]), autoIds = dock ? [] : list.filter(id => !cells[id]);
+  const card = id => {
     const s = summary(id);
     return `<button type="button" class="lg wcard" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}">
       <span class="wc-h"><span>${esc(s.title || W_META[id].name)}</span>${s.alert ? `<em>${esc(s.alert)}</em>` : ''}</span>
       ${s.big ? `<b class="wc-big">${esc(s.big)}</b>` : ''}<span class="wc-s">${esc(s.small || '')}</span></button>`;
-  }).join('') + '<button type="button" class="pgrip" data-drag="cards" aria-label="Move the cards: drag them, or press the Left or Right arrow" title="Drag to move the cards">⠿</button>' : '';
+  };
+  // (1.82.1) a free card sits in a wrapper with its own size handle (a button cannot hold another button)
+  const freeCard = id => `<div class="wfc" style="--gx:${cells[id].x};--gy:${cells[id].y};--ws:${cells[id].s || 1}">${card(id)}<button type="button" class="wrs" data-w="${id}" aria-label="Resize ${esc(W_META[id].name)} (Alt + Plus or Minus)" title="Drag to resize"></button></div>`;
+  $('#wCards').hidden = dock || !autoIds.length;
+  $('#wCards').classList.toggle('many', autoIds.length > 7);   // a column down the side holds two rows of cards when there are many
+  $('#wCards').style.setProperty('--n', autoIds.length <= 6 ? autoIds.length : Math.ceil(autoIds.length / 2));   // one row, or two even rows
+  $('#wCards').innerHTML = autoIds.map(card).join('');
+  $('#wFree').hidden = !freeIds.length;
+  $('#wFree').innerHTML = freeIds.map(freeCard).join('');
   if (!quiet || wOpen === 'worldclock') renderPanel();   // each minute: only World Clock's open panel changes (never one you type in)
   if (keep) $(`#${keep[0]} [data-w="${keep[1]}"]`)?.focus();
 }
@@ -36,14 +45,19 @@ function renderWidgets(quiet = false){
 function placePanel(){
   const p = $('#wPanel');
   if (p.hidden){ document.body.classList.remove('w-cover'); return; }
-  const anchor = document.body.dataset.wstyle === 'glance' ? $('#wCards') : $('#wDock');
-  if (!anchor || anchor.hidden) return;
-  const top = anchor.getBoundingClientRect().top, gap = 14;
-  p.style.top = 'auto';
-  p.style.bottom = Math.round(innerHeight - top + gap) + 'px';
-  p.style.maxHeight = Math.max(160, Math.min(560, Math.round(top - gap - 12))) + 'px';
-  const pt = p.getBoundingClientRect().top;
-  document.body.classList.toggle('w-cover', [$('#clock'), $('#wChips')].some(el => !el.hidden && el.getBoundingClientRect().bottom > pt - 8));
+  const glance = document.body.dataset.wstyle === 'glance', anchor = glance ? $('#wCards') : $('#wDock');
+  const open = glance ? document.querySelector('.wcard[aria-expanded="true"]') : null;
+  // above the row of cards or the dock; beside the cards (a side column, or a card with a place of its own): in the middle of the page
+  const above = !!anchor && !anchor.hidden && (!glance || (document.body.dataset.cardspos === 'bottom' && !(open && open.closest('#wFree'))) || innerWidth < 900);
+  p.dataset.where = above ? 'above' : 'middle';
+  if (above){
+    const top = anchor.getBoundingClientRect().top, gap = 14;
+    p.style.top = 'auto';
+    p.style.bottom = Math.round(innerHeight - top + gap) + 'px';
+    p.style.maxHeight = Math.max(160, Math.min(560, Math.round(top - gap - 12))) + 'px';
+  } else { p.style.top = ''; p.style.bottom = ''; p.style.maxHeight = ''; }
+  const pr = p.getBoundingClientRect();
+  document.body.classList.toggle('w-cover', [$('#clock'), $('#wChips')].some(el => { if (el.hidden) return false; const r = el.getBoundingClientRect(); return r.bottom > pr.top - 8 && r.top < pr.bottom + 8 && r.right > pr.left && r.left < pr.right; }));
 }
 addEventListener('resize', () => placePanel());
 function renderPanel(){
@@ -55,7 +69,8 @@ function renderPanel(){
   p.dataset.shown = wOpen;
   $('#wPanelTitle').textContent = wOpen === 'note' && WD.info && pinnedBox().box && !pinnedBox().tab.enc ? pinnedBox().box.title : W_META[wOpen].name;
   $('#wBody').innerHTML = panelHTML(wOpen);
-  const due = wOpen === 'today' ? $$('#wBody .wrow:not(.wev)').length : 0;   // (1.82.0) Today: how many are due, beside the title
+  $('#wPanelIcon').innerHTML = svgI(W_META[wOpen].icon);   // (1.82.1) every panel: a picture, the name, a count
+  const due = $$('#wBody .wrow:not(.wev)').length;
   $('#wPanelCount').hidden = !due; $('#wPanelCount').textContent = String(due);
   placePanel();
   if (keep && document.getElementById(keep)) document.getElementById(keep).focus();

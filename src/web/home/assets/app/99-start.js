@@ -19,7 +19,7 @@ BG.start();
 $('#nextBg').addEventListener('click', () => BG.next());
 addEventListener('keydown', e => {
   if (/** @type {Element} */ (e.target).matches('input, textarea') || $$('dialog[open]').length) return;
-  if (e.key === 'e') { if (editing) exitEdit(); else $('#editBtn').click(); }
+  if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey && !e.altKey) { if (editing) exitEdit(); else $('#editBtn').click(); }   // (1.82.1) also with Caps Lock on
   if (e.key === 'Escape' && editing) exitEdit();
 });
 })();

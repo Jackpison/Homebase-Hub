@@ -53,6 +53,9 @@ function renderClock(){
   const on = !!(WCFG ? WCFG.clock : PUB.clock);
   $('#clock').hidden = !on;
   document.body.dataset.clockpos = (WCFG ? WCFG.clockPos : PUB.clockPos) || 'center';   // (1.82.0)
+  const cell = freeOk() ? (WCFG ? WCFG.pos && WCFG.pos.clock : PUB.clockCell) : null;   // (1.82.1) a place of its own on the page grid, for everyone who sees the clock
+  document.body.classList.toggle('clock-free', !!cell);
+  if (cell){ document.body.style.setProperty('--cx', String(cell.x)); document.body.style.setProperty('--cy', String(cell.y)); document.body.style.setProperty('--cs', String((WCFG ? WCFG.pos && WCFG.pos.clockScale : PUB.clockScale) || 1)); }
   if (!on) return;
   const now = new Date(), h = now.getHours();
   $('#greet').textContent = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night';

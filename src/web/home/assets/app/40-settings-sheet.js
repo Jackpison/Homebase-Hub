@@ -24,7 +24,7 @@ async function saveHomeBar(on){
   if (!r.ok || !j.ok) throw new Error(j.error || 'Could not save the bar setting. Reload the page and try again.');
 }
 /* Widgets: their own window (the edit pill's Widgets button) */
-let widgetsDraft = null;
+let widgetsDraft = null, widgetsOrig = { clockPos:'center', cardsPos:'bottom' };
 function openWidgets(){
   widgetsDraft = structuredClone(ADMIN.widgets);
   const w = widgetsDraft;
@@ -32,6 +32,8 @@ function openWidgets(){
   seg($('#wStyle'), w.style);
   $('#wClock').checked = w.clock;
   seg($('#wClockPos'), w.clockPos || 'center'); seg($('#wCardsPos'), w.cardsPos || 'bottom');
+  const lk = w.look || {}; seg($('#wTint'), lk.tint || 'glass'); seg($('#wCorner'), lk.corner || 'round'); $('#wAccent').value = lk.accent || '#ffd45c'; $('#wAccent').dataset.set = lk.accent ? '1' : '';
+  widgetsOrig = { clockPos:w.clockPos || 'center', cardsPos:w.cardsPos || 'bottom' };
   $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date; $('#wCdTime').value = w.countdown.time || '';
   drawWidgetList();
   fillNotePicker();
@@ -98,7 +100,10 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   w.zones = zones;
   w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
+  w.look = { tint:$('#wTint [aria-checked="true"]')?.dataset.v || 'glass', corner:$('#wCorner [aria-checked="true"]')?.dataset.v || 'round', accent:$('#wAccent').dataset.set ? $('#wAccent').value : '' };
   w.clockPos = $('#wClockPos [aria-checked="true"]')?.dataset.v || 'center'; w.cardsPos = $('#wCardsPos [aria-checked="true"]')?.dataset.v || 'bottom';
+  if (w.clockPos !== widgetsOrig.clockPos && w.pos) w.pos.clock = null;   // choosing a place here replaces a place you dragged to
+  if (w.cardsPos !== widgetsOrig.cardsPos && w.pos) w.pos.cards = {};
   w.countdown = { name:$('#wCdName').value.trim(), date:$('#wCdDate').value, time:$('#wCdTime').value };
   w.note = { tab:tab || '', box:box || '' };
   ADMIN.widgets = w;
@@ -109,3 +114,19 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   } catch (err){ ADMIN.widgets = prev; toast(err.message, true); }
 }));
 
+
+/* (1.82.1) Widgets > Layout and Card Look: Reset Layout, and the look shows on the page while you choose (Cancel puts it back) */
+function previewLook(){
+  const b = document.body, t = $('#wTint [aria-checked="true"]')?.dataset.v || 'glass', c = $('#wCorner [aria-checked="true"]')?.dataset.v || 'round';
+  b.dataset.wtint = t; b.dataset.wcorner = c;
+  if ($('#wAccent').dataset.set) b.style.setProperty('--wacc', $('#wAccent').value); else b.style.removeProperty('--wacc');
+}
+['#wTint', '#wCorner'].forEach(id => $(id).addEventListener('click', () => setTimeout(previewLook, 0)));
+$('#wAccent').addEventListener('input', () => { $('#wAccent').dataset.set = '1'; previewLook(); });
+$('#wAccentReset').addEventListener('click', () => { $('#wAccent').value = '#ffd45c'; $('#wAccent').dataset.set = ''; previewLook(); });
+$('#wResetLayout').addEventListener('click', () => {
+  if (!widgetsDraft) return;
+  widgetsDraft.pos = { clock:null, cards:{} }; widgetsOrig = { clockPos:'center', cardsPos:'bottom' }; seg($('#wClockPos'), 'center'); seg($('#wCardsPos'), 'bottom');
+  toast('Layout reset. Press Save Widgets to keep it.');
+});
+$('#widgetsSheet').addEventListener('close', () => { if (WCFG) renderWidgets(true); });   // the page goes back to what is saved (after Save, to what was just saved)

@@ -230,8 +230,30 @@ const WORLD_CLOCKS = 3;                     // places in World Clock
 const WIDGET_STYLES = ['dock', 'glance'];
 const CARDS_POS = ['bottom', 'left', 'right'];   // (1.82.0) where the Glance cards sit
 const CLOCK_POS = ['center', 'left', 'right'];   // (1.82.0) where the clock sits
+const GRID_COLS = 24;                              // (1.82.1) the invisible page grid: 24 columns by 16 rows; a free widget sits in one cell
+const GRID_ROWS = 16;
+const CARD_SCALE = [0.7, 2.0];                    // (1.82.1) how small and how big a card can be made
+const CLOCK_SCALE = [0.5, 2.5];
+const WIDGET_TINTS = ['glass', 'dark', 'light', 'solid'];   // (1.82.1) Widgets > Look > Card Style: glass follows Settings > Appearance > Glass
+const WIDGET_CORNERS = ['round', 'soft', 'square'];
 const GLASS_TINTS = ['light', 'dark', 'solid'];   // Home Settings > Glass > Tint   // Glass Dock, or Glance and Expand
 const PAD_MAX = 20000;                      // characters kept in the Scratch Pad
+
+/** (1.82.1) A cell of the page grid: whole numbers inside it, or nothing. */
+function clean_cell($c): ?array
+{
+    if (!is_array($c) || !isset($c['x'], $c['y']) || !is_numeric($c['x']) || !is_numeric($c['y'])) return null;
+    $o = ['x' => max(0, min(GRID_COLS - 1, (int) round((float) $c['x']))), 'y' => max(0, min(GRID_ROWS - 1, (int) round((float) $c['y'])))];
+    $z = clean_scale($c['s'] ?? 1, CARD_SCALE);
+    if ($z !== 1.0) $o['s'] = $z;   // (1.82.1) a card you resized
+    return $o;
+}
+
+/** (1.82.1) A size factor inside its limits, in steps of 0.05; 1 is the usual size. */
+function clean_scale($v, array $lim): float
+{
+    return is_numeric($v) ? round(max($lim[0], min($lim[1], (float) $v)) * 20) / 20 : 1.0;
+}
 
 /** Home's widget settings, cleaned: a style, the clock on or off, every known widget once (in your order, unknown ones dropped,
  *  missing ones added at the end), the countdown (a name and a date) and the pinned note (an Info tab and box). */
@@ -257,6 +279,10 @@ function clean_widgets($in): array
             $zones[] = ['tz' => $tz, 'name' => str_clip($z['name'] ?? '', 30)];
     }
     $we = is_array($in['weather'] ?? null) ? $in['weather'] : [];
+    $pp = is_array($in['pos'] ?? null) ? $in['pos'] : [];
+    $cards = [];
+    foreach (is_array($pp['cards'] ?? null) ? $pp['cards'] : [] as $id => $c) { $c = in_array($id, WIDGET_IDS, true) ? clean_cell($c) : null; if ($c) $cards[$id] = $c; }
+    $lk = is_array($in['look'] ?? null) ? $in['look'] : [];
     return [
         'style'     => in_array($in['style'] ?? '', WIDGET_STYLES, true) ? $in['style'] : 'dock',
         'show'      => (bool) ($in['show'] ?? true),   // Widgets > Show Widgets (1.51.1): off hides every widget; the clock has its own switch
@@ -264,6 +290,8 @@ function clean_widgets($in): array
         'cardsPos'  => in_array($in['cardsPos'] ?? '', CARDS_POS, true) ? $in['cardsPos'] : 'bottom',
         'clockPos'  => in_array($in['clockPos'] ?? '', CLOCK_POS, true) ? $in['clockPos'] : 'center',
         'list'      => $list,
+        'pos'       => ['clock' => clean_cell($pp['clock'] ?? null), 'cards' => (object) $cards, 'clockScale' => clean_scale($pp['clockScale'] ?? 1, CLOCK_SCALE)],   // (1.82.1) free places on the page grid; none: the usual layout
+        'look'      => ['tint' => in_array($lk['tint'] ?? '', WIDGET_TINTS, true) ? $lk['tint'] : 'glass', 'corner' => in_array($lk['corner'] ?? '', WIDGET_CORNERS, true) ? $lk['corner'] : 'round', 'accent' => preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($lk['accent'] ?? '')) ? strtolower($lk['accent']) : ''],
         'countdown' => ['name' => str_clip($cd['name'] ?? '', 40), 'date' => $okDate ? $date : '', 'time' => $okDate && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) ($cd['time'] ?? '')) ? (string) $cd['time'] : ''],   // (1.79.0) time: optional, for the live seconds
         'note'      => ['tab' => $idOk($nt['tab'] ?? ''), 'box' => $idOk($nt['box'] ?? '')],
         'zones'     => $zones,
@@ -526,6 +554,8 @@ function public_payload(): array
         'private' => !empty($s['private']),
         'panel'   => $s['panel'],
         'clockPos' => $s['widgets']['clockPos'],   // where the clock sits is for everyone too
+        'clockCell' => $s['widgets']['pos']['clock'],   // (1.82.1) and its free place on the grid
+        'clockScale' => $s['widgets']['pos']['clockScale'],   // and its size
         'clock'   => $s['widgets']['clock'],   // the big clock and greeting are for everyone; the widgets themselves are not
         'bg'      => [
             'uploadChance' => $s['bg']['uploadChance'],

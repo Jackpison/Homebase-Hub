@@ -1120,3 +1120,7 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 /* (1.80.10) the bell button is as wide as the other bar buttons, so the spacing around it is even */
 #ix-bar #ix-bell.ix-bb{width:38px;height:38px;border-radius:999px}
 #ix-bell img.ix-bell3{width:24px;height:24px}
+
+/* (1.82.1) Home: the bell sits in the top-right buttons, as a round glass button like Different Background (its glass comes from Home's own stylesheet) */
+.corner #ix-bell.ix-bc{position:relative;right:auto;bottom:auto;z-index:auto;width:40px;height:40px;flex:none;color:#fff;opacity:1}
+.corner #ix-bell.ix-bc b{top:6px;right:7px}

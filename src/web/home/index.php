@@ -137,17 +137,19 @@ if (!empty($site['private']) && !hub_admin()) {
     <p class="greet" id="greet"></p>
     <p class="time" id="time"></p>
     <p class="date" id="date"></p>
-    <button type="button" class="pgrip" data-drag="clock" aria-label="Move the clock: drag it, or press the Left or Right arrow" title="Drag to move the clock">⠿</button>
+    <button type="button" class="pgrip" data-drag="clock" aria-label="Move the clock: drag it, or hold Alt and press an arrow key" title="Drag to move the clock">⠿</button>
+    <button type="button" class="crs" data-drag="clockscale" aria-label="Resize the clock: drag it, or hold Alt and press Plus or Minus" title="Drag to resize the clock"></button>
   </div>
   <div class="chips" id="wChips" hidden></div>
 </main>
 
 <section class="lg wpanel" id="wPanel" aria-labelledby="wPanelTitle" hidden>
-  <header class="wph"><h2 id="wPanelTitle"></h2><span class="wpn" id="wPanelCount" hidden></span><button type="button" class="wx" id="wClose" aria-label="Close">✕</button></header>
+  <header class="wph"><span class="wpi" id="wPanelIcon" aria-hidden="true"></span><h2 id="wPanelTitle"></h2><span class="wpn" id="wPanelCount" hidden></span><button type="button" class="wx" id="wClose" aria-label="Close">✕</button></header>
   <div class="wbody" id="wBody"></div>
 </section>
 <div class="lg wdock" id="wDock" role="toolbar" aria-label="Widgets" hidden></div>
 <div class="wcards" id="wCards" role="group" aria-label="Widgets" hidden></div>
+<div class="wfree" id="wFree" role="group" aria-label="Widgets" hidden></div>
 
 <div class="corner">
   <a class="credit-text" id="creditText" target="_blank" rel="noopener"></a>
@@ -221,11 +223,23 @@ if (!empty($site['private']) && !hub_admin()) {
           <label class="g-row"><span class="g-label">Show the Clock<small>The time, the date and a greeting. Visitors see it too.</small></span>
             <input type="checkbox" class="switch" id="wClock"></label>
         </div>
+        <h3>Layout</h3>
         <div class="group">
-          <div class="g-row stack"><span class="g-label">Clock Position<small>Left, center or right. You can also drag the clock by its handle.</small></span>
+          <div class="g-row stack"><span class="g-label">Clock Position<small>Left, center or right. Or drag the clock by its handle to any place on the page.</small></span>
             <div class="seg" id="wClockPos" role="radiogroup" aria-label="Clock Position"><button type="button" role="radio" data-v="left">Left</button><button type="button" role="radio" data-v="center">Center</button><button type="button" role="radio" data-v="right">Right</button></div></div>
-          <div class="g-row stack"><span class="g-label">Cards Position<small>For Glance and Expand: the cards along the bottom, or down the left or right side. Drag them by their handle too.</small></span>
+          <div class="g-row stack"><span class="g-label">Cards Position<small>For Glance and Expand: the cards along the bottom, or down the left or right side. Drag any card to put it anywhere on the page; the page has an invisible grid it snaps to. Alt and an arrow key move a card one step.</small></span>
             <div class="seg" id="wCardsPos" role="radiogroup" aria-label="Cards Position"><button type="button" role="radio" data-v="bottom">Bottom</button><button type="button" role="radio" data-v="left">Left</button><button type="button" role="radio" data-v="right">Right</button></div></div>
+          <div class="g-row"><span class="g-label">Reset Layout<small>Puts the clock and every card back in the usual place.</small></span>
+            <button type="button" class="btn" id="wResetLayout">Reset</button></div>
+        </div>
+        <h3>Card Look</h3>
+        <div class="group">
+          <div class="g-row stack"><span class="g-label">Card Style<small>Glass follows Settings › Appearance › Glass. The others are for widgets only.</small></span>
+            <div class="seg" id="wTint" role="radiogroup" aria-label="Card Style"><button type="button" role="radio" data-v="glass">Glass</button><button type="button" role="radio" data-v="dark">Dark</button><button type="button" role="radio" data-v="light">Light</button><button type="button" role="radio" data-v="solid">Solid</button></div></div>
+          <div class="g-row stack"><span class="g-label">Corners</span>
+            <div class="seg" id="wCorner" role="radiogroup" aria-label="Corners"><button type="button" role="radio" data-v="round">Round</button><button type="button" role="radio" data-v="soft">Soft</button><button type="button" role="radio" data-v="square">Square</button></div></div>
+          <div class="g-row"><span class="g-label">Accent Color<small>Counts, links and the open widget. Default is gold.</small></span>
+            <span class="inline"><input type="color" id="wAccent" aria-label="Accent Color" value="#ffd45c"><button type="button" class="btn" id="wAccentReset">Default</button></span></div>
         </div>
         <h3>Widgets, in This Order</h3>
         <div class="field">

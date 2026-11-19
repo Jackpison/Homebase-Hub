@@ -457,7 +457,7 @@ async function saveHomeBar(on){
   if (!r.ok || !j.ok) throw new Error(j.error || 'Could not save the bar setting. Reload the page and try again.');
 }
 /* Widgets: their own window (the edit pill's Widgets button) */
-let widgetsDraft = null;
+let widgetsDraft = null, widgetsOrig = { clockPos:'center', cardsPos:'bottom' };
 function openWidgets(){
   widgetsDraft = structuredClone(ADMIN.widgets);
   const w = widgetsDraft;
@@ -465,6 +465,8 @@ function openWidgets(){
   seg($('#wStyle'), w.style);
   $('#wClock').checked = w.clock;
   seg($('#wClockPos'), w.clockPos || 'center'); seg($('#wCardsPos'), w.cardsPos || 'bottom');
+  const lk = w.look || {}; seg($('#wTint'), lk.tint || 'glass'); seg($('#wCorner'), lk.corner || 'round'); $('#wAccent').value = lk.accent || '#ffd45c'; $('#wAccent').dataset.set = lk.accent ? '1' : '';
+  widgetsOrig = { clockPos:w.clockPos || 'center', cardsPos:w.cardsPos || 'bottom' };
   $('#wCdName').value = w.countdown.name; $('#wCdDate').value = w.countdown.date; $('#wCdTime').value = w.countdown.time || '';
   drawWidgetList();
   fillNotePicker();
@@ -531,7 +533,10 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   w.zones = zones;
   w.weather = { town:$('#wTown').value.trim(), unit:$('#wUnit [aria-checked="true"]')?.dataset.v === 'f' ? 'f' : 'c' };
   w.clock = $('#wClock').checked;
+  w.look = { tint:$('#wTint [aria-checked="true"]')?.dataset.v || 'glass', corner:$('#wCorner [aria-checked="true"]')?.dataset.v || 'round', accent:$('#wAccent').dataset.set ? $('#wAccent').value : '' };
   w.clockPos = $('#wClockPos [aria-checked="true"]')?.dataset.v || 'center'; w.cardsPos = $('#wCardsPos [aria-checked="true"]')?.dataset.v || 'bottom';
+  if (w.clockPos !== widgetsOrig.clockPos && w.pos) w.pos.clock = null;   // choosing a place here replaces a place you dragged to
+  if (w.cardsPos !== widgetsOrig.cardsPos && w.pos) w.pos.cards = {};
   w.countdown = { name:$('#wCdName').value.trim(), date:$('#wCdDate').value, time:$('#wCdTime').value };
   w.note = { tab:tab || '', box:box || '' };
   ADMIN.widgets = w;
@@ -542,6 +547,22 @@ $('#saveWidgets').addEventListener('click', e => withBusy(e.currentTarget, async
   } catch (err){ ADMIN.widgets = prev; toast(err.message, true); }
 }));
 
+
+/* (1.82.1) Widgets > Layout and Card Look: Reset Layout, and the look shows on the page while you choose (Cancel puts it back) */
+function previewLook(){
+  const b = document.body, t = $('#wTint [aria-checked="true"]')?.dataset.v || 'glass', c = $('#wCorner [aria-checked="true"]')?.dataset.v || 'round';
+  b.dataset.wtint = t; b.dataset.wcorner = c;
+  if ($('#wAccent').dataset.set) b.style.setProperty('--wacc', $('#wAccent').value); else b.style.removeProperty('--wacc');
+}
+['#wTint', '#wCorner'].forEach(id => $(id).addEventListener('click', () => setTimeout(previewLook, 0)));
+$('#wAccent').addEventListener('input', () => { $('#wAccent').dataset.set = '1'; previewLook(); });
+$('#wAccentReset').addEventListener('click', () => { $('#wAccent').value = '#ffd45c'; $('#wAccent').dataset.set = ''; previewLook(); });
+$('#wResetLayout').addEventListener('click', () => {
+  if (!widgetsDraft) return;
+  widgetsDraft.pos = { clock:null, cards:{} }; widgetsOrig = { clockPos:'center', cardsPos:'bottom' }; seg($('#wClockPos'), 'center'); seg($('#wCardsPos'), 'bottom');
+  toast('Layout reset. Press Save Widgets to keep it.');
+});
+$('#widgetsSheet').addEventListener('close', () => { if (WCFG) renderWidgets(true); });   // the page goes back to what is saved (after Save, to what was just saved)
 /* ======================================================================
    BACKGROUND SHEET
    ====================================================================== */
@@ -1134,6 +1155,9 @@ function renderClock(){
   const on = !!(WCFG ? WCFG.clock : PUB.clock);
   $('#clock').hidden = !on;
   document.body.dataset.clockpos = (WCFG ? WCFG.clockPos : PUB.clockPos) || 'center';   // (1.82.0)
+  const cell = freeOk() ? (WCFG ? WCFG.pos && WCFG.pos.clock : PUB.clockCell) : null;   // (1.82.1) a place of its own on the page grid, for everyone who sees the clock
+  document.body.classList.toggle('clock-free', !!cell);
+  if (cell){ document.body.style.setProperty('--cx', String(cell.x)); document.body.style.setProperty('--cy', String(cell.y)); document.body.style.setProperty('--cs', String((WCFG ? WCFG.pos && WCFG.pos.clockScale : PUB.clockScale) || 1)); }
   if (!on) return;
   const now = new Date(), h = now.getHours();
   $('#greet').textContent = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night';
@@ -1406,6 +1430,7 @@ function renderWidgets(quiet = false){
   document.body.classList.toggle('w-open', !!wOpen);
   document.body.dataset.wstyle = WCFG ? WCFG.style : '';
   document.body.dataset.cardspos = WCFG && WCFG.cardsPos || 'bottom'; document.body.dataset.clockpos = WCFG ? WCFG.clockPos || 'center' : document.body.dataset.clockpos;   // (1.82.0)
+  { const lk = WCFG && WCFG.look || {}; document.body.dataset.wtint = lk.tint || 'glass'; document.body.dataset.wcorner = lk.corner || 'round'; if (lk.accent) document.body.style.setProperty('--wacc', lk.accent); else document.body.style.removeProperty('--wacc'); }   // (1.82.1) Widgets > Look
   document.body.classList.toggle('can-move', !!WCFG);   // the handles to drag the clock and the cards show for you only
 
   // Glass Dock: chips under the clock for Today and Countdown, and a dock with every widget
@@ -1416,14 +1441,22 @@ function renderWidgets(quiet = false){
   $('#wDock').innerHTML = dock ? list.map(id => `<button type="button" class="wdb" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}" aria-label="${esc(W_META[id].name)}">${svgI(W_META[id].icon)}<span>${esc(W_META[id].short)}</span></button>`).join('') : '';
 
   // Glance and Expand: one small glass card per widget
-  $('#wCards').hidden = dock || !list.length;
-  $('#wCards').style.setProperty('--n', list.length <= 6 ? list.length : Math.ceil(list.length / 2));   // one row, or two even rows
-  $('#wCards').innerHTML = !dock ? list.map(id => {
+  // (1.82.1) a widget with a place of its own on the page grid is drawn there (#wFree); the others keep the usual layout (#wCards)
+  const cells = freeOk() && WCFG && WCFG.pos ? WCFG.pos.cards || {} : {}, freeIds = dock ? [] : list.filter(id => cells[id]), autoIds = dock ? [] : list.filter(id => !cells[id]);
+  const card = id => {
     const s = summary(id);
     return `<button type="button" class="lg wcard" data-w="${id}" aria-controls="wPanel" aria-expanded="${wOpen === id}">
       <span class="wc-h"><span>${esc(s.title || W_META[id].name)}</span>${s.alert ? `<em>${esc(s.alert)}</em>` : ''}</span>
       ${s.big ? `<b class="wc-big">${esc(s.big)}</b>` : ''}<span class="wc-s">${esc(s.small || '')}</span></button>`;
-  }).join('') + '<button type="button" class="pgrip" data-drag="cards" aria-label="Move the cards: drag them, or press the Left or Right arrow" title="Drag to move the cards">⠿</button>' : '';
+  };
+  // (1.82.1) a free card sits in a wrapper with its own size handle (a button cannot hold another button)
+  const freeCard = id => `<div class="wfc" style="--gx:${cells[id].x};--gy:${cells[id].y};--ws:${cells[id].s || 1}">${card(id)}<button type="button" class="wrs" data-w="${id}" aria-label="Resize ${esc(W_META[id].name)} (Alt + Plus or Minus)" title="Drag to resize"></button></div>`;
+  $('#wCards').hidden = dock || !autoIds.length;
+  $('#wCards').classList.toggle('many', autoIds.length > 7);   // a column down the side holds two rows of cards when there are many
+  $('#wCards').style.setProperty('--n', autoIds.length <= 6 ? autoIds.length : Math.ceil(autoIds.length / 2));   // one row, or two even rows
+  $('#wCards').innerHTML = autoIds.map(card).join('');
+  $('#wFree').hidden = !freeIds.length;
+  $('#wFree').innerHTML = freeIds.map(freeCard).join('');
   if (!quiet || wOpen === 'worldclock') renderPanel();   // each minute: only World Clock's open panel changes (never one you type in)
   if (keep) $(`#${keep[0]} [data-w="${keep[1]}"]`)?.focus();
 }
@@ -1433,14 +1466,19 @@ function renderWidgets(quiet = false){
 function placePanel(){
   const p = $('#wPanel');
   if (p.hidden){ document.body.classList.remove('w-cover'); return; }
-  const anchor = document.body.dataset.wstyle === 'glance' ? $('#wCards') : $('#wDock');
-  if (!anchor || anchor.hidden) return;
-  const top = anchor.getBoundingClientRect().top, gap = 14;
-  p.style.top = 'auto';
-  p.style.bottom = Math.round(innerHeight - top + gap) + 'px';
-  p.style.maxHeight = Math.max(160, Math.min(560, Math.round(top - gap - 12))) + 'px';
-  const pt = p.getBoundingClientRect().top;
-  document.body.classList.toggle('w-cover', [$('#clock'), $('#wChips')].some(el => !el.hidden && el.getBoundingClientRect().bottom > pt - 8));
+  const glance = document.body.dataset.wstyle === 'glance', anchor = glance ? $('#wCards') : $('#wDock');
+  const open = glance ? document.querySelector('.wcard[aria-expanded="true"]') : null;
+  // above the row of cards or the dock; beside the cards (a side column, or a card with a place of its own): in the middle of the page
+  const above = !!anchor && !anchor.hidden && (!glance || (document.body.dataset.cardspos === 'bottom' && !(open && open.closest('#wFree'))) || innerWidth < 900);
+  p.dataset.where = above ? 'above' : 'middle';
+  if (above){
+    const top = anchor.getBoundingClientRect().top, gap = 14;
+    p.style.top = 'auto';
+    p.style.bottom = Math.round(innerHeight - top + gap) + 'px';
+    p.style.maxHeight = Math.max(160, Math.min(560, Math.round(top - gap - 12))) + 'px';
+  } else { p.style.top = ''; p.style.bottom = ''; p.style.maxHeight = ''; }
+  const pr = p.getBoundingClientRect();
+  document.body.classList.toggle('w-cover', [$('#clock'), $('#wChips')].some(el => { if (el.hidden) return false; const r = el.getBoundingClientRect(); return r.bottom > pr.top - 8 && r.top < pr.bottom + 8 && r.right > pr.left && r.left < pr.right; }));
 }
 addEventListener('resize', () => placePanel());
 function renderPanel(){
@@ -1452,7 +1490,8 @@ function renderPanel(){
   p.dataset.shown = wOpen;
   $('#wPanelTitle').textContent = wOpen === 'note' && WD.info && pinnedBox().box && !pinnedBox().tab.enc ? pinnedBox().box.title : W_META[wOpen].name;
   $('#wBody').innerHTML = panelHTML(wOpen);
-  const due = wOpen === 'today' ? $$('#wBody .wrow:not(.wev)').length : 0;   // (1.82.0) Today: how many are due, beside the title
+  $('#wPanelIcon').innerHTML = svgI(W_META[wOpen].icon);   // (1.82.1) every panel: a picture, the name, a count
+  const due = $$('#wBody .wrow:not(.wev)').length;
   $('#wPanelCount').hidden = !due; $('#wPanelCount').textContent = String(due);
   placePanel();
   if (keep && document.getElementById(keep)) document.getElementById(keep).focus();
@@ -1665,58 +1704,139 @@ function setWidgets(cfg){
   loadWidgets();
 }
 
-/* ---------- (1.82.0) drag the clock or the Glance cards to the left, centre or right ----------
-   Only you see the handles (body.can-move). While you drag, three zones show; let go over one and it is saved like any Widgets setting.
-   The arrow keys on a handle do the same, and Widgets > Clock Position and Cards Position are the plain way. */
-const MOVE_PLACES = { clock: ['left', 'center', 'right'], cards: ['left', 'bottom', 'right'] };
-let moveDrag = null;
-async function movePlace(/** @type {string} */ what, /** @type {string} */ to){
-  const key = what === 'clock' ? 'clockPos' : 'cardsPos', wasEditing = editing;
+/* ---------- (1.82.1) the page grid: put the clock and every widget where you like ----------
+   The page has an invisible grid of 24 columns by 16 rows. Drag a card (or the clock by its handle) and it snaps to a cell; the grid shows
+   while you drag. A widget with a place of its own is saved like any Widgets setting; the others keep the usual layout (Widgets > Layout).
+   Alt + arrow keys move the focused card or clock handle by one cell. Under 900 px wide the usual layout is always used. */
+const GRID_COLS = 24, GRID_ROWS = 16;
+const freeOk = () => innerWidth >= 900;
+let mv = /** @type {any} */ (null), justDragged = false;
+const clampN = (/** @type {number} */ n, /** @type {number} */ lo, /** @type {number} */ hi) => Math.max(lo, Math.min(hi, n));
+const cellFromRect = (/** @type {number} */ left, /** @type {number} */ top) => ({ x: clampN(Math.round(left / (innerWidth / GRID_COLS)), 0, GRID_COLS - 1), y: clampN(Math.round(top / (innerHeight / GRID_ROWS)), 0, GRID_ROWS - 1) });
+const cellFromPoint = (/** @type {number} */ x, /** @type {number} */ y) => ({ x: clampN(Math.floor(x / (innerWidth / GRID_COLS)), 0, GRID_COLS - 1), y: clampN(Math.floor(y / (innerHeight / GRID_ROWS)), 0, GRID_ROWS - 1) });
+async function savePlace(/** @type {(w: any) => void} */ change){
+  const wasEditing = editing;
   try { if (!ADMIN) ADMIN = await api('admin_data'); } catch (err){ toast(err.message, true); return; }   // outside Edit the full settings are not loaded yet
-  if (!ADMIN.widgets || ADMIN.widgets[key] === to){ if (!wasEditing) ADMIN = null; return; }
-  const prev = ADMIN.widgets[key];
-  ADMIN.widgets[key] = to;
-  try { await saveAll('Moved'); setWidgets(ADMIN.widgets); } catch (err){ ADMIN.widgets[key] = prev; setWidgets(ADMIN.widgets); toast(err.message, true); }
+  const before = JSON.stringify(ADMIN.widgets);
+  ADMIN.widgets.pos = ADMIN.widgets.pos || { clock:null, cards:{} };
+  change(ADMIN.widgets);
+  if (JSON.stringify(ADMIN.widgets) !== before){
+    try { await saveAll('Moved'); setWidgets(ADMIN.widgets); } catch (err){ ADMIN.widgets = JSON.parse(before); setWidgets(ADMIN.widgets); toast(err.message, true); }
+  }
   if (!wasEditing) ADMIN = null;
 }
-function moveZone(/** @type {string} */ what, /** @type {number} */ x){
-  const f = x / innerWidth;
-  return what === 'clock' ? (f < .34 ? 'left' : f > .66 ? 'right' : 'center') : (f < .3 ? 'left' : f > .7 ? 'right' : 'bottom');
+function gridShow(/** @type {{x:number,y:number,w:number,h:number} | null} */ box){
+  let g = document.getElementById('mvGrid');
+  if (!g){ g = document.createElement('div'); g.id = 'mvGrid'; g.setAttribute('aria-hidden', 'true'); g.innerHTML = '<i></i>'; document.body.append(g); }
+  g.hidden = !box; if (!box) return;
+  const c = /** @type {HTMLElement} */ (g.firstElementChild);
+  c.style.cssText = `left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px`;
 }
-function moveZonesShow(/** @type {string} */ what, /** @type {string} */ on){
-  let z = document.getElementById('mvZones');
-  if (!z){ z = document.createElement('div'); z.id = 'mvZones'; z.setAttribute('aria-hidden', 'true'); document.body.append(z); }
-  z.hidden = !on; if (!on) return;
-  const names = MOVE_PLACES[what];
-  z.className = what; z.innerHTML = names.map(n => `<i data-z="${n}" class="${n === on ? 'on' : ''}">${n === 'bottom' ? 'Bottom' : n[0].toUpperCase() + n.slice(1)}</i>`).join('');
+function moveBegin(/** @type {PointerEvent} */ e, /** @type {HTMLElement} */ el, /** @type {string} */ kind, /** @type {string} */ id){
+  const r = el.getBoundingClientRect();
+  mv = { s:Number(getComputedStyle(el).getPropertyValue('--ws')) || 1, kind, id, el, sx:e.clientX, sy:e.clientY, ox:e.clientX - r.left, oy:e.clientY - r.top, w:r.width, h:r.height, started:false, cell:null, ghost:null, pid:e.pointerId };
+}
+function moveStart(){
+  mv.started = true; document.body.classList.add('moving');
+  if (mv.kind === 'card'){
+    const g = /** @type {HTMLElement} */ (mv.el.cloneNode(true)); g.classList.add('wghost'); g.removeAttribute('data-w'); g.style.cssText = `position:fixed;left:${mv.el.getBoundingClientRect().left}px;top:${mv.el.getBoundingClientRect().top}px;width:${mv.w / mv.s}px;transform:scale(${mv.s});transform-origin:0 0;margin:0;z-index:11;pointer-events:none`;
+    document.body.append(g); mv.ghost = g; mv.el.classList.add('wdim');
+  }
+}
+function movePoint(/** @type {number} */ x, /** @type {number} */ y){
+  if (mv.kind === 'card'){
+    const left = clampN(x - mv.ox, 0, innerWidth - mv.w), top = clampN(y - mv.oy, 0, innerHeight - mv.h);
+    mv.ghost.style.left = left + 'px'; mv.ghost.style.top = top + 'px';
+    mv.cell = cellFromRect(left, top); gridShow({ x:mv.cell.x * innerWidth / GRID_COLS, y:mv.cell.y * innerHeight / GRID_ROWS, w:mv.w, h:mv.h });
+  } else {
+    mv.cell = cellFromPoint(x, y);
+    gridShow({ x:(mv.cell.x + .5) * innerWidth / GRID_COLS - mv.w / 2, y:(mv.cell.y + .5) * innerHeight / GRID_ROWS - mv.h / 2, w:mv.w, h:mv.h });
+  }
+}
+function moveEnd(/** @type {boolean} */ commit){
+  if (!mv) return;
+  const d = mv; mv = null;
+  if (!d.started) return;
+  d.ghost?.remove(); d.el.classList.remove('wdim'); document.body.classList.remove('moving'); gridShow(null);
+  justDragged = true; setTimeout(() => { justDragged = false; }, 0);   // the click that ends a drag must not open the widget
+  if (commit && d.cell) savePlace(w => { if (d.kind === 'clock') w.pos.clock = d.cell; else w.pos.cards[d.id] = Object.assign({}, d.cell, d.s && d.s !== 1 ? { s:d.s } : {}); });
 }
 document.addEventListener('pointerdown', e => {
-  const g = /** @type {HTMLElement | null} */ ((/** @type {Element} */ (e.target)).closest && (/** @type {Element} */ (e.target)).closest('.pgrip'));
-  if (!g || !WCFG || e.button) return;
-  e.preventDefault();
-  moveDrag = { what: g.dataset.drag || 'clock', to: '' };
-  moveDrag.to = moveZone(moveDrag.what, e.clientX); document.body.classList.add('moving'); moveZonesShow(moveDrag.what, moveDrag.to);
-  try { g.setPointerCapture(e.pointerId); } catch { /* the page still follows the pointer */ }
+  const t = /** @type {Element} */ (e.target); if (!WCFG || e.button || editing || !freeOk() || !t.closest) return;
+  const grip = /** @type {HTMLElement | null} */ (t.closest('.pgrip')), card = /** @type {HTMLElement | null} */ (t.closest('.wcard[data-w]'));
+  if (grip){ e.preventDefault(); moveBegin(e, /** @type {HTMLElement} */ (document.getElementById('clock')), 'clock', ''); moveStart(); movePoint(e.clientX, e.clientY); }
+  else if (card) moveBegin(e, card, 'card', card.dataset.w || '');
+  if (mv){ try { (grip || card)?.setPointerCapture(e.pointerId); } catch { /* the page still follows the pointer */ } }
 });
 document.addEventListener('pointermove', e => {
-  if (!moveDrag) return;
-  const to = moveZone(moveDrag.what, e.clientX); if (to !== moveDrag.to){ moveDrag.to = to; moveZonesShow(moveDrag.what, to); }
+  if (!mv || e.pointerId !== mv.pid) return;
+  if (!mv.started){ if (Math.hypot(e.clientX - mv.sx, e.clientY - mv.sy) < 7) return; moveStart(); }
+  movePoint(e.clientX, e.clientY);
 });
-function moveEnd(/** @type {boolean} */ commit){
-  if (!moveDrag) return;
-  const d = moveDrag; moveDrag = null; document.body.classList.remove('moving'); moveZonesShow(d.what, '');
-  if (commit) movePlace(d.what, d.to);
-}
 document.addEventListener('pointerup', () => moveEnd(true));
 document.addEventListener('pointercancel', () => moveEnd(false));
+document.addEventListener('click', e => { if (justDragged){ e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 document.addEventListener('keydown', e => {
-  const g = /** @type {HTMLElement | null} */ ((/** @type {Element} */ (e.target)).closest && (/** @type {Element} */ (e.target)).closest('.pgrip'));
-  if (moveDrag && e.key === 'Escape'){ moveEnd(false); return; }
-  if (!g || !WCFG || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+  const t = /** @type {Element} */ (e.target);
+  if (mv && mv.started && e.key === 'Escape'){ moveEnd(false); return; }
+  if (!WCFG || editing || !freeOk() || !e.altKey || !e.key.startsWith('Arrow') || !t.closest) return;
+  const grip = t.closest('.pgrip'), card = /** @type {HTMLElement | null} */ (t.closest('.wcard[data-w]'));
+  if (!grip && !card) return;
   e.preventDefault();
-  const what = g.dataset.drag || 'clock', list = MOVE_PLACES[what], cur = (what === 'clock' ? WCFG.clockPos : WCFG.cardsPos) || list[what === 'clock' ? 1 : 1];
-  const i = Math.max(0, Math.min(list.length - 1, list.indexOf(cur) + (e.key === 'ArrowRight' ? 1 : -1)));
-  movePlace(what, list[i]).then(() => /** @type {HTMLElement | null} */ (document.querySelector(`.pgrip[data-drag="${what}"]`))?.focus());
+  const id = card ? card.dataset.w || '' : '', pos = WCFG.pos || { clock:null, cards:{} };
+  let cur = card ? pos.cards[id] : pos.clock;
+  if (!cur){ const r = /** @type {HTMLElement} */ (card || document.getElementById('clock')).getBoundingClientRect(); cur = card ? cellFromRect(r.left, r.top) : cellFromPoint(r.left + r.width / 2, r.top + r.height / 2); }
+  const dx = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0, dy = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+  const to = { x:clampN(cur.x + dx, 0, GRID_COLS - 1), y:clampN(cur.y + dy, 0, GRID_ROWS - 1) };
+  savePlace(w => { if (card) w.pos.cards[id] = Object.assign({}, to, cur.s ? { s:cur.s } : {}); else w.pos.clock = to; }).then(() => { const sel = card ? `.wcard[data-w="${id}"]` : '.pgrip'; /** @type {HTMLElement | null} */ (document.querySelector(sel))?.focus(); });
+});
+// when the window crosses 900 px the usual layout (narrow) or the free places (wide) are drawn
+let wasFree = freeOk();
+addEventListener('resize', () => { const f = freeOk(); if (f !== wasFree){ wasFree = f; if (WCFG) renderWidgets(true); else renderClock(); } });
+
+/* ---------- (1.82.1) resize: a card from 0.7 to 2 times, the clock from 0.5 to 2.5 times, in steps of 0.05 ---------- */
+const SCALE_LIM = { card:[0.7, 2], clock:[0.5, 2.5] };
+const snap05 = (/** @type {number} */ n, /** @type {number[]} */ lim) => clampN(Math.round(n / 0.05) * 0.05, lim[0], lim[1]);
+let rz = /** @type {any} */ (null);
+document.addEventListener('pointerdown', e => {
+  const t = /** @type {Element} */ (e.target); if (!WCFG || e.button || editing || !freeOk() || !t.closest) return;
+  const h = /** @type {HTMLElement | null} */ (t.closest('.wrs, .crs')); if (!h) return;
+  e.preventDefault(); e.stopPropagation();
+  const clock = h.classList.contains('crs'), box = /** @type {HTMLElement} */ (clock ? document.getElementById('clock') : h.closest('.wfc')), r = box.getBoundingClientRect();
+  const s0 = clock ? Number(getComputedStyle(document.body).getPropertyValue('--cs')) || 1 : Number(getComputedStyle(box).getPropertyValue('--ws')) || 1;
+  rz = { clock, box, id:h.dataset.w || '', s0, s:s0, pid:e.pointerId, ox:clock ? r.left + r.width / 2 : r.left, oy:clock ? r.top + r.height / 2 : r.top, d0:clock ? Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) : Math.max(8, e.clientX - r.left) };
+  document.body.classList.add('moving'); try { h.setPointerCapture(e.pointerId); } catch { /* the page still follows the pointer */ }
+}, true);
+document.addEventListener('pointermove', e => {
+  if (!rz || e.pointerId !== rz.pid) return;
+  const d = rz.clock ? Math.hypot(e.clientX - rz.ox, e.clientY - rz.oy) : Math.max(8, e.clientX - rz.ox);
+  rz.s = snap05(rz.s0 * d / Math.max(8, rz.d0), rz.clock ? SCALE_LIM.clock : SCALE_LIM.card);
+  if (rz.clock){ document.body.classList.add('clock-free'); document.body.style.setProperty('--cs', String(rz.s)); } else rz.box.style.setProperty('--ws', String(rz.s));
+});
+function resizeEnd(/** @type {boolean} */ commit){
+  if (!rz) return; const d = rz; rz = null; document.body.classList.remove('moving'); justDragged = true; setTimeout(() => { justDragged = false; }, 0);
+  if (!commit || d.s === d.s0) { if (d.clock && !(WCFG && WCFG.pos && WCFG.pos.clock) && !PUB.clockCell) renderClock(); return; }
+  scaleSave(d.clock, d.id, d.s);
+}
+function scaleSave(/** @type {boolean} */ clock, /** @type {string} */ id, /** @type {number} */ s){
+  const sv = s === 1 ? undefined : s;
+  savePlace(w => {
+    if (clock){ if (!w.pos.clock){ const r = /** @type {HTMLElement} */ (document.getElementById('clock')).getBoundingClientRect(); w.pos.clock = cellFromPoint(r.left + r.width / 2, r.top + r.height / 2); } w.pos.clockScale = s; }
+    else if (w.pos.cards[id]){ const c = Object.assign({}, w.pos.cards[id]); if (sv) c.s = sv; else delete c.s; w.pos.cards[id] = c; }
+  });
+}
+document.addEventListener('pointerup', () => resizeEnd(true));
+document.addEventListener('pointercancel', () => resizeEnd(false));
+document.addEventListener('keydown', e => {
+  const t = /** @type {Element} */ (e.target);
+  if (!WCFG || editing || !freeOk() || !e.altKey || !['+', '=', '-', '_'].includes(e.key) || !t.closest) return;
+  const clock = !!t.closest('.pgrip, .crs'), card = /** @type {HTMLElement | null} */ (t.closest('.wfc'));
+  if (!clock && !card) return;
+  e.preventDefault();
+  const cur = clock ? Number(getComputedStyle(document.body).getPropertyValue('--cs')) || 1 : Number(getComputedStyle(/** @type {HTMLElement} */ (card)).getPropertyValue('--ws')) || 1;
+  const to = snap05(cur + (e.key === '-' || e.key === '_' ? -0.05 : 0.05), clock ? SCALE_LIM.clock : SCALE_LIM.card);
+  if (to !== cur){ if (clock) document.body.style.setProperty('--cs', String(to)); else /** @type {HTMLElement} */ (card).style.setProperty('--ws', String(to)); }   // seen at once; saved after
+  if (to !== cur) scaleSave(clock, card ? (card.querySelector('.wcard')?.getAttribute('data-w') || '') : '', to);
 });
 /* ======================================================================
    HOME TOUR (1.69.0): four cards in the Stepper (shell.js), each lighting up a part of the page. It opens once, on the first visit
@@ -1763,7 +1883,7 @@ BG.start();
 $('#nextBg').addEventListener('click', () => BG.next());
 addEventListener('keydown', e => {
   if (/** @type {Element} */ (e.target).matches('input, textarea') || $$('dialog[open]').length) return;
-  if (e.key === 'e') { if (editing) exitEdit(); else $('#editBtn').click(); }
+  if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey && !e.altKey) { if (editing) exitEdit(); else $('#editBtn').click(); }   // (1.82.1) also with Caps Lock on
   if (e.key === 'Escape' && editing) exitEdit();
 });
 })();

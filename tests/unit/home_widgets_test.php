@@ -146,3 +146,21 @@ $w = clean_widgets(['cardsPos' => 'left', 'clockPos' => 'right']);
 t('cards can sit left or right and the clock left or right', $w['cardsPos'] === 'left' && $w['clockPos'] === 'right');
 $w = clean_widgets(['cardsPos' => 'top', 'clockPos' => '<b>']);
 t('an unknown place falls back to the bottom and the centre', $w['cardsPos'] === 'bottom' && $w['clockPos'] === 'center');
+
+// (1.82.1) free places on the page grid, and the widgets' own look
+$w = clean_widgets([]);
+t('no free places and the usual look at first', $w['pos']['clock'] === null && count((array) $w['pos']['cards']) === 0 && $w['pos']['clockScale'] === 1.0 && $w['look'] === ['tint' => 'glass', 'corner' => 'round', 'accent' => '']);
+$w = clean_widgets(['pos' => ['clock' => ['x' => 99, 'y' => -4], 'cards' => ['today' => ['x' => '5', 'y' => 3.6], 'nope' => ['x' => 1, 'y' => 1], 'pad' => ['x' => 'a', 'y' => 2], 'quote' => 'x']]]);
+$cards = (array) $w['pos']['cards'];
+t('a place is a whole cell inside the grid; unknown widgets and bad cells are dropped', $w['pos']['clock'] === ['x' => 23, 'y' => 0] && $cards === ['today' => ['x' => 5, 'y' => 4]], json_encode($w['pos']));
+$w = clean_widgets(['look' => ['tint' => 'dark', 'corner' => 'square', 'accent' => '#FFAA00']]);
+t('the card style, the corners and a hex accent are kept', $w['look'] === ['tint' => 'dark', 'corner' => 'square', 'accent' => '#ffaa00']);
+$w = clean_widgets(['look' => ['tint' => 'x', 'corner' => '<b>', 'accent' => 'red']]);
+t('an unknown style, corner or accent falls back', $w['look'] === ['tint' => 'glass', 'corner' => 'round', 'accent' => '']);
+
+// (1.82.1) resizing: a card and the clock can be made smaller or bigger, inside limits
+$w = clean_widgets(['pos' => ['clockScale' => 9, 'cards' => ['today' => ['x' => 1, 'y' => 1, 's' => 1.333], 'quote' => ['x' => 2, 'y' => 2, 's' => 0.1], 'pad' => ['x' => 3, 'y' => 3, 's' => 'big'], 'weather' => ['x' => 4, 'y' => 4, 's' => 1]]]]);
+$cards = (array) $w['pos']['cards'];
+t('the clock size stops at 2.5 times', $w['pos']['clockScale'] === 2.5);
+t('a card size is rounded to a step and stays between 0.7 and 2', $cards['today']['s'] === 1.35 && $cards['quote']['s'] === 0.7 && !isset($cards['pad']['s']) && !isset($cards['weather']['s']), json_encode($cards));
+t('the clock size can be as small as half', clean_widgets(['pos' => ['clockScale' => 0.2]])['pos']['clockScale'] === 0.5);
