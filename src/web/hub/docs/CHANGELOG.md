@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.82.3 | Home: a dropped widget never lands on another, Undo after a move, Move mode with the M key, and handles that stay in view on touch screens |
 | 1.82.2 | Home: dragging a widget or the clock is smoother, and the piece glides into its place |
 | 1.82.1 | Home: put the clock and every widget anywhere on an invisible page grid, resize them, choose a card look; first-use tips; the bell moves to the top-right buttons on Home |
 | 1.82.0 | Home: compact Glance cards that never reach the clock, the clock and the cards can sit left, center or right (drag them or choose in Widgets), and cleaner widget panels |
@@ -184,6 +185,18 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.82.3
+
+### Home
+
+- A widget dropped on another widget or on the clock goes to the nearest free place instead.
+- After you move or resize a widget, a message offers Undo for a few seconds.
+- Move mode from the keyboard: focus a widget or the clock handle and press M. The arrow keys move it, Plus and Minus resize it, Enter or Escape puts it down. A screen reader says when the mode starts and ends.
+- On touch screens the move and size handles stay in view (there is no hover).
+- Fixed: after a widget with its own place was focused, drawing the cards again could stop with an error.
 
 ---
 
