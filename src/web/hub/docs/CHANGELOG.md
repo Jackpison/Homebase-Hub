@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.81.1 | Links: a dark square logo (X, Swizzin) keeps its symbol on the dark theme instead of turning into a white square |
 | 1.81.0 | Links gets a new look (Page Style: Refined, Panels or Classic), the site address on hover, a Most Used strip, and all-black or all-white logos made visible |
 | 1.80.11 | Files no longer opens the wrong file when you double-click one that is already picked |
 | 1.80.10 | Logs and Activity use two lines (search and filters, then the count with Export and Clear), the bar bell is the exact flat yellow bell with even spacing around it |
@@ -180,6 +181,14 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.81.1
+
+### Links
+
+- A logo that is a dark square with a light or coloured symbol (X, Swizzin, Racknerd) no longer turns into a plain white square on the dark theme. It keeps its symbol and gets a thin light edge so it can still be seen.
 
 ---
 
