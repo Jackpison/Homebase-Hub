@@ -194,7 +194,7 @@ Nothing to migrate by hand unless an entry says so.
 
 ### Everywhere
 
-- New: Hover Hints. Point at a setting or a button on a computer and wait a moment: a short sentence appears in a bubble with a small pointer to the thing it explains. About 70 are in place across Home Settings and Widgets, Links, Info, Cards, Tasks and Files, including the smaller settings inside them.
+- New: Hover Hints. Point at a setting or a button on a computer and wait a moment: a short sentence appears in a bubble with a small pointer to the thing it explains. 62 are in place across Home Settings and Widgets, Links, Info, Cards, Tasks and Files, including the smaller settings inside them.
 - Hints also show inside open Settings windows, and wrap on narrow screens.
 - Features, Hover Hints turns hints on or off and sets how fast they appear (Fast, Normal or Slow). It is kept on this device. Touch screens have no hover, so they show none.
 - The first-use tips now have a pointer to the thing they explain.
