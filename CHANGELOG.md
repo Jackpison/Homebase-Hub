@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.82.5 | Hover Hints: a short sentence with a pointer when you point at a setting or a button, with an on/off switch and a speed choice in Features; the first-use tips point at what they explain |
 | 1.82.4 | A new line-style alerts bell on every page, a fix for cards dropping above where you let go, and tidier Saved Layouts settings |
 | 1.82.3 | Home: widgets never land on each other, Undo after a move, Move mode (M), Saved Layouts, a color for one card, guide lines; Links: Most Used shows with counts hidden; more first-use tips |
 | 1.82.2 | Home: dragging a widget or the clock is smoother, and the piece glides into its place |
@@ -186,6 +187,17 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.82.5
+
+### Everywhere
+
+- New: Hover Hints. Point at a setting or a button on a computer and wait a moment: a short sentence appears in a bubble with a small pointer to the thing it explains. About 70 are in place across Home Settings and Widgets, Links, Info, Cards, Tasks and Files, including the smaller settings inside them.
+- Hints also show inside open Settings windows, and wrap on narrow screens.
+- Features, Hover Hints turns hints on or off and sets how fast they appear (Fast, Normal or Slow). It is kept on this device. Touch screens have no hover, so they show none.
+- The first-use tips now have a pointer to the thing they explain.
 
 ---
 
