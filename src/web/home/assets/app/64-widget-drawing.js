@@ -1,7 +1,7 @@
 /* ---------- drawing ---------- */
 function renderWidgets(quiet = false){
   renderClock();
-  const a = /** @type {HTMLElement} */ (document.activeElement), keep = a && a.dataset && a.dataset.w && !$('#wPanel').contains(a) ? [/** @type {HTMLElement} */ (a.parentNode).id, a.dataset.w] : null;
+  const a = /** @type {HTMLElement} */ (document.activeElement), keep = a && a.dataset && a.dataset.w && !$('#wPanel').contains(a) ? [a.closest('.wfree') ? 'wFree' : /** @type {HTMLElement} */ (a.parentNode).id, a.dataset.w] : null;   // (1.82.3) a free card sits in a wrapper: its row is #wFree
   const list = wShowNow() ? WCFG.list.filter(w => w.on && W_META[w.id]).map(w => w.id) : [];   // Widgets > Show Widgets off: none
   const dock = WCFG && WCFG.style === 'dock';
   if (wOpen && !list.includes(wOpen)) wOpen = '';

@@ -566,3 +566,7 @@ html[data-ix-gsolid] .corner #ix-bell.ix-bc{backdrop-filter:none;-webkit-backdro
 /* (1.82.1) while a piece is in your hand, the frosted blur is paused on it and on the other cards (it is the costly part of every frame) */
 body.moving :is(.wghost,.wcard,.wchip,.pgrip){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 body.moving .wghost{background-color:color-mix(in srgb,var(--ix-gtc,#101114) 55%,transparent)}
+
+/* (1.82.3) touch screens have no hover: the size and move handles stay in view */
+@media (hover:none){body.can-move .pgrip,.wrs,body.can-move .clock .crs{opacity:.85}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

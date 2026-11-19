@@ -347,6 +347,23 @@ try:
         final_pos = saved_pos(); pc.close()
         check('P41c (1.82.1) a free card and the clock resize by their handle and by Alt with Plus or Minus (the smallest card is 0.7), the size is saved, and the bell sits between Different Background and Edit',
               card_big and card_saved_s and card_min and clock_s and bell, (card_big, card_saved_s, final_pos, card_min, clock_s, bell))
+        # (1.82.3) a card dropped on another goes to the nearest free cell; a move offers Undo; M starts Move mode on the keyboard (arrows move, Enter puts down)
+        pc, pp = place_cfg({'pos': {'clock': {'x': 12, 'y': 3}, 'cards': {'today': {'x': 2, 'y': 3}, 'calendar': {'x': 12, 'y': 10}}}, 'clockScale': 1})
+        cal0 = json.loads(saved_pos())['cards']['calendar']
+        cb = pp.locator('#wFree .wcard[data-w=calendar]').bounding_box(); tb = pp.locator('#wFree .wcard[data-w=today]').bounding_box()
+        pp.mouse.move(cb['x'] + 30, cb['y'] + 20); pp.mouse.down(); pp.mouse.move(tb['x'] + 40, tb['y'] + 25, steps=8); pp.mouse.up()
+        moved = until(lambda: json.loads(saved_pos())['cards']['calendar'] != cal0, 8000)
+        no_overlap = until(lambda: pp.evaluate("(() => { const a = document.querySelector('#wFree .wcard[data-w=calendar]').getBoundingClientRect(), b = document.querySelector('#wFree .wcard[data-w=today]').getBoundingClientRect(); return !(a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top); })()"), 8000)
+        undo_btn = until(lambda: pp.evaluate("[...document.querySelectorAll('#ix-toast button')].some(b => /Undo/.test(b.textContent))"), 8000)
+        pp.evaluate("[...document.querySelectorAll('#ix-toast button')].find(b => /Undo/.test(b.textContent)).click()")
+        undone = until(lambda: json.loads(saved_pos())['cards']['calendar'] == cal0, 8000)
+        pp.locator('#wFree .wcard[data-w=today]').focus(); pp.keyboard.press('m'); pp.keyboard.press('ArrowDown')
+        kb_moved = until(lambda: json.loads(saved_pos())['cards']['today']['y'] == 4, 8000)
+        pp.locator('#wFree .wcard[data-w=today]').focus(); pp.keyboard.press('Enter'); pp.keyboard.press('ArrowDown'); pp.evaluate('0')
+        kb_off = json.loads(saved_pos())['cards']['today']['y'] == 4
+        pc.close()
+        check('P41d (1.82.3) a card dropped on another goes to the nearest free cell, the move offers Undo and Undo puts it back, and M starts Move mode (arrows move, Enter puts it down)',
+              moved and no_overlap and undo_btn and undone and kb_moved and kb_off, (moved, no_overlap, undo_btn, undone, kb_moved, kb_off))
         pc, pp = place_cfg({'pos': {'clock': None, 'cards': {}}, 'look': {'tint': 'solid', 'corner': 'square', 'accent': '#7cc7ff'}})
         lk = pp.evaluate("(() => { const c = getComputedStyle(document.querySelector('.wcard')); return [document.body.dataset.wtint, document.body.dataset.wcorner, c.borderTopLeftRadius, c.backdropFilter, getComputedStyle(document.body).getPropertyValue('--wacc').trim()]; })()")
         pc.close()

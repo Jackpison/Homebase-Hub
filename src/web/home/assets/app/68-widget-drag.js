@@ -4,20 +4,43 @@
    Alt + arrow keys move the focused card or clock handle by one cell. Under 900 px wide the usual layout is always used. */
 const GRID_COLS = 24, GRID_ROWS = 16;
 const freeOk = () => innerWidth >= 900;
-let mv = /** @type {any} */ (null), justDragged = false;
+let mv = /** @type {any} */ (null), justDragged = false, kb = false;   // kb: Move mode from the keyboard
+function say(/** @type {string} */ msg){
+  let l = document.getElementById('wLive');
+  if (!l){ l = document.createElement('div'); l.id = 'wLive'; l.className = 'sr'; l.setAttribute('role', 'status'); document.body.append(l); }
+  l.textContent = ''; setTimeout(() => { l.textContent = msg; }, 30);
+}
+document.addEventListener('focusin', e => { if (kb && !(/** @type {Element} */ (e.target)).closest('.pgrip, .crs, .wcard[data-w]')) kb = false; });
 const clampN = (/** @type {number} */ n, /** @type {number} */ lo, /** @type {number} */ hi) => Math.max(lo, Math.min(hi, n));
 const cellFromRect = (/** @type {number} */ left, /** @type {number} */ top) => ({ x: clampN(Math.round(left / (innerWidth / GRID_COLS)), 0, GRID_COLS - 1), y: clampN(Math.round(top / (innerHeight / GRID_ROWS)), 0, GRID_ROWS - 1) });
 const cellFromPoint = (/** @type {number} */ x, /** @type {number} */ y) => ({ x: clampN(Math.floor(x / (innerWidth / GRID_COLS)), 0, GRID_COLS - 1), y: clampN(Math.floor(y / (innerHeight / GRID_ROWS)), 0, GRID_ROWS - 1) });
-async function savePlace(/** @type {(w: any) => void} */ change){
+async function savePlace(/** @type {(w: any) => void} */ change, /** @type {boolean} */ undo = true){
   const wasEditing = editing;
   try { if (!ADMIN) ADMIN = await api('admin_data'); } catch (err){ toast(err.message, true); return; }   // outside Edit the full settings are not loaded yet
-  const before = JSON.stringify(ADMIN.widgets);
+  const before = JSON.stringify(ADMIN.widgets), posBefore = JSON.stringify(ADMIN.widgets.pos || { clock:null, cards:{} });
   ADMIN.widgets.pos = ADMIN.widgets.pos || { clock:null, cards:{} };
   change(ADMIN.widgets);
   if (JSON.stringify(ADMIN.widgets) !== before){
-    try { await saveAll('Moved'); setWidgets(ADMIN.widgets); } catch (err){ ADMIN.widgets = JSON.parse(before); setWidgets(ADMIN.widgets); toast(err.message, true); }
+    try {
+      await saveAll(''); setWidgets(ADMIN.widgets);
+      const H = /** @type {any} */ (window).HUB;   // (1.82.3) Moved, with Undo for a few seconds
+      if (undo && H && H.undo) H.undo('Moved', () => savePlace(w => { w.pos = JSON.parse(posBefore); }, false)); else toast('Saved');
+    } catch (err){ ADMIN.widgets = JSON.parse(before); setWidgets(ADMIN.widgets); toast(err.message, true); }
   }
   if (!wasEditing) ADMIN = null;
+}
+// (1.82.3) a piece dropped on another card or the clock goes to the nearest free cell instead
+function clearCell(/** @type {any} */ d){
+  const others = [...document.querySelectorAll('.wcard:not(.wdim), #clock:not(.wdim)')].map(e => e.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0);
+  const at = (/** @type {{x:number,y:number}} */ c) => d.kind === 'card' ? { x:Math.min(c.x * innerWidth / GRID_COLS, innerWidth - 236 * d.s), y:Math.min(c.y * innerHeight / GRID_ROWS, innerHeight - 100 * d.s) } : { x:(c.x + .5) * innerWidth / GRID_COLS - d.w / 2, y:(c.y + .5) * innerHeight / GRID_ROWS - d.h / 2 };
+  const fits = (/** @type {{x:number,y:number}} */ c) => { const p = at(c); return p.x >= 0 && p.y >= 0 && p.x + d.w <= innerWidth && p.y + d.h <= innerHeight && !others.some(r => p.x < r.right + 6 && p.x + d.w + 6 > r.left && p.y < r.bottom + 6 && p.y + d.h + 6 > r.top); };
+  if (fits(d.cell)) return;
+  let best = null, bd = 1e9;
+  for (let dy = -8; dy <= 8; dy++) for (let dx = -8; dx <= 8; dx++){
+    const c = { x:d.cell.x + dx, y:d.cell.y + dy }, dist = dx * dx + dy * dy;
+    if (dist < bd && c.x >= 0 && c.y >= 0 && c.x < GRID_COLS && c.y < GRID_ROWS && fits(c)){ best = c; bd = dist; }
+  }
+  if (best) d.cell = best;
 }
 function gridShow(/** @type {{x:number,y:number,w:number,h:number} | null} */ box){
   let g = document.getElementById('mvGrid');
@@ -59,7 +82,7 @@ function moveEnd(/** @type {boolean} */ commit){
   if (!mv) return;
   const d = mv; mv = null; cancelAnimationFrame(d.raf);
   if (!d.started) return;
-  if (commit) moveFrame(d);   // the last pointer position counts, even if no frame was drawn for it
+  if (commit){ moveFrame(d); if (d.cell) clearCell(d); }   // the last pointer position counts, even if no frame was drawn for it
   document.body.classList.remove('moving'); gridShow(null);
   justDragged = true; setTimeout(() => { justDragged = false; }, 0);   // the click that ends a drag must not open the widget
   const done = () => { d.ghost?.remove(); d.el.classList.remove('wdim'); };
@@ -89,7 +112,12 @@ document.addEventListener('click', e => { if (justDragged){ e.preventDefault(); 
 document.addEventListener('keydown', e => {
   const t = /** @type {Element} */ (e.target);
   if (mv && mv.started && e.key === 'Escape'){ moveEnd(false); return; }
-  if (!WCFG || editing || !freeOk() || !e.altKey || !e.key.startsWith('Arrow') || !t.closest) return;
+  if (!WCFG || editing || !freeOk() || !t.closest) return;
+  // (1.82.3) M on a focused card or the clock handle starts Move mode: arrows move it, Plus and Minus resize it, Enter or Escape puts it down
+  const onPiece = !!t.closest('.pgrip, .crs, .wcard[data-w]');
+  if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'm' && onPiece){ e.preventDefault(); kb = !kb; say(kb ? 'Move mode. Arrow keys move, Plus and Minus resize, Enter puts it down.' : 'Placed.'); return; }
+  if (kb && (e.key === 'Enter' || e.key === 'Escape')){ e.preventDefault(); e.stopPropagation(); kb = false; say('Placed.'); return; }
+  if (!(e.altKey || (kb && onPiece)) || !e.key.startsWith('Arrow')) return;
   const grip = t.closest('.pgrip'), card = /** @type {HTMLElement | null} */ (t.closest('.wcard[data-w]'));
   if (!grip && !card) return;
   e.preventDefault();
@@ -140,7 +168,7 @@ document.addEventListener('pointerup', () => resizeEnd(true));
 document.addEventListener('pointercancel', () => resizeEnd(false));
 document.addEventListener('keydown', e => {
   const t = /** @type {Element} */ (e.target);
-  if (!WCFG || editing || !freeOk() || !e.altKey || !['+', '=', '-', '_'].includes(e.key) || !t.closest) return;
+  if (!WCFG || editing || !freeOk() || !(e.altKey || kb) || !['+', '=', '-', '_'].includes(e.key) || !t.closest) return;
   const clock = !!t.closest('.pgrip, .crs'), card = /** @type {HTMLElement | null} */ (t.closest('.wfc'));
   if (!clock && !card) return;
   e.preventDefault();
