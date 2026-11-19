@@ -109,6 +109,7 @@ body.editing:not(.searching) .row a.main{cursor:grab}
 :root[data-theme="dark"] img.inv{filter:brightness(0) invert(1)}
 :root[data-theme="dark"] img.ainv{filter:brightness(0) invert(1)}
 :root[data-theme="light"] img.ainvl{filter:brightness(0)}
+:root[data-theme="dark"] img.ainvb{border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.4)}
 .extra{flex:none;font-size:.78em;font-weight:700;letter-spacing:.03em;line-height:1.5;color:var(--text);background:var(--line2);padding:1px 8px;border-radius:5px}
 .extra:hover{background:var(--cat,var(--accent));color:var(--bg)}
 .divider{height:1px;margin:9px 8px;background:var(--line)}
