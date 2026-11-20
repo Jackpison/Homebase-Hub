@@ -421,6 +421,52 @@ try:
         tc.close()
         check('P85 (1.82.5) a hover hint shows a sentence in a bubble with a pointer inside the open dialog, and Hover Hints off stops it; a first-use tip has a pointer too',
               bool(hint) and 'counts' in hint[0].lower() and hint[1] != 'none' and hint[2] and gone_h and bool(arrow) and arrow[0] and arrow[1] != 'none', (hint, gone_h, arrow, dbg_h))
+        # ---- (1.82.6) six more Home widgets: Most Used Links, Focus Timer, Habit Streaks, Search, Year Progress, Converter ----
+        mc = b.new_context(viewport={'width': 1440, 'height': 900}); mc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('ix-seen-ver','9.9.9');localStorage.setItem('ix-tips',JSON.stringify({off:1}))}catch(e){}")
+        mp = mc.new_page(); page_errors(mp, errs); browser_login(mp, s.base)
+        mp.goto(s.base + '/web/home/'); wait_js(mp, "!!document.getElementById('wDock') && !!document.querySelector('#ix-ebar, #editBtn, .corner')", 20000)
+        mp.evaluate("document.getElementById('editBtn') && document.getElementById('editBtn').click()")
+        mp.click('#ix-ebar [data-tip="Widgets"]'); mp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
+        ids = ['most', 'focus', 'habits', 'search', 'year', 'convert']
+        for i in ids: mp.check('#wList [data-wl=%s]' % i)
+        mp.click('#saveWidgets'); until(lambda: not mp.evaluate("document.getElementById('widgetsSheet').open"), 10000)
+        mp.click('#ix-ebar [data-ix-done]'); until(lambda: mp.evaluate("document.querySelectorAll('#wDock [data-w]').length") >= 11, 10000)
+        have = mp.evaluate("[...document.querySelectorAll('#wDock [data-w]')].map(x => x.dataset.w)")
+        # Year Progress: a percentage and three bars
+        mp.click('#wDock [data-w=year]'); mp.wait_for_selector('#wBody .wbar', timeout=5000)
+        yr = mp.evaluate("[document.querySelectorAll('#wBody .wbar').length, /^\\d+%$/.test(document.querySelector('#wBody .wbarr b').textContent)]")
+        # Converter: 1 km is 0.62137 miles, 100 C is 212 F, a change of group picks new units
+        mp.click('#wDock [data-w=convert]'); mp.wait_for_selector('#wCvVal', timeout=5000)
+        mp.fill('#wCvVal', '10'); c1 = mp.inner_text('#wCvOut')
+        mp.select_option('#wCvCat', 'Temperature'); mp.fill('#wCvVal', '100'); mp.select_option('#wCvFrom', 'c'); mp.select_option('#wCvTo', 'f'); c2 = mp.inner_text('#wCvOut')
+        # Habit Streaks: add two habits, tick one, the card says 1 of 2, and it is still there after a reload
+        mp.click('#wDock [data-w=habits]'); mp.wait_for_selector('#wHab', timeout=5000)
+        mp.fill('#wHab', 'Read'); mp.keyboard.press('Enter'); until(lambda: mp.evaluate("document.querySelectorAll('.whab').length") == 1, 3000)
+        mp.fill('#wHab', 'Walk'); mp.keyboard.press('Enter'); until(lambda: mp.evaluate("document.querySelectorAll('.whab').length") == 2, 3000)
+        mp.click('[data-hab]:first-of-type >> nth=0'); until(lambda: mp.evaluate("document.querySelectorAll('.wtick[aria-pressed=true]').length") == 1, 3000)
+        h1 = mp.evaluate("[document.querySelector('.whab .wr-t').textContent, document.getElementById('wHab') ? document.getElementById('wHab').value : 'gone']")
+        mp.reload(wait_until='domcontentloaded'); until(lambda: mp.evaluate("document.querySelectorAll('#wDock [data-w]').length") >= 11, 10000)
+        mp.click('#wDock [data-w=habits]'); mp.wait_for_selector('.whab', timeout=5000)
+        h2 = mp.evaluate("[document.querySelectorAll('.whab').length, document.querySelectorAll('.wtick[aria-pressed=true]').length]")
+        # Focus Timer: starts, counts down, pauses; the choice of length is kept
+        mp.click('#wDock [data-w=focus]'); mp.wait_for_selector('#wFocusT', timeout=5000)
+        f0 = mp.inner_text('#wFocusT'); mp.click('#wFocusGo'); until(lambda: mp.inner_text('#wFocusT') != f0, 4000)
+        f1 = mp.inner_text('#wFocusT'); mp.click('#wFocusGo'); f2 = mp.inner_text('#wFocusGo'); st = mp.evaluate("JSON.parse(localStorage.getItem('hub-focus')).end")
+        mp.click('[data-fmode=short]'); f3 = mp.inner_text('#wFocusT')
+        # Search: nothing is sent until Enter; Enter opens a new tab on the chosen site
+        mp.click('#wDock [data-w=search]'); mp.wait_for_selector('#wSq', timeout=5000)
+        asked = []; mp.context.on('request', lambda r: asked.append(r.url) if 'duckduckgo' in r.url else None)
+        mp.fill('#wSq', 'homebase hub'); quiet = not asked
+        with mp.context.expect_page(timeout=8000) as np2:
+            mp.keyboard.press('Enter')
+        srch = np2.value.url; np2.value.close()
+        # Most Used Links: the links with visits, never an invented one
+        mp.click('#wDock [data-w=most]'); mp.wait_for_selector('#wBody .wlist, #wBody .wmsg', timeout=8000)
+        mu = mp.evaluate("document.querySelector('#wBody').textContent.trim().length > 0")
+        mc.close()
+        check('P86 (1.82.6) six more Home widgets work: Year Progress shows percentages and bars; Converter turns 10 km into miles and 100 C into 212 F; Habit Streaks keeps habits and ticks after a reload; Focus Timer counts down, pauses and switches length; Search sends nothing until Enter and then opens the search in a new tab; Most Used Links opens',
+              all(i in have for i in ids) and yr == [3, True] and c1.startswith('6.2137') and c2.startswith('212') and h1[0] == '1 day' and h1[1] == '' and h2 == [2, 1]
+              and f0 == '25:00' and f1 != f0 and f2 == 'Start' and st == 0 and f3 == '05:00' and quiet and 'duckduckgo.com' in srch and any('q=homebase' in u for u in asked) and mu, (have, yr, c1, c2, h1, h2, f0, f1, f2, st, f3, quiet, srch, mu))
         check('P84 (1.82.1) a first-use tip shows once per visit, Got It remembers it (the next visit shows the next tip), Skip Tips stops them, and Show All Tips Again brings them back',
               bool(t1) and gone and '"seen":["' in seen1 and bool(t2) and t2 != t1 and '"off":1' in off_s and none and t3 == t1, (t1, gone, seen1, t2, off_s, none, t3))
         # ---- (1.68.5) Where > Settings Windows: the page shows through a glass window (a light layer behind it, 55% of its own colour) ----

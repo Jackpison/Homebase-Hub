@@ -20,10 +20,17 @@ const W_META = {
   recent:    { name:'Recent Links',   short:'Links',     icon:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>' },
   files:     { name:'Recent Files',   short:'Files',     icon:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>' },
   status:    { name:'Server Status',  short:'Status',    icon:'<path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01"/>' },
+  // (1.82.6) six more: your favorite links, a timer, habits, a search box, how far the year is, and a unit converter
+  most:      { name:'Most Used Links', short:'Most Used', icon:'<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.5 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/>' },
+  focus:     { name:'Focus Timer',    short:'Focus',     icon:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5M12 2.5V5"/>' },
+  habits:    { name:'Habit Streaks',  short:'Habits',    icon:'<path d="M4 12.5l4.5 4.5L14 10.5M15 18h5M15 13.5h5M15 9h5"/>' },
+  search:    { name:'Search',         short:'Search',    icon:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/>' },
+  year:      { name:'Year Progress',  short:'Year',      icon:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>' },
+  convert:   { name:'Converter',      short:'Convert',   icon:'<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>' },
   weather:   { name:'Weather',        short:'Weather',   icon:'<path d="M8 3v1.5M3.5 8H2M4.8 4.8l1 1M12 6.5A4 4 0 0 0 5 9"/><path d="M8 20h9a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.6 1.6A2.8 2.8 0 0 0 8 20z"/>' },
 };
 let WCFG = PUB.widgets || null;   // null: a visitor, or logged out
-const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', events:[], recent:null, files:null, status:null, statusErr:'' };
+const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', events:[], recent:null, files:null, status:null, statusErr:'', most:null, mostErr:'' };
 let wOpen = '', calMonth = '';
 
 /* dates: Tasks uses the site's time zone (Settings > General), so "today" here is the same day as on the Tasks page */
@@ -146,6 +153,8 @@ function loadWidgets(){
   if (wOn('recent')) loadRecent();
   if (wOn('files')) loadFilesW();
   if (wOn('status')) loadStatus();
+  if (wOn('most')) loadMost();
+  if (wOn('focus')) focusResume();
   if (wOn('note') && WCFG.note.box) loadInfo();
   if (wOn('tools')) loadTools();
   if (wOn('pad')) loadPad();

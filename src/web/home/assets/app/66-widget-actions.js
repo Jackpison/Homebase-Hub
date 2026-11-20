@@ -6,7 +6,7 @@ function openWidget(id){
   if (wOpen === 'note' && !WD.info && WCFG.note.box) loadInfo();
   if (wOpen === 'tools') loadTools();   // a tool you opened since Home loaded
   renderWidgets();
-  if (wOpen) ($('#wQa') || $('#wPad') || $('#wClose')).focus();
+  if (wOpen) ($('#wQa') || $('#wPad') || $('#wSq') || $('#wHab') || $('#wCvVal') || $('#wClose')).focus();
 }
 function closeWidget(){
   if (!wOpen) return;
@@ -75,7 +75,7 @@ addEventListener('pagehide', () => savePad(true));
 /* logged in or out after the page loaded (Edit, Log Out, or another tab) */
 function setWidgets(cfg){
   WCFG = cfg || null;
-  if (!WCFG){ Object.assign(WD, { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'' }); wOpen = ''; }
+  if (!WCFG){ Object.assign(WD, { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', most:null, mostErr:'' }); wOpen = ''; }
   renderWidgets();
   loadWidgets();
 }

@@ -159,6 +159,6 @@ function summary(id){
     if (!WD.pad) return { small:'…' };
     return { small: WD.pad.text.slice(0, 120) || 'Empty. Click to write a quick note.' };
   }
-  return {};
+  return mwSummary(id);
 }
 

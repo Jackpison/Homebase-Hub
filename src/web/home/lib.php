@@ -222,10 +222,11 @@ function site_from_page(array $in, array $cur): array
 /* ================= widgets (1.51) ================= */
 
 /** The widgets Home can show, in their default order. Private ones load their data only for a logged-in browser. */
-const WIDGET_IDS = ['today', 'countdown', 'note', 'tools', 'calendar', 'pad', 'quote', 'worldclock', 'weather', 'bills', 'recent', 'files', 'status'];   // (1.72.0) the last four
+const WIDGET_IDS = ['today', 'countdown', 'note', 'tools', 'calendar', 'pad', 'quote', 'worldclock', 'weather', 'bills', 'recent', 'files', 'status', 'most', 'focus', 'habits', 'search', 'year', 'convert'];   // (1.72.0) four; (1.82.6) six more
 // Weather stays off until you turn it on and type your town: only then does your server ask Open-Meteo for the forecast.
 const WIDGET_ON  = ['today' => true, 'countdown' => true, 'note' => true, 'tools' => true, 'calendar' => true, 'pad' => false,
-                    'quote' => true, 'worldclock' => false, 'weather' => false, 'bills' => false, 'recent' => false, 'files' => false, 'status' => false];
+                    'quote' => true, 'worldclock' => false, 'weather' => false, 'bills' => false, 'recent' => false, 'files' => false, 'status' => false,
+                    'most' => false, 'focus' => false, 'habits' => false, 'search' => false, 'year' => false, 'convert' => false];
 const WORLD_CLOCKS = 3;                     // places in World Clock
 const WIDGET_STYLES = ['dock', 'glance'];
 const CARDS_POS = ['bottom', 'left', 'right'];   // (1.82.0) where the Glance cards sit

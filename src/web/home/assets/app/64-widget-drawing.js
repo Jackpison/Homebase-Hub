@@ -67,7 +67,8 @@ function renderPanel(){
   const p = $('#wPanel');
   if (!wOpen){ if (!p.hidden){ p.hidden = true; } placePanel(); return; }
   const keep = document.activeElement && p.contains(document.activeElement) ? document.activeElement.id : '';
-  if (wOpen === 'pad' && !p.hidden && $('#wPad')) return;   // never redraw the pad while you type
+  if (wOpen === 'pad' && !p.hidden && $('#wPad')) return;
+  if (!mwForce && !p.hidden && p.dataset.shown === wOpen && p.contains(document.activeElement) && document.activeElement.matches('input, select')) return;   // (1.82.6) never redraw while you type or choose in Habit Streaks, Search or Converter   // never redraw the pad while you type
   p.hidden = false;
   p.dataset.shown = wOpen;
   $('#wPanelTitle').textContent = wOpen === 'note' && WD.info && pinnedBox().box && !pinnedBox().tab.enc ? pinnedBox().box.title : W_META[wOpen].name;
@@ -167,7 +168,7 @@ function panelHTML(id){
     if (!WD.pad) return '<p class="wmsg">Loading…</p>';
     return `<textarea id="wPad" rows="6" maxlength="20000" aria-label="Scratch Pad" placeholder="Type anything. It saves by itself.">${esc(WD.pad.text)}</textarea><p class="wmsg small" id="wPadState" aria-live="polite">Saves by itself</p>`;
   }
-  return '';
+  return mwPanel(id);
 }
 
 /* the month calendar: today, and the days that have a task (repeating tasks included) */

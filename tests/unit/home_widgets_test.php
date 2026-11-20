@@ -8,12 +8,17 @@ require_once $site . '/web/tasks/lib.php';
 
 /* ---------- widget settings ---------- */
 $w = clean_widgets([]);
-t('a site with no widget settings gets the default: Glass Dock, the clock, every widget in order; Scratch Pad, World Clock, Weather and the four of 1.72.0 (Upcoming Bills, Recent Links, Recent Files, Server Status) off',
-  $w['style'] === 'dock' && $w['clock'] === true && array_column($w['list'], 'id') === WIDGET_IDS && array_column($w['list'], 'on') === [true, true, true, true, true, false, true, false, false, false, false, false, false]
+t('a site with no widget settings gets the default: Glass Dock, the clock, every widget in order; Scratch Pad, World Clock, Weather and the four of 1.72.0 (Upcoming Bills, Recent Links, Recent Files, Server Status) off, and so are the six of 1.82.6 (Most Used Links, Focus Timer, Habit Streaks, Search, Year Progress, Converter)',
+  $w['style'] === 'dock' && $w['clock'] === true && array_column($w['list'], 'id') === WIDGET_IDS && array_column($w['list'], 'on') === [true, true, true, true, true, false, true, false, false, false, false, false, false, false, false, false, false, false, false]
   && $w['zones'] === [] && $w['weather'] === ['town' => '', 'unit' => 'c'], json_encode($w));
 $w = clean_widgets(['style' => 'glance', 'clock' => false, 'list' => [['id' => 'pad', 'on' => true], ['id' => 'nope', 'on' => true], ['id' => 'today', 'on' => false], ['id' => 'pad', 'on' => false], 'x']]);
 t('your order is kept, an unknown widget and a second copy are dropped, missing ones come after (in their default state)',
   $w['style'] === 'glance' && $w['clock'] === false && array_slice(array_column($w['list'], 'id'), 0, 2) === ['pad', 'today'] && $w['list'][0]['on'] && !$w['list'][1]['on'] && count($w['list']) === count(WIDGET_IDS), json_encode($w['list']));
+t('the six widgets of 1.82.6 are known and kept in a saved list (a layout with them in the middle survives), and still switch off',
+  count(array_intersect(['most', 'focus', 'habits', 'search', 'year', 'convert'], WIDGET_IDS)) === 6
+  && clean_widgets(['list' => [['id' => 'focus', 'on' => true], ['id' => 'year', 'on' => false]]])['list'][0] === ['id' => 'focus', 'on' => true]
+  && clean_widgets(['list' => [['id' => 'focus', 'on' => true]]])['list'][1]['id'] === 'today'
+  && clean_layout(['pos' => ['cards' => ['habits' => ['x' => 3, 'y' => 4]]]])['pos']['cards']['habits'] === ['x' => 3, 'y' => 4]);
 t('Show Widgets is on at first, and can be turned off', clean_widgets([])['show'] === true && clean_widgets(['show' => false])['show'] === false);
 t('Glass Tint is Light at first, keeps Dark or Solid, and anything else falls back to Light',
   clean_site([])['panel']['tint'] === 'light' && clean_site(['panel' => ['tint' => 'solid']])['panel']['tint'] === 'solid' && clean_site(['panel' => ['tint' => 'pink']])['panel']['tint'] === 'light');

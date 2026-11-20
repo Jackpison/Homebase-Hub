@@ -11,7 +11,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden || !WCFG || Date.now() - wSeen < 30000) return;
   wSeen = Date.now();
   if (wOn('weather') && (!WD.weather || WD.weather.saved < Date.now() / 1000 - 1800)) loadWeather();
-  if (wOn('recent')) loadRecent(); if (wOn('files')) loadFilesW(); if (wOn('status')) loadStatus();
+  if (wOn('recent')) loadRecent(); if (wOn('files')) loadFilesW(); if (wOn('status')) loadStatus(); if (wOn('most')) loadMost();
   if (wOn('today') || wOn('calendar') || wOn('bills')) loadTasks(); else renderWidgets();
 });
 // ?bg=picsum | bing | wikimedia | wallhaven | artic | unsplash | pixabay | pixabay_video | upload  forces a source (handy for testing)
