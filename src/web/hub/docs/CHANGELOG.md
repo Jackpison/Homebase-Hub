@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.82.7 | Faster Settings, Tasks and Info: Settings opens at once instead of building every time zone first |
 | 1.82.6 | Home: six more widgets (Most Used Links, Focus Timer, Habit Streaks, Search, Year Progress, Converter) and tidier Widgets settings; Info: pin a box, reminders that show in Today, Recently Edited First, search rows for every box |
 | 1.82.5 | Hover Hints: a short sentence with a pointer when you point at a setting or a button, with an on/off switch and a speed choice in Features; the first-use tips point at what they explain; the Home bell is always in the top-right corner |
 | 1.82.4 | A new line-style alerts bell on every page, a fix for cards dropping above where you let go, and tidier Saved Layouts settings |
@@ -188,6 +189,16 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.82.7
+
+### Everywhere
+
+- Faster: Settings opens without first building the list of about 400 time zones. Your saved zone shows at once and the rest of the list fills in a moment later (or the instant you open it). The list is the same as before.
+- Faster: Tasks and Info reuse one date formatter instead of making a new one for every date they show.
+- The line under the current page in the bar is measured once per frame, together with the page's own layout, instead of while the bar is still being built.
 
 ---
 
