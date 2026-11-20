@@ -1,14 +1,24 @@
-  /* every time zone the browser knows, the saved one and this device's own first; each with its current offset from UTC */
-  function tzOptions(cur) {
+  var TZ_OFF = {};   // each zone's offset is worked out once
+  function tzAll(cur) {
     var all = []; try { all = Intl.supportedValuesOf('timeZone'); } catch (e) {}
     if (!all.length) all = ['Asia/Kolkata', 'UTC', 'Europe/London', 'Europe/Berlin', 'America/New_York', 'America/Chicago', 'America/Los_Angeles', 'Asia/Dubai', 'Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney'];
     if (all.indexOf(cur) < 0) all.unshift(cur);
-    var off = function (z) { try { return (new Intl.DateTimeFormat('en-US', { timeZone: z, timeZoneName: 'shortOffset' }).formatToParts(new Date()).filter(function (x) { return x.type === 'timeZoneName'; })[0] || {}).value || ''; } catch (e) { return ''; } };
-    var opt = function (z, label) { return '<option value="' + esc(z) + '"' + (z === cur ? ' selected' : '') + '>' + esc(label || z.replace(/_/g, ' ')) + ' (' + esc(off(z).replace('GMT', 'UTC') || 'UTC') + ')</option>'; };
+    return all;
+  }
+  function tzTop(cur) {
     var mine = ''; try { mine = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
-    var top = [cur].concat(mine && mine !== cur ? [mine] : []);   // the saved zone, then this device's own
-    return '<optgroup label="Saved and This Device">' + top.map(function (z) { return opt(z, z === 'Asia/Kolkata' ? 'India Standard Time, IST' : ''); }).join('') + '</optgroup><optgroup label="All Time Zones">' +
-      all.filter(function (z) { return top.indexOf(z) < 0; }).map(function (z) { return opt(z); }).join('') + '</optgroup>';
+    return [cur].concat(mine && mine !== cur ? [mine] : []);   // the saved zone, then this device's own
+  }
+  function tzOff(z) {
+    if (TZ_OFF[z] != null) return TZ_OFF[z];
+    var v = ''; try { v = (new Intl.DateTimeFormat('en-US', { timeZone: z, timeZoneName: 'shortOffset' }).formatToParts(new Date()).filter(function (x) { return x.type === 'timeZoneName'; })[0] || {}).value || ''; } catch (e) {}
+    TZ_OFF[z] = v; return v;
+  }
+  function tzOpt(cur, z, label) { return '<option value="' + esc(z) + '"' + (z === cur ? ' selected' : '') + '>' + esc(label || z.replace(/_/g, ' ')) + ' (' + esc(tzOff(z).replace('GMT', 'UTC') || 'UTC') + ')</option>'; }
+  /* every time zone the browser knows, the saved one and this device's own first; each with its current offset from UTC.
+     (1.82.7) Only the first group is built when Settings opens: the other ~400 zones (each one costs a time formatter) are added by tzMore below. */
+  function tzOptions(cur) {
+    return '<optgroup label="Saved and This Device">' + tzTop(cur).map(function (z) { return tzOpt(cur, z, z === 'Asia/Kolkata' ? 'India Standard Time, IST' : ''); }).join('') + '</optgroup><optgroup label="All Time Zones"></optgroup>';
   }
   /* (1.70.0) Overview > Start Here: under Guided Setup, Install on Your Phone and Keyboard Shortcuts (they were in General; they are help, not settings) */
   function helpCards(p) {
@@ -76,7 +86,21 @@
       '<select id="ix-tz" class="ix-sel" aria-label="Time Zone">' + tzOptions(draft.tz || 'Asia/Kolkata') + '</select>' +
       '';   // (1.80.6) no Site Address card: the address is the one in the browser, and the version is in the footer
     glance(p.querySelector('#ix-gl'));
-    p.querySelector('#ix-tz').onchange = function (e) { draft.tz = e.target.value; };
+    var tzSel = p.querySelector('#ix-tz'), tzFilled = false, tzRows = null, tzAt = 0;
+    // the long list is added after the page is drawn, 60 zones at a time while the page is idle; touching the list adds the rest at once
+    var tzMore = function (all) {
+      if (!tzSel.isConnected) return;
+      var cur = draft.tz || 'Asia/Kolkata';
+      if (!tzRows) { var top = tzTop(cur); tzRows = tzAll(cur).filter(function (z) { return top.indexOf(z) < 0; }); }
+      var grp = tzSel.querySelector('optgroup:last-child'), end = all ? tzRows.length : Math.min(tzRows.length, tzAt + 60);
+      if (end > tzAt) grp.insertAdjacentHTML('beforeend', tzRows.slice(tzAt, end).map(function (z) { return tzOpt(cur, z); }).join(''));
+      tzAt = end; tzFilled = tzAt >= tzRows.length;
+      if (!tzFilled) setTimeout(function () { tzMore(false); }, 30);
+    };
+    var tzFill = function () { if (!tzFilled) tzMore(true); };
+    ['focus', 'pointerenter', 'touchstart', 'keydown'].forEach(function (ev) { tzSel.addEventListener(ev, tzFill, { once: true }); });
+    if (window.requestIdleCallback) requestIdleCallback(function () { tzMore(false); }, { timeout: 1500 }); else setTimeout(function () { tzMore(false); }, 400);
+    tzSel.onchange = function (e) { draft.tz = e.target.value; };
     p.querySelector('#ix-name').oninput = function (e) { draft.siteName = e.target.value; };
     p.querySelector('#ix-lu').onclick = function () { p.querySelector('#ix-lf2').click(); };
     p.querySelector('#ix-lf2').onchange = function (e) {

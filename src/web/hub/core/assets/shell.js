@@ -961,7 +961,7 @@
     bar.innerHTML = html;
     fillBrand(bar, true);
     bar.style.setProperty('--hc', pageColor(APP));
-    placeLine();
+    placeLineSoon();
     if (qv && (q = document.getElementById('ix-q'))) { q.value = qv; if (had) q.focus(); }
     bindInlineSearch();
     markEditing();
@@ -1000,7 +1000,10 @@
     var top = nav === 'dock' ? (pill ? pill.getBoundingClientRect().top : A.top - 6) - L.top : B.bottom - L.top - 3;
     line.style.cssText = 'left:' + (A.left - L.left + 10) + 'px;top:' + top + 'px;width:' + Math.max(8, A.width - 20) + 'px;height:3px';
   }
-  addEventListener('resize', function () { placeLine(); });
+  /* (1.82.7) the line is measured once per frame, just before it is drawn, together with the page's own layout (measuring it while the bar was still being built made the browser lay the page out twice) */
+  var lineT = 0;
+  function placeLineSoon() { if (lineT) return; lineT = requestAnimationFrame(function () { lineT = 0; placeLine(); }); }
+  addEventListener('resize', placeLineSoon);
   /* Start page with the bar switched off: its corner shows reload and ONE gear button instead of Edit.
      Logged out it opens the login; logged in it lists editing, the other sections and Settings. */
   function cornerButton() {

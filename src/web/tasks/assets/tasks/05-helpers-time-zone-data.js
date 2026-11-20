@@ -22,9 +22,11 @@ const IC={check:"M5 12.5l4.5 4.5L19 7.5",edit:"M13 21h8M15 5l4 4M16.376 3.622a1 
 
 /* ---------- the site's time zone (Settings > General; India Standard Time by default) ---------- */
 const TZ=()=>(window.HUB&&HUB.tz&&HUB.tz())||"Asia/Kolkata";
+const tzFmt=new Map();   // (1.82.7) one formatter per time zone: making a new one for every date took most of the time Tasks needed to open
 function partsTz(date){
   try{
-    const p=new Intl.DateTimeFormat("en-CA",{timeZone:TZ(),year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(date);
+    const z=TZ();let f=tzFmt.get(z);if(!f){f=new Intl.DateTimeFormat("en-CA",{timeZone:z,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});tzFmt.set(z,f)}
+    const p=f.formatToParts(date);
     const g=t=>(p.find(x=>x.type===t)||{}).value;
     return{d:g("year")+"-"+g("month")+"-"+g("day"),t:g("hour")+":"+g("minute")};
   }catch(e){return{d:ymd(date),t:pad(date.getHours())+":"+pad(date.getMinutes())}}

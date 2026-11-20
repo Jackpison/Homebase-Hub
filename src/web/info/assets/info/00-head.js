@@ -30,7 +30,8 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
 const HF=HUB.fetch;   // the site's fetch: longer timeout and a quiet retry on slow hosts
 const api=body=>HF("api.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-const when=t=>t?new Date(t*1000).toLocaleString(undefined,{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"";
+let whenFmt=null;   // (1.82.7) one formatter for every box: toLocaleString made a new one each time
+const when=t=>{if(!t)return"";if(!whenFmt)whenFmt=new Intl.DateTimeFormat(undefined,{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});return whenFmt.format(new Date(t*1000))};
 const savedMsg=()=>"Saved to your server"+(locked&&authed?". You're logged in.":".");
 const rid=()=>Array.from(crypto.getRandomValues(new Uint8Array(4)),x=>x.toString(16).padStart(2,"0")).join("");
 
