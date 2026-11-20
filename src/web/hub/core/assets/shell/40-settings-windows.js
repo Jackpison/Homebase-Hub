@@ -95,6 +95,7 @@
     [/export|import|backup/i, 'M12 4v11m-4-4 4 4 4-4M5 20h14', '255,138,92'],
     [/title|name|page/i, 'M13 21h8M15 5l4 4M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z', '91,141,255'],
     [/welcome|hello|greeting/i, 'M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z', '255,194,26'],
+    [/api key|token/i, 'M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4', '255,194,26'],
     [/tint|opacity|blur|glass/i, 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z', '179,146,240'],
     [/widget|clock|show/i, 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', '76,201,240']
   ];
@@ -126,7 +127,10 @@
   function sdlgAll() { [].forEach.call(document.querySelectorAll('dialog.ix-sdlg'), sdlgBuild); [].forEach.call(document.querySelectorAll('dialog.sheet .sb'), function (b) { sdlgDecorateSheet(b); }); }
   function sdlgDecorateSheet(b) {   // Home's own sheets (1.64.3): the same tiles on every row (a row with a field or slider under it too), the same Save Settings dimming, and the focus off the X
     if (b._ixT) return; b._ixT = true;
-    [].forEach.call(b.querySelectorAll('.g-row'), function (r) { var lab = r.querySelector('.g-label'); if (lab && !r.querySelector('.ix-rt')) r.insertBefore(rowTile(r.getAttribute('data-rt') || (lab.firstChild ? lab.firstChild.textContent : '')), r.firstChild); });
+    var tiles = function () { [].forEach.call(b.querySelectorAll('.g-row'), function (r) { var lab = r.querySelector('.g-label'); if (lab && !r.querySelector('.ix-rt')) r.insertBefore(rowTile(r.getAttribute('data-rt') || (lab.firstChild ? lab.firstChild.textContent : '')), r.firstChild); }); };
+    tiles();
+    // (1.82.8) rows the page draws later (API keys, sources, custom sources) get their tile too; before, they had an empty space where it belongs
+    if (window.MutationObserver) { var tq = 0; new MutationObserver(function () { if (!tq) tq = requestAnimationFrame(function () { tq = 0; tiles(); }); }).observe(b, { childList: true, subtree: true }); }
     var d = b.closest('dialog'); if (!d) return;
     sdlgFocus(d, b, d.querySelector('.sh .x'));
   }

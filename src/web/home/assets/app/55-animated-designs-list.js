@@ -238,11 +238,17 @@ $('#customRows').addEventListener('click', e => {
 });
 function renderKeys(){
   $('#keyRows').innerHTML = Object.entries(ADMIN.keyInfo).map(([k, info]) => `
-    <div class="g-row stack">
+    <div class="g-row stack" data-rt="API Key">
       <span class="g-label">${esc(info.name)} key<small>${esc(info.help)} <a href="${esc(info.url)}" target="_blank" rel="noopener" class="ext">Get a Free Key</a></small></span>
-      <input type="text" data-key="${k}" value="${esc(bgDraft.keys[k] || '')}" placeholder="Paste your ${esc(info.name)} key" autocomplete="off" spellcheck="false">
+      <div class="keyin"><input type="password" data-key="${k}" value="${esc(bgDraft.keys[k] || '')}" placeholder="Paste your ${esc(info.name)} key" autocomplete="off" spellcheck="false" aria-label="${esc(info.name)} key"><button type="button" class="btn" data-keyshow="${k}" aria-pressed="false">Show</button></div>
     </div>`).join('');
 }
+// (1.82.8) keys are hidden while you look at the sheet (a screenshot or a glance over the shoulder shows dots); Show reveals one
+$('#keyRows').addEventListener('click', e => {
+  const b = e.target.closest('[data-keyshow]'); if (!b) return;
+  const inp = $(`#keyRows [data-key="${b.dataset.keyshow}"]`), show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password'; b.textContent = show ? 'Hide' : 'Show'; b.setAttribute('aria-pressed', String(show));
+});
 $('#keyRows').addEventListener('input', e => {
   const k = e.target.dataset.key; if (!k) return;
   bgDraft.keys[k] = e.target.value.trim(); renderSources();

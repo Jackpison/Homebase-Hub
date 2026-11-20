@@ -69,6 +69,17 @@ try:
         pg.evaluate("document.querySelector('[data-open=bgSheet]').click()"); wait_js(pg, "document.querySelectorAll('#designRows .dz').length === 16", 15000)
         rows = pg.evaluate("[...document.querySelectorAll('#designRows .dz')].map(r => [r.dataset.id, r.querySelector('.dz-sw') ? getComputedStyle(r.querySelector('.dz-sw')).backgroundImage.slice(0, 15) : ''])")
         check('H3 Background lists the 16 designs, each with a colour swatch (the swatches are not blocked) and the Animated Designs theme card is In Use', len(rows) == 16 and all(r[1].startswith('linear-gradient') for r in rows) and pg.evaluate("!!document.querySelector('.theme.on[data-theme=designs]')"), rows[:2])
+        th = pg.evaluate("""(() => { const c = [...document.querySelectorAll('#themeRows .theme-chips .theme')], big = document.querySelector('#themeRows .theme-big');
+          return [c.length, c.filter(x => x.getAttribute('aria-pressed') === 'true').length, big ? big.dataset.themeNow : '', big ? Math.round(big.getBoundingClientRect().height) : 0, !document.querySelector('#themeRows .theme .btn')]; })()""")
+        pg.evaluate("document.querySelector('#themeRows .theme[data-theme=online]').click()")
+        th2 = pg.evaluate("[document.querySelector('#themeRows .theme-big').dataset.themeNow, document.querySelector('#themeRows .theme.on').dataset.theme, document.querySelectorAll('#themeRows .theme.on').length]")
+        check('H3b Background > Main shows one big preview and a row of theme chips: the one in use is marked, and clicking Online Photos moves the preview and the mark to it', th[0] >= 5 and th[1] == 1 and th[2] == 'designs' and th[3] >= 120 and th[4] and th2 == ['online', 'online', 1], [th, th2])
+        pg.evaluate("document.querySelector('[data-bgt=sources]').click()")
+        ky = pg.evaluate("""(() => { const r = document.querySelector('#keyRows .g-row'), i = r.querySelector('input'), b = r.querySelector('[data-keyshow]'), w = Math.round(i.getBoundingClientRect().width), t0 = i.type; b.click();
+          const t1 = i.type, l1 = b.textContent; b.click(); return [!!r.querySelector('.ix-rt'), t0, t1, l1, i.type, w > 250]; })()""")
+        check('H3c API Keys: each row has its icon tile, the key is hidden until Show is pressed, Hide hides it again, and the field is wider than 250px', ky == [True, 'password', 'text', 'Hide', 'password', True], ky)
+        pg.evaluate("document.querySelector('[data-bgt=main]').click()")
+        pg.evaluate("document.querySelector('#themeRows .theme[data-theme=designs]').click()")
         tabs = pg.evaluate("""(() => { const vis = id => !document.getElementById('bgp-' + id).hidden, out = [];
           out.push(['main', vis('main'), vis('animated'), !!document.querySelector('#bgp-main #themeRows'), !!document.querySelector('#bgp-main #bgDim'), !!document.querySelector('#themeRows [data-theme=mix]')]);
           for (const id of ['animated', 'sources', 'uploads']) { document.querySelector('[data-bgt=' + id + ']').click(); out.push([id, vis(id), vis('main'), document.querySelector('[data-bgt=' + id + ']').getAttribute('aria-selected')]); }

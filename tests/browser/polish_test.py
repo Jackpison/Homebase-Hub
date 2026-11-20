@@ -627,6 +627,14 @@ try:
         until(lambda: not pg.evaluate("document.getElementById('setDlg').open"), 4000)
         kept = pg.evaluate("[JSON.parse(localStorage.getItem('bm-look') || '{}').cls, document.documentElement.classList.contains('lk-panels'), !!document.querySelector('.row>a.main[data-host]'), getComputedStyle(document.querySelector('.cat'), '::before').height]")
         check('P79 (1.81.0) Panels is kept for the next visit (before the page paints), rows carry their site address, and a panel has its accent line', kept[0] == ['lk-panels'] and kept[1] and kept[2] and kept[3] == '3px', kept)
+        # (1.82.8) a row with extra link buttons shows its address under the link (not on top of the first chip); a plain row keeps it beside the link
+        hov = pg.evaluate("""(() => { const rows = [...document.querySelectorAll('.row')].filter(r => r.querySelector(':scope > a.main[data-host]'));
+          const plain = rows.find(r => !r.querySelector(':scope > a.extra')) || rows[0], withx = rows[1] || rows[0], clone = withx.cloneNode(true);
+          if (!clone.querySelector(':scope > a.extra')) { const x = document.createElement('a'); x.className = 'extra'; x.textContent = 'Github'; clone.querySelector(':scope > a.main').after(x); }
+          withx.parentNode.insertBefore(clone, withx);
+          const pos = r => { const cs = getComputedStyle(r.querySelector(':scope > a.main'), '::after'); return [parseFloat(cs.left), parseFloat(cs.top), cs.zIndex]; };
+          const a = pos(plain), b = pos(clone); clone.remove(); return [a, b]; })()""")
+        check('P87 (1.82.8) Links, hover address: on a row with extra link buttons it sits under the link (left 2px, above the next row), on a plain row it stays beside the link', hov[0][0] > 20 and hov[1][0] <= 3 and hov[1][1] > 10 and hov[1][2] == '6', hov)
         pg.evaluate("document.documentElement.setAttribute('data-theme', 'dark')")
         pg.evaluate("document.querySelectorAll('.row img')[1].src = 'data:image/svg+xml;base64,' + btoa('<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"4\" fill=\"#fafafa\"/></svg>')")
         until(lambda: pg.evaluate("document.querySelectorAll('.row img.ainv').length") > 0, 4000)

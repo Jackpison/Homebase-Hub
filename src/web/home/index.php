@@ -261,9 +261,9 @@ if (!empty($site['private']) && !hub_admin()) {
         <div class="group">
           <div class="g-row stack"><span class="g-label">Card Style<small>Glass follows Settings › Appearance › Glass. The others are for widgets only.</small></span>
             <div class="seg" id="wTint" role="radiogroup" aria-label="Card Style"><button type="button" role="radio" data-v="glass">Glass</button><button type="button" role="radio" data-v="dark">Dark</button><button type="button" role="radio" data-v="light">Light</button><button type="button" role="radio" data-v="solid">Solid</button></div></div>
-          <div class="g-row stack"><span class="g-label">Corners</span>
+          <div class="g-row stack"><span class="g-label">Corners<small>How round the card edges are.</small></span>
             <div class="seg" id="wCorner" role="radiogroup" aria-label="Corners"><button type="button" role="radio" data-v="round">Round</button><button type="button" role="radio" data-v="soft">Soft</button><button type="button" role="radio" data-v="square">Square</button></div></div>
-          <div class="g-row"><span class="g-label">Accent Color<small>Counts, links and the open widget. Default is gold.</small></span>
+          <div class="g-row stack"><span class="g-label">Accent Color<small>Counts, links and the open widget. Default is gold.</small></span>
             <span class="inline"><input type="color" id="wAccent" aria-label="Accent Color" value="#ffd45c"><button type="button" class="btn" id="wAccentReset">Default</button></span></div>
           <div class="g-row stack"><span class="g-label">Color for One Card<small>Pick a widget, then a color just for it.</small></span>
             <span class="inline"><select id="wCardSel" aria-label="Widget"></select><input type="color" id="wCardAcc" aria-label="Color for This Card" value="#ffd45c"><button type="button" class="btn" id="wCardAccReset">Default</button></span></div>

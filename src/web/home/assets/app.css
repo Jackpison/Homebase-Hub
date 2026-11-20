@@ -238,6 +238,9 @@ html[data-ix-bar][data-ix-nav="dock"] body[data-wstyle="dock"] .wpanel{bottom:ca
 .field b{color:var(--s-ink);font-weight:600}
 .sheet input[type=text],.sheet input[type=password]{width:100%;background:var(--s-bg2);border:1.5px solid transparent;border-radius:var(--r-ctl);
   padding:11px 13px;color:var(--s-ink);transition:border-color .15s, background .15s}
+.keyin{display:flex;gap:8px;align-items:stretch}
+.keyin input{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem}
+.keyin .btn{flex:none}
 .sheet input[type=text]:focus,.sheet input[type=password]:focus{outline:none;border-color:var(--accent);background:var(--s-bg)}
 .sheet input::placeholder{color:var(--s-mute);opacity:.7}
 .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -329,10 +332,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 }
 
 /* Background > Theme cards */
-.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:8px;align-items:start}
-.theme{border:1px solid var(--s-line,rgba(255,255,255,.12));border-radius:14px;overflow:hidden;background:var(--s-bg2);display:grid;align-content:start}
-.theme.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
-.theme-mos{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:#000;height:64px}
+.theme-mos{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:#000;height:92px;border-radius:13px 13px 0 0}
 .theme-mos{overflow:hidden}
 .theme-mos > *{min-width:0;min-height:0}
 .theme-mos img{width:100%;height:100%;object-fit:cover;display:block}
@@ -355,17 +355,12 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .dz-cols input[type=color],#designOpts input[type=color]{width:44px;height:34px;padding:0;border:1px solid var(--s-line,rgba(255,255,255,.2));border-radius:8px;background:none;cursor:pointer}
 .thumb.dzp{display:block}
 .thumb.dzp .dz-sw{width:100%;height:100%;border-radius:0;box-shadow:none}
-.theme-b{padding:8px 10px;display:grid;gap:3px}
-.theme-b small{color:var(--s-mute);font-size:.82rem}
-.theme-b .pill{font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink);margin-left:4px;vertical-align:middle}
 .theme-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
-.theme.off .theme-b{padding:14px}
 .theme-mos video{width:100%;height:100%;object-fit:cover;display:block}
 .theme-mos[data-n="1"]{grid-template-columns:1fr}
 .theme-mos[data-n="2"]{grid-template-columns:1fr 1fr}.theme-mos[data-n="2"] > *{grid-row:1/3}
 .theme-mos[data-n="3"]{grid-template-columns:2fr 1fr}
 .theme-mos video:first-child{grid-row:1/3}
-.theme.new .theme-ph{font-size:1.8rem}
 .thumbs.pick .thumb{cursor:pointer;outline:2px solid transparent;outline-offset:-2px}
 .thumbs.pick .thumb.sel{outline-color:var(--accent)}
 .thumbs.pick input{position:absolute;top:8px;right:8px;width:20px;height:20px;accent-color:var(--accent)}
@@ -613,3 +608,26 @@ body.moving .wghost{background-color:color-mix(in srgb,var(--ix-gtc,#101114) 55%
 .wfold>summary::after{content:"";position:absolute}
 .wfold[open]>summary{border-bottom:1px solid var(--line,rgba(128,128,128,.3));margin-bottom:8px}
 .wfold h3.sub{margin:14px 0 6px}
+/* (1.82.8) Widgets > Card Look: the two color pickers are small squares of their own, not stretched across the row */
+#wAccent,#wCardAcc{flex:none;width:56px;height:38px;padding:2px}
+
+/* Theme picker (1.82.8) */
+.themes{display:grid;gap:10px;margin-top:8px}
+.theme-big{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--s-line,rgba(255,255,255,.12));background:#000}
+.theme-big .theme-mos{height:150px;border-radius:0}
+.theme-cap{position:absolute;left:0;right:0;bottom:0;padding:30px 14px 10px;display:grid;gap:2px;background:linear-gradient(transparent,rgba(0,0,0,.78));color:#fff}
+.theme-cap b{font-size:1.05rem}.theme-cap small{color:rgba(255,255,255,.82);font-size:.85rem}
+.theme-chips{display:flex;flex-wrap:wrap;gap:12px 10px}
+.theme{all:unset;box-sizing:border-box;width:64px;display:grid;justify-items:center;gap:5px;cursor:pointer;color:var(--s-mute);font-size:.72rem;text-align:center}
+.theme-face{width:52px;height:52px;border-radius:50%;overflow:hidden;display:grid;border:2px solid transparent;background:var(--s-bg3);box-shadow:0 0 0 1px var(--s-line,rgba(255,255,255,.14))}
+.theme-face>*{width:100%;height:100%;object-fit:cover;display:block}
+.theme-face .dz-chip{background:var(--dzg)}
+.theme.on{color:inherit}
+.theme.on .theme-face{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
+.theme:hover .theme-face{filter:brightness(1.12)}
+.theme:focus-visible .theme-face{outline:2px solid var(--accent);outline-offset:2px}
+.theme.dim{opacity:.55}
+.theme-nm{max-width:64px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.theme.new .theme-face{border:2px dashed var(--s-mute);box-shadow:none;place-items:center;background:none}
+.theme-blank{background:linear-gradient(135deg,#3a6ea5,#6bb3d9 55%,#d9e8f2)}
+.theme-plus{display:grid;place-items:center;font-size:1.5rem;color:var(--s-mute)}

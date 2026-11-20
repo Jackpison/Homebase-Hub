@@ -266,6 +266,8 @@ body.is-locked .search{display:none}
 :root:not(.lk-classic) .row{border-radius:10px}
 :root:not(.lk-nohost) .row>a.main{position:relative}
 :root:not(.lk-nohost) .row>a.main::after{content:attr(data-host);position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:6px;pointer-events:none;font-size:.78em;font-weight:500;color:var(--muted);opacity:0;transition:opacity .15s;white-space:nowrap}
+/* (1.82.8) a row with extra link buttons (the "Github" chips): the address would land on the first chip, so it shows as a small label under the link instead */
+:root:not(.lk-nohost) .row:has(>a.extra)>a.main::after{left:0;top:calc(100% + 1px);transform:none;margin-left:2px;z-index:6;padding:1px 8px;border-radius:7px;border:1px solid var(--line);background:color-mix(in srgb,var(--bg,#111) 92%,var(--text) 8%);box-shadow:0 4px 12px rgba(0,0,0,.35)}
 :root:not(.lk-nohost) .row:hover>a.main::after,:root:not(.lk-nohost) .row>a.main:focus-visible::after{opacity:1}
 body.editing .row>a.main::after{display:none}
 .lk-panels .cat{position:relative;background:color-mix(in srgb,var(--text) 4%,transparent);border:1px solid var(--line);border-radius:20px;padding:16px 12px 8px;overflow:hidden}
