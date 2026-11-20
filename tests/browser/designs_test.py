@@ -75,6 +75,7 @@ try:
         th2 = pg.evaluate("[document.querySelector('#themeRows .theme-big').dataset.themeNow, document.querySelector('#themeRows .theme.on').dataset.theme, document.querySelectorAll('#themeRows .theme.on').length]")
         check('H3b Background > Main shows one big preview and a row of theme chips: the one in use is marked, and clicking Online Photos moves the preview and the mark to it', th[0] >= 5 and th[1] == 1 and th[2] == 'designs' and th[3] >= 120 and th[4] and th2 == ['online', 'online', 1], [th, th2])
         pg.evaluate("document.querySelector('[data-bgt=sources]').click()")
+        wait_js(pg, "!!document.querySelector('#keyRows .g-row .ix-rt')", 5000)   # the tile is added on the next frame
         ky = pg.evaluate("""(() => { const r = document.querySelector('#keyRows .g-row'), i = r.querySelector('input'), b = r.querySelector('[data-keyshow]'), w = Math.round(i.getBoundingClientRect().width), t0 = i.type; b.click();
           const t1 = i.type, l1 = b.textContent; b.click(); return [!!r.querySelector('.ix-rt'), t0, t1, l1, i.type, w > 250]; })()""")
         check('H3c API Keys: each row has its icon tile, the key is hidden until Show is pressed, Hide hides it again, and the field is wider than 250px', ky == [True, 'password', 'text', 'Hide', 'password', True], ky)
