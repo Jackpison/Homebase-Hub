@@ -223,35 +223,10 @@ if (!empty($site['private']) && !hub_admin()) {
           <label class="g-row"><span class="g-label">Show the Clock<small>The time, the date and a greeting. Visitors see it too.</small></span>
             <input type="checkbox" class="switch" id="wClock"></label>
         </div>
-        <h3>Layout</h3>
-        <div class="group">
-          <div class="g-row stack"><span class="g-label">Clock Position<small>Left, center or right. Or drag the clock by its handle to any place on the page.</small></span>
-            <div class="seg" id="wClockPos" role="radiogroup" aria-label="Clock Position"><button type="button" role="radio" data-v="left">Left</button><button type="button" role="radio" data-v="center">Center</button><button type="button" role="radio" data-v="right">Right</button></div></div>
-          <div class="g-row stack"><span class="g-label">Cards Position<small>For Glance and Expand: the cards along the bottom, or down the left or right side. Drag any card to put it anywhere on the page; the page has an invisible grid it snaps to. Alt and an arrow key move a card one step.</small></span>
-            <div class="seg" id="wCardsPos" role="radiogroup" aria-label="Cards Position"><button type="button" role="radio" data-v="bottom">Bottom</button><button type="button" role="radio" data-v="left">Left</button><button type="button" role="radio" data-v="right">Right</button></div></div>
-          <div class="g-row"><span class="g-label">Reset Layout<small>Puts the clock and every card back in the usual place.</small></span>
-            <button type="button" class="btn" id="wResetLayout">Reset</button></div>
-        </div>
-        <h3>Saved Layouts</h3>
-        <div class="group">
-          <div class="g-row stack"><span class="g-label">Save This Layout<small>Keeps the places, sizes and look as they are now. Up to six. Press Save Widgets to keep the list.</small></span>
-            <span class="inline"><input type="text" id="wLayName" maxlength="30" placeholder="Name, like Work" aria-label="Layout Name"><button type="button" class="btn" id="wLaySave">Save Layout</button></span></div>
-          <div id="wLayList"></div>
-        </div>
-        <h3>Card Look</h3>
-        <div class="group">
-          <div class="g-row stack"><span class="g-label">Card Style<small>Glass follows Settings › Appearance › Glass. The others are for widgets only.</small></span>
-            <div class="seg" id="wTint" role="radiogroup" aria-label="Card Style"><button type="button" role="radio" data-v="glass">Glass</button><button type="button" role="radio" data-v="dark">Dark</button><button type="button" role="radio" data-v="light">Light</button><button type="button" role="radio" data-v="solid">Solid</button></div></div>
-          <div class="g-row stack"><span class="g-label">Corners</span>
-            <div class="seg" id="wCorner" role="radiogroup" aria-label="Corners"><button type="button" role="radio" data-v="round">Round</button><button type="button" role="radio" data-v="soft">Soft</button><button type="button" role="radio" data-v="square">Square</button></div></div>
-          <div class="g-row"><span class="g-label">Accent Color<small>Counts, links and the open widget. Default is gold.</small></span>
-            <span class="inline"><input type="color" id="wAccent" aria-label="Accent Color" value="#ffd45c"><button type="button" class="btn" id="wAccentReset">Default</button></span></div>
-          <div class="g-row stack"><span class="g-label">Color for One Card<small>Pick a widget, then a color just for it.</small></span>
-            <span class="inline"><select id="wCardSel" aria-label="Widget"></select><input type="color" id="wCardAcc" aria-label="Color for This Card" value="#ffd45c"><button type="button" class="btn" id="wCardAccReset">Default</button></span></div>
-        </div>
         <h3>Widgets, in This Order</h3>
         <div class="field">
           <div class="group" id="wList"></div></div>
+        <details class="wfold"><summary>Widget Details<small>Countdown, Pinned Note, World Clock and Weather</small></summary>
         <div class="group">
           <div class="g-row stack"><span class="g-label">Countdown<small>The days left until a date you choose, counting down live to the time you add.</small></span>
             <div class="inline"><input type="text" id="wCdName" maxlength="40" placeholder="Goa Trip" aria-label="Countdown Name"><input type="date" id="wCdDate" aria-label="Countdown Date"><input type="time" id="wCdTime" aria-label="Countdown Time (optional)"></div></div>
@@ -265,6 +240,35 @@ if (!empty($site['private']) && !hub_admin()) {
             <div class="inline"><input type="text" id="wTown" maxlength="60" placeholder="Bengaluru" aria-label="Town for Weather" autocomplete="off">
               <div class="seg" id="wUnit" role="radiogroup" aria-label="Temperature"><button type="button" role="radio" data-v="c">°C</button><button type="button" role="radio" data-v="f">°F</button></div></div></div>
         </div>
+        </details>
+        <details class="wfold"><summary>Layout and Saved Layouts<small>Where things sit, and layouts you keep</small></summary>
+        <div class="group">
+          <div class="g-row stack"><span class="g-label">Clock Position<small>Left, center or right. Or drag the clock by its handle to any place on the page.</small></span>
+            <div class="seg" id="wClockPos" role="radiogroup" aria-label="Clock Position"><button type="button" role="radio" data-v="left">Left</button><button type="button" role="radio" data-v="center">Center</button><button type="button" role="radio" data-v="right">Right</button></div></div>
+          <div class="g-row stack"><span class="g-label">Cards Position<small>For Glance and Expand: the cards along the bottom, or down the left or right side. Drag any card to put it anywhere on the page; the page has an invisible grid it snaps to. Alt and an arrow key move a card one step.</small></span>
+            <div class="seg" id="wCardsPos" role="radiogroup" aria-label="Cards Position"><button type="button" role="radio" data-v="bottom">Bottom</button><button type="button" role="radio" data-v="left">Left</button><button type="button" role="radio" data-v="right">Right</button></div></div>
+          <div class="g-row"><span class="g-label">Reset Layout<small>Puts the clock and every card back in the usual place.</small></span>
+            <button type="button" class="btn" id="wResetLayout">Reset</button></div>
+        </div>
+        <h3 class="sub">Saved Layouts</h3>
+        <div class="group">
+          <div class="g-row stack"><span class="g-label">Save This Layout<small>Keeps the places, sizes and look as they are now. Up to six. Press Save Widgets to keep the list.</small></span>
+            <span class="inline"><input type="text" id="wLayName" maxlength="30" placeholder="Name, like Work" aria-label="Layout Name"><button type="button" class="btn" id="wLaySave">Save Layout</button></span></div>
+          <div id="wLayList"></div>
+        </div>
+        </details>
+        <details class="wfold"><summary>Card Look<small>Style, corners and colors</small></summary>
+        <div class="group">
+          <div class="g-row stack"><span class="g-label">Card Style<small>Glass follows Settings › Appearance › Glass. The others are for widgets only.</small></span>
+            <div class="seg" id="wTint" role="radiogroup" aria-label="Card Style"><button type="button" role="radio" data-v="glass">Glass</button><button type="button" role="radio" data-v="dark">Dark</button><button type="button" role="radio" data-v="light">Light</button><button type="button" role="radio" data-v="solid">Solid</button></div></div>
+          <div class="g-row stack"><span class="g-label">Corners</span>
+            <div class="seg" id="wCorner" role="radiogroup" aria-label="Corners"><button type="button" role="radio" data-v="round">Round</button><button type="button" role="radio" data-v="soft">Soft</button><button type="button" role="radio" data-v="square">Square</button></div></div>
+          <div class="g-row"><span class="g-label">Accent Color<small>Counts, links and the open widget. Default is gold.</small></span>
+            <span class="inline"><input type="color" id="wAccent" aria-label="Accent Color" value="#ffd45c"><button type="button" class="btn" id="wAccentReset">Default</button></span></div>
+          <div class="g-row stack"><span class="g-label">Color for One Card<small>Pick a widget, then a color just for it.</small></span>
+            <span class="inline"><select id="wCardSel" aria-label="Widget"></select><input type="color" id="wCardAcc" aria-label="Color for This Card" value="#ffd45c"><button type="button" class="btn" id="wCardAccReset">Default</button></span></div>
+        </div>
+        </details>
         <datalist id="tzList"></datalist>
       </section>
     </div>

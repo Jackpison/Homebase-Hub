@@ -605,3 +605,11 @@ body.moving .wghost{background-color:color-mix(in srgb,var(--ix-gtc,#101114) 55%
 .wcv select:first-child,.wcv input{grid-column:1 / -1}
 .wcv input{font:inherit;font-size:18px;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff}
 .wcvout{margin:0;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+/* (1.82.6) Widgets settings: the long parts fold away */
+.wfold{margin:10px 0;border:1px solid var(--line,rgba(128,128,128,.3));border-radius:14px;padding:0 14px}
+.wfold>summary{cursor:pointer;list-style:none;padding:12px 0;font-weight:700;display:flex;flex-direction:column;gap:2px}
+.wfold>summary::-webkit-details-marker{display:none}
+.wfold>summary small{font-weight:400;opacity:.75;font-size:12.5px}
+.wfold>summary::after{content:"";position:absolute}
+.wfold[open]>summary{border-bottom:1px solid var(--line,rgba(128,128,128,.3));margin-bottom:8px}
+.wfold h3.sub{margin:14px 0 6px}

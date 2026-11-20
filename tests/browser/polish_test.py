@@ -427,6 +427,7 @@ try:
         mp.goto(s.base + '/web/home/'); wait_js(mp, "!!document.getElementById('wDock') && !!document.querySelector('#ix-ebar, #editBtn, .corner')", 20000)
         mp.evaluate("document.getElementById('editBtn') && document.getElementById('editBtn').click()")
         mp.click('#ix-ebar [data-tip="Widgets"]'); mp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
+        folds = mp.evaluate("[...document.querySelectorAll('.wfold')].map(d => d.open)")   # the three long parts start folded
         ids = ['most', 'focus', 'habits', 'search', 'year', 'convert']
         for i in ids: mp.check('#wList [data-wl=%s]' % i)
         mp.click('#saveWidgets'); until(lambda: not mp.evaluate("document.getElementById('widgetsSheet').open"), 10000)
@@ -465,8 +466,8 @@ try:
         mu = mp.evaluate("document.querySelector('#wBody').textContent.trim().length > 0")
         mc.close()
         check('P86 (1.82.6) six more Home widgets work: Year Progress shows percentages and bars; Converter turns 10 km into miles and 100 C into 212 F; Habit Streaks keeps habits and ticks after a reload; Focus Timer counts down, pauses and switches length; Search sends nothing until Enter and then opens the search in a new tab; Most Used Links opens',
-              all(i in have for i in ids) and yr == [3, True] and c1.startswith('6.2137') and c2.startswith('212') and h1[0] == '1 day' and h1[1] == '' and h2 == [2, 1]
-              and f0 == '25:00' and f1 != f0 and f2 == 'Start' and st == 0 and f3 == '05:00' and quiet and 'duckduckgo.com' in srch and any('q=homebase' in u for u in asked) and mu, (have, yr, c1, c2, h1, h2, f0, f1, f2, st, f3, quiet, srch, mu))
+              folds == [False, False, False] and all(i in have for i in ids) and yr == [3, True] and c1.startswith('6.2137') and c2.startswith('212') and h1[0] == '1 day' and h1[1] == '' and h2 == [2, 1]
+              and f0 == '25:00' and f1 != f0 and f2 == 'Start' and st == 0 and f3 == '05:00' and quiet and 'duckduckgo.com' in srch and any('q=homebase' in u for u in asked) and mu, (folds, have, yr, c1, c2, h1, h2, f0, f1, f2, st, f3, quiet, srch, mu))
         check('P84 (1.82.1) a first-use tip shows once per visit, Got It remembers it (the next visit shows the next tip), Skip Tips stops them, and Show All Tips Again brings them back',
               bool(t1) and gone and '"seen":["' in seen1 and bool(t2) and t2 != t1 and '"off":1' in off_s and none and t3 == t1, (t1, gone, seen1, t2, off_s, none, t3))
         # ---- (1.68.5) Where > Settings Windows: the page shows through a glass window (a light layer behind it, 55% of its own colour) ----

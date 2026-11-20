@@ -215,7 +215,7 @@ try:
         hs = hp.evaluate("[!!document.querySelector('#settingsSheet #sHomeBar'), document.querySelector('#settingsSheet').textContent.includes('Show the Bar on the Home Page'), !document.querySelector('#settingsSheet #wStyle')]")
         check('P37 Home Settings has Show the Bar on the Home Page, and the widgets are no longer in it', hs == [True, True, True], hs)
         hp.evaluate("document.getElementById('settingsSheet').close()")
-        hp.click('#ix-ebar [data-tip="Widgets"]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
+        hp.click('#ix-ebar [data-tip="Widgets"]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000); hp.evaluate("document.querySelectorAll('.wfold').forEach(d => d.open = true)")
         until(lambda: hp.evaluate("document.querySelectorAll('#wNote optgroup').length > 0"), 10000)
         hp.click('#wStyle [data-v=glance]'); hp.check('#wList [data-wl=pad]')
         hp.fill('#wCdName', 'Lakeside Weekend'); hp.fill('#wCdDate', hp.evaluate("(() => { const tz = (window.HUB && HUB.state && HUB.state().tz) || 'Asia/Kolkata'; const d = new Date(new Intl.DateTimeFormat('en-CA', { timeZone:tz }).format(new Date()) + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 12); return d.toISOString().slice(0, 10); })()"))   # 12 days from today in the site's time zone (not this computer's)
@@ -254,13 +254,13 @@ try:
         q1 = hp.evaluate("document.querySelector('#wBody blockquote').textContent"); hp.click('#wQuoteNext'); q2 = hp.evaluate("document.querySelector('#wBody blockquote').textContent")
         check('P34 Quote of the Day shows a quote, and Another Quote shows a different one', len(q1) > 5 and q2 != q1 and hp.evaluate("document.activeElement.id") == 'wQuoteNext', (q1, q2))
         hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#ix-ebar:not([hidden])', timeout=10000)
-        hp.click('#ix-ebar [data-tip="Widgets"]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
+        hp.click('#ix-ebar [data-tip="Widgets"]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000); hp.evaluate("document.querySelectorAll('.wfold').forEach(d => d.open = true)")
         hp.uncheck('#wShow'); hp.click('#saveWidgets'); until(lambda: not hp.evaluate("document.getElementById('widgetsSheet').open"), 10000)
         hp.click('#ix-ebar [data-ix-done]'); settle(hp)
         off = hp.evaluate("[document.querySelectorAll('#wCards .wcard, #wDock .wdb').length, document.body.classList.contains('has-widgets'), !document.getElementById('clock').hidden]")
         check('P38 Widgets > Show Widgets off hides every widget (the clock stays)', off == [0, False, True], off)
         hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#ix-ebar:not([hidden])', timeout=10000)
-        hp.click('#ix-ebar [data-tip="Widgets"]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000); hp.check('#wShow'); hp.click('#saveWidgets')
+        hp.click('#ix-ebar [data-tip="Widgets"]'); hp.wait_for_selector('#widgetsSheet[open]', timeout=5000); hp.evaluate("document.querySelectorAll('.wfold').forEach(d => d.open = true)"); hp.check('#wShow'); hp.click('#saveWidgets')
         until(lambda: not hp.evaluate("document.getElementById('widgetsSheet').open"), 10000); hp.click('#ix-ebar [data-ix-done]')
         def home_bar(on):
             hp.evaluate("document.getElementById('editBtn').click()"); hp.wait_for_selector('#ix-ebar:not([hidden])', timeout=10000)
@@ -387,7 +387,7 @@ try:
         for _try in range(3):   # the click is repeated if the page was still busy with the drag
             pp.evaluate("document.getElementById('editBtn').click()")
             if until(lambda: pp.evaluate("!!document.querySelector('#ix-ebar:not([hidden])')"), 4000): break
-        pp.wait_for_selector('#ix-ebar [data-tip="Widgets"]', timeout=15000); pp.click('#ix-ebar [data-tip="Widgets"]'); pp.wait_for_selector('#widgetsSheet[open]', timeout=5000)
+        pp.wait_for_selector('#ix-ebar [data-tip="Widgets"]', timeout=15000); pp.click('#ix-ebar [data-tip="Widgets"]'); pp.wait_for_selector('#widgetsSheet[open]', timeout=5000); pp.evaluate("document.querySelectorAll('.wfold').forEach(d => d.open = true)")
         pp.fill('#wLayName', 'Work'); pp.click('#wLaySave'); listed = pp.evaluate("document.getElementById('wLayList').textContent.includes('Work')")
         pp.click('#saveWidgets'); until(lambda: not pp.evaluate("document.getElementById('widgetsSheet').open"), 10000)
         lay = until(lambda: 'Work' in subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; echo json_encode(load_site()['widgets']['layouts']);" % D], capture_output=True, text=True).stdout, 8000)
