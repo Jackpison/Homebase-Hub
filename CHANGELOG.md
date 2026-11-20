@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.82.6 | Home: six more widgets (Most Used Links, Focus Timer, Habit Streaks, Search, Year Progress, Converter) and tidier Widgets settings; Info: pin a box, reminders that show in Today, Recently Edited First, search rows for every box |
 | 1.82.5 | Hover Hints: a short sentence with a pointer when you point at a setting or a button, with an on/off switch and a speed choice in Features; the first-use tips point at what they explain; the Home bell is always in the top-right corner |
 | 1.82.4 | A new line-style alerts bell on every page, a fix for cards dropping above where you let go, and tidier Saved Layouts settings |
 | 1.82.3 | Home: widgets never land on each other, Undo after a move, Move mode (M), Saved Layouts, a color for one card, guide lines; Links: Most Used shows with counts hidden; more first-use tips |
@@ -187,6 +188,33 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.82.6
+
+### Home
+
+- New widgets, all off until you turn them on in Widgets:
+  - Most Used Links: the six links you open most in Links (never from a locked tab).
+  - Focus Timer: a 25 minute focus timer with short and long breaks. It is kept in this browser only.
+  - Habit Streaks: up to eight habits you tick each day, with the days in a row. It is kept in this browser only.
+  - Search: type and press Enter to search DuckDuckGo, Wikipedia, YouTube or OpenStreetMap in a new tab. Nothing is sent before you press Enter.
+  - Year Progress: how far the year, the month and the week are.
+  - Converter: length, weight, temperature, volume and speed, worked out on the page.
+- Widgets settings is tidier: Widget Details, Layout and Saved Layouts, and Card Look are folded away until you open them.
+- Today also lists the Info boxes whose reminder date has come.
+
+### Info
+
+- A box can be pinned to the top of its tab (Box Settings, Pin to the Top). A pinned box shows a Pinned chip.
+- A box can have a reminder date (Box Settings, Reminder). A date that is today or past shows a red chip, and the box also shows in Today on Home. A locked tab can't have a reminder.
+- Sort: Recently Edited First puts the boxes you saved last at the top of each tab. It only changes how they are shown on this device.
+- Search shows a row for every box with a match (up to four per tab), not just the first.
+
+### Everywhere
+
+- Fixed: the 1.82.5 notes said about 70 Hover Hints. The number is 62.
 
 ---
 
