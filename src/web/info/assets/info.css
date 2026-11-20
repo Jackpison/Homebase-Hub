@@ -289,3 +289,9 @@ body.editing .tabi:not(.on) .tab:not(.add){padding-right:0}
 #bxdlg .swc[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
 /* (1.79.3) a small grey divider between one tab and the next, as in Links */
 .tabs>.tabi+.tabi::before{content:"";position:absolute;left:-10px;top:50%;width:1px;height:20px;transform:translateY(-50%);background:color-mix(in srgb,var(--fg) 22%,transparent)}
+/* (1.82.6) pinned and reminder chips on a box, the Pin and Reminder rows of Box Settings */
+.chips{display:inline-flex;gap:6px;flex-wrap:wrap}.chips:empty{display:none}
+.chip{font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid var(--border);color:var(--mute);white-space:nowrap}
+.chip.due{color:#fff;background:#d6453d;border-color:#d6453d}
+.bxpinrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#bxrem{font:inherit;color:inherit;background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 8px}

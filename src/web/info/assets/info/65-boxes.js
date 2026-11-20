@@ -6,7 +6,7 @@ async function saveBoxList(t,list,say,done){
   const before=new Set(t.boxes.map(b=>b.id));
   if(!server){
     const pt=plainTabs(),x=pt.find(y=>y.id===t.id);
-    x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h,hc:e.hc!=null?e.hc:o.hc}:{id:e.restore&&e.id?e.id:rid(),title:e.restore?e.restore.title:"",notes:e.restore?e.restore.notes:"",rev:0,saved:0,w:e.w,h:e.h,hc:e.hc||""}});
+    x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h,hc:e.hc!=null?e.hc:o.hc,pin:e.pin!=null?e.pin:o.pin,rem:e.rem!=null?e.rem:o.rem}:{id:e.restore&&e.id?e.id:rid(),title:e.restore?e.restore.title:"",notes:e.restore?e.restore.notes:"",rev:0,saved:0,w:e.w,h:e.h,hc:e.hc||"",pin:!!(e.restore&&e.restore.pin),rem:e.restore?okRem(e.restore.rem):""}});
     mergeTabs({rev:REV+1,tabs:pt});boxSaid(t,before,list);if(done)done(before);return;
   }
   try{
@@ -35,7 +35,7 @@ const bxdlg=$("bxdlg");let BX=null;
 function openBoxDlg(b){
   const t=TABS.find(x=>x.id===b.tabId);if(!t)return;
   if(b.editing){setStatus("Save or cancel this box first.");return}
-  BX={t,b,w:b.w,h:b.h,hc:b.hc||"",pos:t.boxes.indexOf(b),armed:false};
+  BX={t,b,w:b.w,h:b.h,hc:b.hc||"",pin:!!b.pin,rem:b.rem||"",pos:t.boxes.indexOf(b),armed:false};
   $("bxname").textContent=b.sealed?"Locked box":b.title;
   $("bxmsg").textContent="";$("bxdel").textContent="Delete Box";$("bxdel").hidden=t.boxes.length<2;bxUI();bxdlg.showModal();
 }
@@ -44,6 +44,7 @@ function bxUI(){
   const n=BX.t.boxes.length;$("bxpos").textContent="Position "+(BX.pos+1)+" of "+n;$("bxleft").disabled=BX.pos<1;$("bxright").disabled=BX.pos>=n-1;
   $("bxhc").value=BX.hc||"#ffffff";$("bxhcdef").disabled=!BX.hc;
   document.querySelectorAll("#bxsw .swc").forEach((/** @type {HTMLElement} */ x)=>x.setAttribute("aria-pressed",String(!!BX.hc&&x.dataset.c===BX.hc)));
+  $("bxpin").checked=BX.pin;$("bxrem").value=BX.rem;$("bxrem").disabled=BX.t.enc;$("bxremclear").disabled=!BX.rem;$("bxremhint").textContent=BX.t.enc?"A locked tab can't have a reminder.":"Shows in Today on Home from that day.";
   $("bxwhint").textContent=BX.w?"":"Auto means "+(BX.t.layout==="doc"?"the full width of the page.":"half the width.");
 }
 $("bxw").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest(".opt");if(x){BX.w=okW(x.dataset.v);bxUI()}});
@@ -53,12 +54,15 @@ $("bxsw").innerHTML=["#e5484d","#f5a524","#d4a72c","#3ecf8e","#2dd4bf","#3b82f6"
 $("bxsw").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest(".swc");if(x){BX.hc=x.dataset.c;bxUI()}});
 $("bxhc").addEventListener("input",()=>{BX.hc=okColor($("bxhc").value);bxUI()});
 $("bxhcdef").onclick=()=>{BX.hc="";bxUI()};
+$("bxpin").addEventListener("change",()=>{BX.pin=$("bxpin").checked});
+$("bxrem").addEventListener("input",()=>{BX.rem=okRem($("bxrem").value);$("bxremclear").disabled=!BX.rem});
+$("bxremclear").onclick=()=>{BX.rem="";bxUI()};
 $("bxleft").onclick=()=>{BX.pos=Math.max(0,BX.pos-1);bxUI()};
 $("bxright").onclick=()=>{BX.pos=Math.min(BX.t.boxes.length-1,BX.pos+1);bxUI()};
 $("bxcancel").onclick=()=>bxdlg.close();
 function bxList(remove){
   const list=BX.t.boxes.filter(x=>x!==BX.b).map(x=>({id:x.id,w:x.w,h:x.h,hc:x.hc||""}));
-  if(!remove)list.splice(BX.pos,0,{id:BX.b.id,w:BX.w,h:BX.h,hc:BX.hc});
+  if(!remove)list.splice(BX.pos,0,{id:BX.b.id,w:BX.w,h:BX.h,hc:BX.hc,pin:BX.pin,rem:BX.t.enc?"":BX.rem});
   return list;
 }
 $("bxdel").onclick=()=>{
@@ -66,13 +70,13 @@ $("bxdel").onclick=()=>{
   saveBoxList(t,bxList(true),x=>$("bxmsg").textContent=x,()=>{bxdlg.close();if(window.HUB&&HUB.undo)HUB.undo("Box deleted"+what+" (in "+(t.name||"Tab")+").",()=>undoBox(t.id,gone,at))});
 };
 // (1.62.0) Undo after a delete: what the server sent is kept for 7 seconds (a locked tab's text stays locked) and sent back as "restore"
-const rawBox=(b,enc)=>({id:b.id,w:b.w,h:b.h,hc:b.hc||"",title:enc?b.ct:b.title,notes:enc?b.cn:b.notes});
+const rawBox=(b,enc)=>({id:b.id,w:b.w,h:b.h,hc:b.hc||"",pin:!!b.pin,rem:b.rem||"",title:enc?b.ct:b.title,notes:enc?b.cn:b.notes});
 function undoBox(tabId,gone,at){
   const t=TABS.find(x=>x.id===tabId);
   if(!t){setStatus("That tab is gone, so the box can't come back.");return}
   if(t.boxes.length>=MAXBOX){setStatus("This tab is full, so the box can't come back.");return}
   const list=t.boxes.map(b=>({id:b.id,w:b.w,h:b.h,hc:b.hc||""}));
-  list.splice(Math.min(at,list.length),0,{id:gone.id,w:gone.w,h:gone.h,hc:gone.hc||"",restore:{title:gone.title,notes:gone.notes,hc:gone.hc||""}});
+  list.splice(Math.min(at,list.length),0,{id:gone.id,w:gone.w,h:gone.h,hc:gone.hc||"",restore:{title:gone.title,notes:gone.notes,hc:gone.hc||"",pin:!!gone.pin,rem:gone.rem||""}});
   guard(()=>saveBoxList(t,list,setStatus,()=>setStatus("Box is back.")));
 }
 $("bxform").addEventListener("submit",e=>{e.preventDefault();saveBoxList(BX.t,bxList(false),x=>$("bxmsg").textContent=x,()=>bxdlg.close())});

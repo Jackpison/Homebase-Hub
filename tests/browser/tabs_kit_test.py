@@ -149,6 +149,21 @@ try:
         pg.keyboard.press('Escape'); until(lambda: not pg.evaluate("document.getElementById('hubTabDlg').open"), 5000)
         div = pg.evaluate("(() => { var t = document.querySelectorAll('#tabs > .tabi'); return t.length < 2 ? '' : getComputedStyle(t[1], '::before').width + '|' + getComputedStyle(t[1], '::before').content; })()")
         check('K23 Info: a grey divider sits between one tab and the next', div == '1px|""', div)
+        # (1.82.6) pin a box and give it a reminder in Box Settings; a pinned box leads its tab, a due reminder shows as a chip and in Home's Today; Recently Edited First sorts
+        pg.evaluate("document.querySelectorAll('#tabs .tab:not(.add)')[0].click()")
+        until(lambda: pg.evaluate("document.querySelectorAll('.boxes:not([hidden]) .box').length") >= 2, 5000)
+        pg.evaluate("[...document.querySelectorAll('.boxes:not([hidden]) .box')][1].querySelector('[data-r=cfg]').click()"); pg.wait_for_selector('#bxdlg[open]')
+        pg.check('#bxpin'); pg.fill('#bxrem', '2020-01-02'); pg.click('#bxform button[type=submit]'); until(lambda: not pg.evaluate("document.getElementById('bxdlg').open"), 10000)
+        until(lambda: any(b.get('pin') for t in info_tabs(s) for b in t['boxes']), 10000)
+        sv = [(b.get('pin'), b.get('rem')) for t in info_tabs(s) for b in t['boxes'] if b.get('pin')]
+        ord_ = pg.evaluate("(() => { const b = [...document.querySelectorAll('.boxes:not([hidden]) .box')]; return [b[1].style.order, b[0].style.order, [...b[1].querySelectorAll('.chip')].map(c => c.textContent + ':' + c.className)]; })()")
+        pg.evaluate("document.getElementById('sortBtn').click()"); sortd = pg.evaluate("[document.getElementById('sortBtn').getAttribute('aria-pressed'), localStorage.getItem('ix-info-sort')]"); pg.evaluate("document.getElementById('sortBtn').click()")
+        check('K25 (1.82.6) Info: Box Settings pins a box (it leads its tab and says Pinned) and sets a reminder (saved on the server, an old date shows as Overdue); Sort turns on and off',
+              sv == [(True, '2020-01-02')] and ord_[0] == '0' and ord_[1] == '1' and any(c.startswith('Pinned') for c in ord_[2]) and any('Overdue' in c and 'due' in c for c in ord_[2]) and sortd == ['true', 'recent'], (sv, ord_, sortd))
+        pg.goto(s.base + '/web/home/'); wait_js(pg, "!!document.querySelector('#wDock [data-w=today], #wCards [data-w=today]')", 20000)
+        pg.click('#wDock [data-w=today], #wCards [data-w=today]'); until(lambda: 'Reminders From Info' in pg.evaluate("document.getElementById('wBody').textContent"), 8000)
+        check('K26 (1.82.6) Home: a box whose reminder date has come shows in Today under Reminders From Info', 'Reminders From Info' in pg.evaluate("document.getElementById('wBody').textContent"))
+        pg.goto(s.base + '/web/info/'); wait_js(pg, "document.querySelectorAll('#tabs .tab:not(.add)').length >= 2", 20000); edit_on()
         # (1.79.3) Links at its limit of 20 tabs: New Tab stays on the bar and says why
         lk = s.req(s.site_base + '/web/links/api.php?action=get'); data = lk['data']
         while len(data['tabs']) < 20: data['tabs'].append({'id': 'zz%06d' % len(data['tabs']), 'title': 'Extra %d' % len(data['tabs']), 'categories': []})

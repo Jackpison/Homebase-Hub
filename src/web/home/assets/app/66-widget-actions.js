@@ -75,7 +75,7 @@ addEventListener('pagehide', () => savePad(true));
 /* logged in or out after the page loaded (Edit, Log Out, or another tab) */
 function setWidgets(cfg){
   WCFG = cfg || null;
-  if (!WCFG){ Object.assign(WD, { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', most:null, mostErr:'' }); wOpen = ''; }
+  if (!WCFG){ Object.assign(WD, { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', most:null, mostErr:'', rem:[] }); wOpen = ''; }
   renderWidgets();
   loadWidgets();
 }

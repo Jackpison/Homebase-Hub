@@ -91,7 +91,8 @@ function panelHTML(id){
       return `<label class="wrow${late > 0 ? ' late' : ''}"><input type="checkbox" data-done="${esc(x.id)}" data-due="${esc(x.due)}"><span class="wr-n">${esc(x.name)}</span>${when ? `<span class="wr-t">${esc(when)}</span>` : ''}</label>`;
     }).join('');
     const evs = (WD.events || []).map(e => `<div class="wrow wev" style="--ec:${esc(e.cal.color)}"><span class="wr-n">${esc(e.s)}</span><span class="wr-t">${esc(e.t || 'All day')} · ${esc(e.cal.name)}</span></div>`).join('');
-    return `<div class="wlist">${rows || (evs ? '' : '<p class="wmsg">Nothing due today.</p>')}${evs ? '<p class="wmsg small">From Your Calendars</p>' + evs : ''}</div>
+    const rems = (WD.rem || []).map(x => `<a class="wrow${x.d < t ? ' late' : ''}" href="../info/#${encodeURIComponent(x.tab)}"><span class="wr-n">${esc(x.n)}</span><span class="wr-t">${x.d === t ? 'Reminder today' : 'Reminder · ' + esc(dShortW(x.d))}</span></a>`).join('');
+    return `<div class="wlist">${rows || (evs || rems ? '' : '<p class="wmsg">Nothing due today.</p>')}${rems ? '<p class="wmsg small">Reminders From Info</p>' + rems : ''}${evs ? '<p class="wmsg small">From Your Calendars</p>' + evs : ''}</div>
       <form class="wqa" id="wQaForm"><input type="text" id="wQa" maxlength="300" autocomplete="off" placeholder="+ Add a task, press Enter" aria-label="Quick Add" aria-describedby="wQaHint"></form>
       <p class="wmsg small" id="wQaHint">For example: Pay rent 5 Nov, or Netflix 649 monthly</p>${more('../tasks/', 'Open Tasks')}`;
   }

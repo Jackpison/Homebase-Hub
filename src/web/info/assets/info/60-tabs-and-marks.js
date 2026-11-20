@@ -57,7 +57,7 @@ function mergeTabs(d){
     t.boxes=(Array.isArray(src.boxes)?src.boxes:[]).map((x,k)=>{
       const b=had.get(String(x&&x.id!=null?x.id:(k<2?k:"")));
       if(!b)return mkBox(t.id,k,x,t.enc);
-      b.k=k;b.w=okW(x.w);b.h=okH(x.h);b.hc=okColor(x.hc);if(!b.editing&&!busy.has(b.key))intake(b,x,t.enc);return b;
+      b.k=k;b.w=okW(x.w);b.h=okH(x.h);b.hc=okColor(x.hc);b.pin=!!x.pin;b.rem=okRem(x.rem);if(!b.editing&&!busy.has(b.key))intake(b,x,t.enc);return b;
     });
     return t;
   });

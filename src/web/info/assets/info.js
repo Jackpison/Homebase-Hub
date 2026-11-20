@@ -139,12 +139,12 @@ function mkBox(tabId,k,src,enc){
   src=src||{};
   // the two boxes of older pages are 0 and 1 (their drafts keep their names); every other box gets a random id
   const id=/^([0-9]|[a-f0-9]{8})$/.test(String(src.id))?String(src.id):(k<2?String(k):rid());
-  const b={key:tabId+"-"+id,id,tabId,k,w:okW(src.w),h:okH(src.h),hc:okColor(src.hc),title:"",notes:"",rev:0,saved:0,editing:false,theirs:null,el:null};
+  const b={key:tabId+"-"+id,id,tabId,k,w:okW(src.w),h:okH(src.h),hc:okColor(src.hc),pin:!!src.pin,rem:okRem(src.rem),title:"",notes:"",rev:0,saved:0,editing:false,theirs:null,el:null};
   intake(b,src,enc);return b;
 }
 const LAYS=["cards","doc"],okLay=v=>v==="doc"?"doc":"cards";   // how a tab is laid out: notebook cards (the default; "classic" from earlier versions is cards too) or one document
 // Boxes: a tab has 1 to MAXBOX of them, each with a stable id, and optionally a width and a height ("" = what the layout gives it)
-const MAXBOX=12,BW=["","third","half","twothirds","full"],BH=["","short","tall","xtall"],okW=v=>BW.includes(v)?v:"",okH=v=>BH.includes(v)?v:"";
+const MAXBOX=12,BW=["","third","half","twothirds","full"],BH=["","short","tall","xtall"],okRem=v=>typeof v==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(v)?v:"",okW=v=>BW.includes(v)?v:"",okH=v=>BH.includes(v)?v:"";
 const okIcon=v=>HubTabs.isIcon(v)?v:"";   // which icon a tab wears (tabs.js); empty = the document icon
 const okColor=c=>typeof c==="string"&&HUB.isHex(c)?c.toLowerCase():"";
 function mkTab(src){
@@ -166,7 +166,7 @@ function textOn(hex){
 const findBox=key=>{for(const t of TABS)for(const b of t.boxes)if(b.key===key)return b};
 // The tabs as stored: encrypted tabs keep their ciphertext, never the decrypted text.
 const stored=(t,b)=>t.enc?{title:b.ct??b.title,notes:b.cn??b.notes}:{title:b.title,notes:b.notes};
-const plainTabs=()=>TABS.map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>({...stored(t,b),id:b.id,w:b.w,h:b.h,hc:b.hc,rev:b.rev,saved:b.saved}))}));
+const plainTabs=()=>TABS.map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>({...stored(t,b),id:b.id,w:b.w,h:b.h,hc:b.hc,pin:b.pin,rem:b.rem,rev:b.rev,saved:b.saved}))}));
 // The copy kept in this browser for instant loading. Private tabs (and everything, when the page is private)
 // are left out, so private text is never stored on the device. The icon is stored separately and only when it changes.
 let savedIcon=null;
@@ -187,7 +187,7 @@ const normPage=p=>({title:p&&typeof p.title==="string"?p.title:"",
 function buildBox(b){
   const n=$("boxTpl").content.firstElementChild.cloneNode(true);n.dataset.key=b.key;
   const q=s=>n.querySelector(s);
-  b.el={title:q(".title"),copy:q('[data-r="copy"]'),edit:q('[data-r="edit"]'),cfg:q('[data-r="cfg"]'),meta:q(".meta"),info:q(".info"),form:q(".form"),tin:q(".tin"),
+  b.el={title:q(".title"),chips:q(".chips"),copy:q('[data-r="copy"]'),edit:q('[data-r="edit"]'),cfg:q('[data-r="cfg"]'),meta:q(".meta"),info:q(".info"),form:q(".form"),tin:q(".tin"),
         ta:q("textarea"),conflict:q(".conflict"),msg:q(".msg"),save:q('[data-r="save"]'),help:q(".mdhelp"),prev:q(".prev"),tools:q(".tools")};
   b.el.ta.addEventListener("input",()=>{grow(b.el.ta,true);saveDraftSoon(b)});
   b.el.tin.addEventListener("input",()=>saveDraftSoon(b));
@@ -219,7 +219,7 @@ function syncBoxes(t){
   // order: each box right before the Add Box tile, in list order (only boxes that are out of place are moved)
   let prev=null;
   t.boxes.forEach(b=>{const n=boxNode(b),nextWanted=prev?prev.nextElementSibling:bx.firstElementChild;if(n!==nextWanted)bx.insertBefore(n,nextWanted);prev=n});
-  add.hidden=t.boxes.length>=MAXBOX;
+  add.hidden=t.boxes.length>=MAXBOX;applyOrder(t);
   fresh.forEach(b=>renderBox(b));renderOutline(t);
 }
 /* Box headline color of a tab: set on its panel, so both headlines follow it. */
@@ -513,7 +513,8 @@ function renderBox(b){
   e.info.classList.toggle("can-tick",canTick());
   if(HL&&b.notes.trim())markText(e.info,HL);
   e.meta.textContent=busy.has(b.key)?"Saving…":b.saved?"Updated "+when(b.saved):"";
-  const tb=TABS.find(x=>x.id===b.tabId);if(tb)renderOutline(tb);
+  drawChips(b);
+  const tb=TABS.find(x=>x.id===b.tabId);if(tb){renderOutline(tb);applyOrder(tb)}
 }
 
 /* load */
@@ -525,7 +526,7 @@ document.addEventListener("visibilitychange",async()=>{
   lastFetch=Date.now();
   try{const had=authed;takeData(await fetchData());if(had&&!authed){setEdit(false);setStatus("You were logged out on this device.")}}catch(e){}
 }); // true once the server has answered (or is known to be unreachable)
-const sig=d=>JSON.stringify([d.rev|0,!!d.closed,d.tabs.map(t=>[t.id,t.name,t.color||"",t.hc||"",t.layout||"",!!t.private,t.boxes.map(b=>[b.id||"",b.w||"",b.h||"",b.hc||"",b.title,b.notes,b.rev|0,b.saved|0])]),
+const sig=d=>JSON.stringify([d.rev|0,!!d.closed,d.tabs.map(t=>[t.id,t.name,t.color||"",t.hc||"",t.layout||"",!!t.private,t.boxes.map(b=>[b.id||"",b.w||"",b.h||"",b.hc||"",b.pin?1:0,b.rem||"",b.title,b.notes,b.rev|0,b.saved|0])]),
   d.page&&[d.page.title,d.page.icon,d.page.colors,!!d.page.private],d.timer]);
 // Replaces everything shown with the given data (tabs, title, icon, colors, timer).
 function applyData(d){
@@ -750,7 +751,7 @@ function mergeTabs(d){
     t.boxes=(Array.isArray(src.boxes)?src.boxes:[]).map((x,k)=>{
       const b=had.get(String(x&&x.id!=null?x.id:(k<2?k:"")));
       if(!b)return mkBox(t.id,k,x,t.enc);
-      b.k=k;b.w=okW(x.w);b.h=okH(x.h);b.hc=okColor(x.hc);if(!b.editing&&!busy.has(b.key))intake(b,x,t.enc);return b;
+      b.k=k;b.w=okW(x.w);b.h=okH(x.h);b.hc=okColor(x.hc);b.pin=!!x.pin;b.rem=okRem(x.rem);if(!b.editing&&!busy.has(b.key))intake(b,x,t.enc);return b;
     });
     return t;
   });
@@ -805,7 +806,7 @@ async function saveBoxList(t,list,say,done){
   const before=new Set(t.boxes.map(b=>b.id));
   if(!server){
     const pt=plainTabs(),x=pt.find(y=>y.id===t.id);
-    x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h,hc:e.hc!=null?e.hc:o.hc}:{id:e.restore&&e.id?e.id:rid(),title:e.restore?e.restore.title:"",notes:e.restore?e.restore.notes:"",rev:0,saved:0,w:e.w,h:e.h,hc:e.hc||""}});
+    x.boxes=list.map(e=>{const o=x.boxes.find(b=>b.id===e.id);return o?{...o,w:e.w,h:e.h,hc:e.hc!=null?e.hc:o.hc,pin:e.pin!=null?e.pin:o.pin,rem:e.rem!=null?e.rem:o.rem}:{id:e.restore&&e.id?e.id:rid(),title:e.restore?e.restore.title:"",notes:e.restore?e.restore.notes:"",rev:0,saved:0,w:e.w,h:e.h,hc:e.hc||"",pin:!!(e.restore&&e.restore.pin),rem:e.restore?okRem(e.restore.rem):""}});
     mergeTabs({rev:REV+1,tabs:pt});boxSaid(t,before,list);if(done)done(before);return;
   }
   try{
@@ -834,7 +835,7 @@ const bxdlg=$("bxdlg");let BX=null;
 function openBoxDlg(b){
   const t=TABS.find(x=>x.id===b.tabId);if(!t)return;
   if(b.editing){setStatus("Save or cancel this box first.");return}
-  BX={t,b,w:b.w,h:b.h,hc:b.hc||"",pos:t.boxes.indexOf(b),armed:false};
+  BX={t,b,w:b.w,h:b.h,hc:b.hc||"",pin:!!b.pin,rem:b.rem||"",pos:t.boxes.indexOf(b),armed:false};
   $("bxname").textContent=b.sealed?"Locked box":b.title;
   $("bxmsg").textContent="";$("bxdel").textContent="Delete Box";$("bxdel").hidden=t.boxes.length<2;bxUI();bxdlg.showModal();
 }
@@ -843,6 +844,7 @@ function bxUI(){
   const n=BX.t.boxes.length;$("bxpos").textContent="Position "+(BX.pos+1)+" of "+n;$("bxleft").disabled=BX.pos<1;$("bxright").disabled=BX.pos>=n-1;
   $("bxhc").value=BX.hc||"#ffffff";$("bxhcdef").disabled=!BX.hc;
   document.querySelectorAll("#bxsw .swc").forEach((/** @type {HTMLElement} */ x)=>x.setAttribute("aria-pressed",String(!!BX.hc&&x.dataset.c===BX.hc)));
+  $("bxpin").checked=BX.pin;$("bxrem").value=BX.rem;$("bxrem").disabled=BX.t.enc;$("bxremclear").disabled=!BX.rem;$("bxremhint").textContent=BX.t.enc?"A locked tab can't have a reminder.":"Shows in Today on Home from that day.";
   $("bxwhint").textContent=BX.w?"":"Auto means "+(BX.t.layout==="doc"?"the full width of the page.":"half the width.");
 }
 $("bxw").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest(".opt");if(x){BX.w=okW(x.dataset.v);bxUI()}});
@@ -852,12 +854,15 @@ $("bxsw").innerHTML=["#e5484d","#f5a524","#d4a72c","#3ecf8e","#2dd4bf","#3b82f6"
 $("bxsw").addEventListener("click",e=>{const x=/** @type {any} */ (e.target).closest(".swc");if(x){BX.hc=x.dataset.c;bxUI()}});
 $("bxhc").addEventListener("input",()=>{BX.hc=okColor($("bxhc").value);bxUI()});
 $("bxhcdef").onclick=()=>{BX.hc="";bxUI()};
+$("bxpin").addEventListener("change",()=>{BX.pin=$("bxpin").checked});
+$("bxrem").addEventListener("input",()=>{BX.rem=okRem($("bxrem").value);$("bxremclear").disabled=!BX.rem});
+$("bxremclear").onclick=()=>{BX.rem="";bxUI()};
 $("bxleft").onclick=()=>{BX.pos=Math.max(0,BX.pos-1);bxUI()};
 $("bxright").onclick=()=>{BX.pos=Math.min(BX.t.boxes.length-1,BX.pos+1);bxUI()};
 $("bxcancel").onclick=()=>bxdlg.close();
 function bxList(remove){
   const list=BX.t.boxes.filter(x=>x!==BX.b).map(x=>({id:x.id,w:x.w,h:x.h,hc:x.hc||""}));
-  if(!remove)list.splice(BX.pos,0,{id:BX.b.id,w:BX.w,h:BX.h,hc:BX.hc});
+  if(!remove)list.splice(BX.pos,0,{id:BX.b.id,w:BX.w,h:BX.h,hc:BX.hc,pin:BX.pin,rem:BX.t.enc?"":BX.rem});
   return list;
 }
 $("bxdel").onclick=()=>{
@@ -865,17 +870,43 @@ $("bxdel").onclick=()=>{
   saveBoxList(t,bxList(true),x=>$("bxmsg").textContent=x,()=>{bxdlg.close();if(window.HUB&&HUB.undo)HUB.undo("Box deleted"+what+" (in "+(t.name||"Tab")+").",()=>undoBox(t.id,gone,at))});
 };
 // (1.62.0) Undo after a delete: what the server sent is kept for 7 seconds (a locked tab's text stays locked) and sent back as "restore"
-const rawBox=(b,enc)=>({id:b.id,w:b.w,h:b.h,hc:b.hc||"",title:enc?b.ct:b.title,notes:enc?b.cn:b.notes});
+const rawBox=(b,enc)=>({id:b.id,w:b.w,h:b.h,hc:b.hc||"",pin:!!b.pin,rem:b.rem||"",title:enc?b.ct:b.title,notes:enc?b.cn:b.notes});
 function undoBox(tabId,gone,at){
   const t=TABS.find(x=>x.id===tabId);
   if(!t){setStatus("That tab is gone, so the box can't come back.");return}
   if(t.boxes.length>=MAXBOX){setStatus("This tab is full, so the box can't come back.");return}
   const list=t.boxes.map(b=>({id:b.id,w:b.w,h:b.h,hc:b.hc||""}));
-  list.splice(Math.min(at,list.length),0,{id:gone.id,w:gone.w,h:gone.h,hc:gone.hc||"",restore:{title:gone.title,notes:gone.notes,hc:gone.hc||""}});
+  list.splice(Math.min(at,list.length),0,{id:gone.id,w:gone.w,h:gone.h,hc:gone.hc||"",restore:{title:gone.title,notes:gone.notes,hc:gone.hc||"",pin:!!gone.pin,rem:gone.rem||""}});
   guard(()=>saveBoxList(t,list,setStatus,()=>setStatus("Box is back.")));
 }
 $("bxform").addEventListener("submit",e=>{e.preventDefault();saveBoxList(BX.t,bxList(false),x=>$("bxmsg").textContent=x,()=>bxdlg.close())});
 
+/* ---------- (1.82.6) Pinned boxes, Recently Edited First, and reminders ----------
+   A pinned box sits at the top of its tab. "Recently Edited First" orders the boxes of every tab by when they were saved (a view on this
+   device only: the saved order does not change). Both only change how the boxes are shown (CSS order), so the box order on the server stays as it is.
+   A box with a reminder date shows a chip: Due Today, Overdue, or the date. Home's Today widget lists the ones that are due. */
+let SORTR=false;try{SORTR=localStorage.getItem("ix-info-sort")==="recent"}catch(e){}
+function applyOrder(t){
+  const cards=t.layout!=="doc",list=t.boxes.map((b,i)=>({b,i})).filter(x=>boxNode(x.b));
+  if(!cards){list.forEach(x=>{boxNode(x.b).style.order=""});return}
+  list.sort((a,c)=>(+!!c.b.pin-+!!a.b.pin)||(SORTR?(c.b.saved|0)-(a.b.saved|0):0)||a.i-c.i);
+  list.forEach((x,k)=>{boxNode(x.b).style.order=String(k)});
+}
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+function drawChips(b){
+  const e=b.el&&b.el.chips;if(!e)return;
+  const out=[];
+  if(b.pin)out.push('<span class="chip pin" title="Pinned to the top">Pinned</span>');
+  if(b.rem){
+    const t=todayStr(),late=b.rem<t,now=b.rem===t,d=new Date(b.rem+"T12:00:00");
+    out.push('<span class="chip rem'+(late||now?" due":"")+'" title="Reminder">'+(now?"Due Today":late?"Overdue · ":"")+(now?"":esc(d.toLocaleDateString(undefined,{day:"numeric",month:"short"})))+"</span>");
+  }
+  e.innerHTML=out.join("");
+}
+const sortBtn=$("sortBtn");
+function sortUI(){sortBtn.setAttribute("aria-pressed",String(SORTR));sortBtn.textContent=SORTR?"Recently Edited First":"Sort: Tab Order"}
+sortBtn.addEventListener("click",()=>{SORTR=!SORTR;try{localStorage.setItem("ix-info-sort",SORTR?"recent":"")}catch(e){}sortUI();TABS.forEach(applyOrder)});
+sortUI();
 /* Edit Tab / New Tab: the window itself is shared with Links (tabs.js); what saving does is Info's own. */
 function nextTabName(){let n=TABS.length+1;const names=new Set(TABS.map(t=>t.name.trim().toLowerCase()));while(names.has("tab "+n))n++;return"Tab "+n}
 // A tab as the server takes it. The colors that come from a tab's position are fixed first, so tabs keep their colors when positions change.
@@ -1087,17 +1118,19 @@ function snippet(text,at,len){
 function findAll(query){
   const n=query.toLowerCase(),out=[];
   TABS.forEach((t,ti)=>{
-    let count=0,first=null;const nameAt=t.name.toLowerCase().indexOf(n);
+    let count=0;const hits=[],nameAt=t.name.toLowerCase().indexOf(n);
     t.boxes.forEach(b=>{
+      let mine=null;   // (1.82.6) every box with a match gets its own row (up to four per tab)
       for(const [where,text] of [["title",b.title],["text",plain(b.notes)]]){
         const low=text.toLowerCase();let i=low.indexOf(n);
-        if(i>=0&&!first)first={b,where,text,at:i};
+        if(i>=0&&!mine)mine={b,where,text,at:i};
         while(i>=0){count++;i=low.indexOf(n,i+n.length)}
       }
+      if(mine&&hits.length<4)hits.push(mine);
     });
-    if(nameAt>=0||count)out.push({t,ti,nameAt,first,count});
+    if(nameAt>=0||count)(hits.length?hits:[null]).forEach((first,k)=>out.push({t,ti,nameAt,first,count:k?0:count,more:k>0}));
   });
-  return out.sort((a,b)=>+(b.nameAt>=0)-+(a.nameAt>=0)||a.ti-b.ti); // tabs whose name matches come first
+  return out.sort((a,b)=>+(b.nameAt>=0)-+(a.nameAt>=0)||a.ti-b.ti);   // (stable: a tab's rows stay together, in box order) // tabs whose name matches come first
 }
 function drawResults(){
   const query=q.value.trim();
@@ -1106,7 +1139,7 @@ function drawResults(){
   SR=findAll(query);SI=Math.min(SI,Math.max(0,SR.length-1));
   sres.innerHTML=SR.length?SR.map((r,i)=>{
     const c=tabColor(r.t,r.ti);
-    const name=r.nameAt>=0?snippet(r.t.name,r.nameAt,query.length):esc(r.t.name);
+    const name=r.nameAt>=0?snippet(r.t.name,r.nameAt,query.length):esc(r.t.name);   // a tab's later rows repeat its name so each row stands on its own
     const sub=r.first?esc(r.first.b.title)+": "+(r.first.where==="title"?"(box title)":snippet(r.first.text,r.first.at,query.length)):"Tab name";
     return`<button type="button" class="sr" role="option" id="sr${i}" data-i="${i}" aria-selected="${i===SI}"><i class="dot" style="background:${c}"></i>`+
       `<span class="sn"><b>${name}</b><span class="sx">${sub}</span></span><span class="sc">${r.count?r.count+(r.count===1?" match":" matches"):""}</span></button>`;

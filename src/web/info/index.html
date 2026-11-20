@@ -35,6 +35,7 @@
       <div class="sres" id="sres" role="listbox" hidden></div>
     </div>
     <div class="menus">
+      <button class="mbtn" id="sortBtn" type="button" data-hub="hide" aria-pressed="false">Sort: Tab Order</button>
       <button class="mbtn themebtn" id="themeBtn" type="button" data-hub="hide"></button>
       <button class="mbtn" id="editBtn" type="button" data-hub="toggle">Edit</button>
     </div>
@@ -62,7 +63,7 @@
 
 <template id="boxTpl">
   <section class="box">
-    <div class="nh"><h2 class="title"></h2><button type="button" class="edit" data-r="copy">Copy</button><button type="button" class="edit" data-r="edit">Edit</button><button type="button" class="edit cfg" data-r="cfg" title="Box Settings" aria-label="Box Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h3M13 12h7M4 17h10M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg></button><span class="meta"></span></div>
+    <div class="nh"><h2 class="title"></h2><span class="chips"></span><button type="button" class="edit" data-r="copy">Copy</button><button type="button" class="edit" data-r="edit">Edit</button><button type="button" class="edit cfg" data-r="cfg" title="Box Settings" aria-label="Box Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h3M13 12h7M4 17h10M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg></button><span class="meta"></span></div>
     <div class="info rt"></div>
     <div class="form" hidden>
       <input class="tin" maxlength="80" aria-label="Box Title">
@@ -148,6 +149,9 @@
     </div>
     <div class="opts bxhcrow"><span class="lt">Headline Color</span><span class="bxhcctl"><input type="color" id="bxhc" aria-label="Headline Color"><button type="button" id="bxhcdef">Use Default</button></span></div>
     <div class="bxsw" id="bxsw" role="group" aria-label="Usual colors"></div>
+    <label class="opts bxpinrow"><span class="lt">Pin to the Top</span><input type="checkbox" class="ix-sw" id="bxpin"></label>
+    <div class="opts bxhcrow"><span class="lt">Reminder</span><span class="bxhcctl"><input type="date" id="bxrem" aria-label="Reminder Date"><button type="button" id="bxremclear">Clear</button></span></div>
+    <p class="hint" id="bxremhint"></p>
     <div class="crow"><span id="bxpos"></span><button type="button" id="bxleft">Move Earlier</button><button type="button" id="bxright">Move Later</button></div>
     <p id="bxmsg"></p>
     <div class="act"><button type="button" class="danger" id="bxdel" data-hold title="Hold to delete">Delete Box</button><button type="button" id="bxcancel">Cancel</button><button type="submit" class="pri" id="bxsave">Save</button></div>

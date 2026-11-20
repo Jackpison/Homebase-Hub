@@ -26,7 +26,8 @@ function renderBox(b){
   e.info.classList.toggle("can-tick",canTick());
   if(HL&&b.notes.trim())markText(e.info,HL);
   e.meta.textContent=busy.has(b.key)?"Saving…":b.saved?"Updated "+when(b.saved):"";
-  const tb=TABS.find(x=>x.id===b.tabId);if(tb)renderOutline(tb);
+  drawChips(b);
+  const tb=TABS.find(x=>x.id===b.tabId);if(tb){renderOutline(tb);applyOrder(tb)}
 }
 
 /* load */
@@ -38,7 +39,7 @@ document.addEventListener("visibilitychange",async()=>{
   lastFetch=Date.now();
   try{const had=authed;takeData(await fetchData());if(had&&!authed){setEdit(false);setStatus("You were logged out on this device.")}}catch(e){}
 }); // true once the server has answered (or is known to be unreachable)
-const sig=d=>JSON.stringify([d.rev|0,!!d.closed,d.tabs.map(t=>[t.id,t.name,t.color||"",t.hc||"",t.layout||"",!!t.private,t.boxes.map(b=>[b.id||"",b.w||"",b.h||"",b.hc||"",b.title,b.notes,b.rev|0,b.saved|0])]),
+const sig=d=>JSON.stringify([d.rev|0,!!d.closed,d.tabs.map(t=>[t.id,t.name,t.color||"",t.hc||"",t.layout||"",!!t.private,t.boxes.map(b=>[b.id||"",b.w||"",b.h||"",b.hc||"",b.pin?1:0,b.rem||"",b.title,b.notes,b.rev|0,b.saved|0])]),
   d.page&&[d.page.title,d.page.icon,d.page.colors,!!d.page.private],d.timer]);
 // Replaces everything shown with the given data (tabs, title, icon, colors, timer).
 function applyData(d){

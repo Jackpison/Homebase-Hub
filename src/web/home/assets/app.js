@@ -1170,7 +1170,7 @@ const W_META = {
   weather:   { name:'Weather',        short:'Weather',   icon:'<path d="M8 3v1.5M3.5 8H2M4.8 4.8l1 1M12 6.5A4 4 0 0 0 5 9"/><path d="M8 20h9a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.6 1.6A2.8 2.8 0 0 0 8 20z"/>' },
 };
 let WCFG = PUB.widgets || null;   // null: a visitor, or logged out
-const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', events:[], recent:null, files:null, status:null, statusErr:'', most:null, mostErr:'' };
+const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', events:[], recent:null, files:null, status:null, statusErr:'', most:null, mostErr:'', rem:[] };
 let wOpen = '', calMonth = '';
 
 /* dates: Tasks uses the site's time zone (Settings > General), so "today" here is the same day as on the Tasks page */
@@ -1261,6 +1261,15 @@ function billsNow(){
 }
 function moneyW(v, c){ try { return new Intl.NumberFormat(c === 'INR' ? 'en-IN' : undefined, c ? { style:'currency', currency:c, maximumFractionDigits:2, minimumFractionDigits:0 } : { maximumFractionDigits:2 }).format(v); } catch { return String(v); } }
 const dShortW = s => dParse(s).toLocaleDateString(undefined, { day:'numeric', month:'short' });
+/* (1.82.6) Info reminders: boxes with a reminder date that has come (never from a locked tab) show in Today */
+async function loadRem(){
+  try {
+    const j = await siteJSON('../info/api.php'), t = siteToday(), out = [];
+    for (const tab of j.tabs || []) if (!tab.enc) for (const b of tab.boxes || []) if (b && /^\d{4}-\d{2}-\d{2}$/.test(b.rem || '') && b.rem <= t) out.push({ tab:tab.id, id:b.id, n:String(b.title || 'Box').slice(0, 80), d:b.rem });
+    WD.rem = out.sort((a, b) => a.d.localeCompare(b.d)).slice(0, 8);
+  } catch { WD.rem = []; }
+  renderWidgets();
+}
 async function loadInfo(){
   try { WD.info = await siteJSON('../info/api.php'); WD.infoErr = ''; } catch (e){ WD.infoErr = e.message; }
   renderWidgets();
@@ -1294,6 +1303,7 @@ function loadWidgets(){
   if (wOn('files')) loadFilesW();
   if (wOn('status')) loadStatus();
   if (wOn('most')) loadMost();
+  if (wOn('today')) loadRem();
   if (wOn('focus')) focusResume();
   if (wOn('note') && WCFG.note.box) loadInfo();
   if (wOn('tools')) loadTools();
@@ -1559,7 +1569,8 @@ function panelHTML(id){
       return `<label class="wrow${late > 0 ? ' late' : ''}"><input type="checkbox" data-done="${esc(x.id)}" data-due="${esc(x.due)}"><span class="wr-n">${esc(x.name)}</span>${when ? `<span class="wr-t">${esc(when)}</span>` : ''}</label>`;
     }).join('');
     const evs = (WD.events || []).map(e => `<div class="wrow wev" style="--ec:${esc(e.cal.color)}"><span class="wr-n">${esc(e.s)}</span><span class="wr-t">${esc(e.t || 'All day')} · ${esc(e.cal.name)}</span></div>`).join('');
-    return `<div class="wlist">${rows || (evs ? '' : '<p class="wmsg">Nothing due today.</p>')}${evs ? '<p class="wmsg small">From Your Calendars</p>' + evs : ''}</div>
+    const rems = (WD.rem || []).map(x => `<a class="wrow${x.d < t ? ' late' : ''}" href="../info/#${encodeURIComponent(x.tab)}"><span class="wr-n">${esc(x.n)}</span><span class="wr-t">${x.d === t ? 'Reminder today' : 'Reminder · ' + esc(dShortW(x.d))}</span></a>`).join('');
+    return `<div class="wlist">${rows || (evs || rems ? '' : '<p class="wmsg">Nothing due today.</p>')}${rems ? '<p class="wmsg small">Reminders From Info</p>' + rems : ''}${evs ? '<p class="wmsg small">From Your Calendars</p>' + evs : ''}</div>
       <form class="wqa" id="wQaForm"><input type="text" id="wQa" maxlength="300" autocomplete="off" placeholder="+ Add a task, press Enter" aria-label="Quick Add" aria-describedby="wQaHint"></form>
       <p class="wmsg small" id="wQaHint">For example: Pay rent 5 Nov, or Netflix 649 monthly</p>${more('../tasks/', 'Open Tasks')}`;
   }
@@ -1947,7 +1958,7 @@ addEventListener('pagehide', () => savePad(true));
 /* logged in or out after the page loaded (Edit, Log Out, or another tab) */
 function setWidgets(cfg){
   WCFG = cfg || null;
-  if (!WCFG){ Object.assign(WD, { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', most:null, mostErr:'' }); wOpen = ''; }
+  if (!WCFG){ Object.assign(WD, { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', most:null, mostErr:'', rem:[] }); wOpen = ''; }
   renderWidgets();
   loadWidgets();
 }

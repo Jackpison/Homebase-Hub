@@ -18,7 +18,7 @@ t('the six widgets of 1.82.6 are known and kept in a saved list (a layout with t
   count(array_intersect(['most', 'focus', 'habits', 'search', 'year', 'convert'], WIDGET_IDS)) === 6
   && clean_widgets(['list' => [['id' => 'focus', 'on' => true], ['id' => 'year', 'on' => false]]])['list'][0] === ['id' => 'focus', 'on' => true]
   && clean_widgets(['list' => [['id' => 'focus', 'on' => true]]])['list'][1]['id'] === 'today'
-  && clean_layout(['pos' => ['cards' => ['habits' => ['x' => 3, 'y' => 4]]]])['pos']['cards']['habits'] === ['x' => 3, 'y' => 4]);
+  && json_decode(json_encode(clean_layout(['pos' => ['cards' => ['habits' => ['x' => 3, 'y' => 4]]]])['pos']), true)['cards']['habits'] === ['x' => 3, 'y' => 4]);
 t('Show Widgets is on at first, and can be turned off', clean_widgets([])['show'] === true && clean_widgets(['show' => false])['show'] === false);
 t('Glass Tint is Light at first, keeps Dark or Solid, and anything else falls back to Light',
   clean_site([])['panel']['tint'] === 'light' && clean_site(['panel' => ['tint' => 'solid']])['panel']['tint'] === 'solid' && clean_site(['panel' => ['tint' => 'pink']])['panel']['tint'] === 'light');

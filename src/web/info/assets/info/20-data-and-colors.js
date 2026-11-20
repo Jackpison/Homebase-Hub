@@ -3,12 +3,12 @@ function mkBox(tabId,k,src,enc){
   src=src||{};
   // the two boxes of older pages are 0 and 1 (their drafts keep their names); every other box gets a random id
   const id=/^([0-9]|[a-f0-9]{8})$/.test(String(src.id))?String(src.id):(k<2?String(k):rid());
-  const b={key:tabId+"-"+id,id,tabId,k,w:okW(src.w),h:okH(src.h),hc:okColor(src.hc),title:"",notes:"",rev:0,saved:0,editing:false,theirs:null,el:null};
+  const b={key:tabId+"-"+id,id,tabId,k,w:okW(src.w),h:okH(src.h),hc:okColor(src.hc),pin:!!src.pin,rem:okRem(src.rem),title:"",notes:"",rev:0,saved:0,editing:false,theirs:null,el:null};
   intake(b,src,enc);return b;
 }
 const LAYS=["cards","doc"],okLay=v=>v==="doc"?"doc":"cards";   // how a tab is laid out: notebook cards (the default; "classic" from earlier versions is cards too) or one document
 // Boxes: a tab has 1 to MAXBOX of them, each with a stable id, and optionally a width and a height ("" = what the layout gives it)
-const MAXBOX=12,BW=["","third","half","twothirds","full"],BH=["","short","tall","xtall"],okW=v=>BW.includes(v)?v:"",okH=v=>BH.includes(v)?v:"";
+const MAXBOX=12,BW=["","third","half","twothirds","full"],BH=["","short","tall","xtall"],okRem=v=>typeof v==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(v)?v:"",okW=v=>BW.includes(v)?v:"",okH=v=>BH.includes(v)?v:"";
 const okIcon=v=>HubTabs.isIcon(v)?v:"";   // which icon a tab wears (tabs.js); empty = the document icon
 const okColor=c=>typeof c==="string"&&HUB.isHex(c)?c.toLowerCase():"";
 function mkTab(src){
@@ -30,7 +30,7 @@ function textOn(hex){
 const findBox=key=>{for(const t of TABS)for(const b of t.boxes)if(b.key===key)return b};
 // The tabs as stored: encrypted tabs keep their ciphertext, never the decrypted text.
 const stored=(t,b)=>t.enc?{title:b.ct??b.title,notes:b.cn??b.notes}:{title:b.title,notes:b.notes};
-const plainTabs=()=>TABS.map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>({...stored(t,b),id:b.id,w:b.w,h:b.h,hc:b.hc,rev:b.rev,saved:b.saved}))}));
+const plainTabs=()=>TABS.map(t=>({id:t.id,name:t.name,color:t.color,hc:t.hc,layout:t.layout,icon:t.icon,private:t.private,enc:t.enc,boxes:t.boxes.map(b=>({...stored(t,b),id:b.id,w:b.w,h:b.h,hc:b.hc,pin:b.pin,rem:b.rem,rev:b.rev,saved:b.saved}))}));
 // The copy kept in this browser for instant loading. Private tabs (and everything, when the page is private)
 // are left out, so private text is never stored on the device. The icon is stored separately and only when it changes.
 let savedIcon=null;
@@ -51,7 +51,7 @@ const normPage=p=>({title:p&&typeof p.title==="string"?p.title:"",
 function buildBox(b){
   const n=$("boxTpl").content.firstElementChild.cloneNode(true);n.dataset.key=b.key;
   const q=s=>n.querySelector(s);
-  b.el={title:q(".title"),copy:q('[data-r="copy"]'),edit:q('[data-r="edit"]'),cfg:q('[data-r="cfg"]'),meta:q(".meta"),info:q(".info"),form:q(".form"),tin:q(".tin"),
+  b.el={title:q(".title"),chips:q(".chips"),copy:q('[data-r="copy"]'),edit:q('[data-r="edit"]'),cfg:q('[data-r="cfg"]'),meta:q(".meta"),info:q(".info"),form:q(".form"),tin:q(".tin"),
         ta:q("textarea"),conflict:q(".conflict"),msg:q(".msg"),save:q('[data-r="save"]'),help:q(".mdhelp"),prev:q(".prev"),tools:q(".tools")};
   b.el.ta.addEventListener("input",()=>{grow(b.el.ta,true);saveDraftSoon(b)});
   b.el.tin.addEventListener("input",()=>saveDraftSoon(b));
@@ -83,7 +83,7 @@ function syncBoxes(t){
   // order: each box right before the Add Box tile, in list order (only boxes that are out of place are moved)
   let prev=null;
   t.boxes.forEach(b=>{const n=boxNode(b),nextWanted=prev?prev.nextElementSibling:bx.firstElementChild;if(n!==nextWanted)bx.insertBefore(n,nextWanted);prev=n});
-  add.hidden=t.boxes.length>=MAXBOX;
+  add.hidden=t.boxes.length>=MAXBOX;applyOrder(t);
   fresh.forEach(b=>renderBox(b));renderOutline(t);
 }
 /* Box headline color of a tab: set on its panel, so both headlines follow it. */

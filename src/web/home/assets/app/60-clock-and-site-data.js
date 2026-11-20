@@ -30,7 +30,7 @@ const W_META = {
   weather:   { name:'Weather',        short:'Weather',   icon:'<path d="M8 3v1.5M3.5 8H2M4.8 4.8l1 1M12 6.5A4 4 0 0 0 5 9"/><path d="M8 20h9a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.6 1.6A2.8 2.8 0 0 0 8 20z"/>' },
 };
 let WCFG = PUB.widgets || null;   // null: a visitor, or logged out
-const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', events:[], recent:null, files:null, status:null, statusErr:'', most:null, mostErr:'' };
+const WD = { tasks:null, tasksErr:'', set:{}, info:null, infoErr:'', tools:null, pad:null, padErr:'', weather:null, weatherErr:'', events:[], recent:null, files:null, status:null, statusErr:'', most:null, mostErr:'', rem:[] };
 let wOpen = '', calMonth = '';
 
 /* dates: Tasks uses the site's time zone (Settings > General), so "today" here is the same day as on the Tasks page */
@@ -121,6 +121,15 @@ function billsNow(){
 }
 function moneyW(v, c){ try { return new Intl.NumberFormat(c === 'INR' ? 'en-IN' : undefined, c ? { style:'currency', currency:c, maximumFractionDigits:2, minimumFractionDigits:0 } : { maximumFractionDigits:2 }).format(v); } catch { return String(v); } }
 const dShortW = s => dParse(s).toLocaleDateString(undefined, { day:'numeric', month:'short' });
+/* (1.82.6) Info reminders: boxes with a reminder date that has come (never from a locked tab) show in Today */
+async function loadRem(){
+  try {
+    const j = await siteJSON('../info/api.php'), t = siteToday(), out = [];
+    for (const tab of j.tabs || []) if (!tab.enc) for (const b of tab.boxes || []) if (b && /^\d{4}-\d{2}-\d{2}$/.test(b.rem || '') && b.rem <= t) out.push({ tab:tab.id, id:b.id, n:String(b.title || 'Box').slice(0, 80), d:b.rem });
+    WD.rem = out.sort((a, b) => a.d.localeCompare(b.d)).slice(0, 8);
+  } catch { WD.rem = []; }
+  renderWidgets();
+}
 async function loadInfo(){
   try { WD.info = await siteJSON('../info/api.php'); WD.infoErr = ''; } catch (e){ WD.infoErr = e.message; }
   renderWidgets();
@@ -154,6 +163,7 @@ function loadWidgets(){
   if (wOn('files')) loadFilesW();
   if (wOn('status')) loadStatus();
   if (wOn('most')) loadMost();
+  if (wOn('today')) loadRem();
   if (wOn('focus')) focusResume();
   if (wOn('note') && WCFG.note.box) loadInfo();
   if (wOn('tools')) loadTools();

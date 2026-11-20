@@ -10,17 +10,19 @@ function snippet(text,at,len){
 function findAll(query){
   const n=query.toLowerCase(),out=[];
   TABS.forEach((t,ti)=>{
-    let count=0,first=null;const nameAt=t.name.toLowerCase().indexOf(n);
+    let count=0;const hits=[],nameAt=t.name.toLowerCase().indexOf(n);
     t.boxes.forEach(b=>{
+      let mine=null;   // (1.82.6) every box with a match gets its own row (up to four per tab)
       for(const [where,text] of [["title",b.title],["text",plain(b.notes)]]){
         const low=text.toLowerCase();let i=low.indexOf(n);
-        if(i>=0&&!first)first={b,where,text,at:i};
+        if(i>=0&&!mine)mine={b,where,text,at:i};
         while(i>=0){count++;i=low.indexOf(n,i+n.length)}
       }
+      if(mine&&hits.length<4)hits.push(mine);
     });
-    if(nameAt>=0||count)out.push({t,ti,nameAt,first,count});
+    if(nameAt>=0||count)(hits.length?hits:[null]).forEach((first,k)=>out.push({t,ti,nameAt,first,count:k?0:count,more:k>0}));
   });
-  return out.sort((a,b)=>+(b.nameAt>=0)-+(a.nameAt>=0)||a.ti-b.ti); // tabs whose name matches come first
+  return out.sort((a,b)=>+(b.nameAt>=0)-+(a.nameAt>=0)||a.ti-b.ti);   // (stable: a tab's rows stay together, in box order) // tabs whose name matches come first
 }
 function drawResults(){
   const query=q.value.trim();
@@ -29,7 +31,7 @@ function drawResults(){
   SR=findAll(query);SI=Math.min(SI,Math.max(0,SR.length-1));
   sres.innerHTML=SR.length?SR.map((r,i)=>{
     const c=tabColor(r.t,r.ti);
-    const name=r.nameAt>=0?snippet(r.t.name,r.nameAt,query.length):esc(r.t.name);
+    const name=r.nameAt>=0?snippet(r.t.name,r.nameAt,query.length):esc(r.t.name);   // a tab's later rows repeat its name so each row stands on its own
     const sub=r.first?esc(r.first.b.title)+": "+(r.first.where==="title"?"(box title)":snippet(r.first.text,r.first.at,query.length)):"Tab name";
     return`<button type="button" class="sr" role="option" id="sr${i}" data-i="${i}" aria-selected="${i===SI}"><i class="dot" style="background:${c}"></i>`+
       `<span class="sn"><b>${name}</b><span class="sx">${sub}</span></span><span class="sc">${r.count?r.count+(r.count===1?" match":" matches"):""}</span></button>`;
