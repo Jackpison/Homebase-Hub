@@ -6,6 +6,7 @@ swipe in Tasks (touch), the count-up numbers in Cards, and the Presets screen wi
 the What's New light, Erase Everything, the hover glow and the edit bar. 1.67.0: the bar's colour tiles, line, search border and tray.
     python3 tests/browser/polish_test.py build/site-update-X.Y.Z.zip [--browser chromium|firefox|webkit]   (port 8979)"""
 import json, os, re, subprocess, sys
+from urllib.parse import urlparse
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
 from helpers import SEED, Site, Checks, stop_all, browser_login, wait_js, browser_name, launch, until, browser_set_passphrase, page_errors
 from playwright.sync_api import sync_playwright
@@ -456,7 +457,7 @@ try:
         mp.click('[data-fmode=short]'); f3 = mp.inner_text('#wFocusT')
         # Search: nothing is sent until Enter; Enter opens a new tab on the chosen site
         mp.click('#wDock [data-w=search]'); mp.wait_for_selector('#wSq', timeout=5000)
-        asked = []; mp.context.on('request', lambda r: asked.append(r.url) if 'duckduckgo' in r.url else None)
+        asked = []; mp.context.on('request', lambda r: asked.append(r.url) if urlparse(r.url).hostname == 'duckduckgo.com' else None)
         mp.fill('#wSq', 'homebase hub'); quiet = not asked
         with mp.context.expect_page(timeout=8000) as np2:
             mp.keyboard.press('Enter')
@@ -467,7 +468,7 @@ try:
         mc.close()
         check('P86 (1.82.6) six more Home widgets work: Year Progress shows percentages and bars; Converter turns 10 km into miles and 100 C into 212 F; Habit Streaks keeps habits and ticks after a reload; Focus Timer counts down, pauses and switches length; Search sends nothing until Enter and then opens the search in a new tab; Most Used Links opens',
               folds == [False, False, False] and all(i in have for i in ids) and yr == [3, True] and c1.startswith('6.2137') and c2.startswith('212') and h1[0] == '1 day' and h1[1] == '' and h2 == [2, 1]
-              and f0 == '25:00' and f1 != f0 and f2 == 'Start' and st == 0 and f3 == '05:00' and quiet and 'duckduckgo.com' in srch and any('q=homebase' in u for u in asked) and mu, (folds, have, yr, c1, c2, h1, h2, f0, f1, f2, st, f3, quiet, srch, mu))
+              and f0 == '25:00' and f1 != f0 and f2 == 'Start' and st == 0 and f3 == '05:00' and quiet and urlparse(srch).hostname == 'duckduckgo.com' and any('q=homebase' in u for u in asked) and mu, (folds, have, yr, c1, c2, h1, h2, f0, f1, f2, st, f3, quiet, srch, mu))
         check('P84 (1.82.1) a first-use tip shows once per visit, Got It remembers it (the next visit shows the next tip), Skip Tips stops them, and Show All Tips Again brings them back',
               bool(t1) and gone and '"seen":["' in seen1 and bool(t2) and t2 != t1 and '"off":1' in off_s and none and t3 == t1, (t1, gone, seen1, t2, off_s, none, t3))
         # ---- (1.68.5) Where > Settings Windows: the page shows through a glass window (a light layer behind it, 55% of its own colour) ----
