@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.82.8 | Home: a new theme picker in Background (a big preview and a row of round choices), tidier API Keys with Show and Hide, a roomier Widgets Card Look; Links: the hover address no longer covers extra link buttons |
 | 1.82.7 | Faster Settings, Tasks and Info: Settings opens at once instead of building every time zone first |
 | 1.82.6 | Home: six more widgets (Most Used Links, Focus Timer, Habit Streaks, Search, Year Progress, Converter) and tidier Widgets settings; Info: pin a box, reminders that show in Today, Recently Edited First, search rows for every box |
 | 1.82.5 | Hover Hints: a short sentence with a pointer when you point at a setting or a button, with an on/off switch and a speed choice in Features; the first-use tips point at what they explain; the Home bell is always in the top-right corner |
@@ -189,6 +190,21 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.82.8
+
+### Home
+
+- Background > Main has a new theme picker: one big preview of the theme in use, and a row of round choices under it. Click one to switch. Edit, Export and Remove show for the one you chose.
+- API Keys in Background > Sources now have their icon, use the full row width, and stay hidden until you press **Show**.
+- Rows added to a settings sheet after it opened now get their icon too.
+- Widgets > Card Look: the Accent Color row has room, and Corners says what it does.
+
+### Links
+
+- The site address shown on hover now sits under the link when the row has extra link buttons, so it no longer covers them.
 
 ---
 
