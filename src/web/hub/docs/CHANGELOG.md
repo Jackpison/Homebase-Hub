@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.83.1 | A bigger search box that reads Ctrl + K, a clearer dark-mode search field with no yellow glow, and a tidier Only in Tab filter |
 | 1.83.0 | A clearer search box in Light and Dark with a Ctrl K key, Quick Actions in Ctrl+K (go to a page, switch Light and Dark, Edit, Settings, Backup and more), and first-use tips in the same card look |
 | 1.82.9 | Hover Hints are now small cards with the setting's name, a clear sentence and, for switches, what it is now; 24 new hints and clearer wording for first-time users |
 | 1.82.8 | Home: a new theme picker in Background (a big preview and a row of round choices), tidier API Keys with Show and Hide, a roomier Widgets Card Look; Links: the hover address no longer covers extra link buttons |
@@ -192,6 +193,17 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.83.1
+
+### Search
+
+- The search box is half as big again, so it is easier to see and to click.
+- The key hint now reads **Ctrl + K** (**⌘ + K** on a Mac).
+- In Dark mode the search field is a lighter slate with a soft edge, so it stands out from the bar. The yellow glow is gone in both modes.
+- The **Only in Tab** filter looks the same in Light and Dark, and its list is easier to read.
 
 ---
 
