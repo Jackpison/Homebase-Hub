@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.83.0 | A clearer search box in Light and Dark with a Ctrl K key, Quick Actions in Ctrl+K (go to a page, switch Light and Dark, Edit, Settings, Backup and more), and first-use tips in the same card look |
 | 1.82.9 | Hover Hints are now small cards with the setting's name, a clear sentence and, for switches, what it is now; 24 new hints and clearer wording for first-time users |
 | 1.82.8 | Home: a new theme picker in Background (a big preview and a row of round choices), tidier API Keys with Show and Hide, a roomier Widgets Card Look; Links: the hover address no longer covers extra link buttons |
 | 1.82.7 | Faster Settings, Tasks and Info: Settings opens at once instead of building every time zone first |
@@ -191,6 +192,16 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.83.0
+
+### Everywhere
+
+- The search box in the top bar is easier to see in Light and Dark: a clear border, a readable Search, and a Ctrl K key (⌘ K on a Mac). It is a small pill that grows when you click into it.
+- Ctrl+K and the search box now also find things you can do, under Quick Actions: go to a page, switch Light and Dark, Edit This Page, Open Settings, Backup and Import, Keyboard Shortcuts, turn Hover Hints on or off, Show All Tips Again and Log Out. Click into an empty box to see them.
+- First-use tips use the same card look as Hover Hints, with a Quick Tip label that counts the tips.
 
 ---
 
