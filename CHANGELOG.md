@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.82.9 | Hover Hints are now small cards with the setting's name, a clear sentence and, for switches, what it is now; 24 new hints and clearer wording for first-time users |
 | 1.82.8 | Home: a new theme picker in Background (a big preview and a row of round choices), tidier API Keys with Show and Hide, a roomier Widgets Card Look; Links: the hover address no longer covers extra link buttons |
 | 1.82.7 | Faster Settings, Tasks and Info: Settings opens at once instead of building every time zone first |
 | 1.82.6 | Home: six more widgets (Most Used Links, Focus Timer, Habit Streaks, Search, Year Progress, Converter) and tidier Widgets settings; Info: pin a box, reminders that show in Today, Recently Edited First, search rows for every box |
@@ -190,6 +191,17 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.82.9
+
+### Everywhere
+
+- Hover Hints are now small cards: the name of the setting in bold, then one sentence. For a switch or a choice that matters at a glance, a footer shows what it is now, like On now or Off now.
+- A hint about something that contacts another website says Heads Up. A hint that shows a way to do it says Try This, and shows the key to press when there is one.
+- 24 new hints: Home Background (Slow Zoom, Darken, Change Background, keywords, Add Custom Source and more), Links, Info, Cards and Tasks.
+- Clearer wording for Hide From Visitors, Show the Bar on the Home Page, Show Widgets, Widget Style, Show the Clock, Icons from Google, Log Out and more.
 
 ---
 
