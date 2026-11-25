@@ -1188,3 +1188,6 @@ html:not([data-theme="light"]) .ix-fl select{color-scheme:dark;background:#2d2d3
 html:not([data-theme="light"]) .ix-fl select option,html:not([data-theme="light"]) .ix-fl select optgroup{background:#2d2d33;color:#f2f2f2}
 .ix-fl select optgroup{font-weight:700;font-style:normal}
 .ix-fl select option{font-weight:400;padding:6px 10px}
+
+/* (1.83.1) The Only in Tab row: the same soft box in light and dark */
+#ix-sres .ix-fx{background:color-mix(in srgb,var(--ix-tx) 6%,transparent);border:1px solid color-mix(in srgb,var(--ix-tx) 12%,transparent)}
