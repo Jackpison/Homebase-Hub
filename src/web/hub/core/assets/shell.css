@@ -1165,5 +1165,26 @@ html[data-theme="light"] #ix-ftip p{color:#5a554d}
 :is(#ix-bar,#ix-spot) .ix-search input:hover{border-color:color-mix(in srgb,var(--ix-tx) 40%,var(--ix-line2))!important}
 :is(#ix-bar,#ix-spot) .ix-search input:focus{border-color:var(--ix-accent)!important;background:var(--ix-field)!important}
 :is(#ix-bar,#ix-spot) .ix-search kbd{font:700 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ix-tx);opacity:.8;background:color-mix(in srgb,var(--ix-tx) 9%,transparent);border:1px solid color-mix(in srgb,var(--ix-tx) 22%,transparent);border-radius:6px;padding:4px 7px}
-#ix-bar .ix-search{flex:0 1 210px;max-width:210px}
-@media (prefers-reduced-motion:no-preference){#ix-bar .ix-search:focus-within{flex-basis:440px;max-width:520px}}
+#ix-bar .ix-search{flex:0 1 315px;max-width:315px}
+#ix-bar .ix-search input{height:46px;font-size:16px;padding-left:44px!important}
+#ix-bar .ix-search>svg{left:16px;width:19px;height:19px}
+#ix-bar .ix-search input::placeholder{font-size:16px}
+#ix-bar .ix-search kbd{font-size:12.5px;padding:5px 9px;right:50px}
+@media (prefers-reduced-motion:no-preference){#ix-bar .ix-search:focus-within{flex-basis:520px;max-width:600px}}
+/* (1.83.1) The search box stands out without any yellow: in dark a lighter slate field with a light edge, in light a white field; focus brightens the edge, no glow */
+html:not([data-theme="light"]) :is(#ix-bar,#ix-spot) .ix-search input{background:#2d2d33!important;border-color:rgba(255,255,255,.26)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+html:not([data-theme="light"]) :is(#ix-bar,#ix-spot) .ix-search input::placeholder{color:rgba(255,255,255,.9)}
+html:not([data-theme="light"]) :is(#ix-bar,#ix-spot) .ix-search input:hover{border-color:rgba(255,255,255,.45)!important}
+html:not([data-theme="light"]) :is(#ix-bar,#ix-spot) .ix-search>svg{color:#fff;opacity:.9}
+html:not([data-theme="light"]) :is(#ix-bar,#ix-spot) .ix-search kbd{color:#e8e8ec;opacity:1;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28)}
+:is(#ix-bar,#ix-spot) .ix-search input:focus{border-color:color-mix(in srgb,var(--ix-tx) 70%,transparent)!important;box-shadow:0 6px 18px -10px rgba(0,0,0,.55)!important}
+html:not([data-theme="light"]) :is(#ix-bar,#ix-spot) .ix-search input:focus{background:#35353c!important;border-color:rgba(255,255,255,.7)!important}
+/* (1.83.1) The "Only in Tab" list (search filters): a roomier field, a neutral focus edge, and a menu that follows Light and Dark (the browser draws the list itself, so the colors are set on the choices) */
+.ix-fl select{height:38px;border-radius:10px;font-size:14px;padding:0 10px;border:1.5px solid color-mix(in srgb,var(--ix-tx) 28%,transparent);background:var(--ix-s1);cursor:pointer;color-scheme:light}
+html:not([data-theme="light"]) .ix-fl select{color-scheme:dark;background:#2d2d33}
+.ix-fl select:hover{border-color:color-mix(in srgb,var(--ix-tx) 50%,transparent)}
+.ix-fl select:focus,.ix-fl select:focus-visible{outline:none;border-color:color-mix(in srgb,var(--ix-tx) 70%,transparent);box-shadow:none}
+.ix-fl select option,.ix-fl select optgroup{background:var(--ix-s1);color:var(--ix-tx);font-size:14px}
+html:not([data-theme="light"]) .ix-fl select option,html:not([data-theme="light"]) .ix-fl select optgroup{background:#2d2d33;color:#f2f2f2}
+.ix-fl select optgroup{font-weight:700;font-style:normal}
+.ix-fl select option{font-weight:400;padding:6px 10px}

@@ -971,7 +971,7 @@
     } else {
       html = '<button type="button" class="ix-ib ix-menu" data-ix="menu" aria-label="Pages" title="Pages">' + svg(ICON.menu) + '</button>' + brand + links +
         '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + 'Search' + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
-          '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform || '') ? '\u2318 K' : 'Ctrl K') + '</kbd></div>' +
+          '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform || '') ? '\u2318 + K' : 'Ctrl + K') + '</kbd></div>' +
         '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + theme + edit + me + '</div>';
     }
     var key = html + '|' + (S.siteName || '') + '|' + (S.logo || '');   // a new name or logo draws the bar again too
@@ -1743,7 +1743,7 @@
     var go = goKeys(), row = function (k, t) { return '<div class="ix-krow"><span>' + esc(t) + '</span><span class="ix-kk">' + k + '</span></div>'; };
     var kbd = function (a) { return a.split(' ').map(function (x) { return x === 'then' ? ' then ' : '<kbd>' + esc(x) + '</kbd>'; }).join(''); };
     openDlg('<div class="ix-ico">' + svg(ICON.keyboard) + '</div><h2>Keyboard Shortcuts</h2>' +
-      '<div class="ix-keys" tabindex="0" role="region" aria-label="Keyboard shortcuts"><h3>Anywhere</h3>' + row(kbd('/') + ' or ' + kbd('Ctrl K'), 'Search the site') + row(kbd('?'), 'Show this list') + row(kbd('Esc'), 'Close a window') +
+      '<div class="ix-keys" tabindex="0" role="region" aria-label="Keyboard shortcuts"><h3>Anywhere</h3>' + row(kbd('/') + ' or ' + kbd('Ctrl + K'), 'Search, or jump to a page or action') + row(kbd('?'), 'Show this list') + row(kbd('Esc'), 'Close a window') +
       (S.admin ? row(kbd('E'), 'Edit this page (or open the gear menu)') : '') + (SWIPE_APPS.indexOf(APP) >= 0 ? row(kbd('[') + ' and ' + kbd(']'), 'The page before or after (like a swipe on a phone)') : '') +
       '<h3>Go to a Page</h3>' + go.map(function (g) { return row(kbd('G') + ' then ' + kbd(g[0].toUpperCase()), g[1]); }).join('') +
       (PAGEKEYS[APP] ? '<h3>On This Page</h3>' + PAGEKEYS[APP].filter(function (k) { return APP !== 'home' || S.admin; }).map(function (k) { return row(kbd(k[0]), k[1]); }).join('') : '') + '</div>' +

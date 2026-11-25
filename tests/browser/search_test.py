@@ -83,8 +83,8 @@ try:
         t0 = pg.evaluate("document.documentElement.getAttribute('data-theme')")
         pg.evaluate("[...document.querySelectorAll('#ix-sres a[data-act]')].find(a => /Mode$/.test(a.querySelector('b').textContent)).click()")
         wait_js(pg, "document.documentElement.getAttribute('data-theme') !== %r" % t0, 5000)
-        check('Q12 (1.83.0) Ctrl+K opens the search with Quick Actions (switch mode, edit, settings, shortcuts); the box shows the key (Ctrl K); typing finds "Go to Info"; Switch to Dark or Light Mode switches it',
-              any(x.startswith('Switch to') for x in empty) and 'Open Settings' in empty and kbd in ('Ctrl K', '\u2318 K') and ['Go to Info', '/web/info/'] in [[a, h.replace(s.base, '')] for a, h in typed], (empty, kbd, typed))
+        check('Q12 (1.83.0) Ctrl+K opens the search with Quick Actions (switch mode, edit, settings, shortcuts); the box shows the key (Ctrl + K); typing finds "Go to Info"; Switch to Dark or Light Mode switches it',
+              any(x.startswith('Switch to') for x in empty) and 'Open Settings' in empty and kbd in ('Ctrl + K', '\u2318 + K') and ['Go to Info', '/web/info/'] in [[a, h.replace(s.base, '')] for a, h in typed], (empty, kbd, typed))
         check('Q8 no page error', not errs, errs)
         b.close()
 finally:

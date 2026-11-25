@@ -136,7 +136,7 @@
     } else {
       html = '<button type="button" class="ix-ib ix-menu" data-ix="menu" aria-label="Pages" title="Pages">' + svg(ICON.menu) + '</button>' + brand + links +
         '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + 'Search' + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
-          '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform || '') ? '\u2318 K' : 'Ctrl K') + '</kbd></div>' +
+          '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform || '') ? '\u2318 + K' : 'Ctrl + K') + '</kbd></div>' +
         '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + theme + edit + me + '</div>';
     }
     var key = html + '|' + (S.siteName || '') + '|' + (S.logo || '');   // a new name or logo draws the bar again too
