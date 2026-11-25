@@ -77,7 +77,7 @@ try:
         wait_js(pg, "!!document.querySelector('#ix-sres a[data-act]')", 6000)
         empty = pg.evaluate("[...document.querySelectorAll('#ix-sres a[data-act] b')].map(b => b.textContent)")
         kbd = pg.evaluate("document.querySelector('#ix-sbox kbd').textContent")
-        pg.fill('#ix-q', 'info'); wait_js(pg, "!!document.querySelector('#ix-sres a[data-act]')", 6000); pg.wait_for_timeout(200)
+        pg.fill('#ix-q', 'info'); wait_js(pg, "[...document.querySelectorAll('#ix-sres a[data-act] b')].some(b => b.textContent === 'Go to Info')", 6000)
         typed = pg.evaluate("[...document.querySelectorAll('#ix-sres a[data-act]')].map(a => [a.querySelector('b').textContent, a.getAttribute('href')])")
         pg.fill('#ix-q', 'mode'); wait_js(pg, "[...document.querySelectorAll('#ix-sres a[data-act] b')].some(b => /Mode$/.test(b.textContent))", 6000)
         t0 = pg.evaluate("document.documentElement.getAttribute('data-theme')")
