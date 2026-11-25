@@ -48,6 +48,23 @@
     var vis = (bt.innerText || '').trim();   // a visible name: no tooltip needed
     return vis ? null : bt;
   }
+  /* (1.82.9) A hover hint is a small glass card: the name of the setting in bold, then the sentence. Only a setting whose answer matters at a glance
+     (a switch or a choice listed in HINT_STATE) also gets a footer with what it is now, like On now or Now: Refined. Built with DOM calls, so the
+     hint text is never read as markup. */
+  function hintCard(t, bt) {
+    t.textContent = '';
+    var lab = bt.querySelector('.g-label, .ix-slabel, label'), name = lab ? (lab.firstChild ? lab.firstChild.textContent : '') : (bt.getAttribute('aria-label') || '');
+    name = (name || '').trim(); if (name.length > 40) name = '';
+    if (name) { var b = document.createElement('b'); b.className = 'hh'; b.textContent = name; t.appendChild(b); }
+    var kind = bt.getAttribute('data-hint-kind');
+    if (kind) { var k = document.createElement('i'); k.className = 'hl'; k.textContent = kind === 'warn' ? 'Heads up' : 'Try this'; t.appendChild(k); }
+    var p = document.createElement('p'); p.className = 'hp'; p.textContent = bt.getAttribute('data-hint'); t.appendChild(p);
+    if (bt.hasAttribute('data-hint-key')) { var kb = document.createElement('kbd'); kb.className = 'hk'; kb.textContent = bt.getAttribute('data-hint-key'); t.appendChild(kb); }
+    if (bt.hasAttribute('data-hint-state')) {
+      var cb = bt.querySelector('input[type=checkbox]'), sel = bt.querySelector('select'), now = cb ? (cb.checked ? 'On now' : 'Off now') : sel && sel.selectedIndex >= 0 ? 'Now: ' + sel.options[sel.selectedIndex].text : '';
+      if (now) { var f = document.createElement('div'); f.className = 'hf'; f.textContent = now; t.appendChild(f); }
+    }
+  }
   function tipShow(bt) {
     var t = document.getElementById('ix-ebtip');
     if (!bt) { if (t) t.remove(); return; }
@@ -56,13 +73,13 @@
     if (t.parentNode !== host) host.appendChild(t);
     if (t._for === bt) return;
     var hint = bt.hasAttribute('data-hint');
-    t._for = bt; t.textContent = bt.getAttribute(hint ? 'data-hint' : 'data-tip'); t.className = hint ? 'hint' : ''; t.style.animationDelay = hint ? hintDelay() + 'ms' : '';
+    t._for = bt; if (hint) hintCard(t, bt); else t.textContent = bt.getAttribute('data-tip'); t.className = hint ? 'hint' : ''; t.style.animationDelay = hint ? hintDelay() + 'ms' : '';
     var r = bt.getBoundingClientRect(), below = r.top + r.height / 2 < innerHeight / 2;
     var left = Math.max(8, Math.min(innerWidth - t.offsetWidth - 8, r.left + r.width / 2 - t.offsetWidth / 2));
     t.style.left = left + 'px';
     t.style.top = (below ? r.bottom + 10 : r.top - t.offsetHeight - 10) + 'px';
     t.style.setProperty('--ix-ax', Math.round(r.left + r.width / 2 - left) + 'px');
-    t.className = (below ? 'below' : '') + (bt.closest('#ix-ebar') ? ' eb' : '') + (hint ? ' hint' : '');
+    t.className = (below ? 'below' : '') + (bt.closest('#ix-ebar') ? ' eb' : '') + (hint ? ' hint' : '') + (hint && bt.getAttribute('data-hint-kind') ? ' k-' + bt.getAttribute('data-hint-kind') : '');
   }
   ['mouseover', 'focusin'].forEach(function (k) { document.addEventListener(k, function (e) { tipShow(tipTarget(e.target)); }, true); });
   ['mouseout', 'focusout'].forEach(function (k) { document.addEventListener(k, function (e) { var to = tipTarget(e.relatedTarget); if (!to || to !== tipTarget(e.target)) tipShow(to); }, true); });

@@ -448,6 +448,17 @@ html[data-theme="light"] #ix-ebtip{background:rgba(250,249,247,.94);color:#1d1a1
 @keyframes ix-tipin{from{opacity:0;transform:translateY(3px)}}
 /* (1.82.5) a hover hint: a short sentence that wraps, with the same pointer as the other tooltips */
 #ix-ebtip.hint{white-space:normal;max-width:min(280px,calc(100vw - 24px));font-weight:500;font-size:13px;line-height:1.4;padding:9px 13px;text-align:left}
+/* (1.82.9) the hint card: icon tile and name, the sentence, then what it is now */
+#ix-ebtip.hint .hh{display:block;font-size:13px;font-weight:700;margin:0 0 3px}
+#ix-ebtip.hint .hp{margin:0}
+#ix-ebtip.hint .hl{display:block;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ix-accent,#ffc21a);margin:0 0 2px}
+#ix-ebtip.hint.k-warn{border-left:3px solid #ff9f43}
+#ix-ebtip.hint.k-warn .hl{color:#ff9f43}
+#ix-ebtip.hint .hk{display:inline-block;margin-top:7px;padding:1px 7px;border-radius:6px;background:rgba(255,255,255,.12);font:600 11px ui-monospace,SFMono-Regular,Menlo,monospace;color:inherit}
+html[data-theme="light"] #ix-ebtip.hint .hk{background:rgba(0,0,0,.08)}
+html[data-theme="light"] #ix-ebtip.hint.k-warn .hl{color:#b35900}
+#ix-ebtip.hint .hf{margin:8px -13px -9px;padding:6px 13px;border-top:1px solid rgba(255,255,255,.1);font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--ix-accent,#ffc21a)}
+html[data-theme="light"] #ix-ebtip.hint .hf{border-top-color:rgba(0,0,0,.1);color:#8a5a00}
 #ix-ebtip.below{animation-name:ix-tipdn}@keyframes ix-tipdn{from{opacity:0;transform:translateY(-3px)}}
 @media (prefers-reduced-motion:reduce){#ix-ebtip{animation:none}}
 body.boxedit #ix-ebar{display:none}

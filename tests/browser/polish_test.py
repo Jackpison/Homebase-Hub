@@ -415,6 +415,12 @@ try:
             tpg.mouse.move(5, 5); tpg.hover('.ix-srow:has(#sVisits) label')
             hint = until(lambda: tpg.evaluate("(() => { const t = document.getElementById('ix-ebtip'); return t && t.className.includes('hint') && t.closest('dialog') ? [t.textContent, getComputedStyle(t, '::after').content, t.getBoundingClientRect().width <= 281] : null; })()"), 1500)
             if hint: break
+        card_h = tpg.evaluate("(() => { const t = document.getElementById('ix-ebtip'); return t ? [!!t.querySelector('b.hh'), (t.querySelector('.hf') || {}).textContent || '', t.querySelector('.hp') ? t.querySelector('.hp').textContent : ''] : null; })()")
+        warn_h = None
+        for _try in range(3):
+            tpg.mouse.move(5, 5); tpg.hover('.ix-srow:has(#sWebIcons) label')
+            warn_h = until(lambda: tpg.evaluate("(() => { const t = document.getElementById('ix-ebtip'); return t && t.classList.contains('k-warn') ? [(t.querySelector('.hl') || {}).textContent, (t.querySelector('.hf') || {}).textContent || ''] : null; })()"), 1500)
+            if warn_h: break
         dbg_h = tpg.evaluate("(() => { const t = document.getElementById('ix-ebtip'); const r = document.querySelector('.ix-srow:has(#sVisits)'); return [t ? [t.className, t.parentNode.tagName] : null, r ? r.hasAttribute('data-hint') : 'no row', document.querySelectorAll('[data-hint]').length]; })()")
         tpg.evaluate("localStorage.setItem('ix-hints', JSON.stringify({off: 1}))"); tpg.mouse.move(5, 5); tpg.hover('.ix-srow:has(#sHost) label')
         until(lambda: tpg.evaluate('performance.now()') > 0, 500, 100)
@@ -422,6 +428,8 @@ try:
         tc.close()
         check('P85 (1.82.5) a hover hint shows a sentence in a bubble with a pointer inside the open dialog, and Hover Hints off stops it; a first-use tip has a pointer too',
               bool(hint) and 'counts' in hint[0].lower() and hint[1] != 'none' and hint[2] and gone_h and bool(arrow) and arrow[0] and arrow[1] != 'none', (hint, gone_h, arrow, dbg_h))
+        check('P88 (1.82.9) a hover hint is a small card: the setting name in bold, the sentence, and (for a switch) what it is now; a caution hint says Heads Up and has its own edge',
+              bool(card_h) and card_h[0] and card_h[1] in ('On now', 'Off now') and 'counts' in card_h[2].lower() and bool(warn_h) and warn_h[0] == 'Heads up' and warn_h[1] in ('On now', 'Off now'), (card_h, warn_h))
         # ---- (1.82.6) six more Home widgets: Most Used Links, Focus Timer, Habit Streaks, Search, Year Progress, Converter ----
         mc = b.new_context(viewport={'width': 1440, 'height': 900}); mc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('ix-seen-ver','9.9.9');localStorage.setItem('ix-tips',JSON.stringify({off:1}))}catch(e){}")
         mp = mc.new_page(); page_errors(mp, errs); browser_login(mp, s.base)

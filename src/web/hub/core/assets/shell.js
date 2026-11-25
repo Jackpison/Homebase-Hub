@@ -883,6 +883,23 @@
     var vis = (bt.innerText || '').trim();   // a visible name: no tooltip needed
     return vis ? null : bt;
   }
+  /* (1.82.9) A hover hint is a small glass card: the name of the setting in bold, then the sentence. Only a setting whose answer matters at a glance
+     (a switch or a choice listed in HINT_STATE) also gets a footer with what it is now, like On now or Now: Refined. Built with DOM calls, so the
+     hint text is never read as markup. */
+  function hintCard(t, bt) {
+    t.textContent = '';
+    var lab = bt.querySelector('.g-label, .ix-slabel, label'), name = lab ? (lab.firstChild ? lab.firstChild.textContent : '') : (bt.getAttribute('aria-label') || '');
+    name = (name || '').trim(); if (name.length > 40) name = '';
+    if (name) { var b = document.createElement('b'); b.className = 'hh'; b.textContent = name; t.appendChild(b); }
+    var kind = bt.getAttribute('data-hint-kind');
+    if (kind) { var k = document.createElement('i'); k.className = 'hl'; k.textContent = kind === 'warn' ? 'Heads up' : 'Try this'; t.appendChild(k); }
+    var p = document.createElement('p'); p.className = 'hp'; p.textContent = bt.getAttribute('data-hint'); t.appendChild(p);
+    if (bt.hasAttribute('data-hint-key')) { var kb = document.createElement('kbd'); kb.className = 'hk'; kb.textContent = bt.getAttribute('data-hint-key'); t.appendChild(kb); }
+    if (bt.hasAttribute('data-hint-state')) {
+      var cb = bt.querySelector('input[type=checkbox]'), sel = bt.querySelector('select'), now = cb ? (cb.checked ? 'On now' : 'Off now') : sel && sel.selectedIndex >= 0 ? 'Now: ' + sel.options[sel.selectedIndex].text : '';
+      if (now) { var f = document.createElement('div'); f.className = 'hf'; f.textContent = now; t.appendChild(f); }
+    }
+  }
   function tipShow(bt) {
     var t = document.getElementById('ix-ebtip');
     if (!bt) { if (t) t.remove(); return; }
@@ -891,13 +908,13 @@
     if (t.parentNode !== host) host.appendChild(t);
     if (t._for === bt) return;
     var hint = bt.hasAttribute('data-hint');
-    t._for = bt; t.textContent = bt.getAttribute(hint ? 'data-hint' : 'data-tip'); t.className = hint ? 'hint' : ''; t.style.animationDelay = hint ? hintDelay() + 'ms' : '';
+    t._for = bt; if (hint) hintCard(t, bt); else t.textContent = bt.getAttribute('data-tip'); t.className = hint ? 'hint' : ''; t.style.animationDelay = hint ? hintDelay() + 'ms' : '';
     var r = bt.getBoundingClientRect(), below = r.top + r.height / 2 < innerHeight / 2;
     var left = Math.max(8, Math.min(innerWidth - t.offsetWidth - 8, r.left + r.width / 2 - t.offsetWidth / 2));
     t.style.left = left + 'px';
     t.style.top = (below ? r.bottom + 10 : r.top - t.offsetHeight - 10) + 'px';
     t.style.setProperty('--ix-ax', Math.round(r.left + r.width / 2 - left) + 'px');
-    t.className = (below ? 'below' : '') + (bt.closest('#ix-ebar') ? ' eb' : '') + (hint ? ' hint' : '');
+    t.className = (below ? 'below' : '') + (bt.closest('#ix-ebar') ? ' eb' : '') + (hint ? ' hint' : '') + (hint && bt.getAttribute('data-hint-kind') ? ' k-' + bt.getAttribute('data-hint-kind') : '');
   }
   ['mouseover', 'focusin'].forEach(function (k) { document.addEventListener(k, function (e) { tipShow(tipTarget(e.target)); }, true); });
   ['mouseout', 'focusout'].forEach(function (k) { document.addEventListener(k, function (e) { var to = tipTarget(e.relatedTarget); if (!to || to !== tipTarget(e.target)) tipShow(to); }, true); });
@@ -1268,13 +1285,13 @@
   var HINTS = {
     /* Home: Settings */
     sTitle: 'The name in the browser tab and in the bookmark list.',
-    sPrivate: 'Visitors get a login screen instead of this page. You still see it after you log in.',
-    sHomeBar: 'Off keeps Home plain. A small corner button opens the same menu.',
-    sEditBar: 'Text shows the name of each tool. Icons Only is smaller and shows the name when you point at it.',
+    sPrivate: 'When on, only you can see this page. Visitors get a login screen first.',
+    sHomeBar: 'Shows the menu bar on Home. Turn it off for a plain page: a small corner button still opens the same menu.',
+    sEditBar: 'Icons Only is smaller, and each name shows when you point at it. Icons and Text writes the name under every tool.',
     /* Home: Widgets */
-    wShow: 'Turns the cards and the dock on or off. Your cards and notes are kept.',
-    wStyle: 'How the cards look: a dock at the side, cards on the page, or both.',
-    wClock: 'The big clock with the greeting.',
+    wShow: 'Shows or hides the cards and the dock. Nothing is deleted: your cards and notes come back when you turn it on.',
+    wStyle: 'Glass Dock keeps a few small chips under the clock, and the dock opens each card. Glance and Expand puts small cards along the bottom; click one to open it.',
+    wClock: 'The big time, date and greeting. Visitors see it even when the cards are hidden.',
     wClockPos: 'Where the clock sits. On a computer you can also drag it, or press M and move it with the arrow keys.',
     wCardsPos: 'Where the dock of cards sits. Drag a card on a computer to put it anywhere.',
     wResetLayout: 'Puts the clock and the cards back where they started. Undo is offered.',
@@ -1290,7 +1307,7 @@
     wNote: 'A note on the page. It is saved on the server like the rest of Home.',
     wZones: 'Cities for the World Clock card, one per line, like Europe/London.',
     /* Links: Settings */
-    sWebIcons: 'Off by default. Turn it on only if you accept that Google learns which sites you save.',
+    sWebIcons: 'Off by default. If you turn it on, link icons come from Google, so Google learns which sites you save.',
     sVisits: 'Counts clicks on each link. Visitors are counted too, but only you see the numbers.',
     sStyle: 'The look of the link rows. Refined is calm, the others are bolder.',
     sHost: 'Shows the address next to a link when you point at it, so you can tell similar links apart.',
@@ -1300,7 +1317,7 @@
     exportBtn: 'Downloads your links as a file you can keep or open in another browser.',
     importBtn: 'Adds links from a file you exported before. Nothing is lost: it is added to what you have.',
     importBmBtn: 'Brings in bookmarks from your browser (a bookmarks file).',
-    iconsBtn: 'Fetches the missing icons. This asks the icon service only when you press it.',
+    iconsBtn: 'Looks up icons for links that have none. It contacts the icon service, and only when you press this.',
     colorsBtn: 'Choose the colours of the page, in dark and light.',
     textBtn: 'Choose the text sizes of the page.',
     /* Info */
@@ -1317,7 +1334,7 @@
     's-soon': 'How many days ahead a task counts as Due Soon. A task’s own Remind Me comes first.',
     's-start': 'The page that opens first when you open Tasks.',
     's-week': 'The day the calendar week starts on.',
-    's-calon': 'Makes a private link that shows your due dates in Google or Apple Calendar.',
+    's-calon': 'Makes a private link so your due dates show in Google or Apple Calendar. Keep the link to yourself.',
     's-calcopy': 'Copy the link and paste it into your calendar app. Anyone with the link can see your due dates.',
     's-calnew': 'Makes a new link and stops the old one from working.',
     's-onlyme': 'Visitors must log in first. They see nothing of this page.',
@@ -1330,13 +1347,43 @@
     sort: 'Changes the order of the list. It does not move files.',
     up: 'Pick files from this device. You can also drag them onto the page.',
     mk: 'Makes a new folder here.',
+    /* (1.82.9) More hints, for first-time visitors: each says what the setting does in plain words */
+    bgMotion: 'Slowly zooms the photo so the page feels alive. Turn it off if it distracts you.',
+    bgDim: 'Darkens the picture so the clock and cards are easy to read. Raise it for bright photos.',
+    bgRotate: 'How often the background changes. On Refresh picks a new one each time you open Home.',
+    bgQuery: 'Words that decide which photos you get, like mountains or ocean. Separate them with commas.',
+    bgChance: 'How often one of your own uploaded pictures is chosen instead of an online photo.',
+    bgVideo: 'How often a video is shown instead of a still photo.',
+    addCustom: 'Adds another photo website. Most people never need this.',
+    lTitleFetch: 'Reads the page name from the web address for you. It contacts that website, and only when you press this.',
+    lIconFetch: 'Finds the small icon of this website. It asks the icon service, and only when you press this.',
+    bxpin: 'Keeps this box at the top of the page, above the others.',
+    bxrem: 'Pick a day to be reminded. Today on Home shows the box when that day comes.',
+    bxhc: 'The color of this box. Use Default goes back to the color of the page.',
+    sortBtn: 'Switch between your own order and the boxes you changed most recently.',
+    fmore: 'More ways to narrow the list, like bank, network and type.',
+    fclear: 'Removes every filter so all the cards show again.',
+    's-range': 'Which tasks show when you open the page. Where I Left Off remembers your last choice.',
+    's-sort': 'The order tasks are listed in when the page opens. Where I Left Off remembers your last choice.',
+    's-dates': 'How dates are written, like 16 Oct 2026 or Oct 16, 2026.',
+    's-cur': 'The currency shown for a task that has a price but no currency of its own.',
+    fgroup: 'Puts the tasks under headings, like Today and This Week, or by month, year or category.',
+    'e-remind': 'When to remind you before the due date. Page Default uses the choice in Tasks settings.',
+    'e-rep': 'How often the task comes back. Doesn\u2019t Repeat keeps it a one-time task.',
+    'e-on': 'For monthly or yearly tasks: the same date each time, the last day of the month, or a weekday like the 2nd Tuesday.',
+    q: 'Type to search this page. Press / to jump here from anywhere.',
     /* Everywhere */
     themeBtn: 'Switches between Light and Dark.',
     editBtn: 'Opens the tools to change this page. Press Done when you finish.',
-    settingsBtn: 'Settings for this page.',
-    logoutBtn: 'Logs you out on this device only.',
+    settingsBtn: 'Settings for this page, like its title and its look.',
+    logoutBtn: 'Logs you out on this device. Your other devices stay logged in.',
     doneBtn: 'Saves your changes and closes the edit tools.'
   };
+  /* hints whose card also shows what the setting is now (On now, Off now, Now: the choice): the ones where the answer changes what the person sees */
+  var HINT_STATE = ['sPrivate', 'sHomeBar', 'wShow', 'wClock', 'sWebIcons', 'sVisits', 'sHost', 'sMost', 'tonlyme', 's-onlyme', 'spriv', 'sStyle', 'sortSel', 'wStyle'];
+  /* how a hint card looks: warn = a caution (outside services, links that expose things), tip = a way to try it; keys = the key to press */
+  var HINT_KIND = { sWebIcons: 'warn', iconsBtn: 'warn', lTitleFetch: 'warn', lIconFetch: 'warn', 's-calon': 'warn', 's-calcopy': 'warn', qadd: 'tip', fq: 'tip', bgQuery: 'tip', wLayName: 'tip' };
+  var HINT_KEY = { qadd: 'Enter', fq: 'Esc', wClockPos: 'M', q: '/' };
   var HINT_SLOW = { fast: 120, normal: 450, slow: 900 };
   function hintPref() { try { return JSON.parse(localStorage.getItem('ix-hints') || '{}') || {}; } catch (e) { return {}; } }
   function hintSave(o) { try { localStorage.setItem('ix-hints', JSON.stringify(o)); } catch (e) { /* private window */ } }
@@ -1349,6 +1396,9 @@
       var row = el.closest('.ix-srow, .g-row') || el;
       if (row.hasAttribute('data-hint') || (row.hasAttribute('data-tip') && row === el)) return;
       row.setAttribute('data-hint', HINTS[id]);
+      if (HINT_STATE.indexOf(id) >= 0) row.setAttribute('data-hint-state', '1');
+      if (HINT_KIND[id]) row.setAttribute('data-hint-kind', HINT_KIND[id]);
+      if (HINT_KEY[id]) row.setAttribute('data-hint-key', HINT_KEY[id]);
     });
   }
   var hintsApi = {
