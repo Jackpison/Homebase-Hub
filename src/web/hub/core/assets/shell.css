@@ -1136,15 +1136,34 @@ dialog.ix-fp::backdrop{background:rgba(0,0,0,.6)}
 .corner #ix-bell.ix-bc b{top:6px;right:7px}
 
 /* (1.82.1) first-use tips */
-#ix-ftip{position:fixed;z-index:2147483005;width:min(320px,calc(100vw - 16px));padding:14px 16px;border-radius:16px;background:var(--ix-s1);color:var(--ix-tx);border:1px solid var(--ix-line2);box-shadow:0 18px 44px -10px rgba(0,0,0,.55);font:14px/1.45 var(--ix-font);animation:ix-ftipin .25s ease-out}
-#ix-ftip::after{content:"";position:absolute;left:var(--ix-ax,50%);width:12px;height:12px;margin-left:-6px;background:var(--ix-s1);transform:rotate(45deg)}
-#ix-ftip.below::after{top:-7px;border-left:1px solid var(--ix-line2);border-top:1px solid var(--ix-line2);border-radius:3px 0 0 0}
-#ix-ftip.above::after{bottom:-7px;border-right:1px solid var(--ix-line2);border-bottom:1px solid var(--ix-line2);border-radius:0 0 3px 0}
+/* (1.82.10) a first-use tip is the same glass card as a hover hint: a small label, the title, the sentence, and an accent edge on the side that faces the thing it explains */
+#ix-ftip{position:fixed;z-index:2147483005;width:min(320px,calc(100vw - 16px));padding:14px 16px;border-radius:16px;background:rgba(28,28,30,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:#f2f2f2;border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 18px 44px -10px rgba(0,0,0,.6);font:14px/1.45 var(--ix-font);animation:ix-ftipin .25s ease-out}
+#ix-ftip.below{border-top:2px solid var(--ix-accent,#ffc21a)}
+#ix-ftip.above{border-bottom:2px solid var(--ix-accent,#ffc21a)}
+#ix-ftip::after{content:"";position:absolute;left:var(--ix-ax,50%);width:12px;height:12px;margin-left:-6px;background:rgba(28,28,30,.96);transform:rotate(45deg)}
+#ix-ftip.below::after{top:-8px;border-left:2px solid var(--ix-accent,#ffc21a);border-top:2px solid var(--ix-accent,#ffc21a);border-radius:3px 0 0 0}
+#ix-ftip.above::after{bottom:-8px;border-right:2px solid var(--ix-accent,#ffc21a);border-bottom:2px solid var(--ix-accent,#ffc21a);border-radius:0 0 3px 0}
+#ix-ftip .ftl{display:block;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ix-accent,#ffc21a);margin:0 0 4px}
+html[data-theme="light"] #ix-ftip{background:rgba(250,249,247,.96);color:#1d1a16;border-color:rgba(0,0,0,.12);box-shadow:0 18px 44px -10px rgba(0,0,0,.35)}
+html[data-theme="light"] #ix-ftip::after{background:rgba(250,249,247,.98)}
+html[data-theme="light"] #ix-ftip .ftl{color:#8a5a00}
 #ix-ftip b{display:block;font-size:15px;margin-bottom:4px}
-#ix-ftip p{margin:0 0 12px;color:var(--ix-mu)}
+#ix-ftip p{margin:0 0 12px;color:rgba(242,242,242,.78)}
+html[data-theme="light"] #ix-ftip p{color:#5a554d}
+#ix-ftip .ix-btn{color:inherit}
 #ix-ftip .ix-ftip-a{display:flex;gap:8px;flex-wrap:wrap}
 @keyframes ix-ftipin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){#ix-ftip{animation:none}}
 #ix-ftip .ix-btn{font:600 13px var(--ix-font);padding:8px 14px;border-radius:10px;border:1px solid var(--ix-line2);background:var(--ix-s2,var(--ix-s1));color:var(--ix-tx);cursor:pointer}
 #ix-ftip .ix-btn.pri{background:var(--ix-accent);border-color:transparent;color:var(--ix-ink,#000)}
 #ix-ftip .ix-btn:hover{filter:brightness(1.1)}
+
+/* (1.82.10) The search box is a compact pill that is easy to see in Light and Dark: a clear border, a readable "Search" and the Ctrl K key. It grows when you click into it. */
+:is(#ix-bar,#ix-spot) .ix-search input{border:1.5px solid var(--ix-line2)!important;background:var(--ix-field)!important;color:var(--ix-tx)}
+:is(#ix-bar,#ix-spot) .ix-search input::placeholder{font-size:14px;font-weight:700;text-transform:none;letter-spacing:.01em;color:color-mix(in srgb,var(--ix-tx) 78%,transparent)}
+:is(#ix-bar,#ix-spot) .ix-search>svg{color:var(--ix-tx);opacity:.85}
+:is(#ix-bar,#ix-spot) .ix-search input:hover{border-color:color-mix(in srgb,var(--ix-tx) 40%,var(--ix-line2))!important}
+:is(#ix-bar,#ix-spot) .ix-search input:focus{border-color:var(--ix-accent)!important;background:var(--ix-field)!important}
+:is(#ix-bar,#ix-spot) .ix-search kbd{font:700 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ix-tx);opacity:.8;background:color-mix(in srgb,var(--ix-tx) 9%,transparent);border:1px solid color-mix(in srgb,var(--ix-tx) 22%,transparent);border-radius:6px;padding:4px 7px}
+#ix-bar .ix-search{flex:0 1 210px;max-width:210px}
+@media (prefers-reduced-motion:no-preference){#ix-bar .ix-search:focus-within{flex-basis:440px;max-width:520px}}

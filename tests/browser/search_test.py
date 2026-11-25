@@ -71,6 +71,20 @@ try:
         nxt = pg.url
         with pg.expect_navigation(timeout=10000): pg.keyboard.press('[')
         check('Q11 the keys ] and [ open the page after and before (what a swipe does on a phone)', '/web/info/' in nxt and '/web/links/' in pg.url, (nxt, pg.url))
+        # ---- (1.83.0) Quick Actions: Ctrl+K also finds what you can do ----
+        pg.goto(s.base + '/web/links/'); wait_js(pg, "!!document.getElementById('ix-q') && !!(window.HUB && HUB.isAdmin())", 20000)
+        pg.evaluate("document.activeElement && document.activeElement.blur()"); pg.keyboard.press('Control+k')
+        wait_js(pg, "!!document.querySelector('#ix-sres a[data-act]')", 6000)
+        empty = pg.evaluate("[...document.querySelectorAll('#ix-sres a[data-act] b')].map(b => b.textContent)")
+        kbd = pg.evaluate("document.querySelector('#ix-sbox kbd').textContent")
+        pg.fill('#ix-q', 'info'); wait_js(pg, "!!document.querySelector('#ix-sres a[data-act]')", 6000); pg.wait_for_timeout(200)
+        typed = pg.evaluate("[...document.querySelectorAll('#ix-sres a[data-act]')].map(a => [a.querySelector('b').textContent, a.getAttribute('href')])")
+        pg.fill('#ix-q', 'mode'); wait_js(pg, "[...document.querySelectorAll('#ix-sres a[data-act] b')].some(b => /Mode$/.test(b.textContent))", 6000)
+        t0 = pg.evaluate("document.documentElement.getAttribute('data-theme')")
+        pg.evaluate("[...document.querySelectorAll('#ix-sres a[data-act]')].find(a => /Mode$/.test(a.querySelector('b').textContent)).click()")
+        wait_js(pg, "document.documentElement.getAttribute('data-theme') !== %r" % t0, 5000)
+        check('Q12 (1.83.0) Ctrl+K opens the search with Quick Actions (switch mode, edit, settings, shortcuts); the box shows the key (Ctrl K); typing finds "Go to Info"; Switch to Dark or Light Mode switches it',
+              any(x.startswith('Switch to') for x in empty) and 'Open Settings' in empty and kbd in ('Ctrl K', '\u2318 K') and ['Go to Info', '/web/info/'] in [[a, h.replace(s.base, '')] for a, h in typed], (empty, kbd, typed))
         check('Q8 no page error', not errs, errs)
         b.close()
 finally:

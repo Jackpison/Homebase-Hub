@@ -4,10 +4,10 @@
   var TIPS = [
     { id: 'search', page: '*', sel: '#ix-bar [data-ix="search"]', title: 'Search Everything', text: 'Press / or Ctrl + K on any page to search Links, Info, Tasks and Tools at once.' },
     { id: 'edit', page: '*', sel: '#ix-bar [data-ix="edit"]', title: 'Edit This Page', text: 'Press the pencil to change this page. Its own tools appear in a bar at the bottom.' },
-    { id: 'theme', page: '*', sel: '#ix-bar [data-ix="theme"]', title: 'Light or Dark', text: 'Switch between Light and Dark here. Settings, Appearance holds colours, glass and sizes.' },
+    { id: 'theme', page: '*', sel: '#ix-bar [data-ix="theme"]', title: 'Light or Dark', text: 'Switch between Light and Dark here. Settings, Appearance holds colors, glass and sizes.' },
     { id: 'home-place', page: 'home', sel: '#wFree .wcard, #wCards .wcard, #clock', title: 'Put Widgets Anywhere', text: 'On a computer, drag a card to any place on the page, drag the little corner to resize it, and drag the clock by its handle. Alt with an arrow key moves it a step.' },
     { id: 'home-edit', page: 'home', sel: '#editBtn, #ix-bar [data-ix="edit"]', title: 'Press E to Edit', text: 'The E key opens Edit on Home: widgets, background and the look of the cards.' },
-    { id: 'links-tabs', page: 'links', sel: '#tabs', title: 'Tabs and Categories', text: 'Links live in tabs. Open the pencil menu to add tabs, import bookmarks, fetch icons and change colours.' },
+    { id: 'links-tabs', page: 'links', sel: '#tabs', title: 'Tabs and Categories', text: 'Links live in tabs. Open the pencil menu to add tabs, import bookmarks, fetch icons and change colors.' },
     { id: 'backup', page: '*', sel: '#ix-bar [data-ix="backup"]', title: 'Backup and Import', text: 'Make a copy of your whole site here, or bring in bookmarks and files from elsewhere. A copy is also kept just before every update, so Go Back works.' },
     { id: 'menu', page: '*', sel: '#ix-bar [data-ix="menu"], #ix-bar [data-ix="sheet"]', title: 'Settings and Help', text: 'Settings, Features, Health and Logs live here. Features shows what each page can do, and brings these tips back.' },
     { id: 'filters', page: '*', sel: '#ix-bar [data-ix="filters"]', title: 'Search Options', text: 'Choose where the search looks, so Links, Info, Tasks and Tools do not all answer at once.' },
@@ -50,8 +50,8 @@
     });
     if (!pick) return;
     var el = document.createElement('div'); el.id = 'ix-ftip'; el.dataset.tip = pick.id; el.setAttribute('role', 'status');
-    el.innerHTML = '<b></b><p></p><div class="ix-ftip-a"><button type="button" class="ix-btn pri" data-ix-tip="ok">Got It</button><button type="button" class="ix-btn" data-ix-tip="off">Skip Tips</button></div>';
-    el.querySelector('b').textContent = pick.title; el.querySelector('p').textContent = pick.text;
+    el.innerHTML = '<i class="ftl"></i><b></b><p></p><div class="ix-ftip-a"><button type="button" class="ix-btn pri" data-ix-tip="ok">Got It</button><button type="button" class="ix-btn" data-ix-tip="off">Skip Tips</button></div>';
+    el.querySelector('.ftl').textContent = 'Quick Tip · ' + Math.min(seen.length + 1, TIPS.length) + ' of ' + TIPS.length; el.querySelector('b').textContent = pick.title; el.querySelector('p').textContent = pick.text;
     el.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('[data-ix-tip]') : null; if (!b) return; if (b.dataset.ixTip === 'off') tipsApi.setOff(true); firstTipHide(true); });
     document.body.appendChild(el);
     var r = target.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, below = r.bottom + 12 + h < innerHeight;

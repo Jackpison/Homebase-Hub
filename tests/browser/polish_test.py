@@ -407,6 +407,7 @@ try:
         tpg.reload(); until(lambda: tpg.evaluate('performance.now()') > 4500, 8000, 250); none = tpg.evaluate("!document.getElementById('ix-ftip')")
         tpg.evaluate("window.__ixShell.tips.reset()"); tpg.reload(); t3 = until(lambda: tpg.evaluate("(document.getElementById('ix-ftip') || {}).textContent || ''"), 9000)
         arrow = tpg.evaluate("(() => { const e = document.getElementById('ix-ftip'); return e ? [/below|above/.test(e.className), getComputedStyle(e, '::after').content, e.style.getPropertyValue('--ix-ax')] : null; })()")
+        tip_l = tpg.evaluate("(document.querySelector('#ix-ftip .ftl') || {}).textContent || ''")
         # ---- (1.82.5) hover hints: a sentence in the tooltip bubble with a pointer, drawn inside an open dialog; Features turns them off ----
         tpg.evaluate("localStorage.removeItem('ix-hints')"); tpg.reload(); wait_js(tpg, "document.querySelectorAll('.cat').length > 0", 20000)
         tpg.evaluate("document.getElementById('settingsBtn').click()"); tpg.wait_for_selector('#setDlg[open]')
@@ -428,8 +429,8 @@ try:
         tc.close()
         check('P85 (1.82.5) a hover hint shows a sentence in a bubble with a pointer inside the open dialog, and Hover Hints off stops it; a first-use tip has a pointer too',
               bool(hint) and 'counts' in hint[0].lower() and hint[1] != 'none' and hint[2] and gone_h and bool(arrow) and arrow[0] and arrow[1] != 'none', (hint, gone_h, arrow, dbg_h))
-        check('P88 (1.82.9) a hover hint is a small card: the setting name in bold, the sentence, and (for a switch) what it is now; a caution hint says Heads Up and has its own edge',
-              bool(card_h) and card_h[0] and card_h[1] in ('On now', 'Off now') and 'counts' in card_h[2].lower() and bool(warn_h) and warn_h[0] == 'Heads up' and warn_h[1] in ('On now', 'Off now'), (card_h, warn_h))
+        check('P88 (1.82.9) a hover hint is a small card: the setting name in bold, the sentence, and (for a switch) what it is now; a caution hint says Heads Up and has its own edge; a first-use tip wears the same card with a Quick Tip label',
+              bool(card_h) and card_h[0] and card_h[1] in ('On now', 'Off now') and 'counts' in card_h[2].lower() and bool(warn_h) and warn_h[0] == 'Heads up' and warn_h[1] in ('On now', 'Off now') and tip_l.startswith('Quick Tip'), (card_h, warn_h, tip_l))
         # ---- (1.82.6) six more Home widgets: Most Used Links, Focus Timer, Habit Streaks, Search, Year Progress, Converter ----
         mc = b.new_context(viewport={'width': 1440, 'height': 900}); mc.add_init_script("try{sessionStorage.setItem('hl-welcomed','1');localStorage.setItem('ix-seen-ver','9.9.9');localStorage.setItem('ix-tips',JSON.stringify({off:1}))}catch(e){}")
         mp = mc.new_page(); page_errors(mp, errs); browser_login(mp, s.base)

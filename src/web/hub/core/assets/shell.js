@@ -971,7 +971,7 @@
     } else {
       html = '<button type="button" class="ix-ib ix-menu" data-ix="menu" aria-label="Pages" title="Pages">' + svg(ICON.menu) + '</button>' + brand + links +
         '<div class="ix-search" id="ix-sbox">' + svg(ICON.search) + '<input type="search" id="ix-q" placeholder="' + 'Search' + '" autocomplete="off" spellcheck="false" aria-label="Search the Whole Site">' +
-          '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>/</kbd></div>' +
+          '<button type="button" class="ix-fbtn" data-ix="filters" aria-label="Search Options" title="Search Options">' + svg(ICON.filter) + '</button><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform || '') ? '\u2318 K' : 'Ctrl K') + '</kbd></div>' +
         '<div class="ix-tools">' + iconBtn('search', 'Search', toolTile('search', svg(ICON.search)), 'ix-sbtn') + theme + edit + me + '</div>';
     }
     var key = html + '|' + (S.siteName || '') + '|' + (S.logo || '');   // a new name or logo draws the bar again too
@@ -1221,10 +1221,10 @@
   var TIPS = [
     { id: 'search', page: '*', sel: '#ix-bar [data-ix="search"]', title: 'Search Everything', text: 'Press / or Ctrl + K on any page to search Links, Info, Tasks and Tools at once.' },
     { id: 'edit', page: '*', sel: '#ix-bar [data-ix="edit"]', title: 'Edit This Page', text: 'Press the pencil to change this page. Its own tools appear in a bar at the bottom.' },
-    { id: 'theme', page: '*', sel: '#ix-bar [data-ix="theme"]', title: 'Light or Dark', text: 'Switch between Light and Dark here. Settings, Appearance holds colours, glass and sizes.' },
+    { id: 'theme', page: '*', sel: '#ix-bar [data-ix="theme"]', title: 'Light or Dark', text: 'Switch between Light and Dark here. Settings, Appearance holds colors, glass and sizes.' },
     { id: 'home-place', page: 'home', sel: '#wFree .wcard, #wCards .wcard, #clock', title: 'Put Widgets Anywhere', text: 'On a computer, drag a card to any place on the page, drag the little corner to resize it, and drag the clock by its handle. Alt with an arrow key moves it a step.' },
     { id: 'home-edit', page: 'home', sel: '#editBtn, #ix-bar [data-ix="edit"]', title: 'Press E to Edit', text: 'The E key opens Edit on Home: widgets, background and the look of the cards.' },
-    { id: 'links-tabs', page: 'links', sel: '#tabs', title: 'Tabs and Categories', text: 'Links live in tabs. Open the pencil menu to add tabs, import bookmarks, fetch icons and change colours.' },
+    { id: 'links-tabs', page: 'links', sel: '#tabs', title: 'Tabs and Categories', text: 'Links live in tabs. Open the pencil menu to add tabs, import bookmarks, fetch icons and change colors.' },
     { id: 'backup', page: '*', sel: '#ix-bar [data-ix="backup"]', title: 'Backup and Import', text: 'Make a copy of your whole site here, or bring in bookmarks and files from elsewhere. A copy is also kept just before every update, so Go Back works.' },
     { id: 'menu', page: '*', sel: '#ix-bar [data-ix="menu"], #ix-bar [data-ix="sheet"]', title: 'Settings and Help', text: 'Settings, Features, Health and Logs live here. Features shows what each page can do, and brings these tips back.' },
     { id: 'filters', page: '*', sel: '#ix-bar [data-ix="filters"]', title: 'Search Options', text: 'Choose where the search looks, so Links, Info, Tasks and Tools do not all answer at once.' },
@@ -1267,8 +1267,8 @@
     });
     if (!pick) return;
     var el = document.createElement('div'); el.id = 'ix-ftip'; el.dataset.tip = pick.id; el.setAttribute('role', 'status');
-    el.innerHTML = '<b></b><p></p><div class="ix-ftip-a"><button type="button" class="ix-btn pri" data-ix-tip="ok">Got It</button><button type="button" class="ix-btn" data-ix-tip="off">Skip Tips</button></div>';
-    el.querySelector('b').textContent = pick.title; el.querySelector('p').textContent = pick.text;
+    el.innerHTML = '<i class="ftl"></i><b></b><p></p><div class="ix-ftip-a"><button type="button" class="ix-btn pri" data-ix-tip="ok">Got It</button><button type="button" class="ix-btn" data-ix-tip="off">Skip Tips</button></div>';
+    el.querySelector('.ftl').textContent = 'Quick Tip · ' + Math.min(seen.length + 1, TIPS.length) + ' of ' + TIPS.length; el.querySelector('b').textContent = pick.title; el.querySelector('p').textContent = pick.text;
     el.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('[data-ix-tip]') : null; if (!b) return; if (b.dataset.ixTip === 'off') tipsApi.setOff(true); firstTipHide(true); });
     document.body.appendChild(el);
     var r = target.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, below = r.bottom + 12 + h < innerHeight;
@@ -1548,6 +1548,40 @@
       (SF_DEFAULT() ? '' : '<button type="button" class="ix-reset ix-more" data-sf="reset">Reset</button>') + '</div>' +
       (tabs ? '<div class="ix-fx">' + tabs + '</div>' : '') + '</div>';
   }
+  /* (1.82.10) Quick Actions: Ctrl+K (and the search box) also finds what you can DO, not only what you saved: go to a page, switch Light and Dark, open Edit,
+     Settings or Backup, the keyboard shortcuts, turn hints and tips on or off, log out. Each is a row; a row with an address just goes there. */
+  function actionList() {
+    var out = [], adm = S.admin, dark = themeNow() === 'light';
+    out.push({ k: 'theme', t: 'Switch to ' + (dark ? 'Dark' : 'Light') + ' Mode', s: 'Look', w: 'theme dark light mode night day appearance colors' });
+    if (adm && HAS_EDIT) out.push({ k: 'edit', t: 'Edit This Page', s: 'Action', w: 'edit change pencil arrange' });
+    if (adm) out.push({ k: 'settings', t: 'Open Settings', s: 'Action', w: 'settings preferences options gear', href: ROOT + 'web/settings/' });
+    if (adm) out.push({ k: 'backup', t: 'Backup and Import', s: 'Action', w: 'backup import export restore download save copy' });
+    out.push({ k: 'keys', t: 'Keyboard Shortcuts', s: 'Help', w: 'keys keyboard shortcuts hotkeys help', href: '#ix-keys' });
+    if (adm) out.push({ k: 'hints', t: (hintsApi.isOn() ? 'Turn Hover Hints Off' : 'Turn Hover Hints On'), s: 'Help', w: 'hints hover help tooltips explain' });
+    if (adm) out.push({ k: 'tips', t: 'Show All Tips Again', s: 'Help', w: 'tips first use tour help welcome' });
+    pages().forEach(function (p) { if (p[0] !== APP) out.push({ k: 'go', t: 'Go to ' + p[1], s: 'Page', w: p[1].toLowerCase() + ' open page', href: p[2] }); });
+    if (adm) out.push({ k: 'logout', t: 'Log Out', s: 'Account', w: 'logout log out sign out leave' });
+    return out;
+  }
+  function actionsHtml(q, first, max) {
+    var ql = String(q || '').trim().toLowerCase(), words = ql ? ql.split(/\s+/) : [], list = actionList().filter(function (a) {
+      var hay = a.t.toLowerCase() + ' ' + a.w; return words.every(function (w) { return hay.indexOf(w) >= 0; });
+    });
+    if (ql) list.sort(function (a, b) { return (a.t.toLowerCase().indexOf(ql) === 0 ? 0 : 1) - (b.t.toLowerCase().indexOf(ql) === 0 ? 0 : 1); });
+    list = list.slice(0, max || 5); if (!list.length) return { html: '', n: 0 };
+    return { n: list.length, html: '<div class="ix-rh">Quick Actions</div>' + list.map(function (a, i) {
+      return '<a class="ix-r ix-act" role="option" id="ix-r' + (first + i) + '" href="' + esc(a.href || '#') + '" data-act="' + a.k + '"><i class="ix-d"></i><span class="ix-rx"><b>' + esc(a.t) + '</b><span>' + esc(a.s) + '</span></span></a>';
+    }).join('') };
+  }
+  function runAction(k) {
+    var click = function (sel) { var b = document.querySelector(sel); if (b) b.click(); };
+    if (k === 'theme') setTheme(themeNow() === 'light' ? 'dark' : 'light');
+    else if (k === 'edit') click('#ix-bar [data-ix="edit"], #editBtn');
+    else if (k === 'backup') click('#ix-bar [data-ix="backup"]');
+    else if (k === 'hints') hintsApi.setOn(!hintsApi.isOn());
+    else if (k === 'tips') tipsApi.reset();
+    else if (k === 'logout') logout();
+  }
   function resultsHtml(p) {
     var r = searchResults(p), n = 0, h = '', q = p.q, ql = q.toLowerCase();
     var row = function (href, ext, lead, title, sub) {
@@ -1555,6 +1589,7 @@
     };
     // (1.65.1) "?", "keys", "shortcuts", "keyboard" or "hotkeys": the list of keyboard shortcuts comes first
     if (/^\s*\?\s*$|^keys?$|keyboard|shortcut|hotkey/i.test(q)) h += '<div class="ix-rh">Help</div>' + row('#ix-keys', false, '<i class="ix-d"></i>', 'Keyboard Shortcuts', 'Search, go to a page, edit: press ? on any page');
+    if (p.scope === 'all') { var ac = actionsHtml(q, n, 4); h += ac.html; n += ac.n; }
     var head = function (name, k) { var c = r.count[k]; return '<div class="ix-rh">' + name + (c ? ' <span class="ix-rc">' + c + '</span>' : '') + '</div>'; };
     if (r.links.length) h += head('Links', 'links') + r.links.map(function (l) {
       var ic = /^icons\//.test(l.icon) ? ROOT + 'web/hub/media/links/' + l.icon : /^https?:/.test(l.icon) ? l.icon : '';
@@ -1602,10 +1637,10 @@
       if (!p.q && !forceOpen) { panel.hidden = true; panel.innerHTML = ''; return; }
       loadSearchData().then(function () {
         if (my !== token) return;
-        var rec = p.q ? [] : recentList();
-        panel.innerHTML = filtersHtml() + (p.q ? resultsHtml(p) : rec.length ? '<div class="ix-rh">Recent Searches <button type="button" class="ix-reset ix-rclr" data-recent-clear>Clear</button></div>' +
-            rec.map(function (x, i) { return '<a class="ix-r ix-rec" role="option" id="ix-r' + i + '" href="#" data-recent="' + esc(x) + '"><i class="ix-d"></i><span class="ix-rx"><b>' + esc(x) + '</b></span></a>'; }).join('')
-          : '<div class="ix-none">Type to search links, notes, tasks, cards, files, settings and tools.</div>') +
+        var rec = p.q ? [] : recentList(), acts = p.q ? { html: '', n: 0 } : actionsHtml('', 0, 6);
+        panel.innerHTML = filtersHtml() + (p.q ? resultsHtml(p) : acts.html + (rec.length ? '<div class="ix-rh">Recent Searches <button type="button" class="ix-reset ix-rclr" data-recent-clear>Clear</button></div>' +
+            rec.map(function (x, i) { return '<a class="ix-r ix-rec" role="option" id="ix-r' + (acts.n + i) + '" href="#" data-recent="' + esc(x) + '"><i class="ix-d"></i><span class="ix-rx"><b>' + esc(x) + '</b></span></a>'; }).join('')
+          : '<div class="ix-none">Type to search links, notes, tasks, cards, files, settings and tools.</div>')) +
           (p.q || !matchMedia('(hover:hover) and (pointer:fine)').matches ? '' : '<a class="ix-khint" href="#ix-keys"><kbd>?</kbd> Keyboard Shortcuts</a>');   // (1.65.1) so the list can be found
         panel.hidden = false; idx = -1; if (p.q) { mark(0); var nr = panel.querySelectorAll('a.ix-r').length; announce(nr ? nr + (nr === 1 ? ' result' : ' results') : 'No results'); }
         if (panel.id === 'ix-sres') placePanel(input, panel);
@@ -1615,7 +1650,7 @@
       if (!panel.hidden && forceOpen) { forceOpen = false; if (!input.value.trim()) panel.hidden = true; return; }
       forceOpen = true; input.focus(); show();
     };
-    input.addEventListener('focus', function () { loadSearchData(); if (input.value.trim()) show(); else if (recentList().length) { forceOpen = true; show(); } });   // (1.72.0) empty: the recent searches
+    input.addEventListener('focus', function () { loadSearchData(); if (input.value.trim()) show(); else { forceOpen = true; show(); } });   // (1.72.0) empty: the recent searches; (1.83.0) and the Quick Actions
     input.addEventListener('input', function () { clearTimeout(t); t = setTimeout(show, 60); });
     input.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown') { e.preventDefault(); mark(idx + 1); }
@@ -1637,7 +1672,8 @@
       var rc = e.target.closest('a[data-recent]');
       if (rc) { e.preventDefault(); input.value = rc.getAttribute('data-recent'); forceOpen = true; show(); input.focus(); return; }
       var a = e.target.closest('a.ix-r, a.ix-khint'); if (!a) return;
-      recentAdd(input.value);
+      if (a.hasAttribute('data-act')) { var ak = a.getAttribute('data-act'); if (a.getAttribute('href') === '#') e.preventDefault(); panel.hidden = true; forceOpen = false; input.value = ''; onPick && onPick(); if (a.getAttribute('href') !== '#ix-keys') { runAction(ak); return; } }
+      else recentAdd(input.value);
       panel.hidden = true; forceOpen = false; onPick && onPick();
       if (a.getAttribute('href') === '#ix-keys') { e.preventDefault(); input.blur(); showKeys(); return; }
       if (a.href.indexOf('#hub-info=') >= 0 && a.href.split('#')[0] === location.href.split('#')[0]) {   // already on that page: no reload
