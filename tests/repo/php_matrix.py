@@ -18,6 +18,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 BOOT = os.path.join(ROOT, 'src', 'web', 'hub', 'core', 'lib', 'boot.php')
 EXT = ['cli', 'curl', 'mbstring', 'xml', 'zip', 'gd', 'intl']   # what the site and its tests use besides the core (the manifest test draws pictures with gd)
 res = []
+sys.stdout.reconfigure(line_buffering=True)   # (1.83.1) show each line as it happens: a step that stalls used to print nothing for its whole run
 
 
 def check(name, ok, extra=''):
@@ -66,24 +67,31 @@ _apt = {'ready': False}
 RETRY = ['-o', 'Acquire::Retries=3']
 
 
-def sh(cmd):
-    return subprocess.run(['sudo', '-n'] + cmd if os.geteuid() != 0 else cmd, capture_output=True, text=True)
+def sh(cmd, limit=300):
+    """Runs one command and stops it after `limit` seconds (1.83.1): a package server that hangs used to hold CI for the whole 25 minutes. A stopped command counts as a failure, so the retries below can try again."""
+    cmd = ['timeout', '-k', '10', str(limit)] + cmd
+    try:
+        return subprocess.run(['sudo', '-n'] + cmd if os.geteuid() != 0 else cmd, capture_output=True, text=True, timeout=limit + 60)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(cmd, 124, '', 'stopped after %d seconds' % limit)
 
 
 def install(v):
     """Installs PHP v from the same package source setup-php uses (the ondrej/php archive). On failure it says why, so CI shows the reason."""
     if not _apt['ready']:
         _apt['ready'] = True
-        sh(['apt-get', 'install', '-y', '-qq', 'software-properties-common'])
-        sh(['add-apt-repository', '-y', 'ppa:ondrej/php'])
-        r = sh(['apt-get', 'update', '-qq'] + RETRY)
+        print('Adding the PHP package source...')
+        sh(['apt-get', 'install', '-y', '-qq', 'software-properties-common'], 180)
+        sh(['add-apt-repository', '-y', 'ppa:ondrej/php'], 180)
+        r = sh(['apt-get', 'update', '-qq'] + RETRY, 180)
         if r.returncode != 0: print('apt update: ' + (r.stderr or r.stdout).strip()[-300:])
     # (1.80.11) the package server answers 503 now and then (it did on 2026-11-17): try again a few times before calling it a failure
+    print('Installing PHP %s...' % v)
     for tries in range(4):
         r = sh(['apt-get', 'install', '-y', '-qq'] + RETRY + ['php%s-%s' % (v, e) for e in EXT])
         if r.returncode == 0: break
         print('PHP %s: try %d failed: %s' % (v, tries + 1, (r.stderr or r.stdout).strip().replace('\n', ' | ')[-200:]))
-        if tries < 3: time.sleep(15 * (tries + 1)); sh(['apt-get', 'update', '-qq'] + RETRY)
+        if tries < 3: time.sleep(15 * (tries + 1)); sh(['apt-get', 'update', '-qq'] + RETRY, 180)
     if r.returncode != 0: print('could not install PHP %s: %s' % (v, (r.stderr or r.stdout).strip().replace('\n', ' | ')[-400:]))
     return r.returncode == 0
 
