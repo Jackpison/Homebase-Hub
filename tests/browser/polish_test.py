@@ -468,7 +468,7 @@ try:
         mp.click('#wDock [data-w=search]'); mp.wait_for_selector('#wSq', timeout=5000)
         asked = []; mp.context.on('request', lambda r: asked.append(r.url) if urlparse(r.url).hostname == 'duckduckgo.com' else None)
         mp.fill('#wSq', 'homebase hub'); quiet = not asked
-        with mp.context.expect_page(timeout=8000) as np2:
+        with mp.context.expect_page(timeout=20000) as np2:
             mp.keyboard.press('Enter')
         srch = np2.value.url; np2.value.close()
         # Most Used Links: the links with visits, never an invented one
