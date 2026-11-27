@@ -17,6 +17,7 @@ Nothing to migrate by hand unless an entry says so.
 
 | Version | What it brought |
 | --- | --- |
+| 1.83.2 | Info: the Reminder date field in Box Settings has the same round corner as every other field |
 | 1.83.1 | A bigger search box that reads Ctrl + K, a clearer dark-mode search field with no yellow glow, and a tidier Only in Tab filter |
 | 1.83.0 | A clearer search box in Light and Dark with a Ctrl K key, Quick Actions in Ctrl+K (go to a page, switch Light and Dark, Edit, Settings, Backup and more), and first-use tips in the same card look |
 | 1.82.9 | Hover Hints are now small cards with the setting's name, a clear sentence and, for switches, what it is now; 24 new hints and clearer wording for first-time users |
@@ -193,6 +194,14 @@ Nothing to migrate by hand unless an entry says so.
 | 1.7.0 – 1.9.2 | Text sizes, page backgrounds, Tools tabs, typed colors |
 | 1.1.0 – 1.6.x | Earlier work (summarized) |
 | 1.0.0 – 1.0.1 | First combined release (2026-10-12) |
+
+---
+
+## 1.83.2
+
+### Info
+
+- The Reminder date field in Box Settings now has the same round corner as every other field in a window.
 
 ---
 
