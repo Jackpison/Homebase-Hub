@@ -646,10 +646,11 @@ try:
         check('P87 (1.82.8) Links, hover address: on a row with extra link buttons it sits under the link (left 2px, above the next row), on a plain row it stays beside the link', hov[0][0] > 20 and hov[1][0] <= 3 and hov[1][1] > 10 and hov[1][2] == '6', hov)
         pg.evaluate("document.documentElement.setAttribute('data-theme', 'dark')")
         pg.evaluate("document.querySelectorAll('.row img')[1].src = 'data:image/svg+xml;base64,' + btoa('<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"4\" fill=\"#fafafa\"/></svg>')")
-        until(lambda: pg.evaluate("document.querySelectorAll('.row img.ainv').length") > 0, 4000)
+        until(lambda: pg.evaluate("document.querySelectorAll('.row img')[1].className") == 'ainvl' and pg.evaluate("document.querySelectorAll('.row img')[0].className") == 'ainv', 6000)   # the second logo itself, not just any logo: WebKit loads the new picture a moment later
         dk = pg.evaluate("(() => { const im = [...document.querySelectorAll('.row img')]; return [im[0].className, getComputedStyle(im[0]).filter.includes('invert'), im[1].className]; })()")
         check('P80 (1.81.0) on the dark theme an all-black logo turns white; a white one gets the light-theme mark instead', dk[0] == 'ainv' and dk[1] and dk[2] == 'ainvl', dk)
         pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
+        until(lambda: pg.evaluate("getComputedStyle(document.querySelectorAll('.row img')[1]).filter.includes('brightness')"), 4000)
         lt = pg.evaluate("(() => { const im = [...document.querySelectorAll('.row img')]; return [im[1].className, getComputedStyle(im[1]).filter.includes('brightness')]; })()")
         check('P81 (1.81.0) on the light theme an all-white logo turns black', lt[0] == 'ainvl' and lt[1], lt)
         cc = pg.evaluate("(() => { document.documentElement.setAttribute('data-theme', 'dark'); const i = document.querySelectorAll('.row img')[1]; i.src = 'data:image/svg+xml;base64,' + btoa('<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" viewBox=\\\"0 0 24 24\\\"><rect width=\\\"24\\\" height=\\\"24\\\" fill=\\\"#e5484d\\\"/></svg>'); return 1; })()")

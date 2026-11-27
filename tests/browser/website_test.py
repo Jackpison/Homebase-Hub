@@ -188,7 +188,7 @@ try:
         # the two-minute video: the third choice beside Desktop and Phone on Home, and on Screenshots, with a poster and nothing downloaded until it is played
         for path, tag in (('/', 'Home'), ('/screenshots/', 'Screenshots')):
             c6 = ctx(); pg = c6.new_page(); asked = []
-            pg.on('request', lambda rq: asked.append(rq.url) if '/video/tour.' in rq.url else None)
+            pg.on('response', lambda rs: asked.append(rs.url) if '/video/tour.' in rs.url and rs.status > 0 else None)   # a real answer only: WebKit reports the video at load with status 0 and nothing reaches the server
             pg.goto(B + path); settle(pg)
             if path == '/':
                 pg.click('.lp-vsw [data-v=v]'); shown = pg.evaluate("(() => { const r = document.querySelector('.lp-vbox video').getBoundingClientRect(); return r.width > 300 && !document.querySelector('.lp-frame').offsetParent })()")

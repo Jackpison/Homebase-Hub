@@ -322,7 +322,7 @@ try:
         pc, pp = place_cfg(base)
         bot = pp.evaluate("(() => { const k = [...document.querySelectorAll('#wCards .wcard')].map(e => e.getBoundingClientRect()), c = document.getElementById('date').getBoundingClientRect(); return [Math.max(...k.map(r => r.height)) <= 92, Math.min(...k.map(r => r.top)) > c.bottom + 4]; })()")
         cb = pp.locator('.wcard[data-w=today]').bounding_box(); pp.mouse.move(cb['x'] + 40, cb['y'] + 30); pp.mouse.down(); pp.mouse.move(300, 200, steps=6)
-        grid_on = pp.evaluate("!!document.getElementById('mvGrid') && !document.getElementById('mvGrid').hidden")
+        grid_on = until(lambda: pp.evaluate("!!document.getElementById('mvGrid') && !document.getElementById('mvGrid').hidden"), 3000)   # WebKit shows the grid a frame after the move
         pp.mouse.up(); card_free = until(lambda: pp.evaluate("!!document.querySelector('#wFree .wcard[data-w=today]')"), 8000)
         card_saved = subprocess.run(['php', '-r', "require '%s/web/home/lib.php'; echo json_encode(load_site()['widgets']['pos']['cards']);" % D], capture_output=True, text=True).stdout
         panel_closed = pp.evaluate("document.getElementById('wPanel').hidden")

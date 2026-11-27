@@ -294,4 +294,4 @@ body.editing .tabi:not(.on) .tab:not(.add){padding-right:0}
 .chip{font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid var(--border);color:var(--mute);white-space:nowrap}
 .chip.due{color:#fff;background:#d6453d;border-color:#d6453d}
 .bxpinrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
-#bxrem{font:inherit;color:inherit;background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 8px}
+#bxrem{font:inherit;color:inherit;background:transparent;border:1px solid var(--border);border-radius:10px;padding:4px 8px}   /* 10 px like every field in a window (windows_test) */
